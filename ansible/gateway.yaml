@@ -1,0 +1,9 @@
+---
+- hosts: gateway
+  vars:
+    ansible_user: ansible
+    ansible_become: yes
+    
+  roles:
+    - dnsmasq
+    - router

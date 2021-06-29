@@ -1,0 +1,47 @@
+---
+- name: Install iptables
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - iptables
+    - iptables-persistent
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+# sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+# sudo iptables -A FORWARD -i wlan0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+# sudo iptables -A FORWARD -i eth0 -o wlan0 -j ACCEPT
+
+- name: Masquerade to eth0
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: wlan0
+    jump: MASQUERADE
+
+- name: Forward releated
+  iptables:
+    chain: FORWARD
+    in_interface: wlan0
+    out_interface: eth0
+    match: state
+    ctstate:
+      - RELATED
+      - ESTABLISHED
+    jump: ACCEPT
+    
+- name: Forward all
+  iptables:
+    chain: FORWARD
+    in_interface: eth0
+    out_interface: wlan0
+    jump: ACCEPT

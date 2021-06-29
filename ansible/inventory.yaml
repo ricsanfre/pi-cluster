@@ -1,0 +1,11 @@
+all:
+  hosts: {}
+  children:
+    gateway:
+      hosts:
+        10.0.0.1:
+          hostname: gateway
+    k8s:
+      hosts:
+        10.0.0.104:
+          hostname: node1

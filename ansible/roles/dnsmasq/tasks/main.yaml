@@ -1,0 +1,32 @@
+---
+
+
+- name: Install dnsmasq
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - dnsmasq
+
+- name: local dnsmasq file
+  template:
+    src: dnsmasq.j2
+    dest: "/etc/dnsmasq.d/eth0"
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload dnsmasq
+
+- name: Ensure dnsmasq is running
+  service:
+    name: dnsmasq
+    state: started
+
+# - name: Configure resolve.conf to use dnsmasq dns
+#   lineinfile:
+#     path: /etc/dhcp/dhclient.conf
+#     regexp: "^prepend domain-name-servers.*;"
+#     line: "prepend domain-name-servers 192.168.2.1;"
+#     insertafter: "^#supersede domain-name .*;"

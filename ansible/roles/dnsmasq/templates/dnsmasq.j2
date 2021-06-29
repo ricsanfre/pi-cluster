@@ -1,0 +1,37 @@
+# Our DHCP service will be providing addresses over our eth0 adapter
+interface=eth0
+
+# We will listen on the static IP address we declared earlier
+listen-address=10.0.0.1
+
+# Pre-allocate a bunch of IPs on the 10.0.0.0/8 network for the Raspberry Pi nodes
+# DHCP will allocate these for 12 hour leases, but will always assign the same IPs to the same Raspberry Pi
+# devices, as you'll populate the MAC addresses below with those of your actual Pi ethernet interfaces
+
+dhcp-range=10.0.0.32,10.0.0.128,12h
+
+# DNS nameservers.
+server=80.58.61.254
+server=80.58.61.250
+
+# Bind dnsmasq to the interfaces it is listening on (eth0)
+bind-interfaces
+
+# Never forward plain names (without a dot or domain part)
+domain-needed
+
+local=/k8s/
+
+# Never forward addresses in the non-routed address spaces.
+bogus-priv
+
+# Use the hosts file on this machine
+expand-hosts
+
+# Useful for debugging issues
+# log-queries
+# log-dhcp
+
+{% for host in groups['k8s'] %}
+dhcp-host={{ hostvars[host].mac }},{{ hostvars[host].ip }}
+{% endfor %}
