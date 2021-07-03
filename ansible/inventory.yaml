@@ -3,9 +3,19 @@ all:
   children:
     gateway:
       hosts:
-        10.0.0.1:
+        gateway:
           hostname: gateway
+          ansible_host: 10.0.0.1
+          ip: 10.0.0.1
     k8s:
       hosts:
-        10.0.0.104:
+        node1:
           hostname: node1
+          ansible_host: 10.0.0.11 
+          ip: 10.0.0.11 
+          mac: dc:a6:32:9c:29:b9
+        node2:
+          hostname: node2
+          ansible_host: 10.0.0.12
+          ip: 10.0.0.12  
+          mac: e4:5f:01:2d:fd:19
