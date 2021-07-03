@@ -29,7 +29,7 @@ timezone: Europe/Madrid
 locale: es_ES.UTF-8
 
 # Hostname
-hostname: gateway
+hostname: node1
 manage_etc_hosts: true
 
 ## On first boot, use ssh-import-id to give the specific users SSH access to
@@ -93,6 +93,3 @@ users:
 #- [ sh, -xc, "echo $(date) ': hello world!'" ]
 #- [ wget, "http://ubuntu.com", -O, /run/mydir/index.html ]
 
-## Reboot to enable Wifi configuration (more details in network-config file)
-power_state:
-  mode: reboot
