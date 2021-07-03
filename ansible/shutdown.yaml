@@ -1,0 +1,7 @@
+---
+- hosts: k8s
+  vars:
+    ansible_user: ansible
+    ansible_become: yes
+  roles:
+    - shutdown

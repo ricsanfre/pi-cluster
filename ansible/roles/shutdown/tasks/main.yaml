@@ -1,0 +1,4 @@
+---
+- name: shutdown
+  command: shutdown -h now
+  ignore_errors: yes
