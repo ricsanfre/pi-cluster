@@ -1,13 +1,4 @@
 ---
-- name: Install iptables
-  apt:
-    name: "{{ packages }}"
-    state: present
-    update_cache: yes
-  vars:
-    packages:
-    - iptables
-    - iptables-persistent
 
 - name: Enable IP forwarding
   sysctl:
@@ -17,31 +8,26 @@
     state: present
     reload: yes
 
-# sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-# sudo iptables -A FORWARD -i wlan0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-# sudo iptables -A FORWARD -i eth0 -o wlan0 -j ACCEPT
+- name: Ensure Nftables packages is installed
+  package:
+    name: '{{ nft_pkg_list | list }}'
+    state: present
+  register: nft_pkg_install_result
+  until: nft_pkg_install_result is success
 
-- name: Masquerade to eth0
-  iptables:
-    table: nat
-    chain: POSTROUTING
-    out_interface: wlan0
-    jump: MASQUERADE
+- name: Ensure old Iptables packages are removed
+  package:
+    name: '{{ nft_old_pkg_list | list }}'
+    state: absent
+  register: pkg_remove_result
+  until: pkg_remove_result is success
 
-- name: Forward releated
-  iptables:
-    chain: FORWARD
-    in_interface: wlan0
-    out_interface: eth0
-    match: state
-    ctstate:
-      - RELATED
-      - ESTABLISHED
-    jump: ACCEPT
-    
-- name: Forward all
-  iptables:
-    chain: FORWARD
-    in_interface: eth0
-    out_interface: wlan0
-    jump: ACCEPT
+- name: NFTables generate main conf file
+  template:
+    src: "{{ nft_main_conf_content }}"
+    dest: "{{ nft_main_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']

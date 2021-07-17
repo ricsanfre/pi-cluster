@@ -1,0 +1,40 @@
+---
+# List of old Iptables packages to remove to avoid duplicate firewall.
+#
+nft_old_pkg_list:
+  - 'iptables'
+  - 'libiptc0'
+# List of new Nftables packages to be installed.
+nft_pkg_list:
+  - nftables
+
+# nft_service_name
+nft_service_name: 'nftables'
+
+# Location of nftables config file
+nft_main_conf_path: '/etc/nftables.conf'
+
+# Template used to provide the previous main configuration file.
+nft_main_conf_content: 'etc/nftables.conf.j2'
+
+# Backup config
+nft_backup_conf: True
+
+# WAN - LAN interfaces
+lan_interface: 'eth0'
+wan_interface: 'wlan0'
+
+# Local network
+lan_network: '10.0.0.0/24'
+
+# In Accepting rules HTTP, HTTPS, SSH, DNS, DHCP, NTP
+in_tcp_accept: '{ http, https, ssh }'
+in_udp_accept: '{ 53, 67, 68, 123 }'
+
+# Out traffic accepting rules HTTP, HTTPS, SSH, DNS, DHCP, NTP
+out_tcp_accept: '{ http, https, ssh }'
+out_udp_accept: '{ 53, 67, 68, 123 }'
+
+# Forwarding Accepting rules
+forward_tcp_accept: '{ http, https, ssh }'
+forward_udp_accept: '{ domain, ntp }'
