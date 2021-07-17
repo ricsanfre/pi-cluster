@@ -22,6 +22,12 @@
   register: pkg_remove_result
   until: pkg_remove_result is success
 
+- name: Ensure nftables service is enabled and started
+  service: 
+    name: nftables 
+    state: started 
+    enabled: True
+
 - name: NFTables generate main conf file
   template:
     src: "{{ nft_main_conf_content }}"
