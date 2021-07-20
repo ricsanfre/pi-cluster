@@ -10,9 +10,10 @@ listen-address=10.0.0.1
 
 dhcp-range=10.0.0.32,10.0.0.128,12h
 
-# DNS nameservers.
-server=80.58.61.254
-server=80.58.61.250
+# DNS nameservers
+{% for server in home_dns_servers %}
+server={{ server }}
+{% endfor %}
 
 # Bind dnsmasq to the interfaces it is listening on (eth0)
 bind-interfaces
@@ -20,18 +21,35 @@ bind-interfaces
 # Never forward plain names (without a dot or domain part)
 domain-needed
 
-local=/k8s/
+local=/{{ cluster_domain_name }}/
+
+domain={{ cluster_domain_name }}
 
 # Never forward addresses in the non-routed address spaces.
 bogus-priv
 
-# Use the hosts file on this machine
-expand-hosts
+# Do not use the hosts file on this machine
+# expand-hosts
 
 # Useful for debugging issues
 # log-queries
 # log-dhcp
 
-{% for host in groups['k8s'] %}
+# DHCP configuration
+{% for host in groups['cluster'] %}
 dhcp-host={{ hostvars[host].mac }},{{ hostvars[host].ip }}
+{% endfor %}
+
+dhcp-host= {{ hostvars['switch'].mac}},{{ hostvars['switch'].ip }}
+
+# DNS configuration
+
+# Pi Cluster hosts
+{% for host in groups['cluster'] %}
+host-record={{ hostvars[host].hostname }}.{{ cluster_domain_name }},{{ hostvars[host].ip }}
+{% endfor %}
+
+# Switch and Gateway
+{% for host in groups['network'] %}
+host-record={{ hostvars[host].hostname }}.{{ cluster_domain_name }},{{ hostvars[host].ip }}
 {% endfor %}
