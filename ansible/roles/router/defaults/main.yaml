@@ -18,7 +18,7 @@ nft_main_conf_path: '/etc/nftables.conf'
 nft_main_conf_content: 'etc/nftables.conf.j2'
 
 # Backup config
-nft_backup_conf: True
+nft_backup_conf: true
 
 # WAN - LAN interfaces
 lan_interface: 'eth0'

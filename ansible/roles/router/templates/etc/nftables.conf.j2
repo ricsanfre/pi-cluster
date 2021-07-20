@@ -67,25 +67,25 @@ table inet filter {
                 type filter hook input priority 0; policy drop;
                 jump global;
                 # Accept loopback traffic
-                iif lo accept
+                iifname lo accept
                 # Accept SSH traffic
                 tcp dport ssh accept
                 # Filter TCP traffic from LAN
-                iif $lan_interface udp dport @in_udp_accept accept
+                iifname $lan_interface udp dport @in_udp_accept accept
                 # Filter UDP traffic from LAN
-                iif $lan_interface tcp dport @in_tcp_accept accept
+                iifname $lan_interface tcp dport @in_tcp_accept accept
                 # Accept ICMP
-                iif $lan_interface ip protocol icmp accept
+                iifname $lan_interface ip protocol icmp accept
         }
         chain forward {
                 type filter hook forward priority 0; policy drop;
 
                 # TCP traffic forwarding accepting rules
-                iif $lan_interface ip saddr $lan_network oif $wan_interface tcp dport @forward_tcp_accept accept
-                iif $wan_interface oif $lan_interface ip daddr $lan_network tcp sport @forward_tcp_accept accept
+                iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept accept
+                iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp sport @forward_tcp_accept accept
                 # UDP traffic forwarding accepting rules
-                iif $lan_interface ip saddr $lan_network oif $wan_interface udp dport @forward_udp_accept accept
-                iif $wan_interface oif $lan_interface ip daddr $lan_network udp sport @forward_udp_accept accept
+                iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept accept
+                iifname $wan_interface oifname $lan_interface ip daddr $lan_network udp sport @forward_udp_accept accept
         }
         chain output {
                 # Enable all out traffic
@@ -97,7 +97,7 @@ table inet filter {
 table ip nat {
         chain postrouting {
                 type nat hook postrouting priority 100;
-                ip saddr $lan_network oif $wan_interface masquerade
+                ip saddr $lan_network oifname $wan_interface masquerade
         }
 	
 }
