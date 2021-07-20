@@ -10,13 +10,12 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
 - Use ARM 64 bits operating system. Full usage of 4G RAM available by the Raspberry Pi 4. Currently only Ubuntu supports 64 bits ARM distribution for Raspberry Pi.
 - Use ligthweigh Kubernetes distribution (K3S)
 - Use of distributed storage block technology, instead of centralized NFS system, for pod persistent storage
-- Use of Ansible for automating the configuration of the cluster
-
+- Use of Ansible for automating the configuration of the cluster.
 
 ## Content
 
-1. [Lab architecture and hardware](documentation/hardware.md)
-2. [Preparing Ansible Control Node](documentation/pimaster.md
+1. [Lab architecture and hardware](documentation/hardware.md). Home lab design and hardware selection
+2. [Preparing Ansible Control Node](documentation/pimaster.md). Ansible and Ansible Molecule Installation
 3. [Preparing Raspberry PIs](documentation/preparing_raspberrypi.md). Updating Raspberry PI firmware and boot order to enable boot from USB.
 
 
