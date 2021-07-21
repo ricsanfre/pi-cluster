@@ -7,7 +7,7 @@ all:
           hostname: gateway
           ansible_host: 10.0.0.1
           ip: 10.0.0.1
-          mac: e4:5f:01:28:36:98 
+          mac: e4:5f:01:28:36:98
         pimaster:
           hostname: pimaster
           ansible_host: localhost
@@ -36,3 +36,7 @@ all:
           ansible_host: 10.0.0.14
           ip: 10.0.0.14
           mac: e4:5f:01:2f:54:82
+    raspberrypi:
+      hosts:
+        node[1:4]:
+        gateway:
