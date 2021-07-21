@@ -1,34 +1,59 @@
 ---
 
-ntp_enabled: true
 ntp_timezone: Europe/Madrid
 
-ntp_daemon: ntp 
+# NTP package name and daemon. Default pakage for Ubuntu: chrony. ntp is deprecated
+ntp_daemon: chrony
+ntp_package: chrony
 
-ntp_package: ntp
+# NTP service config file
+ntp_config_file: /etc/chrony/chrony.conf
 
-ntp_config_file: /etc/ntp.conf
-ntp_driftfile: /var/lib/ntp/drift
-
-ntp_manage_config: false
-
-# NTP server area configuration (leave empty for 'Worldwide').
-# See: https://www.ntppool.org/
-ntp_area: 'europe'
+# Define upstream NTP servers
+#
+# Format is a list of dictionaries with the following keys:
+# server:  host or pool
+# type:    (Optional) Defaults to server. Maps to a time source in the
+#           configuration file. Can be one of server, peer, pool.
+# options: (Optional) List of options that depends on type, see Chrony
+#          documentation for details.
+# See: https://chrony.tuxfamily.org/doc/4.0/chrony.conf.html
+#
+# Example of configuring a pool and customising the pool specific maxsources option:
+# chrony_ntp_servers:
+#   - server: pool.ntp.org
+#     type: pool
+#     options:
+#       - option: maxsources
+#         val: 3
+#
 ntp_servers:
-  - "0{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
-  - "1{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
-  - "2{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
-  - "3{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
+  - server: ntp.ubuntu.org
+    type: pool
+    options:
+      - option: iburst
+      - option: maxsources
+        val: 4
+  - server: 0.ubuntu.pool.ntp.org
+    type: pool
+    options:
+      - option: iburst
+      - option: maxsources
+        val: 1
+  - server: 1.ubuntu.pool.ntp.org
+    type: pool
+    options:
+      - option: iburst
+      - option: maxsources
+        val: 1
+  - server: 2.ubuntu.pool.ntp.org
+    type: pool
+    options:
+      - option: iburst
+      - option: maxsources
+        val: 2
 
-ntp_server: "10.0.0.1"
-
-ntp_role: client
-
-ntp_restrict:
-  - "127.0.0.1"
-  - "::1"
-
-ntp_cron_handler_enabled: false
-
-ntp_tinker_panic: false
+# Optionally specify a host, subnet, or network from which to allow NTP
+# connections to a machine acting as NTP server
+ntp_allow_hosts:
+  - 10.0.0.0/24

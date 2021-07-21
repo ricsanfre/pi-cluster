@@ -10,17 +10,13 @@
     name: "{{ ntp_daemon }}"
     state: started
     enabled: true
-  when: ntp_enabled | bool
-
-
-- name: Disable the systemd timesyncd service
-  command: timedatectl set-ntp off
 
 - name: Generate ntp configuration file.
   template:
-    #src: "{{ ntp_config_file | basename }}.j2"
-    src:  "ntp_{{ ntp_role }}.conf.j2"
+    src: "{{ ntp_config_file | basename }}.j2"
+    #src:  "ntp_{{ ntp_role }}.conf.j2"
     dest: "{{ ntp_config_file }}"
     mode: 0644
+    backup: true
   notify: restart ntp
-  when: ntp_manage_config | bool
+  
