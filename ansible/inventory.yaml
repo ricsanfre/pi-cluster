@@ -11,6 +11,7 @@ all:
         pimaster:
           hostname: pimaster
           ansible_host: localhost
+          ansible_connection: local
           ip: 10.0.0.10
           mac: 08:00:27:f3:6b:dd
     cluster:
