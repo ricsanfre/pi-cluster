@@ -1,0 +1,11 @@
+---
+- hosts: cluster
+  vars:
+    ansible_user: ansible
+    ansible_become: true
+  roles:
+    - role: ntp
+      ntp_servers:
+        - server: 10.0.0.1
+          type: server
+      ntp_allow_hosts: []
