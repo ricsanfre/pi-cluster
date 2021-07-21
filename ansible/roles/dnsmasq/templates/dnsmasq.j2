@@ -36,20 +36,18 @@ bogus-priv
 # log-dhcp
 
 # DHCP configuration
-{% for host in groups['cluster'] %}
+{% for host in groups['all'] %}
+{% if hostvars[host].mac is defined and hostvars[host].ip is defined %}
 dhcp-host={{ hostvars[host].mac }},{{ hostvars[host].ip }}
+{% endif %}
 {% endfor %}
 
-dhcp-host= {{ hostvars['switch'].mac}},{{ hostvars['switch'].ip }}
+# Adding ethernet switch management IP
+dhcp-host= {{ eth_switch_mac }},{{ eth_switch_ip }}
 
 # DNS configuration
-
-# Pi Cluster hosts
-{% for host in groups['cluster'] %}
+{% for host in groups['all'] %}
+{% if hostvars[host].hostname is defined and hostvars[host].ip is defined %}
 host-record={{ hostvars[host].hostname }}.{{ cluster_domain_name }},{{ hostvars[host].ip }}
-{% endfor %}
-
-# Switch and Gateway
-{% for host in groups['network'] %}
-host-record={{ hostvars[host].hostname }}.{{ cluster_domain_name }},{{ hostvars[host].ip }}
+{% endif %}
 {% endfor %}

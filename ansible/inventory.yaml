@@ -1,19 +1,18 @@
 ---
 all:
-  hosts: {}
   children:
-    network:
+    control:
       hosts:
         gateway:
           hostname: gateway
           ansible_host: 10.0.0.1
           ip: 10.0.0.1
           mac: e4:5f:01:28:36:98 
-        switch:
-          hostname: switch
-          ansible_host: switch
-          ip: 10.0.0.2
-          mac: 94:a6:7e:7c:c7:69
+        pimaster:
+          hostname: pimaster
+          ansible_host: localhost
+          ip: 10.0.0.10
+          mac: 08:00:27:f3:6b:dd
     cluster:
       hosts:
         node1:
