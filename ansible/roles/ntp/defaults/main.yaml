@@ -1,0 +1,34 @@
+---
+
+ntp_enabled: true
+ntp_timezone: Europe/Madrid
+
+ntp_daemon: ntp 
+
+ntp_package: ntp
+
+ntp_config_file: /etc/ntp.conf
+ntp_driftfile: /var/lib/ntp/drift
+
+ntp_manage_config: false
+
+# NTP server area configuration (leave empty for 'Worldwide').
+# See: https://www.ntppool.org/
+ntp_area: 'europe'
+ntp_servers:
+  - "0{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
+  - "1{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
+  - "2{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
+  - "3{{ '.' + ntp_area if ntp_area else '' }}.pool.ntp.org iburst"
+
+ntp_server: "10.0.0.1"
+
+ntp_role: client
+
+ntp_restrict:
+  - "127.0.0.1"
+  - "::1"
+
+ntp_cron_handler_enabled: false
+
+ntp_tinker_panic: false

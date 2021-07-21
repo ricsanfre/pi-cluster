@@ -1,0 +1,26 @@
+---
+
+- name: Ensure NTP package is installed.
+  package:
+    name: "{{ ntp_package }}"
+    state: present
+
+- name: Ensure NTP is running and enabled as configured.
+  service:
+    name: "{{ ntp_daemon }}"
+    state: started
+    enabled: true
+  when: ntp_enabled | bool
+
+
+- name: Disable the systemd timesyncd service
+  command: timedatectl set-ntp off
+
+- name: Generate ntp configuration file.
+  template:
+    #src: "{{ ntp_config_file | basename }}.j2"
+    src:  "ntp_{{ ntp_role }}.conf.j2"
+    dest: "{{ ntp_config_file }}"
+    mode: 0644
+  notify: restart ntp
+  when: ntp_manage_config | bool
