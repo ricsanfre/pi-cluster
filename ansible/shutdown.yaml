@@ -1,7 +1,8 @@
 ---
-- hosts: k8s
-  vars:
-    ansible_user: ansible
-    ansible_become: yes
-  roles:
-    - shutdown
+- hosts: raspberrypi
+  become: true
+
+  tasks:
+    - name: Shutdown
+      command: shutdown -h 1 min
+      ignore_errors: yes

@@ -1,0 +1,36 @@
+---
+- hosts: raspberrypi
+  become: true
+
+  tasks:
+    - name: Update apt repo and cache on all Debian/Ubuntu boxes
+      apt:
+        update_cache: true
+        # Run the equivalent of apt-get update command on all servers
+        force_apt_get: true
+        # Do not use the aptitude command
+        # instead use the apt-get command on Debian/Ubuntu boxes
+        cache_valid_time: 3600
+        # Update the apt cache if its older than the cache_valid_time.
+        # This option is set in seconds
+
+    - name: Upgrade all packages on servers
+      apt:
+        upgrade: dist
+        force_apt_get: true
+
+    - name: Check if a reboot is needed on all servers
+      stat:
+        path: /var/run/reboot-required
+        get_md5: false
+      register: reboot_required_file
+
+    - name: Reboot the box if kernel updated
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
