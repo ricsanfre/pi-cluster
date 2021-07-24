@@ -17,13 +17,17 @@
     - name: Upgrade all packages on servers
       apt:
         upgrade: dist
+        # Run the equivalent of ‘apt-get upgrade’
         force_apt_get: true
+        # Use apt-get instead of aptitude
 
     - name: Check if a reboot is needed on all servers
       stat:
         path: /var/run/reboot-required
         get_md5: false
+        # Algorithm to determine checksum of file
       register: reboot_required_file
+      # Save a result in and we are going to use it as follows to reboot the box
 
     - name: Reboot the box if kernel updated
       reboot:
@@ -33,4 +37,10 @@
         pre_reboot_delay: 0
         post_reboot_delay: 30
         test_command: uptime
+        # Execute uptime command on the rebooted server and expect success from
+        # to determine the machine is ready for further tasks
       when: reboot_required_file.stat.exists
+      # First, check that the file named /var/run/reboot-required exists using a
+      # variable named reboot_required_file.
+      # The reboot module will only work if that file exists and it is enforced
+      # using ‘when: reboot_required_file.stat.exists’ Ansible condition.
