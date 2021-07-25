@@ -1,4 +1,4 @@
-# Creationg Ubuntu VM in VBox from Ubuntu cloud image
+# Creation Ubuntu VM in VBox from Ubuntu cloud image
 
 Fast deployment of a headless Ubuntu server in VBox using a cloud-image ready to be configured in boot time using **cloud-init**.
 
@@ -15,13 +15,30 @@ Network configuration can be provided to cloud-init formated in yaml file `netwo
 
 ## Step 1. Download Ubuntu 20.04 LTS 64 bits cloud-image in VMDK format
 
-Download the specific image in VMDK format from https://cloud-images.ubuntu.com/releases
+Download the specific image format from https://cloud-images.ubuntu.com/releases
 
 > In our case, Ubuntu-20.04-server-cloudimg-amd64.vmdk
 > 
-> https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.vmdk
+> https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img
 
-## Step 2. Create SSH keys
+## Step 2. Convert img file to VBox vdi disk
+
+Convert to raw format the img downloaded in step 2. Use `qemu-img` to conver it with the following command:
+
+    qemu-img convert -O raw ubuntu-20.04-server-cloudimg-amd64.img ubuntu-20.04-server-cloudimg-amd64.raw
+
+> NOTE: In windows qemu-img utility can be installed from [here](https://cloudbase.it/qemu-img-windows/)
+
+
+Convert the raw image to vdi format with VirtualBox tool `vboxmanage`
+ 
+    vboxmanage convertfromraw ubuntu-20.04-server-cloudimg-amd64.raw ubuntu-20.04-server-cloudimg-amd64.vdi
+
+> In windows the command should be something like this:
+> 
+>    "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" convertfromraw ubuntu-20.04-server-cloudimg-amd64.raw ubuntu-20.04-server-cloudimg-amd64.vdi
+
+## Step 3. Create SSH keys
 
 Authentication using SSH keys will be the only mechanism available to login to the server.
 We will create SSH keys for two different users:
@@ -50,7 +67,7 @@ Public-key string will be used in Step 3 to configure ssh_authorized_keys of the
     ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
     ```
 
-## Step 3. Create seed iso file
+## Step 4. Create seed iso file
 
 For creating the iso file from my windows labtop an open-source tool like [FreeISO Creator](http://www.freeisocreator.com/)
 
@@ -94,7 +111,13 @@ For creating the iso file from my windows labtop an open-source tool like [FreeI
 - Create network-configuration file
 
     ```
-
+    version: 2
+    ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses: [192.168.56.100/24]
+    enp0s8:
+      dhcp4: yes
     ```
 
 - Create ISO file with FreeISO
@@ -103,7 +126,7 @@ For creating the iso file from my windows labtop an open-source tool like [FreeI
 
     ![Free-ISO-Creation](images/VBox_create_ubuntu_cloud_image_0.png "Create seed.iso")
 
-## Step 3. Create VM in VirtualBOX
+## Step 5. Create VM in VirtualBOX
 
 - Create new VM without creating any virtual disk
 
@@ -113,7 +136,7 @@ For creating the iso file from my windows labtop an open-source tool like [FreeI
 
     ![Create-VM-VBox](images/VBox_create_ubuntu_cloud_image_3.png "Do not create virtual disk")
 
-- Copy vmdk disk downloaded in step 1 and seed.iso file created in step 2 to new VM's folder
+- Copy vdi disk created in step 2 and seed.iso file created in step 4 to new VM's folder
 
 - Configure new VM, add vmdiks and iso
 
@@ -139,3 +162,16 @@ For creating the iso file from my windows labtop an open-source tool like [FreeI
     NAT interface to provide internet access to the VM
 
     ![Create-VM-VBox](images/VBox_create_ubuntu_cloud_image_7.png "NAT interface")
+
+
+## Step 6. Enlarge Disk size
+
+The converterd vdi size is arround 2GB. It can be enlarged using VBOX GUI (form 6.0 release)
+
+- Open Virtual Media Manager in VirtualBox
+  
+    ![Create-VM-VBox](images/VBox_create_ubuntu_cloud_image_8.png "Virtual Media Manager")
+
+- Modify the size of the vdi created in step 3
+
+    ![Create-VM-VBox](images/VBox_create_ubuntu_cloud_image_9.png "Modify size of vdi")
