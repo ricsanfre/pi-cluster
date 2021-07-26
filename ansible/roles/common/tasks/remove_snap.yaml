@@ -1,0 +1,31 @@
+---
+
+- name: list snap packages
+  shell: |
+    for i in `snap list | awk '!/Name/{print $1}'`;
+    do echo $i;
+    done
+  changed_when: false
+  register: snap_packages
+
+- name: Print list of snap packages
+  debug:
+    msg: "{{ snap_packages }}"
+    verbosity: 1
+
+- name: Remove snap packages
+  command: snap remove {{ item }}
+  register: snap_remove_output
+  with_items: "{{ snap_packages.stdout_lines }}"
+
+- name: Print snap remove command
+  debug:
+    msg: "{{ snap_remove_output }}"
+    verbosity: 1
+
+- name: Remove snapd package
+  apt:
+    name: snapd
+    update_cache: true
+    autoremove: true
+    state: absent

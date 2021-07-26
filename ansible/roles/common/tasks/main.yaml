@@ -1,0 +1,20 @@
+---
+
+# Get list of packages installed
+- name: Get list of packages
+  package_facts:
+    manager: auto
+
+- name: Check whether snap is package is installed
+  debug:
+    msg: "snapd found"
+  when: "'snapd' in ansible_facts.packages"
+
+- name: Remove snap package
+  include_tasks: remove_snap.yaml
+  when: "'snapd' in ansible_facts.packages"
+
+# - name: 'Install Basic-Packages'
+#   apt:
+#     name: "{{basic_packages}}"
+#     state: present
