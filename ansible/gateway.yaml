@@ -5,5 +5,7 @@
     ansible_become: yes
     
   roles:
+    - common
     - dnsmasq
     - router
+    - ntp

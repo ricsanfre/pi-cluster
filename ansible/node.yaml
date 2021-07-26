@@ -4,6 +4,7 @@
     ansible_user: ansible
     ansible_become: true
   roles:
+    - common
     - role: ntp
       ntp_servers:
         - server: 10.0.0.1
