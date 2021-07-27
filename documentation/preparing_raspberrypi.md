@@ -1,4 +1,4 @@
-# 1. Updating Raspberry Pi Firmware and preparing Raspberry Pis for booting from USB
+# Updating Raspberry Pi Firmware and preparing Raspberry Pis for booting from USB
 
 ## About USB Booting support (Raspberry Pi 4 and Ubuntu)
 
@@ -152,3 +152,4 @@ If the BOOT_ORDER is not set, change it using [raspi-config](https://www.raspber
 ### Step 4. Select **OK** and **Finish**
 
 ### Step 5. Reboot Raspberry Pi
+
