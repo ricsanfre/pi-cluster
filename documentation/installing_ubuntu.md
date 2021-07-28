@@ -18,7 +18,7 @@ Ubuntu 20.04 LTS image that can be downloaded from here:
 https://ubuntu.com/download/raspberry-pi
 
 
-### Step 2. Burn the Raspberry Pi OS image to the SD card
+### Step 2. Burn the Ubuntu OS image to the SD card
 Burn the latest Raspberry Pi OS image to SD-Card using Etcher
 
 Browse to https://www.balena.io/etcher/
@@ -114,6 +114,10 @@ mmcblk0     179:0    0 29.7G  0 disk
 ├─mmcblk0p1 179:1    0  256M  0 part /boot
 └─mmcblk0p2 179:2    0 29.5G  0 part /
 ```
+
+> NOTE: In this case USB device is labelled as sda: two partitions (boot partition: sda1)
+
+
 ### Step 4. Create 2 mountpoints  
 
 Now we are going to create two mountpoints and mount the Ubuntu drive.
