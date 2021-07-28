@@ -10,7 +10,7 @@ define lan_network = {{ lan_network }}
 define badcast_addr = { 255.255.255.255, 224.0.0.1, 224.0.0.251 }
 
 define forward_tcp_accept = {{ forward_tcp_accept }}
-define forward_udp_accept = {{ forward_tcp_accept }}
+define forward_udp_accept = {{ forward_udp_accept }}
 define out_tcp_accept = {{ out_tcp_accept }}
 define out_udp_accept = {{ out_udp_accept }}
 define in_tcp_accept = {{ in_tcp_accept }}
@@ -46,7 +46,7 @@ table inet filter {
 		    elements = $out_udp_accept
 	    }
 
-        set forward_tcp_accept {
+            set forward_tcp_accept {
 		    type inet_service
 		    flags interval
 		    elements = $forward_tcp_accept
