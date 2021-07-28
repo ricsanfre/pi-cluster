@@ -146,7 +146,7 @@ mmcblk0     179:0    0 29.7G  0 disk
 
 Download and execute the automated script:
 
-    curl https://raw.githubusercontent.com/TheRemote/Ubuntu-Server-raspi4-unofficial/master/BootFix.sh -O BootFix.sh
+    curl https://raw.githubusercontent.com/TheRemote/Ubuntu-Server-raspi4-unofficial/master/BootFix.sh -o BootFix.sh
     chmod +x BootFix.sh
     sudo ./BootFix.sh
 
