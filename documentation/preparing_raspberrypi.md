@@ -10,7 +10,7 @@ Since 20.10 and 21.04 are development releases and not LTS releases, are less st
 First step is to prepare Raspberry Pis to update its Firmware and enable boot from USB stick. 
 Firmware update and bootloader configuration is fully supported only using Raspberry Pi OS.
 
-## 1.1 Configure headless Raspberry OS
+## Configure headless Raspberry OS
 
 Prepare Raspberry PI OS for a headless start-up (without keyboard and monitor) enabling remote ssh connection and wifi access to home network.
 
@@ -63,7 +63,7 @@ Remove the mini-SD card from the adapter and plug it into the Raspberry Pi. Plug
 ### Step 7. Connect through SSH to the Raspberry Pi
 Connect through SSH to the Raspberry PI using default user and password (pi/raspberry)
 
-## 1.2 Get latest updates of the OS and the firmware
+## Get latest updates of the OS and the firmware
 
 First make sure that you have the absolute latest updates and firmware for the Pi. To upgrade all your packages and firmware to the latest version use the following command:
 
@@ -71,7 +71,7 @@ First make sure that you have the absolute latest updates and firmware for the P
 
 Once the update has completed restart your Pi with a `sudo reboot` command to apply the latest firmware / kernel updates.
 
-## 1.3 Verify EEPROM Bootloader is up to date
+## Verify EEPROM Bootloader is up to date
 We can check if your Pi’s bootloader firmware is up to date with the following command:
 
     sudo rpi-eeprom-update
@@ -117,7 +117,7 @@ If it says any updates are available they be installed manually by adding ‘-a�
 A reboot is required to apply the changes
 
 
-## 1.4 Modify Boot Order if needed
+## Modify Boot Order if needed
 
 Check current boot order configuration with command
 
@@ -153,3 +153,48 @@ If the BOOT_ORDER is not set, change it using [raspi-config](https://www.raspber
 
 ### Step 5. Reboot Raspberry Pi
 
+
+
+# Headless configuration for Desktop Version: Enable VNC Remote Connect
+
+In case Raspberry PI desktop version is used (i.e. gparted application configuration), VNC remote connection can be enabled.
+
+Using `raspi-config` tool.
+
+    sudo raspi-config
+
+### Step 1. Enable VNC
+
+Select **Interfacing Options**
+Select **VNC**
+For the prompt to enable VNC, select Yes (Y)
+For the confirmation, select Ok
+
+### Step 2. Change Change the default screen resolution
+
+There is a weird quirk where you must change the screen resolution or VNC will report “Cannot currently show the desktop.”
+
+Still from within raspi-config:
+
+Select **Display**
+on older versions this was under Advanced Options
+Select **Resolution**
+Select anything but the default (example: 1024x768)
+Select Ok
+Once you’ve established that it works, you can go back and try other screen resolutions.
+
+### Step 3. Save raspi-config changes and reboot
+
+Select Finish
+For the reboot prompt, select Yes
+
+### Step 4. Install the RealVNC viewer on your computer, smartphone or tablet
+Download the RealVNC viewer for your operating system.
+
+Browse to:
+
+https://www.realvnc.com/en/connect/download/viewer/
+For some operating systems the downloaded file may be an installer that needs to run. If that’s the case, run the installer.
+
+### Step 5. Connect over VNC
+Launch the VNC viewer on your computer and type the IP of the Raspberry Pi server into the Connect address bar.
