@@ -1,6 +1,6 @@
 ---
 # Cluster lodal domain
-cluster_domain_name: cluster
+cluster_domain_name: picluster.ricsanfre.com
 
 # DHCP and DNS Config group
 host_groups: all

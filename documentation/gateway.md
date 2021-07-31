@@ -8,7 +8,9 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 
 ## Network Configuration
 
-The WIFI interface (wlan0) will be used to be connected to my home lab (dynamic IP using DHCP), while ethernet interface (eth0) will be connected to the lan switch (static IP address)
+The WIFI interface (wlan0) will be used to be connected to my home network using static IP address (192.168.1.11/24), while ethernet interface (eth0) will be connected to the lan switch, lab network, using static IP address (10.0.0.1/24)
+Static IP addres in home network, will enable the configuration of static routes in my labtop and VM running on it (`pimaster`) to access the cluster nodes without fisically connect the laptop to the lan switch with an ethernet cable. 
+
 
 Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is like:
 
@@ -20,11 +22,15 @@ ethernets:
     addresses: [10.0.0.1/24]
 wifis:
   wlan0:
-    dhcp4: true
+    dhcp4: false
     optional: true
     access-points:
       "<SSID_NAME>":
         password: "<SSID_PASSWD>"
+    addresses: [192.168.1.11/24]
+    gateway4: 192.168.1.1
+    nameservers:
+      addresses: [80.58.61.250,80.58.61.254]
 ```
 
 ## Router/Firewall Configuration
@@ -50,7 +56,7 @@ This can be done installing **iptables** package and configuring iptables rules.
 and persist iptables rules across reboots by installing **iptables-persistent**
 
     sudo apt install iptables-persistent # First time
-	sudo dpkg-reconfigure iptables-persistent # Every time rules are changed
+    sudo dpkg-reconfigure iptables-persistent # Every time rules are changed
 
 In Ubuntu 20.04 applying this procedure does not make the rules to persit acroos reboots. Moreover since Ubuntu 20.10 **nftables** package is used instead iptables.
 nftables seems to have the support of the Linux community and iptables probably will be deprecated in future releases.
@@ -85,6 +91,39 @@ in_udp_accept: '{ 53, 67, 68, 123 }'
 forward_tcp_accept: '{ http, https, ssh }'
 forward_udp_accept: '{ domain, ntp }'
 ```
+
+### Configuring static route in my Laptop and VM `pimaster`
+
+To acess to the cluster nodes from my home network a static route need to be added for using `gateway` as router of my lab network (10.0.0.0/24)
+
+- Adding static route in my Windows laptop
+
+    Open a command:
+
+        ROUTE -P ADD 10.0.0.0 MASK 255.255.255.0 192.168.1.11 METRIC 1
+    
+- Adding static route in Linux VM running on my laptop (VirtualBox)
+  
+    Modify `/etc/netplan/50-cloud-init.yaml` for adding the static route
+
+        network:
+        version: 2
+        ethernets:
+          enp0s3:
+            dhcp4: no
+            addresses: [192.168.56.20/24]
+          enp0s8:
+            dhcp4: yes
+            routes:
+            - to: 10.0.0.0/24
+              via: 192.168.1.11        
+
+     > NOTE: This is `pimaster` VirutalBOX network configuration:
+     >- **Eth0** (enp0s3) connected to VBox **Host-Only adapter** (laptop only connection)
+     >- **Eth1** (enp0s8) connected to VBox **Bridge adapter** (home network connection)
+     
+ 
+
 
 ## DHCP/DNS Configuration
 
@@ -128,7 +167,7 @@ Local cluster domain name and relay DNS servers can be configured.
 
 ```
 # Cluster lodal domain
-cluster_domain_name: cluster
+cluster_domain_name: picluster.ricsanfre.com
 
 # Home network DNS servers
 home_dns_servers:

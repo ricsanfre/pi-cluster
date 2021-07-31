@@ -79,13 +79,18 @@ table inet filter {
         }
         chain forward {
                 type filter hook forward priority 0; policy drop;
-
-                # TCP traffic forwarding accepting rules
-                iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept accept
-                iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp sport @forward_tcp_accept accept
-                # UDP traffic forwarding accepting rules
-                iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept accept
-                iifname $wan_interface oifname $lan_interface ip daddr $lan_network udp sport @forward_udp_accept accept
+                
+                jump global;
+                               
+                # LAN to WAN TCP traffic forwarding accepting rules
+                iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept ct state new accept
+                
+                # LAN to WAN UDP traffic forwarding accepting rules
+                iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
+                
+                # WAN to LAN SSH traffic accepted
+                iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
+              
         }
         chain output {
                 # Enable all out traffic

@@ -36,4 +36,5 @@
     group: root
     mode: 0755
     backup: "{{ nft_backup_conf }}"
+    validate: nft --check -f %s
   notify: ['Reload nftables service']
