@@ -14,7 +14,9 @@
   include_tasks: remove_snap.yaml
   when: "'snapd' in ansible_facts.packages"
 
-# - name: 'Install Basic-Packages'
-#   apt:
-#     name: "{{basic_packages}}"
-#     state: present
+
+- name: Install common packages
+  apt:
+    name: "{{ basic_packages }}"
+    update_cache: true
+    state: present

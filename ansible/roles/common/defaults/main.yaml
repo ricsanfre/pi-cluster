@@ -1,4 +1,4 @@
 ---
 
 basic_packages:
-  - net-tools
+  - libraspberrypi-bin
