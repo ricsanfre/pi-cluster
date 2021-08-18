@@ -1,6 +1,0 @@
----
-# Reload will avoid to loose Nftables rulebase if an invalid syntax is added
-- name: Reload nftables service
-  systemd:
-    state: 'reloaded'
-    name: '{{ nft_service_name }}'

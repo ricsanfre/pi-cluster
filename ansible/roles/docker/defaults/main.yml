@@ -1,7 +1,0 @@
----
-# defaults file for docker
-pimaster_user: ansible
-
-## Docker daemon configuration
-docker_storage_driver: overlay2
-docker_data_dir: /var/lib/docker
