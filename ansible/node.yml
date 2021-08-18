@@ -1,0 +1,7 @@
+---
+- hosts: cluster
+  vars:
+    ansible_become: true
+  roles:
+    - common
+    - role: ricsanfre.ntp

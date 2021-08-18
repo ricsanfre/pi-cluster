@@ -5,4 +5,4 @@
   tasks:
     - name: Shutdown
       command: shutdown -h 1 min
-      ignore_errors: yes
+      ignore_errors: true

@@ -1,0 +1,11 @@
+---
+- hosts: gateway
+  vars:
+    ansible_user: ansible
+    ansible_become: true
+    
+  roles:
+    - common
+    - ricsanfre.dnsmasq
+    - ricsanfre.firewall
+    - ricsanfre.ntp

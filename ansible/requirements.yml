@@ -1,0 +1,8 @@
+---
+roles:
+  - name: ricsanfre.ntp
+    version: v1.0.0
+  - name: ricsanfre.firewall
+    version: v1.0.0
+  - name: ricsanfre.dnsmasq
+    version: v1.0.0

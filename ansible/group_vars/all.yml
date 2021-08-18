@@ -1,0 +1,3 @@
+---
+# Group all variables.
+ansible_user: ansible
