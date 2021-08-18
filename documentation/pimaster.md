@@ -135,4 +135,4 @@ Step 6. Install yamllint and ansible-lint
 
 Step 7. Install Docker python driver and molecule packages:
 
-    pip3 install docker molecule
+    pip3 install molecule[docker]
