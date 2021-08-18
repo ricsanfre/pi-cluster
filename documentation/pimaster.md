@@ -2,7 +2,7 @@
 
 A Virtual-BOX VM running on a Windows PC is used as Ansible Control Node for automating the provisioning of the Raspberry PIs cluster.
 
-This server, **pimaster**, is an Ubuntu 18.04 VM.
+This server, **pimaster**, is an Ubuntu 20.04 VM that can be automatically created from ubuntu cloud image using the script in this [repository] (https://github.com/ricsanfre/ubuntu-cloud-vbox).
 
 ## Installing Docker
 
@@ -94,7 +94,7 @@ Step 8: Configure docker daemon.
     
 ## Installing Ansible, playboook syntax checking tools and Molecule (Ansible testing environment)
 
-Ansible can be installed in Ubuntu 18.04 using official package from the ansible repository 'sudo apt install ansible' will install an old ansible verion for python2.
+Ansible can be installed in Ubuntu 18.04/20.04 using official package from the ansible repository 'sudo apt install ansible' will install an old ansible verion.
 
 Ansible Molecule is not available as official package, so pip is the only alternative
 Instead, install latest version for python3 with python package manager pip.

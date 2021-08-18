@@ -4,12 +4,14 @@ The idea is to configure one of the Raspberry PIs as a SAN, connecting some SSD 
 
 A storage on a network is called iSCSI Target, a Client which connects to iSCSI Target is called iSCSI Initiator. In my home lab, `gateway` will be the iSCSI Target and `node1-node4` will be the iSCSI Initiators.
 
+```
 +----------------------+         |             +----------------------+
 | [   iSCSI Target   ] |10.0.0.1 | 10.0.0.11-14| [ iSCSI Initiator  ] |
 |        gateway       +---------+-------------+        node1-4       |
 |                      |                       |                      |
 +----------------------+                       +----------------------+
 
+```
 
 LIO, [LinuxIO](http://linux-iscsi.org/wiki/Main_Page), has been the Linux SCSI target since kernel version 2.6.38.
 It support sharing different types of storage fabrics and backstorage devices, including block devices (including LVM logical volumes and physical devices).
