@@ -136,3 +136,41 @@ Step 6. Install yamllint and ansible-lint
 Step 7. Install Docker python driver and molecule packages:
 
     pip3 install molecule[docker]
+
+## Create public/private SSH key for the ansible and remote connection users
+
+`ansible` unix user will be created in all servers with root privileges (sudo permissions) so Ansible can automate the configuration process (use as `ansible_remote_user` when connecting).
+
+For remote connection from my Windows laptop `ubuntu` default UNIX user (with sudo privileges)
+
+ssh private/public keys for both users need to be generated once, and public ssh key can be copied automatically on all servers of the cluster to enable passwordless SSH connection.
+Those users and its public keys will be added to cloud-init configuration (`user-data`), when installing Ubuntu OS.
+
+### Create SSH keys
+
+Authentication using SSH keys will be the only mechanism available to login to the server.
+We will create SSH keys for two different users:
+
+- **ubuntu** user, used to connect from my home laptop
+
+    For generating SSH private/public key in Windows, Putty Key Generator can be used:
+
+    ![ubuntu-SSH-key-generation](images/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
+
+Public-key string will be used as ssh_authorized_keys of the default user (ubuntu) in cloud-init `user-data`
+
+- **ansible** user, used to automate configuration activities with ansible
+ 
+     For generating ansible SSH keys in Ubuntu server execute command:
+
+        ssh-keygen
+
+    In directory `$HOME/.ssh/` public and private key files can be found for the user
+
+    `id_rsa` contains the private key and `id_rsa.pub` contains the public key.
+
+    Content of the id_rsa.pub file has to be used as ssh_authorized_keys of the ansible user in cloud-init `user-data`
+    ```
+    cat id_rsa.pub 
+    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
+    ```
