@@ -174,3 +174,56 @@ Public-key string will be used as ssh_authorized_keys of the default user (ubunt
     cat id_rsa.pub 
     ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
     ```
+
+
+## Installing KVM and Vagrant
+In order to automate the testing of some of the roles that requires a VM and not a docker image (example: Storage roles), KVM and Vagrant will be installed
+
+### Enable nested virtualization within the VM
+
+Need to be changed with the command line. Not supported in GUI
+
+    vboxmanage modifyvm <pimaster-VM> --nested-hw-virt on
+
+
+### KVM installation in Ubuntu 20.04
+
+Step 2. Install KVM packages and its dependencies
+
+    sudo apt install qemu qemu-kvm libvirt-clients libvirt-daemon-system virtinst bridge-utils
+
+Step 3. Enable on boot and start libvirtd service (If it is not enabled already):
+
+    sudo systemctl enable libvirtd
+    sudo systemctl start libvirtd
+
+Step 4. Add the user to libvirt group
+
+    sudo usermod -a -G libvirtd $USER 
+
+### Vagrant installation in Ubuntu 20.04
+
+Step 1.  Add hashicorp apt repository
+
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get update
+Step 2. Install vagrant
+   
+    sudo apt install vagrant
+
+### Install vagrant-libvirt plugin in Linux
+
+In order to run Vagrant virtual machines on KVM, you need to install the vagrant-libvirt plugin. This plugin adds the Libvirt provider to Vagrant and allows Vagrant to control and provision machines via Libvirt
+
+Step 1. Install dependencies
+
+    sudo apt install build-essential qemu libvirt-daemon-system libvirt-clients libxslt-dev libxml2-dev libvirt-dev zlib1g-dev ruby-dev ruby-libvirt ebtables dnsmasq-base libguestfs-tools
+
+Step 2. Install vagrant-libvirt plugin:
+
+    vagrant plugin install vagrant-libvirt
+
+Step 3. Install mutate plugin which converts vagrant boxes to work with different providers.
+
+    vagrant plugin install vagrant-mutate
