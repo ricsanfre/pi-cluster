@@ -177,6 +177,7 @@ Public-key string will be used as ssh_authorized_keys of the default user (ubunt
 
 
 ## Installing KVM and Vagrant
+
 In order to automate the testing of some of the roles that requires a VM and not a docker image (example: Storage roles), KVM and Vagrant will be installed
 
 ### Enable nested virtualization within the VM
@@ -227,3 +228,7 @@ Step 2. Install vagrant-libvirt plugin:
 Step 3. Install mutate plugin which converts vagrant boxes to work with different providers.
 
     vagrant plugin install vagrant-mutate
+
+### Install molecule vagrant driver
+
+   pip3 install vagrant-python molecule-python
