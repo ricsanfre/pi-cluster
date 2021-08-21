@@ -135,9 +135,12 @@ Syncing disks.
 
 List the Physical volume, Volume group, logical volumes to confirm:
 
-    sudo pvs
-    sudo vgs
-    sudo lvs
+- List phisical volume
+    `sudo pvs` or `sudo pvdisplay`
+- List volume group
+    `sudo vgs` or `sudo vgdisplay`
+- List logical volumes
+    `sudo lvs` or `sudo lvdisplay`
 
 ## Configuring Target iSCSI
 
