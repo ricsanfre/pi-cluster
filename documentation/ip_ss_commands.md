@@ -33,3 +33,15 @@ arp -a
 ? (198.51.100.254) at 00:50:56:e7:13:d9 [ether] on eth0
 ? (198.51.100.1) at 00:50:56:c0:00:08 [ether] on eth0
 ```
+
+To list all TCP or UDP ports that are being listened on, including the services using the ports and the socket status use the following command:
+
+    sudo ss -tunlp
+
+The options used in this command have the following meaning:
+
+-t - Show TCP ports.
+-u - Show UDP ports.
+-n - Show numerical addresses instead of resolving hosts.
+-l - Show only listening ports.
+-p - Show the PID and name of the listener’s process. This information is shown only if you run the command as root or sudo user.

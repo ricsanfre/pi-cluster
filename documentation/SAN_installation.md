@@ -15,6 +15,7 @@ A storage on a network is called iSCSI Target, a Client which connects to iSCSI 
 
 LIO, [LinuxIO](http://linux-iscsi.org/wiki/Main_Page), has been the Linux SCSI target since kernel version 2.6.38.
 It support sharing different types of storage fabrics and backstorage devices, including block devices (including LVM logical volumes and physical devices).
+[targetcli](http://linux-iscsi.org/wiki/Targetcli) is the single-node LinuxIO management shell developed by Datera, that is part of most linux distributions
 
 **LUN is a Logical Unit Number**, which shared from the iSCSI Storage Server. The Physical drive of iSCSI target server shares its drive to initiator over TCP/IP network. A Collection of drives called LUNs to form a large storage as SAN (Storage Area Network). 
 
@@ -131,7 +132,7 @@ Syncing disks.
     ...
 
 
-### Step 6.
+### Step 6. Check Logical volumes
 
 List the Physical volume, Volume group, logical volumes to confirm:
 
@@ -154,7 +155,15 @@ List the Physical volume, Volume group, logical volumes to confirm:
 
     sudo targetcli
 
-### Step 3. Create an iSCSI Target and Target Port Group (TPG)
+
+### Step 3. Disable auto addind of mapped LUNs
+
+By default all LUNs configured at target level are assigned automatically to any iSCSI initiator which is created (Target ACL). To avoid this and enabling manual allocation of LUNs a targetcli global preference must be setting
+
+   set global auto_add_mapped_luns=false
+
+
+### Step 4. Create an iSCSI Target and Target Port Group (TPG)
 
    cd iscsi/
    create iqn.2021-07.com.ricsanfre.picluster:iscsi-server
@@ -174,11 +183,11 @@ Global pref auto_add_default_portal=true
 Created default portal listening on all IPs (0.0.0.0), port 3260.
 ```
 
-### Step 4. Create a backstore (bock devices associated to LVM Logical Volumes created before).
+### Step 5. Create a backstore (bock devices associated to LVM Logical Volumes created before).
 
 
     cd /backstores/block
-    create block0 /dev/vg_iscsi/lv_iscsi_0
+    create <block_id> <block_dev_path>
 
 ```
 /> cd /backstores/block
@@ -186,7 +195,18 @@ Created default portal listening on all IPs (0.0.0.0), port 3260.
 Created block storage object block0 using /dev/vg_iscsi/lv_iscsi_0.
 ```
 
-### Step 5. Create an Access Control List (ACL) for security and access to the Target.
+### Step 6. Create LUNs
+
+    cd /iscsi/<target_iqn>/tpg1/luns
+    create storage_object=<block_storage> lun=<lun_id>
+
+
+```
+/> cd /iscsi/iqn.2021-07.com.ricsanfre.vbox:iscsi-server/tpg1/luns
+/iscsi/iqn.20...ver/tpg1/luns> create /backstores/block/iscsi-client-vol1
+Created LUN 0.
+```
+### Step 7. Create an Access Control List (ACL) for security and access to the Target.
 
 In the Initiator server check the iqn (iSCSI Qualifier Name) within the file `/etc/iscsi/initiatorname.iscsi`
 
@@ -194,16 +214,18 @@ In the Initiator server check the iqn (iSCSI Qualifier Name) within the file `/e
 
 Create ACL for the iSCSI Initiator. 
 
-```
-cd /iscsi/iqn.2003-01.org.linux-iscsi.ubuntucloud.x8664:sn.c8d2bfaa1b03/tpg1/acls
-create <IQN_Initiator>
-```
 
-Specify userid and password
+    cd /iscsi/<target_iqn>/tpg1/acls
+    create <initiator_iqn>
 
-cd <IQN_Initiator>
-set auth userid=<USER>
-set auth password=<PASSWORD>
+
+Specify userid and password for initiator and target (mutual authentication)
+
+    cd /iscsi/<target_iqn>/tpg1/acls/<initiator_iqn>
+    set auth userid=<initiator_iqn>
+    set auth password=<initiator_password>
+    set auth mutual_userid=<target_iqn>
+    set auth mutual_passwird=<target_password>
 
 
 ```
@@ -235,11 +257,25 @@ Last 10 configs saved in /etc/rtslib-fb-target/backup/.
 Configuration saved to /etc/rtslib-fb-target/saveconfig.json
 ```
 
-### Step 6. Load configuration on startup
+### Step 8. Assing mapped LUNs to initiators
+
+    cd /iscsi/<target_iqn>/tpg1/acls/<initiator_iqn>
+    create mapped_lun=<mapped_lunid> tpg_lun_or_backstore=<lunid> write_protect=<0/1>
+
+write_protect=1, means read-only lun
+
+### Step 9. Save config
+
+Upon exiting targetcli configuration is saved automatically.
+If configuration has been executed through command line without entering targetcli shell (i.e: sudo targetcli command), changes need to be saved
+
+    sudo targetcli saveconfig
+
+### Step 10. Load configuration on startup
 
     sudo systemctl enable rtslib-fb-targetctl 
 
-### Step 7. Configure firewall rules
+### Step 11. Configure firewall rules
 
 Enable incoming traffic on port TCP 3260.
 
@@ -271,7 +307,8 @@ node.session.auth.password = s1cret0
 
 ### Step 4. Restart open-iscsi service
 
-    sudo systemctl restart iscsid open-iscsi
+    sudo systemctl restart iscsid
+    sudo systemclt enable iscsid
 
 ### Step 5. Connect to iSCSI Target
 
@@ -294,6 +331,88 @@ sudo iscsiadm --mode node --targetname iqn.2021-07.com.ricsanfre.vbox:iscsi-serv
 Logging in to [iface: default, target: iqn.2021-07.com.ricsanfre.vbox:iscsi-server, portal: 192.168.56.100,3260](multiple)
 Login to [iface: default, target: iqn.2021-07.com.ricsanfre.vbox:iscsi-server, portal: 192.168.56.100,3260] successful.
 ```
+
+Check the discovered iSCSI disks
+
+    sudo iscsiadm -m session -P 3
+
+
+```
+sudo iscsiadm -m session -P 3
+iSCSI Transport Class version 2.0-870
+version 2.0-874
+Target: iqn.2021-07.com.ricsanfre:iscsi-target (non-flash)
+        Current Portal: 192.168.0.11:3260,1
+        Persistent Portal: 192.168.0.11:3260,1
+                **********
+                Interface:
+                **********
+                Iface Name: default
+                Iface Transport: tcp
+                Iface Initiatorname: iqn.2021-07.com.ricsanfre:iscsi-initiator
+                Iface IPaddress: 192.168.0.12
+                Iface HWaddress: <empty>
+                Iface Netdev: <empty>
+                SID: 1
+                iSCSI Connection State: LOGGED IN
+                iSCSI Session State: LOGGED_IN
+                Internal iscsid Session State: NO CHANGE
+                *********
+                Timeouts:
+                *********
+                Recovery Timeout: 120
+                Target Reset Timeout: 30
+                LUN Reset Timeout: 30
+                Abort Timeout: 15
+                *****
+                CHAP:
+                *****
+                username: iqn.2021-07.com.ricsanfre:iscsi-initiator
+                password: ********
+                username_in: iqn.2021-07.com.ricsanfre:iscsi-target
+                password_in: ********
+                ************************
+                Negotiated iSCSI params:
+                ************************
+                HeaderDigest: None
+                DataDigest: None
+                MaxRecvDataSegmentLength: 262144
+                MaxXmitDataSegmentLength: 262144
+                FirstBurstLength: 65536
+                MaxBurstLength: 262144
+                ImmediateData: Yes
+                InitialR2T: Yes
+                MaxOutstandingR2T: 1
+                ************************
+                Attached SCSI devices:
+                ************************
+                Host Number: 2  State: running
+                scsi2 Channel 00 Id 0 Lun: 0
+                        Attached scsi disk sdb          State: running
+                scsi2 Channel 00 Id 0 Lun: 1
+                        Attached scsi disk sdc          State: running
+
+```
+
+At the end of the ouput the iSCSI attached disks can be found (sdb and sdc)
+
+
+Command `lsblk` can be used to list SCSI devices
+
+    sudo lsblk -S
+
+```
+lsblk -S
+NAME HCTL       TYPE VENDOR   MODEL      REV TRAN
+sda  2:0:0:0    disk ATA      VBOX_HARDDISK 1.0  sata
+sda  2:0:0:0    disk LIO-ORG  lun_node1 4.0  iscsi
+sdb  2:0:0:1    disk LIO-ORG  lun_node3 4.0  iscsi
+```
+
+> NOTE: TRANS column let us separate iSCSI disk (trans=iscsi) from local SCSI (TRANS=sata)
+> MODEL column shows LUN name configured in the target
+
+
 
 Check the connected iSCSI disks with command `fdisk -l`:
 
