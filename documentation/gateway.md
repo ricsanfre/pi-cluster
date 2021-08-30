@@ -1,16 +1,25 @@
 # Gateway Configuration
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
-It will also provide DNS, NTP and DHCP services to my lab network. 
+It will also provide DNS, NTP and DHCP services to my lab network.
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
 In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node4**): Ubuntu 20.04.2 64 bits.
+
+
+#### Table of contents
+
+1. [Network Configuration](#network-configuration) 
+2. [Router/Firewall Configuration](#router/firewall-configuration)
+3. [DHCP/DNS Configuration](#dhcp/dns-configuration)
+4. [NTP Server Configuration](#ntp-server-configuration)
+5. [iSCSI - SAN Configuration](./san_installation.md)
+
 
 ## Network Configuration
 
 The WIFI interface (wlan0) will be used to be connected to my home network using static IP address (192.168.1.11/24), while ethernet interface (eth0) will be connected to the lan switch, lab network, using static IP address (10.0.0.1/24)
 Static IP addres in home network, will enable the configuration of static routes in my labtop and VM running on it (`pimaster`) to access the cluster nodes without fisically connect the laptop to the lan switch with an ethernet cable. 
-
 
 Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is like:
 
@@ -35,7 +44,7 @@ wifis:
 
 ## Router/Firewall Configuration
 
-For automating configuration tasks, **ansible role router** has been created.
+For automating configuration tasks, ansible role [**ricsanfre.firewall**](https://galaxy.ansible.com/ricsanfre/firewall) has been developed.
 
 ### Step 1. Enable IP forwarding
 
@@ -128,7 +137,7 @@ To acess to the cluster nodes from my home network a static route need to be add
 ## DHCP/DNS Configuration
 
 **dnsmasq** will be used as lightweigh DHCP/DNS server
-For automating configuration tasks, **ansible role dnsmasq** has been created.
+For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https://galaxy.ansible.com/ricsanfre/dnsmasq) has been developed.
 
 ### Step 1. Install dnsmasq
 
@@ -209,7 +218,7 @@ Since ntp and ntpdate are deprecated **chrony** package will be used for configu
 
 **gateway** will be hosting a NTP server and the rest of cluster nodes will be configured as NTP Clients.
 
-For automating ntp configuration tasks on all nodes (gateway and node1-4), **ansible role ntp** has been created.
+For automating ntp configuration tasks on all nodes (gateway and node1-4), ansible role [**ricsanfre.ntp**](https://galaxy.ansible.com/ricsanfre/ntp) has been created.
 
 ### Step 1. Install chrony
 

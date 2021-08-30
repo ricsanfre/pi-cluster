@@ -442,80 +442,32 @@ I/O size (minimum/optimal): 512 bytes / 33550336 bytes
     sudo iscsiadm --mode node --op=update -n node.startup -v automatic
 
 
+### Step 7. Format and mount iSCSI disk
 
-### Step 7. Format iSCSI disk
-New Disk can be partitioned and formatted
+The new iSCSI disk can be partitioned with `fdisk`/`parted` and formated with `mkfs.ext4` and mount as any other disk
 
-- Create a primary partition
+Also it can be used with LVM as a physical volume for createing Logical Volumes
 
-```
-sudo fdisk /dev/sdb
+- Create a physical volume
 
-Welcome to fdisk (util-linux 2.34).
-Changes will remain in memory only, until you decide to write them.
-Be careful before using the write command.
+    sudo pvcreate /dev/sdb
 
-Device does not contain a recognized partition table.
-Created a new DOS disklabel with disk identifier 0x071ca572.
+- Create a volume group
 
-Command (m for help): n
-Partition type
-   p   primary (0 primary, 0 extended, 4 free)
-   e   extended (container for logical partitions)
-Select (default p): p
-Partition number (1-4, default 1): 1
-First sector (65528-8388607, default 65528):
-Last sector, +/-sectors or +/-size{K,M,G,T,P} (65528-8388607, default 8388607):
+    sudo vgcreate vgcreate vg_iscsi /dev/sdb
 
-Created a new partition 1 of type 'Linux' and of size 4 GiB.
+- Create Logical Volume
 
-Command (m for help): w
-The partition table has been altered.
-Calling ioctl() to re-read partition table.
-Syncing disks.
+    sudo lvcreate vg_iscsi -l 100%FREE -n lv_iscsi
 
-```
+- Format Logical Volume
 
-Check created partition with `fdisk -l`
+    sudo mkfs.ext4 /dev/vg_iscsi/lv_iscsi
 
-```
-sudo fdisk -l
-
-....
-Disk /dev/sdb: 4 GiB, 4294967296 bytes, 8388608 sectors
-Disk model: iscsi-client-vo
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 33550336 bytes
-Disklabel type: dos
-Disk identifier: 0x071ca572
-
-Device     Boot Start     End Sectors Size Id Type
-/dev/sdb1       65528 8388607 8323080   4G 83 Linux
-```
-
-Format the partition to ext4 file system
-
-```
-
-pi@server:~$ sudo mkfs.ext4 /dev/sdb1
-
-mke2fs 1.45.5 (07-Jan-2020)
-Creating filesystem with 1040385 4k blocks and 260096 inodes
-Filesystem UUID: 1256920d-baeb-411b-ac93-f1af1bfb5e06
-Superblock backups stored on blocks:
-        32768, 98304, 163840, 229376, 294912, 819200, 884736
-
-Allocating group tables: done
-Writing inode tables: done
-Creating journal (16384 blocks): done
-Writing superblocks and filesystem accounting information: done
-```
-
-Mount the disk
+- Mount the disk
 
     sudo mkdir /data
-    sudo mount /dev/sdb1 /data
+    sudo mount /dev/vg_iscsi/lv_iscsi /data
 
 
 ### Step 8. Mount iSCSI disk on startup
@@ -529,28 +481,37 @@ First find the volume UUID.
 
 ```
 sudo blkid
-/dev/sr0: UUID="2021-07-30-14-56-50-42" LABEL="CIDATA" TYPE="iso9660"
-/dev/sda1: LABEL="cloudimg-rootfs" UUID="7339cdbb-1045-46fc-99df-ed81a4d0b313" TYPE="ext4" PARTUUID="15d1e14d-e787-4550-8457-dae123d40109"
-/dev/sda15: LABEL_FATBOOT="UEFI" LABEL="UEFI" UUID="BD61-C33D" TYPE="vfat" PARTUUID="02bff6fe-fbb6-47bd-af18-645273993fdc"
-/dev/loop0: TYPE="squashfs"
-/dev/loop1: TYPE="squashfs"
-/dev/loop2: TYPE="squashfs"
-/dev/sda14: PARTUUID="40a58950-3814-4880-8671-f3386594554c"
-/dev/sdb1: UUID="1256920d-baeb-411b-ac93-f1af1bfb5e06" TYPE="ext4" PARTUUID="071ca572-01"
+
+...
+/dev/sdb: UUID="xj6V9b-8uo6-RACn-MTqB-7siH-nvjT-Aw9B0V" TYPE="LVM2_member"
+/dev/mapper/vg_iscsi-lv_iscsi: UUID="247a2c91-4af8-4403-ac5b-a99116dac96c" TYPE="ext4"
 ```
+
 
 Add the following line to `/etc/fstab`
 ```
 /dev/disk/by-uuid/[iSCSI_DISK_UUID] [MOUNT_POINT] ext4 _netdev 0 0
 ```
-    
+
+```
+#iSCSI data
+UUID=247a2c91-4af8-4403-ac5b-a99116dac96c /data            ext4    _netdev    0  0
+```
+
+
+> Important is to specify _netdev option (mount filesystem after network boot is completed)
+
+
 
 
 # Preparing SSD disk for gateway node
 
-`gateway`node will be acting as SAN server. It will boot from USB using a SSD disk
+`gateway` node will be acting as SAN server. It will boot from USB using a SSD disk.
 
-## Step 1. Burn Ubuntu 20.04 server to SSD distk using Balena Etcher
+SSD Disk will be partitioned to install the operating system and for the iSCSI LUNS: 32 GB will be reserved for the OS and the rest of the disk will be used for LUNs.
+Initial partitions (boot and OS) will be created during initial image burning process. Partitions need to be reconfigured before the first boot.
+
+## Step 1. Burn Ubuntu 20.04 server to SSD disk using Balena Etcher
 
 ## Step 2. Boot Raspberry PI with Raspberry OS
 
@@ -589,7 +550,7 @@ Device     Boot  Start     End Sectors  Size Id Type
 ```
 
 
-## Step 3. Repartition with parted
+## Step 4. Repartition with parted
 
 After flashing the disk the root partion size is less than 3 GB. On first boot this partition is automatically extended to occupy 100% of the available disk space.
 Since I want to use the SSD disk not only for the Ubuntu OS, but providing iSCSI LUNS. Before the first boot, I will repartition the SSD disk.
