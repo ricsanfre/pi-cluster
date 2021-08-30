@@ -3,9 +3,11 @@
   vars:
     ansible_user: ansible
     ansible_become: true
-    
+
   roles:
     - common
     - ricsanfre.dnsmasq
     - ricsanfre.firewall
     - ricsanfre.ntp
+    - ricsanfre.storage
+    - ricsanfre.iscsi_target

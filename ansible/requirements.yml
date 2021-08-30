@@ -6,3 +6,9 @@ roles:
     version: v1.0.0
   - name: ricsanfre.dnsmasq
     version: v1.0.0
+  - name: ricsanfre.storage
+    version: v1.0.0
+  - name: ricsanfre.iscsi_target
+    version: v1.0.0
+  - name: ricsanfre.iscsi_initiator
+    version: v1.0.0

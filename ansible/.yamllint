@@ -5,4 +5,3 @@ rules:
   line-length:
     max: 130
     level: warning
-
