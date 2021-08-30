@@ -67,6 +67,12 @@ nft_set_host:
   forward_udp_accept:
     - type inet_service; flags interval;
     - elements = $forward_udp_accept
+# Input rules
+# override default rules allowing incoming broadcast traffic (DHCP)
+nft_input_host_rules:
+  010 drop unwanted: []
+  011 drop unwanted ipv6: []
+
 # Output rules
 # override default rules allowing all out traffic
 nft_output_host_rules:
