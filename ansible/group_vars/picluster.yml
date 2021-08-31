@@ -1,0 +1,29 @@
+---
+# cluster group variables
+
+####################
+# ntp role variables
+####################
+
+ntp_servers:
+  - server: 10.0.0.1
+    type: server
+
+################################
+# iSCSI-initiator role variables
+################################
+
+open_iscsi_authentication: true
+open_iscsi_auth_username: "{{ open_iscsi_initiator_name }}"
+open_iscsi_auth_password: s1cret0
+open_iscsi_auth_username_in: iqn.2021-07.com.ricsanfre:gateway
+open_iscsi_auth_password_in: 0tr0s1cret0
+open_iscsi_automatic_startup: true
+open_iscsi_targets:
+  - name: gateway-target
+    discover: true
+    auto_portal_startup: true
+    auto_node_startup: true
+    portal: 10.0.0.1
+    target: iqn.2021-07.com.ricsanfre:gateway
+    login: true

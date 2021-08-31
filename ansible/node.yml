@@ -1,7 +1,8 @@
 ---
-- hosts: cluster
+- hosts: picluster
   vars:
     ansible_become: true
   roles:
     - common
-    - role: ricsanfre.ntp
+    - ricsanfre.ntp
+    - ricsanfre.iscsi_initiator

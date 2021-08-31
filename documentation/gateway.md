@@ -12,8 +12,8 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 1. [Hardware](#hardware)
 2. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
 3. [Network Configuration](#network-configuration) 
-4. [Router/Firewall Configuration](#router/firewall-configuration)
-5. [DHCP/DNS Configuration](#dhcp/dns-configuration)
+4. [Router/Firewall Configuration](#routerfirewall-configuration)
+5. [DHCP/DNS Configuration](#dhcpdns-configuration)
 6. [NTP Server Configuration](#ntp-server-configuration)
 7. [iSCSI - SAN Configuration](./san_installation.md)
 

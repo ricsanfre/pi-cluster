@@ -14,7 +14,7 @@ all:
           ansible_connection: local
           ip: 10.0.0.10
           mac: 08:00:27:f3:6b:dd
-    cluster:
+    picluster:
       hosts:
         node1:
           hostname: node1
