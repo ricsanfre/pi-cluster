@@ -74,7 +74,7 @@ Step 8: Configure docker daemon.
    Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
    Documentation about the possible options can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file)
 	
-	```
+	```json
 	{
       "exec-opts": ["native.cgroupdriver=systemd"],
       "log-driver": "json-file",
@@ -231,4 +231,4 @@ Step 3. Install mutate plugin which converts vagrant boxes to work with differen
 
 ### Install molecule vagrant driver
 
-   pip3 install vagrant-python molecule-python
+   pip3 install vagrant-python molecule-python molecule-vagrant

@@ -32,105 +32,119 @@ In my case I will use hostname to make iqn unique
 
     iqn.2021-07.com.ricsanfre.picluster:<hostname>
 
-## Hardware
+## Preparing Storage Device and LVM configuration for LUNS
 
-A Kingston A400 480GB SSD Disk and a SATA Disk USB3.0 Case will be used for building Raspberry PI cluster.
+### Step 1. Allocate storage block device for LUN storage
 
-## Preparing SSD Disk and LVM configuration for LUNS
+Connect a new Disk (SSD/Flash Drive) through USB 3.0 port.
+As alternative a partition on existing SSD/Flash Drive, same disk with boot and root partitions, can be configured. 
 
-### Step 1. Connect SSD Disk through USB 3.0 port
+### Step 2. (optional) Repartition used disk
 
-### Step 2. Partition HDD with `fdisk`
+If we are reusing the storage device containig the boot and root partitions (OS installation), re-partition of the storage is needed for freeing space for iSCSI LUNs. 
 
-Add one primary partition (type LVM) using all disk space available.
+If a new disk is attached to the device this step is not needed:
 
-```
-sudo fdisk -c -u /dev/sdb
+Re-partition with `fdisk` or `parted` for freeing space for iSCSI LUNs.
 
-Welcome to fdisk (util-linux 2.34).
-Changes will remain in memory only, until you decide to write them.
-Be careful before using the write command.
+Example, using `parted` for repartition /dev/sda. PArtition ext4 (root filesystem) is resized and with the free space a new `ext4` partition is created (/dev/sda2) with `lvm` flag
 
-Device does not contain a recognized partition table.
-Created a new DOS disklabel with disk identifier 0x5721e48c.
+```shell
+ubuntu@test:~$ sudo parted /dev/sda
+GNU Parted 3.3
+Using /dev/sda
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) print
+Model: ATA VBOX HARDDISK (scsi)
+Disk /dev/sda: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
 
-Command (m for help): n
-Partition type
-   p   primary (0 primary, 0 extended, 4 free)
-   e   extended (container for logical partitions)
-Select (default p): p
-Partition number (1-4, default 1): 1
-First sector (2048-41943039, default 2048):
-Last sector, +/-sectors or +/-size{K,M,G,T,P} (2048-41943039, default 41943039):
+Number  Start   End     Size    File system  Name  Flags
+14      1049kB  5243kB  4194kB                     bios_grub
+15      5243kB  116MB   111MB   fat32              boot, esp
+ 1      116MB   8590MB  8474MB  ext4
 
-Created a new partition 1 of type 'Linux' and of size 20 GiB.
+(parted) resizepart
+Partition number? 1
+Warning: Partition /dev/sda1 is being used. Are you sure you want to continue?
+Yes/No? Yes
+End?  [8590MB]? 4494MB
+Warning: Shrinking a partition can cause data loss, are you sure you want to continue?
+Yes/No? Yes
+(parted) print
+Model: ATA VBOX HARDDISK (scsi)
+Disk /dev/sda: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
 
-Command (m for help): t
-Selected partition 1
-Hex code (type L to list all codes): L
+Number  Start   End     Size    File system  Name  Flags
+14      1049kB  5243kB  4194kB                     bios_grub
+15      5243kB  116MB   111MB   fat32              boot, esp
+ 1      116MB   4494MB  4378MB  ext4
 
- 0  Empty           24  NEC DOS         81  Minix / old Lin bf  Solaris
- 1  FAT12           27  Hidden NTFS Win 82  Linux swap / So c1  DRDOS/sec (FAT-
- 2  XENIX root      39  Plan 9          83  Linux           c4  DRDOS/sec (FAT-
- 3  XENIX usr       3c  PartitionMagic  84  OS/2 hidden or  c6  DRDOS/sec (FAT-
- 4  FAT16 <32M      40  Venix 80286     85  Linux extended  c7  Syrinx
- 5  Extended        41  PPC PReP Boot   86  NTFS volume set da  Non-FS data
- 6  FAT16           42  SFS             87  NTFS volume set db  CP/M / CTOS / .
- 7  HPFS/NTFS/exFAT 4d  QNX4.x          88  Linux plaintext de  Dell Utility
- 8  AIX             4e  QNX4.x 2nd part 8e  Linux LVM       df  BootIt
- 9  AIX bootable    4f  QNX4.x 3rd part 93  Amoeba          e1  DOS access
- a  OS/2 Boot Manag 50  OnTrack DM      94  Amoeba BBT      e3  DOS R/O
- b  W95 FAT32       51  OnTrack DM6 Aux 9f  BSD/OS          e4  SpeedStor
- c  W95 FAT32 (LBA) 52  CP/M            a0  IBM Thinkpad hi ea  Rufus alignment
- e  W95 FAT16 (LBA) 53  OnTrack DM6 Aux a5  FreeBSD         eb  BeOS fs
- f  W95 Ext'd (LBA) 54  OnTrackDM6      a6  OpenBSD         ee  GPT
-10  OPUS            55  EZ-Drive        a7  NeXTSTEP        ef  EFI (FAT-12/16/
-11  Hidden FAT12    56  Golden Bow      a8  Darwin UFS      f0  Linux/PA-RISC b
-12  Compaq diagnost 5c  Priam Edisk     a9  NetBSD          f1  SpeedStor
-14  Hidden FAT16 <3 61  SpeedStor       ab  Darwin boot     f4  SpeedStor
-16  Hidden FAT16    63  GNU HURD or Sys af  HFS / HFS+      f2  DOS secondary
-17  Hidden HPFS/NTF 64  Novell Netware  b7  BSDI fs         fb  VMware VMFS
-18  AST SmartSleep  65  Novell Netware  b8  BSDI swap       fc  VMware VMKCORE
-1b  Hidden W95 FAT3 70  DiskSecure Mult bb  Boot Wizard hid fd  Linux raid auto
-1c  Hidden W95 FAT3 75  PC/IX           bc  Acronis FAT32 L fe  LANstep
-1e  Hidden W95 FAT1 80  Old Minix       be  Solaris boot    ff  BBT
-Hex code (type L to list all codes): 8e
-Changed type of partition 'Linux' to 'Linux LVM'.
+(parted) mkpart
+Partition name?  []? 2
+File system type?  [ext2]? ext4
+Start? 4494
+End? 100%
+(parted) print
+Model: ATA VBOX HARDDISK (scsi)
+Disk /dev/sda: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
 
-Command (m for help): p
-Disk /dev/sdb: 20 GiB, 21474836480 bytes, 41943040 sectors
-Disk model: VBOX HARDDISK
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: dos
-Disk identifier: 0x5721e48c
+Number  Start   End     Size    File system  Name  Flags
+14      1049kB  5243kB  4194kB                     bios_grub
+15      5243kB  116MB   111MB   fat32              boot, esp
+ 1      116MB   4494MB  4378MB  ext4
+ 2      4494MB  8589MB  4095MB  ext4         2
 
-Device     Boot Start      End  Sectors Size Id Type
-/dev/sdb1        2048 41943039 41940992  20G 8e Linux LVM
+(parted) set 2 lvm on
+(parted) print
+Model: ATA VBOX HARDDISK (scsi)
+Disk /dev/sda: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
 
-Command (m for help): w
-The partition table has been altered.
-Calling ioctl() to re-read partition table.
-Syncing disks.
+Number  Start   End     Size    File system  Name  Flags
+14      1049kB  5243kB  4194kB                     bios_grub
+15      5243kB  116MB   111MB   fat32              boot, esp
+ 1      116MB   4494MB  4378MB  ext4
+ 2      4494MB  8589MB  4095MB  ext4         2     lvm
+
+(parted) quit
 ```
 
 ### Step 3. Create LVM Physical Volume
 
-    sudo pvcreate /dev/sdb1
+In case of new device added (/dev/sdb). If a partition is used instead (/dev/sda2) replace the device in the commands bellow.
+
+    sudo pvcreate <storage_device>
+    
+    sudo pvcreate /dev/sdb
 
 ### Step 4. Create LVM Volumen Group for iSCSI
+    
+    sudo vgcreate <vg_name> <pv_name>
 
-    sudo vgcreate vg_iscsi /dev/sdb1
+    sudo vgcreate vg_iscsi /dev/sdb
 
 ### Step 5. Create LVM Logical Volume associated to LUNs
+
+A Logical Volume need to be created per LUN, specifying the size of each of one
+
+    sudo lvcreate -L <size> -n <lv_name> <vg_name>
 
     sudo lvcreate -L 4G -n lv_iscsi_1 vg_iscsi
 
     sudo lvcreate -L 4G -n lv_iscsi_2 vg_iscsi
 
     ...
-
 
 ### Step 6. Check Logical volumes
 
@@ -500,161 +514,3 @@ UUID=247a2c91-4af8-4403-ac5b-a99116dac96c /data            ext4    _netdev    0 
 
 
 > Important is to specify _netdev option (mount filesystem after network boot is completed)
-
-
-
-
-# Preparing SSD disk for gateway node
-
-`gateway` node will be acting as SAN server. It will boot from USB using a SSD disk.
-
-SSD Disk will be partitioned to install the operating system and for the iSCSI LUNS: 32 GB will be reserved for the OS and the rest of the disk will be used for LUNs.
-Initial partitions (boot and OS) will be created during initial image burning process. Partitions need to be reconfigured before the first boot.
-
-## Step 1. Burn Ubuntu 20.04 server to SSD disk using Balena Etcher
-
-## Step 2. Boot Raspberry PI with Raspberry OS
-
-### Step 3. Connect SSD Disk to USB 3.0 port.
-
-Check the disk
-
-   sudo fdisk -l
-
-```
-sudo fdisk -l
-
-Disk /dev/mmcblk0: 29.7 GiB, 31914983424 bytes, 62333952 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: dos
-Disk identifier: 0x9c46674d
-
-Device         Boot  Start      End  Sectors  Size Id Type
-/dev/mmcblk0p1        8192   532479   524288  256M  c W95 FAT32 (LBA)
-/dev/mmcblk0p2      532480 62333951 61801472 29.5G 83 Linux
-
-
-Disk /dev/sda: 447.1 GiB, 480103981056 bytes, 937703088 sectors
-Disk model: Generic
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 4096 bytes
-I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-Disklabel type: dos
-Disk identifier: 0x4ec8ea53
-
-Device     Boot  Start     End Sectors  Size Id Type
-/dev/sda1  *      2048  526335  524288  256M  c W95 FAT32 (LBA)
-/dev/sda2       526336 6366175 5839840  2.8G 83 Linux
-```
-
-
-## Step 4. Repartition with parted
-
-After flashing the disk the root partion size is less than 3 GB. On first boot this partition is automatically extended to occupy 100% of the available disk space.
-Since I want to use the SSD disk not only for the Ubuntu OS, but providing iSCSI LUNS. Before the first boot, I will repartition the SSD disk.
-
-- Extending the root partition to 32 GB Size
-- Create a new partition for storing iSCSI LVM LUNS
-
-
-```
-pi@gateway:~ $ sudo parted /dev/sda
-GNU Parted 3.2
-Using /dev/sda
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   3259MB  2990MB  primary  ext4
-
-(parted) resizepart
-Partition number? 2
-End?  [3259MB]? 32500
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   32.5GB  32.2GB  primary  ext4
-
-(parted) mkpart
-Partition type?  primary/extended? primary
-File system type?  [ext2]? ext4
-Start? 32501
-End?
-End? 100%
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   32.5GB  32.2GB  primary  ext4
- 3      32.5GB  480GB   448GB   primary  ext4         lba
-
-(parted) set 3 lvm on
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   32.5GB  32.2GB  primary  ext4
- 3      32.5GB  480GB   448GB   primary  ext4         lvm, lba
-
-(parted) quit
-```
-
-## Step 5. Checking USB-SATA Adapter
-
-Checking that the USB SATA adapter suppors UASP.
-
-```
-lsusb -t
-
-/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
-    |__ Port 1: Dev 2, If 0, Class=Mass Storage, Driver=uas, 5000M
-/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/1p, 480M
-    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M
-        |__ Port 3: Dev 3, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
-        |__ Port 3: Dev 3, If 1, Class=Human Interface Device, Driver=usbhid, 1.5M
-        |__ Port 4: Dev 4, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
-
-```
-> Driver=uas indicates that the adpater supports UASP
-
-
-Check USB-SATA adapter ID
-
-```
-sudo lsusb
-Bus 002 Device 002: ID 174c:55aa ASMedia Technology Inc. Name: ASM1051E SATA 6Gb/s bridge, ASM1053E SATA 6Gb/s bridge, ASM1153 SATA 3Gb/s bridge, ASM1153E SATA 6Gb/s bridge
-Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-Bus 001 Device 004: ID 0000:3825
-Bus 001 Device 003: ID 145f:02c9 Trust
-Bus 001 Device 002: ID 2109:3431 VIA Labs, Inc. Hub
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-```
-
-> NOTE: In this case ASMedia TEchnology ASM1051E has ID 152d:0578
-
-
-## Step 6. Modify USB partitions following instrucions described [here](./installing_ubuntu.md)

@@ -38,7 +38,7 @@ After you flash (burn) the image,  File Explorer (Windows) may have trouble seei
 
 - Modify file `/boot/user-data`
 
-    ```
+    ```yml
     #cloud-config
     
     # Disable password authentication with the SSH daemon
@@ -68,7 +68,7 @@ After you flash (burn) the image,  File Explorer (Windows) may have trouble seei
     ```
 - Modify `/boot/network-config` file within the SDCard
 
-    ```
+    ```yml
     version: 2
     ethernets:
       eth0:
@@ -86,7 +86,7 @@ After you flash (burn) the image,  File Explorer (Windows) may have trouble seei
 
 ## (Optional) USB Booting
 
-As alternative to using a SDCard a USB 3.0 Flass Drive can be used to hosts the OS.
+As alternative to using a SDCard a USB 3.0 Flass Drive (or SSD disk connected through a USB3.0 to SATA adapter) can be used to hosts the OS.
 
 Latest version of LTS 20.04.2 does not allow to boot from USB directy and some additional steps are required. 
 
