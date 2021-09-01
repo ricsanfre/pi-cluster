@@ -1,0 +1,13 @@
+---
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: Unisntall k3s
+      command: /usr/local/bin/k3s-uninstall.sh
+
+- hosts: worker
+  become: yes
+  tasks:
+    - name: Unisntall k3s
+      command: /usr/local/bin/k3s-agent-uninstall.sh

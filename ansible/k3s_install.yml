@@ -1,0 +1,19 @@
+---
+
+- hosts: all
+  gather_facts: yes
+  become: yes
+  roles:
+    - role: k3s/prereq
+
+- hosts: master
+  become: yes
+  roles:
+    - role: k3s/master
+
+- hosts: worker
+  become: yes
+  vars:
+    k3s_master_ip: 192.168.1.113
+  roles:
+    - role: k3s/worker

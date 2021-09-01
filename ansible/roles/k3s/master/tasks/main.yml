@@ -1,0 +1,21 @@
+---
+
+- name: Install K3s
+  shell:
+    cmd: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s - server {{ k3s_server_extra_args }}"
+
+
+- name: Create directory .kube
+  file:
+    path: ~{{ ansible_user }}/.kube
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "u=rwx,g=rx,o="
+
+- name: Copy config file to user home directory
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: ~{{ ansible_user }}/.kube/config
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    mode: "u=rw,g=,o="

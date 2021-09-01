@@ -1,0 +1,8 @@
+---
+
+# k3s master server connection
+k3s_token: s1cret0
+k3s_master_ip: 10.0.0.1
+
+# Extra afrguments for installation script
+k3s_worker_extra_args: "--node-label 'node_type=worker' --node-label 'kubernetes.io/role=worker'"
