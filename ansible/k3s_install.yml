@@ -1,19 +1,32 @@
 ---
 
-- hosts: all
+- name: Install K3S prerequisites
+  hosts: k3s_cluster
   gather_facts: yes
   become: yes
   roles:
     - role: k3s/prereq
 
-- hosts: master
+- name: Install K3S master node
+  hosts: k3s_master
   become: yes
   roles:
     - role: k3s/master
 
-- hosts: worker
+- name: Install K3S worker nodes
+  hosts: k3s_worker
   become: yes
   vars:
     k3s_master_ip: 192.168.1.113
   roles:
     - role: k3s/worker
+
+- name: Configure K3S cluster
+  hosts: k3s_master
+  roles:
+    - role: helm
+  tasks:
+    - name: label k3s worker nodes
+      command:
+        cmd: "kubectl label nodes {{ item }} kubernetes.io/role=worker"
+      with_items: "{{ groups['k3s_worker'] }}"

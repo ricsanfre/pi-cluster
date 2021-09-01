@@ -1,12 +1,12 @@
 ---
 
-- hosts: master
+- hosts: k3s_master
   become: yes
   tasks:
     - name: Unisntall k3s
       command: /usr/local/bin/k3s-uninstall.sh
 
-- hosts: worker
+- hosts: k3s_worker
   become: yes
   tasks:
     - name: Unisntall k3s

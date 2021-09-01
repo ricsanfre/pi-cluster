@@ -40,3 +40,11 @@ all:
       hosts:
         node[1:4]:
         gateway:
+    k3s_cluster:
+      children:
+        k3s_master:
+          hosts:
+            node1:
+        k3s_worker:
+          hosts:
+            node[2:4]:

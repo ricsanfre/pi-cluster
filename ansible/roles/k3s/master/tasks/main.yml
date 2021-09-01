@@ -4,7 +4,6 @@
   shell:
     cmd: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s - server {{ k3s_server_extra_args }}"
 
-
 - name: Create directory .kube
   file:
     path: ~{{ ansible_user }}/.kube

@@ -12,3 +12,7 @@ roles:
     version: v1.0.0
   - name: ricsanfre.iscsi_initiator
     version: v1.0.0
+
+collections:
+  - name: community.kubernetes
+    version: 2.0.0
