@@ -82,7 +82,7 @@ To enable remote access to the cluster using kubectl and helm applications follo
 
 To reset the cluster execute k3s uninstall script in master and worker nodes
 
-On each worker node (node2-node4) execute:
+On each worker node (`node2-node4`) execute:
 
 ```
   /usr/local/bin/k3s-agent-uninstall.sh
@@ -91,4 +91,18 @@ On master node (node1) execute
 
 ```
 /usr/local/bin/k3s-uninstall.sh
+```
+
+## Ansible Automation
+
+K3s cluster installation and reset procedures have been automated with Asible playbooks
+
+For installing the cluster execute: 
+```
+ansible-playbook k3s_install.yml
+```
+
+For resetting the cluster execute:
+```
+ansible-playbook k3s_reset.yml
 ```
