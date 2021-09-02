@@ -1,13 +1,14 @@
 ---
 
 - hosts: k3s_master
-  become: yes
+  become: true
   tasks:
     - name: Unisntall k3s
       command: /usr/local/bin/k3s-uninstall.sh
-
+      changed_when: true
 - hosts: k3s_worker
-  become: yes
+  become: true
   tasks:
     - name: Unisntall k3s
       command: /usr/local/bin/k3s-agent-uninstall.sh
+      changed_when: true
