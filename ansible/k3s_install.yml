@@ -17,8 +17,6 @@
 - name: Install K3S worker nodes
   hosts: k3s_worker
   become: true
-  vars:
-    k3s_master_ip: 192.168.1.113
   roles:
     - role: k3s/worker
 

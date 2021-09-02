@@ -1,0 +1,7 @@
+---
+
+# k3s installation variables
+k3s_master_ip: 192.168.1.113
+k3s_token: s1cret0
+k3s_server_extra_args: "--write-kubeconfig-mode '0644' --node-taint 'k3s-controlplane=true:NoExecute'"
+k3s_worker_extra_args: "--node-label 'node_type=worker'"
