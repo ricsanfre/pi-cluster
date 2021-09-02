@@ -2,31 +2,57 @@
 
 - name: Install K3S prerequisites
   hosts: k3s_cluster
-  gather_facts: yes
-  become: yes
+  gather_facts: true
+  become: true
   roles:
     - role: k3s/prereq
 
 - name: Install K3S master node
   hosts: k3s_master
-  become: yes
+  become: true
   roles:
     - role: k3s/master
+    - role: ricsanfre.k8s_cli
 
 - name: Install K3S worker nodes
   hosts: k3s_worker
-  become: yes
+  become: true
   vars:
     k3s_master_ip: 192.168.1.113
   roles:
     - role: k3s/worker
 
-- name: Configure K3S cluster
+- name: Configure K3S master node
   hosts: k3s_master
-  roles:
-    - role: helm
   tasks:
+    - name: Wait for node {{ item }} to be ready
+      command:
+        cmd: "kubectl get nodes {{ item }}"
+      register: nodes
+      until:
+        - '" Ready "  in nodes.stdout'
+      retries: 6
+      delay: 2
+      with_items: "{{ groups['k3s_worker'] }}"
+
     - name: label k3s worker nodes
       command:
         cmd: "kubectl label nodes {{ item }} kubernetes.io/role=worker"
       with_items: "{{ groups['k3s_worker'] }}"
+
+    - name: Ensure ansible kubernetes collection required dependencies are installed.
+      package:
+        name:
+          - python3-pip
+          - python3-setuptools
+          - build-essential
+          - golang
+          - git
+        state: present
+      become: true
+
+    - name: Ensure openshift Python library is installed.
+      pip:
+        name: openshift
+        state: present
+      become: true
