@@ -51,8 +51,8 @@
         state: present
       become: true
 
-    - name: Ensure openshift Python library is installed.
+    - name: Ensure kubernetes Python library is installed.
       pip:
-        name: openshift
+        name: kubernetes
         state: present
       become: true
