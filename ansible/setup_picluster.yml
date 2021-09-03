@@ -1,0 +1,50 @@
+---
+
+- name: Configure Pi Cluster Gateway
+  hosts: gateway
+  tags: [gateway]
+  vars:
+    ansible_user: ansible
+    ansible_become: true
+  roles:
+
+    # OS basic setup tasks
+    - role: basic_setup
+
+    # DNS/DHCP server configuration
+    - role: ricsanfre.dnsmasq
+      tags: [dnsmasq]
+
+    # Firewall (nftables) configuration
+    - role: ricsanfre.firewall
+      tags: [firewall]
+
+    # NTP Server configuration
+    - role: ricsanfre.ntp
+      tags: [ntp]
+
+    # iSCSI LUNs: LVM Volumes configuration
+    - role: ricsanfre.storage
+      tags: [iscsi]
+
+    # iSCSI server (target) configuration
+    - role: ricsanfre.iscsi_target
+      tags: [iscsi]
+
+- name: Configure Pi Cluster Nodes
+  hosts: picluster
+  tags: [node]
+  vars:
+    ansible_become: true
+  roles:
+
+    # OS basic setup tasks
+    - role: basic_setup
+
+    # NTP Client configuration
+    - role: ricsanfre.ntp
+      tags: [ntp]
+
+    # iSCSI client (initiator) configuration
+    - role: ricsanfre.iscsi_initiator
+      tags: [iscsi]
