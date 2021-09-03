@@ -5,7 +5,7 @@
     ansible_become: true
 
   roles:
-    - common
+    - basic_setup
     - ricsanfre.dnsmasq
     - ricsanfre.firewall
     - ricsanfre.ntp

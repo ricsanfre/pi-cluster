@@ -3,6 +3,6 @@
   vars:
     ansible_become: true
   roles:
-    - common
+    - basic_setup
     - ricsanfre.ntp
     - ricsanfre.iscsi_initiator
