@@ -2,3 +2,7 @@
 
 install_helm: true
 install_kubectl: false
+
+# OS and hardware architectire
+k8s_platform: linux
+k8s_arch: arm64

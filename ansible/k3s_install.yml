@@ -29,8 +29,8 @@
       register: nodes
       until:
         - '" Ready "  in nodes.stdout'
-      retries: 6
-      delay: 2
+      retries: 10
+      delay: 5
       with_items: "{{ groups['k3s_worker'] }}"
 
     - name: label k3s worker nodes
