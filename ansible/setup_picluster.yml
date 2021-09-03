@@ -2,6 +2,7 @@
 
 - name: Configure Pi Cluster Gateway
   hosts: gateway
+  gather_facts: true
   tags: [gateway]
   vars:
     ansible_become: true
@@ -32,6 +33,7 @@
 
 - name: Configure Pi Cluster Nodes
   hosts: picluster
+  gather_facts: true
   tags: [node]
   vars:
     ansible_become: true
@@ -47,3 +49,8 @@
     # iSCSI client (initiator) configuration
     - role: ricsanfre.iscsi_initiator
       tags: [iscsi]
+  
+    # Mounting iSCSI LUNs
+    - role: ricsanfre.storage
+      tags: [iscsi]
+
