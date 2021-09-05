@@ -1,5 +1,5 @@
 ---
-
+# Enable ip forwarding
 - name: Enable IPv4 forwarding
   sysctl:
     name: net.ipv4.ip_forward
@@ -14,6 +14,29 @@
     state: present
     reload: true
 
+# Enable iptables to see bridged traffic
+- name: Add br_netfilter to /etc/modules-load.d/
+  copy:
+    content: "br_netfilter"
+    dest: /etc/modules-load.d/br_netfilter.conf
+    mode: "u=rw,g=,o="
+
+- name: Load br_netfilter
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Set bridge-nf-call-iptables
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+    reload: yes
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+
+# Enable cgroups
 - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
   lineinfile:
     path: /boot/firmware/cmdline.txt
