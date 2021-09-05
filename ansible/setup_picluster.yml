@@ -10,7 +10,8 @@
 
     # OS basic setup tasks
     - role: basic_setup
-
+      tags: [os]
+      
     # DNS/DHCP server configuration
     - role: ricsanfre.dnsmasq
       tags: [dnsmasq]
@@ -41,6 +42,7 @@
 
     # OS basic setup tasks
     - role: basic_setup
+      tags: [os]
 
     # NTP Client configuration
     - role: ricsanfre.ntp
