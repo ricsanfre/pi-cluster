@@ -12,18 +12,35 @@ Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspbe
 
     cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
 
-- Step 2: Reboot the server
+- Step 2: Enable iptables to see bridged traffic
+
+    Load br_netfilter kernel module an modify settings to let iptable see bridged traffic
+
+    ```shell
+    cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+    br_netfilter
+    EOF
+    
+    cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+    net.bridge.bridge-nf-call-ip6tables = 1
+    net.bridge.bridge-nf-call-iptables = 1
+    EOF
+    sudo sysctl --system
+    ```
+- Step 3: Reboot the server
+
 
 ## Master installation (node1)
 
 - Step 1: Installing K3S control plane node
     For installing the master node execute the following command:
 ```
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'k3s-controlplane=true:NoExecute'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'k3s-controlplane=true:NoExecute --disable servicelb'
 ```
 - **server_token** is shared secret within the cluster for allowing connection of worker nodes
 - **--write-kubeconfig-mode '0644'** gives read permissions to kubeconfig file located in `/etc/rancher/k3s/k3s.yaml`
 - **--node-taint 'k3s-controlplane=true:NoExecute'** makes master node not to run any pod. By default master node is a worker node.
+- **--disable servicelb** to disable default service load balancer installed by K3S (Klipper Load Balancer)
 
 - Step 2: Install Helm utility
 
