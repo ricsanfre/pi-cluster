@@ -2,3 +2,4 @@
 
 basic_packages:
   - libraspberrypi-bin
+  - fake-hwclock

@@ -195,3 +195,9 @@ The output will something like
 Remove packages not required
 
     sudo apt autoremove
+
+## Installing Fake HW
+
+Raspberry PI does not have a hardware clock, so even when NTP is used to synchronize the time and date, when it boots takes as current-time the time of the first-installation and it could cause problems for example when using boot process uses `fdisk` when starting.  It also will take longer to get synchronized as time goes by.
+
+For solving this [`fake-hwclock`](http://manpages.ubuntu.com/manpages/focal/man8/fake-hwclock.8.html) package need to be installed. `fake-hwclock` keeps track of the current time in a file and it load the latest time stored in boot time.
