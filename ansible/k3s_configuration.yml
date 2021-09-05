@@ -1,0 +1,17 @@
+---
+
+- name: Deploy Kubernetes resources via master node.
+  hosts: k3s_master
+  gather_facts: false
+
+  collections:
+    - kubernetes.core
+
+  environment:
+    # The location of the kubeconfig file on the master.
+    K8S_AUTH_KUBECONFIG: ~/.kube/config
+    PATH: "~/go/bin:{{ ansible_env.PATH }}"
+
+  roles:
+    - role: metallb
+      tags: ['setup']

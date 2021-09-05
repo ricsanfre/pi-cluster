@@ -1,0 +1,26 @@
+---
+- name: Create Metal LB namespace.
+  kubernetes.core.k8s:
+    name: metallb-system
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add Metal LB chart repo.
+  kubernetes.core.helm_repository:
+    name: metallb
+    repo_url: "https://metallb.github.io/metallb"
+
+- name: Deploy LongHorn Helm chart.
+  kubernetes.core.helm:
+    name: metallb
+    chart_ref: metallb/metallb
+    release_namespace: metallb-system
+    state: present
+    release_values:
+      configInline:
+        address-pools:
+          - name: default
+            protocol: layer2
+            addresses:
+              - "{{ k3s_external_ip_range }}"
