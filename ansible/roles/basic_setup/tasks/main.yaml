@@ -20,3 +20,14 @@
     name: "{{ basic_packages }}"
     update_cache: true
     state: present
+
+- name: Copy utility scripts
+  copy:
+    src: "scripts/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+  with_items:
+    - pi_temp
+    - pi_throttling
