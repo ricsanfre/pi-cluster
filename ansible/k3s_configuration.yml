@@ -10,8 +10,22 @@
   environment:
     # The location of the kubeconfig file on the master.
     K8S_AUTH_KUBECONFIG: ~/.kube/config
-    PATH: "~/go/bin:{{ ansible_env.PATH }}"
 
+  pre_tasks:
+    # Install kubernetes core collection dependencies (kubernetes python package) using PIP.
+    - name: Ensure PIP is installed.
+      package:
+        name:
+          - python3-pip
+          - python3-setuptools
+        state: present
+      become: true
+
+    - name: Ensure kubernetes Python library is installed.
+      pip:
+        name: kubernetes
+        state: present
+      become: true
   roles:
     - role: metallb
       tags: ['setup']

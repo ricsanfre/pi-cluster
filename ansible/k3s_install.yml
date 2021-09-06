@@ -20,7 +20,7 @@
   roles:
     - role: k3s/worker
 
-- name: Configure K3S master node
+- name: Label K3S worker nodes
   hosts: k3s_master
   tasks:
     - name: Wait for node {{ item }} to be ready
@@ -37,20 +37,3 @@
       command:
         cmd: "kubectl label nodes {{ item }} kubernetes.io/role=worker"
       with_items: "{{ groups['k3s_worker'] }}"
-
-    - name: Ensure ansible kubernetes collection required dependencies are installed.
-      package:
-        name:
-          - python3-pip
-          - python3-setuptools
-          - build-essential
-          - golang
-          - git
-        state: present
-      become: true
-
-    - name: Ensure kubernetes Python library is installed.
-      pip:
-        name: kubernetes
-        state: present
-      become: true
