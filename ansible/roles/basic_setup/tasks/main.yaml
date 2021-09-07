@@ -31,3 +31,10 @@
   with_items:
     - pi_temp
     - pi_throttling
+
+- name: Set GPU memory split to 16 MB
+  lineinfile:
+    path: /boot/firmware/config.txt
+    line: "gpu_mem=16"
+    create: yes
+  notify: reboot
