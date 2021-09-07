@@ -92,6 +92,8 @@ nft_forward_host_rules:
     - iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
   220 ssh from wan:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
+  230 http from wan:
+    - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
 # NAT Post-routing
 nft_nat_host_postrouting_rules:
   005 masquerade lan to wan:
