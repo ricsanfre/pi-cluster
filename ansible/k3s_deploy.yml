@@ -28,4 +28,6 @@
       become: true
   roles:
     - role: metallb
-      tags: ['setup']
+      tags: ['metallb']
+    - role: longhorn
+      tags: ['longhorn']
