@@ -5,12 +5,12 @@ metadata:
   namespace: longhorn-system
   annotations:
     kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
 spec:
   rules:
-  - http:
+  - host: storage.picluster.ricsanfre.com
+    http:
       paths:
-      - path: /longhorn/
+      - path: /
         pathType: Prefix
         backend:
           service:
