@@ -142,7 +142,9 @@ mmcblk0     179:0    0 29.7G  0 disk
 └─mmcblk0p2 179:2    0 29.5G  0 part /
 ```
 
-### Step 5. Modify Mounted Partitions – Using Automated Script from James A. Chambers
+### Step 5. Modify Mounted Partitions to fix booting procedure from disk 
+
+Modify step 4 mounted partitions using script from James A. Chambers
 
 Download and execute the automated script:
 
@@ -164,73 +166,3 @@ Updating Ubuntu partition was successful!  Shut down your Pi, remove the SD card
 ```
 ### Step 6. Shutdown Raspberry Pi, remove SDCard and boot again from USB
 RaspberryPI is  now able to boot from USB without needing a SDCard
-
-# Ubuntu OS Preparation Tasks
-
-## Removing snap package
-
-### Step 1. List snap packages installed
-
-    sudo snap list
-
-The output will something like
-
-    sudo snap list
-    Name    Version   Rev    Tracking       Publisher   Notes
-    core18  20210611  2074   latest/stable  canonical✓  base
-    lxd     4.0.7     21029  4.0/stable/…   canonical✓  -
-    snapd   2.51.1    12398  latest/stable  canonical✓  snapd
-
-
-### Step 3. Remove snap packages
-
-    snap remove <package>
-
-    snap remove lxd && snap remove core18 && snap remove snapd
-
-### Step 4. Remove snapd package
-
-    sudo apt purge snapd
-
-Remove packages not required
-
-    sudo apt autoremove
-
-# Raspberry PI specific configuration
-
-## Installing Fake HW
-
-Raspberry PI does not have a hardware clock, so even when NTP is used to synchronize the time and date, when it boots takes as current-time the time of the first-installation and it could cause problems for example when using boot process uses `fdisk` when starting.  It also will take longer to get synchronized as time goes by.
-
-For solving this [`fake-hwclock`](http://manpages.ubuntu.com/manpages/focal/man8/fake-hwclock.8.html) package need to be installed. `fake-hwclock` keeps track of the current time in a file and it load the latest time stored in boot time.
-
-## Installing Utility scripts
-
-Raspberry PI OS contains several specific utilities such as `vcgencmd` that are also available in Ubuntu 20.04 through the package [`libraspberrypi-bin`](https://packages.ubuntu.com/focal-updates/libraspberrypi-bin)
-
-    sudo apt install libraspberrypi-bi
-
-Two scripts, using `vcgencmd` command for checking temperature and throttling status of Raspberry Pi, can be deployed on each Raspberry Pi (in `/usr/local/bin` directory)
-
-`pi_temp` for getting Raspeberry Pi temperature
-`pi_throttling` for getting the throttling status
-
-Boths scripts can be executed remotely with Ansible
-
-    ansible -i inventory.yml -b -m shell -a "pi_temp" raspberrypi
-    
-    ansible -i inventory.yml -b -m shell -a "pi_throttling" raspberrypi
-
-## Change default GPU Memory Split
-
-The Raspberry PI allocates part of the RAM memory to the GPU (76 MB of the available RAM)
-
-Since the Raspberry PIs in the cluster are configured as a headless server, without monitorm and using the server Ubuntu distribution (not desktop GUI) Rasberry PI reserved GPU Memory can be set to lowest possible (16M).
-
-- Step 1. Edit `/boot/firmware/config.txt` file, adding at the end:
-
-    gpu_mem=16
-
-- Step 2. Reboot the Raspberry Pi
-
-    sudo reboot

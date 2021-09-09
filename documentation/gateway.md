@@ -10,12 +10,13 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 #### Table of contents
 
 1. [Hardware](#hardware)
-2. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
-3. [Network Configuration](#network-configuration) 
-4. [Router/Firewall Configuration](#routerfirewall-configuration)
-5. [DHCP/DNS Configuration](#dhcpdns-configuration)
-6. [NTP Server Configuration](#ntp-server-configuration)
-7. [iSCSI - SAN Configuration](./san_installation.md)
+2. [Network Configuration](#network-configuration)
+3. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
+4. [Initial OS Configuration](#ubuntu-os-initital-configuration)
+5. [Router/Firewall Configuration](#routerfirewall-configuration)
+6. [DHCP/DNS Configuration](#dhcpdns-configuration)
+7. [NTP Server Configuration](#ntp-server-configuration)
+8. [iSCSI SAN Configuration](#iscsi-configuration)
 
 
 ## Hardware
@@ -23,6 +24,31 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 `gateway` node is based on a Raspberry Pi 4B 2GB boot from a SSD Disk.
 A Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway` for building for providing iSCSI storage to the Raspberry PI cluster.
 
+## Network Configuration
+
+The WIFI interface (wlan0) will be used to be connected to my home network using static IP address (192.168.1.11/24), while ethernet interface (eth0) will be connected to the lan switch, lab network, using static IP address (10.0.0.1/24)
+Static IP addres in home network, will enable the configuration of static routes in my labtop and VM running on it (`pimaster`) to access the cluster nodes without fisically connect the laptop to the lan switch with an ethernet cable. 
+
+Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is like:
+
+```yml
+version: 2
+ethernets:
+  eth0:
+    dhcp4: false
+    addresses: [10.0.0.1/24]
+wifis:
+  wlan0:
+    dhcp4: false
+    optional: true
+    access-points:
+      "<SSID_NAME>":
+        password: "<SSID_PASSWD>"
+    addresses: [192.168.1.11/24]
+    gateway4: 192.168.1.1
+    nameservers:
+      addresses: [80.58.61.250,80.58.61.254]
+```
  
 ## Unbuntu boot from SSD
 
@@ -32,11 +58,16 @@ SSD Disk will be partitioned reserving the biggest partition for the iSCSI LUNS:
 
 Initial partitions (boot and OS) will be created during initial image burning process. Partitions need to be reconfigured before the first boot.
 
-Follow the procedure incidated [here](./installing_ubuntu.md), but modifying the disks partitions before booting from USB for the frist time.
+The procedure followed is the described [here](./installing_ubuntu.md), but modifying the disks partitions before booting from USB for the first time for creating a partition disk for iSCSI LUNs
 
 ### Step 1. Burn Ubuntu 20.04 server to SSD disk using Balena Etcher
 
 Update cloud-init configuration files (`user-data` and `network-config`) with the `gateway` network configuration and OS initial configuration.
+
+
+| User data file   | Network configuration |
+| ------------- |-------------|
+| [user-data](../cloud-init-ubuntu-images/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/gateway/network-config)|
 
 ### Step 2. Boot Raspberry PI with Raspberry OS
 
@@ -182,36 +213,16 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 > NOTE: In this case ASMedia TEchnology ASM1051E has ID 152d:0578
 
 
-### Step 6. Modify USB partitions following instrucions described [here](./installing_ubuntu.md)
+### Step 6. Modify USB partitions following instrucions described [here](./installing_ubuntu.md#step-5-modify-mounted-partitions-to-fix-booting-procedure-from-disk)
 
 
-### Ubuntu OS Configuration
+## Ubuntu OS Initital Configuration
 
-### Network Configuration
+After booting from the USB3.0 external storage for the first time, the Raspberry Pi will have SSH connectivity and it will be ready to be automatically configured from the ansible control node `pimaster`.
 
-The WIFI interface (wlan0) will be used to be connected to my home network using static IP address (192.168.1.11/24), while ethernet interface (eth0) will be connected to the lan switch, lab network, using static IP address (10.0.0.1/24)
-Static IP addres in home network, will enable the configuration of static routes in my labtop and VM running on it (`pimaster`) to access the cluster nodes without fisically connect the laptop to the lan switch with an ethernet cable. 
+Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions [here](./basic_os_configuration.md).
 
-Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is like:
-
-```yml
-version: 2
-ethernets:
-  eth0:
-    dhcp4: false
-    addresses: [10.0.0.1/24]
-wifis:
-  wlan0:
-    dhcp4: false
-    optional: true
-    access-points:
-      "<SSID_NAME>":
-        password: "<SSID_PASSWD>"
-    addresses: [192.168.1.11/24]
-    gateway4: 192.168.1.1
-    nameservers:
-      addresses: [80.58.61.250,80.58.61.254]
-```
+For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
 ## Router/Firewall Configuration
 
@@ -312,6 +323,8 @@ Edit file `/etc/dnsmasq.d/dnsmasq.conf`
 ```
 TBD: CONTENT dnsmasq.conf
 ```
+
+### Step 3. Restart dnsmasq service
 
 ### Configuring Ansible Role
 
@@ -430,3 +443,13 @@ Check time synchronization with Chronyc
     ```
     chronyc tracking
 	  ```
+
+## iSCSI configuration
+
+`gateway` is configured as iSCSI Target to export LUNs mounted by `node1-node4`
+
+iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
+
+Further details about iSCSI configurations and step-by-step manual instructions are defined [here](./san_installation.md).
+
+`gateway` exposes a dedicated LUN of 100 GB for each of the clusters nodes.
