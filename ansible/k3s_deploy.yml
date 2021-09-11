@@ -31,3 +31,5 @@
       tags: ['metallb']
     - role: longhorn
       tags: ['longhorn']
+    - role: certmanager
+      tags: ['certmanager']
