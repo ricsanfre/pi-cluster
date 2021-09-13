@@ -11,7 +11,11 @@
     # OS basic setup tasks
     - role: basic_setup
       tags: [os]
-      
+
+    # Security Hardening      
+    - role: ricsanfre.security
+      tags: [security]
+
     # DNS/DHCP server configuration
     - role: ricsanfre.dnsmasq
       tags: [dnsmasq]
@@ -43,6 +47,10 @@
     # OS basic setup tasks
     - role: basic_setup
       tags: [os]
+
+    # Security Hardening      
+    - role: ricsanfre.security
+      tags: [security]
 
     # NTP Client configuration
     - role: ricsanfre.ntp

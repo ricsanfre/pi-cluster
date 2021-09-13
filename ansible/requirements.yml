@@ -1,5 +1,7 @@
 ---
 roles:
+  - name: ricsanfre.security
+    version: v1.0.0
   - name: ricsanfre.ntp
     version: v1.0.0
   - name: ricsanfre.firewall
