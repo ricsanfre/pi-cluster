@@ -74,3 +74,13 @@ spec:
 - Step 2. Apply the manifest file
 
     kubectl apply -f longhorn_ingress.yml
+
+### Setting Longhorn as default Kubernetes StorageClass
+
+By default K3S comes with Rancher’s Local Path Provisioner and this enables the ability to create persistent volume claims out of the box using local storage on the respective node.
+
+In order to use Longhorn as default storageClass whenever a new Helm is installed, Local Path Provisioner need to be removed from default storage class.
+
+```
+kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+```
