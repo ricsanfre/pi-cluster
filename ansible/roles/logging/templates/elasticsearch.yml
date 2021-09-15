@@ -1,0 +1,22 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: "{{ elk_elasticsearch_name }}"
+  namespace: "{{ k3s_logging_namespace }}"
+spec:
+  version: 7.14.1
+  nodeSets:
+  - name: default
+    count: "{{ elk_elasticsearch_nodes }}"    
+    config:
+      node.store.allow_mmap: "{{ elk_elasticsearch_enable_mmap }}"
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: "{{ elk_elasticsearch_storage_size }}"
+        storageClassName: "{{ elk_elasticsearch_storage_class }}"

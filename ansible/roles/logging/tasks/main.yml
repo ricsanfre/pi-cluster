@@ -1,0 +1,38 @@
+---
+# namespace for hosting EFK stack
+- name: Create k3s-logging namespace.
+  kubernetes.core.k8s:
+    name: k3s-logging
+    api_version: v1
+    kind: Namespace
+    state: present
+
+# namespace for hosting ELK operator
+- name: Create elk namespace.
+  kubernetes.core.k8s:
+    name: elastic-system
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add elastic chart repo.
+  kubernetes.core.helm_repository:
+    name: elastic
+    repo_url: "https://helm.elastic.co"
+
+- name: Deploy ELK Operator Helm chart.
+  kubernetes.core.helm:
+    name: elastic-operator
+    chart_ref: elastic/eck-operator
+    release_namespace: elastic-system
+    state: present
+
+
+- name: Deploy ELK using ECK Operator
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - elasticsearch.yml
+    - filebeat.yml
+    - kibana.yml
