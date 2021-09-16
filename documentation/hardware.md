@@ -6,7 +6,17 @@ The home lab I am building is shown in the following picture
 
 ![Cluster-lab](images/RaspberryPiCluster_homelab.png)
 
-A Raspberry Pi cluster composed of 4 Raspberry Pi 4 (4GB), `node1-node4` will be connected using a LAN Switch. To isolate lab network and my home network, a Raspberry PI 4 (2GB) will be used as Router/Firewall of the lab network providing DNS, NTP and DHCP services to my lab network. This Raspberry Pi (`gateway`), is connected to my home network using its WIFI interface and to the LAN Switch using the eth interface.
+A Raspberry Pi cluster composed of 4 Raspberry Pi 4 (4GB), `node1-node4` will be connected using a LAN Switch. To isolate lab network from my home network, a Raspberry PI 4 (2GB) will be used as Router/Firewall of the lab network providing DNS, NTP and DHCP services to my lab network. This Raspberry Pi (`gateway`), is connected to my home network using its WIFI interface and to the LAN Switch using the eth interface.
+
+A SAN (Storage Access Network) will be configured using `gateway` as iSCSI Storage Server, providing storage (LUNs) to `node1-node4`.
+
+As storage device, a SSD disk will be attached to `gateway` node. This SSD disk will be used as well to host the OS.
+
+`node1-node4` will use additional storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of SDCards.
+
+![cluster-HW](images/RaspberryPiCluster_HW.png)
+
+
 
 ## Hardware Used
 
@@ -22,3 +32,5 @@ This is the hardware I'm using to create the cluster:
 - [1 x ANIDEES AI CHARGER 6+](https://www.tiendatec.es/raspberry-pi/raspberry-pi-alimentacion/796-anidees-ai-charger-6-cargador-usb-6-puertos-5v-60w-12a-raspberry-pi-4712909320214.html). 6 port USB power supply (60 W and max 12 A)
 - [5 x Ethernet Cable](https://www.amazon.es/NANOCABLE-10-20-0400-BL-Ethernet-latiguillo-0-5mts/dp/B00YAFOB60). Cat 6 0.5 meter length
 - [5 x USB-C power cable](https://www.amazon.es/NIBIKIA-Android-Cargador-Compatible-Motorola/dp/B08FFVCNZM). 0.5 m long.
+
+
