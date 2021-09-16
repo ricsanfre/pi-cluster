@@ -8,7 +8,7 @@ The home lab I am building is shown in the following picture
 
 ## Networking
 
-A Raspberry Pi cluster composed of 4 Raspberry Pi 4 (4GB), `node1-node4` will be connected using a LAN Switch. To isolate lab network from my home network, a Raspberry PI 4 (2GB), `gateway`m will be used as Router/Firewall of the lab network. It will also provide networking sercices: Internet Access, DNS, NTP and DHCP services to my lab network. `gateway` will be connected to my home network using its WIFI interface and to the LAN Switch using the eth interface.
+A Raspberry Pi cluster composed of 4 Raspberry Pi 4 (4GB), `node1-node4` will be connected using a LAN Switch. To isolate lab network from my home network, a Raspberry PI 4 (2GB), `gateway` will be used as Router/Firewall of the lab network. It will also provide networking sercices: Internet Access, DNS, NTP and DHCP services to my lab network. `gateway` will be connected to my home network using its WIFI interface and to the LAN Switch using the eth interface.
 
 ## Storage
 
