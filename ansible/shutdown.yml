@@ -1,8 +1,16 @@
 ---
-- hosts: raspberrypi
+- hosts: picluster
   become: true
 
   tasks:
     - name: Shutdown
       command: shutdown -h 1 min
+      ignore_errors: true
+
+- hosts: gateway
+  become: true
+
+  tasks:
+    - name: Shutdown
+      command: shutdown -h 5 min
       ignore_errors: true
