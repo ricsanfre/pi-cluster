@@ -1,0 +1,18 @@
+---
+- name: Testing longhorn installation.
+  hosts: k3s_master
+
+  tasks:
+    - name: Create longhorn namespace.
+      kubernetes.core.k8s:
+        name: testing-longhorn
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Create PVC and testing pod
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'templates/' + item ) }}"
+        state: present
+      with_items:
+        - testing_longhorn_manifest.yml
