@@ -1,0 +1,28 @@
+---
+# Namespace of the ELK/EFK stack
+k3s_logging_namespace: k3s-logging
+
+
+#####################################
+# Elasticsearch Default Configuration
+#####################################
+# Elastic Search name
+elk_elasticsearch_name: "elk-elasticsearh"
+
+# Number of Elastic Search nodes
+elk_elasticsearch_nodes: 1
+# Enable/Disable memory map
+elk_elasticsearch_enable_mmap: false
+# Storage Settings
+elk_elasticsearch_storage_size: "5Gi"
+elk_elasticsearch_storage_class: "longhorn"
+
+##############################
+# Kibana Default Configuration
+##############################
+elk_kibana_name: "elk-kibana"
+
+#################################
+# FileBeats Default Configuration
+#################################
+elk_filebeats_name: "elk-filebeats"
