@@ -1,0 +1,13 @@
+---
+- hosts: k3s_master
+  become: true
+  tasks:
+    - name: Stop k3s
+      command: /usr/local/bin/k3s-killall.sh
+      changed_when: true
+- hosts: k3s_worker
+  become: true
+  tasks:
+    - name: Stop k3s
+      command: /usr/local/bin/k3s-killall.sh
+      changed_when: true

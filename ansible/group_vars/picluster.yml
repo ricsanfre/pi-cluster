@@ -13,11 +13,6 @@ ntp_servers:
 # iSCSI-initiator role variables
 ################################
 
-open_iscsi_authentication: true
-open_iscsi_auth_username: "{{ open_iscsi_initiator_name }}"
-open_iscsi_auth_password: s1cret0
-open_iscsi_auth_username_in: iqn.2021-07.com.ricsanfre:gateway
-open_iscsi_auth_password_in: 0tr0s1cret0
 open_iscsi_automatic_startup: true
 open_iscsi_targets:
   - name: gateway-target
@@ -27,6 +22,11 @@ open_iscsi_targets:
     portal: 10.0.0.1
     target: iqn.2021-07.com.ricsanfre:gateway
     login: true
+    node_auth: CHAP
+    node_user: "{{ open_iscsi_initiator_name }}"
+    node_pass: s1cret0
+    node_user_in: iqn.2021-07.com.ricsanfre:gateway
+    node_pass_in: 0tr0s1cret0
 
 #############################################
 # Storage role variables. Mount iSCSI volumes

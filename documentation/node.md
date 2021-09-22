@@ -57,3 +57,5 @@ iSCSI configuration in `node1-node4`and iSCSI LUN mount and format tasks have be
 Further details about iSCSI configurations and step-by-step manual instructions are defined [here](./san_installation.md).
 
 Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
+
+< NOTE: Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. Authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
