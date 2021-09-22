@@ -300,7 +300,7 @@ In order to communicate and connect to iSCSI volume, we need to install open-isc
 
     sudo apt install open-iscsi
 
-### Step 2. Configure iSCI Intitiatio iqn 
+### Step 2. Configure iSCI Intitiator iqn 
 
 Edit iqn assigned to the server in the file `/etc/iscsi/initiatorname.conf`.
 
@@ -319,14 +319,16 @@ node.session.auth.username = user1
 node.session.auth.password = s1cret0
 ```
 
-### Step 4. Restart open-iscsi service
+> NOTE: This configuration assumes that all iSCSI targets to which the host is connecting have the same credentials. It this is not the case, credentials can configured per target and this step must be avoided. See configuration per target below in step 5
+
+### Step 4. Restart open-iscsi service and enable it in boot time
 
     sudo systemctl restart iscsid
     sudo systemclt enable iscsid
 
-### Step 5. Connect to iSCSI Target
+### Step 5. Discovery iSCSI Target
 
-Discover the iSCSI Target.
+Discover the iSCSI Targets exposed by the portal.
 
 
     sudo iscsiadm -m discovery -t sendtargets -p 192.168.100.100
@@ -335,6 +337,35 @@ Discover the iSCSI Target.
 sudo iscsiadm -m discovery -t sendtargets -p 192.168.56.100
 192.168.56.100:3260,1 iqn.2021-07.com.ricsanfre.vbox:iscsi-server
 ```
+
+When targets are discovered node session configuration parameters are stored locally using the defaults values within the configuration file `iscsi.conf` are used (for example: authentication credentials )
+
+Target information can be showed using the command:
+```
+sudo iscsiadm -m node -o show
+```
+
+The corresponding information is localy stored in files:
+
+`/etc/iscsi/nodes/<target_name>/<portal_ip>,<port>,1/default`
+
+And it can be modified before logging in (actual connection of the iSCSI target) using the following command:
+
+```
+sudo iscsiadm --mode node --targetname <target> --op=update --name <parmeters_name> --value <parameter_value>
+```
+
+For example authentication credentials can be specified per target:
+
+```console
+sudo iscsiadm --mode node --targetname iqn.2021-07.com.ricsanfre.vbox:iscsi-server --op=update --name node.session.auth.authmethod --value CHAP
+
+sudo iscsiadm --mode node --targetname iqn.2021-07.com.ricsanfre.vbox:iscsi-server --op=update --name node.session.auth.username --value user1
+
+sudo iscsiadm --mode node --targetname iqn.2021-07.com.ricsanfre.vbox:iscsi-server --op=update --name node.session.auth.pass --value s1cret0
+```
+
+### Step 6. Connect to the iSCSI target.
 
 Login to the iSCSI target
 
@@ -450,13 +481,13 @@ I/O size (minimum/optimal): 512 bytes / 33550336 bytes
 
 ```
 
-### Step 6. Configure automatic login 
+### Step 7. Configure automatic login
 
     sudo iscsiadm --mode node --op=update -n node.conn[0].startup -v automatic
     sudo iscsiadm --mode node --op=update -n node.startup -v automatic
 
 
-### Step 7. Format and mount iSCSI disk
+### Step 8. Format and mount iSCSI disk
 
 The new iSCSI disk can be partitioned with `fdisk`/`parted` and formated with `mkfs.ext4` and mount as any other disk
 
@@ -484,7 +515,7 @@ Also it can be used with LVM as a physical volume for createing Logical Volumes
     sudo mount /dev/vg_iscsi/lv_iscsi /data
 
 
-### Step 8. Mount iSCSI disk on startup
+### Step 9. Mount iSCSI disk on startup
 
 Modify `/etc/fstab` to mount iSCSI disk on startup
 
