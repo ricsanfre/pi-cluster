@@ -237,37 +237,61 @@ This is done by adding to **/etc/sysctl.conf** file:
 
 ### Step 2. Configure filtering and forwarding rules
 
-This can be done installing **iptables** package and configuring iptables rules.
+This can be done installing `iptables` package and configuring iptables rules.
+
+For example forwarding rules can be configured with the follwing commads:
 
     sudo apt install iptables
     sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
     sudo iptables -A FORWARD -i wlan0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
     sudo iptables -A FORWARD -i eth0 -o wlan0 -j ACCEPT
 
-and persist iptables rules across reboots by installing **iptables-persistent**
+But for configuring router/firewall rules, [**nftables**](https://www.netfilter.org/projects/nftables/) package will be used instead.
 
-    sudo apt install iptables-persistent # First time
-    sudo dpkg-reconfigure iptables-persistent # Every time rules are changed
+`nftables` is the succesor of `iptables` and it allows for much more flexible, easy to use, scalable and performance packet classification. Both of them are based on `netfilter` kernel module and according to their community maintaners [netfilter](netfilter.org) in nftables is "where all the fancy new features are developed".
 
-In Ubuntu 20.04 applying this procedure does not make the rules to persit across reboots. Moreover since Ubuntu 20.10 **nftables** package is used instead iptables.
-nftables seems to have the support of the Linux community and iptables probably will be deprecated in future releases.
+In Debian, since 11 release (Buster), `nftables` is the default and recommended firewall package replacing `iptables` (see https://wiki.debian.org/nftables). Starting with Debian Buster, nf_tables is the default backend when using iptables, by means of the iptables-nft layer (i.e, using iptables syntax with the nf_tables kernel subsystem). In Ubuntu, since Ubuntu 20.10, `ip-tables` package is including [`xtables-nft`](https://manpages.ubuntu.com/manpages/groovy/man8/iptables-nft.8.html) commands which are versions of iptables commands but using nftables kernel api for enabling the migration from iptables to nftables.
 
-For configuring router/firewall rules, [**nftables**](https://www.netfilter.org/projects/nftables/) package will be used.
+`nftables` seems to have the support of the Linux community and iptables probably will be deprecated in future releases.
 
 Package can be installed with apt:
 
    sudo apt install nftables
 
-And it can be configured using command line or configuration file `/etc/nftables.conf`.
+And it can be configured using command line or a configuration file `/etc/nftables.conf`.
 
 ```
 TBD: CONTENT nftables.conf
 ```
 
-With this rules:
+<br>
 
-- **gateway** is accepting incoming ICMP, SSH, NTP, DNS and HTTP and HTTPS traffic
-- **gateway** is forwarding only SSH, HTTP, DNS and HTTPS traffic
+> ***NOTE: About iptables rules persistency***
+>
+>
+> iptables rules need to be saved to a file and restore it on startup from the backup file
+>
+>This can be done with the following commands:
+>
+>     sudo iptables-save > /etc/iptables/rules.v4
+>
+>     sudo iptables-restore < /etc/iptables/rules.v4
+>
+>and its IPv6 vesrions:
+>
+>     sudo ip6tables-save > /etc/iptables/rules.v6
+>
+>     sudo ip6tables-restore < /etc/iptables/rules.v6
+>
+>Init scripts should be configured to automatically load iptables rules on startup.
+>
+>In Ubuntu and Debian there is a package `iptables-persistent` which takes over the automatic loading of the saved iptables rules
+>
+>     sudo apt install iptables-persistent # First time
+>     sudo dpkg-reconfigure iptables-persistent # Every time rules are changed
+>
+>In Ubuntu 20.04 applying this procedure is not working any more and it does not make the rules to persit across reboots.
+
 
 ### Configuring Ansible Role
 
