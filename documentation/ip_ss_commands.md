@@ -1,8 +1,14 @@
-# Use ip and ss Commands
+# net-tools package deprecated in favor of iproute2 package
 
-`ifconfig` and `netstat` commands are not installed by default on Ubuntu 20.04. Installation of package net-tools is needed for using those commands.
+## New ip/ss commands instead of old ifconfig/netstat.
 
-Use alternative commands `ip` and `ss` instead.
+`ifconfig` and `netstat` commands are not installed by default on Ubuntu 20.04. They are part of the package `net-tools` that have been deprecated in favor of `iproute2` package.
+
+`iproute2`
+
+Alternative new commands:
+- `ifconfig` -> `ip`
+- `netstat`  -> `ss`
 
 
 For example, to display a list of network interfaces, run the ss command instead of netstat. To display information for IP addresses, run the ip addr command instead of ifconfig -a.
