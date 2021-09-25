@@ -20,3 +20,7 @@ spec:
           requests:
             storage: "{{ elk_elasticsearch_storage_size }}"
         storageClassName: "{{ elk_elasticsearch_storage_class }}"
+        http:    # Making elasticsearch service available from outisde the cluster
+          service:
+            spec:
+              type: LoadBalancer

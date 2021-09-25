@@ -8,3 +8,7 @@ spec:
   count: 1
   elasticsearchRef:
     name: "{{ elk_elasticsearch_name }}"
+  http:
+    service:
+      spec:
+        type: LoadBalancer # default is ClusterIP
