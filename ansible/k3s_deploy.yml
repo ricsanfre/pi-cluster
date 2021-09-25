@@ -33,3 +33,5 @@
       tags: ['longhorn']
     - role: certmanager
       tags: ['certmanager']
+    - role: logging
+      tags: ['logging']
