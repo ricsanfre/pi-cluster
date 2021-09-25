@@ -41,9 +41,14 @@ So when request to my-svc.my-namespace.svc.cluster.local is made, it resolves to
 
 ## Useful references
 
-[1] How a Kubernetes Pod Gets an IP Address: https://ronaknathani.com/blog/2020/08/how-a-kubernetes-pod-gets-an-ip-address/
+[1] Desmitifying containers networking https://blog.mbrt.dev/posts/container-network/
 
-[2] CNI github repository: https://github.com/containernetworking/cni
+[2] Diving Deep into kuberentes networking (Rancher whitepaper) https://more.suse.com/rs/937-DCH-261/images/Diving-Deep-Into-Kubernetes-Networking.pdf
 
-[3] How Flannel works: https://msazure.club/flannel-networking-demystify/
+[3] How a Kubernetes Pod Gets an IP Address: https://ronaknathani.com/blog/2020/08/how-a-kubernetes-pod-gets-an-ip-address/
 
+[4] CNI github repository: https://github.com/containernetworking/cni
+
+[5] How Flannel works: https://msazure.club/flannel-networking-demystify/
+
+[6] How to create overlay networks using linux bridges and vxlans https://ilearnedhowto.wordpress.com/2017/02/16/how-to-create-overlay-networks-using-linux-bridges-and-vxlans/
