@@ -1,5 +1,9 @@
 # LongHorn
 
+K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won`t be able to access the data.
+
+A distributed block storage is needed to handle this issue. With distributed block storage, the storage is decouple from the pods, and the PersistentVolumeClaim can be mounted to the pod regardless of where the pod is running
+
 [Longhorn](https://longhorn.io/) is a distributed block storage system for Kubernetes. Lightweight, reliable and easy-to-use can be used as an alternative to Rook/Cephs. It is opensource software initially developed by Rancher Labs supporting AMD64 and ARM64 architectures that can be easily integrated with K3S.
 
 
@@ -74,6 +78,84 @@ spec:
 - Step 2. Apply the manifest file
 
     kubectl apply -f longhorn_ingress.yml
+
+
+### Testing Longhorn
+
+For testing longorn storage, create a specification for a `PersistentVolumeClaim` and use the `storageClassName` of `longhorn` and a POD making use of that volume claim
+
+- Step 1. Create testing namespace
+
+    ```
+    kubectl create namespace testing-longhorn
+    ```
+
+- Step 2. Create manifest file `longhorn_test.yml`
+
+```yml
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: longhorn-pvc
+  namespace: testing-longhorn
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: longhorn-test
+  namespace: testing-longhorn
+spec:
+  containers:
+  - name: longhorn-test
+    image: nginx:stable-alpine
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+    - name: longhorn-pvc
+      mountPath: /data
+    ports:
+    - containerPort: 80
+  volumes:
+  - name: longhorn-pvc
+    persistentVolumeClaim:
+      claimName: longhorn-pvc
+```
+- Step 2. Apply the manifest file
+
+    kubectl apply -f longhorn_test.yml
+
+
+> NOTE: Ansible playbook has been developed for automatically create this testing POD `roles\longhorn\test_longhorn.yml` 
+
+- Step 3. Check created POD has been started
+
+    kubectl get pods -o wide -n testing-longhorn
+
+- Step 4. Check pv and pvc have been created
+
+    kubectl get pv -n testing-longhorn
+    kubectl get pvc -n testing-longhorn
+
+- Step 5. Connect to the POD and make use of the created volume
+
+    Get a shell to the container and create a file on the persistent volume:
+    ```console
+    kubectl exec -n testing-longhorn -it longhorn-test -- sh
+    / # echo "testing" > /data/test.txt
+    ```
+- Step 6. Check in the longhorn-UI the created volumes and the replicas.
+
+![longhorn-ui-volume](./images/longhorn_volume_test.png)
+
+![longhorn-ui-replica](./images/longhorn_volume_test_replicas.png)
 
 ### Setting Longhorn as default Kubernetes StorageClass
 
