@@ -36,3 +36,4 @@
     - elasticsearch.yml
     - kibana.yml
     - fluentd.yml
+    - kibana_ingress.yml
