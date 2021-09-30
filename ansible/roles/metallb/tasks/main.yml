@@ -11,7 +11,7 @@
     name: metallb
     repo_url: "https://metallb.github.io/metallb"
 
-- name: Deploy LongHorn Helm chart.
+- name: Deploy Metal LB Helm chart.
   kubernetes.core.helm:
     name: metallb
     chart_ref: metallb/metallb
