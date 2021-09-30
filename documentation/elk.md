@@ -76,10 +76,10 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
-  name: elasticsearch
+  name: efk
   namespace: k3s-logging
 spec:
-  version: 7.14.1
+  version: 7.15.0
   nodeSets:
   - name: default
     count: 1    # One node elastic search cluster
@@ -95,15 +95,25 @@ spec:
           requests:
             storage: 5Gi
         storageClassName: longhorn
-        http:    # Making elasticsearch service available from outisde the cluster: NOTE 3
-          service:
-            spec:
-              type: LoadBalancer
+  http:    # Making elasticsearch service available from outisde the cluster: NOTE 3
+    service:
+      spec:
+        type: LoadBalancer
 ```
 
 - Step 2: Apply manifest
 
     kubectl apply -f manifest.yml
+
+- Step 3: Check Services and Pods
+
+```
+kubectl get services -n k3s-logging
+NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+efk-es-transport   ClusterIP      None            <none>        9300/TCP         3h2m
+efk-es-default     ClusterIP      None            <none>        9200/TCP         3h2m
+efk-es-http        LoadBalancer   10.43.186.20    10.0.0.102    9200:30079/TCP   147m
+```
 
 > **NOTE 1: About Memory mapping configuration**<br>
 By default, Elasticsearch uses memory mapping (mmap) to efficiently access indices ( `node.store.allow_nmap: false` option disable this default mechanism. <br>
@@ -120,6 +130,32 @@ This can be useful for example if elasticsearh database have to be used to monit
 
 More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-services.html)
 
+### Elasticsearch authentication
+
+By default ECK configures secured communications with auto-signed SSL certificates. Access to its API on port 9200 is only available through https and user authentication is required to allow the connection. ECK defines a `elastic` user and stores its credentials within a kubernetes Secret.
+
+Both to access Kibana UI or to configure Fluetd collector to insert data, secure communications on https must be used and user/password need to be provided 
+
+Password is stored in a kubernetes secret (`<efk_cluster_name>-es-elastic-user`). Execute this command for getting the password
+```
+kubectl get secret -n k3s-logging efk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+```
+
+Setting the password to a well known value is not an officially supported feature by ECK but a workaround exists by creating the {clusterName}-es-elastic-user Secret before creating the Elasticsearch resource with the ECK operator.
+
+
+```yml
+apiVersion: v1
+kind: Secret
+metadata: 
+  name: efk-es-elastic-user
+  namespace: k3s-logging
+type: Opaque
+data:
+  elastic: "{{ efk_elasticsearch_passwd | b64encode }}"
+```
+
+
 ### Kibana installation
 
 
@@ -132,21 +168,84 @@ metadata:
   name: kibana
   namespace: k3s-logging
 spec:
-  version: 7.14.1
-  count: 1
+  version: 7.15.0
+  count: 2 # Elastic Search statefulset deployment with two replicas
   elasticsearchRef:
     name: "elasticsearch"
-  http:
-    service:
-      spec:
-        type: LoadBalancer # default is ClusterIP
+  http:  # NOTE disabling selfSigned certificate
+    tls:
+      selfSignedCertificate:
+        disabled: true
 ```
 
 - Step 2: Apply manifest
 
     kubectl apply -f manifest.yml
 
-### Installation of Filebeats
+- Step 3: Check kibana POD and services
+
+
+```
+kubectl get services -n k3s-logging
+NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+efk-kb-http              LoadBalancer   10.43.242.252   10.0.0.101    5601:31779/TCP   3h2m
+```
+
+### Ingress rule for Traefik
+
+Make accesible Kibana UI from outside the cluster through Ingress Controller
+
+- Step 1. Create the ingress rule manifest
+```yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kibana-ingress
+  namespace: k3s-logging
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: kibana.picluster.ricsanfre.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "elk-kb-http"
+            port:
+              number: 5601
+```
+- Step 2: Apply manifest
+
+    kubectl apply -f manifest.yml
+
+- Step 3. Access to Kibana UI
+
+UI can be access through http://kibana.picluster.ricsanfre.com.
+Using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`
+
+
+
+### Installation of Fluentd
+
+Fluentd will be deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster. Using this DaemonSet controller, a Fluentd logging agent Pod will be deployed on every node of the cluster. To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
+
+In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to JSON files on the nodes. The Fluentd Pod will tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend.
+
+In addition to container logs, the Fluentd agent will tail Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, consult the [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
+
+Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset. 
+
+Further documentation can be found [here](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
+
+
+Fluentd need to be tuning for parsing containerd logs (fluentd images are prepared for parsing docker logs). See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
+
+
+
+### Alternative installation of Filebeats
 
 In order to collect and parse all logs from all containers within the K3S cluster, Filebeats need to be deployed as DaemonSet pod (one pod running on each cluster node)
 
@@ -201,17 +300,3 @@ spec:
 - Step 2: Apply manifest
 
     kubectl apply -f manifest.yml
-
-### Installation of Fluentd
-
-Fluentd will be deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster. Using this DaemonSet controller, a Fluentd logging agent Pod will be deployed on every node of the cluster. To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
-
-In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to JSON files on the nodes. The Fluentd Pod will tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend.
-
-In addition to container logs, the Fluentd agent will tail Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, consult the [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
-
-Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset. 
-
-Further documentation can be found [here](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
-
-
