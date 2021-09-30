@@ -6,7 +6,9 @@
       command: /usr/local/bin/k3s-uninstall.sh
       changed_when: true
     - name: Delete Longhorn storage
-      command: "rm -rf /storage/*"
+      shell: "rm -rf /storage/*"
+      args:
+        executable: /bin/bash
       changed_when: true
 - hosts: k3s_worker
   become: true
@@ -15,5 +17,7 @@
       command: /usr/local/bin/k3s-agent-uninstall.sh
       changed_when: true
     - name: Delete Longhorn storage
-      command: "rm -rf /storage/*"
+      shell: "rm -rf /storage/*"
+      args:
+        executable: /bin/bash
       changed_when: true
