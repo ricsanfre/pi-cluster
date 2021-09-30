@@ -10,7 +10,7 @@ k3s_logging_namespace: k3s-logging
 elk_elasticsearch_name: "elk-elasticsearh"
 
 # Number of Elastic Search nodes
-elk_elasticsearch_nodes: 1
+elk_elasticsearch_nodes: 2
 # Enable/Disable memory map
 elk_elasticsearch_enable_mmap: false
 # Storage Settings
