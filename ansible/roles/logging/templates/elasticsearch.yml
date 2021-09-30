@@ -4,12 +4,12 @@ metadata:
   name: "{{ elk_elasticsearch_name }}"
   namespace: "{{ k3s_logging_namespace }}"
 spec:
-  version: 7.14.1
+  version: 7.15.0
   nodeSets:
   - name: default
     count: {{ elk_elasticsearch_nodes }}
     config:
-      node.store.allow_mmap: "{{ elk_elasticsearch_enable_mmap }}"
+      node.store.allow_mmap: {{ elk_elasticsearch_enable_mmap }}
     volumeClaimTemplates:
     - metadata:
         name: elasticsearch-data
@@ -20,7 +20,7 @@ spec:
           requests:
             storage: "{{ elk_elasticsearch_storage_size }}"
         storageClassName: "{{ elk_elasticsearch_storage_class }}"
-        http:    # Making elasticsearch service available from outisde the cluster
-          service:
-            spec:
-              type: LoadBalancer
+  http:    # Making elasticsearch service available from outisde the cluster
+      service:
+        spec:
+          type: LoadBalancer
