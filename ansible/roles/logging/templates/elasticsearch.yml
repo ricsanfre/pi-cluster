@@ -1,15 +1,15 @@
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
-  name: "{{ elk_elasticsearch_name }}"
+  name: "{{ efk_cluster_name }}"
   namespace: "{{ k3s_logging_namespace }}"
 spec:
   version: 7.15.0
   nodeSets:
   - name: default
-    count: {{ elk_elasticsearch_nodes }}
+    count: {{ efk_elasticsearch_nodes }}
     config:
-      node.store.allow_mmap: {{ elk_elasticsearch_enable_mmap }}
+      node.store.allow_mmap: {{ efk_elasticsearch_enable_mmap }}
     volumeClaimTemplates:
     - metadata:
         name: elasticsearch-data
@@ -18,8 +18,8 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: "{{ elk_elasticsearch_storage_size }}"
-        storageClassName: "{{ elk_elasticsearch_storage_class }}"
+            storage: "{{ efk_elasticsearch_storage_size }}"
+        storageClassName: "{{ efk_elasticsearch_storage_class }}"
   http:    # Making elasticsearch service available from outisde the cluster
       service:
         spec:

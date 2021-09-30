@@ -27,12 +27,12 @@
     release_namespace: elastic-system
     state: present
 
-
 - name: Deploy elasticsearch, kibana and fluentd
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
+    - elasticsearch_secret.yml
     - elasticsearch.yml
     - kibana.yml
     - fluentd.yml

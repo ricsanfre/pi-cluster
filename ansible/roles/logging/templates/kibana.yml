@@ -1,13 +1,13 @@
 apiVersion: kibana.k8s.elastic.co/v1
 kind: Kibana
 metadata:
-  name: "{{ elk_kibana_name }}"
+  name: "{{ efk_cluster_name }}"
   namespace: "{{ k3s_logging_namespace }}"
 spec:
   version: 7.15.0
   count: 1
   elasticsearchRef:
-    name: "{{ elk_elasticsearch_name }}"
+    name: "{{ efk_cluster_name }}"
   http:
     tls:
       selfSignedCertificate:
