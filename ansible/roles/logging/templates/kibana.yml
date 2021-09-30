@@ -4,11 +4,11 @@ metadata:
   name: "{{ elk_kibana_name }}"
   namespace: "{{ k3s_logging_namespace }}"
 spec:
-  version: 7.14.1
+  version: 7.15.0
   count: 1
   elasticsearchRef:
     name: "{{ elk_elasticsearch_name }}"
   http:
-    service:
-      spec:
-        type: LoadBalancer # default is ClusterIP
+    tls:
+      selfSignedCertificate:
+        disabled: true
