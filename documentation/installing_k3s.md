@@ -35,12 +35,23 @@ Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspbe
 - Step 1: Installing K3S control plane node
     For installing the master node execute the following command:
 ```
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'k3s-controlplane=true:NoExecute --disable servicelb'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb'
 ```
 - **server_token** is shared secret within the cluster for allowing connection of worker nodes
 - **--write-kubeconfig-mode '0644'** gives read permissions to kubeconfig file located in `/etc/rancher/k3s/k3s.yaml`
-- **--node-taint 'k3s-controlplane=true:NoExecute'** makes master node not to run any pod. By default master node is a worker node.
+- **--node-taint 'node-role.kubernetes.io/master=true:NoSchedule'** makes master node not schedulable to run any pod. Only pods marked with specific tolerance will be scheduled on master node. 
 - **--disable servicelb** to disable default service load balancer installed by K3S (Klipper Load Balancer)
+
+> NOTE 1: 
+
+> Avoid the use of documented taint `k3s-controlplane=true:NoExecute` to avoid deployment of pods on master node. We are interested on running certain pods on master node, like the ones needed to collect logs/metrics from the master node.
+>
+> K3S common services: core-dns, metric-service, service-lb are configured with tolerance to `node-role.kubernetes.io/master` taint, so they will be scheduled on master node.
+>
+> Metal-lb, load balancer to be used, as well use this tolerance, so daemonset metallb-speaker will be deployed on node1. Daemonset pod like fluentd will have the specific tolerance to be able to get logs from master node.
+> 
+> See K3S PR introducing this feature: https://github.com/k3s-io/k3s/pull/1275 
+
 
 - Step 2: Install Helm utility
 
