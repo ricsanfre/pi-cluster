@@ -19,3 +19,6 @@ efk_elasticsearch_storage_size: "5Gi"
 efk_elasticsearch_storage_class: "longhorn"
 # elastic user password
 efk_elasticsearch_passwd: "s1cret0"
+
+# Fluentd image version
+efk_fluentd_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"

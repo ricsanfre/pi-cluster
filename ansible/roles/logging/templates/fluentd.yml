@@ -62,7 +62,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: fluentd
-        image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch
+        image: "{{ efk_fluentd_image }}"
         env:
           - name:  FLUENT_ELASTICSEARCH_HOST
             value: "{{ efk_cluster_name }}-es-http"
@@ -78,6 +78,8 @@ spec:
             value: "{{ efk_elasticsearch_passwd }}"
           - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
             value: "cri"
+          - name: FLUENT_CONTAINER_TAIL_PARSER_TIME_FORMAT
+            value: "%Y-%m-%dT%H:%M:%S.%N%:z"
         resources:
           limits:
             memory: 200Mi
