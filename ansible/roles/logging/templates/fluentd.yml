@@ -35,6 +35,43 @@ subjects:
   name: fluentd
   namespace: "{{ k3s_logging_namespace }}"
 ---
+apiVersion: v1
+data:
+  # Additional configuration for parsing auth.log file
+  auth.conf: |-
+    <source>
+      @type tail
+      path /var/log/auth.log
+      pos_file /var/log/auth.pos
+      tag authlog
+      <parse>
+        @type syslog
+        message_format rfc3164
+        with_priority false
+      </parse>
+    </source>
+  # Additional configuraion for pasing syslog.file
+  syslog.conf: |-
+    <source>
+      @type tail
+      path /var/log/syslog.log
+      pos_file /var/log/syslog.pos
+      tag syslog
+      <parse>
+        @type syslog
+        message_format rfc3164
+        with_priority false
+      </parse>
+    </source>
+
+kind: ConfigMap
+metadata:
+  labels:
+    stack: efk
+  name: fluentd-config
+  namespace: "{{ k3s_logging_namespace }}"
+
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -102,11 +139,16 @@ spec:
             cpu: 100m
             memory: 200Mi
         volumeMounts:
+        # Fluentd need access to node logs /var/log
         - name: varlog
           mountPath: /var/log
+        # Fluentd need access to pod logs /var/log/pods
         - name: dockercontainerlogdirectory
           mountPath: /var/log/pods
           readOnly: true
+        # Mounting additional fluentd configuration files
+        - name: fluentd-additional-config-vol
+          mountPath: /fluentd/etc/conf.d
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
@@ -115,3 +157,7 @@ spec:
       - name: dockercontainerlogdirectory
         hostPath:
           path: /var/log/pods
+      - name: fluentd-additional-config-vol
+        configMap:
+          # holds the different fluentd configuration files
+          name: fluentd-config
