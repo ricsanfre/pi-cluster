@@ -1,0 +1,18 @@
+---
+- name: Clean Longhorn storage
+  shell: "rm -rf /storage/*"
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Clean container/pod logs
+  shell: "rm -rf /var/log/pods /var/log/containers"
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Clean fluentd pos files
+  shell: "rm /var/log/*.pos"
+  args:
+    executable: /bin/bash
+  changed_when: true

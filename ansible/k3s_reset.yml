@@ -5,19 +5,14 @@
     - name: Unisntall k3s
       command: /usr/local/bin/k3s-uninstall.sh
       changed_when: true
-    - name: Delete Longhorn storage
-      shell: "rm -rf /storage/*"
-      args:
-        executable: /bin/bash
-      changed_when: true
+    - import_tasks: tasks/cleaning.yml
+      tags: ['clean']
+
 - hosts: k3s_worker
   become: true
   tasks:
     - name: Unisntall k3s
       command: /usr/local/bin/k3s-agent-uninstall.sh
       changed_when: true
-    - name: Delete Longhorn storage
-      shell: "rm -rf /storage/*"
-      args:
-        executable: /bin/bash
-      changed_when: true
+    - import_tasks: tasks/cleaning.yml
+      tags: ['clean']
