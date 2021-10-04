@@ -48,19 +48,21 @@ data:
         @type syslog
         message_format rfc3164
         with_priority false
+        timezone "{{ efk_node_timezone }}"
       </parse>
     </source>
   # Additional configuraion for pasing syslog.file
   syslog.conf: |-
     <source>
       @type tail
-      path /var/log/syslog.log
+      path /var/log/syslog
       pos_file /var/log/syslog.pos
       tag syslog
       <parse>
         @type syslog
         message_format rfc3164
         with_priority false
+        timezone "{{ efk_node_timezone }}"
       </parse>
     </source>
 

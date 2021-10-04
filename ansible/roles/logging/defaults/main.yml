@@ -2,13 +2,8 @@
 # Namespace of the ELK/EFK stack
 k3s_logging_namespace: k3s-logging
 
-
 # EFK cluster name
 efk_cluster_name: "efk"
-
-#####################################
-# Elasticsearch Default Configuration
-#####################################
 
 # Number of Elastic Search nodes
 efk_elasticsearch_nodes: 2
@@ -22,3 +17,6 @@ efk_elasticsearch_passwd: "s1cret0"
 
 # Fluentd image version
 efk_fluentd_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
+
+# Configured Timezone
+efk_node_timezone: "Europe/Madrid"
