@@ -57,6 +57,7 @@ spec:
       serviceAccount: fluentd
       serviceAccountName: fluentd
       tolerations:
+      # Schedule this pod on master node
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
@@ -64,20 +65,28 @@ spec:
       - name: fluentd
         image: "{{ efk_fluentd_image }}"
         env:
+          # Elastic operator creates elastic service name with format cluster_name-es-http
           - name:  FLUENT_ELASTICSEARCH_HOST
             value: "{{ efk_cluster_name }}-es-http"
+          # Default elasticsearch default port
           - name:  FLUENT_ELASTICSEARCH_PORT
             value: "9200"
+          # Elastic operator enables only HTTPS channels to elaticsearch
           - name: FLUENT_ELASTICSEARCH_SCHEME
             value: "https"
+          # Elastic operator creates auto-signed certificates, verification must be disabled
           - name: FLUENT_ELASTICSEARCH_SSL_VERIFY
             value: "false"
+          # Elasticsearch user
           - name: FLUENT_ELASTICSEARCH_USER
-            value: "elastic"  
+            value: "elastic"
+          # Elasticsearch password
           - name: FLUENT_ELASTICSEARCH_PASSWORD
             value: "{{ efk_elasticsearch_passwd }}"
+          # Use cri parser for contarinerd based pods
           - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
             value: "cri"
+          # Use proper time format parsing for containerd logs
           - name: FLUENT_CONTAINER_TAIL_PARSER_TIME_FORMAT
             value: "%Y-%m-%dT%H:%M:%S.%N%:z"
         resources:
