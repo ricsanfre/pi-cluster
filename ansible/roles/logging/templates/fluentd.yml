@@ -86,6 +86,9 @@ spec:
               secretKeyRef:
                 name: "{{ efk_cluster_name }}-es-elastic-user"
                 key: elastic
+          # Setting a index-prefix for fluentd. By default index is logstash
+          - name:  FLUENT_ELASTICSEARCH_INDEX_NAME
+            value: fluentd
           # Use cri parser for contarinerd based pods
           - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
             value: "cri"
