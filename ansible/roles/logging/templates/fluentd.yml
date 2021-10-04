@@ -80,9 +80,12 @@ spec:
           # Elasticsearch user
           - name: FLUENT_ELASTICSEARCH_USER
             value: "elastic"
-          # Elasticsearch password
+          # Elastic operator stores elastic user password in a secret
           - name: FLUENT_ELASTICSEARCH_PASSWORD
-            value: "{{ efk_elasticsearch_passwd }}"
+            valueFrom:
+              secretKeyRef:
+                name: "{{ efk_cluster_name }}-es-elastic-user"
+                key: elastic
           # Use cri parser for contarinerd based pods
           - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
             value: "cri"
