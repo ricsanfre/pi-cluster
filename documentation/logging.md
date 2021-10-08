@@ -3,6 +3,11 @@
 ELK Stack (Elaticsearch - Logstash - Kibana) enables centralized log monitoring of IT infrastructure.
 As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Fluentd is used instead of Logstash for doing the collection and parsing of logs.
 
+EFK stack will be deployed as centralized logging solution for the K3S cluster.
+
+![K3S-EFK-Architecture](images/efk_logging_architecture.png)
+
+
 ## ARM architecture and Kubernetes deployment support
 
 In June 2020, Elastic announced (https://www.elastic.co/blog/elasticsearch-on-arm) that starting from 7.8 release they will provide multi-architecture docker images supporting AMD64 and ARM64 architectures.
@@ -447,63 +452,5 @@ spec:
 
 ### Gathering logs from servers outside the kubernetes cluster
 
-For gathering the logs from `gateway` server fluentbit can be installed. Fluentbit is a lightweigh version of fluentd ( just 640 KB not requiring any gem library to be installed) See comparison [here](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit)
-There official packages for Ubuntu. Installation instructions can be found [here](https://docs.fluentbit.io/manual/installation/linux/ubuntu)
-
-
-
-### Alternative installation of Filebeats
-
-In order to collect and parse all logs from all containers within the K3S cluster, Filebeats need to be deployed as DaemonSet pod (one pod running on each cluster node)
-
-Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-beat-quickstart.html)
-
-- Step 1. Create a manifest file
-
-```yml
-apiVersion: beat.k8s.elastic.co/v1beta1
-kind: Beat
-metadata:
-  name: filebeat
-spec:
-  type: filebeat
-  version: 7.14.1
-  elasticsearchRef:
-    name: elasticsearch
-  config:
-    filebeat.inputs:
-    - type: container
-      paths:
-      - /var/log/containers/*.log
-  daemonSet:
-    podTemplate:
-      spec:
-        dnsPolicy: ClusterFirstWithHostNet
-        hostNetwork: true
-        securityContext:
-          runAsUser: 0
-        containers:
-        - name: filebeat
-          volumeMounts:
-          - name: varlogcontainers
-            mountPath: /var/log/containers
-          - name: varlogpods
-            mountPath: /var/log/pods
-          - name: varlibdockercontainers
-            mountPath: /var/lib/docker/containers
-        volumes:
-        - name: varlogcontainers
-          hostPath:
-            path: /var/log/containers
-        - name: varlogpods
-          hostPath:
-            path: /var/log/pods
-        - name: varlibdockercontainers
-          hostPath:
-            path: /var/lib/docker/containers
-
-```
-
-- Step 2: Apply manifest
-
-    kubectl apply -f manifest.yml
+For gathering the logs from `gateway` server fluentbit can be installed. Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed) See comparison [here](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit)
+There official packages for Ubuntu. Installation instructions can be found [here](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
