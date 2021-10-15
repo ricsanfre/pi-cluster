@@ -35,3 +35,13 @@
       tags: ['certmanager']
     - role: logging
       tags: ['logging']
+
+- name: Deploy fluentbit on Pi Cluster Gateway
+  hosts: gateway
+  gather_facts: true
+  tags: [logging]
+  vars:
+    ansible_become: true
+  roles:
+    - role: ricsanfre.fluentbit
+      tags: ['logging']
