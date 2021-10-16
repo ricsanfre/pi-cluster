@@ -8,23 +8,20 @@ fluentbit_inputs:
     Tag: auth
     Path: /var/log/auth.log
     Path_key: log_file
-    Key: message
     DB: /run/fluent-bit-auth.state
-    Parser: syslog-rfc3164
+    Parser: syslog-rfc3164-nopri
   - Name: tail
     Tag: syslog
     Path: /var/log/syslog
     Path_key: log_file
-    Key: message
     DB: /run/fluent-bit-syslog.state
-    Parser: syslog-rfc3164
+    Parser: syslog-rfc3164-nopri
 # Fluentbit filters
 fluentbit_filters:
   - Name: record_modifier
     Match: "*"
     Record: host ${HOSTNAME}
-
-# Elasticsearch output
+# Fluentbit Elasticsearch output
 fluentbit_outputs:
   - Name: es
     match: "*"
@@ -39,3 +36,11 @@ fluentbit_outputs:
     tls: On
     tls.verify: Off
     Retry_Limit: False
+# Fluentbit custom parsers
+fluentbit_custom_parsers:
+  - Name: syslog-rfc3164-nopri
+    Format: regex
+    Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key: time
+    Time_Format: "%b %d %H:%M:%S"
+    Time_Keep: false
