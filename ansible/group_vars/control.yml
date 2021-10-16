@@ -44,3 +44,4 @@ fluentbit_custom_parsers:
     Time_Key: time
     Time_Format: "%b %d %H:%M:%S"
     Time_Keep: false
+    Time_Offset: "+0200"
