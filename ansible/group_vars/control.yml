@@ -16,26 +16,21 @@ fluentbit_inputs:
     Path_key: log_file
     DB: /run/fluent-bit-syslog.state
     Parser: syslog-rfc3164-nopri
-# Fluentbit filters
-fluentbit_filters:
-  - Name: record_modifier
-    Match: "*"
-    Record: host ${HOSTNAME}
 # Fluentbit Elasticsearch output
 fluentbit_outputs:
   - Name: es
     match: "*"
     Host: 10.0.0.101
     Port: 9200
-    Logstash_Format: On
+    Logstash_Format: true
     Logstash_Prefix: logstash
-    Include_Tag_Key: On
+    Include_Tag_Key: true
     Tag_Key: tag
     HTTP_User: elastic
     HTTP_Passwd: s1cret0
-    tls: On
-    tls.verify: Off
-    Retry_Limit: False
+    tls: true
+    tls.verify: false
+    Retry_Limit: false
 # Fluentbit custom parsers
 fluentbit_custom_parsers:
   - Name: syslog-rfc3164-nopri
@@ -43,5 +38,5 @@ fluentbit_custom_parsers:
     Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
     Time_Key: time
     Time_Format: "%b %d %H:%M:%S"
-    Time_Keep: false
-    Time_Offset: "+0200"
+    Time_Keep: false  # Remove duplicated time field, avoid elasticsearh processing error
+    Time_Offset: "+0200"  # Add TimeZone UTC offset
