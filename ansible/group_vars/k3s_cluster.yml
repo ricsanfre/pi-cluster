@@ -10,5 +10,5 @@ k3s_token: s1cret0
 k3s_server_extra_args: "--write-kubeconfig-mode '0644' --disable 'servicelb' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'"
 k3s_worker_extra_args: "--node-label 'node_type=worker'"
 
-# k3s external ip range: Metal LB pool configuration  
+# k3s external ip range: Metal LB pool configuration
 k3s_external_ip_range: "10.0.0.100-10.0.0.200"

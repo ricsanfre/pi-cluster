@@ -34,7 +34,7 @@ open_iscsi_targets:
 
 storage_volumegroups:
   - name: vg_iscsi
-    devices: 
+    devices:
       - /dev/sdb
 storage_volumes:
   - name: vg_iscsi_lv_node
