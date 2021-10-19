@@ -454,3 +454,49 @@ spec:
 
 For gathering the logs from `gateway` server fluentbit can be installed. Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed) See comparison [here](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit)
 There official packages for Ubuntu. Installation instructions can be found [here](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
+
+For automating configuration tasks, ansible role [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit) has been developed.
+
+Fluentbit role input and parsing rules are defined through variables for `control` inventory (group_vars/control.yml), to which gateway belongs to.
+
+```yml
+fluentbit_inputs:
+  - Name: tail
+    Tag: auth
+    Path: /var/log/auth.log
+    Path_key: log_file
+    DB: /run/fluent-bit-auth.state
+    Parser: syslog-rfc3164-nopri
+  - Name: tail
+    Tag: syslog
+    Path: /var/log/syslog
+    Path_key: log_file
+    DB: /run/fluent-bit-syslog.state
+    Parser: syslog-rfc3164-nopri
+# Fluentbit Elasticsearch output
+fluentbit_outputs:
+  - Name: es
+    match: "*"
+    Host: 10.0.0.101
+    Port: 9200
+    Logstash_Format: On
+    Logstash_Prefix: logstash
+    Include_Tag_Key: On
+    Tag_Key: tag
+    HTTP_User: elastic
+    HTTP_Passwd: s1cret0
+    tls: On
+    tls.verify: Off
+    Retry_Limit: False
+# Fluentbit custom parsers
+fluentbit_custom_parsers:
+  - Name: syslog-rfc3164-nopri
+    Format: regex
+    Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key: time
+    Time_Format: "%b %d %H:%M:%S"
+    Time_Keep: false
+    Time_Offset: "+0200"
+
+```
+With this rules Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to elasticsearch server running on K3S cluster.

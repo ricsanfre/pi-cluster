@@ -20,10 +20,10 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
 4. [Gateway node configuration](documentation/gateway.md). Configuring a Raspberry PI as firewall and provider of cluster services (NTP, DHCP, DNS and iSCSI SAN services).
 5. [Cluster nodes configuration](documentation/node.md). Configuring 4 Raspberry PI as nodes of the cluster, using network and storage services from Gateway node
 6. K3S Installation and Configuration
-    - [K3S Installation](documentation/intstalling_k3s.md). Installing K3S lightweight kubernetes cluster
+    - [K3S Installation](documentation/installing_k3s.md). Installing K3S lightweight kubernetes cluster
     - [K3S Networking Configuration](documentation/k3s_networking.md). Installing Metal LB as bare-metal load balancer for the Kubernetes cluster.
     - [K3S Storage](documentation/longhorn.md). Installing LongHorn as cluster storage provider.
-
+7. [Centralized logging monitoring](documentation/logging.md). Installing and configuring EFK stack. Real-time processing of Kuberentes and servers logs.
 
 ## About the Project
 
