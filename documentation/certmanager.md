@@ -1,8 +1,43 @@
 # SSL and HTTPS
 
-The frontends that will be deployed on the Kubernetes cluster must be SSL encrypted and access through HTTPS must use valid public certificates.
+The frontends that will be deployed on the Kubernetes cluster should be SSL encrypted and access through HTTPS should use valid public certificates.
 
-In the Kubernetes cluster Cert-Manager can be used to automate the certificate management tasks (issue certificate request, renewals, etc.) and we can use Let's Encrypt service to obtain validated SSL certificates.
+In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
+
+It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry.
+
+1. [Cert-Manager installation](#cert-manager-installation)
+2. [Auto-signed SSL certificates](#auto-signed-certificates)
+2. [Lets Encrypt SSL certificates](#lets-encrypt)
+
+## Cert Manager Installation
+
+Installation using `Helm` (Release 3):
+
+- Step 1: Add the JetStack Helm repository:
+    ```
+    helm repo add jetstack https://charts.jetstack.io
+    ```
+- Step2: Fetch the latest charts from the repository:
+    ```
+    helm repo update
+    ```
+- Step 3: Create namespace
+    ```
+    kubectl create namespace certmanager-system
+    ```
+- Step 3: Install Cert-Manager
+    ```
+    helm install cert-manager jetstack/cert-manager --namespace certmanager-system --version v1.5.3 --set installCRDs=true
+    ```
+- Step 4: Confirm that the deployment succeeded, run:
+    ```
+    kubectl -n certmanager-system get pod
+    ```
+
+## Auto-signed Certificates
+
+TBD
 
 ## Lets Encrypt
 
@@ -10,7 +45,31 @@ Lets Encrypt provide publicly validated TLS certificates for free. Not need to g
 
 The process is the following, we issue a request for a certificate to Let's Encrypt for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME DNS or HTTP validation mechanism. If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
 
+For details see cert-manager [ACME issuer type documentation](https://cert-manager.io/docs/configuration/acme/)
+
+
+### Let's Encrypt DNS validation method
+
+DNS validation method requires to expose a "challenge DNS" record within the DNS domain associated to the SSL certificate.
+This method do not require to expose to the Public Internet the web services hosted within my K3S cluster and so it would be the preferred method to use Let's Encrypt.
+
+1) Cert-manager issues a certifate request to Let's Encrypt
+2) Let's Encript request an ownership verification challenge in response.
+The challenge will be to put a DNS TXT record with specific content that proves that we have the control of the DNS domain. The theory is that if we can put that TXT record and Let's Encrypt can retrieve it remotely, then we must really be the owners of the domain
+3) Cert-manager temporary creates the requested TXT record in the DNS. If Let's Encrypt can read the challenge and it is correct, it will issue the certificates back to cert-manager.
+4) Cert-manager will then store the certificates as secrets, and our website (or whatever) will use those certificates for securing our traffic with TLS.
+
+Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge. For supporting additional DNS providers webhooks can be developed. See supported list and further documentation [here](https://cert-manager.io/docs/configuration/acme/dns01/).
+
+IONOS, my DNS server provider, is not in the list of supported ones. 
+
+Since Dec 2020, IONOS launched an API for remotelly configure DNS, and so the integration could be possible as it is detailed in this [post](https://dev.to/devlix-blog/automate-let-s-encrypt-automate-let-s-encrypt-wildcard-certificate-creation-with-ionos-dns-rest-api-o23). This new API can be used as well for developing a Certbot plugin ([Cerbot](https://certbot.eff.org/) is an opensource software to automate the interaction with Let's Encrypt). See git repository (https://github.com/helgeerbe/certbot-dns-ionos).
+
+Unfortunally IONOS API is part of a beta program that it is not available yet in my location (Spain).
+
 ### Let`s Encrypt HTTP validation method
+
+HTTP validation method requires to actually expose a "challenge URL" in the Public Internet using the DNS domain associated to the SSL certificate.
 
 HTTP validation method is as follows: 
 1) Cert-manager issues a certificate request to Let's Encrypt. 
@@ -62,36 +121,5 @@ Enable port forwarding for TCP ports 80/443 to `gateway` node.
 
 ### Configure Pi cluster Gateway
 
-Configure NFtables for forwarding incoming traffic at 
+Configure NFtables for forwarding incoming traffic at 8080 and 4430 ports.
 
-# Cert Manager
-
-[cert-manager](https://cert-manager.io/docs/) cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates. 
-Sites be encrypted, but they will be using valid public certificates that are automatically provisioned and automatically renewed from Let's Encrypt
-
-It can issue certificates from a variety of supported sources, including Let’s Encrypt. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry.
-
-## Installation procedure using Helm
-
-Installation using `Helm` (Release 3):
-
-- Step 1: Add the JetStack Helm repository:
-    ```
-    helm repo add jetstack https://charts.jetstack.io
-    ```
-- Step2: Fetch the latest charts from the repository:
-    ```
-    helm repo update
-    ```
-- Step 3: Create namespace
-    ```
-    kubectl create namespace certmanager-system
-    ```
-- Step 3: Install Cert-Manager
-    ```
-    helm install cert-manager jetstack/cert-manager --namespace certmanager-system --version v1.5.3 --set installCRDs=true
-    ```
-- Step 4: Confirm that the deployment succeeded, run:
-    ```
-    kubectl -n longhorn-system get pod
-    ```
