@@ -1,5 +1,7 @@
 # K3S Networking
 
+> **NOTE**: Basic kubernetes networking concepts and useful references can be found [here](./k8s_networking_basics.md) 
+
 ## K3S networking default add-ons
 
 By default K3s install and configure basic Kubernetes networking packages
@@ -10,7 +12,6 @@ By default K3s install and configure basic Kubernetes networking packages
 
 Additionally it adds an embedded Service Load Balancer
 - [Klipper Load Balancer](https://github.com/k3s-io/klipper-lb) as embedded Service Load Balancer
-
 
 Instead of using the embeded service load balancer that only comes with K3S, a more generic kubernetes load balancer like [Metal LB](https://metallb.universe.tf/) will be used. This load balancer can be used with almost any distribution of kubernetes.
 
@@ -57,6 +58,9 @@ MetalLB consists of two different pods:
 
 - Controller: resposible for handling IP address assigments from a configured Pool.
 - Speaker: DaemonSet pod running on each worker node, resposible for announcing the allocated IPs.
+
+
+![metal-lb-architecture](images/metallb_architecture.png)
 
 
 ## Install Metal Load Balancer
