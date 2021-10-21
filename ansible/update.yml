@@ -1,6 +1,7 @@
 ---
 - hosts: raspberrypi
   become: true
+  gather_facts: false
 
   tasks:
     - name: Update apt repo and cache on all Debian/Ubuntu boxes

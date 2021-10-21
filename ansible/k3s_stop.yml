@@ -1,13 +1,35 @@
 ---
+
 - hosts: k3s_master
   become: true
+  gather_facts: false
   tasks:
-    - name: Stop k3s
-      command: /usr/local/bin/k3s-killall.sh
-      changed_when: true
+    - name: Stop K3S Service
+      service:
+        name: k3s
+        state: stopped
+
 - hosts: k3s_worker
   become: true
+  gather_facts: false
   tasks:
-    - name: Stop k3s
+    - name: Stop K3S Service
+      service:
+        name: k3s-agent
+        state: stopped
+
+- hosts: k3s_master
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Stop k3s containers and free network resources
+      command: /usr/local/bin/k3s-killall.sh
+      changed_when: true
+
+- hosts: k3s_worker
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Stop k3s containers and free network resources
       command: /usr/local/bin/k3s-killall.sh
       changed_when: true
