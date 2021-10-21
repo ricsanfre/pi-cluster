@@ -44,6 +44,27 @@ TBD
 Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auti-signed SSL Certificates for the websites that are not automatic validated by HTTP browsers.
 
 The process is the following, we issue a request for a certificate to Let's Encrypt for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME DNS or HTTP validation mechanism. If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
+For details see cert-manager [ACME issuer type documentation](https://cert-manager.io/docs/configuration/acme/)
+
+
+### Let's Encrypt DNS validation method
+
+DNS validation method requires to expose a "challenge DNS" record within the DNS domain associated to the SSL certificate.
+This method do not require to expose to the Public Internet the web services hosted within my K3S cluster and so it would be the preferred method to use Let's Encrypt.
+
+1) Cert-manager issues a certifate request to Let's Encrypt
+2) Let's Encript request an ownership verification challenge in response.
+The challenge will be to put a DNS TXT record with specific content that proves that we have the control of the DNS domain. The theory is that if we can put that TXT record and Let's Encrypt can retrieve it remotely, then we must really be the owners of the domain
+3) Cert-manager temporary creates the requested TXT record in the DNS. If Let's Encrypt can read the challenge and it is correct, it will issue the certificates back to cert-manager.
+4) Cert-manager will then store the certificates as secrets, and our website (or whatever) will use those certificates for securing our traffic with TLS.
+
+Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge. For supporting additional DNS providers webhooks can be developed. See supported list and further documentation [here](https://cert-manager.io/docs/configuration/acme/dns01/).
+
+IONOS, my DNS server provider, is not in the list of supported ones. 
+
+Since Dec 2020, IONOS launched an API for remotelly configure DNS, and so the integration could be possible as it is detailed in this [post](https://dev.to/devlix-blog/automate-let-s-encrypt-automate-let-s-encrypt-wildcard-certificate-creation-with-ionos-dns-rest-api-o23). This new API can be used as well for developing a Certbot plugin ([Cerbot](https://certbot.eff.org/) is an opensource software to automate the interaction with Let's Encrypt). See git repository (https://github.com/helgeerbe/certbot-dns-ionos).
+
+Unfortunally IONOS API is part of a beta program that it is not available yet in my location (Spain).
 
 For details see cert-manager [ACME issuer type documentation](https://cert-manager.io/docs/configuration/acme/)
 
