@@ -20,3 +20,10 @@
     state: present
     release_values:
       installCRDs: true
+
+- name: Configura self-signed issuer
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - selfsigned_issuer.yml

@@ -1,11 +1,23 @@
+---
+# HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: longhorn-ingress
   namespace: longhorn-system
   annotations:
-    kubernetes.io/ingress.class: traefik
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: longhorn
 spec:
+  tls:
+  - hosts:
+    - storage.picluster.ricsanfre.com
+    secretName: storage-tls
   rules:
   - host: storage.picluster.ricsanfre.com
     http:
@@ -17,3 +29,28 @@ spec:
             name: longhorn-frontend
             port:
               number: 80
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: longhorn-redirect
+  namespace: longhorn-system
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: storage.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: longhorn-frontend
+              port:
+                number: 80

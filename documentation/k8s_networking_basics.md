@@ -15,7 +15,7 @@ A CNI plugin is responsible for inserting a network interface into the container
 
 See details [here](https://kubernetes.io/docs/concepts/services-networking/service/)
 
-### kube-proxy: Kuberentes Services interanl Load-balancing
+### kube-proxy: Kuberentes Services internal Load-balancing
 
 kube-proxy is a key component of any Kubernetes deployment.  Its role is to load-balance traffic that is destined for services (via Cluster IPs and Node Ports) to the correct backend pods.
 
@@ -44,6 +44,11 @@ So when request to my-svc.my-namespace.svc.cluster.local is made, it resolves to
 `Ingress` exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the `Ingress` resource.
 
 An Ingress may be configured to give Services externally-reachable URLs, load balance traffic, terminate SSL / TLS, and offer name-based virtual hosting. An `Ingress Controller` is the component responsible for fulfilling the Ingress rules. Ingress Controller need to be deployed within the cluster usually with an external load balancer to handle the incoming traffic.
+
+Every `Ingress` resource belong to `IngressClass` resource that contains information about the `Ingress Controller` implementing the class. This way Ingresses can be implemented by different controllers.
+
+See detailed information [here](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+
 
 ## Useful references
 

@@ -29,10 +29,12 @@
   roles:
     - role: metallb
       tags: ['metallb']
-    - role: longhorn
-      tags: ['longhorn']
+    - role: traefik
+      tags: ['traefik']
     - role: certmanager
       tags: ['certmanager']
+    - role: longhorn
+      tags: ['longhorn']
     - role: logging
       tags: ['logging']
 

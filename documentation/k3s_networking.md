@@ -4,14 +4,23 @@
 
 ## K3S networking default add-ons
 
-By default K3s install and configure basic Kubernetes networking packages
+By default K3s install and configure basic Kubernetes networking packages:
 
 - [Flannel](https://github.com/flannel-io/flannel) as Networking plugin, CNI (Container Networking Interface), for enabling pod communications
 - [CoreDNS](https://coredns.io/) providing cluster dns services
 - [Traefik](https://traefik.io/) as ingress controller
-
-Additionally it adds an embedded Service Load Balancer
 - [Klipper Load Balancer](https://github.com/k3s-io/klipper-lb) as embedded Service Load Balancer
+
+
+# Flannel as CNI
+
+TBD
+
+# Traefik as Ingress Controller
+
+Traefik is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease. It simplifies networking complexity while designing, deploying, and running applications.
+
+# Metal LB as Cluster Load Balancer
 
 Instead of using the embeded service load balancer that only comes with K3S, a more generic kubernetes load balancer like [Metal LB](https://metallb.universe.tf/) will be used. This load balancer can be used with almost any distribution of kubernetes.
 
@@ -40,7 +49,7 @@ kube-system   traefik          LoadBalancer   10.43.50.56     <pending>     80:3
 ## Why Metal LB
 
 Kubernetes does not offer an implementation of network load balancers (Services of type LoadBalancer) for bare-metal clusters. The implementations of network load balancers that Kubernetes does ship with are all glue code that calls out to various IaaS platforms (GCP, AWS, Azure…). In bare-metal kubernetes clusters, like the one I am building, "LoadBalancer" services will remain in the “pending” state indefinitely when created.
-(see in previous output of `kubectl get services` command how `traefik` LoadBAlancer service "Exteal IP" is "pending")
+(see in previous output of `kubectl get services` command how `traefik` LoadBAlancer service "External IP" is "pending")
 
 For Bare-metal cluster only two optios remain availale for managing incoming traffic to the cluster: “NodePort” and “externalIPs” services. Both of these options have significant downsides for production use, which makes bare-metal clusters second-class citizens in the Kubernetes ecosystem.
 
