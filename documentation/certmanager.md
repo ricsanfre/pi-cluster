@@ -1,128 +1,8 @@
-# SSL and HTTPS
-
-The frontends that will be deployed on the Kubernetes cluster should be SSL encrypted and access through HTTPS. If possible those certificates should be valid public certificates.
+# Automating SSL certifications managment with Cert-Manager
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
 
 It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry.
-
-1. [Configure Traefik](#configure-traefik)
-2. [Cert-Manager installation](#cert-manager-installation)
-3. [Self-signed SSL certificates](#self-signed-certificates)
-4. [Lets Encrypt SSL certificates](#lets-encrypt)
-
-## Configure Traefik
-
-Traefik is installed by default within K3S enabling Ingress Kubernetes as Traefik Provider
-
-
-### Enabling TLS in Ingress resources
-
-As stated in the [documentation](https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress/)
-Ingress resource annotation `traefik.ingress.kubernetes.io/router.tls: "true"` and `traefik.ingress.kubernetes.io/router.entrypoints: websecure` can be used to limit the endpoint to HTTPS and enable TLS on the underlying traefik's router configuration created from the ingress.
-
-
-```yml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: myingress
-  annotations:
-    # HTTPS entrypoint enabled
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # TLS enabled
-    traefik.ingress.kubernetes.io/router.tls: true
-spec:
-  tls:
-  - hosts:
-    - whoami
-    secretName: whoami-tls # SSL certificate store in Kubernetes secret
-  rules:
-    - host: whoami
-      http:
-        paths:
-          - path: /bar
-            pathType: Exact
-            backend:
-              service:
-                name:  whoami
-                port:
-                  number: 80
-          - path: /foo
-            pathType: Exact
-            backend:
-              service:
-                name:  whoami
-                port:
-                  number: 80
-
-```
-
-SSL certificates can be created manually and stored in Kubernetes `Secrets`. This manual step can be avoided using Cert-manager (see next section)
-
-```yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: whoami-tls
-data:
-  tls.crt: base64 encoded crt
-  tls.key: base64 encoded key
-type: kubernetes.io/tls
-```
-
-### Redirecting HTTP traffic to HTTPS
-
-Middlewares are a means of tweaking the requests before they are sent to the service (or before the answer from the services are sent to the clients)
-Traefik's [HTTP redirect scheme Middleware](https://doc.traefik.io/traefik/middlewares/http/redirectscheme/) can be used for redirecting HTTP traffic to HTTPS.
-
-```yml
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: redirect
-  namespace: traefik-system
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true
-```
-
-This middleware can be inserted into a Ingress resource using HTTP entrypoint
-
-Ingress resource annotation `traefik.ingress.kubernetes.io/router.entrypoints: web` indicates the use of HTTP as entrypoint and `traefik.ingress.kubernetes.io/router.middlewares:<namespace>-<middleware_name>@kuberentescrd` indicates to use a middleware when routing the requests.
-
-
-```yml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: myingress
-  annotations:
-    # HTTP entrypoint enabled
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-    # Use HTTP to HTTPS redirect middleware
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
-spec:
-  rules:
-    - host: whoami
-      http:
-        paths:
-          - path: /bar
-            pathType: Exact
-            backend:
-              service:
-                name:  whoami
-                port:
-                  number: 80
-          - path: /foo
-            pathType: Exact
-            backend:
-              service:
-                name:  whoami
-                port:
-                  number: 80
-```
 
 ## Cert Manager Installation
 
@@ -197,9 +77,6 @@ spec:
     - example.com
     secretName: myingress-cert # < cert-manager will store the created certificate in this secret.
 ```
-
-
-
 
 ## Lets Encrypt
 

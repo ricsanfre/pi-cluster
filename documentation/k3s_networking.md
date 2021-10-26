@@ -24,9 +24,9 @@ Traefik is a modern HTTP reverse proxy and load balancer made to deploy microser
 
 Instead of using the embeded service load balancer that only comes with K3S, a more generic kubernetes load balancer like [Metal LB](https://metallb.universe.tf/) will be used. This load balancer can be used with almost any distribution of kubernetes.
 
-During K3S installation of embedded service load balancer will be disabled.
+In order to use Metal LB, K3S embedded Klipper Load Balancer must be disabled: K3s server installation  option `--disable servicelb`.
 
-After doing that the pods and services started by default are:
+K3S fresh installation (disabling embedded service load balanced) the following pods and services are started by default:
 
 ```
 kubectl get pods --all-namespaces
