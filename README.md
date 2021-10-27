@@ -1,6 +1,6 @@
 # Raspberry Pi Cluster
 ## Scope
-The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and using Ansible to automate the deployment and configuration.
+The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and Ansible to automate the deployment and configuration.
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible. 
 As part of the project the goal is to deploy on the Kuberenets cluster basic services such as distributed block storage for persistent volumes (Rook/Ceph or LongHorn) or centralized monitoring (Prometheus and ELK).
@@ -14,17 +14,19 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
 
 ## Content
 
-1. [Lab architecture and hardware](documentation/hardware.md). Home lab design and hardware selection
-2. [Installing Ansible Control Node (pimaster)](documentation/pimaster.md). Ansible and Ansible Molecule installation
-3. [Raspberry-PI preparation tasks](documentation/preparing_raspberrypi.md). Updating Raspberry PI firmware to enable booting from USB.
-4. [Gateway node configuration](documentation/gateway.md). Configuring a Raspberry PI as firewall and provider of cluster services (NTP, DHCP, DNS and iSCSI SAN services).
-5. [Cluster nodes configuration](documentation/node.md). Configuring 4 Raspberry PI as nodes of the cluster, using network and storage services from Gateway node
-6. [K3S Installation and basic configuration](documentation/installing_k3s.md). Installing K3S lightweight kubernetes cluster.
-7. [K3S Networking Configuration](documentation/k3s_networking.md). Complementing K3S default networking services (Flannel and CoreDNS) with baremetal Load Balancer (Metal LB).
-8. [K3S Ingress Configuration](documentation/ingress_controller.md). Configuring ingress controller (Traefik) to enable secure and encrypted HTTP incoming traffic using SSL certificates.
-9. [SSL certificates centralized management](documentation/certmanager.md). Configure Cert-manager to automatically manage the lifecycle of SSL certificates.
-10. [K3S Distributed Storage](documentation/longhorn.md). Installing LongHorn as cluster distributed storage solution for providing Persistent Volumes to pods.
-11. [K3S centralized logging monitoring](documentation/logging.md). Installing a centralized log monitoring tool based on EFK stack. Real-time processing of Kuberentes pods and services and homelab servers logs.
+1) [Lab architecture and hardware](documentation/hardware.md). Home lab design and hardware selection
+2) [Ansible Control Node (pimaster)](documentation/pimaster.md). Installation and configuration of Ansible control node and ansible development and testing environment (Molecule, Docker, Vagrant) 
+3) Nodes firmware, operating system and basic services configuration
+    - [Raspberry-PI preparation tasks](documentation/preparing_raspberrypi.md). Updating Raspberry PI firmware to enable booting from USB.
+    - [Gateway server OS installation and configuration](documentation/gateway.md). Installing Ubuntu OS and configuring a Raspberry PI as firewall and provider of cluster services (NTP, DHCP, DNS and iSCSI SAN services).
+    - [Cluster nodes OS installation and configuration](documentation/node.md). Installing Ubutuntu and configuring 4 Raspberry PI as nodes of the cluster, using network and storage services from Gateway node
+4) K3S Cluster Installation and basic services configuration
+    - [K3S Installation](documentation/installing_k3s.md). Installing K3S lightweight kubernetes cluster.
+    - [K3S Networking Configuration](documentation/k3s_networking.md). Complementing K3S default networking services (Flannel and CoreDNS) with baremetal Load Balancer (Metal LB).
+    - [K3S Ingress Configuration](documentation/ingress_controller.md). Configuring ingress controller (Traefik) to enable secure and encrypted HTTP incoming traffic using SSL certificates.
+        - [SSL certificates centralized management](documentation/certmanager.md). Configure Cert-manager to automatically manage the lifecycle of SSL certificates.
+    - [K3S Distributed Storage](documentation/longhorn.md). Installing LongHorn as cluster distributed storage solution for providing Persistent Volumes to pods.
+    - [K3S centralized logging monitoring](documentation/logging.md). Installing a centralized log monitoring tool based on EFK stack. Real-time processing of Kuberentes pods and services and homelab servers logs.
 
 ## About the Project
 

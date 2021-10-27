@@ -6,9 +6,17 @@ The home lab I am building is shown in the following picture
 
 ![Cluster-lab](images/RaspberryPiCluster_architecture.png)
 
+A K3S cluster composed of 4 Raspberry Pi 4 (4GB), one master node `node1` and three worker nodes `node2`, `node3` and `node4` connected to a dedicated LAN switch.
+
+A Raspberry PI 4 (2GB), `gateway` will be used as Router/Firewall to isolate lab network from my home network,. It will also provide networking services to my lab network: Internet Access, DNS, NTP and DHCP, SAN services. 
+
+As Ansible control node, `pimaster`, a VM running on my laptop will be used. Required SSH connectivity from control node to cluster nodes will be routed through `gateway`.
+
 ## Networking
 
-A Raspberry Pi cluster composed of 4 Raspberry Pi 4 (4GB), `node1-node4` will be connected using a LAN Switch. To isolate lab network from my home network, a Raspberry PI 4 (2GB), `gateway` will be used as Router/Firewall of the lab network. It will also provide networking sercices: Internet Access, DNS, NTP and DHCP services to my lab network. `gateway` will be connected to my home network using its WIFI interface and to the LAN Switch using the eth interface.
+A 8 GE ports LAN switch, NetGear GS108-300PES, supporting VLAN configuration and remote management, is used to provide connectivity to all Raspberry Pis (`gateway` and `node1-node4`), using Raspeberry PI Gigabit Ethernet port.
+
+`gateway` will be also connected to my home network using its WIFI interface in order to route and filter traffic comming in/out the cluster.
 
 ## Storage
 
@@ -18,9 +26,12 @@ Additional storage is required per node for deploying the Kubernetes distributed
 
 iSCSI SAN will be deployed instead of attaching an additional USB Flash Disks to each of the nodes because, first, I wanted to test the different storage options for RaspberryPI and to learn about iSCSI configuration and deployment on bare-metal environments, and second, deploying a centralized storage solution was cheaper than installing additional USB Flash Disks.
 
-After testing the performance of the different storage options for the Raspberry Pi, the performace obtained using local attached USB3.0 Flash Disk is quite simillar to the one obtained using iSCSI with a SSD Disk as central storage). See this [repository](https://github.com/ricsanfre/pi-storage-benchmark) for the details of the testing procedure and the results.
+After testing the performance of the different storage options for the Raspberry Pi, the performace obtained using local attached USB3.0 Flash Disk is quite simillar to the one obtained using iSCSI with a SSD Disk as central storage.
+
+> See this [repository](https://github.com/ricsanfre/pi-storage-benchmark) for the details of the testing procedure and the results.
 
 A SAN (Storage Access Network) will be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node4`.
+
 As storage device, a SSD disk will be attached to `gateway` node. This SSD disk will be used as well to host the OS.
 
 
