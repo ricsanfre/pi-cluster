@@ -36,14 +36,23 @@ spec:
 
 Basic HTTP authentication can be used as Traefik Middleware
 
+User/password can be generated with `htpasswd` utility. THis utility is part of `apache2-utils` package
+It can be installed in order to use it or using docker image to execute the comand:
+
 - Step 1. Install apache2-utils
       sudo apt install apache2-utils
 
 - Step 2. Create a base64 encoded htpasswd
-    htpasswd -nb <user> <passwd> | openssl base 4
+ 
+    htpasswd -nb <user> <passwd> | base64
 
-    htpasswd -nb oss s1cret0 | openssl base 4
+    htpasswd -nb oss s1cret0 | base64
     
+> NOTE: As an alternative, docker can be used for executing the command
+>  
+>```  
+>docker run --rm -it --entrypoint /usr/local/apache2/bin/htpasswd httpd:alpine -nb user password | base64
+>```
 - Step 3. Create manifest for the Basic-Auth Middleware and Ingress
 
 ```yml
