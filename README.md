@@ -16,8 +16,10 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
 
 1) [Lab architecture and hardware](documentation/hardware.md). Home lab design and hardware selection
 2) [Ansible Control Node (pimaster)](documentation/pimaster.md). Installation and configuration of Ansible control node and ansible development and testing environment (Molecule, Docker, Vagrant) 
-3) Nodes firmware, operating system and basic services configuration
+3) Nodes firmware, operating system installation and basic services configuration
     - [Raspberry-PI preparation tasks](documentation/preparing_raspberrypi.md). Updating Raspberry PI firmware to enable booting from USB.
+    - [Ubuntu 20.04 Installation on Raspberry Pis](documentation/installing_ubuntu.md). General procedure for installing Ubuntu 20.04 OS on USB storage device and boot Raspberry Pi from USB.
+    - [Configuring SAN for the lab cluster](documentation/san_installation.md). Details about the configuration of SAN using a Raspeberry PI, gateway as iSCSI Target exposing LUNs to cluster nodes.
     - [Gateway server OS installation and configuration](documentation/gateway.md). Installing Ubuntu OS and configuring a Raspberry PI as firewall and provider of cluster services (NTP, DHCP, DNS and iSCSI SAN services).
     - [Cluster nodes OS installation and configuration](documentation/node.md). Installing Ubutuntu and configuring 4 Raspberry PI as nodes of the cluster, using network and storage services from Gateway node
 4) K3S Cluster Installation and basic services configuration
