@@ -51,17 +51,36 @@ Installation using `Helm` (Release 3):
 
 Create a Ingress rule to make Longhorn front-end available through the Ingress Controller (Traefik) using a specific URL (`storage.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
 
+Longhorn backend is providing not secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
+Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured. 
+
+
 - Step 1. Create a manifest file `longhorn_ingress.yml`
 
+Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares, HTTPS redirect and basic authentication will be used. 
+
 ```yml
+# HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: longhorn-ingress
   namespace: longhorn-system
   annotations:
-    kubernetes.io/ingress.class: traefik
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: longhorn
 spec:
+  tls:
+  - hosts:
+    - storage.picluster.ricsanfre.com
+    secretName: storage-tls
   rules:
   - host: storage.picluster.ricsanfre.com
     http:
@@ -73,6 +92,31 @@ spec:
             name: longhorn-frontend
             port:
               number: 80
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: longhorn-redirect
+  namespace: longhorn-system
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: storage.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: longhorn-frontend
+              port:
+                number: 80
 ```
 
 - Step 2. Apply the manifest file

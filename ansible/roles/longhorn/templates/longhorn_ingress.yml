@@ -10,6 +10,8 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
     cert-manager.io/common-name: longhorn

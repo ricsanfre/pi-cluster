@@ -1,5 +1,4 @@
 ---
-
 - name: Create traefik namespace.
   kubernetes.core.k8s:
     name: traefik-system
@@ -12,3 +11,4 @@
     state: present
   with_items:
     - redirect_middleware.yml
+    - basicauth_middleware.yml
