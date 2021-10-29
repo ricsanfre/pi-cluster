@@ -1,0 +1,10 @@
+---
+# Deploy fluentbit
+- name: Deploy fluentbit.
+  include_role:
+    name: ricsanfre.fluentbit
+  vars:
+    # lua scripts
+    fluentbit_lua_scripts:
+      - name: adjust_ts.lua
+        content: "{{ lookup('template','templates/adjust_ts.lua') }}"

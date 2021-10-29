@@ -35,15 +35,15 @@
       tags: ['certmanager']
     - role: longhorn
       tags: ['longhorn']
-    - role: logging
+    - role: logging/k3s
       tags: ['logging']
 
-- name: Deploy fluentbit on Pi Cluster Gateway
-  hosts: gateway
+- name: Deploy fluentbit on control nodes (gateway and pimaster)
+  hosts: control
   gather_facts: true
   tags: [logging]
   vars:
     ansible_become: true
   roles:
-    - role: ricsanfre.fluentbit
+    - role: logging/external_node
       tags: ['logging']
