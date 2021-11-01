@@ -5,6 +5,16 @@
     executable: /bin/bash
   changed_when: true
 
+- name: Clean longhorn iscsi targets and nodes
+  shell: |
+    for i in `sudo iscsiadm -m discovery -o show | grep -v 10.0.0.1 | awk '{print $1}'`
+    do
+    echo "Deleting target $i"
+    sudo iscsiadm -m discovery -p $i -o delete
+    done
+  register: output
+  changed_when: true
+
 - name: Clean container/pod logs
   shell: "rm -rf /var/log/pods /var/log/containers"
   args:
