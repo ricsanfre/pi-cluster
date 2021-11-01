@@ -28,3 +28,9 @@
     state: present
   with_items:
     - longhorn_ingress.yml
+
+- name: Remove Local-Path as default storage class
+  command:
+    cmd: >
+     kubectl patch storageclass local-path -p
+     '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
