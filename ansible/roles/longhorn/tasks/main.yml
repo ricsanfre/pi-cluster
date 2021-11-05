@@ -15,7 +15,7 @@
   kubernetes.core.helm:
     name: longhorn
     chart_ref: longhorn/longhorn
-    # chart_version: "2.0.7"
+    update_repo_cache: true
     release_namespace: longhorn-system
     state: present
     release_values:
