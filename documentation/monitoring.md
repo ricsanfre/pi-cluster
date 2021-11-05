@@ -32,7 +32,235 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     ```
     kubectl create namespace monitoring
     ```
-- Step 3: Install kube-Prometheus-stack in the monitoring namespace
+- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn
+  ```yml
+  alertmanager:
+        alertmanagerSpec:
+          storage:
+            volumeClaimTemplate:
+              spec:
+                storageClassName: longhorn
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: 50Gi
+      prometheus:
+        prometheusSpec:
+          storageSpec:
+            volumeClaimTemplate:
+              spec:
+                storageClassName: longhorn
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: 50Gi
+   ```yml
+
+- Step 3: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
     ```
-    helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+    helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
     ```
+
+## Ingress resources configuration
+
+Enable external access to Prometheus, Grafana and AlertManager through Ingress Controller
+
+Create a Ingress rule to make prometheus stack front-ends available through the Ingress Controller (Traefik) using a specific URLs (`prometheus.picluster.ricsanfre.com` , `grafana.picluster.ricsanfre.com` and `alertmanager.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer service external IP.
+
+prometheus, Grafana and alertmanager backend are not providing secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
+Since prometheus frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured. 
+
+
+- Step 1. Create a manifest file `prometheus_ingress.yml`
+
+Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares, HTTPS redirect and basic authentication will be used. 
+
+```yml
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-ingress
+  namespace: k3s-monitoring
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: prometheus
+spec:
+  tls:
+  - hosts:
+    - prometheus.picluster.ricsanfre.com
+    secretName: prometheus-tls
+  rules:
+  - host: prometheus.picluster.ricsanfre.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-prometheus-stack-prometheus
+            port:
+              number: 9090
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: prometheus-redirect
+  namespace: k3s-monitoring
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: prometheus.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: kube-prometheus-stack-prometheus
+              port:
+                number: 9090
+```
+- Step 2. Create a manifest file `grafana_ingress.yml`
+
+Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares HTTPS redirect will be used
+
+```yml
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: k3s-monitoring
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: grafana
+spec:
+  tls:
+  - hosts:
+    - grafana.picluster.ricsanfre.com
+    secretName: grafana-tls
+  rules:
+  - host: grafana.picluster.ricsanfre.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-prometheus-stack-grafana
+            port:
+              number: 80
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: grafana-redirect
+  namespace: k3s-monitoring
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: grafana.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: kube-prometheus-stack-grafana
+              port:
+                number: 80
+
+```
+- Step 2. Create a manifest file `alertmanager_ingress.yml`
+
+Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares HTTPS redirect will be used
+
+```yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alertmanager-ingress
+  namespace: k3s-monitoring
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: alertmanager
+spec:
+  tls:
+  - hosts:
+    - alertmanager.picluster.ricsanfre.com
+    secretName: prometheus-tls
+  rules:
+  - host: alertmanager.picluster.ricsanfre.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-prometheus-stack-alertmanager
+            port:
+              number: 9093
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: alertmanager-redirect
+  namespace: k3s-monitoring
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: alertmanager.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: kube-prometheus-stack-alertmanager
+              port:
+                number: 9093
+
+``` 
+- Step 3. Apply the manifest file
+
+    kubectl apply -f prometheus_ingress.yml grafana_ingress.yml
