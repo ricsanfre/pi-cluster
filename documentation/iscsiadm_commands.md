@@ -41,6 +41,10 @@ View iSCSI database regarding discovery:
     iscsiadm -m discovery -o show
  
 
+Delete discovery target and its associated nodes
+
+   iscsiadm -m discovery -p ip_addess -o delete
+
 View iSCSI database regarding targets to login to:
 
     iscsiadm -m node -o show
