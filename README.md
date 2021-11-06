@@ -29,6 +29,7 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
         - [SSL certificates centralized management](documentation/certmanager.md). Configure Cert-manager to automatically manage the lifecycle of SSL certificates.
     - [K3S Distributed Storage](documentation/longhorn.md). Installing LongHorn as cluster distributed storage solution for providing Persistent Volumes to pods.
     - [K3S centralized logging monitoring](documentation/logging.md). Installing a centralized log monitoring tool based on EFK stack. Real-time processing of Kuberentes pods and services and homelab servers logs.
+    - [K3S centralized monitoring](documentation/monitoring.md). Installing Kube Prometheus Stack for monitoring Kuberentes cluster
 
 ## About the Project
 
