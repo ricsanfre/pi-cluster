@@ -198,7 +198,7 @@ spec:
                 number: 80
 
 ```
-- Step 2. Create a manifest file `alertmanager_ingress.yml`
+- Step 3. Create a manifest file `alertmanager_ingress.yml`
 
 Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares HTTPS redirect will be used
 
@@ -261,6 +261,6 @@ spec:
                 number: 9093
 
 ``` 
-- Step 3. Apply the manifest file
+- Step 4. Apply the manifest file
 
-    kubectl apply -f prometheus_ingress.yml grafana_ingress.yml
+    kubectl apply -f prometheus_ingress.yml grafana_ingress.yml alertmanager_ingress.yml
