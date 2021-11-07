@@ -107,10 +107,13 @@ storage_volumegroups:
   - name: vg_iscsi
     devices:
       - /dev/sda3
+  - name: vg_storage
+    devices:
+      - /dev/sda4
 storage_volumes:
   - name: vg_iscsi_lv_node1
     vg: vg_iscsi
-    size: 100g
+    size: 25g
   - name: vg_iscsi_lv_node2
     vg: vg_iscsi
     size: 100g
@@ -120,6 +123,22 @@ storage_volumes:
   - name: vg_iscsi_lv_node4
     vg: vg_iscsi
     size: 100g
+  - name: vg_storage_lv_gateway
+    vg: vg_storage
+    size: 100%VG
+storage_filesystems:
+  - name: /dev/vg_storage/vg_storage_lv_gateway
+    filesystem: ext4
+storage_mounts:
+  - name: /storage
+    src: /dev/vg_storage/vg_storage_lv_gateway
+    owner: root
+    group: root
+    mode: "0755"
+    opts: _netdev
+    boot: true
+    dump: 0
+    passno: 2
 
 ###################
 # iSCSI_Target Role
