@@ -35,6 +35,8 @@
       tags: ['certmanager']
     - role: longhorn
       tags: ['longhorn']
+    - role: prometheus
+      tags: ['monitoring']
     - role: logging/k3s
       tags: ['logging']
 

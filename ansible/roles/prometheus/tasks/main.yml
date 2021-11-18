@@ -1,0 +1,49 @@
+---
+- name: Create prometheus namespace.
+  kubernetes.core.k8s:
+    name: k3s-monitoring
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add prometheus community chart repo.
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: "https://prometheus-community.github.io/helm-charts"
+
+- name: Deploy prometheus-stack Helm chart.
+  kubernetes.core.helm:
+    name: kube-prometheus-stack
+    chart_ref: prometheus-community/kube-prometheus-stack
+    release_namespace: k3s-monitoring
+    state: present
+    release_values:
+      alertmanager:
+        alertmanagerSpec:
+          storage:
+            volumeClaimTemplate:
+              spec:
+                storageClassName: "{{ prometheus_storage_class }}"
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: "{{ prometheus_storage_size }}"
+      prometheus:
+        prometheusSpec:
+          storageSpec:
+            volumeClaimTemplate:
+              spec:
+                storageClassName: "{{ prometheus_storage_class }}"
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: "{{ prometheus_storage_size }}"
+
+- name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - prometheus_ingress.yml
+    - grafana_ingress.yml
+    - alertmanager_ingress.yml

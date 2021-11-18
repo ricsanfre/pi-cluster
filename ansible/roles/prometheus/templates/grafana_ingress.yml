@@ -1,0 +1,56 @@
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: k3s-monitoring
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: grafana
+spec:
+  tls:
+  - hosts:
+    - grafana.picluster.ricsanfre.com
+    secretName: grafana-tls
+  rules:
+  - host: grafana.picluster.ricsanfre.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-prometheus-stack-grafana
+            port:
+              number: 80
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: grafana-redirect
+  namespace: k3s-monitoring
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: grafana.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: kube-prometheus-stack-grafana
+              port:
+                number: 80
