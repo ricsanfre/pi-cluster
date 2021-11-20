@@ -28,14 +28,6 @@
     - role: ricsanfre.ntp
       tags: [ntp]
 
-    # iSCSI LUNs: LVM Volumes configuration
-    - role: ricsanfre.storage
-      tags: [iscsi]
-
-    # iSCSI server (target) configuration
-    - role: ricsanfre.iscsi_target
-      tags: [iscsi]
-
 - name: Configure Pi Cluster Nodes
   hosts: picluster
   gather_facts: true
