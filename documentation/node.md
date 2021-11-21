@@ -11,12 +11,31 @@
 3. [Ubuntu boot from USB](#unbuntu-boot-from-usb)
 4. [Initial OS Configuration](#ubuntu-os-initital-configuration)
 5. [NTP Server Configuration](#ntp-server-configuration)
-6. [iSCSI Configuration](#iscsi-configuration)
+6. [Storage configuration](#storage-configuration)
+7. [iSCSI Configuration](#iscsi-configuration)
 
 ## Hardware
 
-`node1-4` are based on a Raspberry Pi 4B 4GB boot from a USB Flash Disk avoiding the use of SDCards.
-A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
+`node1-4` are based on a Raspberry Pi 4B 4GB booting from a SSD Disk.
+A Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node4`.
+
+## Storage configuration
+
+SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating a logical volumes (LVM) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kuberentes distributed storage solution and by backup solution.
+
+cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
+
+> NOTE: As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/)
+
+Command executed in boot time is
+
+    sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
+
+This command:
+  - First convert MBR partition to GPT (-g option)
+  - Second moves the GPT backup block to the end of the disk  (-e option)
+  - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
+  - And labels it as an LVM partition (-t option)
 
 ## Network Configuration
 
@@ -48,14 +67,15 @@ See NTP Configuration instructions [here](document/gateway.md#ntp-server-configu
 
 NTP configuration in `node1-node4` has been automated using ansible role **ricsanfre.ntp**
 
+## Storage configuration
+
+For `node1-node4` the partition created in boot time using most of the disk space (reserving just 30GB for the root filesystem),`/dev/sda2`, is added to a LVM Volume Group and create a unique Logical Volume which is formatted (ext4) and mounted as `/storage`.
+
+LVM partition and formatting tasks have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
+` 
+
 ## iSCSI configuration
 
-`node1-node4` are configured as iSCSI Initiator to use iSCSI volumes exposed by `gateway`
+Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. All nodes of the cluster need to be configured as iSCSI initiators, When configurin iSCSI initiator, authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
 
-iSCSI configuration in `node1-node4`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
-
-Further details about iSCSI configurations and step-by-step manual instructions are defined [here](./san_installation.md).
-
-Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
-
-< NOTE: Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. Authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
+iSCSI initiator configuration in `node1-node4` have been automated with Ansible developing the ansible role: **ricsanfre.iscsi_initiator**.
