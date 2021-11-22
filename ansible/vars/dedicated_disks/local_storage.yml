@@ -1,0 +1,31 @@
+---
+
+# ------------------------------------------
+# DEDICATED DISKS ARCHITECTURE
+# ------------------------------------------
+# Variables for configuring local disks
+
+#############################################
+# Storage role variables.
+#############################################
+
+storage_volumegroups:
+  - name: vg_local
+    devices:
+      - /dev/sda3
+storage_volumes:
+  - name: vg_local_lv_storage
+    vg: vg_storage
+    size: 100%VG
+storage_filesystems:
+  - name: /dev/vg_local/vg_local_lv_storage
+    filesystem: ext4
+storage_mounts:
+  - name: /storage
+    src: /dev/vg_local/vg_local_lv_storage
+    owner: root
+    group: root
+    mode: "0755"
+    boot: true
+    dump: 0
+    passno: 2

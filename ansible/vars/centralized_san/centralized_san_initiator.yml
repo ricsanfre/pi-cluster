@@ -1,0 +1,51 @@
+---
+# ------------------------------------------
+# CENTRALIZED SAN (ALTERNATIVE ARCHITECTURE)
+# ------------------------------------------
+# Variables for configuring iSCSI in clusters nodes
+# iSCSI Initiator Configuration + Mouting iSCSI LUNs
+
+################################
+# iSCSI-initiator role variables
+################################
+
+open_iscsi_automatic_startup: true
+open_iscsi_targets:
+  - name: gateway-target
+    discover: true
+    auto_portal_startup: true
+    auto_node_startup: true
+    portal: 10.0.0.1
+    target: iqn.2021-07.com.ricsanfre:gateway
+    login: true
+    node_auth: CHAP
+    node_user: "{{ open_iscsi_initiator_name }}"
+    node_pass: s1cret0
+    node_user_in: iqn.2021-07.com.ricsanfre:gateway
+    node_pass_in: 0tr0s1cret0
+
+#############################################
+# Storage role variables. Mount iSCSI volumes
+#############################################
+
+storage_volumegroups:
+  - name: vg_iscsi
+    devices:
+      - /dev/sdb
+storage_volumes:
+  - name: vg_iscsi_lv_node
+    vg: vg_iscsi
+    size: 100%VG
+storage_filesystems:
+  - name: /dev/vg_iscsi/vg_iscsi_lv_node
+    filesystem: ext4
+storage_mounts:
+  - name: /storage
+    src: /dev/vg_iscsi/vg_iscsi_lv_node
+    owner: root
+    group: root
+    mode: "0755"
+    opts: _netdev
+    boot: true
+    dump: 0
+    passno: 2
