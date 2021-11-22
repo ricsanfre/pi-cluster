@@ -1,8 +1,0 @@
----
-- hosts: picluster
-  vars:
-    ansible_become: true
-  roles:
-    - basic_setup
-    - ricsanfre.ntp
-    - ricsanfre.iscsi_initiator
