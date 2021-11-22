@@ -77,6 +77,7 @@ After you flash (burn) the image,  File Explorer (Windows) may have trouble seei
       mode: reboot
 
     ```
+
 - Modify `/boot/network-config` file within the SDCard
 
     ```yml
@@ -126,7 +127,9 @@ mmcblk0     179:0    0 29.7G  0 disk
 └─mmcblk0p2 179:2    0 29.5G  0 part /
 ```
 
-> NOTE: In this case USB device is labelled as sda: two partitions (boot partition: sda1)
+> NOTE: In this case USB device is labelled as sda: two partitions (boot and OS) are automatically created by initial image burning process.
+>  - boot partition: sda1
+>  - root filesystem: sda2
 
 ### Step 3.5 (Case of SSDD with USB to SATA Adapter). Checking USB-SATA Adapter support UASP
 

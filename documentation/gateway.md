@@ -1,7 +1,8 @@
 # Gateway Configuration
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
-It will also provide DNS, NTP and DHCP services to my lab network.
+It will also provide DNS, NTP and DHCP services to my lab network. In case of deployment using centralized SAN storage architectural option, `gateway` is providing SAN services also.
+
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
 In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node4**): Ubuntu 20.04.3 64 bits.
@@ -11,17 +12,21 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 
 1. [Hardware](#hardware)
 2. [Network Configuration](#network-configuration)
-3. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
-4. [Initial OS Configuration](#ubuntu-os-initital-configuration)
-5. [Router/Firewall Configuration](#routerfirewall-configuration)
-6. [DHCP/DNS Configuration](#dhcpdns-configuration)
-7. [NTP Server Configuration](#ntp-server-configuration)
+3. [Storage Configuration - Centralized SAN](#storage-configuration-centralized-san)
+4. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
+5. [Initial OS Configuration](#ubuntu-os-initital-configuration)
+6. [Router/Firewall Configuration](#routerfirewall-configuration)
+7. [DHCP/DNS Configuration](#dhcpdns-configuration)
+8. [NTP Server Configuration](#ntp-server-configuration)
+9. [iSCSI configuration - Centralized SAN](#iscsi-configuration-centralized-san)
 
 
 ## Hardware
 
-`gateway` node is based on a Raspberry Pi 4B 2GB boot from a USB Flash Disk avoiding the use of SDCards.
-A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
+`gateway` node is based on a Raspberry Pi 4B 2GB booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+
+- Dedicated disks storage architecture: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
+- Centralized SAN architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway`. SSD disk for hosting OS and iSCSI LUNs
 
 ## Network Configuration
 
@@ -48,22 +53,33 @@ wifis:
     nameservers:
       addresses: [80.58.61.250,80.58.61.254]
 ```
- 
-## Unbuntu boot from SSD
+## Storage configuration. Centralized SAN
 
-`gateway` node will be acting as SAN server and to enhace its performance it will boot from USB using the same SSD disk that will be used for LUNs storage
+SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating a logical volumes (LVM) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kuberentes distributed storage solution and by backup solution.
 
-SSD Disk will be partitioned reserving the biggest partition for the iSCSI LUNS: 32 GB will be reserved for the OS and the rest of the disk will be used for LUNs.
+cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
 
-Initial partitions (boot and OS) will be created during initial image burning process. Partitions need to be reconfigured before the first boot.
+> NOTE: As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/)
 
-The installation procedure followed is the described [here](./installing_ubuntu.md) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
+Command executed in boot time is
 
+    sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
 
-| User data file   | Network configuration |
-| ------------- |-------------|
-| [user-data](../cloud-init-ubuntu-images/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/gateway/network-config)|
+This command:
+  - First convert MBR partition to GPT (-g option)
+  - Second moves the GPT backup block to the end of the disk  (-e option)
+  - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
+  - And labels it as an LVM partition (-t option)
 
+## Unbuntu boot from USB
+
+The installation procedure followed is the described [here](./installing_ubuntu.md) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
+
+| Storage Architeture| User data    | Network configuration |
+|--------------------| ------------- |-------------|
+|  Dedicated Disks |[user-data](../cloud-init-ubuntu-images/dedicated_disks/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/dedicated_disks/gateway/network-config)|
+| Centralized SAN | [user-data](../cloud-init-ubuntu-images/centralized_san/gateway/user-data) | 
+[network-config](../cloud-init-ubuntu-images/centralized_san/gateway/network-config)|
 
 
 ## Ubuntu OS Initital Configuration
@@ -317,3 +333,15 @@ Check time synchronization with Chronyc
     ```
     chronyc tracking
 	  ```
+
+## iSCSI configuration. Centralized SAN
+
+`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node4`
+
+iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
+
+Specific `gateway` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_target.yml`](../ansible/vars/centralized_san/centralized_san_target.yml)
+
+Further details about iSCSI configurations and step-by-step manual instructions are defined [here](./san_installation.md).
+
+`gateway` exposes a dedicated LUN of 100 GB for each of the clusters nodes.
