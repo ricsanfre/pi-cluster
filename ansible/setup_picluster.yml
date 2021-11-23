@@ -38,10 +38,12 @@
             file: vars/centralized_san/iscsi_target.yml
         # iSCSI LUNs: LVM Volumes configuration
         - name: Configure iSCSI SAN Target
-          include_role: ricsanfre.storage
+          include_role:
+            name: ricsanfre.storage
         # iSCSI LUNs: LVM Volumes configuration
         - name: Configure iSCSI SAN Target
-          include_role: ricsanfre.iscsi_target
+          include_role:
+            name: ricsanfre.iscsi_target
       when: centralized_san
       tags: [iscsi]
 
@@ -75,10 +77,12 @@
             file: vars/centralized_san/iscsi_initiator.yml
         # iSCSI client (initiator) configuration
         - name: Configure iSCSI Initiator
-          include_role: ricsanfre.iscsi_initiator
+          include_role:
+            name: ricsanfre.iscsi_initiator
         # Mounting iSCSI LUNs
         - name: Configure iSCSI SAN Target
-          include_role: ricsanfre.storage
+          include_role:
+            name: ricsanfre.storage
       when: centralized_san
       tags: [iscsi]
 
@@ -92,11 +96,13 @@
         # iSCSI client (initiator) configuration
         # iSCSI initiator needs to be configured for Longhorn
         - name: Configure iSCSI Initiator
-          include_role: ricsanfre.iscsi_initiator
+          include_role:
+            name: ricsanfre.iscsi_initiator
           vars:
             - open_iscsi_automatic_startup: true
         # Configure local storage
         - name: Configure Local Storage
-          include_role: ricsanfre.storage
+          include_role:
+            name: ricsanfre.storage
       when: not centralized_san
       tags: [storage]

@@ -15,7 +15,7 @@ storage_volumegroups:
       - /dev/sda3
 storage_volumes:
   - name: vg_local_lv_storage
-    vg: vg_storage
+    vg: vg_local
     size: 100%VG
 storage_filesystems:
   - name: /dev/vg_local/vg_local_lv_storage
