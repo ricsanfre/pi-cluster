@@ -20,12 +20,14 @@
           - python3-setuptools
         state: present
       become: true
+      tags: ['always']
 
     - name: Ensure kubernetes Python library is installed.
       pip:
         name: kubernetes
         state: present
       become: true
+      tags: ['always']
   roles:
     - role: metallb
       tags: ['metallb']
