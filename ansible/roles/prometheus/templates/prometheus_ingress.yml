@@ -17,20 +17,20 @@ metadata:
     cert-manager.io/common-name: prometheus
 spec:
   tls:
-  - hosts:
-    - prometheus.picluster.ricsanfre.com
-    secretName: prometheus-tls
+    - hosts:
+        - prometheus.picluster.ricsanfre.com
+      secretName: prometheus-tls
   rules:
-  - host: prometheus.picluster.ricsanfre.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: kube-prometheus-stack-prometheus
-            port:
-              number: 9090
+    - host: prometheus.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-prometheus
+                port:
+                  number: 9090
 
 ---
 # http ingress for http->https redirection
@@ -49,10 +49,10 @@ spec:
     - host: prometheus.picluster.ricsanfre.com
       http:
         paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: kube-prometheus-stack-prometheus
-              port:
-                number: 9090
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-prometheus
+                port:
+                  number: 9090

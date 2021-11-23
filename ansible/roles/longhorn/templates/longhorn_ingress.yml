@@ -17,20 +17,20 @@ metadata:
     cert-manager.io/common-name: longhorn
 spec:
   tls:
-  - hosts:
-    - storage.picluster.ricsanfre.com
-    secretName: storage-tls
+    - hosts:
+        - storage.picluster.ricsanfre.com
+      secretName: storage-tls
   rules:
-  - host: storage.picluster.ricsanfre.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: longhorn-frontend
-            port:
-              number: 80
+    - host: storage.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: longhorn-frontend
+                port:
+                  number: 80
 
 ---
 # http ingress for http->https redirection
@@ -49,10 +49,10 @@ spec:
     - host: storage.picluster.ricsanfre.com
       http:
         paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: longhorn-frontend
-              port:
-                number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: longhorn-frontend
+                port:
+                  number: 80

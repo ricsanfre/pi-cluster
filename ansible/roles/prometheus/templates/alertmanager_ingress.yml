@@ -17,20 +17,20 @@ metadata:
     cert-manager.io/common-name: alertmanager
 spec:
   tls:
-  - hosts:
-    - alertmanager.picluster.ricsanfre.com
-    secretName: prometheus-tls
+    - hosts:
+        - alertmanager.picluster.ricsanfre.com
+      secretName: prometheus-tls
   rules:
-  - host: alertmanager.picluster.ricsanfre.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: kube-prometheus-stack-alertmanager
-            port:
-              number: 9093
+    - host: alertmanager.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-alertmanager
+                port:
+                  number: 9093
 
 ---
 # http ingress for http->https redirection
@@ -49,10 +49,10 @@ spec:
     - host: alertmanager.picluster.ricsanfre.com
       http:
         paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: kube-prometheus-stack-alertmanager
-              port:
-                number: 9093
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-alertmanager
+                port:
+                  number: 9093

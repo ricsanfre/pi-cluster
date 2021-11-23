@@ -1,7 +1,6 @@
 ---
 extends: default
 
-
 ignore: |
   ansible_collections/
   roles/ricsanfre.*/
@@ -10,4 +9,3 @@ rules:
   line-length:
     max: 180
     level: warning
-

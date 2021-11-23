@@ -1,3 +1,4 @@
+---
 - hosts: k3s_master
   become: true
   gather_facts: false

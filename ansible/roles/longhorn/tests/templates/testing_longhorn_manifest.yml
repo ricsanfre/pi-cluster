@@ -6,7 +6,7 @@ metadata:
   namespace: testing-longhorn
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: longhorn
   resources:
     requests:
@@ -20,15 +20,15 @@ metadata:
   namespace: testing-longhorn
 spec:
   containers:
-  - name: longhorn-test
-    image: nginx:stable-alpine
-    imagePullPolicy: IfNotPresent
-    volumeMounts:
-    - name: longhorn-pvc
-      mountPath: /data
-    ports:
-    - containerPort: 80
+    - name: longhorn-test
+      image: nginx:stable-alpine
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - name: longhorn-pvc
+          mountPath: /data
+      ports:
+        - containerPort: 80
   volumes:
-  - name: longhorn-pvc
-    persistentVolumeClaim:
-      claimName: longhorn-pvc
+    - name: longhorn-pvc
+      persistentVolumeClaim:
+        claimName: longhorn-pvc

@@ -1,3 +1,4 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,13 +8,13 @@ metadata:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-  - host: kibana.picluster.ricsanfre.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "{{ efk_cluster_name }}-kb-http"
-            port:
-              number: 5601
+    - host: kibana.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: "{{ efk_cluster_name }}-kb-http"
+                port:
+                  number: 5601
