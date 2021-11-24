@@ -22,9 +22,9 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
 3) Nodes firmware, operating system installation and basic services configuration
     - [Raspberry-PI preparation tasks](documentation/preparing_raspberrypi.md). Updating Raspberry PI firmware to enable booting from USB.
     - [Ubuntu 20.04 Installation on Raspberry Pis](documentation/installing_ubuntu.md). General procedure for installing Ubuntu 20.04 OS on USB storage device and boot Raspberry Pi from USB.
-    - [Configuring SAN for the lab cluster](documentation/san_installation.md). Details about the configuration of SAN using a Raspeberry PI, gateway as iSCSI Target exposing LUNs to cluster nodes.
-    - [Gateway server OS installation and configuration](documentation/gateway.md). Installing Ubuntu OS and configuring a Raspberry PI as firewall and provider of cluster services (NTP, DHCP, DNS and iSCSI SAN services).
-    - [Cluster nodes OS installation and configuration](documentation/node.md). Installing Ubutuntu and configuring 4 Raspberry PI as nodes of the cluster, using network and storage services from Gateway node
+    - [Configuring SAN for the lab cluster](documentation/san_installation.md). In case of centralized SAN architecture, instructions for configuration of SAN using a Raspeberry PI, gateway as iSCSI Target exposing LUNs to cluster nodes.
+    - [Gateway server OS installation and configuration](documentation/gateway.md). Installing Ubuntu OS and configuring a Raspberry PI as firewall and provider of cluster networking services (NTP, DHCP and DNS services) and SAN services (centalized SAN architectural option)
+    - [Cluster nodes OS installation and configuration](documentation/node.md). Installing Ubutuntu and configuring 4 Raspberry PI as nodes of the cluster, using network services from Gateway node
 4) K3S Cluster Installation and basic services configuration
     - [K3S Installation](documentation/installing_k3s.md). Installing K3S lightweight kubernetes cluster.
     - [K3S Networking Configuration](documentation/k3s_networking.md). Complementing K3S default networking services (Flannel and CoreDNS) with baremetal Load Balancer (Metal LB).
@@ -53,9 +53,11 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
   
   - Adjust [`inventory.yml`](ansible/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
 
-  - Adjust [`ansible.cfg`](ansible/ansible.cfg) file to include your SSH key: `private-file-key` variable
+  - Adjust [`ansible.cfg`](ansible/ansible.cfg) file to include your SSH key: `private-file-key` variable.
 
-  - Adjust cluster variables under `group_vars` and `host_vars` directory to meet your specific configuration.
+  - Adjust [`all.yml`](ansible/group_vars/all.yml) file to include your ansible remote UNIX user (`ansible_user` variable) and whether centralized san storage architectural option is selected (`centralized_san` variable)
+
+  - Adjust cluster variables under `group_vars`, `host_vars` and `vars`directories to meet your specific configuration.
 
 
       | Variable file | Group of nodes affected |
@@ -66,6 +68,7 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
       | [`k3s_cluster.yml`](ansible/group_vars/picluster.yml) | all nodes of the k3s cluster |
       | [`k3s_master.yml`](ansible/group_vars/k3s_master.yml) | K3s master nodes |
       | [`gateway.yml`](ansible/host_vars/gateway.yml) | gateway node |
+    
 
 ### Installing the cluster
 

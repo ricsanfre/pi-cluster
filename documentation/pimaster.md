@@ -209,7 +209,7 @@ Step 8. Install molecule vagrant driver
 
 `ansible` unix user will be created in all servers with root privileges (sudo permissions) so Ansible can automate the configuration process (use as `ansible_remote_user` when connecting).
 
-For connecting to the servers from my Windows laptop using SSH client (Putty), `ubuntu`, default UNIX user (with sudo privileges) created by ubuntu cloud images,  will be used.
+For connecting to the servers from my Windows laptop using SSH client (Putty), `oss`, UNIX user (with sudo privileges) will be used. In order to improve security, default `ubuntu` UNIX user created by cloud images will be disabled.
 
 ssh private/public keys for both users need to be generated once, and public ssh key can be copied automatically on all servers of the cluster to enable passwordless SSH connection.
 Those users and its public keys will be added to cloud-init configuration (`user-data`), when installing Ubuntu OS.
@@ -219,7 +219,7 @@ Those users and its public keys will be added to cloud-init configuration (`user
 Authentication using SSH keys will be the only mechanism available to login to the server.
 We will create SSH keys for two different users:
 
-- **ubuntu** user, used to connect from my home laptop
+- **oss** user, used to connect from my home laptop
 
     For generating SSH private/public key in Windows, Putty Key Generator can be used:
 

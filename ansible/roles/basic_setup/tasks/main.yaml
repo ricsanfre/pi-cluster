@@ -36,5 +36,5 @@
   lineinfile:
     path: /boot/firmware/config.txt
     line: "gpu_mem=16"
-    create: yes
+    create: true
   notify: reboot

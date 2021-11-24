@@ -3,7 +3,7 @@
 Ubuntu Server 64 bits installation on Raspberry Pi is supported since release 20.04.
 Ubuntu images can be downloaded from [here](https://ubuntu.com/download/raspberry-pi).
 
-Ubuntu Server 20.04.2 LTS for ARM64 image will be used.
+Ubuntu Server 20.04.3 LTS for ARM64 image will be used.
 
 
 ## Headless installation
@@ -38,34 +38,46 @@ After you flash (burn) the image,  File Explorer (Windows) may have trouble seei
 
 - Modify file `/boot/user-data`
 
+  As an example this cloud-init `user-data` file, set hostname, locale and timezone and specify a couple of users, `oss` and `ansible` (removing default `ubuntu` user) with its ssh public keys
+
     ```yml
     #cloud-config
-    
-    # Disable password authentication with the SSH daemon
-    ssh_pwauth: false
-    # SSH authorized keys for default user (ubuntu)
-    ssh_authorized_keys:
-      - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAusTXKfFoy6p3G4QAHvqoBK+9Vn2+cx2G5AY89WmjMikmeTG9KUseOCIAx22BCrFTNryMZ0oLx4u3M+Ibm1nX76R3Gs4b+gBsgf0TFENzztST++n9/bHYWeMVXddeV9RFbvPnQZv/TfLfPUejIMjFt26JCfhZdw3Ukpx9FKYhFDxr2jG9hXzCY9Ja2IkVwHuBcO4gvWV5xtI1nS/LvMw44Okmlpqos/ETjkd12PLCxZU6GQDslUgGZGuWsvOKbf51sR+cvBppEAG3ujIDySZkVhXqH1SSaGQbxF0pO6N5d4PWus0xsafy5z1AJdTeXZdBXPVvUSNVOUw8lbL+RTWI2Q== ubuntu@mi_pc
 
     # Set TimeZone and Locale
     timezone: Europe/Madrid
     locale: es_ES.UTF-8
 
     # Hostname
-    hostname: node1
-    manage_etc_hosts: true
-    # Users
+    hostname: gateway
+
+    # cloud-init not managing hosts file. only hostname is added
+    manage_etc_hosts: localhost
+
     users:
-      - default
+      # not using default ubuntu user
+      - name: oss
+        primary_group: users
+        groups: [adm, admin]
+        shell: /bin/bash
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        lock_passwd: true
+        ssh_authorized_keys:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAusTXKfFoy6p3G4QAHvqoBK+9Vn2+cx2G5AY89WmjMikmeTG9KUseOCIAx22BCrFTNryMZ0oLx4u3M+Ibm1nX76R3Gs4b+gBsgf0TFENzztST++n9/bHYWeMVXddeV9RFbvPnQZv/TfLfPUejIMjFt26JCfhZdw3Ukpx9FKYhFDxr2jG9hXzCY9Ja2IkVwHuBcO4gvWV5xtI1nS/LvMw44Okmlpqos/ETjkd12PLCxZU6GQDslUgGZGuWsvOKbf51sR+cvBppEAG3ujIDySZkVhXqH1SSaGQbxF0pO6N5d4PWus0xsafy5z1AJdTeXZdBXPVvUSNVOUw8lbL+RTWI2Q== ubuntu@mi_pc
+      # Ansible user
       - name: ansible
         primary_group: users
         shell: /bin/bash
         sudo: ALL=(ALL) NOPASSWD:ALL
         lock_passwd: true
         ssh_authorized_keys:
-          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLVnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
+
+    ## Reboot to enable Wifi configuration (more details in network-config file)
+    power_state:
+      mode: reboot
 
     ```
+
 - Modify `/boot/network-config` file within the SDCard
 
     ```yml
@@ -92,7 +104,7 @@ Latest version of LTS 20.04.2 does not allow to boot from USB directy and some a
 
 You can follow the instructions of this [post](https://jamesachambers.com/raspberry-pi-4-ubuntu-20-04-usb-mass-storage-boot-guide/).
 
-### Step 1. Flash USB Flash Disk with Ubuntu 20.04
+### Step 1. Flash USB Flash Disk/SSD Disk with Ubuntu 20.04
 
 Repeat the steps for flashing Ubuntu image, but selecting the USB Flash Drive instead the SDCard
 
@@ -100,7 +112,7 @@ Repeat the steps for flashing Ubuntu image, but selecting the USB Flash Drive in
 
 The SDCard burnt in [preparing Raspberry Pi](preparing_raspberrypi.md) section, can be used for booting the RaspberryPI.
 
-### Step 3. Plug in the USB Flash Disk using USB 3.0 port in Raspberry Pi 
+### Step 3. Plug in the USB Flash Disk/SSD Disk using USB 3.0 port in Raspberry Pi 
 
 Execute `lsblk` for finding the new USB disk
 
@@ -115,8 +127,42 @@ mmcblk0     179:0    0 29.7G  0 disk
 └─mmcblk0p2 179:2    0 29.5G  0 part /
 ```
 
-> NOTE: In this case USB device is labelled as sda: two partitions (boot partition: sda1)
+> NOTE: In this case USB device is labelled as sda: two partitions (boot and OS) are automatically created by initial image burning process.
+>  - boot partition: sda1
+>  - root filesystem: sda2
 
+### Step 3.5 (Case of SSDD with USB to SATA Adapter). Checking USB-SATA Adapter support UASP
+
+Checking that the USB SATA adapter suppors UASP.
+
+```shell
+lsusb -t
+
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
+    |__ Port 1: Dev 2, If 0, Class=Mass Storage, Driver=uas, 5000M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/1p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M
+        |__ Port 3: Dev 3, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
+        |__ Port 3: Dev 3, If 1, Class=Human Interface Device, Driver=usbhid, 1.5M
+        |__ Port 4: Dev 4, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
+
+```
+> Driver=uas indicates that the adpater supports UASP
+
+
+Check USB-SATA adapter ID
+
+```shell
+sudo lsusb
+Bus 002 Device 002: ID 174c:55aa ASMedia Technology Inc. Name: ASM1051E SATA 6Gb/s bridge, ASM1053E SATA 6Gb/s bridge, ASM1153 SATA 3Gb/s bridge, ASM1153E SATA 6Gb/s bridge
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 001 Device 004: ID 0000:3825
+Bus 001 Device 003: ID 145f:02c9 Trust
+Bus 001 Device 002: ID 2109:3431 VIA Labs, Inc. Hub
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+```
+
+> NOTE: In this case ASMedia TEchnology ASM1051E has ID 152d:0578
 
 ### Step 4. Create 2 mountpoints  
 

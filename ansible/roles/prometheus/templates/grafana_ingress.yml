@@ -15,20 +15,20 @@ metadata:
     cert-manager.io/common-name: grafana
 spec:
   tls:
-  - hosts:
-    - grafana.picluster.ricsanfre.com
-    secretName: grafana-tls
+    - hosts:
+        - grafana.picluster.ricsanfre.com
+      secretName: grafana-tls
   rules:
-  - host: grafana.picluster.ricsanfre.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: kube-prometheus-stack-grafana
-            port:
-              number: 80
+    - host: grafana.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-grafana
+                port:
+                  number: 80
 
 ---
 # http ingress for http->https redirection
@@ -47,10 +47,10 @@ spec:
     - host: grafana.picluster.ricsanfre.com
       http:
         paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: kube-prometheus-stack-grafana
-              port:
-                number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-grafana
+                port:
+                  number: 80

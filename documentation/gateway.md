@@ -1,28 +1,32 @@
 # Gateway Configuration
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
-It will also provide DNS, NTP and DHCP, and SAN services to my lab network.
+It will also provide DNS, NTP and DHCP services to my lab network. In case of deployment using centralized SAN storage architectural option, `gateway` is providing SAN services also.
+
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
-In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node4**): Ubuntu 20.04.2 64 bits.
+In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node4**): Ubuntu 20.04.3 64 bits.
 
 
 #### Table of contents
 
 1. [Hardware](#hardware)
 2. [Network Configuration](#network-configuration)
-3. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
-4. [Initial OS Configuration](#ubuntu-os-initital-configuration)
-5. [Router/Firewall Configuration](#routerfirewall-configuration)
-6. [DHCP/DNS Configuration](#dhcpdns-configuration)
-7. [NTP Server Configuration](#ntp-server-configuration)
-8. [iSCSI SAN Configuration](#iscsi-configuration)
+3. [Storage Configuration - Centralized SAN](#storage-configuration-centralized-san)
+4. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
+5. [Initial OS Configuration](#ubuntu-os-initital-configuration)
+6. [Router/Firewall Configuration](#routerfirewall-configuration)
+7. [DHCP/DNS Configuration](#dhcpdns-configuration)
+8. [NTP Server Configuration](#ntp-server-configuration)
+9. [iSCSI configuration - Centralized SAN](#iscsi-configuration-centralized-san)
 
 
 ## Hardware
 
-`gateway` node is based on a Raspberry Pi 4B 2GB boot from a SSD Disk.
-A Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway` for building for providing iSCSI storage to the Raspberry PI cluster.
+`gateway` node is based on a Raspberry Pi 4B 2GB booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+
+- Dedicated disks storage architecture: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
+- Centralized SAN architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway`. SSD disk for hosting OS and iSCSI LUNs
 
 ## Network Configuration
 
@@ -49,171 +53,33 @@ wifis:
     nameservers:
       addresses: [80.58.61.250,80.58.61.254]
 ```
- 
-## Unbuntu boot from SSD
+## Storage configuration. Centralized SAN
 
-`gateway` node will be acting as SAN server and to enhace its performance it will boot from USB using the same SSD disk that will be used for LUNs storage
+SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating a logical volumes (LVM) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kuberentes distributed storage solution and by backup solution.
 
-SSD Disk will be partitioned reserving the biggest partition for the iSCSI LUNS: 32 GB will be reserved for the OS and the rest of the disk will be used for LUNs.
+cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
 
-Initial partitions (boot and OS) will be created during initial image burning process. Partitions need to be reconfigured before the first boot.
+> NOTE: As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/)
 
-The procedure followed is the described [here](./installing_ubuntu.md), but modifying the disks partitions before booting from USB for the first time for creating a partition disk for iSCSI LUNs
+Command executed in boot time is
 
-### Step 1. Burn Ubuntu 20.04 server to SSD disk using Balena Etcher
+    sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
 
-Update cloud-init configuration files (`user-data` and `network-config`) with the `gateway` network configuration and OS initial configuration.
+This command:
+  - First convert MBR partition to GPT (-g option)
+  - Second moves the GPT backup block to the end of the disk  (-e option)
+  - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
+  - And labels it as an LVM partition (-t option)
 
+## Unbuntu boot from USB
 
-| User data file   | Network configuration |
-| ------------- |-------------|
-| [user-data](../cloud-init-ubuntu-images/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/gateway/network-config)|
+The installation procedure followed is the described [here](./installing_ubuntu.md) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
 
-### Step 2. Boot Raspberry PI with Raspberry OS
-
-Use a SD with Raspberry PI OS to boot for the first time.
-
-### Step 3. Connect SSD Disk to USB 3.0 port.
-
-Check the disk
-
-   sudo fdisk -l
-
-```
-sudo fdisk -l
-
-Disk /dev/mmcblk0: 29.7 GiB, 31914983424 bytes, 62333952 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: dos
-Disk identifier: 0x9c46674d
-
-Device         Boot  Start      End  Sectors  Size Id Type
-/dev/mmcblk0p1        8192   532479   524288  256M  c W95 FAT32 (LBA)
-/dev/mmcblk0p2      532480 62333951 61801472 29.5G 83 Linux
-
-
-Disk /dev/sda: 447.1 GiB, 480103981056 bytes, 937703088 sectors
-Disk model: Generic
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 4096 bytes
-I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-Disklabel type: dos
-Disk identifier: 0x4ec8ea53
-
-Device     Boot  Start     End Sectors  Size Id Type
-/dev/sda1  *      2048  526335  524288  256M  c W95 FAT32 (LBA)
-/dev/sda2       526336 6366175 5839840  2.8G 83 Linux
-```
-
-### Step 4. Repartition with parted
-
-After flashing the disk the root partion size is less than 3 GB. On first boot this partition is automatically extended to occupy 100% of the available disk space.
-Since I want to use the SSD disk not only for the Ubuntu OS, but providing iSCSI LUNS. Before the first boot, I will repartition the SSD disk.
-
-- Extending the root partition to 32 GB Size
-- Create a new partition for storing iSCSI LVM LUNS
-
-```shell
-pi@gateway:~ $ sudo parted /dev/sda
-GNU Parted 3.2
-Using /dev/sda
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   3259MB  2990MB  primary  ext4
-
-(parted) resizepart
-Partition number? 2
-End?  [3259MB]? 32500
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   32.5GB  32.2GB  primary  ext4
-
-(parted) mkpart
-Partition type?  primary/extended? primary
-File system type?  [ext2]? ext4
-Start? 32501
-End?
-End? 100%
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   32.5GB  32.2GB  primary  ext4
- 3      32.5GB  480GB   448GB   primary  ext4         lba
-
-(parted) set 3 lvm on
-(parted) print
-Model: JMicron Generic (scsi)
-Disk /dev/sda: 480GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  269MB   268MB   primary  fat32        boot, lba
- 2      269MB   32.5GB  32.2GB  primary  ext4
- 3      32.5GB  480GB   448GB   primary  ext4         lvm, lba
-
-(parted) quit
-```
-
-### Step 5. Checking USB-SATA Adapter
-
-Checking that the USB SATA adapter suppors UASP.
-
-```shell
-lsusb -t
-
-/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
-    |__ Port 1: Dev 2, If 0, Class=Mass Storage, Driver=uas, 5000M
-/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/1p, 480M
-    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M
-        |__ Port 3: Dev 3, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
-        |__ Port 3: Dev 3, If 1, Class=Human Interface Device, Driver=usbhid, 1.5M
-        |__ Port 4: Dev 4, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
-
-```
-> Driver=uas indicates that the adpater supports UASP
-
-
-Check USB-SATA adapter ID
-
-```shell
-sudo lsusb
-Bus 002 Device 002: ID 174c:55aa ASMedia Technology Inc. Name: ASM1051E SATA 6Gb/s bridge, ASM1053E SATA 6Gb/s bridge, ASM1153 SATA 3Gb/s bridge, ASM1153E SATA 6Gb/s bridge
-Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-Bus 001 Device 004: ID 0000:3825
-Bus 001 Device 003: ID 145f:02c9 Trust
-Bus 001 Device 002: ID 2109:3431 VIA Labs, Inc. Hub
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-```
-
-> NOTE: In this case ASMedia TEchnology ASM1051E has ID 152d:0578
-
-
-### Step 6. Modify USB partitions following instrucions described [here](./installing_ubuntu.md#step-5-modify-mounted-partitions-to-fix-booting-procedure-from-disk)
+| Storage Architeture| User data    | Network configuration |
+|--------------------| ------------- |-------------|
+|  Dedicated Disks |[user-data](../cloud-init-ubuntu-images/dedicated_disks/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/dedicated_disks/gateway/network-config)|
+| Centralized SAN | [user-data](../cloud-init-ubuntu-images/centralized_san/gateway/user-data) | 
+[network-config](../cloud-init-ubuntu-images/centralized_san/gateway/network-config)|
 
 
 ## Ubuntu OS Initital Configuration
@@ -468,11 +334,13 @@ Check time synchronization with Chronyc
     chronyc tracking
 	  ```
 
-## iSCSI configuration
+## iSCSI configuration. Centralized SAN
 
-`gateway` is configured as iSCSI Target to export LUNs mounted by `node1-node4`
+`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node4`
 
 iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
+
+Specific `gateway` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_target.yml`](../ansible/vars/centralized_san/centralized_san_target.yml)
 
 Further details about iSCSI configurations and step-by-step manual instructions are defined [here](./san_installation.md).
 

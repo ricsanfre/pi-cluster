@@ -7,7 +7,7 @@ roles:
   - name: ricsanfre.firewall
     version: v1.0.0
   - name: ricsanfre.dnsmasq
-    version: v1.0.0
+    version: v1.0.1
   - name: ricsanfre.storage
     version: v1.0.0
   - name: ricsanfre.iscsi_target

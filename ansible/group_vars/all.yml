@@ -1,3 +1,7 @@
 ---
 # Group all variables.
 ansible_user: ansible
+
+# Cluster Lab Architecture
+# Whether to use centralized SAN architecture or not
+centralized_san: false

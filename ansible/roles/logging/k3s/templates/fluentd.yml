@@ -11,15 +11,15 @@ kind: ClusterRole
 metadata:
   name: fluentd
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - namespaces
-  verbs:
-  - get
-  - list
-  - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
 
 ---
 kind: ClusterRoleBinding
@@ -31,9 +31,9 @@ roleRef:
   name: fluentd
   apiGroup: rbac.authorization.k8s.io
 subjects:
-- kind: ServiceAccount
-  name: fluentd
-  namespace: "{{ k3s_logging_namespace }}"
+  - kind: ServiceAccount
+    name: fluentd
+    namespace: "{{ k3s_logging_namespace }}"
 ---
 apiVersion: v1
 data:
@@ -96,70 +96,70 @@ spec:
       serviceAccount: fluentd
       serviceAccountName: fluentd
       tolerations:
-      # Schedule this pod on master node
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
+        # Schedule this pod on master node
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
       containers:
-      - name: fluentd
-        image: "{{ efk_fluentd_image }}"
-        env:
-          # Elastic operator creates elastic service name with format cluster_name-es-http
-          - name:  FLUENT_ELASTICSEARCH_HOST
-            value: "{{ efk_cluster_name }}-es-http"
-          # Default elasticsearch default port
-          - name:  FLUENT_ELASTICSEARCH_PORT
-            value: "9200"
-          # Elastic operator enables only HTTPS channels to elaticsearch
-          - name: FLUENT_ELASTICSEARCH_SCHEME
-            value: "https"
-          # Elastic operator creates auto-signed certificates, verification must be disabled
-          - name: FLUENT_ELASTICSEARCH_SSL_VERIFY
-            value: "false"
-          # Elasticsearch user
-          - name: FLUENT_ELASTICSEARCH_USER
-            value: "elastic"
-          # Elastic operator stores elastic user password in a secret
-          - name: FLUENT_ELASTICSEARCH_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: "{{ efk_cluster_name }}-es-elastic-user"
-                key: elastic
-          # Setting a index-prefix for fluentd. By default index is logstash
-          - name:  FLUENT_ELASTICSEARCH_INDEX_NAME
-            value: fluentd
-          # Use cri parser for contarinerd based pods
-          - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
-            value: "cri"
-          # Use proper time format parsing for containerd logs
-          - name: FLUENT_CONTAINER_TAIL_PARSER_TIME_FORMAT
-            value: "%Y-%m-%dT%H:%M:%S.%N%:z"
-        resources:
-          limits:
-            memory: 200Mi
-          requests:
-            cpu: 100m
-            memory: 200Mi
-        volumeMounts:
-        # Fluentd need access to node logs /var/log
-        - name: varlog
-          mountPath: /var/log
-        # Fluentd need access to pod logs /var/log/pods
-        - name: dockercontainerlogdirectory
-          mountPath: /var/log/pods
-          readOnly: true
-        # Mounting additional fluentd configuration files
-        - name: fluentd-additional-config-vol
-          mountPath: /fluentd/etc/conf.d
+        - name: fluentd
+          image: "{{ efk_fluentd_image }}"
+          env:
+            # Elastic operator creates elastic service name with format cluster_name-es-http
+            - name: FLUENT_ELASTICSEARCH_HOST
+              value: "{{ efk_cluster_name }}-es-http"
+            # Default elasticsearch default port
+            - name: FLUENT_ELASTICSEARCH_PORT
+              value: "9200"
+            # Elastic operator enables only HTTPS channels to elaticsearch
+            - name: FLUENT_ELASTICSEARCH_SCHEME
+              value: "https"
+            # Elastic operator creates auto-signed certificates, verification must be disabled
+            - name: FLUENT_ELASTICSEARCH_SSL_VERIFY
+              value: "false"
+            # Elasticsearch user
+            - name: FLUENT_ELASTICSEARCH_USER
+              value: "elastic"
+            # Elastic operator stores elastic user password in a secret
+            - name: FLUENT_ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ efk_cluster_name }}-es-elastic-user"
+                  key: elastic
+            # Setting a index-prefix for fluentd. By default index is logstash
+            - name: FLUENT_ELASTICSEARCH_INDEX_NAME
+              value: fluentd
+            # Use cri parser for contarinerd based pods
+            - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
+              value: "cri"
+            # Use proper time format parsing for containerd logs
+            - name: FLUENT_CONTAINER_TAIL_PARSER_TIME_FORMAT
+              value: "%Y-%m-%dT%H:%M:%S.%N%:z"
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+            # Fluentd need access to node logs /var/log
+            - name: varlog
+              mountPath: /var/log
+            # Fluentd need access to pod logs /var/log/pods
+            - name: dockercontainerlogdirectory
+              mountPath: /var/log/pods
+              readOnly: true
+            # Mounting additional fluentd configuration files
+            - name: fluentd-additional-config-vol
+              mountPath: /fluentd/etc/conf.d
       terminationGracePeriodSeconds: 30
       volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log
-      - name: dockercontainerlogdirectory
-        hostPath:
-          path: /var/log/pods
-      - name: fluentd-additional-config-vol
-        configMap:
-          # holds the different fluentd configuration files
-          name: fluentd-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: dockercontainerlogdirectory
+          hostPath:
+            path: /var/log/pods
+        - name: fluentd-additional-config-vol
+          configMap:
+            # holds the different fluentd configuration files
+            name: fluentd-config
