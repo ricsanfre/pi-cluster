@@ -47,3 +47,10 @@
     - prometheus_ingress.yml
     - grafana_ingress.yml
     - alertmanager_ingress.yml
+
+- name: Configura Service Monitors
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - traefik_servicemonitor.yml
