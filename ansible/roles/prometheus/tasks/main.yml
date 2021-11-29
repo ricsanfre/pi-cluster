@@ -48,9 +48,21 @@
     - grafana_ingress.yml
     - alertmanager_ingress.yml
 
-- name: Configura Service Monitors
+- name: Configure Service Monitors
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
     - traefik_servicemonitor.yml
+
+- name: Configure Grafana Dashboards
+  include_tasks: configure_grafana_dashboards.yml
+  vars:
+    dashboard_name: "{{ item.name }}"
+    dashboard_file:
+      name: "{{ item.file }}"
+      content: | 
+        {{ lookup('file', 'files/' + item.file ) }}
+  with_items:
+    - name: dasboard-traefik
+      file: traefik-dashboard.json
