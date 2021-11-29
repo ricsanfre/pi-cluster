@@ -264,3 +264,83 @@ spec:
 - Step 4. Apply the manifest file
 
     kubectl apply -f prometheus_ingress.yml grafana_ingress.yml alertmanager_ingress.yml
+
+## Traefik Monitoring
+
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Traefik metrics endpoint as a Prometheus target.
+
+- Create a manifest file `traefik-servicemonitor.yml`
+
+```yml
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: traefik
+    release: kube-prometheus-stack
+  name: traefik
+  namespace: k3s-monitoring
+spec:
+  endpoints:
+    - port: traefik
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: traefik
+      app.kubernetes.io/name: traefik-dashboard
+
+``` 
+> NOTE: Important to set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
+
+- Apply manifest file
+
+  kubectl apply -f traefik-servicemonitor.yml
+
+
+- Check target is automatically discovered in Prometheus UI
+
+  http://prometheus.picluster.ricsanfre/targets
+
+
+## Configuring Dashboards
+
+
+Custom Grafana dashboards can be added creating CongigMap resources, containing dashboard definition in json format, because kube-prometheus-stack configure by default grafana sidecar to check for new ConfigMaps containing label `grafana_dashboard`
+
+The default chart values are:
+
+```yml
+
+grafana:
+  sidecar:
+    dashboards:
+      SCProvider: true
+      annotations: {}
+      defaultFolderName: null
+      enabled: true
+      folder: /tmp/dashboards
+      folderAnnotation: null
+      label: grafana_dashboard
+      labelValue: null
+```
+
+Check grafana chart [documentation](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining it.
+
+Config Map resouce containing as data the json dashboard definition 
+
+```yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample-grafana-dashboard
+  labels:
+     grafana_dashboard: "1"
+data:
+  dashboard.json: |-
+  [...]
+
+```

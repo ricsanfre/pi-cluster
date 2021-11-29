@@ -227,6 +227,138 @@ spec:
 
 ```
 
+## Enabling Traefik dashboard and Prometheus Metrics
+
+### Enabling Prometheus metrics
+
+By default Traefik deployed by K3S does not enable Traefik metrics for Prometheus. The Helm chart used to deploy Traefik must be configured providing the following values file:
+
+```yml
+additionalArguments:
+  - "--metrics.prometheus=true"
+```
+
+Traefik is a K3S embedded components that is auto-deployed using Helm. In order to configure Helm chart configuration parameters the official [document](https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig) must be followed.
+
+- Create a file `traefik-config.yml` of the customized resource `HelmChartConfig` 
+   
+  ```yml
+  ---
+  apiVersion: helm.cattle.io/v1
+  kind: HelmChartConfig
+  metadata:
+    name: traefik
+    namespace: kube-system
+  spec:
+    valuesContent: |-
+      additionalArguments:
+        - "--metrics.prometheus=true"
+  ```
+   
+- Copy file `traefik-config.yml` file to `/var/lib/rancher/k3s/server/manifests/` in the master node.
+
+  K3S automatically will re-deploy Traefik chart with the configuration changes.
+
+### Creating Traefik-Dashboard Service
+
+A Kuberentes Service must be created for enabling the access to Prometheus metrics and UI Dashboard
+
+- Create Manfifest file for the dashboard service
+
+```yml
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik-dashboard
+spec:
+  type: ClusterIP
+  ports:
+    - name: traefik
+      port: 9000
+      targetPort: traefik
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+```
+
+- Create Ingress rules for accesing through HTTPS dashboard UI, using certifcates automatically created by certmanager and providing a basic authentication mechanism.
+
+```yml
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-ingress
+  namespace: kube-system
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: self-signed-issuer
+    cert-manager.io/common-name: traefik
+spec:
+  tls:
+    - hosts:
+        - traefik.picluster.ricsanfre.com
+      secretName: prometheus-tls
+  rules:
+    - host: traefik.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-dashboard
+                port:
+                  number: 9000
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: traefik-redirect
+  namespace: kube-system
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: traefik.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-dashboard
+                port:
+                  number: 9000
+
+```
+- Apply manifests files
+
+- Check dashboard UI and metrics end-point is available
+
+  curl http://<traefik-dashboard-service>:9000/metrics
+
+- Acces UI through configured dns: https://traefik.picluster.ricsanfre.com/dashboard/
+
 ## Automating with Ansible
 
-Ansible role **traefik** creates the redirect and basic auth Middleware resources that can be used globally by any Ingress resource.
+Ansible role **traefik** creates the redirect and basic auth Middleware resources that can be used globally by any Ingress resource. It also enables Prometheus metrics endopoint and Traefik dashboard service access.
