@@ -1,0 +1,5 @@
+---
+- name: Configure Dashboard
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/grafana_dashboard.yml.j2' ) }}"
+    state: present

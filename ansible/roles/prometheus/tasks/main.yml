@@ -38,6 +38,10 @@
                 resources:
                   requests:
                     storage: "{{ prometheus_storage_size }}"
+      grafana:
+        adminPassword: "{{ prometheus_grafana_password }}"
+        plugins:
+          - grafana-piechart-panel
 
 - name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
   kubernetes.core.k8s:
@@ -47,3 +51,24 @@
     - prometheus_ingress.yml
     - grafana_ingress.yml
     - alertmanager_ingress.yml
+
+- name: Configure Service Monitors
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - traefik_servicemonitor.yml
+    - longhorn_servicemonitor.yml
+
+- name: Configure Grafana Dashboards
+  include_tasks: configure_grafana_dashboards.yml
+  vars:
+    dashboard_name: "{{ item.name }}"
+    dashboard_file:
+      name: "{{ item.file }}"
+      content: "{{ lookup('file', 'files/' + item.file ) | string }}"
+  with_items:
+    - name: dashboard-traefik
+      file: traefik-dashboard.json
+    - name: dashboard-longhorn
+      file: longhorn-dashboard.json

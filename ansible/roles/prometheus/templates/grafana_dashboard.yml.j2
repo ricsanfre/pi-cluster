@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ dashboard_name }}
+  namespace: k3s-monitoring
+  labels:
+     grafana_dashboard: "1"
+data:
+  {{ dashboard_file.name }}: |-
+{{ dashboard_file.content | string | indent(4, true) }}
