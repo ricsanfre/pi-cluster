@@ -58,6 +58,7 @@
     state: present
   with_items:
     - traefik_servicemonitor.yml
+    - longhorn_servicemonitor.yml
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
@@ -67,5 +68,7 @@
       name: "{{ item.file }}"
       content: "{{ lookup('file', 'files/' + item.file ) | string }}"
   with_items:
-    - name: dasboard-traefik
+    - name: dashboard-traefik
       file: traefik-dashboard.json
+    - name: dashboard-longhorn
+      file: longhorn-dashboard.json
