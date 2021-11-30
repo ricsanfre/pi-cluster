@@ -312,9 +312,80 @@ spec:
 
   http://prometheus.picluster.ricsanfre/targets
 
+### Traefik Grafana dashboard
 
-## Configuring Dashboards
+Traefik dashboard can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/11462). This dashboard has as prerequisite to have installed `grafana-piechart-panel` plugin. The list of plugins to be installed can be specified during kube-prometheus-stack helm deployment as values (`grafana.plugins` variable).
 
+
+## Longhorn Monitoring
+
+As stated by official [documentation](https://longhorn.io/docs/1.2.2/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint http://LONGHORN_MANAGER_IP:PORT/metrics.
+
+Backend endpoint is already exposing Prometheus metrics.
+
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Longhorn metrics endpoint as a Prometheus target.
+
+- Create a manifest file `longhorm-servicemonitor.yml`
+
+```yml
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: longhorn
+    release: kube-prometheus-stack
+  name: longhorn-prometheus-servicemonitor
+  namespace: k3s-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  namespaceSelector:
+    matchNames:
+    - longhorn-system
+  endpoints:
+  - port: manager
+
+``` 
+> NOTE: Important to set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
+
+- Apply manifest file
+
+  kubectl apply -f longhorn-servicemonitor.yml
+
+
+- Check target is automatically discovered in Prometheus UI
+
+  http://prometheus.picluster.ricsanfre/targets
+
+
+```yml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: longhorn-prometheus-servicemonitor
+  namespace: monitoring
+  labels:
+    name: longhorn-prometheus-servicemonitor
+spec:
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  namespaceSelector:
+    matchNames:
+    - longhorn-system
+  endpoints:
+  - port: manager
+
+```
+
+### Longhorn Grafana dashboard
+
+Longhorn dashboard sample can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/13032).
+
+
+## Provisioning Dashboards automatically
 
 Custom Grafana dashboards can be added creating CongigMap resources, containing dashboard definition in json format, because kube-prometheus-stack configure by default grafana provisioning sidecar to check for new ConfigMaps containing label `grafana_dashboard`
 
@@ -351,7 +422,23 @@ data:
   [...]
 
 ```
+Due to issue Grafana [issue](https://github.com/grafana/grafana/issues/10786), json files need to be modified before inserting them into ConfigMap yaml file, in order to detect DS_PROMETHEUS datasource. See issue [#18](https://github.com/ricsanfre/pi-cluster/issues/18)
 
-### Traefik dashboard
+Modify each json file adding the following code to `templating` section
 
-Traefik dashboard can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/11462). This dashboard has as prerequisite to have installed `grafana-piechart-panel` plugin. The list of plugins to be installed can be specified during kube-prometheus-stack helm deployment as values (`grafana.plugins` variable).
+```json
+"templating": {
+    "list": [
+      {
+        "hide": 0,
+        "label": "datasource",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+```
+
+
