@@ -5,7 +5,7 @@ metadata:
   labels:
     app: traefik
     release: kube-prometheus-stack
-  name: traefik
+  name: traefik-prometheus-servicemonitor
   namespace: k3s-monitoring
 spec:
   endpoints:
