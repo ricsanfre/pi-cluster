@@ -32,9 +32,9 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     ```
     kubectl create namespace monitoring
     ```
-- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn
+- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password
   ```yml
-  alertmanager:
+      alertmanager:
         alertmanagerSpec:
           storage:
             volumeClaimTemplate:
@@ -54,6 +54,8 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
                 resources:
                   requests:
                     storage: 50Gi
+      grafana:
+        adminPassword: "admin_password"
    ```yml
 
 - Step 3: Install kube-Prometheus-stack in the monitoring namespace with the overriden values

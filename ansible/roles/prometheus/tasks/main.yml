@@ -38,6 +38,8 @@
                 resources:
                   requests:
                     storage: "{{ prometheus_storage_size }}"
+      grafana:
+        adminPassword: "{{ prometheus_grafana_password }}"
 
 - name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
   kubernetes.core.k8s:
@@ -61,8 +63,7 @@
     dashboard_name: "{{ item.name }}"
     dashboard_file:
       name: "{{ item.file }}"
-      content: | 
-        {{ lookup('file', 'files/' + item.file ) }}
+      content: "{{ lookup('file', 'files/' + item.file ) | string }}"
   with_items:
     - name: dasboard-traefik
       file: traefik-dashboard.json

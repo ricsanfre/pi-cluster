@@ -3,3 +3,6 @@
 # Storage Settings
 prometheus_storage_size: "5Gi"
 prometheus_storage_class: "longhorn"
+
+# Grafana Settings
+prometheus_grafana_password: "s1cret0"
