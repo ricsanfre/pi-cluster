@@ -40,6 +40,8 @@
                     storage: "{{ prometheus_storage_size }}"
       grafana:
         adminPassword: "{{ prometheus_grafana_password }}"
+        plugins:
+          - grafana-piechart-panel
 
 - name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
   kubernetes.core.k8s:

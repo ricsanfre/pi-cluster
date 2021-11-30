@@ -32,7 +32,8 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     ```
     kubectl create namespace monitoring
     ```
-- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password
+- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password and list of plugins to be installed
+
   ```yml
       alertmanager:
         alertmanagerSpec:
@@ -55,7 +56,11 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
                   requests:
                     storage: 50Gi
       grafana:
+        # Admin user password
         adminPassword: "admin_password"
+        # List of grafana plugins to be installed
+        plugins:
+          - grafana-piechart-panel
    ```yml
 
 - Step 3: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
@@ -311,7 +316,7 @@ spec:
 ## Configuring Dashboards
 
 
-Custom Grafana dashboards can be added creating CongigMap resources, containing dashboard definition in json format, because kube-prometheus-stack configure by default grafana sidecar to check for new ConfigMaps containing label `grafana_dashboard`
+Custom Grafana dashboards can be added creating CongigMap resources, containing dashboard definition in json format, because kube-prometheus-stack configure by default grafana provisioning sidecar to check for new ConfigMaps containing label `grafana_dashboard`
 
 The default chart values are:
 
@@ -330,7 +335,7 @@ grafana:
       labelValue: null
 ```
 
-Check grafana chart [documentation](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining it.
+Check grafana chart [documentation](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
 
 Config Map resouce containing as data the json dashboard definition 
 
@@ -346,3 +351,7 @@ data:
   [...]
 
 ```
+
+### Traefik dashboard
+
+Traefik dashboard can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/11462). This dashboard has as prerequisite to have installed `grafana-piechart-panel` plugin. The list of plugins to be installed can be specified during kube-prometheus-stack helm deployment as values (`grafana.plugins` variable).
