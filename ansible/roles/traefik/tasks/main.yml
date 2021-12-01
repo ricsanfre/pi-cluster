@@ -20,6 +20,6 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - redirect_middleware.yml
-    - basicauth_middleware.yml
-    - traefik_dashboard.yml
+    - redirect_middleware.yml.j2
+    - basicauth_middleware.yml.j2
+    - traefik_dashboard.yml.j2

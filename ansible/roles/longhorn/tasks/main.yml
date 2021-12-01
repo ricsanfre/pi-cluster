@@ -27,7 +27,7 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - longhorn_ingress.yml
+    - longhorn_ingress.yml.j2
 
 - name: Remove Local-Path as default storage class
   command:

@@ -32,8 +32,8 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - elasticsearch_secret.yml
-    - elasticsearch.yml
-    - kibana.yml
-    - fluentd.yml
-    - kibana_ingress.yml
+    - elasticsearch_secret.yml.j2
+    - elasticsearch.yml.j2
+    - kibana.yml.j2
+    - fluentd.yml.j2
+    - kibana_ingress.yml.j2

@@ -48,17 +48,17 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - prometheus_ingress.yml
-    - grafana_ingress.yml
-    - alertmanager_ingress.yml
+    - prometheus_ingress.yml.j2
+    - grafana_ingress.yml.j2
+    - alertmanager_ingress.yml.j2
 
 - name: Configure Service Monitors
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - traefik_servicemonitor.yml
-    - longhorn_servicemonitor.yml
+    - traefik_servicemonitor.yml.j2
+    - longhorn_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml

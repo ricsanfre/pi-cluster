@@ -26,4 +26,4 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - selfsigned_issuer.yml
+    - selfsigned_issuer.yml.j2
