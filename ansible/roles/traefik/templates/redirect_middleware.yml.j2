@@ -4,7 +4,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: redirect
-  namespace: traefik-system
+  namespace: {{ k3s_traefik_namespace }}
 spec:
   redirectScheme:
     scheme: https

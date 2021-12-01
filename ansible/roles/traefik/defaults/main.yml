@@ -1,0 +1,6 @@
+---
+# Namespace for cert-manager
+k3s_traefik_namespace: traefik-system
+
+# Endpoint Service DNS name
+traefik_dashboard_dns: traefik.picluster.ricsanfre.com

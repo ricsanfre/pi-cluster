@@ -31,17 +31,17 @@ metadata:
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
     cert-manager.io/common-name: traefik
 spec:
   tls:
     - hosts:
-        - traefik.picluster.ricsanfre.com
+        - {{ traefik_dashboard_dns }}
       secretName: prometheus-tls
   rules:
-    - host: traefik.picluster.ricsanfre.com
+    - host: {{ traefik_dashboard_dns }}
       http:
         paths:
           - path: /
@@ -61,12 +61,12 @@ metadata:
   namespace: kube-system
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: traefik.picluster.ricsanfre.com
+    - host: {{ traefik_dashboard_dns }}
       http:
         paths:
           - path: /
