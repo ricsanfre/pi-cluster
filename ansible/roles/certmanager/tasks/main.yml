@@ -1,7 +1,7 @@
 ---
 - name: Create cert-manager namespace.
   kubernetes.core.k8s:
-    name: certmanager-system
+    name: "{{ k3s_certmanager_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
@@ -15,8 +15,8 @@
   kubernetes.core.helm:
     name: certmanager
     chart_ref: jetstack/cert-manager
-    chart_version: "1.5.3"
-    release_namespace: certmanager-system
+    update_repo_cache: true
+    release_namespace: "{{ k3s_certmanager_namespace }}"
     state: present
     release_values:
       installCRDs: true

@@ -1,0 +1,3 @@
+---
+# Namespace for cert-manager
+k3s_certmanager_namespace: certmanager-system
