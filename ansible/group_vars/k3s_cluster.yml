@@ -10,5 +10,13 @@ k3s_token: s1cret0
 k3s_server_extra_args: "--write-kubeconfig-mode '0644' --disable 'servicelb' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'"
 k3s_worker_extra_args: "--node-label 'node_type=worker'"
 
+# Namespaces
+k3s_metallb_namespace: metallb-system
+k3s_traefik_namespace: traefik-system
+k3s_longhorn_namespace: longhorn-system
+k3s_certmanager_namespace: certmanager-system
+k3s_logging_namespace: k3s-logging
+k3s_monitoring_namespace: k3s-monitoring
+
 # k3s external ip range: Metal LB pool configuration
 k3s_external_ip_range: "10.0.0.100-10.0.0.200"

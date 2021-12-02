@@ -1,0 +1,6 @@
+---
+# Namespace for Longhorn
+k3s_longhorn_namespace: longhorn-system
+
+# Endpoint Service DNS name
+longhorn_dashboard_dns: storage.picluster.ricsanfre.com

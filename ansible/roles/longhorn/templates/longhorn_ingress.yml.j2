@@ -4,24 +4,24 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: longhorn-ingress
-  namespace: longhorn-system
+  namespace: {{ k3s_longhorn_namespace }}
   annotations:
     # HTTPS as entry point
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
     cert-manager.io/common-name: longhorn
 spec:
   tls:
     - hosts:
-        - storage.picluster.ricsanfre.com
+        - {{ longhorn_dashboard_dns }}
       secretName: storage-tls
   rules:
-    - host: storage.picluster.ricsanfre.com
+    - host: {{ longhorn_dashboard_dns }}
       http:
         paths:
           - path: /
@@ -38,15 +38,15 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: longhorn-redirect
-  namespace: longhorn-system
+  namespace: {{ k3s_longhorn_namespace }}
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: storage.picluster.ricsanfre.com
+    - host: {{ longhorn_dashboard_dns }}
       http:
         paths:
           - path: /
