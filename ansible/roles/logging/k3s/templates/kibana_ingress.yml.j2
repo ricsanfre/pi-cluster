@@ -8,7 +8,7 @@ metadata:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-    - host: kibana.picluster.ricsanfre.com
+    - host: {{ kibana_dashboard_dns }}
       http:
         paths:
           - path: /

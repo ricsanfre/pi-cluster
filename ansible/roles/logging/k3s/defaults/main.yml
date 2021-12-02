@@ -20,3 +20,6 @@ efk_fluentd_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsear
 
 # Configured Timezone
 efk_node_timezone: "Europe/Madrid"
+
+# Endpoint Service DNS name
+kibana_dashboard_dns: kibana.picluster.ricsanfre.com
