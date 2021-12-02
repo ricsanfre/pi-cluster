@@ -1,7 +1,7 @@
 ---
 - name: Create prometheus namespace.
   kubernetes.core.k8s:
-    name: k3s-monitoring
+    name: "{{ k3s_monitoring_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
@@ -15,7 +15,8 @@
   kubernetes.core.helm:
     name: kube-prometheus-stack
     chart_ref: prometheus-community/kube-prometheus-stack
-    release_namespace: k3s-monitoring
+    release_namespace: "{{ k3s_monitoring_namespace }}"
+    update_repo_cache: true
     state: present
     release_values:
       alertmanager:

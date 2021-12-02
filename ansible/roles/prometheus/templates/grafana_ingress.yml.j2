@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: grafana-ingress
-  namespace: k3s-monitoring
+  namespace: {{ k3s_monitoring_namespace }}
   annotations:
     # HTTPS as entry point
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -16,10 +16,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - grafana.picluster.ricsanfre.com
+        - {{ grafana_dashboard_dns }}
       secretName: grafana-tls
   rules:
-    - host: grafana.picluster.ricsanfre.com
+    - host: {{ grafana_dashboard_dns }}
       http:
         paths:
           - path: /
@@ -36,15 +36,15 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: grafana-redirect
-  namespace: k3s-monitoring
+  namespace: {{ k3s_monitoring_namespace }}
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: grafana.picluster.ricsanfre.com
+    - host: {{ grafana_dashboard_dns }}
       http:
         paths:
           - path: /
