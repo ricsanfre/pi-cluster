@@ -1,0 +1,6 @@
+---
+# Namespace for metallb
+k3s_metallb_namespace: metallb-system
+
+# k3s external ip range: Metal LB pool configuration
+k3s_external_ip_range:
