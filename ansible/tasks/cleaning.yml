@@ -19,10 +19,12 @@
   shell: "rm -rf /var/log/pods /var/log/containers"
   args:
     executable: /bin/bash
+  ignore_errors: yes
   changed_when: true
 
 - name: Clean fluentd pos files
   shell: "rm /var/log/*.pos"
   args:
     executable: /bin/bash
+  ignore_errors: yes
   changed_when: true
