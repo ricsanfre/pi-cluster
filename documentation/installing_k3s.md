@@ -35,12 +35,14 @@ Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspbe
 - Step 1: Installing K3S control plane node
     For installing the master node execute the following command:
 ```
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-controller-manager-arg 'address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kube-scheduler-arg 'address=0.0.0.0'
 ```
 - **server_token** is shared secret within the cluster for allowing connection of worker nodes
 - **--write-kubeconfig-mode '0644'** gives read permissions to kubeconfig file located in `/etc/rancher/k3s/k3s.yaml`
 - **--node-taint 'node-role.kubernetes.io/master=true:NoSchedule'** makes master node not schedulable to run any pod. Only pods marked with specific tolerance will be scheduled on master node. 
 - **--disable servicelb** to disable default service load balancer installed by K3S (Klipper Load Balancer)
+- **--kube-controller-manager.arg**, **--kube-schedueler-arg** and **--kube-proxy-arg** to bind those components not only to 127.0.0.1 and enable metrics scraping from external node.
+
 
 > NOTE 1: 
 

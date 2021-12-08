@@ -43,6 +43,23 @@
         adminPassword: "{{ prometheus_grafana_password }}"
         plugins:
           - grafana-piechart-panel
+      kubeApiServer:
+        enabled: true
+      kubeControllerManager:
+        enabled: false
+      kubeScheduler:
+        enabled: false
+      kubeProxy:
+        enabled: false
+      kubeEtcd:
+        enabled: false
+
+- name: Create k3s metrics service
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - k3s_service_metrics.yml.j2
 
 - name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
   kubernetes.core.k8s:
@@ -60,6 +77,7 @@
   with_items:
     - traefik_servicemonitor.yml.j2
     - longhorn_servicemonitor.yml.j2
+    - k3s_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
@@ -73,3 +91,9 @@
       file: traefik-dashboard.json
     - name: dashboard-longhorn
       file: longhorn-dashboard.json
+    - name: k3s-controller-manager
+      file: k3s-controllermanager-dashboard.json
+    - name: k3s-scheduler
+      file: k3s-scheduler-dashboard.json
+    - name: k3s-proxy
+      file: k3s-proxy-dashboard.json

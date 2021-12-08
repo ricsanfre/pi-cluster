@@ -7,7 +7,17 @@ k3s_master_ip: 10.0.0.11
 k3s_token: s1cret0
 
 # Extra arguments for k3s installation scripts
-k3s_server_extra_args: "--write-kubeconfig-mode '0644' --disable 'servicelb' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'"
+k3s_server_extra_args: >-
+  --write-kubeconfig-mode '0644'
+  --disable 'servicelb'
+  --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
+  --kube-controller-manager-arg 'bind-address=0.0.0.0'
+  --kube-controller-manager-arg 'address=0.0.0.0'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+  --kube-scheduler-arg 'bind-address=0.0.0.0'
+  --kube-scheduler-arg 'address=0.0.0.0'
+
+
 k3s_worker_extra_args: "--node-label 'node_type=worker'"
 
 # Namespaces

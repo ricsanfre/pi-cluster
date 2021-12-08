@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: k3s
+    release: kube-prometheus-stack
+  name: k3s-prometheus-servicemonitor
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      app: k3s-metrics
+  endpoints:
+    - port: http-metrics
+      path: /metrics
