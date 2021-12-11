@@ -2,7 +2,7 @@
 # namespace for hosting EFK stack
 - name: Create k3s-logging namespace.
   kubernetes.core.k8s:
-    name: k3s-logging
+    name: "{{ k3s_logging_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
@@ -25,6 +25,7 @@
     name: elastic-operator
     chart_ref: elastic/eck-operator
     release_namespace: elastic-system
+    update_repo_cache: true
     state: present
 
 - name: Deploy elasticsearch, kibana and fluentd
@@ -32,8 +33,8 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - elasticsearch_secret.yml
-    - elasticsearch.yml
-    - kibana.yml
-    - fluentd.yml
-    - kibana_ingress.yml
+    - elasticsearch_secret.yml.j2
+    - elasticsearch.yml.j2
+    - kibana.yml.j2
+    - fluentd.yml.j2
+    - kibana_ingress.yml.j2

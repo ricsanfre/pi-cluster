@@ -6,7 +6,7 @@ metadata:
     app: longhorn
     release: kube-prometheus-stack
   name: longhorn-prometheus-servicemonitor
-  namespace: k3s-monitoring
+  namespace: {{ k3s_monitoring_namespace }}
 spec:
   selector:
     matchLabels:

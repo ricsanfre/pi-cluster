@@ -3,56 +3,56 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: longhorn-ingress
-  namespace: longhorn-system
+  name: prometheus-ingress
+  namespace: {{ k3s_monitoring_namespace }}
   annotations:
     # HTTPS as entry point
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: longhorn
+    cert-manager.io/common-name: prometheus
 spec:
   tls:
     - hosts:
-        - storage.picluster.ricsanfre.com
-      secretName: storage-tls
+        - {{ prometheus_dashboard_dns }}
+      secretName: prometheus-tls
   rules:
-    - host: storage.picluster.ricsanfre.com
+    - host: {{ prometheus_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: longhorn-frontend
+                name: kube-prometheus-stack-prometheus
                 port:
-                  number: 80
+                  number: 9090
 
 ---
 # http ingress for http->https redirection
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: longhorn-redirect
-  namespace: longhorn-system
+  name: prometheus-redirect
+  namespace: {{ k3s_monitoring_namespace }}
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: storage.picluster.ricsanfre.com
+    - host: {{ prometheus_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: longhorn-frontend
+                name: kube-prometheus-stack-prometheus
                 port:
-                  number: 80
+                  number: 9090

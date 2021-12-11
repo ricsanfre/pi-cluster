@@ -3,30 +3,32 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: grafana-ingress
-  namespace: k3s-monitoring
+  name: longhorn-ingress
+  namespace: {{ k3s_longhorn_namespace }}
   annotations:
     # HTTPS as entry point
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: grafana
+    cert-manager.io/common-name: longhorn
 spec:
   tls:
     - hosts:
-        - grafana.picluster.ricsanfre.com
-      secretName: grafana-tls
+        - {{ longhorn_dashboard_dns }}
+      secretName: storage-tls
   rules:
-    - host: grafana.picluster.ricsanfre.com
+    - host: {{ longhorn_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-grafana
+                name: longhorn-frontend
                 port:
                   number: 80
 
@@ -35,22 +37,22 @@ spec:
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: grafana-redirect
-  namespace: k3s-monitoring
+  name: longhorn-redirect
+  namespace: {{ k3s_longhorn_namespace }}
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: grafana.picluster.ricsanfre.com
+    - host: {{ longhorn_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-grafana
+                name: longhorn-frontend
                 port:
                   number: 80

@@ -126,9 +126,204 @@ Package can be installed with apt:
 
 And it can be configured using command line or a configuration file `/etc/nftables.conf`.
 
-```
-TBD: CONTENT nftables.conf
-```
+
+As a modular example:
+
+- Global Configuration File
+
+  `/etc/nftables.conf`
+  ```
+  #!/usr/sbin/nft -f
+  # Ansible managed
+
+  # clean
+  flush ruleset
+
+  include "/etc/nftables.d/defines.nft"
+
+  table inet filter {
+          chain global {
+                  # 005 state management
+                  ct state established,related accept
+                  ct state invalid drop
+          }
+          include "/etc/nftables.d/sets.nft"
+          include "/etc/nftables.d/filter-input.nft"
+          include "/etc/nftables.d/filter-output.nft"
+          include "/etc/nftables.d/filter-forward.nft"
+  }
+
+  # Additionnal table for Network Address Translation (NAT)
+  table ip nat {
+          include "/etc/nftables.d/sets.nft"
+          include "/etc/nftables.d/nat-prerouting.nft"
+          include "/etc/nftables.d/nat-postrouting.nft"
+  }
+
+  ```
+- Variables  Variables containing the IP address and ports to be used by the rules files
+  
+  `/etc/nftables.d/defines.nft`
+  ```
+    # broadcast and multicast
+    define badcast_addr = { 255.255.255.255, 224.0.0.1, 224.0.0.251 }
+
+    # broadcast and multicast
+    define ip6_badcast_addr = { ff02::16 }
+
+    # in_tcp_accept
+    define in_tcp_accept = { ssh, https, http }
+
+    # in_udp_accept
+    define in_udp_accept = { snmp, domain, ntp, bootps }
+
+    # out_tcp_accept
+    define out_tcp_accept = { http, https, ssh }
+
+    # out_udp_accept
+    define out_udp_accept = { domain, bootps , ntp }
+
+    # lan_interface
+    define lan_interface = eth0
+
+    # wan_interface
+    define wan_interface = wlan0
+
+    # lan_network
+    define lan_network = 10.0.0.0/24
+
+    # forward_tcp_accept
+    define forward_tcp_accept = { http, https, ssh }
+
+    # forward_udp_accept
+    define forward_udp_accept = { domain, ntp }
+
+  ```
+- Nftables typed and tagged variables, [sets](https://wiki.nftables.org/wiki-nftables/index.php/Sets).
+
+  `/etc/nftables.d/sets.nft`
+  ```
+    set blackhole {
+          type ipv4_addr;
+          elements = $badcast_addr
+      }
+
+    set forward_tcp_accept {
+          type inet_service; flags interval;
+          elements = $forward_tcp_accept
+      }
+
+    set forward_udp_accept {
+          type inet_service; flags interval;
+          elements = $forward_udp_accept
+      }
+
+    set in_tcp_accept {
+          type inet_service; flags interval;
+          elements = $in_tcp_accept
+      }
+
+    set in_udp_accept {
+          type inet_service; flags interval;
+          elements = $in_udp_accept
+      }
+
+    set ip6blackhole {
+          type ipv6_addr;
+          elements = $ip6_badcast_addr
+      }
+
+    set out_tcp_accept {
+          type inet_service; flags interval;
+          elements = $out_tcp_accept
+      }
+
+    set out_udp_accept {
+          type inet_service; flags interval;
+          elements = $out_udp_accept
+      }
+
+  ```
+- Input traffic filtering rules
+
+  `/etc/nftables.d/filter-input.nft`
+  ```
+  chain input {
+          # 000 policy
+          type filter hook input priority 0; policy drop;
+          # 005 global
+          jump global
+          # 010 drop unwanted
+          # (none)
+          # 011 drop unwanted ipv6
+          # (none)
+          # 015 localhost
+          iif lo accept
+          # 050 icmp
+          meta l4proto {icmp,icmpv6} accept
+          # 200 input udp accepted
+          udp dport @in_udp_accept ct state new accept
+          # 210 input tcp accepted
+          tcp dport @in_tcp_accept ct state new accept
+    }
+
+  ```
+
+- Output traffic filtering rules
+  
+  `/etc/nftables.d/filter-output.nft`
+  ```
+  chain output {
+        # 000 policy: Allow any output traffic
+        type filter hook output priority 0;
+    }
+  ```
+
+- Forwarding traffic rules
+
+  `/etc/nftables.d/filter-forward.nft`
+  ```
+  chain forward {
+      # 000 policy
+          type filter hook forward priority 0; policy drop;
+        # 005 global
+          jump global
+        # 200 lan to wan tcp
+          iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept ct state new accept
+        # 210 wan to lan udp
+          iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
+        # 220 ssh from wan
+          iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
+        # 230 http from wan
+          iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
+    }
+
+  ```
+
+- NAT pre-routing rules
+
+  `/etc/nftables.d/nat-prerouting.nft`
+  ```
+  chain prerouting {
+          # 000 policy
+          type nat hook prerouting priority 0;
+    }
+
+  ```
+
+- NAT post-routing rules
+  `/etc/nftables.d/nat-postrouting.nft`
+  ```
+  chain postrouting {
+          # 000 policy
+          type nat hook postrouting priority 100;
+          # 005 masquerade lan to wan
+          ip saddr $lan_network oifname $wan_interface masquerade
+    }
+
+  ```
+  
+
 
 <br>
 

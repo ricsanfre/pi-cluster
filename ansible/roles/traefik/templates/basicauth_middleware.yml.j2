@@ -7,10 +7,10 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: basic-auth-secret
-  namespace: traefik-system
+  namespace: {{ k3s_traefik_namespace }}
 data:
   users: |2
-    b3NzOiRhcHIxJDNlZTVURy83JFpmY1NRQlV6SFpIMFZTak9NZGJ5UDANCg0K
+    {{ traefik_auth_htpasswd_pair }}
 
 ---
 # Basic-auth middleware
@@ -18,7 +18,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: basic-auth
-  namespace: traefik-system
+  namespace: {{ k3s_traefik_namespace }}
 spec:
   basicAuth:
     secret: basic-auth-secret

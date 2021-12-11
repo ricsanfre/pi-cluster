@@ -16,9 +16,12 @@
     register: snap_remove_output
     with_items: "{{ snap_packages.stdout_lines }}"
   rescue:
-    - fail:
+    - name: Check number of retries and fail if greater that 3
+      fail:
         msg: Maximum retries of grouped tasks reached
       when: retry_count | int == 3
-    - debug:
+    - name: printing retry message
+      debug:
         msg: "Removing snap package failed, let's give it another shot"
-    - include_tasks: remove_snap_packages.yml
+    - name: retrying deletion
+      include_tasks: remove_snap_packages.yml

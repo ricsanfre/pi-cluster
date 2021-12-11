@@ -3,56 +3,54 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: prometheus-ingress
-  namespace: k3s-monitoring
+  name: grafana-ingress
+  namespace: {{ k3s_monitoring_namespace }}
   annotations:
     # HTTPS as entry point
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
-    # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: prometheus
+    cert-manager.io/common-name: grafana
 spec:
   tls:
     - hosts:
-        - prometheus.picluster.ricsanfre.com
-      secretName: prometheus-tls
+        - {{ grafana_dashboard_dns }}
+      secretName: grafana-tls
   rules:
-    - host: prometheus.picluster.ricsanfre.com
+    - host: {{ grafana_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-prometheus
+                name: kube-prometheus-stack-grafana
                 port:
-                  number: 9090
+                  number: 80
 
 ---
 # http ingress for http->https redirection
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: prometheus-redirect
-  namespace: k3s-monitoring
+  name: grafana-redirect
+  namespace: {{ k3s_monitoring_namespace }}
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: prometheus.picluster.ricsanfre.com
+    - host: {{ grafana_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-prometheus
+                name: kube-prometheus-stack-grafana
                 port:
-                  number: 9090
+                  number: 80

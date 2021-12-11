@@ -1,7 +1,7 @@
 ---
 - name: Create prometheus namespace.
   kubernetes.core.k8s:
-    name: k3s-monitoring
+    name: "{{ k3s_monitoring_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
@@ -15,7 +15,8 @@
   kubernetes.core.helm:
     name: kube-prometheus-stack
     chart_ref: prometheus-community/kube-prometheus-stack
-    release_namespace: k3s-monitoring
+    release_namespace: "{{ k3s_monitoring_namespace }}"
+    update_repo_cache: true
     state: present
     release_values:
       alertmanager:
@@ -42,23 +43,41 @@
         adminPassword: "{{ prometheus_grafana_password }}"
         plugins:
           - grafana-piechart-panel
+      kubeApiServer:
+        enabled: true
+      kubeControllerManager:
+        enabled: false
+      kubeScheduler:
+        enabled: false
+      kubeProxy:
+        enabled: false
+      kubeEtcd:
+        enabled: false
+
+- name: Create k3s metrics service
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - k3s_service_metrics.yml.j2
 
 - name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - prometheus_ingress.yml
-    - grafana_ingress.yml
-    - alertmanager_ingress.yml
+    - prometheus_ingress.yml.j2
+    - grafana_ingress.yml.j2
+    - alertmanager_ingress.yml.j2
 
 - name: Configure Service Monitors
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - traefik_servicemonitor.yml
-    - longhorn_servicemonitor.yml
+    - traefik_servicemonitor.yml.j2
+    - longhorn_servicemonitor.yml.j2
+    - k3s_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
@@ -72,3 +91,9 @@
       file: traefik-dashboard.json
     - name: dashboard-longhorn
       file: longhorn-dashboard.json
+    - name: k3s-controller-manager
+      file: k3s-controllermanager-dashboard.json
+    - name: k3s-scheduler
+      file: k3s-scheduler-dashboard.json
+    - name: k3s-proxy
+      file: k3s-proxy-dashboard.json

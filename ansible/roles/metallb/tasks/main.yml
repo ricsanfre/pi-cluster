@@ -1,7 +1,7 @@
 ---
 - name: Create Metal LB namespace.
   kubernetes.core.k8s:
-    name: metallb-system
+    name: "{{ k3s_metallb_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
@@ -15,7 +15,8 @@
   kubernetes.core.helm:
     name: metallb
     chart_ref: metallb/metallb
-    release_namespace: metallb-system
+    release_namespace: "{{ k3s_metallb_namespace }}"
+    update_repo_cache: true
     state: present
     release_values:
       configInline:

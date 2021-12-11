@@ -1,58 +1,78 @@
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik-dashboard
+spec:
+  type: ClusterIP
+  ports:
+    - name: traefik
+      port: 9000
+      targetPort: traefik
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+
+---
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: alertmanager-ingress
-  namespace: k3s-monitoring
+  name: traefik-ingress
+  namespace: kube-system
   annotations:
     # HTTPS as entry point
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: alertmanager
+    cert-manager.io/common-name: traefik
 spec:
   tls:
     - hosts:
-        - alertmanager.picluster.ricsanfre.com
+        - {{ traefik_dashboard_dns }}
       secretName: prometheus-tls
   rules:
-    - host: alertmanager.picluster.ricsanfre.com
+    - host: {{ traefik_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-alertmanager
+                name: traefik-dashboard
                 port:
-                  number: 9093
+                  number: 9000
 
 ---
 # http ingress for http->https redirection
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: alertmanager-redirect
-  namespace: k3s-monitoring
+  name: traefik-redirect
+  namespace: kube-system
   annotations:
     # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
     # HTTP as entrypoint
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-    - host: alertmanager.picluster.ricsanfre.com
+    - host: {{ traefik_dashboard_dns }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-alertmanager
+                name: traefik-dashboard
                 port:
-                  number: 9093
+                  number: 9000

@@ -32,7 +32,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     ```
     kubectl create namespace monitoring
     ```
-- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password and list of plugins to be installed
+- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password, list of plugins to be installed and disabling the monitoring of kubernetes components (Scheduler, Controller Manager and Proxy). See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22)
 
   ```yml
       alertmanager:
@@ -61,6 +61,16 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         # List of grafana plugins to be installed
         plugins:
           - grafana-piechart-panel
+            kubeApiServer:
+        enabled: true
+      kubeControllerManager:
+        enabled: false
+      kubeScheduler:
+        enabled: false
+      kubeProxy:
+        enabled: false
+      kubeEtcd:
+        enabled: false
    ```yml
 
 - Step 3: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
@@ -271,6 +281,95 @@ spec:
 - Step 4. Apply the manifest file
 
     kubectl apply -f prometheus_ingress.yml grafana_ingress.yml alertmanager_ingress.yml
+
+
+## K3S components monitoring
+
+In order to monitor Kubernetes components (Scheduler, Controller Manager and Proxy), default resources created by kube-prometheus-operator (headless service, service monitor and grafana dashboards) are not valid for monitoring K3S because  K3S is emitting the same metrics on the three end-points, causing prometheus to consume high memory causing worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
+
+
+- Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape K3S metrics.
+
+  This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), for allowing Prometheus service discovery process of each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitely
+
+  The service will be use the k3s-proxy endpoint (TCP port 10249) for scraping all metrics. 
+
+  ```yml
+  ---
+  # Headless service for K3S metrics. No Selector
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: k3s-metrics-service
+    labels:
+      app: k3s-metrics
+    namespace: kube-system
+  spec:
+    clusterIP: None
+    ports:
+    - name: http-metrics
+      port: 10249
+      protocol: TCP
+      targetPort: 10249
+    type: ClusterIP
+
+  ---
+  # Endpoint for the headless service without selector
+  apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: k3s-metrics-service
+    namespace: kube-system
+  subsets:
+  - addresses:
+    - ip: 10.0.0.11
+    ports:
+    - name: http-metrics
+      port: 10249
+      protocol: TCP
+  ```
+
+- Create manifest file for defining the service monitor resource for let Prometheus discover this target
+
+  The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover K3S metrics endpoint as a Prometheus target.
+
+  ```yml
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: k3s
+      release: kube-prometheus-stack
+    name: k3s-prometheus-servicemonitor
+    namespace: k3s-monitoring
+  spec:
+    namespaceSelector:
+      matchNames:
+      - kube-system
+    selector:
+      matchLabels:
+        app: k3s-metrics
+    endpoints:
+      - port: http-metrics
+        path: /metrics
+  ```
+
+
+- Apply manifest file
+
+  kubectl apply -f k3s-metrics-service.yml k3s-servicemonitor.yml
+
+- Check target is automatically discovered in Prometheus UI
+
+  http://prometheus.picluster.ricsanfre/targets
+
+### K3S Grafana dashboards
+
+Kubernetes-controller-manager, kubernetes-proxy and kuberetes-scheduler dashboards can be donwloaded from grafana.com:
+
+- Kube Proxy: https://grafana.com/grafana/dashboards/12129
+- Kube Controller Manager: https://grafana.com/grafana/dashboards/12122
+- Kube Scheduler: https://grafana.com/grafana/dashboards/12130
 
 ## Traefik Monitoring
 

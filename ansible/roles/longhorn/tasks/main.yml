@@ -1,7 +1,7 @@
 ---
 - name: Create longhorn namespace.
   kubernetes.core.k8s:
-    name: longhorn-system
+    name: "{{ k3s_longhorn_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
@@ -16,7 +16,7 @@
     name: longhorn
     chart_ref: longhorn/longhorn
     update_repo_cache: true
-    release_namespace: longhorn-system
+    release_namespace: "{{ k3s_longhorn_namespace }}"
     state: present
     release_values:
       defaultSettings:
@@ -27,7 +27,7 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - longhorn_ingress.yml
+    - longhorn_ingress.yml.j2
 
 - name: Remove Local-Path as default storage class
   command:

@@ -3,7 +3,7 @@
 - name: Configure K3S embedded Traefik Helm Chart
   copy:
     dest: "/var/lib/rancher/k3s/server/manifests/traefik-config.yaml"
-    src: templates/traefik-config.yaml
+    src: files/traefik-config.yaml
     owner: root
     group: root
     mode: 0600
@@ -11,15 +11,19 @@
 
 - name: Create traefik namespace.
   kubernetes.core.k8s:
-    name: traefik-system
+    name: "{{ k3s_traefik_namespace }}"
     api_version: v1
     kind: Namespace
     state: present
+
+- name: Create Basic authentication credentials
+  include_tasks: create_basic_auth_credentials.yml
+
 - name: Configura Traefik
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - redirect_middleware.yml
-    - basicauth_middleware.yml
-    - traefik_dashboard.yml
+    - redirect_middleware.yml.j2
+    - basicauth_middleware.yml.j2
+    - traefik_dashboard.yml.j2

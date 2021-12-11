@@ -1,5 +1,12 @@
 ---
 
+k3s_monitoring_namespace: k3s-monitoring
+
+# Endpoint Service DNS name
+grafana_dashboard_dns: grafana.picluster.ricsanfre.com
+prometheus_dashboard_dns: prometheus.picluster.ricsanfre.com
+alertmanager_dashboard_dns: alertmanager.picluster.ricsanfre.com
+
 # Storage Settings
 prometheus_storage_size: "5Gi"
 prometheus_storage_class: "longhorn"
