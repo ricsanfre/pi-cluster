@@ -10,7 +10,7 @@ metadata:
   namespace: {{ k3s_traefik_namespace }}
 data:
   users: |2
-    b3NzOiRhcHIxJDNlZTVURy83JFpmY1NRQlV6SFpIMFZTak9NZGJ5UDANCg0K
+    {{ traefik_auth_htpasswd_pair }}
 
 ---
 # Basic-auth middleware

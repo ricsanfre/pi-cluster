@@ -16,6 +16,9 @@
     kind: Namespace
     state: present
 
+- name: Create Basic authentication credentials
+  include_tasks: create_basic_auth_credentials.yml
+
 - name: Configura Traefik
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
