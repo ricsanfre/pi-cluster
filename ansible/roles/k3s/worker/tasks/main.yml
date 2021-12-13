@@ -1,5 +1,14 @@
 ---
 
+- name: Get K3s installation script
+  get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s_install.sh
+    mode: '0766'
+
 - name: Install K3s
-  shell:
-    cmd: "curl -sfL https://get.k3s.io | K3S_URL='https://{{ k3s_master_ip }}:6443' K3S_TOKEN={{ k3s_token }} sh -s - {{ k3s_worker_extra_args }}"
+  command: "/tmp/k3s_install.sh {{ k3s_worker_extra_args }}"
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+    K3S_URL: "https://{{ k3s_master_ip }}:6443"
+  changed_when: true

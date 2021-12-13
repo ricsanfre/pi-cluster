@@ -1,30 +1,50 @@
 ---
-- name: Clean Longhorn storage
-  shell: "rm -rf /storage/*"
-  args:
-    executable: /bin/bash
-  changed_when: true
+
+- name: Clean Longhorn storage | get content
+  become: true
+  find:
+    paths: /storage
+    patterns: '*'
+    file_type: any
+    hidden: true
+  register: directory_content_result
+
+- name: Clean Longhorn storage | delete content
+  become: true
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ directory_content_result.files }}"
 
 - name: Clean longhorn iscsi targets and nodes
   shell: |
+    set -o pipefail
     for i in `sudo iscsiadm -m discovery -o show | grep -v 10.0.0.1 | awk '{print $1}'`
     do
     echo "Deleting target $i"
     sudo iscsiadm -m discovery -p $i -o delete
     done
+  args:
+    executable: /bin/bash
   register: output
   changed_when: true
 
 - name: Clean container/pod logs
-  shell: "rm -rf /var/log/pods /var/log/containers"
-  args:
-    executable: /bin/bash
-  ignore_errors: true
-  changed_when: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/var/log/pods"
+    - "/var/log/containers"
 
-- name: Clean fluentd pos files
-  shell: "rm /var/log/*.pos"
-  args:
-    executable: /bin/bash
-  ignore_errors: true
-  changed_when: true
+- name: Clean fluentd pos files | get pos files
+  find:
+    paths: /var/log
+    patterns: '*.pos'
+  register: files_to_delete
+
+- name: Clean fluentd pos files | delete pos files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
