@@ -25,6 +25,10 @@ dnsmasq_additional_dns_hosts:
     desc: "DNS Server"
     hostname: dns
     ip: 10.0.0.1
+  s3_server:
+    desc: "S3 Server"
+    hostname: s3
+    ip: 10.0.0.11
 
 ####################
 # ntp role variables

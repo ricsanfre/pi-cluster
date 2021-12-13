@@ -86,6 +86,14 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
      ```
      ansible-playbook setup_picluster.yml --tags "node"
      ```
+  - Configure backup server (S3) (`node1`)
+
+     Run the playbook:
+
+     ```
+     ansible-playbook setup_picluster.yml --tags "backup"
+     ```
+
   - Install K3S cluster
 
      Run the playbook:

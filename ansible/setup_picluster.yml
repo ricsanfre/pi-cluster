@@ -106,3 +106,33 @@
             name: ricsanfre.storage
       when: not centralized_san
       tags: [storage]
+
+- name: Configure Backup Server - S3 Storage
+  hosts: node1
+  gather_facts: true
+  tags: [backup]
+  vars:
+    ansible_become: true
+    server_hostname: s3.picluster.ricsanfre.com
+    ssl_key_size: 4096
+    ssl_certificate_provider: selfsigned
+
+  pre_tasks:
+    - name: Generate self-signed SSL certificates for minio
+      include_tasks: tasks/generate_selfsigned_cert.yml
+      args:
+        apply:
+          delegate_to: localhost
+          become: false
+    - name: Load tls key and cert
+      set_fact:
+        minio_key: "{{ lookup('file','certificates/' + inventory_hostname + '_private.key') }}"
+        minio_cert: "{{ lookup('file','certificates/' + inventory_hostname + '_public.crt') }}"
+
+  tasks:
+    - name: Include node storage variables
+      include_vars:
+        file: vars/backup/s3_minio.yml
+    - name: Configure Minio S3 server
+      include_role:
+        name: ricsanfre.minio

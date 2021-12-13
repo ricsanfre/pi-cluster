@@ -406,7 +406,69 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
 Edit file `/etc/dnsmasq.d/dnsmasq.conf`
 
 ```
-TBD: CONTENT dnsmasq.conf
+# Our DHCP service will be providing addresses over our eth0 adapter
+interface=eth0
+
+# We will listen on the static IP address we declared earlier
+listen-address= 10.0.0.1
+
+# Pre-allocate a bunch of IPs on the 10.0.0.0/8 network for the Raspberry Pi nodes
+# DHCP will allocate these for 12 hour leases, but will always assign the same IPs to the same Raspberry Pi
+# devices, as you'll populate the MAC addresses below with those of your actual Pi ethernet interfaces
+
+dhcp-range=10.0.0.32,10.0.0.128,12h
+
+# DNS nameservers
+server=80.58.61.250
+server=80.58.61.254
+
+# Bind dnsmasq to the interfaces it is listening on (eth0)
+bind-interfaces
+
+# Never forward plain names (without a dot or domain part)
+domain-needed
+
+local=/picluster.ricsanfre.com/
+
+domain=picluster.ricsanfre.com
+
+# Never forward addresses in the non-routed address spaces.
+bogus-priv
+
+# Do not use the hosts file on this machine
+# expand-hosts
+
+# Useful for debugging issues
+# log-queries
+# log-dhcp
+
+# DHCP configuration based on inventory
+dhcp-host=e4:5f:01:28:36:98,10.0.0.1
+dhcp-host=08:00:27:f3:6b:dd,10.0.0.10
+dhcp-host=dc:a6:32:9c:29:b9,10.0.0.11
+dhcp-host=e4:5f:01:2d:fd:19,10.0.0.12
+dhcp-host=e4:5f:01:2f:49:05,10.0.0.13
+dhcp-host=e4:5f:01:2f:54:82,10.0.0.14
+
+# Adding additional DHCP hosts
+# Ethernet Switch
+dhcp-host=94:a6:7e:7c:c7:69,10.0.0.2
+
+# DNS configuration based on inventory
+host-record=gateway.picluster.ricsanfre.com,10.0.0.1
+host-record=pimaster.picluster.ricsanfre.com,10.0.0.10
+host-record=node1.picluster.ricsanfre.com,10.0.0.11
+host-record=node2.picluster.ricsanfre.com,10.0.0.12
+host-record=node3.picluster.ricsanfre.com,10.0.0.13
+host-record=node4.picluster.ricsanfre.com,10.0.0.14
+
+# Adding additional DNS
+# NTP Server
+host-record=ntp.picluster.ricsanfre.com,10.0.0.1
+# DNS Server
+host-record=dns.picluster.ricsanfre.com,10.0.0.1
+# S3 Server
+host-record=s3.picluster.ricsanfre.com,10.0.0.11
 ```
 
 ### Step 3. Restart dnsmasq service

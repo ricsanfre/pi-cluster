@@ -1,0 +1,25 @@
+---
+
+# Minio admin credentials
+minio_root_user: "minioadmin"
+minio_root_password: "supers1cret0"
+
+# Minio site region configuration
+minio_site_region: "eu-west-1"
+
+# Enabling TLS
+minio_enable_tls: true
+minio_validate_certificate: false
+
+# Minio Buckets
+minio_buckets:
+  - name: k3s-longhorn
+    policy: read-write
+
+# Minio users and ACLs
+minio_users:
+  - name: longhorn
+    password: supers1cret0
+    buckets_acl:
+      - name: k3s-longhorn
+        policy: read-write
