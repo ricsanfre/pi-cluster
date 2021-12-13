@@ -1,8 +1,16 @@
 ---
 
+- name: Get K3s installation script
+  get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s_install.sh
+    mode: '0766'
+
 - name: Install K3s
-  shell:
-    cmd: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s - server {{ k3s_server_extra_args }}"
+  command: "/tmp/k3s_install.sh server {{ k3s_server_extra_args }}"
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+  changed_when: true
 
 - name: Create directory .kube
   file:
