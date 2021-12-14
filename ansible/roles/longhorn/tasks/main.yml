@@ -15,7 +15,7 @@
   block:
     - name: Create Minio S3 secret
       include_tasks: tasks/create_minio_s3_secret.yml
-    - name: Deploy LongHorn Helm chart without S3 backup.
+    - name: Deploy LongHorn Helm chart with S3 backup.
       kubernetes.core.helm:
         name: longhorn
         chart_ref: longhorn/longhorn
