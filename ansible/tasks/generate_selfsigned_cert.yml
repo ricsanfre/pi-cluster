@@ -1,20 +1,20 @@
 ---
 - name: Create private certificate
   openssl_privatekey:
-    path: "certificates/{{ inventory_hostname }}_private.key"
+    path: "certificates/{{ server_hostname }}_private.key"
     size: "{{ ssl_key_size | int }}"
     mode: 0644
 
 - name: Create CSR
   openssl_csr:
-    path: "certificates/{{ inventory_hostname }}_cert.csr"
-    privatekey_path: "certificates/{{ inventory_hostname }}_private.key"
+    path: "certificates/{{ server_hostname }}_cert.csr"
+    privatekey_path: "certificates/{{ server_hostname }}_private.key"
     common_name: "{{ server_hostname }}"
     subject_alt_name: "IP:{{ ansible_default_ipv4.address }}"
 
 - name: Create certificates for keystore
   openssl_certificate:
-    csr_path: "certificates/{{ inventory_hostname }}_cert.csr"
-    path: "certificates/{{ inventory_hostname }}_public.crt"
-    privatekey_path: "certificates/{{ inventory_hostname }}_private.key"
+    csr_path: "certificates/{{ server_hostname }}_cert.csr"
+    path: "certificates/{{ server_hostname }}_public.crt"
+    privatekey_path: "certificates/{{ server_hostname }}_private.key"
     provider: "{{ ssl_certificate_provider }}"
