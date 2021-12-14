@@ -56,6 +56,29 @@ Minio installation and configuration tasks have been automated with Ansible deve
     - Minio Server API Port: 9091
     - Minio Console Port: 9092
     - Minio Storage data dir: `/storage/minio`
+    - Minio Site Region: `eu-west-1`
+    - Self-signed SSL certificates stored in /etc/minio/ssl.
+
+    Minio Enviroment variables stored in `/etc/minio/minio.conf` file:
+    ```
+    # Minio local volumes.
+    MINIO_VOLUMES="/storage/minio"
+
+    # Minio cli options.
+    MINIO_OPTS="--address :9091 --console-address :9092 --certs-dir /etc/minio/ssl"
+
+    # Access Key of the server.
+    MINIO_ROOT_USER="<admin_user>"
+    # Secret key of the server.
+    MINIO_ROOT_PASSWORD="<admin_user_passwd>"
+    # Minio server region
+    MINIO_SITE_REGION="eu-west-1"
+    ```
+
+    Minio server start-up command is:
+
+        /usr/local/minio server $MINIO_OPTS $MINIO_VOLUMES
+
 
 - Minio Buckets
     - Longhorn Backup: `longhorn`
@@ -63,7 +86,69 @@ Minio installation and configuration tasks have been automated with Ansible deve
 - Minio Users and ACLs
     - `longhorn` with read-write access to `longhorn` bucket.
 
-### References
+
+
+## Longhorn backup
+
+
+### Minio end-point credentials
+
+Create kuberentes secret resource containing Minio end-point access information and credentials
+
+- Create manifest file `longhorn-minio-secret.yml`
+
+  ```yml
+
+    apiVersion: v1
+    kind: Secret
+    metadata:
+    name: minio-secret
+    namespace: longhorn-system
+    type: Opaque
+    data:
+    AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
+    AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
+    AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
+    AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate
+  ```
+  For encoding the different access paramenters the following commands can be used:
+
+    echo -n minio_url | base64
+    echo -n minio_access_key_id | base64
+    echo -n minio_secret_access_key | base64
+    cat minio-ssl.pem | base64
+
+- Apply manifest file
+
+   kubectl apply -f longhorn-s3-secret.yml
+
+### Configure Longhorn backup target
+
+Go to the Longhorn UI. In the top navigation bar, click Settings. In the Backup section, set Backup Target to:
+
+    s3://<bucket-name>@<minio-s3-region>/
+
+Following my configuration it should be:
+
+    s3//longhorn@eu-west-1/
+
+> NOTE: Make sure that you have / at the end, otherwise you will get an error.
+
+
+In the Backup section set Backup Target Credential Secret to the secret resource created before
+
+    minio-secret
+
+## Target can be automatically configured when deploying helm chart
+
+Additional overriden values can be provided to helm chart deployment to configure S3 target.
+
+```yml
+defaultSettings:
+  backupTarget: s3://longhorn@eu-west-1/
+  backupTargetCredentialSecret: minio-secret
+```
+## References
 
 [1] K3S Backup/Restore official documentation (https://rancher.com/docs/k3s/latest/en/backup-restore/)
 [2] Longhorn Backup/Restore official documentation (https://longhorn.io/docs/1.2.2/snapshots-and-backups/)
