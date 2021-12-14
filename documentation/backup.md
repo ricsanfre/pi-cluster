@@ -116,7 +116,7 @@ Create kuberentes secret resource containing Minio end-point access information 
     echo -n minio_url | base64
     echo -n minio_access_key_id | base64
     echo -n minio_secret_access_key | base64
-    cat minio-ssl.pem | base64
+    cat minio-ssl.pem | base64 | tr -d "\n"
 
 - Apply manifest file
 
