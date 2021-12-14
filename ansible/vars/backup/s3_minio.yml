@@ -1,4 +1,8 @@
 ---
+# Minio data dirs
+minio_server_make_datadirs: true
+minio_server_datadirs:
+  - /storage/minio
 
 # Minio admin credentials
 minio_root_user: "minioadmin"
