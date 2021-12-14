@@ -127,17 +127,15 @@ Create kuberentes secret resource containing Minio end-point access information 
 Go to the Longhorn UI. In the top navigation bar, click Settings. In the Backup section, set Backup Target to:
 
     s3://<bucket-name>@<minio-s3-region>/
-
-Following my configuration it should be:
-
-    s3//longhorn@eu-west-1/
+    
 
 > NOTE: Make sure that you have / at the end, otherwise you will get an error.
-
 
 In the Backup section set Backup Target Credential Secret to the secret resource created before
 
     minio-secret
+
+![longhorn-backup-settings](./images/longhorn_backup_settings.png)
 
 ## Target can be automatically configured when deploying helm chart
 
