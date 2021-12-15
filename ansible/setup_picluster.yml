@@ -130,8 +130,8 @@
           become: false
     - name: Load tls key and cert
       set_fact:
-        minio_key: "{{ lookup('file','certificates/' + server_hostname + '_private.key') }}"
-        minio_cert: "{{ lookup('file','certificates/' + server_hostname + '_public.crt') }}"
+        minio_key: "{{ lookup('file','certificates/' + server_hostname + '.key') }}"
+        minio_cert: "{{ lookup('file','certificates/' + server_hostname + '.pem') }}"
 
   tasks:
     - name: Include node storage variables
