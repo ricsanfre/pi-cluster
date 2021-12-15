@@ -1,0 +1,20 @@
+---
+
+- name: Download Velero CLI
+  get_url:
+    url: https://github.com/vmware-tanzu/velero/releases/download/{{ velero_version }}/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz
+    dest: /tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz
+    mode: '0766'
+
+- name: Extract archives
+  unarchive:
+    src: /tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz
+    dest: /tmp
+    remote_src: true
+
+- name: Copy binary to /usr/local/bin
+  copy:
+    src: /tmp/velero-{{ velero_version }}-linux-{{ velero_arch }}/velero
+    dest: /usr/local/bin/velero
+    mode: '0755'
+    remote_src: true

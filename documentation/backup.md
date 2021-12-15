@@ -87,8 +87,94 @@ Minio installation and configuration tasks have been automated with Ansible deve
     - `longhorn` with read-write access to `longhorn` bucket.
 
 
+## Velero Installation and configuration
 
-## Longhorn backup
+Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
+
+Velero as well provides a CLI to execute backup/restore commands using Kuberentes API. More details in official [documentation](https://velero.io/docs/v1.7/how-velero-works/)
+
+The complete backup workflow is the following:
+
+![velero-backup-process](./images/velero-backup-process.png)
+
+As storage provider, Minio will be used. See specific installation documentation using Minio as backend [here](https://velero.io/docs/v1.7/contributions/minio/).
+
+
+### Installing CLI
+
+- Step 1: Download latest stable velero release from https://github.com/vmware-tanzu/velero/releases
+
+- Step 2: Download tar file corresponding to the latest stable version and the host architecture
+
+    velero-<release>-linux-<arch>.tar.gz
+
+- Step 3: unarchive
+
+    tar -xvf <RELEASE-TARBALL-NAME>.tar.gz -C /dir/to/extract/to
+
+- Step 4: Copy `velero` binary to `/usr/local/bin`
+
+
+### Installing server
+
+Installation using `Helm` (Release 3):
+
+- Step 1: Add the vmware-tanzu Helm repository:
+    ```
+    helm repo add vmware-tanzu https://vmware-tanzu.github.io/helm-charts
+    ```
+- Step2: Fetch the latest charts from the repository:
+    ```
+    helm repo update
+    ```
+- Step 3: Create namespace
+    ```
+    kubectl create namespace velero-system
+    ```
+- Step 4: Create values.yml for Velero helm chart deployment
+  
+    ```yml
+    # Disable volume snapshots. Longhorn deals with them
+    snapshotsEnabled: false
+    # Minio storage configuration
+    configuration:
+    # Cloud provider being used
+    provider: aws
+    backupStorageLocation:
+      name:
+      bucket: velero_bucket
+      config:
+        region: eu-west-1
+        s3ForcePathStyle: true
+        s3Url: "https://minio.example.com:9091"
+        insecureSkipTLSVerify: true
+    credentials:
+      secretContents:
+        aws_access_key_id: minio_velero_user
+        aws_secret_access_key: minio_velero_key
+    # AWS backend plugin configuration
+    init_containers:
+    - name: velero-plugin-for-aws
+        image: velero/velero-plugin-for-aws:v1.3.0
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /target
+            name: plugins
+    ```
+
+ 
+- Step 5: Install Veleor in the velero-system namespace with the overriden values
+    ```
+    helm install velero vmware-tanzu/velero --namespace velero-system -f values.yml
+    
+    ```
+- Step 6: Confirm that the deployment succeeded, run:
+    ```
+    kubectl -n velero-system get pod
+    ```
+
+
+## Longhorn backup configuration
 
 
 ### Minio end-point credentials
@@ -117,6 +203,8 @@ Create kuberentes secret resource containing Minio end-point access information 
     echo -n minio_access_key_id | base64
     echo -n minio_secret_access_key | base64
     cat minio-ssl.pem | base64 | tr -d "\n"
+
+> NOTE: As the command shows, "\n" characters from the base64 encoded SSL pem must be removed.
 
 - Apply manifest file
 
@@ -153,3 +241,4 @@ defaultSettings:
 [3] Bare metal Minio documentation (https://docs.min.io/minio/baremetal/)
 [4] Create a Multi-User MinIO Server for S3-Compatible Object Hosting (https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting)
 [5] Backup Longhorn Volumes to a Minio S3 bucket (https://www.civo.com/learn/backup-longhorn-volumes-to-a-minio-s3-bucket)
+

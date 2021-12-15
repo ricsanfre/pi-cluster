@@ -1,0 +1,54 @@
+---
+
+- name: Install velero client
+  include_tasks: install_velero_cli.yml
+  args:
+    apply:
+      become: true
+
+- name: Create velero namespace.
+  kubernetes.core.k8s:
+    name: "{{ k3s_velero_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Add vmware-tanzu chart repo.
+  kubernetes.core.helm_repository:
+    name: vmware-tanzu
+    repo_url: "https://vmware-tanzu.github.io/helm-charts"
+
+- name: Deploy Velero with Minio storage provider
+  kubernetes.core.helm:
+    name: velero
+    chart_ref: vmware-tanzu/velero
+    update_repo_cache: true
+    release_namespace: "{{ k3s_velero_namespace }}"
+    state: present
+    release_values:
+      # Disable volume snapshots. Longhorn deals with them
+      snapshotsEnabled: false
+      # Minio storage configuration
+      configuration:
+        # Cloud provider being used
+        provider: aws
+        backupStorageLocation:
+          name: minio-bucket
+          bucket: "{{ minio_velero_bucket }}"
+          config:
+            region: "{{ minio_site_region }}"
+            s3ForcePathStyle: true
+            s3Url: "{{ minio_url }}"
+            insecureSkipTLSVerify: true
+      credentials:
+        secretContents:
+          aws_access_key_id: "{{ minio_velero_user }}"
+          aws_secret_access_key: "{{ minio_velero_key }}"
+      # AWS backend plugin configuration
+      init_containers:
+        - name: velero-plugin-for-aws
+          image: velero/velero-plugin-for-aws:v1.3.0
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /target
+              name: plugins
