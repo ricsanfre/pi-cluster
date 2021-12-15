@@ -3,12 +3,16 @@
   openssl_privatekey:
     path: "certificates/{{ server_hostname }}_private.key"
     size: "{{ ssl_key_size | int }}"
+    type: "{{ key_type }}"
     mode: 0644
 
 - name: Create CSR
   openssl_csr:
     path: "certificates/{{ server_hostname }}_cert.csr"
     privatekey_path: "certificates/{{ server_hostname }}_private.key"
+    country_name: "{{ country_name }}"
+    organization_name: "{{ organization_name }}"
+    email_address: "{{ email_address }}"
     common_name: "{{ server_hostname }}"
     subject_alt_name: "IP:{{ ansible_default_ipv4.address }}"
 

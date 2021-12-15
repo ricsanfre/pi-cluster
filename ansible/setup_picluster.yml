@@ -116,6 +116,10 @@
     server_hostname: s3.picluster.ricsanfre.com
     ssl_key_size: 4096
     ssl_certificate_provider: selfsigned
+    key_type: RSA
+    country_name: ES
+    email_address: admin@ricsanfre.com
+    organization_name: Ricsanfre
 
   pre_tasks:
     - name: Generate self-signed SSL certificates for minio
