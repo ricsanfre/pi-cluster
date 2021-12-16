@@ -33,4 +33,25 @@ minio_users:
     password: supers1cret0
     buckets_acl:
       - name: k3s-velero
-        policy: read-write
+        policy: custom
+        custom:
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:GetObject",
+                  "s3:DeleteObject",
+                  "s3:PutObject",
+                  "s3:AbortMultipartUpload",
+                  "s3:ListMultipartUploadParts"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-velero/*"
+              ]
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:ListBucket"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-velero"
+              ]
