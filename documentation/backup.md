@@ -134,6 +134,22 @@ Installation using `Helm` (Release 3):
 - Step 4: Create values.yml for Velero helm chart deployment
   
     ```yml
+    # AWS backend plugin configuration
+    initContainers:
+    - name: velero-plugin-for-aws
+        image: velero/velero-plugin-for-aws:v1.3.0
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /target
+            name: plugins
+    # Upgrading CRDs is causing issues
+    upgradeCRDs: false
+    # Use a kubectl image supporting ARM64
+    # bitnami default is not suppporting it
+    # kubectl:
+    #   image:
+    #     repository: rancher/kubectl
+    #     tag: v1.21.5
     # Disable volume snapshots. Longhorn deals with them
     snapshotsEnabled: false
     # Minio storage configuration
@@ -141,26 +157,27 @@ Installation using `Helm` (Release 3):
     # Cloud provider being used
     provider: aws
     backupStorageLocation:
-      name:
-      bucket: velero_bucket
-      config:
-        region: eu-west-1
+        name: aws
+        default: true
+        provider: aws
+        bucket: "{{ minio_velero_bucket }}"
+        config:
+        region: "{{ minio_site_region }}"
         s3ForcePathStyle: true
-        s3Url: "https://minio.example.com:9091"
+        s3Url: "{{ minio_url }}"
         insecureSkipTLSVerify: true
     credentials:
-      secretContents:
-        aws_access_key_id: minio_velero_user
-        aws_secret_access_key: minio_velero_key
-    # AWS backend plugin configuration
-    init_containers:
-    - name: velero-plugin-for-aws
-        image: velero/velero-plugin-for-aws:v1.3.0
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-        - mountPath: /target
-            name: plugins
+    secretContents:
+        cloud: |
+        [default]
+        aws_access_key_id: "{{ minio_velero_user }}"
+        aws_secret_access_key: "{{ minio_velero_key }}"
+
     ```
+
+> NOTE: UpgradeCRDs option causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami. Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
+Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue either.
+
 
  
 - Step 5: Install Veleor in the velero-system namespace with the overriden values
