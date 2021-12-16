@@ -1,25 +1,19 @@
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: Namespace
 metadata:
-  name: nginx-logs
-  namespace: testing-longhorn
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 50Mi
+  name: nginx-example
+  labels:
+    app: nginx
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: testing-longhorn
+  namespace: nginx-example
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: nginx
@@ -28,19 +22,11 @@ spec:
       labels:
         app: nginx
     spec:
-      volumes:
-        - name: nginx-logs
-          persistentVolumeClaim:
-           claimName: nginx-logs
       containers:
       - image: nginx:1.17.6
         name: nginx
         ports:
         - containerPort: 80
-        volumeMounts:
-          - mountPath: "/var/log/nginx"
-            name: nginx-logs
-            readOnly: false
 
 ---
 apiVersion: v1
@@ -49,7 +35,7 @@ metadata:
   labels:
     app: nginx
   name: my-nginx
-  namespace: testing-longhorn
+  namespace: nginx-example
 spec:
   ports:
   - port: 80

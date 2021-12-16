@@ -1,0 +1,11 @@
+---
+- name: Testing longhorn installation.
+  hosts: k3s_master
+
+  tasks:
+    - name: Cleaning testing
+      kubernetes.core.k8s:
+        definition: "{{ lookup('files', 'files/' + item ) }}"
+        state: absent
+      with_items:
+        - nginx_test_application.yml
