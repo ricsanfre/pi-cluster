@@ -1,6 +1,6 @@
 # Cluster Backup
 
-It is needed to implement a backup strategy for the K3S cluster. This backup strategy should, at least, contain a backup infrastructure, and backup and restore procedures for OS basic configuration files, K3S cluster configuration and Longhorn Persistent Volumes.
+It is needed to implement a backup strategy for the K3S cluster. This backup strategy should, at least, contains a backup infrastructure, and backup and restore procedures for OS basic configuration files, K3S cluster configuration and Longhorn Persistent Volumes.
 
 - OS configuration files backup
 
@@ -36,11 +36,20 @@ The backup architecture is the following
 
 [TBD: Image Backup architecture: Minio, Velero, etc]
 
+
+#### Table of contents
+
+1. [Backup Infrastructure](#backup-infrastructure)
+2. [Minio S3 Object Storage Server](#minio-s3-object-storage-server)
+3. [Velero installation and configuration](#Velero-installation-and-configuration)
+4. [Longhorn backup configuration](#longhorn-backup-configuration)
+
+
 ## Backup Infrastructure
 
 For installing Minio S3 storage server, `node1` will be used. `node1` has attached a SSD Disk of 480 GB that is not being used by Longhorn Distributed Storage solution. Longhorn storage solution is not deployed in k3s master node and thus storage replicas are only using storage resources of `node2`, `node3` and `node4`.
 
-## Installation of S3 Storage Server (Minio)
+## Minio S3 Object Storage Server
 
 Official [documentation](https://docs.min.io/minio/baremetal/installation/deploy-minio-standalone.html) can be used for installing stand-alone Minio Server in bare-metal environment. 
 
@@ -87,7 +96,7 @@ Minio installation and configuration tasks have been automated with Ansible deve
     - `longhorn` with read-write access to `longhorn` bucket.
 
 
-## Velero Installation and configuration
+## Velero installation and configuration
 
 Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
 
@@ -100,7 +109,53 @@ The complete backup workflow is the following:
 As storage provider, Minio will be used. See specific installation documentation using Minio as backend [here](https://velero.io/docs/v1.7/contributions/minio/).
 
 
-### Installing CLI
+### Configuring Minio bucket and user for Velero
+
+elero requires an object storage bucket to store backups in. In Minio a dedicated S3 bucket is created for Velero (name: `k3s-velero`) 
+
+A specific Minio user `velero` is configured with specic access policy to grant the user access to the bucket.
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:DeleteObject",
+                "s3:GetObject",
+                "s3:ListMultipartUploadParts",
+                "s3:PutObject",
+                "s3:AbortMultipartUpload"
+            ],
+            "Resource": [
+                "arn:aws:s3:::k3s-velero/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::k3s-velero"
+            ]
+        }
+    ]
+}
+
+```
+
+See more details in Velero's documentation about [aws plugin](https://github.com/vmware-tanzu/velero-plugin-for-aws)
+
+
+### Installing Velero CLI
+
+Velero CLI need to be installed joinly with kubectl. `velero` uses kubectl config file (`~/.kube/config`) to connect to Kuberentes API.
+
+> NOTE: k3s config file is located in `/etc/rancher/k3s/k3s.yaml` and it need to be copied into `$HOME/kube/config` int the server where `kubectl` and `velero` is going to be executed.
+
+This will be installed in `node1`
 
 - Step 1: Download latest stable velero release from https://github.com/vmware-tanzu/velero/releases
 
@@ -115,7 +170,7 @@ As storage provider, Minio will be used. See specific installation documentation
 - Step 4: Copy `velero` binary to `/usr/local/bin`
 
 
-### Installing server
+### Installing Velero Kubernetes Service
 
 Installation using `Helm` (Release 3):
 
