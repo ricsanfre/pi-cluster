@@ -31,16 +31,16 @@ spec:
       volumes:
         - name: nginx-logs
           persistentVolumeClaim:
-           claimName: nginx-logs
+            claimName: nginx-logs
       containers:
-      - image: nginx:1.17.6
-        name: nginx
-        ports:
-        - containerPort: 80
-        volumeMounts:
-          - mountPath: "/var/log/nginx"
-            name: nginx-logs
-            readOnly: false
+        - image: nginx:1.17.6
+          name: nginx
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/var/log/nginx"
+              name: nginx-logs
+              readOnly: false
 
 ---
 apiVersion: v1
@@ -52,8 +52,8 @@ metadata:
   namespace: testing-longhorn
 spec:
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
   selector:
     app: nginx
   type: LoadBalancer
