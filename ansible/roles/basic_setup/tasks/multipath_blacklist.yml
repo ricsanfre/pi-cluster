@@ -1,0 +1,18 @@
+---
+# This play is for blacklist devices in multiplath configurtion
+# Avoid conflicts with Longhorn. See: https://longhorn.io/kb/troubleshooting-volume-with-multipath/
+- name: Check that the multipath.conf exists
+  stat:
+    path: /etc/multipath.conf
+  register: multipath_file_exist
+
+- name: Copy blacklisted multipath.conf file
+  copy:
+    dest: /etc/multipath.conf
+    src: files/multipath.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: true
+  when: multipath_file_exist.stat.exists
+  notify: restart multipath

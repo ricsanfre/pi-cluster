@@ -22,6 +22,23 @@ Longhorn uses internally iSCSI to expose the block device presented by the Longh
 Since all cluster nodes (`node1-node4`) have been already configured as iSCSI Initiators all pre-requisties are met.
 
 
+### Longhorn issues with Multipath
+
+Multipath running on the storage nodes might cause problems when starting Pods using Longhorn volumes ("Error messages of type: volume already mounted").
+
+To prevent the multipath daemon from adding additional block devices created by Longhorn, Longhorn devices must be blacklisted in multipath configuration. See Longhorn documentation related to this [issue](https://longhorn.io/kb/troubleshooting-volume-with-multipath/)
+
+Include in `/etc/multipath.conf` the following configuration:
+
+    blacklist {
+    devnode "^sd[a-z0-9]+"
+  }
+
+Restart multipathd service
+
+    systemctl restart multipathd
+
+
 ### Installation procedure using Helm
 
 Installation using `Helm` (Release 3):
