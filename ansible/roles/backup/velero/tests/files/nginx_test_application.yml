@@ -7,13 +7,29 @@ metadata:
     app: nginx
 
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nginx-logs
+  namespace: nginx-example
+  labels:
+    app: nginx
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
   namespace: nginx-example
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: nginx
@@ -21,12 +37,38 @@ spec:
     metadata:
       labels:
         app: nginx
+      annotations:
+        backup.velero.io/backup-volumes: nginx-logs
+        pre.hook.backup.velero.io/container: fsfreeze
+        pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
+        post.hook.backup.velero.io/container: fsfreeze
+        post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
     spec:
+      volumes:
+        - name: nginx-logs
+          persistentVolumeClaim:
+            claimName: nginx-logs
       containers:
         - image: nginx:1.17.6
           name: nginx
           ports:
             - containerPort: 80
+          volumeMounts:
+            - mountPath: "/var/log/nginx"
+              name: nginx-logs
+              readOnly: false
+        - image: ubuntu:bionic
+          name: fsfreeze
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: "/var/log/nginx"
+              name: nginx-logs
+              readOnly: false
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "sleep infinity"
 
 ---
 apiVersion: v1
