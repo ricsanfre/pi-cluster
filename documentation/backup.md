@@ -66,7 +66,7 @@ Minio installation and configuration tasks have been automated with Ansible deve
     - Minio Console Port: 9092
     - Minio Storage data dir: `/storage/minio`
     - Minio Site Region: `eu-west-1`
-    - Self-signed SSL certificates stored in /etc/minio/ssl.
+    - SSL certificates stored in /etc/minio/ssl.
 
     Minio Enviroment variables stored in `/etc/minio/minio.conf` file:
     ```
@@ -88,6 +88,17 @@ Minio installation and configuration tasks have been automated with Ansible deve
 
         /usr/local/minio server $MINIO_OPTS $MINIO_VOLUMES
 
+- Minio SSL certificates
+
+  `restic` backup to a S3 Object Storage backend using self-signed certificates does not work (See issue [#26](https://github.com/ricsanfre/pi-cluster/issues/26)). However, it works if SSL certificates are signed using a custom CA.
+
+  1) Create a self-signed CA key and self-signed certificate
+  2) Create a SSL certificate for Minio server signed using the custom CA
+  3) Copy public certificate as `/etc/minio/ssl/public.crt`
+  4) Copy private key as `/etc/minio/ssl/private.key`
+  5) Restart minio server.
+
+> NOTE: Certificates creation has been automated with Ansible using openssl module.
 
 - Minio Buckets
     - Longhorn Backup: `longhorn`
@@ -189,50 +200,50 @@ Installation using `Helm` (Release 3):
 - Step 4: Create values.yml for Velero helm chart deployment
   
     ```yml
-    # AWS backend plugin configuration
     initContainers:
-    - name: velero-plugin-for-aws
-        image: velero/velero-plugin-for-aws:v1.3.0
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-        - mountPath: /target
-            name: plugins
-    # Upgrading CRDs is causing issues
-    upgradeCRDs: false
-    # Use a kubectl image supporting ARM64
-    # bitnami default is not suppporting it
-    # kubectl:
-    #   image:
-    #     repository: rancher/kubectl
-    #     tag: v1.21.5
-    # Disable volume snapshots. Longhorn deals with them
-    snapshotsEnabled: false
-    # Minio storage configuration
-    configuration:
-    # Cloud provider being used
-    provider: aws
-    backupStorageLocation:
-        name: aws
-        default: true
+        - name: velero-plugin-for-aws
+          image: velero/velero-plugin-for-aws:v1.3.0
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /target
+              name: plugins
+      # Upgrading CRDs is causing issues
+      upgradeCRDs: false
+      # Use a kubectl image supporting ARM64
+      # bitnami default is not suppporting it
+      # kubectl:
+      #   image:
+      #     repository: rancher/kubectl
+      #     tag: v1.21.5
+      # Disable volume snapshots. Longhorn deals with them
+      snapshotsEnabled: false
+      # Deploy restic for backing up volumes
+      deployRestic: true
+      # Minio storage configuration
+      configuration:
+        # Cloud provider being used
         provider: aws
-        bucket: "{{ minio_velero_bucket }}"
-        config:
-        region: "{{ minio_site_region }}"
-        s3ForcePathStyle: true
-        s3Url: "{{ minio_url }}"
-        insecureSkipTLSVerify: true
-    credentials:
-    secretContents:
-        cloud: |
-        [default]
-        aws_access_key_id: "{{ minio_velero_user }}"
-        aws_secret_access_key: "{{ minio_velero_key }}"
-
+        backupStorageLocation:
+          provider: aws
+          bucket: <velero_bucket>
+          caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
+          config:
+            region: eu-west-1
+            s3ForcePathStyle: true
+            s3Url: https://minio.example.com:9091
+            insecureSkipTLSVerify: true
+      credentials:
+        secretContents:
+          cloud: |
+            [default]
+            aws_access_key_id: <minio_velero_user> # Not encoded
+            aws_secret_access_key: <minio_velero_pass> # Not encoded
     ```
 
-> NOTE: UpgradeCRDs option causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami. Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
+> NOTE 1: UpgradeCRDs option causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami. Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
 Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue either.
 
+> NOTE 2: Custom CA certificate must be passed as `caCert` parameter (base64 encoded and removing any '\n' character)
 
  
 - Step 5: Install Veleor in the velero-system namespace with the overriden values
@@ -245,6 +256,145 @@ Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue eithe
     kubectl -n velero-system get pod
     ```
 
+### Testing Velero installation
+
+- Step 1: Deploy a testing application (nginx), which uses a Longhorn's Volume for storing its logs (`/var/logs/nginx`)
+
+   1) Create manifest file: `nginx-example.yml`
+
+    ```yml
+    ---
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+    name: nginx-example
+    labels:
+        app: nginx
+
+    ---
+    kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+    name: nginx-logs
+    namespace: nginx-example
+    labels:
+        app: nginx
+    spec:
+    storageClassName: longhorn
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+        storage: 50Mi
+
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+    name: nginx-deployment
+    namespace: nginx-example
+    spec:
+    replicas: 1
+    selector:
+        matchLabels:
+        app: nginx
+    template:
+        metadata:
+        labels:
+            app: nginx
+        annotations:
+            backup.velero.io/backup-volumes: nginx-logs
+            pre.hook.backup.velero.io/container: fsfreeze
+            pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
+            post.hook.backup.velero.io/container: fsfreeze
+            post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
+        spec:
+        volumes:
+            - name: nginx-logs
+            persistentVolumeClaim:
+                claimName: nginx-logs
+        containers:
+            - image: nginx:1.17.6
+            name: nginx
+            ports:
+                - containerPort: 80
+            volumeMounts:
+                - mountPath: "/var/log/nginx"
+                name: nginx-logs
+                readOnly: false
+            - image: ubuntu:bionic
+            name: fsfreeze
+            securityContext:
+                privileged: true
+            volumeMounts:
+                - mountPath: "/var/log/nginx"
+                name: nginx-logs
+                readOnly: false
+            command:
+                - "/bin/bash"
+                - "-c"
+                - "sleep infinity"
+
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+    labels:
+        app: nginx
+    name: my-nginx
+    namespace: nginx-example
+    spec:
+    ports:
+        - port: 80
+        targetPort: 80
+    selector:
+        app: nginx
+    type: LoadBalancer
+
+    ```
+
+   > NOTE: Deployment template is annotated so, volume is included in the backup (`backup.velero.io/backup-volumes`) and before doing the backup the filesystem is freeze (`pre.hook.backup.velero.io` and `post.hook.backup.velero.io`)
+   
+
+  2) Apply manifest file `nginx-example.yml`
+
+    kubectl apply -f nginx-example.yml
+
+  3) Connect to nginx pod and create manually a file within `/var/log/nginx`
+
+    kubectl exec <nginx-pod> -n nginx-example -it -- /bin/sh
+
+    # touch /var/log/nginx/testing
+  
+  4) Create a backup for any object that matches the app=nginx label selector:
+
+    velero backup create nginx-backup --selector app=nginx 
+
+  5) Simulate a disaster:
+
+    kubectl delete namespace nginx-example
+
+  6) To check that the nginx deployment and service are gone, run:
+
+    kubectl get deployments --namespace=nginx-example
+    kubectl get services --namespace=nginx-example
+    kubectl get namespace/nginx-example
+
+  7) Run the restore
+
+    velero restore create --from-backup nginx-backup
+   
+  8) Check the status of the restore:
+
+    velero restore get
+
+  After the restore finishes, the output looks like the following:
+  ```
+  NAME                          BACKUP         STATUS      STARTED                         COMPLETED                       ERRORS   WARNINGS   CREATED                         SELECTOR
+  nginx-backup-20211220180613   nginx-backup   Completed   2021-12-20 18:06:13 +0100 CET   2021-12-20 18:06:50 +0100 CET   0        0          2021-12-20 18:06:13 +0100 CET   <none>
+  ```
+
+  9) Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
 
 ## Longhorn backup configuration
 
@@ -267,16 +417,16 @@ Create kuberentes secret resource containing Minio end-point access information 
     AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
     AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
     AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
-    AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate
+    AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
   ```
   For encoding the different access paramenters the following commands can be used:
 
     echo -n minio_url | base64
     echo -n minio_access_key_id | base64
     echo -n minio_secret_access_key | base64
-    cat minio-ssl.pem | base64 | tr -d "\n"
+    cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
 
-> NOTE: As the command shows, "\n" characters from the base64 encoded SSL pem must be removed.
+> NOTE 1: As the command shows, SSL certificates in the validation chain must be concatenated and "\n" characters from the base64 encoded SSL pem must be removed.
 
 - Apply manifest file
 
