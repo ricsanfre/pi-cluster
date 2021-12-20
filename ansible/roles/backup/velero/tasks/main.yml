@@ -53,6 +53,7 @@
         backupStorageLocation:
           provider: aws
           bucket: "{{ minio_velero_bucket }}"
+          caCert: "{{ lookup('file','certificates/CA.pem') | b64encode | replace('\n', '') }}"
           config:
             region: "{{ minio_site_region }}"
             s3ForcePathStyle: true

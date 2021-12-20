@@ -122,8 +122,14 @@
     organization_name: Ricsanfre
 
   pre_tasks:
-    - name: Generate self-signed SSL certificates for minio
-      include_tasks: tasks/generate_selfsigned_cert.yml
+    - name: Generate custom CA
+      include_tasks: tasks/generate_custom_ca.yml
+      args:
+        apply:
+          delegate_to: localhost
+          become: false
+    - name: Generate customCA-signed SSL certificates for minio
+      include_tasks: tasks/generate_ca_signed_cert.yml
       args:
         apply:
           delegate_to: localhost
