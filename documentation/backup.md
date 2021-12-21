@@ -180,6 +180,13 @@ This will be installed in `node1`
 
 - Step 4: Copy `velero` binary to `/usr/local/bin`
 
+- Step 5: Customize namespace for operational commands
+
+  CLI commands expects velero to be running in default namespace (`velero`). If namespace is different it must be specified with any execution of the command (--namespace option)
+
+  Velero CLI can be configured to use a different namespace and avoid passing --namespace option with each execution
+
+    velero client config set namespace=<velero_namespace>
 
 ### Installing Velero Kubernetes Service
 
