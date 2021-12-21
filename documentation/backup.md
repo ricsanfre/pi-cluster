@@ -401,7 +401,13 @@ Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue eithe
   nginx-backup-20211220180613   nginx-backup   Completed   2021-12-20 18:06:13 +0100 CET   2021-12-20 18:06:50 +0100 CET   0        0          2021-12-20 18:06:13 +0100 CET   <none>
   ```
 
-  9) Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
+  9) Check nginx deployment and services are back
+
+    kubectl get deployments --namespace=nginx-example
+    kubectl get services --namespace=nginx-example
+    kubectl get namespace/nginx-example
+
+  10) Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
 
 ## Longhorn backup configuration
 

@@ -1,11 +1,11 @@
 ---
-- name: Testing longhorn installation.
+- name: Cleaning velero testing pod.
   hosts: k3s_master
 
   tasks:
     - name: Cleaning testing
       kubernetes.core.k8s:
-        definition: "{{ lookup('files', 'files/' + item ) }}"
+        definition: "{{ lookup('file', 'files/' + item ) }}"
         state: absent
       with_items:
         - nginx_test_application.yml
