@@ -1,8 +1,23 @@
 # Cluster Backup
 
-It is needed to implement a backup strategy for the K3S cluster. This backup strategy should, at least, contains a backup infrastructure, and backup and restore procedures for OS basic configuration files, K3S cluster configuration and Longhorn Persistent Volumes.
+#### Table of contents
+1. [Backup Architecture and Desing](#backup-architecture-and-design)
+2. [Backup server hardware infrastructure](#backup-server-hardware-infrastructure)
+3. [Minio S3 Object Storage Server](#minio-s3-object-storage-server)
+4. [OS Filesystem backup with Restic](#os-filesystem-backup-with-restic)
+5. [Kubernetes Backup with Velero](#kubernetes-backup-with-velero)
+6. [Longhorn backup configuration](#longhorn-backup-configuration)
 
-- OS configuration files backup
+
+## Backup Architecture and Design
+
+It is needed to implement a backup strategy for the K3S cluster. This backup strategy should, at least, contains a backup infrastructure, and backup and restore procedures for OS basic configuration files, K3S cluster configuration and PODs Persistent Volumes.
+
+The backup architecture is the following:
+
+![picluster-backup-architecture](./images/pi-cluster-backup-architecture.png)
+
+- OS filesystem backup
 
     Some OS configuration files should be backed up in order to being able to restore configuration at OS level.
     For doing so, [Restic](restic.net) can be used. Restic provides a fast and secure backup program that can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports opensource S3 [Minio](min.io). 
@@ -20,32 +35,36 @@ It is needed to implement a backup strategy for the K3S cluster. This backup str
 
     Since Velero is a most generic way to backup any Kuberentes cluster (not just K3S) it will be used to implement my cluster K3S backup.
 
-- Longhorn Persistent Volumes backup and restore.
+- PODs Persistent Volumes backup and restore.
 
-    Velero supports, Persistent Volumes backup/restore procedures using `restic` (https://velero.io/docs/v1.7/restic/), but it is a beta feature.
+    Velero supports, Persistent Volumes backup/restore procedures using `restic` as backup engine (https://velero.io/docs/v1.7/restic/) using the same S3 backend configured within Velero for backing up the cluster configuration. 
 
-    Longhorn provides its own mechanisms for doing the backups and to take snapshots of the persistent volumes. See Longhorn [documentation](https://longhorn.io/docs/1.2.2/snapshots-and-backups/).
+    Longhorn also provides its own mechanisms for doing the backups and to take snapshots of the persistent volumes. See Longhorn [documentation](https://longhorn.io/docs/1.2.2/snapshots-and-backups/). For configuring the backup in Longhorn is needed to define a backup target, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets. [Minio](min.io) can be used as backend.
 
-    For implementing the backup is needed to define a backup target, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets. [Minio](min.io) can be used as backend.
+    Applications running in Kubernetes needs to be backed up in a consistent state. It means that before copying the filesystem is it required to freeze the application and make it flush all the pending changes to disk before making the copy. Once the backup is finished, the application can be unfreeze.
+      1) Application Freeze and flush to disk
+      2) Filesystem level backup
+      3) Application unfreeze.
 
+    Velero supports the definition of [backup hooks](https://velero.io/docs/v1.7/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations, 
 
-All the above mechanisms supports as backup backend, a S3-compliant storage infrastructure. For this reason, open-source project [Minio](https://min.io/)
+    Longhorn does not currently support application consistent volumes snapshots/backups, see open [issue](https://github.com/longhorn/longhorn/issues/2128). 
+    Enabling within K3S cluster the new Kubernetes CSI feature: [Volume Snapshots](https://kubernetes.io/docs/concepts/storage/volume-snapshots/) allows to programmatically create backups and so orchestrate consistent backups:
 
+       kubectl exec pod -- app_feeze_command
+       kubectl apply -f volume_snapshot.yml
+       # wait till snapshot finish
+       kubectl exec pod -- app_unfreeze_command
 
-The backup architecture is the following
+    This CSI feature is supported by Longhorn. See Longhorn documentation: [CSI Snapshot Support](https://longhorn.io/docs/1.2.2/snapshots-and-backups/csi-snapshot-support/create-a-backup-via-csi/). K3S currently does not come with a preintegrated Snapshot Controller, but external controller could be used (https://github.com/kubernetes-csi/external-snapshotter).
 
-[TBD: Image Backup architecture: Minio, Velero, etc]
+    > NOTE: CSI Snaphot Support is not yet supported in current pi-cluster release. To be implemented and tested in the future 
 
+    Both mechanism for backing up Persistent Volumes (Velero and Longhorn) will be enabled in my cluster.
 
-#### Table of contents
+All the above mechanisms supports as backup backend, a S3-compliant storage infrastructure. For this reason, open-source project [Minio](https://min.io/) will be deployed.
 
-1. [Backup Infrastructure](#backup-infrastructure)
-2. [Minio S3 Object Storage Server](#minio-s3-object-storage-server)
-3. [Velero installation and configuration](#Velero-installation-and-configuration)
-4. [Longhorn backup configuration](#longhorn-backup-configuration)
-
-
-## Backup Infrastructure
+## Backup server hardware infrastructure
 
 For installing Minio S3 storage server, `node1` will be used. `node1` has attached a SSD Disk of 480 GB that is not being used by Longhorn Distributed Storage solution. Longhorn storage solution is not deployed in k3s master node and thus storage replicas are only using storage resources of `node2`, `node3` and `node4`.
 
@@ -101,13 +120,146 @@ Minio installation and configuration tasks have been automated with Ansible deve
 > NOTE: Certificates creation has been automated with Ansible using openssl module.
 
 - Minio Buckets
-    - Longhorn Backup: `longhorn`
+    - Longhorn Backup: `k3s-longhorn`
+    - Velero Backup: `k3s-velero`
+    - OS backup: `restic`
+
+  Buckets can be created using Minio's CLI (`mc`)
+  
+      mc mb <minio_alias>/<bucket_name> 
+
+  Where: <minio_alias> is the mc's alias connection to Minio Server using admin user credentials
+
+      mc alias set minio_alias <minio_url> <minio_root_user> <minio_root_password>
+
 
 - Minio Users and ACLs
-    - `longhorn` with read-write access to `longhorn` bucket.
+    - `longhorn` with read-write access to `k3s-longhorn` bucket.
+    - `velero` with read-write access to `k3s-velero` bucket. 
+    - `restic` with read-write access to `restic` bucket
+  
+  Users can be created usinng Minio's CLI
+
+      mc admin user add <minio_alias> <user_name> <user_password>
+
+  Access policies to the different buckets can be assigned to the different users using the command:
+
+      mc admin policy add <minio_alias> <user_name> user_policy.json
+
+  Where `user_policy.json`, contains AWS access policies definition like:
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+          "Effect": "Allow",
+          "Action": [
+              "s3:DeleteObject",
+              "s3:GetObject",
+              "s3:ListBucket",
+              "s3:PutObject"
+          ],
+          "Resource": [
+              "arn:aws:s3:::bucket_name",
+              "arn:aws:s3:::bucket_name/*"
+          ]
+      }  
+    ]
+  }
+  ``` 
+  granting read-write access to `bucket_name`
+
+## OS Filesystem backup with Restic
+
+OS filesystems from different nodes will be backed up using `restic`. As backend S3 Minio server will be used.
+
+Restic installation and backup scheduling tasks have been automated with Ansible developing a role: **ricsanfre.backup**. This role installs restic and configure a systemd service and timer to schedule the backup execution.
+
+### Restic installation and backup scheduling configuration
+
+Ubuntu has as part of its distribution a `restic` package that can be installed with `apt` command. restic version is an old one (0.9), so it is better to install the last version binary (0.12.1) from github repository
+
+For doing the installation execute the following commands as root user
+   ```
+   cd /tmp
+   wget https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_linux_arm64.bz2
+   bzip2 -d /tmp/restic_0.12.1_linux_arm64.bz2
+   cp /tmp/restic_0.12.1_linux_arm64 /usr/local/bin/restic
+   chmod 755 /usr/local/bin/restic 
+   ```
+### Create restic environment variables files
+
+restic repository info can be passed to `restic` command through environment variables instead of typing in as parameters with every command execution
+
+- Step 1: Create a restic config directory
+  
+  ```
+  sudo mkdir /etc/restic
+  ```
+
+- Step 2: Create `restic.conf` file containing repository information:
+
+  ```
+  RESTIC_REPOSITORY=s3:https://<minio_server>:9091/<restic_bucket>
+  RESTIC_PASSWORD=<restic_repository_password>
+  AWS_ACCESS_KEY_ID=<minio_restic_user>
+  AWS_SECRET_ACCESS_KEY=<minio_restic_password>
+  ```
+
+- Step 3: Export as enviroment variables content of the file
+
+  ```
+  export $(grep -v '^#' /etc/restic/restic.conf | xargs -d '\n')
+  ```  
+
+  > NOTE: This command need to be executed with any new SSH shell connection before executing any `restic` command. As an alternative that command can be added to the bash profile of the user.
+
+### Copy CA SSL certificates
+
+In case Minio S3 server is using secure communications using a not valid certificate (self-signed or signed with custom CA), restic command must be used with `--cacert <path_to_CA.pem_file` option to let restic validate the server certificate. 
+
+Copy CA.pem, used to sign Minio SSL certificate into `/etc/restic/ssl/CA.pem` 
+
+### Restic repository initialization
+
+restic repository (stored within Minio's S3 bucket) need to be initialized before being used. It need to be done just once.
+
+For initilizing the repo execute:
+
+  restic --cacert /etc/restic/ssl/CA.pem init
+
+For checking whether the repo is initialized or not execute:
+
+  restic --cacert /etc/restic/ssl/CA.pem init cat config
+
+That command shows the information about the repository (file `config` stored within the S3 bucket)
+
+### Execute restic backup
+
+For manually launch backup process, execute
+
+   restic --cacert /etc/restic/ssl/CA.pem backup <path_to_backup>
+
+Backups snapshots can be displayed executing
+
+   restic --cacert /etc/restic/ssl/CA.pem snapshots
+
+### Restic backup schedule
+
+A systemd service and timer or cron can be used to execute and schedule the backups.
+
+**ricsanfre.backup** ansible role uses a systemd service and timer to automatically execute the backups. List of directories to be backed up, the scheduling of the backup and the retention policy are passed as role parameters 
+
+### Backups polocies
 
 
-## Velero installation and configuration
+
+
+
+## Kubernetes Backup with Velero
+
+### Velero installation and configuration
 
 Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
 
@@ -408,6 +560,12 @@ Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue eithe
     kubectl get namespace/nginx-example
 
   10) Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
+
+### Schedule a periodic full backup
+
+Set up daily full backup
+
+   velero schedule create full --schedule "0 16 * * *"
 
 ## Longhorn backup configuration
 

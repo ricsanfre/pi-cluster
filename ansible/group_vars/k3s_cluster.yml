@@ -47,11 +47,6 @@ k3s_external_ip_range: "10.0.0.100-10.0.0.200"
 traefik_basic_auth_user: admin
 traefik_basic_auth_passwd: s1cret0
 
-# Backup
-minio_hostname: s3.picluster.ricsanfre.com
-minio_url: "https://{{ minio_hostname }}:9091"
-minio_site_region: "eu-west-1"
-
 # Velero
 minio_velero_user: velero
 minio_velero_key: supers1cret0

@@ -5,3 +5,28 @@ ansible_user: ansible
 # Cluster Lab Architecture
 # Whether to use centralized SAN architecture or not
 centralized_san: false
+
+
+#######################
+# backup configuration
+#######################
+
+# Minio S3 Server
+minio_hostname: s3.picluster.ricsanfre.com
+minio_url: "https://{{ minio_hostname }}:9091"
+minio_site_region: "eu-west-1"
+
+
+restic_repository: "s3:{{ minio_url }}/restic"
+restic_aws_access_key_id: restic
+restic_aws_secret_access_key: supers1cret0
+restic_use_ca_cert: true
+
+restic_backups_dirs:
+  - path: '/etc'
+  - path: '/root'
+    exclude: '--exclude .cache'
+  - path: '/home/ansible'
+    exclude: '--exclude .cache'
+  - path: '/home/oss'
+    exclude: '--exclude .cache'
