@@ -20,6 +20,10 @@
     - role: ricsanfre.dnsmasq
       tags: [dnsmasq]
 
+    # Update DNS server to point to DNSmasq
+    - role: dns
+      tags: [dns]
+
     # Firewall (nftables) configuration
     - role: ricsanfre.firewall
       tags: [firewall]

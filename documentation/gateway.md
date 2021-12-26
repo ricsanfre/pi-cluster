@@ -520,6 +520,31 @@ DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are 
     sudo dhclient <interface>
 	  ```
 
+### Additional connfiguration: Updating DNS resolver
+
+Ubuntu 20.04 comes with systemd-resolved service that provides a DNS stub resolver on Ubuntu 20.04. A stub resolver is a small DNS client running on the server that provides network name resolution to local applications and implements a DNS caching.
+
+The DNS servers contacted are determined from the global settings in /etc/systemd/resolved.conf, the per-link static settings in /etc/systemd/network/*.network files, the per-link dynamic settings received over DHCP, information provided via resolvectl(1), and any DNS server information made available by other system services.
+
+All nodes of the cluster will receive the configuration of the DNS server in the cluster (dnsmasq running in `gateway` node) from DHCP. But `gateway` node need to be configured to use lolca dnsmaq service instead of the default DNS servers  received by the DCHP connection to my home network (my home network configuration)
+
+To check the name server used by the local resolver run:
+
+  systemd-resolve --status
+
+To specify the dns server to be used modify the file `/etc/systemd/resolved.conf`
+
+Add the following lines
+```
+[Resolve]
+DNS=10.0.0.1
+Domains=picluster.ricsanfre.com
+```
+
+Restart systemd-resolve service
+```
+sudo systemctl restart systemd-resolved
+```
 
 ## NTP Server Configuration
 

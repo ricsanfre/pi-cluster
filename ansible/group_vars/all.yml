@@ -6,6 +6,12 @@ ansible_user: ansible
 # Whether to use centralized SAN architecture or not
 centralized_san: false
 
+#######################
+# DNS configuration
+#######################
+# DNS server
+dns_server: 10.0.0.1
+dns_domain: picluster.ricsanfre.com
 
 #######################
 # backup configuration
@@ -27,6 +33,6 @@ restic_backups_dirs:
   - path: '/root'
     exclude: '--exclude .cache'
   - path: '/home/ansible'
-    exclude: '--exclude .cache'
+    exclude: '--exclude .cache --exclude .ansible'
   - path: '/home/oss'
     exclude: '--exclude .cache'
