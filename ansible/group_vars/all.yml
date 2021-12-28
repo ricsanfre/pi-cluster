@@ -27,12 +27,17 @@ restic_repository: "s3:{{ minio_url }}/restic"
 restic_aws_access_key_id: restic
 restic_aws_secret_access_key: supers1cret0
 restic_use_ca_cert: true
-
+# Deactivate clean service. Only enabled in one node
+restic_clean_service: false
 restic_backups_dirs:
   - path: '/etc'
   - path: '/root'
-    exclude: '--exclude .cache'
+    exclude:
+      - pattern: '.cache'
   - path: '/home/ansible'
-    exclude: '--exclude .cache --exclude .ansible'
+    exclude:
+      - pattern: '.cache'
+      - pattern: '.ansible'
   - path: '/home/oss'
-    exclude: '--exclude .cache'
+    exclude:
+      - pattern: '.cache'
