@@ -69,3 +69,11 @@
             [default]
             aws_access_key_id: "{{ minio_velero_user }}"
             aws_secret_access_key: "{{ minio_velero_key }}"
+
+
+- name: Create Full backup Schedule policy
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - velero_full_schedule.yml.j2
