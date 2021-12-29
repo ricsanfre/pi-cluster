@@ -227,11 +227,11 @@ restic repository (stored within Minio's S3 bucket) need to be initialized befor
 
 For initilizing the repo execute:
 
-  restic --cacert /etc/restic/ssl/CA.pem init
+    restic --cacert /etc/restic/ssl/CA.pem init
 
 For checking whether the repo is initialized or not execute:
 
-  restic --cacert /etc/restic/ssl/CA.pem init cat config
+    restic --cacert /etc/restic/ssl/CA.pem init cat config
 
 That command shows the information about the repository (file `config` stored within the S3 bucket)
 
@@ -239,23 +239,54 @@ That command shows the information about the repository (file `config` stored wi
 
 For manually launch backup process, execute
 
-   restic --cacert /etc/restic/ssl/CA.pem backup <path_to_backup>
+    restic --cacert /etc/restic/ssl/CA.pem backup <path_to_backup>
 
 Backups snapshots can be displayed executing
 
-   restic --cacert /etc/restic/ssl/CA.pem snapshots
+    restic --cacert /etc/restic/ssl/CA.pem snapshots
 
-### Restic backup schedule
+### Restic repository maintenance tasks
 
-A systemd service and timer or cron can be used to execute and schedule the backups.
+For checking repository inconsistencies and fixing them
 
-**ricsanfre.backup** ansible role uses a systemd service and timer to automatically execute the backups. List of directories to be backed up, the scheduling of the backup and the retention policy are passed as role parameters 
+    restic --cacert /etc/restic/ssl/CA.pem check
 
-### Backups polocies
+For applying data retention policy (i.e.: maintain 30 days old snapshots)
+
+    restic --cacert /etc/restic/ssl/CA.pem forget --keep-within 30d
+
+For purging repository old data:
+
+    restic --cacert /etc/restic/ssl/CA.pem prune
+
+### Restic backup schedule and concurrent backups
+
+- Scheduling backup processes
+  A systemd service and timer or cron can be used to execute and schedule the backups.
+
+  **ricsanfre.backup** ansible role uses a systemd service and timer to automatically execute the backups. List of directories to be backed up, the scheduling of the backup and the retention policy are passed as role parameters.
+
+- Allowing concurrent backup processes
+  A unique repository will be used (unique S3 bucket) to backing up configuration from all cluster servers. Restic maintenace tasks (`restic check`, `restic forget` and `restic prune` operations) acquires an exclusive-lock in the repository, so concurrent backup processes including those operations are mutually lock.
+
+  To avoid this situation, retic repo maintenance tasks are scheduled separatedly from the backup process and executed just from one of the nodes: `gateway`
 
 
+### Backups policies
 
+The folling directories are backed-up from the cluster nodes
 
+|Path | Exclude patterns|
+|----|----|
+| /etc/ | |
+| /home/oss | .cache |
+| /root | .cache |
+| /home/ansible | .cache .ansible |
+
+Backup policies scheduling
+
+- Daily backup at 03:00 (executed from all nodes)
+- Daily restic repo maintenance at 06:00 (executed from `gateway` node)
 
 ## Kubernetes Backup with Velero
 
@@ -563,9 +594,33 @@ Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue eithe
 
 ### Schedule a periodic full backup
 
-Set up daily full backup
+Set up daily full backup can be on with velero CLI
 
-   velero schedule create full --schedule "0 16 * * *"
+    velero schedule create full --schedule "0 4 * * *"
+
+Or creating a 'Schedule' kubernetes resource (https://velero.io/docs/v1.7/api-types/schedule/):
+
+```yml
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: full
+  namespace: velero-system
+spec:
+  schedule: 0 4 * * *
+  template:
+    hooks: {}
+    includedNamespaces:
+    - '*'
+    included_resources:
+    - '*'
+    includeClusterResources: true
+    metadata:
+      labels:
+        type: 'full'
+        schedule: 'daily'
+    ttl: 720h0m0s
+```
 
 ## Longhorn backup configuration
 
@@ -627,10 +682,43 @@ defaultSettings:
   backupTarget: s3://longhorn@eu-west-1/
   backupTargetCredentialSecret: minio-secret
 ```
+
+## Scheduling longhorn volumes backup
+
+A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
+See details in [documentation](https://longhorn.io/docs/1.2.3/snapshots-and-backups/scheduling-backups-and-snapshots/).
+
+- Create `RecurringJob` manifest resource
+
+  ```yml
+  ---
+  apiVersion: longhorn.io/v1beta1
+  kind: RecurringJob
+  metadata:
+    name: backup
+    namespace: longhorn-system
+  spec:
+    cron: "0 5 * * *"
+    task: "backup"
+    groups:
+    - default
+    retain: 2
+    concurrency: 2
+    labels:
+      type: 'full'
+      schedule: 'daily'
+  ```
+
+  This will create  recurring backup job for `default`. Longhorn will automatically add a volume to the default group when the volume has no recurring job.
+
+- Apply manifest file
+    
+      kubectl apply -f recurring_job.yml
+
 ## References
 
 [1] K3S Backup/Restore official documentation (https://rancher.com/docs/k3s/latest/en/backup-restore/)
-[2] Longhorn Backup/Restore official documentation (https://longhorn.io/docs/1.2.2/snapshots-and-backups/)
+[2] Longhorn Backup/Restore official documentation (https://longhorn.io/docs/1.2.3/snapshots-and-backups/)
 [3] Bare metal Minio documentation (https://docs.min.io/minio/baremetal/)
 [4] Create a Multi-User MinIO Server for S3-Compatible Object Hosting (https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting)
 [5] Backup Longhorn Volumes to a Minio S3 bucket (https://www.civo.com/learn/backup-longhorn-volumes-to-a-minio-s3-bucket)
