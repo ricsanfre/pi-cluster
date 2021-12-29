@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: longhorn-pvc
+  name: nginx-logs
   namespace: testing-longhorn
 spec:
   accessModes:
@@ -10,25 +10,50 @@ spec:
   storageClassName: longhorn
   resources:
     requests:
-      storage: 1Gi
+      storage: 50Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: testing-longhorn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      volumes:
+        - name: nginx-logs
+          persistentVolumeClaim:
+            claimName: nginx-logs
+      containers:
+        - image: nginx:1.17.6
+          name: nginx
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/var/log/nginx"
+              name: nginx-logs
+              readOnly: false
 
 ---
 apiVersion: v1
-kind: Pod
+kind: Service
 metadata:
-  name: longhorn-test
+  labels:
+    app: nginx
+  name: my-nginx
   namespace: testing-longhorn
 spec:
-  containers:
-    - name: longhorn-test
-      image: nginx:stable-alpine
-      imagePullPolicy: IfNotPresent
-      volumeMounts:
-        - name: longhorn-pvc
-          mountPath: /data
-      ports:
-        - containerPort: 80
-  volumes:
-    - name: longhorn-pvc
-      persistentVolumeClaim:
-        claimName: longhorn-pvc
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: nginx
+  type: LoadBalancer

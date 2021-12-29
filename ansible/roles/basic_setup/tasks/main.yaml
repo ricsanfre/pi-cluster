@@ -39,3 +39,6 @@
     create: true
     mode: 0755
   notify: reboot
+
+- name: Blacklist storage devices in multipath configuration
+  include_tasks: multipath_blacklist.yml

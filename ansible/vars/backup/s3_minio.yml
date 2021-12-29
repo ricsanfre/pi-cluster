@@ -1,0 +1,64 @@
+---
+# Minio data dirs
+minio_server_make_datadirs: true
+minio_server_datadirs:
+  - /storage/minio
+
+# Minio admin credentials
+minio_root_user: "minioadmin"
+minio_root_password: "supers1cret0"
+
+# Minio site region configuration
+minio_site_region: "eu-west-1"
+
+# Enabling TLS
+minio_enable_tls: true
+minio_validate_certificate: false
+
+# Minio Buckets
+minio_buckets:
+  - name: restic
+    policy: read-write
+  - name: k3s-longhorn
+    policy: read-write
+  - name: k3s-velero
+    policy: read-write
+
+# Minio users and ACLs
+minio_users:
+  - name: restic
+    password: supers1cret0
+    buckets_acl:
+      - name: restic
+        policy: read-write
+  - name: longhorn
+    password: supers1cret0
+    buckets_acl:
+      - name: k3s-longhorn
+        policy: read-write
+  - name: velero
+    password: supers1cret0
+    buckets_acl:
+      - name: k3s-velero
+        policy: custom
+        custom:
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:GetObject",
+                  "s3:DeleteObject",
+                  "s3:PutObject",
+                  "s3:AbortMultipartUpload",
+                  "s3:ListMultipartUploadParts"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-velero/*"
+              ]
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:ListBucket"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-velero"
+              ]

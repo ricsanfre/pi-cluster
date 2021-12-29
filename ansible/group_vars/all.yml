@@ -5,3 +5,39 @@ ansible_user: ansible
 # Cluster Lab Architecture
 # Whether to use centralized SAN architecture or not
 centralized_san: false
+
+#######################
+# DNS configuration
+#######################
+# DNS server
+dns_server: 10.0.0.1
+dns_domain: picluster.ricsanfre.com
+
+#######################
+# backup configuration
+#######################
+
+# Minio S3 Server
+minio_hostname: s3.picluster.ricsanfre.com
+minio_url: "https://{{ minio_hostname }}:9091"
+minio_site_region: "eu-west-1"
+
+
+restic_repository: "s3:{{ minio_url }}/restic"
+restic_aws_access_key_id: restic
+restic_aws_secret_access_key: supers1cret0
+restic_use_ca_cert: true
+# Deactivate clean service. Only enabled in one node
+restic_clean_service: false
+restic_backups_dirs:
+  - path: '/etc'
+  - path: '/root'
+    exclude:
+      - pattern: '.cache'
+  - path: '/home/ansible'
+    exclude:
+      - pattern: '.cache'
+      - pattern: '.ansible'
+  - path: '/home/oss'
+    exclude:
+      - pattern: '.cache'

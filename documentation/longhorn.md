@@ -22,6 +22,23 @@ Longhorn uses internally iSCSI to expose the block device presented by the Longh
 Since all cluster nodes (`node1-node4`) have been already configured as iSCSI Initiators all pre-requisties are met.
 
 
+### Longhorn issues with Multipath
+
+Multipath running on the storage nodes might cause problems when starting Pods using Longhorn volumes ("Error messages of type: volume already mounted").
+
+To prevent the multipath daemon from adding additional block devices created by Longhorn, Longhorn devices must be blacklisted in multipath configuration. See Longhorn documentation related to this [issue](https://longhorn.io/kb/troubleshooting-volume-with-multipath/)
+
+Include in `/etc/multipath.conf` the following configuration:
+
+    blacklist {
+    devnode "^sd[a-z0-9]+"
+  }
+
+Restart multipathd service
+
+    systemctl restart multipathd
+
+
 ### Installation procedure using Helm
 
 Installation using `Helm` (Release 3):
@@ -52,14 +69,28 @@ Installation using `Helm` (Release 3):
 Create a Ingress rule to make Longhorn front-end available through the Ingress Controller (Traefik) using a specific URL (`storage.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
 
 Longhorn backend is providing not secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
-Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured. 
+Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured.
+
+There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Longhorn APIs calls fail. Traefik 2.x ingress controller does not set the WebSocket headers and a specific middleware to route to the Longhorn UI must be specified. See Longhorn specific [documentation](https://longhorn.io/kb/troubleshooting-traefik-2.x-as-ingress-controller/) about how to solve this particular issue.
 
 
 - Step 1. Create a manifest file `longhorn_ingress.yml`
 
-Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares, HTTPS redirect and basic authentication will be used. 
+Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares, HTTPS redirect, basic authentication and X-Forwareded-Proto headers will be used.
 
 ```yml
+# Solving API issue. 
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: svc-longhorn-headers
+  namespace: longhorn-system
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+---
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -72,7 +103,9 @@ metadata:
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: 
+      traefik-system-basic-auth@kubernetescrd,
+      longhorn-system-svc-longhorn-headers@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: self-signed-issuer
     cert-manager.io/common-name: longhorn

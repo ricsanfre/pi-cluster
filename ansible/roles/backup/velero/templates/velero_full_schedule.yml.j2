@@ -1,0 +1,20 @@
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: full
+  namespace: velero-system
+spec:
+  schedule: 0 4 * * *
+  template:
+    hooks: {}
+    includedNamespaces:
+    - '*'
+    included_resources:
+    - '*'
+    includeClusterResources: true
+    metadata:
+      labels:
+        type: 'full'
+        schedule: 'daily'
+    ttl: 720h0m0s

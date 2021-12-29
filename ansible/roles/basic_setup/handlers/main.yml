@@ -1,3 +1,8 @@
 ---
 - name: reboot
   reboot:
+
+- name: restart multipath
+  service:
+    name: multipathd
+    state: restarted

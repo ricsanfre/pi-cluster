@@ -18,6 +18,10 @@ roles:
     version: v1.0.0
   - name: ricsanfre.fluentbit
     version: v1.0.3
+  - name: ricsanfre.minio
+    version: v1.0.7
+  - name: ricsanfre.backup
+    version: v1.0.2
 collections:
   - name: kubernetes.core
     version: 2.1.1

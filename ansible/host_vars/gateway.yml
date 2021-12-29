@@ -25,6 +25,10 @@ dnsmasq_additional_dns_hosts:
     desc: "DNS Server"
     hostname: dns
     ip: 10.0.0.1
+  s3_server:
+    desc: "S3 Server"
+    hostname: s3
+    ip: 10.0.0.11
 
 ####################
 # ntp role variables
@@ -94,7 +98,14 @@ nft_forward_host_rules:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
   230 http from wan:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
+  240 s3 from wan:
+    - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport {9091, 9092} ct state new accept
 # NAT Post-routing
 nft_nat_host_postrouting_rules:
   005 masquerade lan to wan:
     - ip saddr $lan_network oifname $wan_interface masquerade
+
+############################
+# restic backup role variables
+############################
+restic_clean_service: true

@@ -41,6 +41,8 @@
       tags: ['monitoring']
     - role: logging/k3s
       tags: ['logging']
+    - role: backup/velero
+      tags: ['backup']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control

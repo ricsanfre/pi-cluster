@@ -6,7 +6,7 @@ k3s_logging_namespace: k3s-logging
 efk_cluster_name: "efk"
 
 # Number of Elastic Search nodes
-efk_elasticsearch_nodes: 2
+efk_elasticsearch_nodes: 1
 # Enable/Disable memory map
 efk_elasticsearch_enable_mmap: false
 # Storage Settings

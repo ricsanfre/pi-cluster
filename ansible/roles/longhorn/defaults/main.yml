@@ -4,3 +4,6 @@ k3s_longhorn_namespace: longhorn-system
 
 # Endpoint Service DNS name
 longhorn_dashboard_dns: storage.picluster.ricsanfre.com
+
+# Enable S3 backup
+longhorn_s3_backup: true

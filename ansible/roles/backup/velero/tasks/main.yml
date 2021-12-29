@@ -1,0 +1,79 @@
+---
+
+- name: Install velero client
+  include_tasks: install_velero_cli.yml
+  args:
+    apply:
+      become: true
+
+- name: Create velero namespace.
+  kubernetes.core.k8s:
+    name: "{{ k3s_velero_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+
+- name: Configure velero CLI
+  include_tasks: configure_velero_cli.yml
+
+- name: Add vmware-tanzu chart repo.
+  kubernetes.core.helm_repository:
+    name: vmware-tanzu
+    repo_url: "https://vmware-tanzu.github.io/helm-charts"
+
+- name: Deploy Velero with Minio storage provider
+  kubernetes.core.helm:
+    name: velero
+    chart_ref: vmware-tanzu/velero
+    update_repo_cache: true
+    release_namespace: "{{ k3s_velero_namespace }}"
+    state: present
+    release_values:
+      # AWS backend plugin configuration
+      initContainers:
+        - name: velero-plugin-for-aws
+          image: velero/velero-plugin-for-aws:v1.3.0
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /target
+              name: plugins
+      # Upgrading CRDs is causing issues
+      upgradeCRDs: false
+      # Use a kubectl image supporting ARM64
+      # bitnami default is not suppporting it
+      # kubectl:
+      #   image:
+      #     repository: rancher/kubectl
+      #     tag: v1.21.5
+      # Disable volume snapshots. Longhorn deals with them
+      snapshotsEnabled: false
+      # Deploy restic
+      deployRestic: true
+      # Minio storage configuration
+      configuration:
+        # Cloud provider being used
+        provider: aws
+        backupStorageLocation:
+          provider: aws
+          bucket: "{{ minio_velero_bucket }}"
+          caCert: "{{ lookup('file','certificates/CA.pem') | b64encode | replace('\n', '') }}"
+          config:
+            region: "{{ minio_site_region }}"
+            s3ForcePathStyle: true
+            s3Url: "{{ minio_url }}"
+            insecureSkipTLSVerify: true
+      credentials:
+        secretContents:
+          cloud: |
+            [default]
+            aws_access_key_id: "{{ minio_velero_user }}"
+            aws_secret_access_key: "{{ minio_velero_key }}"
+
+
+- name: Create Full backup Schedule policy
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - velero_full_schedule.yml.j2

@@ -1,0 +1,11 @@
+---
+- name: Testing velero backup.
+  hosts: k3s_master
+
+  tasks:
+    - name: Create PVC and testing pod
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'files/' + item ) }}"
+        state: present
+      with_items:
+        - nginx_test_application.yml

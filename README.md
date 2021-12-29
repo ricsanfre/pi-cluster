@@ -33,6 +33,7 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
     - [K3S Distributed Storage](documentation/longhorn.md). Installing LongHorn as cluster distributed storage solution for providing Persistent Volumes to pods.
     - [K3S centralized logging monitoring](documentation/logging.md). Installing a centralized log monitoring tool based on EFK stack. Real-time processing of Kuberentes pods and services and homelab servers logs.
     - [K3S centralized monitoring](documentation/monitoring.md). Installing Kube Prometheus Stack for monitoring Kuberentes cluster
+5) [Cluster backup and restore](documentation/backup.md). Deployment of a backup server (Minio S3 Object Store) and backup policies implementation at 3 levels: 1) OS filesystem level, using Restic, 2) Kubernetes configuration, using Velero, 3) POD's Persistent Volumes, using Longhorn backup/snapshots and Velero-restic.    
 
 ## Automatic deployment instructions using Ansible
 
@@ -86,6 +87,14 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
      ```
      ansible-playbook setup_picluster.yml --tags "node"
      ```
+  - Configure backup server (S3) (`node1`) and configuring OS backup with restic in all nodes (`node1-node4` and `gateway`)
+
+     Run the playbook:
+
+     ```
+     ansible-playbook backup_configuration.yml
+     ```
+
   - Install K3S cluster
 
      Run the playbook:
@@ -94,7 +103,7 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
      ansible-playbook k3s_install.yml
      ```
 
-  - Deploy and configure basic services (metallb, traefik, certmanager, longhorn, EFK and Prometheus )
+  - Deploy and configure basic services (metallb, traefik, certmanager, longhorn, EFK, Prometheus, Velero )
 
      Run the playbook:
 
@@ -116,6 +125,7 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
      | `longhorn` | Longhorn |
      | `logging` | EFK Stack |
      | `monitoring` | Prometheus Stack |
+     | `backup` | Velero |
 
 
 ### Resetting K3s

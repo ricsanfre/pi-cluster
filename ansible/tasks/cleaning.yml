@@ -8,6 +8,7 @@
     file_type: any
     hidden: true
   register: directory_content_result
+  when: "'k3s_worker' in group_names"
 
 - name: Clean Longhorn storage | delete content
   become: true
@@ -15,6 +16,7 @@
     path: "{{ item.path }}"
     state: absent
   with_items: "{{ directory_content_result.files }}"
+  when: "'k3s_worker' in group_names"
 
 - name: Clean longhorn iscsi targets and nodes
   shell: |
@@ -28,6 +30,7 @@
     executable: /bin/bash
   register: output
   changed_when: true
+  when: "'k3s_worker' in group_names"
 
 - name: Clean container/pod logs
   file:
