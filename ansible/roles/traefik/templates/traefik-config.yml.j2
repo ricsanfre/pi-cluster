@@ -8,3 +8,6 @@ spec:
   valuesContent: |-
     additionalArguments:
       - "--metrics.prometheus=true"
+    service:
+      spec:
+        loadBalancerIP: {{ k3s_ingress_external_ip }}

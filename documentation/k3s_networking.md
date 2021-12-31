@@ -72,6 +72,11 @@ MetalLB consists of two different pods:
 ![metal-lb-architecture](images/metallb_architecture.png)
 
 
+## Requesting Specific IPs
+
+MetalLB respects the Kubernetes service `spec.loadBalancerIP` parameter, so if a static IP address from the available pool need to be set up for a specific service, it can be requested by setting that parameter. If MetalLB does not own the requested address, or if the address is already in use by another service, assignment will fail and MetalLB will log a warning event visible in `kubectl describe service <service name>`.
+
+
 ## Install Metal Load Balancer
 
 

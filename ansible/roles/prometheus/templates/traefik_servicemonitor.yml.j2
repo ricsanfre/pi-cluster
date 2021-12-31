@@ -9,7 +9,7 @@ metadata:
   namespace: {{ k3s_monitoring_namespace }}
 spec:
   endpoints:
-    - port: traefik
+    - port: metrics
       path: /metrics
   namespaceSelector:
     matchNames:
@@ -17,4 +17,4 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik-dashboard
+      app.kubernetes.io/name: traefik-metrics

@@ -101,6 +101,12 @@ spec:
     service:
       spec:
         type: LoadBalancer
+        loadBalancerIP: 10.0.0.101
+    tls: # Configuring self-signed certificate with DNS and static IP address: NOTE 4
+      selfSignedCertificate:
+        subjectAltNames:
+        - ip: 10.0.0.101
+        - dns: elasticsearch.picluster.ricsanfre.com
 ```
 
 - Step 2: Apply manifest
@@ -127,10 +133,14 @@ See how to configure PersistenVolumeTemplates for Elasticsearh using this operat
 
 > **NOTE 3: About accesing ELK services from outside the cluster**<br>
 
-By default ELK services (elasticsearch, kibana, etc) are accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster they can be configured as `LoadBalancer` service type.
+By default ELK services (elasticsearch, kibana, etc) are accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster they can be configured as `LoadBalancer` service type and specifying a static IP address (`loadBalancerIP`) for the service from the Metal LB pool.
 This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` service can be configured to send logs to the elasticsearch running in the cluster).
 
 More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-services.html)
+
+> **NOTE 4: TLS self-signed certificate**<br>
+
+Self-signed certificate will be created for elasticsearch, SANS (Service Alternative Names) can be added to the TLS certificate. More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-transport-settings.html)
 
 ### Elasticsearch authentication
 
