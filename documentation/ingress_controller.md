@@ -227,6 +227,7 @@ spec:
 
 ```
 
+
 ## Enabling Traefik dashboard and Prometheus Metrics
 
 ### Enabling Prometheus metrics
@@ -358,6 +359,17 @@ spec:
   curl http://<traefik-dashboard-service>:9000/metrics
 
 - Acces UI through configured dns: https://traefik.picluster.ricsanfre.com/dashboard/
+
+## Assign a static IP address from LoadBalancer pool to Ingress service
+
+Traefik service of type LoadBalancer created by Helm Chart does not specify any static external IP address. To assign a static IP address belonging to Metal LB pool, heml chart parameters shoud be specified:
+
+```yml
+service:
+  spec:
+    loadBalancerIP: 10.0.0.100
+```
+As before modify `traefik-config.yml` and copy to  `/var/lib/rancher/k3s/server/manifests/` in the master node for K3S to automatically re-deploy Traefik chart with the configuration changes.
 
 ## Automating with Ansible
 

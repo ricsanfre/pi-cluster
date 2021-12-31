@@ -1,9 +1,9 @@
 ---
 
 - name: Configure K3S embedded Traefik Helm Chart
-  copy:
+  template:
     dest: "/var/lib/rancher/k3s/server/manifests/traefik-config.yaml"
-    src: files/traefik-config.yaml
+    src: templates/traefik-config.yml.j2
     owner: root
     group: root
     mode: 0600
