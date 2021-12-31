@@ -27,3 +27,4 @@
     - redirect_middleware.yml.j2
     - basicauth_middleware.yml.j2
     - traefik_dashboard.yml.j2
+    - traefik_metrics.yml.j2
