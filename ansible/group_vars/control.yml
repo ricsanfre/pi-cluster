@@ -30,7 +30,7 @@ fluentbit_filters:
 fluentbit_outputs:
   - Name: es
     match: "*"
-    Host: 10.0.0.101
+    Host: "{{ elasticsearch_dns }}"
     Port: 9200
     Logstash_Format: true
     Logstash_Prefix: logstash

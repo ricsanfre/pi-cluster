@@ -29,22 +29,6 @@ k3s_logging_namespace: k3s-logging
 k3s_monitoring_namespace: k3s-monitoring
 k3s_velero_namespace: velero-system
 
-# DNS service end-points
-
-traefik_dashboard_dns: traefik.picluster.ricsanfre.com
-longhorn_dashboard_dns: storage.picluster.ricsanfre.com
-kibana_dashboard_dns: kibana.picluster.ricsanfre.com
-grafana_dashboard_dns: grafana.picluster.ricsanfre.com
-prometheus_dashboard_dns: prometheus.picluster.ricsanfre.com
-alertmanager_dashboard_dns: alertmanager.picluster.ricsanfre.com
-
-# MetalLB configuration
-# k3s external ip range: Metal LB pool configuration
-k3s_external_ip_range: "10.0.0.100-10.0.0.200"
-
-# External IP for Kubernets Ingress
-k3s_ingress_external_ip: 10.0.0.100
-
 # Traefik configuration
 # HTTP Basic auth credentials
 traefik_basic_auth_user: admin
