@@ -25,8 +25,7 @@ spec:
     service:
       spec:
         type: LoadBalancer
-        externalIPs:
-          - {{ k3s_elasticsearch_external_ip }}
+        loadBalancerIP: {{ k3s_elasticsearch_external_ip }}
     tls:
       selfSignedCertificate:
         subjectAltNames:
