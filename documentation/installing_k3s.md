@@ -1,3 +1,14 @@
+# K3S
+
+K3S is a lightweight kubernetes built for IoT and edge computing, provided by the company Rancher. The following picture shows the K3S architecture
+
+![K3S Architecture](images/how-it-works-k3s-revised.svg)
+
+In K3S all kubernetes processes are consolidated within one single binary. The binary is deployed on servers with two different k3s roles (k3s-server or k3s-agent).
+
+- k3s-server: starts all kubernetes control plane processes (API, Scheduler and Controller) and worker proceses (Kubelet and kube-proxy), so master node can be used also as worker node.
+- k3s-agent: consolidating all kuberentes worker processes (Kubelet and kube-proxy).
+
 # K3S Installation
 
 Kubernetes cluster will be installed in node1-node4. `node1` will have control-plane role while `node2-4` will be workers.
