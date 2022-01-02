@@ -34,6 +34,10 @@ Two different storage alternatives:
 
 For having better cluster performance `node1-node4` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
 
+<p align="center">
+  <img src="images/pi-cluster-2.0.png" width="355" />
+</p>
+
 ### Centralized SAN
 
 A cheaper alternative architecture, instead of using dedicated SSD disks for each cluster node, one single SSD disk can be used for configuring a SAN service.
@@ -45,6 +49,10 @@ As additional storage (required by distributed storage solution), iSCSI SAN was 
 A SAN (Storage Access Network) was configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node4`.
 
 As storage device, a SSD disk was attached to `gateway` node. This SSD disk was used as well to host the OS.
+
+<p align="center">
+  <img src="images/pi-cluster.png" width="400" / alt="pi-cluster-1.0">
+</p>
 
 This alternative setup is worth it from educational point of view, to test the different storage options for RaspberryPI and to learn about iSCSI configuration and deployment on bare-metal environments. As well can be used a a cheaper solution for deploying centralized storage solution.
 

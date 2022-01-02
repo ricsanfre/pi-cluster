@@ -1,12 +1,20 @@
 # Raspberry Pi Cluster
 
-![Pi-cluster](documentation/images/pi-cluster.png)
+
+<p align="left">
+  <img src="documentation/images/pi-cluster.png" width="400" / alt="pi-cluster-1.0">
+  <img src="documentation/images/pi-cluster-2.0.png" width="355" />
+</p>
 
 ## Scope
 The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and Ansible to automate the deployment and configuration.
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible. 
-As part of the project the goal is to deploy on the Kuberenets cluster basic services such as distributed block storage for persistent volumes (Rook/Ceph or LongHorn) or centralized monitoring tools like Prometheus and EFK.
+As part of the project the goal is to deploy on the Kuberenets cluster basic services such as distributed block storage for persistent volumes (Rook/Ceph or `LongHorn`), centralized monitoring tools like `Prometheus` and `EFK` (Elasticsearch-Fluentd-Kibana) and backup/restore solution like `Velero` and `Restic`.
+
+<p align="center">
+  <img src="documentation/images/pi-cluster-icons.png" width="500"/>
+</p>
 
 ## Design Principles
 
@@ -15,7 +23,7 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
 - Use of distributed storage block technology, instead of centralized NFS system, for pod persistent storage.  Kubernetes block distributed storage solutions, like Rook/Ceph or Longhorn, in their latest versions have included ARM 64 bits support.
 - Use of Ansible for automating the configuration of the cluster.
 
-## Content
+## Documentation
 
 1) [Lab architecture and hardware](documentation/hardware.md). Home lab design and hardware selection
 2) [Ansible Control Node (pimaster)](documentation/pimaster.md). Installation and configuration of Ansible control node and ansible development and testing environment (Molecule, Docker, Vagrant) 
