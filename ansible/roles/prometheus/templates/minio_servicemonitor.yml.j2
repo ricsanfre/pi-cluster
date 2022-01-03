@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: minio-monitor-token
+  namespace: {{ k3s_monitoring_namespace }}
+data:
+  token: {{ minio_bearer_token | b64encode }}
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: minio
+    release: kube-prometheus-stack
+  name: minio-prometheus-servicemonitor
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  endpoints:
+    - port: http-metrics
+      path: /minio/v2/metrics/cluster
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true 
+      bearerTokenSecret:
+        name: minio-monitor-token
+        key: token
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      app: minio-metrics

@@ -556,6 +556,127 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
 
 Velero dashboard sample can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/11055).
 
+## Minio Monitoring
+
+Minio monitoring with Prometheus documentation can be found [here](https://docs.min.io/minio/baremetal/monitoring/metrics-alerts/collect-minio-metrics-using-prometheus.html)
+
+NOTE: Minio Console Dashboard integration has not been configured, instead a Grafana dashboard is provided.
+
+- Generate bearer token to be able to access to Minio Metrics
+
+     mc admin prometheus generate <alias>
+
+  Output is something like this:
+  ```
+  scrape_configs:
+  - job_name: minio-job
+  bearer_token: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ3OTQ4Mjg4MTcsImlzcyI6InByb21ldGhldXMiLCJzdWIiOiJtaW5pb2FkbWluIn0.mPFKnj3p-sPflnvdrtrWawSZn3jTQUVw7VGxdBoEseZ3UvuAcbEKcT7tMtfAAqTjZ-dMzQEe1z2iBdbdqufgrA
+  metrics_path: /minio/v2/metrics/cluster
+  scheme: https
+  static_configs:
+  - targets: ['127.0.0.1:9091']
+
+  ```
+  Where: 
+  - `bearer_token` is the token to be used by Prometheus for authentication purposes 
+  - `metrics_path` is th path to scrape the metrics on Minio server (TCP port 9091)
+
+- Create a manifest file `minio-metrics-service.yml` for creating the Kuberentes service pointing to a external server used by Prometheus to scrape Minio metrics.
+
+  This service. as it happens with k3s-metrics must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) and [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitely
+
+  The service will be use the Minio endpoint (TCP port 9091) for scraping all metrics.
+
+  ```yml
+  ---
+  # Headless service for Minio metrics. No Selector
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: minio-metrics-service
+    labels:
+      app: minio-metrics
+    namespace: kube-system
+  spec:
+    clusterIP: None
+    ports:
+    - name: http-metrics
+      port: 9091
+      protocol: TCP
+      targetPort: 9091
+    type: ClusterIP
+  ---
+  # Endpoint for the headless service without selector
+  apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: minio-metrics-service
+    namespace: kube-system
+  subsets:
+  - addresses:
+    - ip: 10.0.0.11
+    ports:
+    - name: http-metrics
+      port: 9091
+    protocol: TCP
+  ```
+
+- Create manifest file for defining the a Secret containing the Bearer-Token an the service monitor resource for let Prometheus discover this target
+
+  The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Minio metrics endpoint as a Prometheus target.
+  Bearer-token need to be b64 encoded within the Secret resource
+
+  ```yml
+  ---
+  apiVersion: v1
+  kind: Secret
+  type: Opaque
+  metadata:
+    name: minio-monitor-token
+    namespace: k3s-monitoring
+  data:
+    token: < minio_bearer_token | b64encode >
+
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: minio
+      release: kube-prometheus-stack
+    name: minio-prometheus-servicemonitor
+    namespace: k3s-monitoring
+  spec:
+    endpoints:
+      - port: http-metrics
+        path: /minio/v2/metrics/cluster
+        scheme: https
+        tlsConfig:
+          insecureSkipVerify: true 
+        bearerTokenSecret:
+          name: minio-monitor-token
+          key: token
+    namespaceSelector:
+      matchNames:
+      - kube-system
+    selector:
+      matchLabels:
+        app: minio-metrics
+
+  ```
+
+
+- Apply manifest file
+
+  kubectl apply -f minio-metrics-service.yml minio-servicemonitor.yml
+
+- Check target is automatically discovered in Prometheus UI
+
+  http://prometheus.picluster.ricsanfre/targets
+
+### Minio Grafana dashboard
+
+Minio dashboard sample can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/13502).
 
 ## Provisioning Dashboards automatically
 

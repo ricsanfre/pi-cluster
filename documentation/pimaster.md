@@ -193,9 +193,9 @@ Step 5. Install ansible
 
     pip3 install ansible
 
-Step 6. Install yamllint and ansible-lint
+Step 6. Install yamllint, ansible-lint and jmespath (required by ansible json filters)
 
-    pip3 install yamllint ansible-lint
+    pip3 install yamllint ansible-lint jmespath
 
 Step 7. Install Docker python driver and molecule packages:
 
