@@ -78,6 +78,7 @@
     - traefik_servicemonitor.yml.j2
     - longhorn_servicemonitor.yml.j2
     - k3s_servicemonitor.yml.j2
+    - velero_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
@@ -97,3 +98,5 @@
       file: k3s-scheduler-dashboard.json
     - name: k3s-proxy
       file: k3s-proxy-dashboard.json
+    - name: velero
+      file: velero-dashboard.json
