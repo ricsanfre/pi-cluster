@@ -1,0 +1,1126 @@
+{
+    "__requires": [
+      {
+        "type": "grafana",
+        "id": "grafana",
+        "name": "Grafana",
+        "version": "5.2.1"
+      },
+      {
+        "type": "panel",
+        "id": "graph",
+        "name": "Graph",
+        "version": "5.0.0"
+      },
+      {
+        "type": "datasource",
+        "id": "prometheus",
+        "name": "Prometheus",
+        "version": "5.0.0"
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "description": "Stats for Velero backups",
+    "editable": true,
+    "gnetId": 11055,
+    "graphTooltip": 1,
+    "id": 40,
+    "iteration": 1572366481432,
+    "links": [],
+    "panels": [
+      {
+        "collapsed": false,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 15,
+        "panels": [],
+        "title": "Backup",
+        "type": "row"
+      },
+      {
+        "cacheTimeout": null,
+        "colorBackground": false,
+        "colorValue": false,
+        "colors": [
+          "#d44a3a",
+          "rgba(237, 129, 40, 0.89)",
+          "#299c46"
+        ],
+        "format": "short",
+        "gauge": {
+          "maxValue": 100,
+          "minValue": 0,
+          "show": true,
+          "thresholdLabels": false,
+          "thresholdMarkers": false
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 5,
+          "x": 0,
+          "y": 1
+        },
+        "id": 4,
+        "interval": null,
+        "links": [],
+        "mappingType": 1,
+        "mappingTypes": [
+          {
+            "name": "value to text",
+            "value": 1
+          },
+          {
+            "name": "range to text",
+            "value": 2
+          }
+        ],
+        "maxDataPoints": 100,
+        "nullPointMode": "connected",
+        "nullText": null,
+        "options": {},
+        "pluginVersion": "6.3.2",
+        "postfix": "",
+        "postfixFontSize": "50%",
+        "prefix": "",
+        "prefixFontSize": "50%",
+        "rangeMaps": [
+          {
+            "from": "null",
+            "text": "N/A",
+            "to": "null"
+          }
+        ],
+        "sparkline": {
+          "fillColor": "rgba(31, 118, 189, 0.18)",
+          "full": false,
+          "lineColor": "rgb(31, 120, 193)",
+          "show": false,
+          "ymax": null,
+          "ymin": null
+        },
+        "tableColumn": "",
+        "targets": [
+          {
+            "expr": "sum(velero_backup_active_total{schedule=~\"$schedule\"})",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "thresholds": "",
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "Active Backup",
+        "type": "singlestat",
+        "valueFontSize": "80%",
+        "valueMaps": [
+          {
+            "op": "=",
+            "text": "0",
+            "value": "null"
+          }
+        ],
+        "valueName": "current",
+        "datasource": "$datasource"
+      },
+      {
+        "cacheTimeout": null,
+        "colorBackground": false,
+        "colorValue": true,
+        "colors": [
+          "#d44a3a",
+          "rgba(237, 129, 40, 0.89)",
+          "#299c46"
+        ],
+        "format": "percentunit",
+        "gauge": {
+          "maxValue": 100,
+          "minValue": 0,
+          "show": true,
+          "thresholdLabels": false,
+          "thresholdMarkers": true
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 4,
+          "x": 5,
+          "y": 1
+        },
+        "id": 22,
+        "interval": null,
+        "links": [],
+        "mappingType": 1,
+        "mappingTypes": [
+          {
+            "name": "value to text",
+            "value": 1
+          },
+          {
+            "name": "range to text",
+            "value": 2
+          }
+        ],
+        "maxDataPoints": 100,
+        "nullPointMode": "connected",
+        "nullText": null,
+        "options": {},
+        "postfix": "",
+        "postfixFontSize": "50%",
+        "prefix": "",
+        "prefixFontSize": "50%",
+        "rangeMaps": [
+          {
+            "from": "null",
+            "text": "N/A",
+            "to": "null"
+          }
+        ],
+        "sparkline": {
+          "fillColor": "rgba(31, 118, 189, 0.18)",
+          "full": false,
+          "lineColor": "rgb(31, 120, 193)",
+          "show": false
+        },
+        "tableColumn": "",
+        "targets": [
+          {
+            "expr": "sum(velero_backup_success_total{schedule=~\"$schedule\"}) / sum(velero_backup_attempt_total{schedule=~\"$schedule\"})",
+            "format": "time_series",
+            "intervalFactor": 1,
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "thresholds": ".95,.99",
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "Backup Success Rate",
+        "type": "singlestat",
+        "valueFontSize": "80%",
+        "valueMaps": [
+          {
+            "op": "=",
+            "text": "N/A",
+            "value": "null"
+          }
+        ],
+        "valueName": "current",
+        "datasource": "$datasource"
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "cacheTimeout": null,
+        "dashLength": 10,
+        "dashes": false,
+        "decimals": 0,
+        "fill": 10,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 9,
+          "w": 15,
+          "x": 9,
+          "y": 1
+        },
+        "id": 8,
+        "legend": {
+          "alignAsTable": false,
+          "avg": true,
+          "current": false,
+          "max": false,
+          "min": false,
+          "rightSide": true,
+          "show": true,
+          "sort": "avg",
+          "sortDesc": false,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "links": [],
+        "nullPointMode": "null as zero",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pluginVersion": "6.3.5",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": true,
+        "steppedLine": true,
+        "targets": [
+          {
+            "expr": "sum(increase(velero_backup_success_total{schedule=~\"$schedule\"}[1h]))",
+            "format": "time_series",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "Backup success",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(increase(velero_backup_failure_total{schedule=~\"$schedule\"}[1h]))",
+            "hide": false,
+            "legendFormat": "Backup failure",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(increase(velero_backup_partial_failure_total{schedule=~\"$schedule\"}[1h]))",
+            "legendFormat": "Backup partial failure",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(increase(velero_backup_deletion_success_total{schedule=~\"$schedule\"}[1h]))",
+            "legendFormat": "Backup deletion success",
+            "refId": "D"
+          },
+          {
+            "expr": "sum(increase(velero_backup_deletion_failure_total{schedule=~\"$schedule\"}[1h]))",
+            "legendFormat": "Backup deletion failure",
+            "refId": "E"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Backup per hour",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": 0,
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        },
+        "datasource": "$datasource"
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": "$datasource",
+        "decimals": 0,
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 7,
+          "w": 24,
+          "x": 0,
+          "y": 10
+        },
+        "id": 2,
+        "legend": {
+          "alignAsTable": true,
+          "avg": false,
+          "current": true,
+          "hideEmpty": false,
+          "hideZero": true,
+          "max": false,
+          "min": false,
+          "rightSide": true,
+          "show": true,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "velero_backup_total",
+            "legendFormat": "Backup Total",
+            "refId": "A"
+          },
+          {
+            "expr": "velero_backup_active_total{schedule=~\"$schedule\"}",
+            "legendFormat": "Backup {{schedule}}",
+            "refId": "D"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Backup Count",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": null,
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 17
+        },
+        "id": 11,
+        "legend": {
+          "alignAsTable": true,
+          "avg": false,
+          "current": false,
+          "max": true,
+          "min": false,
+          "rightSide": true,
+          "show": true,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null as zero",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(velero_backup_duration_seconds_bucket{schedule=~\"$schedule\"}[15m])) by (le))",
+            "legendFormat": "Scheduled: 0.99",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(velero_backup_duration_seconds_bucket{schedule!~\".*\"}[15m])) by (le))",
+            "legendFormat": "Non Scheduled: 0.99",
+            "refId": "F"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(velero_backup_duration_seconds_bucket{schedule=~\"$schedule\"}[15m])) by (le))",
+            "legendFormat": "Scheduled: 0.95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(velero_backup_duration_seconds_bucket{schedule!~\".*\"}[15m])) by (le))",
+            "legendFormat": "Non Scheduled: 0.95",
+            "refId": "E"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(velero_backup_duration_seconds_bucket{schedule=~\"$schedule\"}[15m])) by (le))",
+            "legendFormat": "Scheduled: 0.50",
+            "refId": "C"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(velero_backup_duration_seconds_bucket{schedule!~\".*\"}[15m])) by (le))",
+            "legendFormat": "Non Scheduled: 0.50",
+            "refId": "D"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Backup Time",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": 0,
+            "format": "s",
+            "label": "",
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        },
+        "datasource": "$datasource"
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 23
+        },
+        "id": 18,
+        "legend": {
+          "alignAsTable": true,
+          "avg": false,
+          "current": false,
+          "max": true,
+          "min": false,
+          "rightSide": true,
+          "show": true,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null as zero",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "avg_over_time(velero_backup_tarball_size_bytes{schedule=~\"$schedule\"}[15m])",
+            "legendFormat": "{{schedule}}",
+            "refId": "A"
+          },
+          {
+            "expr": "avg_over_time(velero_backup_tarball_size_bytes{schedule!~\".*\"}[15m])",
+            "hide": false,
+            "legendFormat": "Non Scheduled",
+            "refId": "F"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Backup Size",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": 0,
+            "format": "decbytes",
+            "label": "",
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        },
+        "datasource": "$datasource"
+      },
+      {
+        "columns": [
+          {
+            "text": "Current",
+            "value": "current"
+          }
+        ],
+        "datasource": "$datasource",
+        "fontSize": "100%",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 29
+        },
+        "id": 13,
+        "options": {},
+        "pageSize": null,
+        "scroll": true,
+        "showHeader": true,
+        "sort": {
+          "col": 0,
+          "desc": false
+        },
+        "styles": [
+          {
+            "alias": "Time",
+            "dateFormat": "YYYY-MM-DD HH:mm:ss",
+            "pattern": "Time",
+            "type": "date"
+          },
+          {
+            "alias": "Hours since last backup",
+            "colorMode": "row",
+            "colors": [
+              "rgba(50, 172, 45, 0.97)",
+              "rgba(237, 129, 40, 0.89)",
+              "rgba(245, 54, 54, 0.9)"
+            ],
+            "decimals": 2,
+            "pattern": "Current",
+            "thresholds": [
+              "24",
+              "48"
+            ],
+            "type": "number",
+            "unit": "short"
+          }
+        ],
+        "targets": [
+          {
+            "expr": "(time() - velero_backup_last_successful_timestamp{schedule!=\"\"}) / 60 / 60",
+            "legendFormat": "{{schedule}}",
+            "refId": "A"
+          }
+        ],
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "Hours since last Backup",
+        "transform": "timeseries_aggregations",
+        "type": "table"
+      },
+      {
+        "collapsed": false,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 37
+        },
+        "id": 17,
+        "panels": [],
+        "title": "Restore",
+        "type": "row"
+      },
+      {
+        "cacheTimeout": null,
+        "colorBackground": false,
+        "colorValue": false,
+        "colors": [
+          "#d44a3a",
+          "rgba(237, 129, 40, 0.89)",
+          "#299c46"
+        ],
+        "datasource": "$datasource",
+        "format": "short",
+        "gauge": {
+          "maxValue": 100,
+          "minValue": 0,
+          "show": true,
+          "thresholdLabels": false,
+          "thresholdMarkers": false
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 5,
+          "x": 0,
+          "y": 38
+        },
+        "id": 5,
+        "interval": null,
+        "links": [],
+        "mappingType": 1,
+        "mappingTypes": [
+          {
+            "name": "value to text",
+            "value": 1
+          },
+          {
+            "name": "range to text",
+            "value": 2
+          }
+        ],
+        "maxDataPoints": 100,
+        "nullPointMode": "connected",
+        "nullText": null,
+        "options": {},
+        "pluginVersion": "6.3.2",
+        "postfix": "",
+        "postfixFontSize": "50%",
+        "prefix": "",
+        "prefixFontSize": "50%",
+        "rangeMaps": [
+          {
+            "from": "null",
+            "text": "N/A",
+            "to": "null"
+          }
+        ],
+        "sparkline": {
+          "fillColor": "rgba(31, 118, 189, 0.18)",
+          "full": false,
+          "lineColor": "rgb(31, 120, 193)",
+          "show": false,
+          "ymax": null,
+          "ymin": null
+        },
+        "tableColumn": "",
+        "targets": [
+          {
+            "expr": "sum(rate(velero_restore_attempt_total[$__interval])) / sum(rate(velero_restore_success_total[$__interval]))",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "thresholds": "",
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "Active Restore",
+        "type": "singlestat",
+        "valueFontSize": "80%",
+        "valueMaps": [
+          {
+            "op": "=",
+            "text": "0",
+            "value": "null"
+          }
+        ],
+        "valueName": "current"
+      },
+      {
+        "aliasColors": {},
+        "bars": true,
+        "cacheTimeout": null,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": "$datasource",
+        "decimals": 0,
+        "fill": 10,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 9,
+          "w": 19,
+          "x": 5,
+          "y": 38
+        },
+        "id": 19,
+        "legend": {
+          "alignAsTable": false,
+          "avg": false,
+          "current": false,
+          "max": true,
+          "min": false,
+          "rightSide": false,
+          "show": true,
+          "sort": "avg",
+          "sortDesc": false,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "links": [],
+        "nullPointMode": "null as zero",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pluginVersion": "6.3.2",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "sum(rate(velero_restore_success_total{schedule!~\".*\"}[15m])) / sum(rate(velero_restore_attempt_total{schedule!~\".*\"}[15m]))",
+            "interval": "",
+            "legendFormat": "Backup success rate",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(velero_restore_success_total{schedule=~\"$schedule\"}[15m])) / sum(rate(velero_restore_attempt_total{schedule=~\"$schedule\"}[15m]))",
+            "legendFormat": "Backup success rate {{schedule}}",
+            "refId": "B"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Restore Success",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": 0,
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": "$datasource",
+        "decimals": 0,
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 47
+        },
+        "id": 20,
+        "legend": {
+          "alignAsTable": true,
+          "avg": false,
+          "current": true,
+          "hideZero": true,
+          "max": false,
+          "min": false,
+          "rightSide": true,
+          "show": true,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "avg_over_time(velero_restore_total[15m]) ",
+            "legendFormat": "Restore Total",
+            "refId": "A"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_success_total{schedule=~\"$schedule\"}[15m])",
+            "legendFormat": "Restore Success Total {{schedule}}",
+            "refId": "D"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_success_total{schedule!~\".*\"}[15m])",
+            "legendFormat": "Restore Success Total",
+            "refId": "G"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_partial_failure_total{schedule=~\"$schedule\"}[15m])",
+            "legendFormat": " Restore Partial Failure Total {{schedule}}",
+            "refId": "C"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_partial_failure_total{schedule!~\".*\"}[15m])",
+            "legendFormat": "Restore Partial Failure Total",
+            "refId": "F"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_failed_total{schedule=~\"$schedule\"}[15m])",
+            "legendFormat": "Restore Failure Total {{schedule}}",
+            "refId": "B"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_failed_total{schedule!~\".*\"}[15m])",
+            "legendFormat": "Restore Failure Total",
+            "refId": "E"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_validation_failed_total{schedule=~\"$schedule\"}[15m])",
+            "legendFormat": "Restore Validation Failed {{schedule}}",
+            "refId": "I"
+          },
+          {
+            "expr": "avg_over_time(velero_restore_validation_failed_total{schedule!~\".*\"}[15m])",
+            "legendFormat": "Restore Validation Failed",
+            "refId": "H"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Total Restore Count",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": null,
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
+      }
+    ],
+    "refresh": false,
+    "schemaVersion": 19,
+    "style": "dark",
+    "tags": [
+      "velero"
+    ],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "tags": [],
+            "text": "Prometheus",
+            "value": "Prometheus"
+          },
+          "hide": 0,
+          "includeAll": false,
+          "label": "Datasource",
+          "multi": false,
+          "name": "datasource",
+          "options": [],
+          "query": "prometheus",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "type": "datasource"
+        },
+        {
+          "allValue": null,
+          "current": {
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
+          },
+          "datasource": "$datasource",
+          "definition": "label_values(velero_backup_attempt_total, schedule)",
+          "hide": 0,
+          "includeAll": true,
+          "label": null,
+          "multi": true,
+          "name": "schedule",
+          "options": [],
+          "query": "label_values(velero_backup_attempt_total, schedule)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "tagValuesQuery": "",
+          "tags": [],
+          "tagsQuery": "",
+          "type": "query",
+          "useTags": false
+        }
+      ]
+    },
+    "time": {
+      "from": "now-2d",
+      "to": "now"
+    },
+    "timepicker": {
+      "hidden": false,
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ]
+    },
+    "timezone": "",
+    "title": "Kubernetes / Addons / Velero Stats",
+    "uid": "YAniUGC",
+    "version": 2
+  }

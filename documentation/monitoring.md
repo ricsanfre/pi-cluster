@@ -459,30 +459,224 @@ spec:
   http://prometheus.picluster.ricsanfre/targets
 
 
-```yml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: longhorn-prometheus-servicemonitor
-  namespace: monitoring
-  labels:
-    name: longhorn-prometheus-servicemonitor
-spec:
-  selector:
-    matchLabels:
-      app: longhorn-manager
-  namespaceSelector:
-    matchNames:
-    - longhorn-system
-  endpoints:
-  - port: manager
-
-```
-
 ### Longhorn Grafana dashboard
 
 Longhorn dashboard sample can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/13032).
 
+## Velero Monitoring
+
+By default velero helm chart is configured to expose Prometheus metrics in port 8085
+Backend endpoint is already exposing Prometheus metrics.
+
+It can be confirmed checking velero service
+
+    kubectl get svc velero -n velero-system -o yaml
+
+    ```yml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        meta.helm.sh/release-name: velero
+        meta.helm.sh/release-namespace: velero-system
+      creationTimestamp: "2021-12-31T11:36:39Z"
+      labels:
+        app.kubernetes.io/instance: velero
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: velero
+        helm.sh/chart: velero-2.27.1
+      name: velero
+      namespace: velero-system
+      resourceVersion: "9811"
+      uid: 3a6707ba-0e0f-49c3-83fe-4f61645f6fd0
+    spec:
+      clusterIP: 10.43.3.141
+      clusterIPs:
+      - 10.43.3.141
+      internalTrafficPolicy: Cluster
+      ipFamilies:
+      - IPv4
+      ipFamilyPolicy: SingleStack
+      ports:
+      - name: http-monitoring
+        port: 8085
+        protocol: TCP
+        targetPort: http-monitoring
+      selector:
+        app.kubernetes.io/instance: velero
+        app.kubernetes.io/name: velero
+        name: velero
+      sessionAffinity: None
+      type: ClusterIP
+
+    ```
+And executing `curl` command to obtain the velero metrics
+
+     curl 10.43.3.141:8085/metrics
+
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Velero metrics endpoint as a Prometheus target.
+
+- Create a manifest file `velero-servicemonitor.yml`
+
+    ```yml
+    ---
+    apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      labels:
+        app: velero
+        release: kube-prometheus-stack
+      name: velero-prometheus-servicemonitor
+      namespace: k3s-monitoring
+    spec:
+      endpoints:
+        - port: http-monitoring
+          path: /metrics
+      namespaceSelector:
+        matchNames:
+          - velero-system
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: velero
+          app.kubernetes.io/name: velero
+    ``` 
+> NOTE: Important to set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
+
+- Apply manifest file
+
+  kubectl apply -f longhorn-servicemonitor.yml
+
+
+- Check target is automatically discovered in Prometheus UI
+
+  http://prometheus.picluster.ricsanfre/targets
+
+
+### Velero Grafana dashboard
+
+Velero dashboard sample can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/11055).
+
+## Minio Monitoring
+
+Minio monitoring with Prometheus documentation can be found [here](https://docs.min.io/minio/baremetal/monitoring/metrics-alerts/collect-minio-metrics-using-prometheus.html)
+
+NOTE: Minio Console Dashboard integration has not been configured, instead a Grafana dashboard is provided.
+
+- Generate bearer token to be able to access to Minio Metrics
+
+     mc admin prometheus generate <alias>
+
+  Output is something like this:
+  ```
+  scrape_configs:
+  - job_name: minio-job
+  bearer_token: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ3OTQ4Mjg4MTcsImlzcyI6InByb21ldGhldXMiLCJzdWIiOiJtaW5pb2FkbWluIn0.mPFKnj3p-sPflnvdrtrWawSZn3jTQUVw7VGxdBoEseZ3UvuAcbEKcT7tMtfAAqTjZ-dMzQEe1z2iBdbdqufgrA
+  metrics_path: /minio/v2/metrics/cluster
+  scheme: https
+  static_configs:
+  - targets: ['127.0.0.1:9091']
+
+  ```
+  Where: 
+  - `bearer_token` is the token to be used by Prometheus for authentication purposes 
+  - `metrics_path` is th path to scrape the metrics on Minio server (TCP port 9091)
+
+- Create a manifest file `minio-metrics-service.yml` for creating the Kuberentes service pointing to a external server used by Prometheus to scrape Minio metrics.
+
+  This service. as it happens with k3s-metrics must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) and [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitely
+
+  The service will be use the Minio endpoint (TCP port 9091) for scraping all metrics.
+
+  ```yml
+  ---
+  # Headless service for Minio metrics. No Selector
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: minio-metrics-service
+    labels:
+      app: minio-metrics
+    namespace: kube-system
+  spec:
+    clusterIP: None
+    ports:
+    - name: http-metrics
+      port: 9091
+      protocol: TCP
+      targetPort: 9091
+    type: ClusterIP
+  ---
+  # Endpoint for the headless service without selector
+  apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: minio-metrics-service
+    namespace: kube-system
+  subsets:
+  - addresses:
+    - ip: 10.0.0.11
+    ports:
+    - name: http-metrics
+      port: 9091
+    protocol: TCP
+  ```
+
+- Create manifest file for defining the a Secret containing the Bearer-Token an the service monitor resource for let Prometheus discover this target
+
+  The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Minio metrics endpoint as a Prometheus target.
+  Bearer-token need to be b64 encoded within the Secret resource
+
+  ```yml
+  ---
+  apiVersion: v1
+  kind: Secret
+  type: Opaque
+  metadata:
+    name: minio-monitor-token
+    namespace: k3s-monitoring
+  data:
+    token: < minio_bearer_token | b64encode >
+
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: minio
+      release: kube-prometheus-stack
+    name: minio-prometheus-servicemonitor
+    namespace: k3s-monitoring
+  spec:
+    endpoints:
+      - port: http-metrics
+        path: /minio/v2/metrics/cluster
+        scheme: https
+        tlsConfig:
+          insecureSkipVerify: true 
+        bearerTokenSecret:
+          name: minio-monitor-token
+          key: token
+    namespaceSelector:
+      matchNames:
+      - kube-system
+    selector:
+      matchLabels:
+        app: minio-metrics
+
+  ```
+
+
+- Apply manifest file
+
+  kubectl apply -f minio-metrics-service.yml minio-servicemonitor.yml
+
+- Check target is automatically discovered in Prometheus UI
+
+  http://prometheus.picluster.ricsanfre/targets
+
+### Minio Grafana dashboard
+
+Minio dashboard sample can be donwloaded from grafana.com: (https://grafana.com/grafana/dashboards/13502).
 
 ## Provisioning Dashboards automatically
 

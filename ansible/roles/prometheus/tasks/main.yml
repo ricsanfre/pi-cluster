@@ -54,12 +54,20 @@
       kubeEtcd:
         enabled: false
 
-- name: Create k3s metrics service
+- name: Create metrics services (K3s and Minio)
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
     - k3s_service_metrics.yml.j2
+    - minio_service_metrics.yml.j2
+
+- name: Generate minio prometheus bearer token
+  include_tasks: tasks/create_minio_bearer_token.yml
+  args:
+    apply:
+      delegate_to: node1
+      become: false
 
 - name: Create Ingress rule for Prometheus, Alertmanager and Graphana UI
   kubernetes.core.k8s:
@@ -78,6 +86,8 @@
     - traefik_servicemonitor.yml.j2
     - longhorn_servicemonitor.yml.j2
     - k3s_servicemonitor.yml.j2
+    - velero_servicemonitor.yml.j2
+    - minio_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
@@ -97,3 +107,7 @@
       file: k3s-scheduler-dashboard.json
     - name: k3s-proxy
       file: k3s-proxy-dashboard.json
+    - name: velero
+      file: velero-dashboard.json
+    - name: minio
+      file: minio-dashboard.json
