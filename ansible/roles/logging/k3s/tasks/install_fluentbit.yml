@@ -1,0 +1,15 @@
+---
+
+- name: Add fluentbit chart repo.
+  kubernetes.core.helm_repository:
+    name: fluent
+    repo_url: "https://fluent.github.io/helm-charts"
+
+- name: Deploy fluentbit Helm chart.
+  kubernetes.core.helm:
+    name: fluent-bit
+    chart_ref: fluent/fluent-bit
+    release_namespace: "{{ k3s_logging_namespace }}"
+    update_repo_cache: true
+    state: present
+    values: "{{ lookup('template', 'fluentbit_helm_values.yml.j2') | from_yaml }}"

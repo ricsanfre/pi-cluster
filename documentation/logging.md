@@ -506,7 +506,93 @@ fluentbit_custom_parsers:
     Time_Key: time
     Time_Format: "%b %d %H:%M:%S"
     Time_Keep: false
-    Time_Offset: "+0200"
+
+# Fluentbit_filters
+fluentbit_filters:
+  - name: lua
+    match: "*"
+    script: /etc/td-agent-bit/adjust_ts.lua
+    call: local_timestamp_to_UTC
 
 ```
 With this rules Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to elasticsearch server running on K3S cluster.
+
+Lua script need to be included for translaing local time zone (`Europe\Madrid`) to UTC and the corresponding filter need to be executed. See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5) 
+
+### Alternative to Fluentd - Installation of Fluentbit
+
+Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed). See comparison [here](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
+
+It can be installed and configured to collect and parse Kubernetes logs deploying a daemonset pod (same as fluentd). See fluenbit documentation on how to install it on Kuberentes cluster (https://docs.fluentbit.io/manual/installation/kubernetes).
+
+For speed-up the installation there is available a [helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluent-bit). fluentbit config file can be 
+
+
+- Step 1. Add fluentbit helm repo
+
+      helm repo add fluent https://fluent.github.io/helm-charts
+
+- Step 2. Update helm repo
+
+      helm repo update
+
+- Step 3. Create `values.yml` for tuning helm chart deployment.
+
+  fluentbit configuration can be provided to the helm. See [`values.yml`](https://github.com/fluent/helm-charts/blob/main/charts/fluent-bit/values.yaml)
+
+  [SERVER] configuration provided by default by the helm chart, enables the HTTP server for being able to scrape Prometheus metric.
+  ```yml
+  config:
+    service: |
+      [SERVICE]
+          Daemon Off
+          Flush 1
+          Log_Level {{ .Values.logLevel }}
+          Parsers_File parsers.conf
+          Parsers_File custom_parsers.conf
+          HTTP_Server On
+          HTTP_Listen 0.0.0.0
+          HTTP_Port {{ .Values.metricsPort }}
+          Health_Check On
+  ```
+  default [SERVICE] configuration can be used as it is.
+
+  [INPUT] configuration: by default the chart only parse kuberentes logs, supporting the parsing of docker and cri logs at the same time (check `multiline.parser` [documentation](https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/multiline-parsing)), and a systemd `kubelet.system` service. 
+  
+  ```yml
+  config:
+    inputs: |
+      [INPUT]
+          Name tail
+          Path /var/log/containers/*.log
+          multiline.parser docker, cri
+          Tag kube.*
+          Mem_Buf_Limit 5MB
+          Skip_Long_Lines On
+      [INPUT]
+          Name systemd
+          Tag host.*
+          Systemd_Filter _SYSTEMD_UNIT=kubelet.service
+          Read_From_Tail On
+  ```
+  
+  [INPUT] configuration need to be overriden since K3S does not use default docker output (it uses cri with specific Time format and it does not install a systemd `kubelet.service`
+
+  [PARSER] configuration need to be overriden as well to include kuberentes `cri` parsers specific configuration and `syslog` specific parser for monitoring `/var/log/auth.log` and `/var/log/syslog` files
+
+  [FILTERS] configuration: by default helm chart includes a filter for enriching logs with Kubernetes metadata. See [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes). Default configuration need to be overriden to include Lua script execution (translation local time to UTC).
+   
+  [OUTPUT] configuration by default uses elasticsearch, but it needs to be overriding for using the specific credentials and https protocol.
+  
+  The final `values.yml` is:
+  ```yml
+  config:
+    inputs: |
+
+
+  ```
+
+- Step 4. Install chart
+
+      helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
+ 

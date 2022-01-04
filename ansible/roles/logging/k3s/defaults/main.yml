@@ -15,6 +15,9 @@ efk_elasticsearch_storage_class: "longhorn"
 # elastic user password
 efk_elasticsearch_passwd: "s1cret0"
 
+# fluentbit or fluentd collector. Possible values ('fluentbit' or 'fluentd')
+efk_logging_collector: 'fluentbit'
+
 # Fluentd image version
 efk_fluentd_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
 
@@ -23,3 +26,72 @@ efk_node_timezone: "Europe/Madrid"
 
 # Endpoint Service DNS name
 kibana_dashboard_dns: kibana.picluster.ricsanfre.com
+
+##########################
+# fluentbit configuration
+##########################
+
+# Fluentbit_inputs
+fluentbit_inputs:
+  - Name: tail
+    Path: /var/log/containers/*.log
+    multiline.parser: cri
+    Tag: kube.*
+    Mem_Buf_Limit: 5MB
+    Skip_Long_Lines: true
+  - Name: tail
+    Tag: node.*
+    Path: /var/log/auth
+    Parser: syslog-rfc3164-nopri
+  - Name: tail
+    Tag: node.*
+    Path: /var/log/syslog
+    Parser: syslog-rfc3164-nopri
+
+# Fluentbit Elasticsearch output
+fluentbit_outputs:
+  - Name: es
+    match: "*"
+    Host: "{{ efk_cluster_name }}-es-http"
+    Port: 9200
+    Logstash_Format: true
+    Logstash_Prefix: logstash
+    Include_Tag_Key: true
+    Tag_Key: tag
+    HTTP_User: elastic
+    HTTP_Passwd: s1cret0
+    tls: true
+    tls.verify: false
+    Retry_Limit: false
+# Fluentbit custom parsers
+fluentbit_custom_parsers:
+  - Name: cri
+    Format: regex
+    Regex: ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<message>.*)$
+    Time_Key: time
+    Time_Format: "%Y-%m-%dT%H:%M:%S.%N%:z"
+  - Name: syslog-rfc3164-nopri
+    Format: regex
+    Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key: time
+    Time_Format: "%b %d %H:%M:%S"
+    Time_Keep: false  # Remove duplicated time field, avoid elasticsearh processing error
+#    Time_Offset: "+0200"  # Add TimeZone UTC offset
+
+# Lua_scripts
+fluentbit_lua_script:
+  - name: adjust_ts.lua
+    content: "{{ lookup('file','files/adjust_ts.lua') }}"
+
+# Fluentbit_filters
+fluentbit_filters:
+  - Name: kubernetes
+    Match: kube.*
+    Merge_Log: true
+    Keep_Log: false
+    K8S-Logging.Parser: true
+    K8S-Logging.Exclude: true
+  - name: lua
+    match: "*"
+    script: /fluent-bit/scripts/adjust_ts.lua
+    call: local_timestamp_to_UTC

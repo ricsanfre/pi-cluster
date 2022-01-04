@@ -1,0 +1,46 @@
+config:
+  inputs: |
+{% for input in fluentbit_inputs %}
+    [INPUT]
+{% for key in input %}
+        {{ key }} {{ input[key] }}
+{% endfor %}
+{% endfor %}
+  outputs: |
+{% for output in fluentbit_outputs %}
+    [OUTPUT]
+{% for key in output %}
+        {{ key }} {{ output[key] }}
+{% endfor %}
+{% endfor %}
+  customParsers: |
+{% for parser in fluentbit_parsers %}
+    [PARSER]
+{% for key in parser %}
+        {{ key }} {{ parser[key] }}
+{% endfor %}
+{% endfor %}
+  luaScripts:
+{% for lua_script in fluentbit_lua_script %}
+    {{ lua_script.name }}: |
+      {{ lua_scritp.content }}
+{% endfor %}
+
+
+
+
+
+
+{% for input in fluentbit_filters %}
+[FILTER]
+{% for key in input %}
+    {{ key }} {{ input[key] }}
+{% endfor %}
+{% endfor %}
+
+{% for output in fluentbit_outputs %}
+[OUTPUT]
+{% for key in output %}
+    {{ key }} {{ output[key] }}
+{% endfor %}
+{% endfor %}
