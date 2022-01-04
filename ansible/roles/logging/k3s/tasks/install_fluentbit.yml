@@ -12,4 +12,4 @@
     release_namespace: "{{ k3s_logging_namespace }}"
     update_repo_cache: true
     state: present
-    values: "{{ lookup('template', 'fluentbit_helm_values.yml.j2') | from_yaml }}"
+    values: "{{ lookup('template', 'templates/fluentbit_helm_values.yml.j2') | from_yaml }}"
