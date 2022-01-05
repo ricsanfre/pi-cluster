@@ -84,3 +84,6 @@ tolerations:
   - key: node-role.kubernetes.io/master
     operator: Exists
     effect: NoSchedule
+
+# Log_Level
+logLevel: {{ fluent_bit_log_level }}
