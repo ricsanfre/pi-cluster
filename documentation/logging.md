@@ -233,6 +233,7 @@ Log format used by Kubernetes is different depending on the container runtime us
     <time_stamp> <stream_type> <P/F> <log>
 
 where:
+  - <time_stamp> has the format `%Y-%m-%dT%H:%M:%S.%L%z` Date and time including UTC offset
   - <stream_type> is `stdout` or `stderr`
   - <P/F> indicates whether the log line is partial (P), in case of multine logs, or full log line (F)
   - <log>: message log
@@ -243,6 +244,14 @@ Using this DaemonSet controller, a Fluentd/Fluentbit logging agent Pod is deploy
 To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
 
 In addition to container logs, the Fluentd/Fluentbit agent can collect and parse Kubernetes system component logs like kubelet, kube-proxy, systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
+
+> NOTE: Ubuntu system logs stored in `/var/logs` (auth.log, systlog, kern.log), have a syslog format without priority field, and the timestamp is using local time.
+
+    <time_stamp> <host> <process>[<PID>] <message>
+Where:
+  - <time_stamp> has the format `%b %d %H:%M:%S`: local date and time not including timezone UTC offset
+  - <host>: hostanme
+  - <process> and <PID> identifies the process generating the log
 
 
 ### Fluent-bit installation
@@ -368,7 +377,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
       [FILTER]
           name lua
-          match *
+          match node.*
           script /fluent-bit/scripts/adjust_ts.lua
           call local_timestamp_to_UTC
 
@@ -446,7 +455,9 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   [FILTERS] default helm chart configuration includes a filter for enriching logs with Kubernetes metadata. See [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
 
-  Default configuration need to be modified to include Lua script execution (translation local time to UTC). See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5)
+  Default configuration need to be modified to include local-time-to-utc filter (Lua script), which translates all logs timestamps to UTC for all node local logs (`/var/log/syslog` and `/var/log/auth.log`). Time field included in these logs does not contain information about TimeZone and when parsing them Fluentbit/Elasticsearch assume they are in UTC timezone displaying them in the future, which in my case it is wrong (`Europe/Madrid` timezone).
+  
+  See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5)
   
   **NOTE 7: Lua scripts**
   Helm chart supports the specification of Lua scripts to be used by FILTERS. Helm chart creates a specific ConfigMap with the content of the Lua scripts that are mounted by the pod.
