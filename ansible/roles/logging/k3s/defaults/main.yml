@@ -52,19 +52,19 @@ fluentbit_inputs:
 fluentbit_outputs:
   - Name: es
     match: "*"
-    Host: "{{ efk_cluster_name }}-es-http"
-    Port: 9200
+    Host: ${FLUENT_ELASTICSEARCH_HOST}
+    Port: ${FLUENT_ELASTICSEARCH_PORT}
     Logstash_Format: true
     Logstash_Prefix: logstash
     Include_Tag_Key: true
     Tag_Key: tag
-    HTTP_User: elastic
-    HTTP_Passwd: s1cret0
+    HTTP_User: ${FLUENT_ELASTICSEARCH_USER}
+    HTTP_Passwd: ${FLUENT_ELASTICSEARCH_PASSWORD}
     tls: true
     tls.verify: false
     Retry_Limit: false
 # Fluentbit custom parsers
-fluentbit_custom_parsers:
+fluentbit_parsers:
   - Name: cri
     Format: regex
     Regex: ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<message>.*)$

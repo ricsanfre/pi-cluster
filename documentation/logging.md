@@ -539,59 +539,193 @@ For speed-up the installation there is available a [helm chart](https://github.c
 - Step 3. Create `values.yml` for tuning helm chart deployment.
 
   fluentbit configuration can be provided to the helm. See [`values.yml`](https://github.com/fluent/helm-charts/blob/main/charts/fluent-bit/values.yaml)
-
-  [SERVER] configuration provided by default by the helm chart, enables the HTTP server for being able to scrape Prometheus metric.
-  ```yml
-  config:
-    service: |
-      [SERVICE]
-          Daemon Off
-          Flush 1
-          Log_Level {{ .Values.logLevel }}
-          Parsers_File parsers.conf
-          Parsers_File custom_parsers.conf
-          HTTP_Server On
-          HTTP_Listen 0.0.0.0
-          HTTP_Port {{ .Values.metricsPort }}
-          Health_Check On
-  ```
-  default [SERVICE] configuration can be used as it is.
-
-  [INPUT] configuration: by default the chart only parse kuberentes logs, supporting the parsing of docker and cri logs at the same time (check `multiline.parser` [documentation](https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/multiline-parsing)), and a systemd `kubelet.system` service. 
   
+  The final `values.yml` is:
   ```yml
+  ---
+  # fluentbit helm chart values
+
+  # fluentbit-container environment variables. **NOTE 1**
+  env:
+    # Elastic operator creates elastic service name with format cluster_name-es-http
+    - name: FLUENT_ELASTICSEARCH_HOST
+      value: "efk-es-http"
+    # Default elasticsearch default port
+    - name: FLUENT_ELASTICSEARCH_PORT
+      value: "9200"
+    # Elasticsearch user
+    - name: FLUENT_ELASTICSEARCH_USER
+      value: "elastic"
+    # Elastic operator stores elastic user password in a secret
+    - name: FLUENT_ELASTICSEARCH_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "efk-es-elastic-user"
+          key: elastic
+
+  # Fluentbit config
   config:
+    # fluent-bit.config SERVICE. **NOTE 2**
+    # Helm chart defaults are Ok
+    # service: |
+    #   [SERVICE]
+    #     Daemon Off
+    #     Flush 1
+    #     Log_Level info
+    #     Parsers_File parsers.conf
+    #     Parsers_File custom_parsers.conf
+    #     HTTP_Server On
+    #     HTTP_Listen 0.0.0.0
+    #     HTTP_Port 2020
+    #     Health_Check On
+
+    # fluent-bit.config INPUT. **NOTE 3**
     inputs: |
+
       [INPUT]
+          Name tail
+          Path /var/log/containers/*.log
+          multiline.parser cri
+          Tag kube.*
+          Mem_Buf_Limit 5MB
+          Skip_Long_Lines True
+
+      [INPUT]
+          Name tail
+          Tag node.*
+          Path /var/log/auth
+          Parser syslog-rfc3164-nopri
+
+      [INPUT]
+          Name tail
+          Tag node.*
+          Path /var/log/syslog
+          Parser syslog-rfc3164-nopri
+    # fluent-bit.config OUTPUT **NOTE 4**
+    outputs: |
+
+      [OUTPUT]
+          Name es
+          match *
+          Host ${FLUENT_ELASTICSEARCH_HOST}
+          Port ${FLUENT_ELASTICSEARCH_PORT}
+          Logstash_Format True
+          Logstash_Prefix logstash
+          Include_Tag_Key True
+          Tag_Key tag
+          HTTP_User ${FLUENT_ELASTICSEARCH_USER}
+          HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
+          tls True
+          tls.verify False
+          Retry_Limit False
+    # fluent-bit.config PARSERS **NOTE 5**
+    customParsers: |
+
+      [PARSER]
+          Name cri
+          Format regex
+          Regex ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<message>.*)$
+          Time_Key time
+          Time_Format %Y-%m-%dT%H:%M:%S.%N%:z
+
+      [PARSER]
+          Name syslog-rfc3164-nopri
+          Format regex
+          Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+          Time_Key time
+          Time_Format %b %d %H:%M:%S
+          Time_Keep False
+    # fluent-bit.config FILTERS **NOTE 6**
+    filters: |
+
+      [FILTER]
+          Name kubernetes
+          Match kube.*
+          Merge_Log True
+          Keep_Log False
+          K8S-Logging.Parser True
+          K8S-Logging.Exclude True
+
+      [FILTER]
+          name lua
+          match *
+          script /fluent-bit/scripts/adjust_ts.lua
+          call local_timestamp_to_UTC
+
+  # Fluentbit config Lua Scripts. **NOTE 7**
+  luaScripts:
+    adjust_ts.lua: |
+      function local_timestamp_to_UTC(tag, timestamp, record)
+          local utcdate   = os.date("!*t", ts)
+          local localdate = os.date("*t", ts)
+          localdate.isdst = false -- this is the trick
+          utc_time_diff = os.difftime(os.time(localdate), os.time(utcdate))
+          return 1, timestamp - utc_time_diff, record
+      end
+
+  # Enable fluentbit instalaltion on master node. **NOTE 8**
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+
+  ```
+  **NOTE 1: Elasticsearch server**
+
+  Elasticsearch connection details (IP and port) and access credentials are passed as environment variables to the fluentbit pod (`elastic` user password obtaining from the corresponding Secret).
+
+  **NOTE 2: Fluentbit SERVICE configuration**
+  
+  [SERVER] configuration provided by default by the helm chart, enables the HTTP server for being able to scrape Prometheus metric.
+  
+  **NOTE 3: Fluentbit INPUT configuration**
+
+  [INPUT] default configurationonly parse kuberentes logs, supporting the parsing of multiline logs in multipleformats (docker and cri-o). cri is the format we are interested in.
+    ```
+    [INPUT]
           Name tail
           Path /var/log/containers/*.log
           multiline.parser docker, cri
           Tag kube.*
           Mem_Buf_Limit 5MB
           Skip_Long_Lines On
-      [INPUT]
+    ```
+  This is a new multiline core 1.8 functionality (https://docs.fluentbit.io/manual/pipeline/inputs/tail#multiline-core-v1.8). 
+  The two options in `multiline.parser` separated by a comma means multi-format: try docker and cri multiline formats
+  
+  It also configured the log parsing of a systemd `kubelet.system` service, that it is not available in K3S
+  
+    ```
+        [INPUT]
           Name systemd
           Tag host.*
           Systemd_Filter _SYSTEMD_UNIT=kubelet.service
           Read_From_Tail On
-  ```
+    ``` 
+  Default configuration need to be changed since K3S does not use default docker output (it uses cri with specific Time format and it does not install a systemd `kubelet.service`.
+
+  Additional inputs need to be configured for extracting logs from host (`/var/logs/auth` and `/var/log/syslog`)
+
+  **NOTE 4: Fluentbit OUTPUT configuration**
+
+  [OUTPUT] configuration by default uses elasticsearch, but it needs to be modified for specifying the access credentials and https protocol specific parameters (use tls and skip SSL certification validation)
+
+  **NOTE 5: Fluentbit PARSER configuration**
+
+  [PARSER] default configuration need to be changed as well to include kuberentes `cri` parsers specific configuration and `syslog` specific parser for monitoring `/var/log/auth.log` and `/var/log/syslog` files.
   
-  [INPUT] configuration need to be overriden since K3S does not use default docker output (it uses cri with specific Time format and it does not install a systemd `kubelet.service`
+  **NOTE 6: Fluentbit FILTERS configuration**
 
-  [PARSER] configuration need to be overriden as well to include kuberentes `cri` parsers specific configuration and `syslog` specific parser for monitoring `/var/log/auth.log` and `/var/log/syslog` files
+  [FILTERS] default helm chart configuration includes a filter for enriching logs with Kubernetes metadata. See [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
 
-  [FILTERS] configuration: by default helm chart includes a filter for enriching logs with Kubernetes metadata. See [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes). Default configuration need to be overriden to include Lua script execution (translation local time to UTC).
-   
-  [OUTPUT] configuration by default uses elasticsearch, but it needs to be overriding for using the specific credentials and https protocol.
+  Default configuration need to be modified to include Lua script execution (translation local time to UTC). See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5)
   
-  The final `values.yml` is:
-  ```yml
-  config:
-    inputs: |
+  **NOTE 7: Lua scripts**
+  Helm chart supports the specification of Lua scripts to be used by FILTERS. Helm chart creates a specific ConfigMap with the content of the Lua scripts that are mounted by the pod.
 
-
-  ```
-
+  **NOTE 8: Enable daemonset deployment of master node**
+  `tolerantions` section need to be provided.
+  
 - Step 4. Install chart
 
       helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
