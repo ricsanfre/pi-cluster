@@ -18,7 +18,9 @@ env:
       secretKeyRef:
         name: "{{ efk_cluster_name }}-es-elastic-user"
         key: elastic
-
+  # Specify TZ
+  - name: TZ
+    value: "{{ efk_node_timezone }}"
 # Fluentbit config
 config:
   # fluent-bit.config SERVICE

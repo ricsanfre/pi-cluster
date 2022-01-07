@@ -297,6 +297,9 @@ For speed-up the installation there is available a [helm chart](https://github.c
         secretKeyRef:
           name: "efk-es-elastic-user"
           key: elastic
+    # Specify TZ
+    - name: TZ
+      value: "Europe/Madrid"
 
   # Fluentbit config
   config:
@@ -322,6 +325,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Path /var/log/containers/*.log
           multiline.parser cri
           Tag kube.*
+          DB /var/log/flb_kube.db
           Mem_Buf_Limit 5MB
           Skip_Long_Lines True
 
@@ -329,12 +333,14 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Name tail
           Tag node.var.log.auth
           Path /var/log/auth.log
+          DB /var/log/flb_auth.db
           Parser syslog-rfc3164-nopri
 
       [INPUT]
           Name tail
           Tag node.var.log.syslog
           Path /var/log/syslog
+          DB /var/log/flb_syslog.db
           Parser syslog-rfc3164-nopri
     # fluent-bit.config OUTPUT **NOTE 4**
     outputs: |
@@ -398,9 +404,11 @@ For speed-up the installation there is available a [helm chart](https://github.c
       operator: Exists
       effect: NoSchedule
   ```
-  **NOTE 1: Elasticsearch server**
+  **NOTE 1: Daemonset pod environment variables**
 
   Elasticsearch connection details (IP and port) and access credentials are passed as environment variables to the fluentbit pod (`elastic` user password obtaining from the corresponding Secret).
+
+  TimeZone (`TZ`) need to be specified so Fluentbit can properly parse logs which timestamp do not contain timezone information (i.e: OS Ubuntu logs like `/var/log/syslog` and `/var/log/auth.log`). 
 
   **NOTE 2: Fluentbit SERVICE configuration**
   
