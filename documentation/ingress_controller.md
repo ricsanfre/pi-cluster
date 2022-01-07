@@ -238,29 +238,7 @@ By default Traefik deployed by K3S does not enable Traefik metrics for Prometheu
 additionalArguments:
   - "--metrics.prometheus=true"
 ```
-
 This configuration makes the traefik pod to open its metric port at TCP port 9100
-
-Traefik is a K3S embedded components that is auto-deployed using Helm. In order to configure Helm chart configuration parameters the official [document](https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig) must be followed.
-
-- Create a file `traefik-config.yml` of the customized resource `HelmChartConfig` 
-   
-  ```yml
-  ---
-  apiVersion: helm.cattle.io/v1
-  kind: HelmChartConfig
-  metadata:
-    name: traefik
-    namespace: kube-system
-  spec:
-    valuesContent: |-
-      additionalArguments:
-        - "--metrics.prometheus=true"
-  ```
-   
-- Copy file `traefik-config.yml` file to `/var/lib/rancher/k3s/server/manifests/` in the master node.
-
-  K3S automatically will re-deploy Traefik chart with the configuration changes.
 
 ### Creating Traefik-metric Service
 
@@ -399,7 +377,86 @@ service:
   spec:
     loadBalancerIP: 10.0.0.100
 ```
-As before modify `traefik-config.yml` and copy to  `/var/lib/rancher/k3s/server/manifests/` in the master node for K3S to automatically re-deploy Traefik chart with the configuration changes.
+
+## Enabling Access log
+
+Traefik access logs contains detailed information about every request it handles. By default, these logs are not enabled. When they are enabled (throug parameter `--accesslog`), Traefik writes the logs to `stdout` by default, mixing the access logs with Traefik-generated application logs.
+
+To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`--accesslog.filepath`), adding to traekik deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
+
+Default access format need to be changed as well to use JSON format (`--accesslog.format=json`). That way those logs will be parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
+
+Following Traefik helm chart values need to be provided:
+
+```yml
+additionalArguments:
+  - "--accesslog"
+  - "--accesslog.format=json"
+  - "--accesslog.filepath=/data/access.log"
+deployment:
+  additionalContainers:
+    - name: stream-accesslog
+      image: busybox
+      args:
+      - /bin/sh
+      - -c
+      - tail -n+1 -F /data/access.log
+      imagePullPolicy: Always
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+```
+
+This configuration enables Traefik access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
+
+## Traefik HelmChart Configuration
+
+Traefik is a K3S embedded components that is auto-deployed using Helm. In order to configure Helm chart configuration parameters the official [document](https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig) must be followed.
+
+- Create a file `traefik-config.yml` of the customized resource `HelmChartConfig` 
+   
+  ```yml
+  ---
+  apiVersion: helm.cattle.io/v1
+  kind: HelmChartConfig
+  metadata:
+    name: traefik
+    namespace: kube-system
+  spec:
+    valuesContent: |-
+      additionalArguments:
+        - "--metrics.prometheus=true"
+        - "--accesslog"
+        - "--accesslog.format=json"
+        - "--accesslog.filepath=/data/access.log"
+      deployment:
+        additionalContainers:
+          - name: stream-accesslog
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - tail -n+1 -F /data/access.log
+            imagePullPolicy: Always
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+            - mountPath: /data
+              name: data
+      service:
+        spec:
+          loadBalancerIP: 10.0.0.100
+  ```
+   
+- Copy file `traefik-config.yml` file to `/var/lib/rancher/k3s/server/manifests/` in the master node.
+
+  K3S automatically will re-deploy Traefik chart with the configuration changes.
+
+
 
 ## Automating with Ansible
 

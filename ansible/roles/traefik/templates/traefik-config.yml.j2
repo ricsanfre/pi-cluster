@@ -8,6 +8,24 @@ spec:
   valuesContent: |-
     additionalArguments:
       - "--metrics.prometheus=true"
+      - "--accesslog"
+      - "--accesslog.format=json"
+      - "--accesslog.filepath=/data/access.log"
+    deployment:
+      additionalContainers:
+        - name: stream-accesslog
+          image: busybox
+          args:
+          - /bin/sh
+          - -c
+          - tail -n+1 -F /data/access.log
+          imagePullPolicy: Always
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
     service:
       spec:
         loadBalancerIP: {{ k3s_ingress_external_ip }}

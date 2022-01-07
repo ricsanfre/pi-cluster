@@ -1,0 +1,100 @@
+---
+# fluentbit helm chart values
+
+#fluentbit-container environment variables
+env:
+  # Elastic operator creates elastic service name with format cluster_name-es-http
+  - name: FLUENT_ELASTICSEARCH_HOST
+    value: "{{ efk_cluster_name }}-es-http"
+  # Default elasticsearch default port
+  - name: FLUENT_ELASTICSEARCH_PORT
+    value: "9200"
+  # Elasticsearch user
+  - name: FLUENT_ELASTICSEARCH_USER
+    value: "elastic"
+  # Elastic operator stores elastic user password in a secret
+  - name: FLUENT_ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: "{{ efk_cluster_name }}-es-elastic-user"
+        key: elastic
+  # Specify TZ
+  - name: TZ
+    value: "{{ efk_node_timezone }}"
+# Fluentbit config
+config:
+  # fluent-bit.config SERVICE
+  # Helm chart defaults are Ok
+  # service: |
+  #   [SERVICE]
+  #     Daemon Off
+  #     Flush 1
+  #     Log_Level info
+  #     Parsers_File parsers.conf
+  #     Parsers_File custom_parsers.conf
+  #     HTTP_Server On
+  #     HTTP_Listen 0.0.0.0
+  #     HTTP_Port 2020
+  #     Health_Check On
+
+  # fluent-bit.config INPUT
+  inputs: |
+{% for input in fluentbit_inputs %}
+
+    [INPUT]
+{% for key in input %}
+        {{ key }} {{ input[key] }}
+{% endfor %}
+{% endfor %}
+  # fluent-bit.config OUTPUT
+  outputs: |
+{% for output in fluentbit_outputs %}
+
+    [OUTPUT]
+{% for key in output %}
+        {{ key }} {{ output[key] }}
+{% endfor %}
+{% endfor %}
+  # fluent-bit.config PARSERS
+  customParsers: |
+{% for parser in fluentbit_parsers %}
+
+    [PARSER]
+{% for key in parser %}
+        {{ key }} {{ parser[key] }}
+{% endfor %}
+{% endfor %}
+  # fluent-bit.config FILTERS
+  filters: |
+{% for item in fluentbit_filters %}
+
+    [FILTER]
+{% for key in item %}
+        {{ key }} {{ item[key] }}
+{% endfor %}
+{% endfor %}
+
+# Fluentbit config Lua Scripts
+luaScripts:
+{% for lua_script in fluentbit_lua_script %}
+  {{ lua_script.name }}: |
+{{ lua_script.content | indent(4, True)}}
+{% endfor %}
+
+# Enable fluentbit instalaltion on master node
+tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+# Log_Level
+logLevel: {{ fluent_bit_log_level }}
+
+# Init container
+initContainers:
+  - name: init-log-directory
+    image: busybox
+    command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
+    volumeMounts:
+      - name: varlog
+        mountPath: /var/log

@@ -15,6 +15,9 @@ efk_elasticsearch_storage_class: "longhorn"
 # elastic user password
 efk_elasticsearch_passwd: "s1cret0"
 
+# fluentbit or fluentd collector. Possible values ('fluentbit' or 'fluentd')
+efk_logging_collector: 'fluentbit'
+
 # Fluentd image version
 efk_fluentd_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
 
@@ -23,3 +26,75 @@ efk_node_timezone: "Europe/Madrid"
 
 # Endpoint Service DNS name
 kibana_dashboard_dns: kibana.picluster.ricsanfre.com
+
+##########################
+# fluentbit configuration
+##########################
+
+# Fluentbit_inputs
+fluentbit_inputs:
+  - Name: tail
+    Path: /var/log/containers/*.log
+    multiline.parser: cri
+    DB: /var/log/fluentbit/flb_kube.db
+    Tag: kube.*
+    Mem_Buf_Limit: 5MB
+    Skip_Long_Lines: true
+  - Name: tail
+    Tag: node.var.log.auth
+    DB: /var/log/fluentbit/flb_auth.db
+    Path: /var/log/auth.log
+    Parser: syslog-rfc3164-nopri
+  - Name: tail
+    Tag: node.var.log.syslog
+    DB: /var/log/fluentbit/flb_syslog.db
+    Path: /var/log/syslog
+    Parser: syslog-rfc3164-nopri
+
+# Fluentbit Elasticsearch output
+fluentbit_outputs:
+  - Name: es
+    match: "*"
+    Host: ${FLUENT_ELASTICSEARCH_HOST}
+    Port: ${FLUENT_ELASTICSEARCH_PORT}
+    Logstash_Format: true
+    Logstash_Prefix: logstash
+    Include_Tag_Key: true
+    Tag_Key: tag
+    HTTP_User: ${FLUENT_ELASTICSEARCH_USER}
+    HTTP_Passwd: ${FLUENT_ELASTICSEARCH_PASSWORD}
+    tls: true
+    tls.verify: false
+    Retry_Limit: false
+# Fluentbit custom parsers
+fluentbit_parsers:
+  - Name: syslog-rfc3164-nopri
+    Format: regex
+    Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key: time
+    Time_Format: "%b %d %H:%M:%S"
+    Time_Keep: false
+
+# Lua_scripts
+fluentbit_lua_script:
+  - name: adjust_ts.lua
+    content: "{{ lookup('file','files/adjust_ts.lua') }}"
+
+# Fluentbit_filters
+fluentbit_filters:
+  - Name: kubernetes
+    Match: kube.*
+    Kube_Tag_Prefix: kube.var.log.containers.
+    Merge_Log: true
+    Merge_Log_Trim: true
+    Keep_Log: false
+    K8S-Logging.Parser: true
+    K8S-Logging.Exclude: false
+    Annotations: false
+    Labels: true
+  - Name: lua
+    Match: node.*
+    script: /fluent-bit/scripts/adjust_ts.lua
+    call: local_timestamp_to_UTC
+
+fluent_bit_log_level: info
