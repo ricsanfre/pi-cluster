@@ -403,6 +403,15 @@ For speed-up the installation there is available a [helm chart](https://github.c
     - key: node-role.kubernetes.io/master
       operator: Exists
       effect: NoSchedule
+
+  # Init container. Create directory for fluentbit db **NOTE 9**
+  initContainers:
+    - name: init-log-directory
+      image: busybox
+      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log
   ```
   **NOTE 1: Daemonset pod environment variables**
 
@@ -472,6 +481,9 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   **NOTE 8: Enable daemonset deployment of master node**
   `tolerantions` section need to be provided.
+
+  **NOTE 9: Init container for creating fluentbit DB temporary directory**
+  Configure a `initContainer` based on `busybox` image that creates a directory `/var/logs/fluentbit` to store fluentbit Tail database keeping track of monitored files and offsets (`Tail` input `DB` parameter).
   
 - Step 4. Install chart
 

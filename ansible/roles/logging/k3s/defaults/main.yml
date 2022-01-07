@@ -36,18 +36,18 @@ fluentbit_inputs:
   - Name: tail
     Path: /var/log/containers/*.log
     multiline.parser: cri
-    DB: /var/log/flb_kube.db
+    DB: /var/log/fluentbit/flb_kube.db
     Tag: kube.*
     Mem_Buf_Limit: 5MB
     Skip_Long_Lines: true
   - Name: tail
     Tag: node.var.log.auth
-    DB: /var/log/flb_auth.db
+    DB: /var/log/fluentbit/flb_auth.db
     Path: /var/log/auth.log
     Parser: syslog-rfc3164-nopri
   - Name: tail
     Tag: node.var.log.syslog
-    DB: /var/log/flb_syslog.db
+    DB: /var/log/fluentbit/flb_syslog.db
     Path: /var/log/syslog
     Parser: syslog-rfc3164-nopri
 
