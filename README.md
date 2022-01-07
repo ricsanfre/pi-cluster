@@ -72,7 +72,6 @@ As part of the project the goal is to deploy on the Kuberenets cluster basic ser
       | Variable file | Group of nodes affected |
       |----|----|
       | [`all.yml`](ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
-      | [`control.yml`](ansible/group_vars/control.yml) | gateway node + pimaster |
       | [`picluster.yml`](ansible/group_vars/picluster.yml) | all nodes of the cluster | 
       | [`k3s_cluster.yml`](ansible/group_vars/picluster.yml) | all nodes of the k3s cluster |
       | [`k3s_master.yml`](ansible/group_vars/k3s_master.yml) | K3s master nodes |

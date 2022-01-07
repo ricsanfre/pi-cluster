@@ -7,7 +7,7 @@ EFK stack will be deployed as centralized logging solution for the K3S cluster.
 
 ![K3S-EFK-Architecture](images/efk_logging_architecture.png)
 
-S
+
 ## ARM architecture and Kubernetes deployment support
 
 In June 2020, Elastic announced (https://www.elastic.co/blog/elasticsearch-on-arm) that starting from 7.8 release they will provide multi-architecture docker images supporting AMD64 and ARM64 architectures.
