@@ -1,0 +1,54 @@
+---
+layout: default
+---
+
+<div class="header-container p-5 mb-4 rounded-3">
+    <div class="container-fluid py-5">
+        <h1>Raspberry PI Kubernetes Cluster Project Website</h1>
+        <p>K3S Kubernetes cluster using ARM architecture automated by Ansible.</p>
+        <p><a class="btn btn-primary btn-lg" href="{{ "/docs/home/" | relative_url }}" type="button">Learn more</a></p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <h2 class="header-light regular-pad">Project Scope</h2>
+        <div class="col-md-6">
+              <p class="lead">The scope of this project is to create a kubernetes cluster at home using Raspberry Pis
+              and Ansible to automate the deployment and configuration.<br>
+              This is an educational project to explore kubernetes cluster configurations using an ARM architecture and 
+              its automation using Ansible.<br>
+              As part of the project the goal is to use a lightweight Kubernetes flavor based on <a href="https://ks3.io/">K3S</a> 
+              and deploy cluster basic services such as distributed block storage for persistent volumes like 
+              <a href="https://longhorn.io/">Longhorn</a>, centralized monitoring tools like <a href="https://prometheus.io/">Prometheus</a> 
+              and EFK (<a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a>-<a href="https://fluentbit.io/">Fluentbit</a></a>-<a href="https://www.elastic.co/kibana/">Kibana</a>) 
+              and backup/restore solution like <a href="https://velero.io/">Velero</a> and <a href="https://restic.io/">Restic</a>.</p>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="{{ "/assets/img/pi-cluster-icons.png" | relative_url }}" alt="PiCluster logos" class="img-fluid">
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-sm-4">
+            <h1 class="text-center"><i class="fas fa-graduation-cap" aria-hidden="true"></i></h1>
+            <h3 class="text-center">Perfect for Educational purpuses</h3>
+            <p>Ideal to know the state of the art of Kubernetes ARM-based clusters and to play with different
+            cluster services and applications using low-performance baremetal servers instead of x8086 virtual machines.</p>
+        </div>
+        <div class="col-sm-4">
+            <h1 class="text-center"><i class="fas fa-dollar-sign" aria-hidden="true"></i></h1>
+            <h3 class="text-center">Low cost Kubernetes cluster</h3>
+            <p>All it is needed is a bunch of Raspberry PIs, (4 Model-B with 4GB) USB sticks, a power hub, and a Ethernet Switch. <br>
+               Anyway you can drive yourself mad, like I did, and buy more staff like dedicated SSDs disks to improve cluster performance.</p>         
+        </div>
+        <div class="col-sm-4">
+            <h1 class="text-center"><i class="fas fa-cogs" aria-hidden="true"></i></h1>
+            <h3 class="text-center">Rebuild automatically the cluster</h3>
+            <p>You can break the the cluster configuration as many times as needed testing and be able to rebuilding the cluster in minutes.
+            All installation/configuration activities are automated with Ansible
+            It also makes easy to re-configure cluster nodes in case of hardware failure</p>
+        </div>
+        
+    </div>
+</div>

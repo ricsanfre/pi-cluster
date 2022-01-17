@@ -1,0 +1,25 @@
+
+
+  .navbar-brand{
+    img{
+      width: 15%;
+      height: 15%;
+    }
+  }
+  
+  
+  .header-container {
+    background-color: black;
+    background: url('../img/bg.jpg') no-repeat 50% 0;
+    color: #fff;
+  
+    h1 {
+      color: #fff;
+    }
+    // background-attachment: fixed;
+    background-size: cover;
+    background-position: center 36%;
+    //margin-top: -37px;
+  }
+  
+

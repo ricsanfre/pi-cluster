@@ -1,0 +1,70 @@
+# Site settings
+title: Pi Kubernetes Cluster
+email: admin@ricsanfre.com
+description: >
+  Raspberry Pi Kubernetes cluster
+lang: en-US
+
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
+git_address: https://github.com/ricsanfre/pi-cluster
+git_edit_address: https://github.com/ricsanfre/pi-cluster/blob/gh-pages
+
+# remote_theme: aksakalli/jekyll-doc-theme@gh-pages
+
+# theme options from https://bootswatch.com/3/
+# comment out this to use default Bootstrap
+bootwatch: slate # cerulean cosmo custom cyborg darkly flatly journal lumen readable sandstone simplex slate solar spacelab superhero united yeti
+
+# Build settings
+markdown: kramdown
+
+# Allow kramdown to parse inside html blocks (Generate toc)
+kramdown:
+  parse_block_html: true
+
+highlighter: rouge
+
+# Plugins (previously gems:)
+plugins:
+#  - jekyll-remote-theme
+  - jekyll-toc
+  - jekyll-feed
+  - jekyll-redirect-from
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - .idea/
+  - .gitignore
+  - README.md
+  - vendor
+timezone: Europe/Madrid
+
+defaults:
+- scope:
+    path: _posts
+    type: posts
+  values:
+    layout: post
+    sectionid: blog
+
+- scope:
+    path: _docs
+    type: docs
+  values:
+    layout: docs
+    sectionid: docs
+    seo:
+      type: "WebPage"
+    toc: true
+
+collections:
+  docs:
+    permalink: /:collection/:path/
+    output: true
+  posts:
+    permalink: /blog/:year/:month/:day/:title/
+    output: true
