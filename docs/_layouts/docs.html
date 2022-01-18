@@ -5,10 +5,12 @@ layout: default
 <div class="container">
     <div class="row">
         <div class="col-md-3">
-          {% include docs_nav.html %}
+          <div class="sticky-top">
+            {% include docs_nav.html %}
+          </div>
         </div>
 
-        <div class="col-md-7">
+        <div class="col-md-7 doc-content">
             <h1>{{ page.title }}</h1>
             <div id="markdown-content-container">{{ content }}</div>
             <div style="clear:both;">
@@ -22,8 +24,10 @@ layout: default
             <hr>
             {% include section_nav.html %}
         </div>
-        <div class="col-md-2">
-          {% include toc.html %}
+        <div class="col-md-2 doc-toc">
+          <div class="sticky-top">
+            {% include toc.html %}
+          </div>
         </div>
     </div>
 </div>
