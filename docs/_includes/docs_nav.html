@@ -1,29 +1,34 @@
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+<div class="flex-shrink-0 p-3">
+  <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
+    <span class="fs-5 fw-semibold">Pi Cluster Documentation</span>
+  </a>
+  <ul class="list-unstyled ps-0">
     {% for section in site.data.docs %}
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4 class="panel-title">
-            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
+      {% assign showed = false %}
+      {% for item in section.docs %}
+        {% assign item_url = item | prepend:"/docs/" | append:"/" %}
+        {% if item_url == page.url %}
+          {% assign showed = true %}
+        {% endif %}
+      {% endfor %}
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">
+            <a role="button" data-bs-toggle="collapse" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
               {{ section.title }}
             </a>
-          </h4>
+          </h5>
         </div>
-        {% assign collapsed = true %}
-        {% for item in section.docs %}
-          {% assign item_url = item | prepend:"/docs/" | append:"/" %}
-          {% if item_url == page.url %}
-            {% assign collapsed = false %}
-          {% endif %}
-        {% endfor %}
-        <div class="panel-collapse{% if collapsed %} collapse{% endif %}" id="collapse-{{forloop.index}}" role="tabpanel" aria-label="Side Navigation">
+        <div class="card-collapse collapse{% if showed %} show{% endif %}" id="collapse-{{forloop.index}}">
           <div class="list-group">
-            {% for item in section.docs %}
-              {% assign item_url = item | prepend:"/docs/" | append:"/" %}
-              {% assign p = site.docs | where:"url", item_url | first %}
-              <a class="list-group-item {% if item_url == page.url %}active{% endif %}" href="{{ p.url  | relative_url }}">{{ p.title }}</a>
-            {% endfor %}
+          {% for item in section.docs %}
+            {% assign item_url = item | prepend:"/docs/" | append:"/" %}
+            {% assign p = site.docs | where:"url", item_url | first %}
+              <a class="list-group-item{% if item_url == page.url %} active{% endif %}" href="{{ p.url  | relative_url }}">{{ p.title }}</a>
+          {% endfor %}
           </div>
         </div>
       </div>
     {% endfor %}
-  </div>
+  </ul>
+</div>
