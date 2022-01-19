@@ -14,7 +14,7 @@ git_edit_address: https://github.com/ricsanfre/pi-cluster/blob/gh-pages
 
 # theme options from https://bootswatch.com/3/
 # comment out this to use default Bootstrap
-bootwatch: slate # cerulean cosmo custom cyborg darkly flatly journal lumen readable sandstone simplex slate solar spacelab superhero united yeti
+bootwatch: materia # cerulean cosmo custom cyborg darkly flatly journal lumen readable sandstone simplex slate solar spacelab superhero united yeti
 
 # Build settings
 markdown: kramdown
@@ -28,7 +28,7 @@ highlighter: rouge
 # Plugins (previously gems:)
 plugins:
 #  - jekyll-remote-theme
-  - jekyll-toc
+#  - jekyll-toc
   - jekyll-feed
   - jekyll-redirect-from
   - jekyll-seo-tag
@@ -43,6 +43,7 @@ exclude:
   - vendor
 timezone: Europe/Madrid
 
+
 defaults:
 - scope:
     path: _posts
@@ -50,7 +51,6 @@ defaults:
   values:
     layout: post
     sectionid: blog
-
 - scope:
     path: _docs
     type: docs
