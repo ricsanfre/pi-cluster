@@ -11,24 +11,20 @@
           {% assign showed = true %}
         {% endif %}
       {% endfor %}
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">
-            <a role="button" data-bs-toggle="collapse" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
+      <li class="mb-1">
+        <button class="navdoc-btn navdoc-btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
               {{ section.title }}
-            </a>
-          </h5>
-        </div>
-        <div class="card-collapse collapse{% if showed %} show{% endif %}" id="collapse-{{forloop.index}}">
-          <div class="list-group">
+        </button>
+        <div class="collapse{% if showed %} show{% endif %}" id="collapse-{{forloop.index}}">
+          <ul class="nav navdoc-btn-toggle-nav list-unstyled fw-normal pb-1 small">
           {% for item in section.docs %}
             {% assign item_url = item | prepend:"/docs/" | append:"/" %}
             {% assign p = site.docs | where:"url", item_url | first %}
-              <a class="list-group-item{% if item_url == page.url %} active{% endif %}" href="{{ p.url  | relative_url }}">{{ p.title }}</a>
+              <li class="nav-item"><a class="nav-link{% if item_url == page.url %} active{% endif %}" href="{{ p.url  | relative_url }}">{{ p.title }}</a></li>
           {% endfor %}
-          </div>
+          </ul>
         </div>
-      </div>
+      </li>
     {% endfor %}
   </ul>
 </div>

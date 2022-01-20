@@ -1,4 +1,6 @@
-<nav class="navbar" id="navbar-toc">
-  <a class="navbar-brand" href="#">Table of Contents:</a>
-    {% include toc.html html=content item_class="nav-item" submenu_class="nav nav-pills" anchor_class="nav-link text-secondary" %}
-</nav>
+<div class="doc-toc mb-5 ps-xl-3 mb-lg-5 p3 text-muted">
+  <strong class="h6 mb-3 pb-3 border-bottom">On this page:</strong>
+  <nav class="navbar mt-3" id="navbar-toc">
+    {% include toc.html html=content %}
+  </nav>
+</div>
