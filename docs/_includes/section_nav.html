@@ -13,34 +13,34 @@ next, lets build a link to it.
 {% for document in docs %}
   {% assign document_url = document | prepend:"/docs/" | append:"/" %}
   {% if document_url == page.url %}
-    <ul class="pager">
+    <ul class="pagination justify-content-center">
       {% if forloop.first %}
-        <li class="previous disabled">
-          <a>
+        <li class="page-item previous disabled">
+          <a class="page-link">
             <span aria-hidden="true">&larr;</span> Previous
           </a>
         </li>
       {% else %}
         {% assign previous = forloop.index0 | minus: 1 %}
         {% assign previous_page = docs[previous] | prepend:"/docs/" | append:"/" %}
-        <li class="previous">
-          <a href="{{ previous_page | relative_url }}">
+        <li class="page-item previous">
+          <a class="page-link" href="{{ previous_page | relative_url }}">
             <span aria-hidden="true">&larr;</span> Previous
           </a>
         </li>
       {% endif %}
 
       {% if forloop.last %}
-        <li class="next disabled">
-          <a>
+        <li class="page-item next disabled">
+          <a class="page-link">
             Next <span aria-hidden="true">&rarr;</span>
           </a>
         </li>
       {% else %}
         {% assign next = forloop.index0 | plus: 1 %}
         {% assign next_page = docs[next] | prepend:"/docs/" | append:"/" %}
-        <li class="next">
-          <a href="{{ next_page | relative_url }}">
+        <li class="page-item next">
+          <a class="page-link" href="{{ next_page | relative_url }}">
             Next <span aria-hidden="true">&rarr;</span>
           </a>
         </li>
