@@ -1,4 +1,4 @@
-<div class="flex-shrink-0 p-3">
+<div class="docs-nav flex-shrink-0 p-3">
   <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
     <span class="fs-5 fw-semibold">Pi Cluster Documentation</span>
   </a>
@@ -12,11 +12,11 @@
         {% endif %}
       {% endfor %}
       <li class="mb-1">
-        <button class="navdoc-btn navdoc-btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
+        <button class="btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
               {{ section.title }}
         </button>
         <div class="collapse{% if showed %} show{% endif %}" id="collapse-{{forloop.index}}">
-          <ul class="nav navdoc-btn-toggle-nav list-unstyled fw-normal pb-1 small">
+          <ul class="nav btn-toggle-nav list-unstyled fw-normal pb-1 small">
           {% for item in section.docs %}
             {% assign item_url = item | prepend:"/docs/" | append:"/" %}
             {% assign p = site.docs | where:"url", item_url | first %}
