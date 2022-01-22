@@ -91,8 +91,11 @@ html {
   margin-top: 0.5rem;
   overflow-y: scroll;
   img {
-    max-width: 100%;
+    max-width: 80%;
     height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 // Docs-layout: Toc
