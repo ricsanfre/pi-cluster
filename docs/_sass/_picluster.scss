@@ -90,6 +90,10 @@ html {
   height: calc(100vh - 7rem);
   margin-top: 0.5rem;
   overflow-y: scroll;
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 // Docs-layout: Toc
 .docs-toc {
