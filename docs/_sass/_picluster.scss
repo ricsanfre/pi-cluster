@@ -37,29 +37,31 @@ html {
 // Docs-layout. Navigator
 .docs-nav {
   position: sticky;
+  --bs-bg-opacity: 1;
+  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
   .btn-toggle {
     display: inline-flex;
     align-items: center;
     padding: .25rem .5rem;
     font-weight: 600;
-    color: rgba(0, 0, 0, .65);
+    color: rgba(255, 255, 255, 0.5);
     background-color: transparent;
     border: 0;
   }
   .btn-toggle:hover,
   .btn-toggle:focus {
-    color: rgba(0, 0, 0, .85);
-    background-color: #d2f4ea;
+    color: rgba(255, 255, 255, 0.5);
+    background-color: #043325;
   }
   .btn-toggle::before {
     width: 1.25em;
     line-height: 0;
-    content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba%280,0,0,.5%29' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 14l6-6-6-6'/%3e%3c/svg%3e");
+    content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba%28255,255,255,.5%29' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 14l6-6-6-6'/%3e%3c/svg%3e");
     transition: transform .35s ease;
     transform-origin: .5em 50%;
   }
   .btn-toggle[aria-expanded="true"] {
-    color: rgba(0, 0, 0, .85);
+    color: rgba(255, 255, 255, 0.5);
   }
   .btn-toggle[aria-expanded="true"]::before {
     transform: rotate(90deg);
@@ -70,26 +72,34 @@ html {
     margin-top: .125rem;
     margin-left: 1.25rem;
     text-decoration: none;
+    color: white;
   }
   .btn-toggle-nav a:hover,
   .btn-toggle-nav a:focus {
-    background-color: #d2f4ea;
+    background-color: #043325;
   }
-  .nav-link {
-    &.active {
-      font-weight: bold;
-      text-decoration: underline;
-    }
+  // .nav-link {
+  //   &.active {
+  //     font-weight: bold;
+  //     text-decoration: underline;
+  //   }
+  // }
+  .docs-nav-title {
+    color: white;
+  }
+  .nav-pills .nav-link.active {
+    background-color: $gray-600;
   }  
 }
 
 // Docs-layout: Content
 .docs-content {
   position: relative;
-  // height: 500px;
   height: calc(100vh - 7rem);
   margin-top: 0.5rem;
   overflow-y: scroll;
+
+  // Default settings for images
   img {
     max-width: 80%;
     height: auto;
@@ -98,6 +108,17 @@ html {
     margin-right: auto;
   }
 }
+// Hide scrollbar IE, Edge and Firefox
+.docs-content {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.docs-content::-webkit-scrollbar {
+  display: none;
+}
+
 // Docs-layout: Toc
 .docs-toc {
   position: sticky;

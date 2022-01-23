@@ -1,8 +1,8 @@
-<div class="docs-nav flex-shrink-0 p-3">
-  <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
+<div class="flex-shrink-0 p-3">
+  <a href="/" class="docs-nav-title d-flex align-items-center pb-3 mb-3 text-decoration-none border-bottom">
     <span class="fs-5 fw-semibold">Pi Cluster Documentation</span>
   </a>
-  <ul class="list-unstyled ps-0">
+  <ul class="nav nav-pills list-unstyled ps-0">
     {% for section in site.data.docs %}
       {% assign showed = false %}
       {% for item in section.docs %}
@@ -16,7 +16,7 @@
               {{ section.title }}
         </button>
         <div class="collapse{% if showed %} show{% endif %}" id="collapse-{{forloop.index}}">
-          <ul class="nav btn-toggle-nav list-unstyled fw-normal pb-1 small">
+          <ul class="nav nav-pills flex-column btn-toggle-nav list-unstyled fw-normal pb-1 small">
           {% for item in section.docs %}
             {% assign item_url = item | prepend:"/docs/" | append:"/" %}
             {% assign p = site.docs | where:"url", item_url | first %}
