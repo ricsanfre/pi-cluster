@@ -17,8 +17,8 @@
             <a class="nav-link" href="{{ site.posts.first.url | relative_url }}">Blog</a>
           </li>          
         </ul>
-        <form class="d-flex">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <form class="d-flex" action="/search" method="GET">
+          <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
           <button class="btn btn-primary" type="submit">Search</button>
         </form>
       </div>
