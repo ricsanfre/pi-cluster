@@ -135,4 +135,7 @@ html {
       text-decoration: underline;
     }
   }
+  .nav-pills .nav-link.active {
+    background-color: $gray-600;
+  }
 }
