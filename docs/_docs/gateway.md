@@ -1,3 +1,9 @@
+---
+title: Gateway installation
+permalink: /docs/gateway/
+redirect_from: /docs/gateway.md
+---
+
 # Gateway Configuration
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
@@ -6,19 +12,6 @@ It will also provide DNS, NTP and DHCP services to my lab network. In case of de
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
 In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node4**): Ubuntu 20.04.3 64 bits.
-
-
-#### Table of contents
-
-1. [Hardware](#hardware)
-2. [Network Configuration](#network-configuration)
-3. [Storage Configuration - Centralized SAN](#storage-configuration-centralized-san)
-4. [Ubuntu boot from SSD](#unbuntu-boot-from-ssd)
-5. [Initial OS Configuration](#ubuntu-os-initital-configuration)
-6. [Router/Firewall Configuration](#routerfirewall-configuration)
-7. [DHCP/DNS Configuration](#dhcpdns-configuration)
-8. [NTP Server Configuration](#ntp-server-configuration)
-9. [iSCSI configuration - Centralized SAN](#iscsi-configuration-centralized-san)
 
 
 ## Hardware

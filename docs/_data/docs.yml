@@ -1,3 +1,36 @@
-- title: Getting Started
+- title: Welcome
   docs:
   - home
+- title: Architecture
+  docs:
+  - architecture
+  - hardware
+  - pimaster
+- title: Nodes installation
+  docs:
+  - firmware
+  - ubuntu
+  - os_basic
+  - san
+  - gateway
+  - node
+- title: K3S Installation
+  docs:
+  - k3s_installation
+  - k3s_networking
+  - traefik
+  - certmanager
+  - longhorn
+- title: Cluster Monitoring
+  docs:
+  - logging
+  - prometheus
+- title: Cluster Backup
+  docs:
+  - backup
+- title: Reference Docs
+  docs:
+  - k8s_networking
+  - k8s_commands
+  - iscsi_commands
+  - pi_commands

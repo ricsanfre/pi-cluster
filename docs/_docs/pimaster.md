@@ -1,4 +1,8 @@
-# Preparing Ansible Control Node
+---
+title: Ansible Control Node
+permalink: /docs/pimaster/
+redirect_from: /docs/pimaster.md
+---
 
 A Virtual-BOX VM running on a Windows PC is used as Ansible Control Node, `pimaster` for automating the provisioning of the Raspberry PIs cluster.
 
@@ -7,13 +11,6 @@ As OS for `pimaster` a Ubuntu 20.04 LTS server will be used.
 > **NOTE**: This server, **pimaster**, can be automatically provisioned from ubuntu cloud image using the script in this [repository](https://github.com/ricsanfre/ubuntu-cloud-vbox)
 >
 > Using that provisioning script a cloud-init user-data booting file can be created to automate the installation tasks of all component needed (Docker, Vagrant, KVM, Ansible, etc.). Check this [template](https://github.com/ricsanfre/ubuntu-cloud-vbox/blob/master/templates/user-data-dev-server.yml) as an example.
-
-#### Table of contents
-
-1. [Installing Docker](#installing-docker)
-2. [Installing KVM and Vagrant](#installing-kvm-and-vagrant)
-3. [Installing Ansible and Molecule testing environment](#installing-ansible-and-molecule-testing-environment)
-4. [Create SSH keys for remote connection users](#create-public-private/ssh-key-for-remote-connection-users)
 
 ## Installing Docker
 
@@ -81,22 +78,21 @@ Step 8: Configure docker daemon.
 
 - Edit file `/etc/docker/daemon.json´
 	
-   Set storage driver to overlay2 and to use systemd for the management of the container’s cgroups.
-   Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
-   Documentation about the possible options can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file)
-	
-	```json
-	{
-      "exec-opts": ["native.cgroupdriver=systemd"],
-      "log-driver": "json-file",
-      "log-opts": {
-        "max-size": "100m"
-       },
-      "storage-driver": "overlay2",
-	  "data-root": "/data/docker"
-	  
-    }
-    ```	
+  Set storage driver to overlay2 and to use systemd for the management of the container’s cgroups.
+  Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
+  Documentation about the possible options can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file)
+  	
+  ```json
+  {
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "log-driver": "json-file",
+    "log-opts": {
+    "max-size": "100m"
+    },
+    "storage-driver": "overlay2",
+    "data-root": "/data/docker"  
+  }
+  ```	
 - Restart docker
 
     ```

@@ -1,19 +1,15 @@
+---
+title: Cluster Node configuration
+permalink: /docs/node/
+redirect_from: /docs/node.md
+---
+
+
 # Node Configuration
 
-4 Raspeberry Pi (4GB), `node1`, `node2`, `node3` and `node4`, will be used as nodes for the Kubernetes cluster.
+4 Raspberry Pi (4GB), `node1`, `node2`, `node3` and `node4`, will be used as nodes for the Kubernetes cluster.
 `node1` will be acting as **master node** and `node2/3/4` as **worker nodes**
 
-
-#### Table of contents
-
-1. [Hardware](#hardware)
-2. [Network Configuration](#network-configuration)
-3. [Storage Configuration - Dedicated Disks](#storage-configuration-dedicated-disks)
-3. [Ubuntu boot from USB](#unbuntu-boot-from-usb)
-4. [Initial OS Configuration](#ubuntu-os-initital-configuration)
-5. [NTP Server Configuration](#ntp-server-configuration)
-6. [iSCSI Configuration - Dedicated Disks](#iscsi-configuration-dedicated-disks)
-7. [iSCSI configuration - Centralized SAN](#iscsi-configuration-centralized-san)
 
 ## Hardware
 

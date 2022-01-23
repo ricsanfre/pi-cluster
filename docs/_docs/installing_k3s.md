@@ -1,4 +1,9 @@
-# K3S
+---
+title: K3S Installation
+permalink: /docs/k3s_installation/
+redirect_from: /docs/k3s_installation.md
+---
+
 
 K3S is a lightweight kubernetes built for IoT and edge computing, provided by the company Rancher. The following picture shows the K3S architecture
 
@@ -9,19 +14,20 @@ In K3S all kubernetes processes are consolidated within one single binary. The b
 - k3s-server: starts all kubernetes control plane processes (API, Scheduler and Controller) and worker proceses (Kubelet and kube-proxy), so master node can be used also as worker node.
 - k3s-agent: consolidating all kuberentes worker processes (Kubelet and kube-proxy).
 
-# K3S Installation
 
 Kubernetes cluster will be installed in node1-node4. `node1` will have control-plane role while `node2-4` will be workers.
 
 Control-plane node will be configured so no load is deployed in it.
 
-## Prerequisites for all nodes
+## Installation prerequisites for all nodes
 
-Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
+Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Raspberry Pi
 
 - Step 1: Modify file `/boot/firmware/cmdline.txt` to include the line:
 
+    ```
     cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
+    ```
 
 - Step 2: Enable iptables to see bridged traffic
 
@@ -36,6 +42,7 @@ Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspbe
     net.bridge.bridge-nf-call-ip6tables = 1
     net.bridge.bridge-nf-call-iptables = 1
     EOF
+
     sudo sysctl --system
     ```
 - Step 3: Reboot the server

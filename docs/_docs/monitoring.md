@@ -1,3 +1,10 @@
+---
+title: Monitoring (Prometheus)
+permalink: /docs/prometheus/
+redirect_from: /docs/monitoring.md
+---
+
+
 # Centralized Monitoring with Prometheus
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.

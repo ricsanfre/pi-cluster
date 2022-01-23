@@ -1,4 +1,10 @@
-# Updating Raspberry Pi Firmware and preparing Raspberry Pis for booting from USB
+---
+title: Raspberry PI firmware update
+permalink: /docs/firmware/
+redirect_from: /docs/preparing_raspberrypi.md
+---
+
+Raspberry Pi Firmware update procedure and preparing Raspberry Pis for booting from USB
 
 ## About USB Booting support (Raspberry Pi 4 and Ubuntu)
 

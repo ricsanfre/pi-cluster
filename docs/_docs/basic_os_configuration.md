@@ -1,4 +1,9 @@
-# Ubuntu OS Initial Tasks
+---
+title: Ubuntu OS initial configurations
+permalink: /docs/os_basic/
+redirect_from: /docs/basic_os_configuration.md
+---
+
 
 ## Removing snap package
 

@@ -1,4 +1,8 @@
-# Ubuntu 20.04 Installation on Raspberry Pis
+---
+title: Ubuntu OS Installation
+permalink: /docs/ubuntu/
+redirect_from: /docs/installing_ubuntu.md
+---
 
 Ubuntu Server 64 bits installation on Raspberry Pi is supported since release 20.04.
 Ubuntu images can be downloaded from [here](https://ubuntu.com/download/raspberry-pi).

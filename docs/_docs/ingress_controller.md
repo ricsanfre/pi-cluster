@@ -1,4 +1,8 @@
-# Ingress Controller configuration
+---
+title: Ingress Controller (Traefik)
+permalink: /docs/traefik/
+redirect_from: /docs/ingress_controller.md
+---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
 K3S default installation comes with Traefik HTTP reverse proxy which is a Kuberentes compliant Ingress Controller.

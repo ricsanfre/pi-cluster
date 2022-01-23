@@ -1,4 +1,9 @@
-# K3S Networking
+---
+title: K3S Networking
+permalink: /docs/k3s_networking/
+redirect_from: /docs/k3s_networking.md
+---
+
 
 > **NOTE**: Basic kubernetes networking concepts and useful references can be found [here](./k8s_networking_basics.md) 
 
@@ -12,7 +17,7 @@ By default K3s install and configure basic Kubernetes networking packages:
 - [Klipper Load Balancer](https://github.com/k3s-io/klipper-lb) as embedded Service Load Balancer
 
 
-# Flannel as CNI
+## Flannel as CNI
 
 K3S run by default with flannel as the CNI, using VXLAN as the default backend. Flannel is running as backend `go` routine within k3s unique process
 
@@ -58,7 +63,7 @@ Traffics between cni0 and flannel.1 are forwarded by ip routing enabled in the n
 
 ![flannel](images/flannel.png)
 
-# CoreDNS
+## CoreDNS
 
 k3s server installation options can be provided in order to configure coreDNS
 
@@ -67,11 +72,11 @@ k3s server installation options can be provided in order to configure coreDNS
 | --cluster-dns value | “10.43.0.10”	| Cluster IP for coredns service. Should be in your service-cidr range
 | --cluster-domain value | “cluster.local” | Cluster Domain
 
-# Traefik as Ingress Controller
+## Traefik as Ingress Controller
 
 Traefik is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease. It simplifies networking complexity while designing, deploying, and running applications.
 
-# Metal LB as Cluster Load Balancer
+## Metal LB as Cluster Load Balancer
 
 Instead of using the embeded service load balancer that only comes with K3S, a more generic kubernetes load balancer like [Metal LB](https://metallb.universe.tf/) will be used. This load balancer can be used with almost any distribution of kubernetes.
 
@@ -97,7 +102,7 @@ kube-system   metrics-server   ClusterIP      10.43.169.140   <none>        443/
 kube-system   traefik          LoadBalancer   10.43.50.56     <pending>     80:30582/TCP,443:30123/TCP   5m53s
 ```
 
-## Why Metal LB
+### Why Metal LB
 
 Kubernetes does not offer an implementation of network load balancers (Services of type LoadBalancer) for bare-metal clusters. The implementations of network load balancers that Kubernetes does ship with are all glue code that calls out to various IaaS platforms (GCP, AWS, Azure…). In bare-metal kubernetes clusters, like the one I am building, "LoadBalancer" services will remain in the “pending” state indefinitely when created.
 (see in previous output of `kubectl get services` command how `traefik` LoadBAlancer service "External IP" is "pending")
@@ -106,7 +111,7 @@ For Bare-metal cluster only two optios remain availale for managing incoming tra
 
 MetalLB provides a network load balacer that can be integrated with standard network equipment, so that external services on bare-metal clusters can be accesible using a pool of "external" ip addresses.
 
-## How Metal LB works
+### How Metal LB works
 
 MetalLB can work in two modes, BGP and Layer 2. The major advantage of the layer 2 mode is its universality: it will work on any Ethernet network. In BGP mode specific routers are needed to deploy the solution.
 
@@ -123,12 +128,12 @@ MetalLB consists of two different pods:
 ![metal-lb-architecture](images/metallb_architecture.png)
 
 
-## Requesting Specific IPs
+### Requesting Specific IPs
 
 MetalLB respects the Kubernetes service `spec.loadBalancerIP` parameter, so if a static IP address from the available pool need to be set up for a specific service, it can be requested by setting that parameter. If MetalLB does not own the requested address, or if the address is already in use by another service, assignment will fail and MetalLB will log a warning event visible in `kubectl describe service <service name>`.
 
 
-## Install Metal Load Balancer
+### Install Metal Load Balancer
 
 
 Installation using `Helm` (Release 3):

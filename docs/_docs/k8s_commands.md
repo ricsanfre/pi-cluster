@@ -1,3 +1,10 @@
+---
+title: Kubernetes commands
+permalink: /docs/k8s_commands/
+redirect_from: /docs/k8s_commands.md
+---
+
+
 # Kubernetes commads
 
 

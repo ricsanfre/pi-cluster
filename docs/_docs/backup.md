@@ -1,13 +1,8 @@
-# Cluster Backup
-
-#### Table of contents
-1. [Backup Architecture and Desing](#backup-architecture-and-design)
-2. [Backup server hardware infrastructure](#backup-server-hardware-infrastructure)
-3. [Minio S3 Object Storage Server](#minio-s3-object-storage-server)
-4. [OS Filesystem backup with Restic](#os-filesystem-backup-with-restic)
-5. [Kubernetes Backup with Velero](#kubernetes-backup-with-velero)
-6. [Longhorn backup configuration](#longhorn-backup-configuration)
-
+---
+title: Backup & Restore
+permalink: /docs/backup/
+redirect_from: /docs/backup.md
+---
 
 ## Backup Architecture and Design
 

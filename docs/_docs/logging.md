@@ -1,4 +1,8 @@
-# Centralized Log Monitoring with EFK stack
+---
+title: Log Management (EFK)
+permalink: /docs/logging/
+redirect_from: /docs/logging.md
+---
 
 ELK Stack (Elaticsearch - Logstash - Kibana) enables centralized log monitoring of IT infrastructure.
 As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Fluentd is used instead of Logstash for doing the collection and parsing of logs.

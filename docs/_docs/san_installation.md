@@ -1,3 +1,9 @@
+---
+title: Cluster SAN installation (optional)
+permalink: /docs/san/
+redirect_from: /docs/san_installation.md
+---
+
 # Configuring Raspberry PI as SAN for the lab cluster
 
 The idea is to configure one of the Raspberry PIs as a SAN, connecting some SSD Disk to it (through USB 3.0 ports) and providing LUNs to all the cluster nodes through iSCSI.

@@ -1,4 +1,9 @@
-# Automating SSL certifications managment with Cert-Manager
+---
+title: SSL Certification Management (Cert-Manager)
+permalink: /docs/certmanager/
+redirect_from: /docs/certmanager.md
+---
+
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
 
