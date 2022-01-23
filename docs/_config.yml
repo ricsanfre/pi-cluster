@@ -50,7 +50,7 @@ defaults:
     type: posts
   values:
     layout: post
-    sectionid: blog
+    sectionid: news
 - scope:
     path: _docs
     type: docs

@@ -1,4 +1,7 @@
 - name: Docs
   link: /docs/home
+  sectionid: docs
 - name: About
   link: /docs/about
+  sectionid: about
+  

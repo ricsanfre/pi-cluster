@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg">
+<nav class="navbar navbar-dark bg-dark navbar-expand-lg">
     <div class="container-fluid">
       <a class="navbar-brand" href="{{ site.baseurl }}/">
         <span><img src="{{ "/assets/img/logonav.png" | relative_url }}" alt="Logo" class="d-inline-block align-text-center"> {{ site.title }}</span>
@@ -10,16 +10,16 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% for item in site.data.navbar %}
           <li class="nav-item">
-            <a class="nav-link" href="{{ item.link }}">{{ item.name }}</a>
+            <a {% if page.sectionid == item.sectionid %}class="nav-link active"{% else %}class="nav-link"{% endif %} href="{{ item.link }}">{{ item.name }}</a>
           </li>
           {% endfor %}
-          <li {% if page.sectionid=='blog' %} class="nav-item" {% endif %}>
-            <a class="nav-link" href="{{ site.posts.first.url | relative_url }}">Blog</a>
+          <li class="nav-item">
+            <a {% if page.sectionid=='news' %}class="nav-link active"{% else %}class="nav-link"{% endif %} href="{{ site.posts.first.url | relative_url }}">News</a>
           </li>          
         </ul>
         <form class="d-flex" action="/search" method="GET">
           <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
-          <button class="btn btn-primary" type="submit">Search</button>
+          <button class="btn btn-secondary" type="submit">Search</button>
         </form>
       </div>
     </div>
