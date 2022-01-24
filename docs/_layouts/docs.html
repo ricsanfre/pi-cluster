@@ -3,18 +3,33 @@ layout: default
 ---
 
 <div class="fluid-container">
+    <div class="offcanvas offcanvas-start w-25 bg-dark" tabindex="-1" id="offcanvas-nav" data-bs-keyboard="false" data-bs-backdrop="false">
+      <div class="offcanvas-header">
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body docs-nav">
+        {% include docs_nav.html %}
+      </div>
+    </div>
     <div class="row">
-        <div class="docs-nav col-md-2">
+      <div class="text-left">
+        <button class="btn d-lg-none" type="button" data-toggle="offcanvas" data-target="#offcanvas-nav">
+          <i class="fa fa-bars" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-nav"></i>
+        </button>
+      </div>
+    </div>
+    <div class="row">
+        <div class="docs-nav col-2 collapse d-lg-block">
           {% include docs_nav.html %}
         </div>
-        <div class="docs-content col-md-8" data-bs-spy="scroll" data-bs-target="#navdoc-toc" data-bs-offset="0" tabindex="0">
+        <div class="docs-content col" data-bs-spy="scroll" data-bs-target="#navdoc-toc" data-bs-offset="0" tabindex="0">
             <h1>{{ page.title }}</h1>
             <div id="markdown-content-container">{{ content }}</div>
             <hr>
             {% include section_nav.html %}
         </div>
         {% if page.toc == true %}
-        <div class="docs-toc col-md-2">
+        <div class="docs-toc col-2 collapse d-lg-block">
           {% include docs_toc.html %}
         </div>
         {% endif %}
