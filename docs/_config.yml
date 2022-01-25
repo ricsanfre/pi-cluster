@@ -5,6 +5,12 @@ description: >
   Raspberry Pi Kubernetes cluster
 lang: en-US
 
+# Enable matoma analytics
+matoma_analytics: true
+matoma:
+  url: 192.168.56.15:8080
+  site_id: 1
+
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
 git_address: https://github.com/ricsanfre/pi-cluster
