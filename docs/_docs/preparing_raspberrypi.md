@@ -145,15 +145,15 @@ If the BOOT_ORDER is not set, change it using [raspi-config](https://www.raspber
 
 ### Step 1 Select **6. Advanced Options**
 
-![raspi-menu](images/raspi-config-window-1.png)
+![raspi-menu](/assets/img/raspi-config-window-1.png)
 
 ### Step 2. Select **A6. Boot Order** 
 
-![raspi-menu](images/raspi-config-window-2.png)
+![raspi-menu](/assets/img/raspi-config-window-2.png)
 
 ### Step 3. Select **B2 USB Boot"
 
-![raspi-menu](images/raspi-config-window-3.png)
+![raspi-menu](/assets/img/raspi-config-window-3.png)
 
 ### Step 4. Select **OK** and **Finish**
 

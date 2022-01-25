@@ -7,7 +7,7 @@ redirect_from: /docs/k3s_installation.md
 
 K3S is a lightweight kubernetes built for IoT and edge computing, provided by the company Rancher. The following picture shows the K3S architecture
 
-![K3S Architecture](images/how-it-works-k3s-revised.svg)
+![K3S Architecture](/assets/img/how-it-works-k3s-revised.svg)
 
 In K3S all kubernetes processes are consolidated within one single binary. The binary is deployed on servers with two different k3s roles (k3s-server or k3s-agent).
 

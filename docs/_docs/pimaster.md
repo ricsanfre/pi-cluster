@@ -219,7 +219,7 @@ We will create SSH keys for two different users:
 
     For generating SSH private/public key in Windows, Putty Key Generator can be used:
 
-    ![ubuntu-SSH-key-generation](images/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
+    ![ubuntu-SSH-key-generation](/assets/img/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
 
 Public-key string will be used as ssh_authorized_keys of the default user (ubuntu) in cloud-init `user-data`
 

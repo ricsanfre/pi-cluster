@@ -9,7 +9,7 @@ As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Flue
 
 EFK stack will be deployed as centralized logging solution for the K3S cluster.
 
-![K3S-EFK-Architecture](images/efk_logging_architecture.png)
+![K3S-EFK-Architecture](/assets/img/efk_logging_architecture.png)
 
 
 ## ARM architecture and Kubernetes deployment support

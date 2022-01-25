@@ -234,9 +234,9 @@ spec:
     ```
 - Step 6. Check in the longhorn-UI the created volumes and the replicas.
 
-![longhorn-ui-volume](./images/longhorn_volume_test.png)
+![longhorn-ui-volume](/assets/img/longhorn_volume_test.png)
 
-![longhorn-ui-replica](./images/longhorn_volume_test_replicas.png)
+![longhorn-ui-replica](/assets/img/longhorn_volume_test_replicas.png)
 
 
 ### Setting Longhorn as default Kubernetes StorageClass

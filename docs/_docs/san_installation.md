@@ -27,7 +27,7 @@ It support sharing different types of storage fabrics and backstorage devices, i
 
 In real environment LUNs are defined in LVM, if so it can be expandable as per space requirements.
 
-![LUNs-on-LVM](images/Creating_LUNs_using_LVM.png "Creating LUNS using LVM")
+![LUNs-on-LVM](/assets/img/Creating_LUNs_using_LVM.png "Creating LUNS using LVM")
 
 ## iSCSI Qualifier Names (iqn)
 

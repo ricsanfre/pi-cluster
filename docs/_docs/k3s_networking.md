@@ -61,7 +61,7 @@ When Flannel is running it creates the following interfaces in eah node:
 
 Traffics between cni0 and flannel.1 are forwarded by ip routing enabled in the node
 
-![flannel](images/flannel.png)
+![flannel](/assets/img/flannel.png)
 
 ## CoreDNS
 
@@ -126,7 +126,7 @@ MetalLB consists of two different pods:
 - Speaker: DaemonSet pod running on each worker node, resposible for announcing the allocated IPs.
 
 
-![metal-lb-architecture](images/metallb_architecture.png)
+![metal-lb-architecture](/assets/img/metallb_architecture.png)
 
 
 ### Requesting Specific IPs

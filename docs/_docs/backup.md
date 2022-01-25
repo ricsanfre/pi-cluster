@@ -10,7 +10,7 @@ It is needed to implement a backup strategy for the K3S cluster. This backup str
 
 The backup architecture is the following:
 
-![picluster-backup-architecture](./images/pi-cluster-backup-architecture.png)
+![picluster-backup-architecture](/assets/img/pi-cluster-backup-architecture.png)
 
 - OS filesystem backup
 
@@ -294,7 +294,7 @@ Velero as well provides a CLI to execute backup/restore commands using Kuberente
 
 The complete backup workflow is the following:
 
-![velero-backup-process](./images/velero-backup-process.png)
+![velero-backup-process](/assets/img/velero-backup-process.png)
 
 As storage provider, Minio will be used. See specific installation documentation using Minio as backend [here](https://velero.io/docs/v1.7/contributions/minio/).
 
@@ -667,7 +667,7 @@ In the Backup section set Backup Target Credential Secret to the secret resource
 
     minio-secret
 
-![longhorn-backup-settings](./images/longhorn_backup_settings.png)
+![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
 
 ## Target can be automatically configured when deploying helm chart
 

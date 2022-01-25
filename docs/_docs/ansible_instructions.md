@@ -31,6 +31,7 @@
       | [`k3s_cluster.yml`](../ansible/group_vars/picluster.yml) | all nodes of the k3s cluster |
       | [`k3s_master.yml`](../ansible/group_vars/k3s_master.yml) | K3s master nodes |
       | [`gateway.yml`](../ansible/host_vars/gateway.yml) | gateway node |
+      {: .table }
 
 ### 2) Installing the cluster
 
@@ -78,7 +79,7 @@
      | `longhorn` | Longhorn |
      | `logging` | EFK Stack |
      | `monitoring` | Prometheus Stack |
-
+     {: .table }
 
 ### Resetting K3s
 

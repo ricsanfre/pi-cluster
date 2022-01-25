@@ -78,7 +78,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         enabled: false
       kubeEtcd:
         enabled: false
-   ```yml
+   ```
 
 - Step 3: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
     ```
@@ -301,40 +301,41 @@ In order to monitor Kubernetes components (Scheduler, Controller Manager and Pro
 
   The service will be use the k3s-proxy endpoint (TCP port 10249) for scraping all metrics. 
 
-  ```yml
-  ---
-  # Headless service for K3S metrics. No Selector
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: k3s-metrics-service
-    labels:
-      app: k3s-metrics
-    namespace: kube-system
-  spec:
-    clusterIP: None
-    ports:
-    - name: http-metrics
-      port: 10249
-      protocol: TCP
-      targetPort: 10249
-    type: ClusterIP
+```yml
+---
+# Headless service for K3S metrics. No selector
+apiVersion: v1
+kind: Service
+metadata:
+  name: k3s-metrics-service
+  labels:
+    app: k3s-metrics
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 10249
+    protocol: TCP
+    targetPort: 10249
+  type: ClusterIP
 
-  ---
-  # Endpoint for the headless service without selector
-  apiVersion: v1
-  kind: Endpoints
-  metadata:
-    name: k3s-metrics-service
-    namespace: kube-system
-  subsets:
-  - addresses:
-    - ip: 10.0.0.11
-    ports:
-    - name: http-metrics
-      port: 10249
-      protocol: TCP
-  ```
+---
+# Endpoint for the headless service without selector
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: k3s-metrics-service
+  namespace: kube-system
+subsets:
+- addresses:
+  - ip: 10.0.0.11
+  ports:
+  - name: http-metrics
+    port: 10249
+    protocol: TCP
+
+```
 
 - Create manifest file for defining the service monitor resource for let Prometheus discover this target
 
