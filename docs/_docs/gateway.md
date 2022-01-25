@@ -71,9 +71,8 @@ The installation procedure followed is the described [here](./installing_ubuntu.
 | Storage Architeture| User data    | Network configuration |
 |--------------------| ------------- |-------------|
 |  Dedicated Disks |[user-data](../cloud-init-ubuntu-images/dedicated_disks/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/dedicated_disks/gateway/network-config)|
-| Centralized SAN | [user-data](../cloud-init-ubuntu-images/centralized_san/gateway/user-data) | 
-[network-config](../cloud-init-ubuntu-images/centralized_san/gateway/network-config)|
-
+| Centralized SAN | [user-data](../cloud-init-ubuntu-images/centralized_san/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/centralized_san/gateway/network-config) |
+{: .table }
 
 ## Ubuntu OS Initital Configuration
 

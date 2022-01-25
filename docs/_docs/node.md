@@ -56,6 +56,7 @@ Follow the procedure indicated [here](./installing_ubuntu.md) using cloud-init c
 |-----------| ------- |-------|-------|--------|
 | Dedicated Disks | [user-data](../cloud-init-ubuntu-images/dedicated_disks/node1/user-data) | [user-data](../cloud-init-ubuntu-images/dedicated_disks/node2/user-data)| [user-data](../cloud-init-ubuntu-images/dedicated_disks/node3/user-data) | [user-data](../cloud-init-ubuntu-images/dedicated_disks/node4/user-data) |
 | Centralized SAN | [user-data](../cloud-init-ubuntu-images/centralized_san/node1/user-data) | [user-data](../cloud-init-ubuntu-images/centralized_san/node2/user-data)| [user-data](../cloud-init-ubuntu-images/centralized_san/node3/user-data) | [user-data](../cloud-init-ubuntu-images/centralized_san/node4/user-data) |
+{: .table }
 
 ## Ubuntu OS Initital Configuration
 
