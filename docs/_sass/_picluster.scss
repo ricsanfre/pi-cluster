@@ -44,6 +44,10 @@ html {
   background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
   overflow-y: scroll;
 
+  nav {
+    font-size:.875rem;
+  }
+
   .btn-toggle {
     display: inline-flex;
     align-items: center;
@@ -52,6 +56,7 @@ html {
     color: rgba(255, 255, 255, 0.5);
     background-color: transparent;
     border: 0;
+    font-size: 0.875rem;
   }
   .btn-toggle:hover,
   .btn-toggle:focus {
