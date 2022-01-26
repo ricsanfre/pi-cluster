@@ -5,7 +5,7 @@ redirect_from: /docs/k3s_networking.md
 ---
 
 
-> **NOTE**: Basic kubernetes networking concepts and useful references can be found [here](./k8s_networking_basics.md) 
+> **NOTE**: Basic kubernetes networking concepts and useful references can be found [here](/docs/k8s_networking/) 
 
 ## K3S networking default add-ons
 

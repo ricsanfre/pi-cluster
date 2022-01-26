@@ -66,19 +66,19 @@ This command:
 
 ## Unbuntu boot from USB
 
-The installation procedure followed is the described [here](./installing_ubuntu.md) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
+The installation procedure followed is the described [here](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
 
 | Storage Architeture| User data    | Network configuration |
 |--------------------| ------------- |-------------|
-|  Dedicated Disks |[user-data](../cloud-init-ubuntu-images/dedicated_disks/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/dedicated_disks/gateway/network-config)|
-| Centralized SAN | [user-data](../cloud-init-ubuntu-images/centralized_san/gateway/user-data) | [network-config](../cloud-init-ubuntu-images/centralized_san/gateway/network-config) |
+|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config)|
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config) |
 {: .table }
 
 ## Ubuntu OS Initital Configuration
 
 After booting from the USB3.0 external storage for the first time, the Raspberry Pi will have SSH connectivity and it will be ready to be automatically configured from the ansible control node `pimaster`.
 
-Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions [here](./basic_os_configuration.md).
+Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions [here](/docs/os_basic/).
 
 For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
@@ -348,7 +348,7 @@ As a modular example:
 
 ### Configuring Ansible Role
 
-nftables default rules establish by the role can be updated by changing roles variables for `gateway` host (see `gateway` host variables in [`host_vars\gateway.yml`](../ansible/host_vars/gateway.yml) file)
+nftables default rules establish by the role can be updated by changing roles variables for `gateway` host (see `gateway` host variables in [`host_vars\gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) file)
 
 The rules configured for `gateway` allow incoming traffic (icmp, http, https, iscsi, ssh, dns, dhcp, ntp and snmp) and forward http, https, ssh, dns and ntp traffic.
 
@@ -467,7 +467,7 @@ host-record=s3.picluster.ricsanfre.com,10.0.0.11
 
 ### Configuring Ansible Role
 
-DHCP static IP leases and DNS records are taken automatically from ansible inventory file for those hosts with `ip`, `hostname` and `mac` variables are defined. See [`inventory.yml`](../ansible/inventory.yml) file.
+DHCP static IP leases and DNS records are taken automatically from ansible inventory file for those hosts with `ip`, `hostname` and `mac` variables are defined. See [`inventory.yml`]({{ site.git_edit_address }}/inventory.yml) file.
 
 ```yml
 ...
@@ -488,7 +488,7 @@ DHCP static IP leases and DNS records are taken automatically from ansible inven
 
 Additional DHCP static IP leases and DNS records can be added using `dnsmasq_additional_dhcp_hosts` and `dnsmasq_additional_dns_hosts` role variables.
 
-DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`host_vars\gateway.yml`](../ansible/host_vars/gateway.yml) file.
+DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`host_vars\gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) file.
 
 ### Commands
 
@@ -614,8 +614,8 @@ Check time synchronization with Chronyc
 
 iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
 
-Specific `gateway` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_target.yml`](../ansible/vars/centralized_san/centralized_san_target.yml)
+Specific `gateway` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml)
 
-Further details about iSCSI configurations and step-by-step manual instructions are defined [here](./san_installation.md).
+Further details about iSCSI configurations and step-by-step manual instructions are defined [here](/docs/san/).
 
 `gateway` exposes a dedicated LUN of 100 GB for each of the clusters nodes.

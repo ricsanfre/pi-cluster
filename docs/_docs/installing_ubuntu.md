@@ -114,7 +114,7 @@ Repeat the steps for flashing Ubuntu image, but selecting the USB Flash Drive in
 
 ### Step 2. Boot the Raspberry Pi with Raspi OS Lite
 
-The SDCard burnt in [preparing Raspberry Pi](preparing_raspberrypi.md) section, can be used for booting the RaspberryPI.
+The SDCard burnt in [preparing Raspberry Pi](/docs/firmware/) section, can be used for booting the RaspberryPI.
 
 ### Step 3. Plug in the USB Flash Disk/SSD Disk using USB 3.0 port in Raspberry Pi 
 

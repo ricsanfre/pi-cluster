@@ -6,7 +6,7 @@
   - architecture
   - hardware
   - pimaster
-- title: Nodes installation
+- title: Cluster Nodes
   docs:
   - firmware
   - ubuntu
@@ -28,6 +28,9 @@
 - title: Cluster Backup
   docs:
   - backup
+- title: Ansible
+  docs:
+  - ansible
 - title: Reference Docs
   docs:
   - k8s_networking
