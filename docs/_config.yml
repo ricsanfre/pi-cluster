@@ -14,13 +14,13 @@ matoma:
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
 git_address: https://github.com/ricsanfre/pi-cluster
-git_edit_address: https://github.com/ricsanfre/pi-cluster/blob/gh-pages
+git_edit_address: https://github.com/ricsanfre/pi-cluster/master
 
 # remote_theme: aksakalli/jekyll-doc-theme@gh-pages
 
 # theme options from https://bootswatch.com/3/
 # comment out this to use default Bootstrap
-bootwatch: materia # cerulean cosmo custom cyborg darkly flatly journal lumen readable sandstone simplex slate solar spacelab superhero united yeti
+bootwatch: cyborg # cerulean cosmo custom cyborg darkly flatly journal lumen readable sandstone simplex slate solar spacelab superhero united yeti
 
 # Build settings
 markdown: kramdown

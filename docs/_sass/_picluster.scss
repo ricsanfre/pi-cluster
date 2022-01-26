@@ -31,8 +31,8 @@ html {
   width: 100%;    
   padding-top: 1rem;
   padding-bottom: 1rem;
-  --bs-bg-opacity: 0.9;
-  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+  // --bs-bg-opacity: 0.9;
+  // background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
   color: $dark;
 }
 
@@ -40,8 +40,8 @@ html {
 .docs-nav {
   position: relative;
   height: calc(100vh - 7rem);
-  --bs-bg-opacity: 0.9;
-  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+  // --bs-bg-opacity: 0.9;
+  // background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
   overflow-y: scroll;
 
   nav {
@@ -120,8 +120,8 @@ html {
   position: relative;
   height: calc(100vh - 7rem);
   overflow-y: scroll;
-  --bs-bg-opacity: 0.9;
-  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+  //--bs-bg-opacity: 0.9;
+  //background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
 
   nav {
     font-size:.875rem;
