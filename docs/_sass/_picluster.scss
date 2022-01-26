@@ -176,8 +176,23 @@ html {
 .docs-content, .docs-nav , .docs-toc {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+  // Syntax higlight
   .highlight {
-    background: #222222
+    background: #222222;
+    pre {
+      padding: 12px 12px 12px 12px;
+    }
+  }
+  // Code
+  code {
+    background-color: #222222;
+    border-radius: 0.1rem;
+    color: white;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    font-size: .85em;
+    padding: 0 0.2941176471em;
+    word-break: break-word;
   }
 }
 
@@ -192,8 +207,9 @@ html {
   }
 }
 
-.highlight {
-  pre {
-    padding: 12px 12px 12px 12px;
-  }
+// Change colour of alert-info
+.alert-info {
+  color: #ffffff;
+  background-color: #2a9fd6;
+  border-color: #2180ac;
 }
