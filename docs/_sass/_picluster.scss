@@ -176,6 +176,9 @@ html {
 .docs-content, .docs-nav , .docs-toc {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+  .highlight {
+    background: #222222
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -186,5 +189,11 @@ html {
 .offcanvas {
   .btn {
     color: white;
+  }
+}
+
+.highlight {
+  pre {
+    padding: 12px 12px 12px 12px;
   }
 }
