@@ -12,7 +12,7 @@ EFK stack will be deployed as centralized logging solution for the K3S cluster.
 ![K3S-EFK-Architecture](/assets/img/efk_logging_architecture.png)
 
 
-## ARM architecture and Kubernetes deployment support
+## ARM/Kubernetes support
 
 In June 2020, Elastic announced (https://www.elastic.co/blog/elasticsearch-on-arm) that starting from 7.8 release they will provide multi-architecture docker images supporting AMD64 and ARM64 architectures.
 
@@ -34,106 +34,117 @@ Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routin
 - **Fluentd** is a CNCF project
 
 
-# EFK Installation
+## EFK Installation
 
-## ELK Operator installation
+### ELK Operator installation
 
 - Step 1: Add the Elastic repository:
-    ```
-    helm repo add elastic https://helm.elastic.co
-    ```
+  ```shell
+  helm repo add elastic https://helm.elastic.co
+  ```
 - Step2: Fetch the latest charts from the repository:
-    ```
-    helm repo update
-    ```
+  ```
+  helm repo update
+  ```
 - Step 3: Create namespace
-    ```
-    kubectl create namespace elastic-system
-    ```
+  ```
+  kubectl create namespace elastic-system
+  ```
 - Step 3: Install Longhorn in the elastic-system namespace
-    ```
-    helm install elastic-operator elastic/eck-operator --namespace elastic-system
-    ```
+  ```
+  helm install elastic-operator elastic/eck-operator --namespace elastic-system
+  ```
 - Step 4: Monitor operator logs:
-    ```
-    kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
-    ```
+  ```
+  kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
+  ```
 
-## Elasticsearch installation
+### Elasticsearch installation
 
 Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-deploy-elasticsearch.html)
 
-- Step 1: Create a manifest file containing basic configuration: one node elasticsearch using Longhorn as storageClass and 5GB of storage in the volume claims.
+- Step 1: Create a manifest file containing basic configuration: one node elasticsearch using Longhorn as   storageClass and 5GB of storage in the volume claims.
+  
+  ```yml
+  apiVersion: elasticsearch.k8s.elastic.co/v1
+  kind: Elasticsearch
+  metadata:
+    name: efk
+    namespace: k3s-logging
+  spec:
+    version: 7.15.0
+    nodeSets:
+    - name: default
+      count: 1    # One node elastic search cluster
+      config:
+        node.store.allow_mmap: false # Disable memory mapping: Note(1)
+      volumeClaimTemplates: # Specify Longhorn as storge class and 5GB of storage: Note(2)
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: longhorn
+    http:    # Making elasticsearch service available from outisde the cluster: Note(3)
+      service:
+        spec:
+          type: LoadBalancer
+          loadBalancerIP: 10.0.0.101
+      tls: # Configuring self-signed certificate with DNS and static IP address: Note(4)
+        selfSignedCertificate:
+          subjectAltNames:
+          - ip: 10.0.0.101
+          - dns: elasticsearch.picluster.ricsanfre.com
+  ```
+  
+  {{site.data.alerts.note}} **(1) About Memory mapping configuration**
 
-```yml
-apiVersion: elasticsearch.k8s.elastic.co/v1
-kind: Elasticsearch
-metadata:
-  name: efk
-  namespace: k3s-logging
-spec:
-  version: 7.15.0
-  nodeSets:
-  - name: default
-    count: 1    # One node elastic search cluster
-    config:
-      node.store.allow_mmap: false # Disable memory mapping: NOTE1
-    volumeClaimTemplates: # Specify Longhorn as storge class and 5GB of storage
-    - metadata:
-        name: elasticsearch-data
-      spec:
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5Gi
-        storageClassName: longhorn
-  http:    # Making elasticsearch service available from outisde the cluster: NOTE 3
-    service:
-      spec:
-        type: LoadBalancer
-        loadBalancerIP: 10.0.0.101
-    tls: # Configuring self-signed certificate with DNS and static IP address: NOTE 4
-      selfSignedCertificate:
-        subjectAltNames:
-        - ip: 10.0.0.101
-        - dns: elasticsearch.picluster.ricsanfre.com
-```
+  By default, Elasticsearch uses memory mapping (`mmap`) to efficiently access indices. To disable this default mechanism add the following configuration option:
+  ```yml
+  node.store.allow_nmap: false
+  ```
+  Usually, default values for virtual address space on Linux distributions are too low for Elasticsearch to work properly, which may result in out-of-memory exceptions. This is why `mmap` is disable.
+
+  For production workloads, it is strongly recommended to increase the kernel setting `vm.max_map_count` to 262144 and leave `node.store.allow_mmap` unset.
+
+  See further details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
+  {{site.data.alerts.end}}
+
+  {{site.data.alerts.note}} **(2): About Persistent Storage**
+
+  See how to configure PersistenVolumeTemplates for Elasticsearh using this operator [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
+  {{site.data.alerts.end}}
+
+  {{site.data.alerts.note}} **(3): About accesing ELK services from outside the cluster**
+
+  By default ELK services (elasticsearch, kibana, etc) are accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster they can be configured as `LoadBalancer` service type and specifying a static IP address (`loadBalancerIP`) for the service from the Metal LB pool.
+  This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` service can be configured to send logs to the elasticsearch running in the cluster).
+
+  More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-services.html)
+  {{site.data.alerts.end}}
+
+  {{site.data.alerts.note}} **(4): TLS self-signed certificate**
+
+  Self-signed certificate will be created for elasticsearch, SANS (Service Alternative Names) can be added to the TLS certificate. More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-transport-settings.html)
+  {{site.data.alerts.end}}
 
 - Step 2: Apply manifest
-
-    kubectl apply -f manifest.yml
-
+  ```
+  kubectl apply -f manifest.yml
+  ```
 - Step 3: Check Services and Pods
+  ```
+  kubectl get services -n k3s-logging
+  NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+  efk-es-transport   ClusterIP      None            <none>        9300/TCP         3h2m
+  efk-es-default     ClusterIP      None            <none>        9200/TCP         3h2m
+  efk-es-http        LoadBalancer   10.43.186.20    10.0.0.102    9200:30079/TCP   147m
+  ```
 
-```
-kubectl get services -n k3s-logging
-NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-efk-es-transport   ClusterIP      None            <none>        9300/TCP         3h2m
-efk-es-default     ClusterIP      None            <none>        9200/TCP         3h2m
-efk-es-http        LoadBalancer   10.43.186.20    10.0.0.102    9200:30079/TCP   147m
-```
-
-> **NOTE 1: About Memory mapping configuration**<br>
-By default, Elasticsearch uses memory mapping (mmap) to efficiently access indices ( `node.store.allow_nmap: false` option disable this default mechanism. <br>
-Usually, default values for virtual address space on Linux distributions are too low for Elasticsearch to work properly, which may result in out-of-memory exceptions. This is why mmap is disable. <br>
-For production workloads, it is strongly recommended to increase the kernel setting vm.max_map_count to 262144 and leave node.store.allow_mmap unset. See details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
-
-> **NOTE 2: About Persistent Storage**<br>
-See how to configure PersistenVolumeTemplates for Elasticsearh using this operator [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
-
-> **NOTE 3: About accesing ELK services from outside the cluster**<br>
-
-By default ELK services (elasticsearch, kibana, etc) are accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster they can be configured as `LoadBalancer` service type and specifying a static IP address (`loadBalancerIP`) for the service from the Metal LB pool.
-This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` service can be configured to send logs to the elasticsearch running in the cluster).
-
-More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-services.html)
-
-> **NOTE 4: TLS self-signed certificate**<br>
-
-Self-signed certificate will be created for elasticsearch, SANS (Service Alternative Names) can be added to the TLS certificate. More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-transport-settings.html)
-
-## Elasticsearch authentication
+### Elasticsearch authentication
 
 By default ECK configures secured communications with auto-signed SSL certificates. Access to its API on port 9200 is only available through https and user authentication is required to allow the connection. ECK defines a `elastic` user and stores its credentials within a kubernetes Secret.
 
@@ -146,7 +157,6 @@ kubectl get secret -n k3s-logging efk-es-elastic-user -o=jsonpath='{.data.elasti
 
 Setting the password to a well known value is not an officially supported feature by ECK but a workaround exists by creating the {clusterName}-es-elastic-user Secret before creating the Elasticsearch resource with the ECK operator.
 
-
 ```yml
 apiVersion: v1
 kind: Secret
@@ -158,75 +168,71 @@ data:
   elastic: "{{ efk_elasticsearch_passwd | b64encode }}"
 ```
 
-
-## Kibana installation
+### Kibana installation
 
 - Step 1. Create a manifest file
-
-```yml
-apiVersion: kibana.k8s.elastic.co/v1
-kind: Kibana
-metadata:
-  name: kibana
-  namespace: k3s-logging
-spec:
-  version: 7.15.0
-  count: 2 # Elastic Search statefulset deployment with two replicas
-  elasticsearchRef:
-    name: "elasticsearch"
-  http:  # NOTE disabling selfSigned certificate
-    tls:
-      selfSignedCertificate:
-        disabled: true
-```
-
+  
+  ```yml
+  apiVersion: kibana.k8s.elastic.co/v1
+  kind: Kibana
+  metadata:
+    name: kibana
+    namespace: k3s-logging
+  spec:
+    version: 7.15.0
+    count: 2 # Elastic Search statefulset deployment with two replicas
+    elasticsearchRef:
+      name: "elasticsearch"
+    http:  # NOTE disabling selfSigned certificate
+      tls:
+        selfSignedCertificate:
+          disabled: true
+  ```
 - Step 2: Apply manifest
-
-    kubectl apply -f manifest.yml
-
+  ```
+  kubectl apply -f manifest.yml
+  ```
 - Step 3: Check kibana POD and services
+  ```
+  kubectl get services -n k3s-logging
+  NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+  efk-kb-http              LoadBalancer   10.43.242.252   10.0.0.101    5601:31779/TCP   3h2m
+  ```
 
-
-```
-kubectl get services -n k3s-logging
-NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-efk-kb-http              LoadBalancer   10.43.242.252   10.0.0.101    5601:31779/TCP   3h2m
-```
-
-### Ingress rule for Traefik
+#### Ingress rule for Traefik
 
 Make accesible Kibana UI from outside the cluster through Ingress Controller
 
 - Step 1. Create the ingress rule manifest
-```yml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: kibana-ingress
-  namespace: k3s-logging
-  annotations:
-    kubernetes.io/ingress.class: traefik
-spec:
-  rules:
-  - host: kibana.picluster.ricsanfre.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "efk-kb-http"
-            port:
-              number: 5601
-```
+  
+  ```yml
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: kibana-ingress
+    namespace: k3s-logging
+    annotations:
+      kubernetes.io/ingress.class: traefik
+  spec:
+    rules:
+    - host: kibana.picluster.ricsanfre.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: "efk-kb-http"
+              port:
+                number: 5601
+  ```
 - Step 2: Apply manifest
-
-    kubectl apply -f manifest.yml
-
+  ```
+  kubectl apply -f manifest.yml
+  ```
 - Step 3. Access to Kibana UI
 
-UI can be access through http://kibana.picluster.ricsanfre.com.
-Using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`
+  UI can be access through http://kibana.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
 
 ## Collecting Kuberentes logs with Fluentbit/Fluentd
 
@@ -249,14 +255,19 @@ To learn more about this logging architecture, consult [“Using a node logging 
 
 In addition to container logs, the Fluentd/Fluentbit agent can collect and parse Kubernetes system component logs like kubelet, kube-proxy, systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
 
-> NOTE: Ubuntu system logs stored in `/var/logs` (auth.log, systlog, kern.log), have a syslog format without priority field, and the timestamp is using local time.
 
-    <time_stamp> <host> <process>[<PID>] <message>
+{{site.data.alerts.note}}: Ubuntu system logs stored in `/var/logs` (auth.log, systlog, kern.log), have a syslog format without priority field, and the timestamp is formatted using system local time.
+
+The syslog format is the following:
+
+```
+<time_stamp> <host> <process>[<PID>] <message>
 Where:
   - <time_stamp> has the format `%b %d %H:%M:%S`: local date and time not including timezone UTC offset
   - <host>: hostanme
   - <process> and <PID> identifies the process generating the log
-
+```
+{{site.data.alerts.end}}
 
 ### Fluent-bit installation
 
