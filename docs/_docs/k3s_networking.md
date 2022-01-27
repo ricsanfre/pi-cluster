@@ -4,8 +4,9 @@ permalink: /docs/k3s_networking/
 redirect_from: /docs/k3s_networking.md
 ---
 
-
-> **NOTE**: Basic kubernetes networking concepts and useful references can be found [here](/docs/k8s_networking/) 
+{{site.data.alerts.note}}
+Basic kubernetes networking concepts and useful references can be found [here](/docs/k8s_networking/) 
+{{site.data.alerts.end}}
 
 ## K3S networking default add-ons
 
@@ -16,7 +17,6 @@ By default K3s install and configure basic Kubernetes networking packages:
 - [Traefik](https://traefik.io/) as ingress controller
 - [Klipper Load Balancer](https://github.com/k3s-io/klipper-lb) as embedded Service Load Balancer
 
-
 ## Flannel as CNI
 
 K3S run by default with flannel as the CNI, using VXLAN as the default backend. Flannel is running as backend `go` routine within k3s unique process
@@ -25,19 +25,18 @@ k3s server installation options can be provided in order to configure Network CI
 
 | k3s server option | default value | Description |
 | ----- | ---- |---- |
-| --cluster-cidr value | “10.42.0.0/16” | Network CIDR to use for pod IPs
-| --service-cidr value | “10.43.0.0/16” | Network CIDR to use for services IPs
-| --flannel-backend value | “vxlan” | ‘none’ to disable or ‘vxlan’, ‘ipsec’, ‘host-gw’, or ‘wireguard’
+| `--cluster-cidr value` | “10.42.0.0/16” | Network CIDR to use for pod IPs
+| `--service-cidr value` | “10.43.0.0/16” | Network CIDR to use for services IPs
+| `--flannel-backend value` | “vxlan” | ‘none’ to disable or ‘vxlan’, ‘ipsec’, ‘host-gw’, or ‘wireguard’
 {: .table }
 
 By default, flannel will have a 10.42.X.0/24 subnet allocated to each node (X=0, 1, 2, 3, etc.), K3S Pod will use IP address from subnet's address space.
-
 
 When Flannel is running it creates the following interfaces in eah node:
 
 - a network device `flannel.1` as VTEP (VXLAN Tunnel End Point) device.
 
-    ```sh
+    ```shell
     oss@node1:~$ ip -d addr show flannel.1
     4: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default
         link/ether 5e:08:1d:56:15:e3 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 68 maxmtu 65535
@@ -48,7 +47,7 @@ When Flannel is running it creates the following interfaces in eah node:
     ```
 - and a bridge interface `cni0` with ip address 10.42.X.1/24
 
-    ```sh
+    ```shell
     oss@node1:~$ ip -d addr show cni0
     5: cni0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default qlen 1000
         link/ether 72:0e:b2:60:e6:23 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 68 maxmtu 65535
@@ -69,8 +68,8 @@ k3s server installation options can be provided in order to configure coreDNS
 
 | k3s server option | default value | Description |
 | ----- | ---- |---- |
-| --cluster-dns value | “10.43.0.10”	| Cluster IP for coredns service. Should be in your service-cidr range
-| --cluster-domain value | “cluster.local” | Cluster Domain
+| `--cluster-dns value` | “10.43.0.10”	| Cluster IP for coredns service. Should be in your service-cidr range
+| `--cluster-domain value` | “cluster.local” | Cluster Domain
 {: .table }
 
 ## Traefik as Ingress Controller
@@ -85,7 +84,7 @@ In order to use Metal LB, K3S embedded Klipper Load Balancer must be disabled: K
 
 K3S fresh installation (disabling embedded service load balanced) the following pods and services are started by default:
 
-```
+```shell
 kubectl get pods --all-namespaces
 NAMESPACE     NAME                                      READY   STATUS      RESTARTS   AGE
 kube-system   metrics-server-86cbb8457f-k52mz           1/1     Running     0          7m45s
@@ -140,17 +139,23 @@ MetalLB respects the Kubernetes service `spec.loadBalancerIP` parameter, so if a
 Installation using `Helm` (Release 3):
 
 - Step 1: Add the Metal LB Helm repository:
-    ```
+  
+    ```shell
     helm repo add metallb https://metallb.github.io/metallb
     ```
+
 - Step 2: Fetch the latest charts from the repository:
-    ```
+
+    ```shell
     helm repo update
     ```
+
 - Step 3: Create namespace
-    ```
+
+    ```shell
     kubectl create namespace metallb-system
     ```
+
 - Step 4. Create `values.yml` for configuring the installation. Metallb protocol specification and external ip address pool allocation
 
     ```yml
@@ -163,22 +168,22 @@ Installation using `Helm` (Release 3):
     ```
 
 - Step 5: Install Metallb in the metallb-system namespace.
-    ```
+
+    ```shell
     helm install metallb metallb/metallb --namespace metallb-system -f values.yml
     ```
 - Step 6: Confirm that the deployment succeeded, run:
-    ```
+
+    ```shell
     kubectl -n metallb-system get pod
     ```
+    After a while, metallb is deployed and traefik LoadBalancer service gets its externa-ip from the configured pool and is accessible from outside the cluster
 
-
-After a while, metallb is deployed and traefik LoadBalancer service gets its externa-ip from the configured pool and is accessible from outside the cluster
-
-```
-kubectl get services --all-namespaces
-NAMESPACE     NAME             TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
-default       kubernetes       ClusterIP      10.43.0.1       <none>        443/TCP                      63m
-kube-system   kube-dns         ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       63m
-kube-system   metrics-server   ClusterIP      10.43.169.140   <none>        443/TCP                      63m
-kube-system   traefik          LoadBalancer   10.43.50.56     10.0.0.100    80:30582/TCP,443:30123/TCP   60m
-```
+    ```shell
+    kubectl get services --all-namespaces
+    NAMESPACE     NAME             TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+    default       kubernetes       ClusterIP      10.43.0.1       <none>        443/TCP                      63m
+    kube-system   kube-dns         ClusterIP      10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP       63m
+    kube-system   metrics-server   ClusterIP      10.43.169.140   <none>        443/TCP                      63m
+    kube-system   traefik          LoadBalancer   10.43.50.56     10.0.0.100    80:30582/TCP,443:30123/TCP   60m
+    ```

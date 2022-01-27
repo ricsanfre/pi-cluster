@@ -15,14 +15,15 @@ All externally exposed frontends deployed on the Kubernetes cluster should be SS
 
 ### Enabling TLS in Ingress resources
 
-As stated in Kuberentes (documentation)(https://kubernetes.io/docs/concepts/services-networking/ingress/#tls) Ingress access can be secured using TLS by specifying a Secret that contains a TLS private key and certificate. The Ingress resource only supports a single TLS port, 443, and assumes TLS termination at the ingress point (traffic to the Service and its Pods is in plaintext).
+As stated in [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls), Ingress access can be secured using TLS by specifying a `Secret` that contains a TLS private key and certificate. The Ingress resource only supports a single TLS port, 443, and assumes TLS termination at the ingress point (traffic to the Service and its Pods is in plaintext).
 
-Traefik (documentation)[documentation](https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress/), defines several Ingress resource annotations that can be used to tune the behavioir of Traefik when implementing a Ingress rule.
+[Traefik documentation](https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress/), defines several Ingress resource annotations that can be used to tune the behavioir of Traefik when implementing a Ingress rule.
 
 Traefik can be used to terminate SSL connections, serving internal not secure services by using the following annotations:
 - `traefik.ingress.kubernetes.io/router.tls: "true"` makes Traefik to end TLS connections
 - `traefik.ingress.kubernetes.io/router.entrypoints: websecure` 
-With this annotations Traefik will ignore HTTP (non TLS) requests. Traefik will terminate the SSL connections. Depending on protocol (HTTP or HTTPS) used by the backend service, Traefik will send decrypted data to an HTTP pod service or encrypted with SSL using the SSL certificate exposed by the service.
+
+With these annotations, Traefik will ignore HTTP (non TLS) requests. Traefik will terminate the SSL connections. Depending on protocol (HTTP or HTTPS) used by the backend service, Traefik will send decrypted data to an HTTP pod service or encrypted with SSL using the SSL certificate exposed by the service.
 
 ```yml
 apiVersion: networking.k8s.io/v1
@@ -57,7 +58,6 @@ spec:
                 name:  whoami
                 port:
                   number: 80
-
 ```
 
 SSL certificates can be created manually and stored in Kubernetes `Secrets`. This manual step can be avoided using Cert-manager.
@@ -130,7 +130,7 @@ spec:
 
 In case that the backend does not provide authentication/autherization functionality (i.e: longhorn ui), Traefik can be configured to provide HTTP authentication mechanism (basic authentication, digest and forward authentication).
 
-Traefik's [Basic Auth Middleware](https://doc.traefik.io/traefik/middlewares/http/basicauth/) for providing basic auth HTTP authentication.
+Traefik's [Basic Auth Middleware](https://doc.traefik.io/traefik/middlewares/http/basicauth/) can be used for providing basic auth HTTP authentication.
 
 ### Configuring Secret for basic Authentication
 
@@ -152,19 +152,21 @@ data:
 
 `data` field within the Secret resouce contains just a field `users`, which is an array of authorized users. Each user must be declared using the `name:hashed-password` format. Additionally all data included in Secret resource must be base64 encoded.
 
-For more details see Traefik [documentation](https://doc.traefik.io/traefik/middlewares/http/basicauth/).
+For more details see [Traefik documentation](https://doc.traefik.io/traefik/middlewares/http/basicauth/).
 
 User:hashed-passwords pairs can be generated with `htpasswd` utility. The command to execute is:
 
-    htpasswd -nb <user> <passwd> | base64
+```shell
+htpasswd -nb <user> <passwd> | base64
+```
 
 The result encoded string is the one that should be included in `users` field.
 
 `htpasswd` utility is part of `apache2-utils` package. In order to execute the command it can be installed with the command: `sudo apt install apache2-utils`
 
-As an alternative, docker image can be used and the command to generate the user:hashed-password pairs is:
+As an alternative, docker image can be used and the command to generate the `user:hashed-password` pairs is:
       
-```  
+```shell
 docker run --rm -it --entrypoint /usr/local/apache2/bin/htpasswd httpd:alpine -nb user password | base64
 ```
 For example user:pass pair (oss/s1cret0) will generate a Secret file:
@@ -179,7 +181,7 @@ data:
   users: |2
     b3NzOiRhcHIxJDNlZTVURy83JFpmY1NRQlV6SFpIMFZTak9NZGJ5UDANCg0K
 ```
-### Middleware configureation
+### Middleware configuration
 
 A Traefik Middleware resource must be configured referencing the Secret resource previously created
 
@@ -231,8 +233,9 @@ spec:
 
 ```
 
+## Monitoring Traefik
 
-## Enabling Traefik dashboard and Prometheus Metrics
+Follow this procedure to enable Traefik dashboard and metrics monitoring with Prometheus.
 
 ### Enabling Prometheus metrics
 
@@ -244,133 +247,136 @@ additionalArguments:
 ```
 This configuration makes the traefik pod to open its metric port at TCP port 9100
 
+{{site.data.alerts.important}}
+Since Traefik helm deployment is managed directly by K3S, a specific K3S procedure need to be followed to change the configuration of the Helm chart. See section [below](#traefik-helmchart-configuration).
+{{site.data.alerts.end}}
+
 ### Creating Traefik-metric Service
 
 A Kuberentes Service must be created for enabling the access to Prometheus metrics
 
 - Create Manfifest file for the dashboard service
-
-```yml
-apiVersion: v1
-kind: Service
-metadata:
-  name: traefik-metrics
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/instance: traefik
-    app.kubernetes.io/name: traefik-metrics
-spec:
-  type: ClusterIP
-  ports:
-    - name: metrics
-      port: 9100
-      targetPort: metrics
-      protocol: TCP
-  selector:
-    app.kubernetes.io/instance: traefik
-    app.kubernetes.io/name: traefik
-```
+  
+  ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: traefik-metrics
+    namespace: kube-system
+    labels:
+      app.kubernetes.io/instance: traefik
+      app.kubernetes.io/name: traefik-metrics
+  spec:
+    type: ClusterIP
+    ports:
+      - name: metrics
+        port: 9100
+        targetPort: metrics
+        protocol: TCP
+    selector:
+      app.kubernetes.io/instance: traefik
+      app.kubernetes.io/name: traefik
+  ```
 - Apply manifest files
 
 - Check metrics end-point is available
 
+  ```shell
   curl http://<traefik-dashboard-service>:9100/metrics
+  ```
 
 ### Creating Traefik-Dashboard Service
 
 A Kuberentes Service must be created for enabling the access to UI Dashboard
 
 - Create Manfifest file for the dashboard service
-
-```yml
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: traefik-dashboard
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/instance: traefik
-    app.kubernetes.io/name: traefik-dashboard
-spec:
-  type: ClusterIP
-  ports:
-    - name: traefik
-      port: 9000
-      targetPort: traefik
-      protocol: TCP
-  selector:
-    app.kubernetes.io/instance: traefik
-    app.kubernetes.io/name: traefik
-```
+  
+  ```yml
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: traefik-dashboard
+    namespace: kube-system
+    labels:
+      app.kubernetes.io/instance: traefik
+      app.kubernetes.io/name: traefik-dashboard
+  spec:
+    type: ClusterIP
+    ports:
+      - name: traefik
+        port: 9000
+        targetPort: traefik
+        protocol: TCP
+    selector:
+      app.kubernetes.io/instance: traefik
+      app.kubernetes.io/name: traefik
+  ```
 
 - Create Ingress rules for accesing through HTTPS dashboard UI, using certifcates automatically created by certmanager and providing a basic authentication mechanism.
-
-```yml
----
-# HTTPS Ingress
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: traefik-ingress
-  namespace: kube-system
-  annotations:
-    # HTTPS as entry point
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # Enable TLS
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
-    # Enable cert-manager to create automatically the SSL certificate and store in Secret
-    cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: traefik
-spec:
-  tls:
-    - hosts:
-        - traefik.picluster.ricsanfre.com
-      secretName: prometheus-tls
-  rules:
-    - host: traefik.picluster.ricsanfre.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: traefik-dashboard
-                port:
-                  number: 9000
-
----
-# http ingress for http->https redirection
-kind: Ingress
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: traefik-redirect
-  namespace: kube-system
-  annotations:
-    # Use redirect Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
-    # HTTP as entrypoint
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-spec:
-  rules:
-    - host: traefik.picluster.ricsanfre.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: traefik-dashboard
-                port:
-                  number: 9000
-
-```
+  
+  ```yml
+  ---
+  # HTTPS Ingress
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: traefik-ingress
+    namespace: kube-system
+    annotations:
+      # HTTPS as entry point
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Enable TLS
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      # Use Basic Auth Midleware configured
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: self-signed-issuer
+      cert-manager.io/common-name: traefik
+  spec:
+    tls:
+      - hosts:
+          - traefik.picluster.ricsanfre.com
+        secretName: prometheus-tls
+    rules:
+      - host: traefik.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: traefik-dashboard
+                  port:
+                    number: 9000
+  ---
+  # http ingress for http->https redirection
+  kind: Ingress
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: traefik-redirect
+    namespace: kube-system
+    annotations:
+      # Use redirect Midleware configured
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      # HTTP as entrypoint
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+  spec:
+    rules:
+      - host: traefik.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: traefik-dashboard
+                  port:
+                    number: 9000
+  ```
 - Apply manifests files
 
-- Acces UI through configured dns: https://traefik.picluster.ricsanfre.com/dashboard/
+- Acces UI through configured dns: `https://traefik.picluster.ricsanfre.com/dashboard/`
 
 ## Assign a static IP address from LoadBalancer pool to Ingress service
 
@@ -381,6 +387,10 @@ service:
   spec:
     loadBalancerIP: 10.0.0.100
 ```
+
+{{site.data.alerts.important}}
+Since Traefik helm deployment is managed directly by K3S, a specific K3S procedure need to be followed to change the configuration of the Helm chart. See section [below](#traefik-helmchart-configuration).
+{{site.data.alerts.end}}
 
 ## Enabling Access log
 
@@ -415,6 +425,11 @@ deployment:
 ```
 
 This configuration enables Traefik access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
+
+{{site.data.alerts.important}}
+Since Traefik helm deployment is managed directly by K3S, a specific K3S procedure need to be followed to change the configuration of the Helm chart. See section [below](#traefik-helmchart-configuration).
+{{site.data.alerts.end}}
+
 
 ## Traefik HelmChart Configuration
 
@@ -459,8 +474,6 @@ Traefik is a K3S embedded components that is auto-deployed using Helm. In order 
 - Copy file `traefik-config.yml` file to `/var/lib/rancher/k3s/server/manifests/` in the master node.
 
   K3S automatically will re-deploy Traefik chart with the configuration changes.
-
-
 
 ## Automating with Ansible
 

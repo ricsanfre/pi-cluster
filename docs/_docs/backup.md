@@ -213,7 +213,7 @@ restic repository info can be passed to `restic` command through environment var
   ```shell
   export $(grep -v '^#' /etc/restic/restic.conf | xargs -d '\n')
   ```  
-  {{site.data.alerts.warning}}
+  {{site.data.alerts.important}}
   This command need to be executed with any new SSH shell connection before executing any `restic` command. As an alternative that command can be added to the bash profile of the user.
   {{site.data.alerts.end}}
 
@@ -358,7 +358,7 @@ See more details in Velero's documentation about [aws plugin](https://github.com
 
 Velero CLI need to be installed joinly with kubectl. `velero` uses kubectl config file (`~/.kube/config`) to connect to Kuberentes API.
 
-{{site.data.alerts.note}} k3s config file is located in `/etc/rancher/k3s/k3s.yaml` and it need to be copied into `$HOME/kube/config` int the server where `kubectl` and `velero` is going to be executed.
+{{site.data.alerts.important}} k3s config file is located in `/etc/rancher/k3s/k3s.yaml` and it need to be copied into `$HOME/kube/config` in the server where `kubectl` and `velero` is going to be executed.
 {{site.data.alerts.end}}
 
 This will be installed in `node1`
@@ -449,10 +449,10 @@ Installation using `Helm` (Release 3):
   ```
 
   {{site.data.alerts.warning}} **(1):**
-  UpgradeCRDs option causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami. Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
+  `upgradeCRDs` set to true causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami. Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
   Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue either.
   {{site.data.alerts.end}}
-  {{site.data.alerts.warning}} **(2):**
+  {{site.data.alerts.important}} **(2):**
   Custom CA certificate must be passed as `caCert` parameter (base64 encoded and removing any '\n' character)
   {{site.data.alerts.end}}
  
@@ -687,7 +687,7 @@ Create kuberentes secret resource containing Minio end-point access information 
   cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
   ```
 
-  {{site.data.alerts.warning}}
+  {{site.data.alerts.important}}
   As the command shows, SSL certificates in the validation chain must be concatenated and `\n` characters from the base64 encoded SSL pem must be removed.
   {{site.data.alerts.end}}
 
@@ -705,7 +705,7 @@ Go to the Longhorn UI. In the top navigation bar, click Settings. In the Backup 
 s3://<bucket-name>@<minio-s3-region>/
 ```
 
-{{site.data.alerts.warning}}
+{{site.data.alerts.important}}
 Make sure that you have `/` at the end, otherwise you will get an error.
 {{site.data.alerts.end}}
 
