@@ -19,6 +19,9 @@ layout: default
             <h1>{{ page.title }}</h1>
             <div id="markdown-content-container">{{ content }}</div>
             <hr>
+            {% if page.comments %}
+            <div id="remark42"></div>
+            {% endif %}
             {% include section_nav.html %}
         </div>
         {% if page.toc == true %}
