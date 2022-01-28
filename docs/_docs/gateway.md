@@ -4,8 +4,6 @@ permalink: /docs/gateway/
 redirect_from: /docs/gateway.md
 ---
 
-# Gateway Configuration
-
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
 It will also provide DNS, NTP and DHCP services to my lab network. In case of deployment using centralized SAN storage architectural option, `gateway` is providing SAN services also.
 
@@ -52,11 +50,15 @@ SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (O
 
 cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
 
-> NOTE: As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/)
+{{site.data.alerts.note}}
+As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/)
+{{site.data.alerts.end}}
 
 Command executed in boot time is
 
-    sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
+```shell
+sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
+```
 
 This command:
   - First convert MBR partition to GPT (-g option)
@@ -86,23 +88,27 @@ For automating all this initial configuration tasks, ansible role **basic_setup*
 
 For automating configuration tasks, ansible role [**ricsanfre.firewall**](https://galaxy.ansible.com/ricsanfre/firewall) has been developed.
 
-### Step 1. Enable IP forwarding
+
+### Enabling IP Forwarding
 
 To convert gateway into a router, Ubuntu need to be configured to enable the forwarding of IP packets.
 This is done by adding to **/etc/sysctl.conf** file:
+```
+net.ipv4.ip_forward=1
+```
 
-    net.ipv4.ip_forward=1
-
-### Step 2. Configure filtering and forwarding rules
+### Configure Filtering and Forwarding rules
 
 This can be done installing `iptables` package and configuring iptables rules.
 
-For example forwarding rules can be configured with the follwing commads:
+For example forwarding rules can be configured with the following commads:
 
-    sudo apt install iptables
-    sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-    sudo iptables -A FORWARD -i wlan0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-    sudo iptables -A FORWARD -i eth0 -o wlan0 -j ACCEPT
+```shell
+sudo apt install iptables
+sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+sudo iptables -A FORWARD -i wlan0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o wlan0 -j ACCEPT
+```
 
 But for configuring router/firewall rules, [**nftables**](https://www.netfilter.org/projects/nftables/) package will be used instead.
 
@@ -114,10 +120,11 @@ In Debian, since 11 release (Buster), `nftables` is the default and recommended 
 
 Package can be installed with apt:
 
-   sudo apt install nftables
+```shell
+sudo apt install nftables
+```
 
 And it can be configured using command line or a configuration file `/etc/nftables.conf`.
-
 
 As a modular example:
 
@@ -154,7 +161,7 @@ As a modular example:
 
   ```
 - Variables  Variables containing the IP address and ports to be used by the rules files
-  
+
   `/etc/nftables.d/defines.nft`
   ```
     # broadcast and multicast
@@ -316,35 +323,23 @@ As a modular example:
   ```
   
 
+{{site.data.alerts.important}} **About iptables rules persistency***
 
-<br>
 
-> ***NOTE: About iptables rules persistency***
->
->
-> iptables rules need to be saved to a file and restore it on startup from the backup file
->
->This can be done with the following commands:
->
->     sudo iptables-save > /etc/iptables/rules.v4
->
->     sudo iptables-restore < /etc/iptables/rules.v4
->
->and its IPv6 vesrions:
->
->     sudo ip6tables-save > /etc/iptables/rules.v6
->
->     sudo ip6tables-restore < /etc/iptables/rules.v6
->
->Init scripts should be configured to automatically load iptables rules on startup.
->
->In Ubuntu and Debian there is a package `iptables-persistent` which takes over the automatic loading of the saved iptables rules
->
->     sudo apt install iptables-persistent # First time
->     sudo dpkg-reconfigure iptables-persistent # Every time rules are changed
->
->In Ubuntu 20.04 applying this procedure is not working any more and it does not make the rules to persit across reboots.
+In Ubuntu for having iptables persistent rules across reboots `iptables-persistent` and `netfilter-persistent` packages need to be installed.
 
+`netfilter-persistent` systemd service is in charge to save the rules during shutdown and load on startup
+
+Rules can be saved on demand using the command:
+
+```shell
+sudo netfilter-persistent save
+```
+Rules are stored in the following location:
+
+`/etc/iptables/rules.v[4-6]`
+
+{{site.data.alerts.end}}
 
 ### Configuring Ansible Role
 
