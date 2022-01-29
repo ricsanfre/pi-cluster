@@ -29,9 +29,7 @@ User-space mode is legacy implementation not in use . Iptables proxy mode is the
 
 In iptables mode, kube-proxy watches the Kubernetes control plane for the addition and removal of Service and Endpoint objects. For each Service, it installs iptables rules, which capture traffic to the Service's clusterIP and port, and redirect that traffic to one of the Service's backend sets. For each Endpoint object, it installs iptables rules which select a backend Pod.
 
-By default, kube-proxy in iptables mode chooses a backend at random
-
-https://github.com/k3s-io/k3s/blob/master/vendor/k8s.io/kubernetes/pkg/proxy/ipvs/README.md
+By default, kube-proxy in iptables mode chooses a backend at random. See more details in [IPVS documentation](https://github.com/kubernetes/kubernetes/blob/master/pkg/proxy/ipvs/README.md)
 
 As a summary:
 
@@ -56,14 +54,14 @@ See detailed information [here](https://kubernetes.io/docs/concepts/services-net
 
 ## Useful references
 
-[1] Desmitifying containers networking https://blog.mbrt.dev/posts/container-network/
+- Desmitifying containers networking [[1]](https://blog.mbrt.dev/posts/container-network/)
 
-[2] Diving Deep into kuberentes networking (Rancher whitepaper) https://more.suse.com/rs/937-DCH-261/images/Diving-Deep-Into-Kubernetes-Networking.pdf
+- Diving Deep into kuberentes networking (Rancher whitepaper) [[2]](https://more.suse.com/rs/937-DCH-261/images/Diving-Deep-Into-Kubernetes-Networking.pdf)
 
-[3] How a Kubernetes Pod Gets an IP Address: https://ronaknathani.com/blog/2020/08/how-a-kubernetes-pod-gets-an-ip-address/
+- How a Kubernetes Pod Gets an IP Address: [[3]](https://ronaknathani.com/blog/2020/08/how-a-kubernetes-pod-gets-an-ip-address/)
 
-[4] CNI github repository: https://github.com/containernetworking/cni
+- CNI github repository: [[4]](https://github.com/containernetworking/cni)
 
-[5] How Flannel works: https://msazure.club/flannel-networking-demystify/
+- How Flannel works: [[5]](https://msazure.club/flannel-networking-demystify/)
 
-[6] How to create overlay networks using linux bridges and vxlans https://ilearnedhowto.wordpress.com/2017/02/16/how-to-create-overlay-networks-using-linux-bridges-and-vxlans/
+- How to create overlay networks using linux bridges and vxlans [[6]](https://ilearnedhowto.wordpress.com/2017/02/16/how-to-create-overlay-networks-using-linux-bridges-and-vxlans/)

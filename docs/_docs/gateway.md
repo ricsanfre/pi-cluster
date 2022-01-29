@@ -323,7 +323,7 @@ As a modular example:
   ```
   
 
-{{site.data.alerts.important}} **About iptables rules persistency***
+{{site.data.alerts.important}} **About iptables rules persistency**
 
 
 In Ubuntu for having iptables persistent rules across reboots `iptables-persistent` and `netfilter-persistent` packages need to be installed.
@@ -348,117 +348,131 @@ nftables default rules establish by the role can be updated by changing roles va
 The rules configured for `gateway` allow incoming traffic (icmp, http, https, iscsi, ssh, dns, dhcp, ntp and snmp) and forward http, https, ssh, dns and ntp traffic.
 
 
-### Configuring static route in my Laptop and VM `pimaster`
+### Configuring static routes to access to cluster from home network
 
 To acess to the cluster nodes from my home network a static route need to be added for using `gateway` as router of my lab network (10.0.0.0/24)
 
+This route need to be added to my Laptop and the VM running `pimaster` node
+
 - Adding static route in my Windows laptop
 
-    Open a command:
+  Open a command:
 
-        ROUTE -P ADD 10.0.0.0 MASK 255.255.255.0 192.168.1.11 METRIC 1
-    
+  ```dos
+  ROUTE -P ADD 10.0.0.0 MASK 255.255.255.0 192.168.1.11 METRIC 1
+  ```
+
 - Adding static route in Linux VM running on my laptop (VirtualBox)
   
-    Modify `/etc/netplan/50-cloud-init.yaml` for adding the static route
+  Modify `/etc/netplan/50-cloud-init.yaml` for adding the static route
     
-    ```yml 
-    network:
-    version: 2
-    ethernets:
-      enp0s3:
-        dhcp4: no
-        addresses: [192.168.56.20/24]
-      enp0s8:
-        dhcp4: yes
-        routes:
-        - to: 10.0.0.0/24
-          via: 192.168.1.11        
-    ```
-     > NOTE: This is `pimaster` VirutalBOX network configuration:
-     >- **Eth0** (enp0s3) connected to VBox **Host-Only adapter** (laptop only connection)
-     >- **Eth1** (enp0s8) connected to VBox **Bridge adapter** (home network connection)
-    
+  ```yml 
+  network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses: [192.168.56.20/24] #Host Only VirtualBox network
+    enp0s8:
+      dhcp4: yes # Home network IP address
+      routes:
+      - to: 10.0.0.0/24 #Cluster Lab Network
+        via: 192.168.1.11 #`gateway` static ip address in home network        
+  ```
+  {{site.data.alerts.note}}
+
+  This is `pimaster` VirutalBOX network configuration:
+  - **Eth0** (enp0s3) connected to VBox **Host-Only adapter** (laptop only connection)
+  - **Eth1** (enp0s8) connected to VBox **Bridge adapter** (home network connection)
+
+  {{site.data.alerts.end}}  
+
 ## DHCP/DNS Configuration
 
-**dnsmasq** will be used as lightweigh DHCP/DNS server
+`dnsmasq` will be used as lightweigh DHCP/DNS server
 For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https://galaxy.ansible.com/ricsanfre/dnsmasq) has been developed.
 
-### Step 1. Install dnsmasq
+- Step 1. Install dnsmasq
 
-    sudo apt install dnsmasq
-	
-### Step 2. Configure dnsmasq
+  ```shell
+  sudo apt install dnsmasq
+	```
 
-Edit file `/etc/dnsmasq.d/dnsmasq.conf`
+- Step 2. Configure dnsmasq
 
-```
-# Our DHCP service will be providing addresses over our eth0 adapter
-interface=eth0
+  Edit file `/etc/dnsmasq.d/dnsmasq.conf`
 
-# We will listen on the static IP address we declared earlier
-listen-address= 10.0.0.1
+  ```
+  # Our DHCP service will be providing addresses over our eth0 adapter
+  interface=eth0
 
-# Pre-allocate a bunch of IPs on the 10.0.0.0/8 network for the Raspberry Pi nodes
-# DHCP will allocate these for 12 hour leases, but will always assign the same IPs to the same Raspberry Pi
-# devices, as you'll populate the MAC addresses below with those of your actual Pi ethernet interfaces
+  # We will listen on the static IP address we declared earlier
+  listen-address= 10.0.0.1
 
-dhcp-range=10.0.0.32,10.0.0.128,12h
+  # Pre-allocate a bunch of IPs on the 10.0.0.0/8 network for the Raspberry Pi nodes
+  # DHCP will allocate these for 12 hour leases, but will always assign the same IPs to the same Raspberry Pi
+  # devices, as you'll populate the MAC addresses below with those of your actual Pi ethernet interfaces
 
-# DNS nameservers
-server=80.58.61.250
-server=80.58.61.254
+  dhcp-range=10.0.0.32,10.0.0.128,12h
 
-# Bind dnsmasq to the interfaces it is listening on (eth0)
-bind-interfaces
+  # DNS nameservers
+  server=80.58.61.250
+  server=80.58.61.254
 
-# Never forward plain names (without a dot or domain part)
-domain-needed
+  # Bind dnsmasq to the interfaces it is listening on (eth0)
+  bind-interfaces
 
-local=/picluster.ricsanfre.com/
+  # Never forward plain names (without a dot or domain part)
+  domain-needed
 
-domain=picluster.ricsanfre.com
+  local=/picluster.ricsanfre.com/
 
-# Never forward addresses in the non-routed address spaces.
-bogus-priv
+  domain=picluster.ricsanfre.com
 
-# Do not use the hosts file on this machine
-# expand-hosts
+  # Never forward addresses in the non-routed address spaces.
+  bogus-priv
 
-# Useful for debugging issues
-# log-queries
-# log-dhcp
+  # Do not use the hosts file on this machine
+  # expand-hosts
 
-# DHCP configuration based on inventory
-dhcp-host=e4:5f:01:28:36:98,10.0.0.1
-dhcp-host=08:00:27:f3:6b:dd,10.0.0.10
-dhcp-host=dc:a6:32:9c:29:b9,10.0.0.11
-dhcp-host=e4:5f:01:2d:fd:19,10.0.0.12
-dhcp-host=e4:5f:01:2f:49:05,10.0.0.13
-dhcp-host=e4:5f:01:2f:54:82,10.0.0.14
+  # Useful for debugging issues
+  # log-queries
+  # log-dhcp
 
-# Adding additional DHCP hosts
-# Ethernet Switch
-dhcp-host=94:a6:7e:7c:c7:69,10.0.0.2
+  # DHCP configuration based on inventory
+  dhcp-host=e4:5f:01:28:36:98,10.0.0.1
+  dhcp-host=08:00:27:f3:6b:dd,10.0.0.10
+  dhcp-host=dc:a6:32:9c:29:b9,10.0.0.11
+  dhcp-host=e4:5f:01:2d:fd:19,10.0.0.12
+  dhcp-host=e4:5f:01:2f:49:05,10.0.0.13
+  dhcp-host=e4:5f:01:2f:54:82,10.0.0.14
 
-# DNS configuration based on inventory
-host-record=gateway.picluster.ricsanfre.com,10.0.0.1
-host-record=pimaster.picluster.ricsanfre.com,10.0.0.10
-host-record=node1.picluster.ricsanfre.com,10.0.0.11
-host-record=node2.picluster.ricsanfre.com,10.0.0.12
-host-record=node3.picluster.ricsanfre.com,10.0.0.13
-host-record=node4.picluster.ricsanfre.com,10.0.0.14
+  # Adding additional DHCP hosts
+  # Ethernet Switch
+  dhcp-host=94:a6:7e:7c:c7:69,10.0.0.2
 
-# Adding additional DNS
-# NTP Server
-host-record=ntp.picluster.ricsanfre.com,10.0.0.1
-# DNS Server
-host-record=dns.picluster.ricsanfre.com,10.0.0.1
-# S3 Server
-host-record=s3.picluster.ricsanfre.com,10.0.0.11
-```
+  # DNS configuration based on inventory
+  host-record=gateway.picluster.ricsanfre.com,10.0.0.1
+  host-record=pimaster.picluster.ricsanfre.com,10.0.0.10
+  host-record=node1.picluster.ricsanfre.com,10.0.0.11
+  host-record=node2.picluster.ricsanfre.com,10.0.0.12
+  host-record=node3.picluster.ricsanfre.com,10.0.0.13
+  host-record=node4.picluster.ricsanfre.com,10.0.0.14
 
-### Step 3. Restart dnsmasq service
+  # Adding additional DNS
+  # NTP Server
+  host-record=ntp.picluster.ricsanfre.com,10.0.0.1
+  # DNS Server
+  host-record=dns.picluster.ricsanfre.com,10.0.0.1
+  # S3 Server
+  host-record=s3.picluster.ricsanfre.com,10.0.0.11
+  ```
+
+- Step 3. Restart dnsmasq service
+
+  ```shell
+  sudo systemctl restart dnsmasq
+  ```
 
 ### Configuring Ansible Role
 
@@ -485,27 +499,27 @@ Additional DHCP static IP leases and DNS records can be added using `dnsmasq_add
 
 DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`host_vars\gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) file.
 
-### Commands
+### Useful Commands
 
 1. Check DHCP leases in DHCP server
 
-    See file `/var/lib/misc/dnsmasq.leases`
+   See file `/var/lib/misc/dnsmasq.leases`
 	
 2. Check DHCP lease in DHCP Clients
 
-    See file `/var/lib/dhcp/dhclient.leases`
+   See file `/var/lib/dhcp/dhclient.leases`
 	
 3. Release DHCP current lease (DHCP client)
    
-    ```
-  	sudo dhclient -r <interface>
-  	```
+   ```shell
+   sudo dhclient -r <interface>
+  ```
 	
 4. Obtain a new DHCP lease
 
-    ```
-    sudo dhclient <interface>
-	  ```
+   ```shell
+   sudo dhclient <interface>
+	 ```
 
 ### Additional connfiguration: Updating DNS resolver
 
@@ -513,11 +527,13 @@ Ubuntu 20.04 comes with systemd-resolved service that provides a DNS stub resolv
 
 The DNS servers contacted are determined from the global settings in /etc/systemd/resolved.conf, the per-link static settings in /etc/systemd/network/*.network files, the per-link dynamic settings received over DHCP, information provided via resolvectl(1), and any DNS server information made available by other system services.
 
-All nodes of the cluster will receive the configuration of the DNS server in the cluster (dnsmasq running in `gateway` node) from DHCP. But `gateway` node need to be configured to use lolca dnsmaq service instead of the default DNS servers  received by the DCHP connection to my home network (my home network configuration)
+All nodes of the cluster will receive the configuration of the DNS server in the cluster (dnsmasq running in `gateway` node) from DHCP. But `gateway` node need to be configured to use local dnsmaq service instead of the default DNS servers  received by the DCHP connection to my home network (my home network configuration)
 
 To check the name server used by the local resolver run:
 
-  systemd-resolve --status
+```shell
+systemd-resolve --status
+```
 
 To specify the dns server to be used modify the file `/etc/systemd/resolved.conf`
 
@@ -529,14 +545,15 @@ Domains=picluster.ricsanfre.com
 ```
 
 Restart systemd-resolve service
-```
+
+```shell
 sudo systemctl restart systemd-resolved
 ```
 
 ## NTP Server Configuration
 
-Ubuntu by default uses timedatectl / timesyncd to synchronize time and users can optionally use chrony to serve the Network Time Protocol
-Since Ubuntu 16.04 timedatectl / timesyncd (which are part of systemd) replace most of ntpdate / ntp.
+Ubuntu by default uses `timedatectl` / `timesyncd` to synchronize time and users can optionally use `chrony` to serve the Network Time Protocol
+From Ubuntu 16.04 timedatectl / timesyncd (which are part of systemd) replace most of ntpdate / ntp.
 (https://ubuntu.com/server/docs/network-ntp)
 
 Since ntp and ntpdate are deprecated **chrony** package will be used for configuring NTP synchronization.
@@ -545,16 +562,17 @@ Since ntp and ntpdate are deprecated **chrony** package will be used for configu
 
 For automating ntp configuration tasks on all nodes (gateway and node1-4), ansible role [**ricsanfre.ntp**](https://galaxy.ansible.com/ricsanfre/ntp) has been created.
 
-### Step 1. Install chrony
+- Step 1. Install chrony
 
-    sudo apt install chrony
+  ```shell
+  sudo apt install chrony
+  ```
 
+- Step 2. Configure chrony
 
-### Step 2. Configure chrony
+  Edit file `/etc/chrony/chrony.conf`
 
-Edit file `/etc/chrony/chrony.conf`
-
-- In **gateway**
+  - In **gateway**
 
     Configure NTP servers and allow serving NTP to lan clients.
 	
@@ -567,7 +585,7 @@ Edit file `/etc/chrony/chrony.conf`
     allow 10.0.0.0/24
     ```
 
-- In **node1-4**:
+  - In **node1-4**:
 
     Configure gateway as NTP server
    
@@ -581,27 +599,27 @@ Check time synchronization with Chronyc
 
 1. Confirm that NTP is enabled
 
-    ```
+   ```shell
     timedatectl
-	  ```
+	 ```
 
 2. Checking Chrony is running and view the peers and servers to which it is connected
     
-	  ```
-    chronyc activity
-	  ```
+	 ```shell
+   chronyc activity
+	 ```
 
 3. To view a detailed list of time servers, their IP addresses, time skew, and offset
     
-	  ```
-    chronyc sources
-	  ```
+	 ```shell
+   chronyc sources
+	 ```
 
 4. Confirm that the chrony is synchronized
    
-    ```
-    chronyc tracking
-	  ```
+   ```shell
+   chronyc tracking
+	 ```
 
 ## iSCSI configuration. Centralized SAN
 

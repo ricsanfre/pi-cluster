@@ -1,10 +1,11 @@
-- title: Welcome
+- title: Getting Started
   docs:
   - home
-- title: Architecture
-  docs:
   - architecture
   - hardware
+  - ansible
+- title: Control Node
+  docs:
   - pimaster
 - title: Cluster Nodes
   docs:
@@ -28,9 +29,6 @@
 - title: Cluster Backup
   docs:
   - backup
-- title: Ansible
-  docs:
-  - ansible
 - title: Reference Docs
   docs:
   - k8s_networking

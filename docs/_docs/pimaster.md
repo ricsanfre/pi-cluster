@@ -8,9 +8,14 @@ A Virtual-BOX VM running on a Windows PC is used as Ansible Control Node, `pimas
 
 As OS for `pimaster` a Ubuntu 20.04 LTS server will be used.
 
-> **NOTE**: This server, **pimaster**, can be automatically provisioned from ubuntu cloud image using the script in this [repository](https://github.com/ricsanfre/ubuntu-cloud-vbox)
->
-> Using that provisioning script a cloud-init user-data booting file can be created to automate the installation tasks of all component needed (Docker, Vagrant, KVM, Ansible, etc.). Check this [template](https://github.com/ricsanfre/ubuntu-cloud-vbox/blob/master/templates/user-data-dev-server.yml) as an example.
+
+{{site.data.alerts.important}}
+
+This server, `pimaster`, can be automatically provisioned as a Virtual Box VM in a Windows Laptop using a ubuntu cloud image using the procedure described other of my GitHub repositories, [ubuntu-clod-vbox](https://github.com/ricsanfre/ubuntu-cloud-vbox)
+
+Using that provisioning script a cloud-init user-data booting file can be created to automate the installation tasks of all component needed (Docker, Vagrant, KVM, Ansible, etc.). Check this [template](https://github.com/ricsanfre/ubuntu-cloud-vbox/blob/master/templates/user-data-dev-server.yml) as an example.
+
+{{site.data.alerts.end}}
 
 ## Installing Docker
 
@@ -18,84 +23,88 @@ Docker is used by Molecule, Ansible's testing tool, for building the testing env
 
 Follow official [installation guide](https://docs.docker.com/engine/install/ubuntu/).
 
-Step 1. Uninstall old versions of docker
+- Step 1. Uninstall old versions of docker
 
-    sudo apt-get remove docker docker-engine docker.io containerd runc
+  ```shell
+  sudo apt-get remove docker docker-engine docker.io containerd runc
+  ```
 
-Step 2. Install packages to allow apt to use a repository over HTTPS
+- Step 2. Install packages to allow apt to use a repository over HTTPS
 
-```
-sudo apt-get update
+  ```shell
+  sudo apt-get update
 
-sudo apt-get install \
+  sudo apt-get install \
   apt-transport-https \
   ca-certificates \
   curl \
   gnupg \
   lsb-release
-```
+  ```
 	
+- Step 3. Add docker´s official GPG	key
+
+  ```shell	
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  ```
 	
-Step 3. Add docker´s official GPG	key
-	
-	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-	
+- Step 4: Add x86_64 repository	
 
-Step 4: Add x86_64 repository	
+  ```shell
+  echo \
+    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  ```
 
-```
-echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-```
+- Step 5: Install Docker Engine
 
-Step 5: Install Docker Engine
+  ```shell
+  sudo apt-get install docker-ce docker-ce-cli containerd.io
+  ```
 
+- Step 6: Enable docker management with non-priviledge user
 
-    sudo apt-get install docker-ce docker-ce-cli containerd.io
-	
+  - Create docker group
 
-Step 6: Enable docker management with non-priviledge user
-
-- Create docker group
-
-    ```
+    ```shell
     sudo groupadd docker
     ```
     
-- Add user to docker group
+  - Add user to docker group
 
-    ```
+    ```shell
     sudo usermod -aG docker $USER
     ```
     
-Step 7: Configure Docker to start on boot
+- Step 7: Configure Docker to start on boot
 
-    sudo systemctl enable docker.service
-    sudo systemctl enable containerd.service
+  ```shell
+  sudo systemctl enable docker.service
+  sudo systemctl enable containerd.service
+  ```
 
-Step 8: Configure docker daemon.
+- Step 8: Configure docker daemon.
 
-- Edit file `/etc/docker/daemon.json´
+  - Edit file `/etc/docker/daemon.json´
 	
-  Set storage driver to overlay2 and to use systemd for the management of the container’s cgroups.
-  Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
-  Documentation about the possible options can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file)
+    Set storage driver to overlay2 and to use systemd for the management of the container’s cgroups.
+    Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
+    Documentation about the possible options can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file)
   	
-  ```json
-  {
-    "exec-opts": ["native.cgroupdriver=systemd"],
-    "log-driver": "json-file",
-    "log-opts": {
-    "max-size": "100m"
-    },
-    "storage-driver": "overlay2",
-    "data-root": "/data/docker"  
-  }
-  ```	
-- Restart docker
+    ```json
+    {
+        "exec-opts": ["native.cgroupdriver=systemd"],
+        "log-driver": "json-file",
+        "log-opts": {
+        "max-size": "100m"
+        },
+        "storage-driver": "overlay2",
+        "data-root": "/data/docker"  
+    }
+    ```	
+  - Restart docker
 
-    ```
+    ```shell
     sudo systemctl restart docker
     ```
 
@@ -107,52 +116,68 @@ In order to automate the testing of some of the roles that requires a VM and not
 
 Need to be changed with the command line. Not supported in GUI
 
-    vboxmanage modifyvm <pimaster-VM> --nested-hw-virt on
-
+```shell
+vboxmanage modifyvm <pimaster-VM> --nested-hw-virt on
+```
 
 ### KVM installation in Ubuntu 20.04
 
-Step 1. Install KVM packages and its dependencies
+- Step 1. Install KVM packages and its dependencies
 
-    sudo apt install qemu qemu-kvm libvirt-clients libvirt-daemon-system virtinst bridge-utils
+  ```shell
+  sudo apt install qemu qemu-kvm libvirt-clients libvirt-daemon-system virtinst bridge-utils
+  ```
 
-Step 2. Enable on boot and start libvirtd service (If it is not enabled already):
+- Step 2. Enable on boot and start libvirtd service (If it is not enabled already):
+  
+  ```shell
+  sudo systemctl enable libvirtd
+  sudo systemctl start libvirtd
+  ```
 
-    sudo systemctl enable libvirtd
-    sudo systemctl start libvirtd
-
-Step 3. Add the user to libvirt group
-
-    sudo usermod -a -G libvirtd $USER
+- Step 3. Add the user to libvirt group
+  
+  ```shell
+  sudo usermod -a -G libvirtd $USER
+  ```
 
 ### Vagrant installation in Ubuntu 20.04
 
-Step 1.  Add hashicorp apt repository
+- Step 1.  Add hashicorp apt repository
 
-    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-    sudo apt-get update
+  ```shell
+  curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+  sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  sudo apt-get update
+  ```
 
-Step 2. Install vagrant
-
-    sudo apt install vagrant
+- Step 2. Install vagrant
+  
+  ```shell
+  sudo apt install vagrant
+  ```
 
 ### Install vagrant-libvirt plugin in Linux
 
 In order to run Vagrant virtual machines on KVM, you need to install the vagrant-libvirt plugin. This plugin adds the Libvirt provider to Vagrant and allows Vagrant to control and provision machines via Libvirt
 
-Step 1. Install dependencies
+- Step 1. Install dependencies
 
-    sudo apt install build-essential qemu libvirt-daemon-system libvirt-clients libxslt-dev libxml2-dev libvirt-dev zlib1g-dev ruby-dev ruby-libvirt ebtables dnsmasq-base libguestfs-tools
+  ```shell
+  sudo apt install build-essential qemu libvirt-daemon-system libvirt-clients libxslt-dev libxml2-dev libvirt-dev zlib1g-dev ruby-dev ruby-libvirt ebtables dnsmasq-base libguestfs-tools
+  ```
 
-Step 2. Install vagrant-libvirt plugin:
+- Step 2. Install vagrant-libvirt plugin:
 
-    vagrant plugin install vagrant-libvirt
+  ```shell
+  vagrant plugin install vagrant-libvirt
+  ```
 
-Step 3. Install mutate plugin which converts vagrant boxes to work with different providers.
+- Step 3. Install mutate plugin which converts vagrant boxes to work with different providers.
 
-    vagrant plugin install vagrant-mutate
-
+  ```shell
+  vagrant plugin install vagrant-mutate
+  ```` 
 
 ## Installing Ansible and Molecule testing environment
 
@@ -165,41 +190,57 @@ Python Ansible and Molecule packages and its dependencies installed using Pip mi
 
 Installation of the whole Ansible environment can be done using a python virtual environment.
 
-Step 1. Install python Virtual Env and Pip3 package
+- Step 1. Install python Virtual Env and Pip3 package
+  
+  ```shell
+  sudo apt-get install python3-venv python3-pip
+  ```
 
-    sudo apt-get install python3-venv python3-pip
+- Step 2. Create Virtual Env for Ansible
 
-Step 2. Create Virtual Env for Ansible
+  ```shell
+  python3 -m venv ansible_env
+  ```
 
-    python3 -m venv ansible_env
+- Step 3. Activate Virtual Environment
 
-Step 3. Activate Virtual Environment
+  ```shell
+  source ansible_env/bin/activate
+  ```
+  
+  {{site.data.alerts.note}}
+  For deactivating the Virtual environment execute command `deactivate`
+  {{site.data.alerts.end}}
 
-    source ansible_env/bin/activate
-	
-> NOTE: For deactivating the Virtual environment
+- Step 4. Upgrade setuptools and pip packages
 
-	deactivate
+  ```shell
+  pip3 install --upgrade pip setuptools
+  ```
 
-Step 4. Upgrade setuptools and pip packages
+- Step 5. Install ansible
 
-    pip3 install --upgrade pip setuptools
-	
-Step 5. Install ansible
+  ```shell
+  pip3 install ansible
+  ```
 
-    pip3 install ansible
+- Step 6. Install yamllint, ansible-lint and jmespath (required by ansible json filters)
 
-Step 6. Install yamllint, ansible-lint and jmespath (required by ansible json filters)
+  ```shell
+  pip3 install yamllint ansible-lint jmespath
+  ```
 
-    pip3 install yamllint ansible-lint jmespath
+- Step 7. Install Docker python driver and molecule packages:
 
-Step 7. Install Docker python driver and molecule packages:
+  ```shell
+  pip3 install molecule[docker]
+  ```
 
-    pip3 install molecule[docker]
+- Step 8. Install molecule vagrant driver
 
-Step 8. Install molecule vagrant driver
-
-    pip3 install vagrant-python molecule-python molecule-vagrant
+  ```shell
+  pip3 install vagrant-python molecule-python molecule-vagrant
+  ```
 
 ## Create public/private SSH key for remote connection users
 
@@ -215,26 +256,29 @@ Those users and its public keys will be added to cloud-init configuration (`user
 Authentication using SSH keys will be the only mechanism available to login to the server.
 We will create SSH keys for two different users:
 
-- **oss** user, used to connect from my home laptop
+- `oss` user, used to connect from my home laptop
 
-    For generating SSH private/public key in Windows, Putty Key Generator can be used:
+  For generating SSH private/public key in Windows, Putty Key Generator can be used:
 
-    ![ubuntu-SSH-key-generation](/assets/img/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
+  ![ubuntu-SSH-key-generation](/assets/img/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
 
-Public-key string will be used as ssh_authorized_keys of the default user (ubuntu) in cloud-init `user-data`
+  Public-key string will be used as ssh_authorized_keys of the default user (ubuntu) in cloud-init `user-data`
 
-- **ansible** user, used to automate configuration activities with ansible
+- `ansible` user, used to automate configuration activities with Ansible
  
-     For generating ansible SSH keys in Ubuntu server execute command:
+  For generating ansible SSH keys in Ubuntu server execute command:
 
-        ssh-keygen
+  ```shell
+  ssh-keygen
+  ```
+  
+  In directory `$HOME/.ssh/` public and private key files can be found for the user
 
-    In directory `$HOME/.ssh/` public and private key files can be found for the user
+  `id_rsa` contains the private key and `id_rsa.pub` contains the public key.
 
-    `id_rsa` contains the private key and `id_rsa.pub` contains the public key.
+  Content of the id_rsa.pub file has to be used as ssh_authorized_keys of the ansible user in cloud-init `user-data`
 
-    Content of the id_rsa.pub file has to be used as ssh_authorized_keys of the ansible user in cloud-init `user-data`
-    ```
-    cat id_rsa.pub 
-    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
-    ```
+  ```shell
+  cat id_rsa.pub 
+  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
+  ```
