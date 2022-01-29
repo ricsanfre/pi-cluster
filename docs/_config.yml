@@ -8,19 +8,19 @@ lang: en-US
 # Enable matoma analytics
 matoma_analytics: true
 matoma:
-  url: 192.168.56.15:8080
+  url: matomo.ricsanfre.com
   site_id: 1
 
 # remark42 comments
 remark42:
-  url: http://192.168.56.15:8081
+  url: https://remark42.ricsanfre.com
   site_id: picluster
 
 
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
 git_address: https://github.com/ricsanfre/pi-cluster
-git_edit_address: https://github.com/ricsanfre/pi-cluster/master
+git_edit_address: https://github.com/ricsanfre/pi-cluster/master/tree
 
 # remote_theme: aksakalli/jekyll-doc-theme@gh-pages
 
