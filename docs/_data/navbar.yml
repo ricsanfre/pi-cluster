@@ -1,7 +1,7 @@
 - name: Docs
   link: /docs/home
   sectionid: docs
-- name: About
-  link: /docs/about
-  sectionid: about
+- name: '<i class="fab fa-github"></i> Repo'
+  link: https://github.com/ricsanfre/pi-cluster
+  sectionid: github
   
