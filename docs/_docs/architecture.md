@@ -67,9 +67,5 @@ As storage device, a SSD disk was attached to `gateway` node. This SSD disk was 
 
 This alternative setup is worth it from educational point of view, to test the different storage options for RaspberryPI and to learn about iSCSI configuration and deployment on bare-metal environments. As well it can be used as a cheaper solution for deploying centralized storage solution.
 
-After testing the performance of the different storage options for the Raspberry Pi, the performace obtained using local attached USB3.0 Flash Disk is quite simillar to the one obtained using iSCSI with a SSD Disk as central storage.
-
-See this [repository](https://github.com/ricsanfre/pi-storage-benchmark) for the details of the testing procedure and the results.
-
 See [SAN configuration document](/docs/san/) further details about the configuration of SAN using a Raspeberry PIs, `gateway`, as iSCSI Target exposing LUNs to cluster nodes.
 
