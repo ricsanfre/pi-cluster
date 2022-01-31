@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Welcome to Pi Cluster!"
-date:   2022-01-13
+date:   2022-01-31
 author: ricsanfre
 ---
 
