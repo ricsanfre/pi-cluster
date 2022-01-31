@@ -20,7 +20,7 @@ remark42:
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
 git_address: https://github.com/ricsanfre/pi-cluster
-git_edit_address: https://github.com/ricsanfre/pi-cluster/master/tree
+git_edit_address: https://github.com/ricsanfre/pi-cluster/blob/master
 
 # remote_theme: aksakalli/jekyll-doc-theme@gh-pages
 
