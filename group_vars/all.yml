@@ -1,21 +1,12 @@
 ---
 # Group all variables.
+
+# Remote user name
 ansible_user: ansible
 
 # Cluster Lab Architecture
 # Whether to use centralized SAN architecture or not
 centralized_san: false
-
-######################################
-# External IPs: Metal LB configuration
-######################################
-# MetalLB configuration
-# k3s external ip range: Metal LB pool configuration
-k3s_external_ip_range: "10.0.0.100-10.0.0.200"
-# External IP for Kubernets Ingress
-k3s_ingress_external_ip: 10.0.0.100
-# External IP for elasticsearch
-k3s_elasticsearch_external_ip: 10.0.0.101
 
 #######################
 # DNS configuration
@@ -38,11 +29,11 @@ elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
 #######################
 
 # Minio S3 Server
-minio_hostname: s3.picluster.ricsanfre.com
+minio_hostname: "s3.{{ dns_domain }}"
 minio_url: "https://{{ minio_hostname }}:9091"
 minio_site_region: "eu-west-1"
 
-
+# Restic configuration
 restic_repository: "s3:{{ minio_url }}/restic"
 restic_aws_access_key_id: restic
 restic_aws_secret_access_key: supers1cret0
