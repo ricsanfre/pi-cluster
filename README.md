@@ -1,161 +1,53 @@
-# Raspberry Pi Cluster
+# Raspberry Pi Kubernetes Cluster 
 
+<img src="docs/assets/img/picluster-logo.png" width="200" />
 
-<p align="left">
-  <img src="documentation/images/pi-cluster.png" width="400" / alt="pi-cluster-1.0">
-  <img src="documentation/images/pi-cluster-2.0.png" width="355" />
-</p>
+<table>
+  <tr>
+    <td><img src="docs/assets/img/pi-cluster.png" width="400" alt="pi-cluster-1.0"/></td>
+    <td><img src="docs/assets/img/pi-cluster-2.0.png" width="360" /></td>
+  </tr>
+</table>
+
+## **K3S Kubernetes Cluster using bare metal ARM-based nodes (Raspberry-PIs) automated with Ansible**
+
+This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
+
+All the process for creating this cluster at home, from cluster design and architecture to step-by-step manual configuration guides, has been documented and it is published in the project website: https://picluster.ricsanfre.com.
+
+This repository contains the Ansible's source code (playbooks/roles) and Cloud-init's configuration files used for automated all manual tasks described in the documentation. 
+The cluster can be re-deployed in minutes as many times as needed for testing new cluster configurations, new software versions or just take you out of any mesh you could cause playing with the cluster.
 
 ## Scope
-The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and Ansible to automate the deployment and configuration.
 
-This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible. 
-As part of the project the goal is to deploy on the Kuberenets cluster basic services such as distributed block storage for persistent volumes (Rook/Ceph or `LongHorn`), centralized monitoring tools like `Prometheus` and `EFK` (Elasticsearch-Fluentd-Kibana) and backup/restore solution like `Velero` and `Restic`.
+Automatically deploy and configure a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and set of cluster basic services such as: 1) distributed block storage for POD's persistent volumes like [LongHorn](https://longhorn.io/), 2) centralized monitoring tool like [Prometheus](https://prometheus.io/) 3) centralized log managemeent like EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) and 3) backup/restore solution for the cluster like [Velero](https://velero.io/) and [Restic](https://restic.io/).
+
+The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible:
 
 <p align="center">
-  <img src="documentation/images/pi-cluster-icons.png" width="500"/>
+  <img src="docs/assets/img/pi-cluster-icons.png" width="500"/>
 </p>
 
-## Design Principles
+## Cluster architecture and hardware
 
-- Use ARM 64 bits operating system enabling the possibility of using Raspberry PI B nodes with 8GB RAM. Currently only Ubuntu supports 64 bits ARM distribution for Raspberry Pi.
-- Use ligthweigh Kubernetes distribution (K3S). Kuberentes distribution with a smaller memory footprint which is ideal for running on Raspberry PIs
-- Use of distributed storage block technology, instead of centralized NFS system, for pod persistent storage.  Kubernetes block distributed storage solutions, like Rook/Ceph or Longhorn, in their latest versions have included ARM 64 bits support.
-- Use of Ansible for automating the configuration of the cluster.
-
-## Documentation
-
-1) [Lab architecture and hardware](documentation/hardware.md). Home lab design and hardware selection
-2) [Ansible Control Node (pimaster)](documentation/pimaster.md). Installation and configuration of Ansible control node and ansible development and testing environment (Molecule, Docker, Vagrant) 
-3) Nodes firmware, operating system installation and basic services configuration
-    - [Raspberry-PI preparation tasks](documentation/preparing_raspberrypi.md). Updating Raspberry PI firmware to enable booting from USB.
-    - [Ubuntu 20.04 Installation on Raspberry Pis](documentation/installing_ubuntu.md). General procedure for installing Ubuntu 20.04 OS on USB storage device and boot Raspberry Pi from USB.
-    - [Configuring SAN for the lab cluster](documentation/san_installation.md). In case of centralized SAN architecture, instructions for configuration of SAN using a Raspeberry PI, gateway as iSCSI Target exposing LUNs to cluster nodes.
-    - [Gateway server OS installation and configuration](documentation/gateway.md). Installing Ubuntu OS and configuring a Raspberry PI as firewall and provider of cluster networking services (NTP, DHCP and DNS services) and SAN services (centalized SAN architectural option)
-    - [Cluster nodes OS installation and configuration](documentation/node.md). Installing Ubutuntu and configuring 4 Raspberry PI as nodes of the cluster, using network services from Gateway node
-4) K3S Cluster Installation and basic services configuration
-    - [K3S Installation](documentation/installing_k3s.md). Installing K3S lightweight kubernetes cluster.
-    - [K3S Networking Configuration](documentation/k3s_networking.md). Complementing K3S default networking services (Flannel and CoreDNS) with baremetal Load Balancer (Metal LB).
-    - [K3S Ingress Configuration](documentation/ingress_controller.md). Configuring ingress controller (Traefik) to enable secure and encrypted HTTP incoming traffic using SSL certificates.
-        - [SSL certificates centralized management](documentation/certmanager.md). Configure Cert-manager to automatically manage the lifecycle of SSL certificates.
-    - [K3S Distributed Storage](documentation/longhorn.md). Installing LongHorn as cluster distributed storage solution for providing Persistent Volumes to pods.
-    - [K3S centralized logging monitoring](documentation/logging.md). Installing a centralized log monitoring tool based on EFK stack. Real-time processing of Kuberentes pods and services and homelab servers logs.
-    - [K3S centralized monitoring](documentation/monitoring.md). Installing Kube Prometheus Stack for monitoring Kuberentes cluster
-5) [Cluster backup and restore](documentation/backup.md). Deployment of a backup server (Minio S3 Object Store) and backup policies implementation at 3 levels: 1) OS filesystem level, using Restic, 2) Kubernetes configuration, using Velero, 3) POD's Persistent Volumes, using Longhorn backup/snapshots and Velero-restic.    
-
-## Automatic deployment instructions using Ansible
-
-### Preparing the Ansible Control node and adapt ansible playbooks configuration
+Home lab architecture, showed in the picture bellow, consist of a Kubernetes cluster of 4 nodes (1 master and 3 workers) and a firewall, built with another Raspberry PI, to isolate cluster network from your home network.
 
 
-  - Set-up a Ubuntu Server 20.04 LTS to become ansible control node `pimaster` following these [instructions](documentation/pimaster.md)
+<p align="center">
+  <img src="docs/assets/img/RaspberryPiCluster_architecture.png" width="500"/>
+</p>
 
-  - Clone this repo or download using the 'Download ZIP' link on GitHub on https://github.com/ricsanfre/pi-cluster
+See further details about the architecture and hardware in the [documentation](https://picluster.ricsanfre.com/docs/home/)
 
-  - Install Ansible requirements:
+## Official Site
 
-    Ansible playbooks depend on external roles that need to be installed.
+You can browse more information about Pi Cluster Project on https://picluster.ricsanfre.com/. 
 
-    ```
-     ansible-galaxy install -r requirements.yml
-    ```
-  
-  - Adjust [`inventory.yml`](ansible/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
+The content of this website and the source code to build it (Jekyll static based website) are also stored in this repo: `/docs` folder.
 
-  - Adjust [`ansible.cfg`](ansible/ansible.cfg) file to include your SSH key: `private-file-key` variable.
+## Usage 
 
-  - Adjust [`all.yml`](ansible/group_vars/all.yml) file to include your ansible remote UNIX user (`ansible_user` variable) and whether centralized san storage architectural option is selected (`centralized_san` variable)
-
-  - Adjust cluster variables under `group_vars`, `host_vars` and `vars`directories to meet your specific configuration.
-
-
-      | Variable file | Group of nodes affected |
-      |----|----|
-      | [`all.yml`](ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
-      | [`picluster.yml`](ansible/group_vars/picluster.yml) | all nodes of the cluster | 
-      | [`k3s_cluster.yml`](ansible/group_vars/picluster.yml) | all nodes of the k3s cluster |
-      | [`k3s_master.yml`](ansible/group_vars/k3s_master.yml) | K3s master nodes |
-      | [`gateway.yml`](ansible/host_vars/gateway.yml) | gateway node |
-    
-
-### Installing the cluster
-
-  - Configure cluster firewall (`gateway` node)
-     
-     Run the playbook:
-
-     ```
-     ansible-playbook setup_picluster.yml --tags "gateway"
-     ```
-  - Configure cluster nodes (`node1-node4` nodes)
-
-     Run the playbook:
-
-     ```
-     ansible-playbook setup_picluster.yml --tags "node"
-     ```
-  - Configure backup server (S3) (`node1`) and configuring OS backup with restic in all nodes (`node1-node4` and `gateway`)
-
-     Run the playbook:
-
-     ```
-     ansible-playbook backup_configuration.yml
-     ```
-
-  - Install K3S cluster
-
-     Run the playbook:
-
-     ```
-     ansible-playbook k3s_install.yml
-     ```
-
-  - Deploy and configure basic services (metallb, traefik, certmanager, longhorn, EFK, Prometheus, Velero )
-
-     Run the playbook:
-
-     ```
-     ansible-playbook k3s_deploy.yml
-     ```
-
-     Different tags can be used to select the componentes to deploy executing
-
-     ```
-     ansible-playbook k3s_deploy.yml --tags <ansible_tag>
-    ```
-
-     | Ansible Tag | Component to configure/deploy |
-     |---|---|
-     | `metallb` | Metal LB |
-     | `traefik` | Traefik | 
-     | `certmanager` | Cert-manager |
-     | `longhorn` | Longhorn |
-     | `logging` | EFK Stack |
-     | `monitoring` | Prometheus Stack |
-     | `backup` | Velero |
-
-
-### Resetting K3s
-
-If you mess anything up in your Kubernetes cluster, and want to start fresh, the K3s Ansible playbook includes a reset playbook, that you can use to reset the K3S:
-
-  ```
-  ansible-playbook k3s_reset.yml
-  ```
-
-### Shutting down the Raspeberry Pi Cluster
-
-To automatically shut down the Raspberry PI cluster, Ansible can be used.
-
-For shutting down the cluster run this command:
-
-  ```
-  ansible-playbook shutdown.yml
-  ```
-
-This playbook will connect to each Raspberry PI in the cluster (including `gateway` node) and execute the command `sudo shutdown -h 1m`, telling the raspberry pi to shutdown in 1 minute.
-
-After a couple of minutes all raspberry pi will be shutdown. You can notice that when the Switch ethernet ports  LEDs are off. Then it is safe to unplug the Raspberry PIs.
+Check in the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder) and Ansible playbooks contained in this report
 
 ## About the Project
 

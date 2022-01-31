@@ -6,6 +6,12 @@ redirect_from: /docs/ansible_instructions.md
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
 
+{{site.data.alerts.info}}
+
+Step-by-step manual process is also described in this documentation.
+
+{{site.data.alerts.end}}
+
 ## Preparing the Ansible Control node
 
 - Set-up a Ubuntu Server VM in your laptop to become ansible control node `pimaster`  and create the SSH public/private keys needed for connecting remotely to the servers
