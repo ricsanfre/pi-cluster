@@ -1,3 +1,4 @@
-ansible/roles/ricsanfre.*
+roles/ricsanfre.*
 ansible_collections
 certificates
+docs/_site

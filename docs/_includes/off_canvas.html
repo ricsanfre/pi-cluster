@@ -1,0 +1,22 @@
+<div class="offcanvas offcanvas-start w-25" tabindex="-1" id="offcanvas-nav" data-bs-keyboard="false" data-bs-backdrop="false">
+    <div class="offcanvas-header">
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      <div class="text-right">
+        <button class="btn d-lg-none" type="button" data-toggle="offcanvas" data-target="#offcanvas-toc">
+          <i class="fa fa-book" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-toc"></i>
+        </button>
+      </div>
+    </div>
+    <div class="offcanvas-body docs-nav">
+      {% include docs_nav.html %}
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-start w-25" tabindex="-1" id="offcanvas-toc" data-bs-keyboard="false" data-bs-backdrop="false">
+    <div class="offcanvas-header">
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body docs-toc">
+      {% include docs_toc.html %}
+    </div>
+</div>

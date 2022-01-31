@@ -1,0 +1,68 @@
+---
+# k3s_cluster group variables
+
+
+####################
+# ntp role variables
+####################
+
+ntp_servers:
+  - server: 10.0.0.1
+    type: server
+
+
+####################
+# K3S variables
+####################
+
+# k3s master node IP
+k3s_master_ip: 10.0.0.11
+
+# k3s shared token
+k3s_token: s1cret0
+
+# Extra arguments for k3s installation scripts
+k3s_server_extra_args: >-
+  --write-kubeconfig-mode '0644'
+  --disable 'servicelb'
+  --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
+  --kube-controller-manager-arg 'bind-address=0.0.0.0'
+  --kube-controller-manager-arg 'address=0.0.0.0'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+  --kube-scheduler-arg 'bind-address=0.0.0.0'
+  --kube-scheduler-arg 'address=0.0.0.0'
+
+k3s_worker_extra_args: "--node-label 'node_type=worker'"
+
+# Namespaces
+k3s_metallb_namespace: metallb-system
+k3s_traefik_namespace: traefik-system
+k3s_longhorn_namespace: longhorn-system
+k3s_certmanager_namespace: certmanager-system
+k3s_logging_namespace: k3s-logging
+k3s_monitoring_namespace: k3s-monitoring
+k3s_velero_namespace: velero-system
+
+# MetalLB configuration
+# k3s external ip range: Metal LB pool configuration
+k3s_external_ip_range: "10.0.0.100-10.0.0.200"
+# External IP for Kubernets Ingress
+k3s_ingress_external_ip: 10.0.0.100
+# External IP for elasticsearch
+k3s_elasticsearch_external_ip: 10.0.0.101
+
+# Traefik configuration
+# HTTP Basic auth credentials
+traefik_basic_auth_user: admin
+traefik_basic_auth_passwd: s1cret0
+
+# Velero configuration
+minio_velero_user: velero
+minio_velero_key: supers1cret0
+minio_velero_bucket: k3s-velero
+
+# Longhorn backup configuration
+longhorn_s3_backup: true
+minio_longhorn_user: longhorn
+minio_longhorn_key: supers1cret0
+minio_longhorn_bucket: k3s-longhorn

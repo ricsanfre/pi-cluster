@@ -1,0 +1,30 @@
+<div class="flex-shrink-0 p-3">
+  <a href="/" class="docs-nav-title d-flex align-items-center pb-3 mb-3 text-decoration-none border-bottom">
+    <span class="fs-5 fw-semibold">Pi Cluster Documentation</span>
+  </a>
+  <ul class="nav nav-pills flex-column list-unstyled ps-0">
+    {% for section in site.data.docs %}
+      {% assign showed = false %}
+      {% for item in section.docs %}
+        {% assign item_url = item | prepend:"/docs/" | append:"/" %}
+        {% if item_url == page.url %}
+          {% assign showed = true %}
+        {% endif %}
+      {% endfor %}
+      <li class="mb-1">
+        <button class="btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
+              {{ section.title }}
+        </button>
+        <div class="collapse{% if showed %} show{% endif %}" id="collapse-{{forloop.index}}">
+          <ul class="nav nav-pills flex-column btn-toggle-nav list-unstyled fw-normal pb-1 small">
+          {% for item in section.docs %}
+            {% assign item_url = item | prepend:"/docs/" | append:"/" %}
+            {% assign p = site.docs | where:"url", item_url | first %}
+              <li class="nav-item"><a class="nav-link{% if item_url == page.url %} active{% endif %}" href="{{ p.url  | relative_url }}">{{ p.title }}</a></li>
+          {% endfor %}
+          </ul>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

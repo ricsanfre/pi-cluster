@@ -1,0 +1,32 @@
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+@charset "utf-8";
+
+// Import partials from `sass_dir` (defaults to `_sass`)
+
+@import
+
+  // Import Bootswath theme variables from _config.yml file
+  {% if site.bootwatch %}
+    "bootswatch/{{site.bootwatch | downcase}}/variables",
+  {% endif %}
+
+  // Import Bootstrap base theme
+  "bootstrap/bootstrap",
+
+  // Import Bootswath theme styles
+  {% if site.bootwatch %}
+    "bootswatch/{{site.bootwatch | downcase}}/bootswatch",
+  {% endif %}
+
+  // Import Fontawesome
+  "fontawesome/fontawesome",
+  "fontawesome/solid",
+  "fontawesome/regular",
+  "fontawesome/brands",
+  // Import rouge syntax highlighting
+  "rouge-base16-dark",
+  // Import specific styles for the site
+  "picluster"
+;

@@ -1,0 +1,215 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+.navbar-brand{
+  img{
+    width: 15%;
+    height: 15%;
+  }
+}
+
+
+.header-container {
+  background-color: black;
+  background: url('../img/bg.jpg') no-repeat 50% 0;
+  color: #fff;
+
+  h1 {
+    color: #fff;
+  }
+  // background-attachment: fixed;
+  background-size: cover;
+  background-position: center 36%;
+  //margin-top: -37px;
+}
+
+.footer {
+  //position: absolute;
+  //bottom: 0;
+  width: 100%;    
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  // --bs-bg-opacity: 0.9;
+  // background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+  color: $dark;
+}
+
+// Docs-layout. Navigator
+.docs-nav {
+  position: relative;
+  height: calc(100vh - 7rem);
+  // --bs-bg-opacity: 0.9;
+  // background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+  overflow-y: scroll;
+
+  nav {
+    font-size:.875rem;
+  }
+
+  .btn-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: .25rem .5rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    background-color: transparent;
+    border: 0;
+    font-size: 0.875rem;
+  }
+  .btn-toggle:hover,
+  .btn-toggle:focus {
+    color: rgba(255, 255, 255, 0.5);
+    background-color: #043325;
+  }
+  .btn-toggle::before {
+    width: 1.25em;
+    line-height: 0;
+    content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba%28255,255,255,.5%29' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 14l6-6-6-6'/%3e%3c/svg%3e");
+    transition: transform .35s ease;
+    transform-origin: .5em 50%;
+  }
+  .btn-toggle[aria-expanded="true"] {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .btn-toggle[aria-expanded="true"]::before {
+    transform: rotate(90deg);
+  }
+  .btn-toggle-nav a {
+    display: inline-flex;
+    padding: .1875rem .5rem;
+    margin-top: .125rem;
+    margin-left: 1.25rem;
+    text-decoration: none;
+    color: white;
+  }
+  .btn-toggle-nav a:hover,
+  .btn-toggle-nav a:focus {
+    background-color: #043325;
+  }
+
+  .docs-nav-title {
+    color: white;
+  }
+  .nav-pills .nav-link.active {
+    background-color: $gray-600;
+  }  
+}
+
+// Docs-layout: Content
+.docs-content {
+  position: relative;
+  height: calc(100vh - 7rem);
+  margin-top: 0.5rem;
+  overflow-y: scroll;
+  margin-left: 0.5rem;
+
+  // Default settings for images
+  img {
+    max-width: 80%;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+// Docs-layout: Toc
+.docs-toc {
+  position: relative;
+  height: calc(100vh - 7rem);
+  overflow-y: scroll;
+  //--bs-bg-opacity: 0.9;
+  //background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+
+  nav {
+    font-size:.875rem;
+    box-shadow: none;
+    ul {
+      padding-left:0;
+      list-style:none;
+      ul  {
+        padding-left:1rem;
+        // margin-top:.25rem;
+      }
+    }
+    li {
+      // margin-bottom:.25rem;
+    }
+    a {
+      color:inherit;
+      code { 
+        font:inherit;
+      }
+    }
+    a:not(:hover) {
+      text-decoration:none
+    }
+    a:active {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  }
+  .btn-toggle-nav a {
+    display: inline-flex;
+    padding: .1875rem .5rem;
+    margin-top: .125rem;
+    // margin-left: 1.25rem;
+    text-decoration: none;
+    color: white;
+  }
+  .btn-toggle-nav a:hover,
+  .btn-toggle-nav a:focus {
+    background-color: #043325;
+  }
+  .nav-pills .nav-link.active {
+    background-color: $gray-600;
+  }
+
+  .docs-nav-title {
+    color: white;
+  }
+}
+
+// Hide scrollbar IE, Edge and Firefox
+.docs-content, .docs-nav , .docs-toc {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  // Syntax higlight
+  .highlight {
+    background: #222222;
+    pre {
+      padding: 12px 12px 12px 12px;
+    }
+  }
+  // Code
+  code {
+    background-color: #222222;
+    border-radius: 0.1rem;
+    color: white;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    font-size: .85em;
+    // padding: 0 0.2941176471em;
+    word-break: break-word;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.docs-content::-webkit-scrollbar, .docs-nav::-webkit-scrollbar, .docs-toc::-webkit-scrollbar {
+  display: none;
+}
+
+.offcanvas {
+  .btn {
+    color: white;
+  }
+}
+
+// Change colour of alert-info
+.alert-info {
+  color: #ffffff;
+  background-color: #2a9fd6;
+  border-color: #2180ac;
+}

@@ -1,0 +1,83 @@
+# Site settings
+title: Pi Kubernetes Cluster
+email: admin@ricsanfre.com
+description: >
+  Raspberry Pi Kubernetes cluster
+lang: en-US
+
+# Enable matoma analytics
+matoma_analytics: true
+matoma:
+  url: matomo.ricsanfre.com
+  site_id: 1
+
+# remark42 comments
+remark42:
+  url: https://remark42.ricsanfre.com
+  site_id: picluster
+
+
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
+git_address: https://github.com/ricsanfre/pi-cluster
+git_edit_address: https://github.com/ricsanfre/pi-cluster/master/tree
+
+# remote_theme: aksakalli/jekyll-doc-theme@gh-pages
+
+# theme options from https://bootswatch.com/3/
+# comment out this to use default Bootstrap
+bootwatch: cyborg # cerulean cosmo custom cyborg darkly flatly journal lumen readable sandstone simplex slate solar spacelab superhero united yeti
+
+# Build settings
+markdown: kramdown
+
+# Allow kramdown to parse inside html blocks (Generate toc)
+kramdown:
+  parse_block_html: true
+
+highlighter: rouge
+
+# Plugins (previously gems:)
+plugins:
+#  - jekyll-remote-theme
+#  - jekyll-toc
+  - jekyll-feed
+  - jekyll-redirect-from
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - .idea/
+  - .gitignore
+  - README.md
+  - vendor
+timezone: Europe/Madrid
+
+defaults:
+- scope:
+    path: _posts
+    type: posts
+  values:
+    layout: post
+    sectionid: news
+- scope:
+    path: _docs
+    type: docs
+  values:
+    layout: docs
+    sectionid: docs
+    seo:
+      type: "WebPage"
+    toc: true
+    comments: true
+    lastmodified: "Jan 29, 2022"
+
+collections:
+  docs:
+    permalink: /:collection/:path/
+    output: true
+  posts:
+    permalink: /blog/:year/:month/:day/:title/
+    output: true
