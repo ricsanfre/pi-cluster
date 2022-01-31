@@ -6,7 +6,7 @@ redirect_from: /docs/ansible_instructions.md
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
 
-{{site.data.alerts.info}}
+{{site.data.alerts.note}}
 
 Step-by-step manual process is also described in this documentation.
 
