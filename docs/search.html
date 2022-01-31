@@ -1,14 +1,22 @@
 ---
-layout: search
+layout: default
 ---
-<form action="/search.html" method="get">
-  <label for="search-box">Search</label>
-  <input type="text" id="search-box" name="query">
-  <input type="submit" value="search">
-</form>
 
-<ul id="search-results"></ul>
-
+<div class="container search">
+  <div class="row">
+    <h3>Searching Documentation:</h3>
+    <form action="/search.html" method="get">
+      <div class="input-group">
+        <input type="text" class="form-control" id="search-box" name="query" aria-label="Example text with button addon" aria-describedby="button-addon1">
+        <button class="btn btn-secondary" type="submit" value="search" id="button-addon1">Search</button>
+      </div>
+    </form>
+  </div>
+  <hr>
+  <div class="row mt-3">
+    <ul id="search-results"></ul>
+  </div>
+</div>
 <script>
   window.store = {
     {% for doc in site.docs %}
