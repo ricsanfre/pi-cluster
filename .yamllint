@@ -4,6 +4,7 @@ extends: default
 ignore: |
   ansible_collections/
   roles/ricsanfre.*/
+  docs/
 
 rules:
   line-length:
