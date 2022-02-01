@@ -2,6 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 redirect_from: /docs/ansible_instructions.md
+lastmodified: "Feb 1, 2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -71,6 +72,7 @@ The following table shows the variable files defined at ansible`s group and host
 | Group/Host Variable file | Nodes affected |
 |----|----|
 | [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
+| [`group_vars/control.yml`]({{ site.git_edit_address }}/group_vars/control.yml) | control group: gateway node + pimaster |
 | [`group_vars/k3s_cluster.yml`]({{ site.git_edit_address }}/group_vars/picluster.yml) | all nodes of the k3s cluster |
 | [`group_vars/k3s_master.yml`]({{ site.git_edit_address }}/group_vars/k3s_master.yml) | K3s master nodes |
 | [`host_vars/gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) | gateway node specific variables|
