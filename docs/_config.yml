@@ -2,7 +2,7 @@
 title: Pi Kubernetes Cluster
 email: admin@ricsanfre.com
 description: >
-  Raspberry Pi Kubernetes cluster
+  Kubernetes home lab built with Raspberry-Pi nodes and automated with Ansible
 lang: en-US
 
 # Enable matoma analytics
@@ -64,7 +64,7 @@ defaults:
 - scope:
     path: ""
   values:
-    image: /assets/img/picluster-logo.png
+    image: /assets/img/pi-logo-reduced.png
 - scope:
     path: _posts
     type: posts
