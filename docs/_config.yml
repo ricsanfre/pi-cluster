@@ -18,9 +18,14 @@ remark42:
 
 
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: http://picluster.ricsanfre.com # the base hostname & protocol for your site
+url: https://picluster.ricsanfre.com # the base hostname & protocol for your site
 git_address: https://github.com/ricsanfre/pi-cluster
 git_edit_address: https://github.com/ricsanfre/pi-cluster/blob/master
+
+
+twitter:
+  username: ricsanfre
+  card: summary
 
 # remote_theme: aksakalli/jekyll-doc-theme@gh-pages
 
@@ -56,6 +61,10 @@ exclude:
 timezone: Europe/Madrid
 
 defaults:
+- scope:
+    path: ""
+  values:
+    image: /assets/img/picluster-logo.png
 - scope:
     path: _posts
     type: posts
