@@ -2,6 +2,9 @@
 title: Log Management (EFK)
 permalink: /docs/logging/
 redirect_from: /docs/logging.md
+description: Kuberentes Cluster centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana)
+last_modified_at: "03-02-2022"
+
 ---
 
 ELK Stack (Elaticsearch - Logstash - Kibana) enables centralized log monitoring of IT infrastructure.
