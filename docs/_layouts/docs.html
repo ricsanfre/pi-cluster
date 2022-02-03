@@ -21,7 +21,7 @@ layout: default
             <hr>
             <div class="doc-date mt-6">
               <small>
-                Last Update: {{ page.lastmodified }}
+                Last Update: {{ page.last_modified_at | date: '%b %d, %Y'}}
               </small>
             </div>
             {% if page.comments %}

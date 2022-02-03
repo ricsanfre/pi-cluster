@@ -3,7 +3,23 @@ title: Pi Kubernetes Cluster
 email: admin@ricsanfre.com
 description: >
   Kubernetes home lab built with Raspberry-Pi nodes and automated with Ansible
+
 lang: en-US
+
+author:
+  name: Ricardo Sanchez
+  twitter: ricsanfre
+twitter:
+  username: ricsanfre
+  card: summary
+social:
+  name: Ricardo Sanchez
+  links:
+    - https://twitter.com/ricsanfre
+    - https://github.com/ricsanfre
+
+# Timezone
+timezone: Europe/Madrid
 
 # Enable matoma analytics
 matoma_analytics: true
@@ -16,18 +32,10 @@ remark42:
   url: https://remark42.ricsanfre.com
   site_id: picluster
 
-
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: https://picluster.ricsanfre.com # the base hostname & protocol for your site
 git_address: https://github.com/ricsanfre/pi-cluster
 git_edit_address: https://github.com/ricsanfre/pi-cluster/blob/master
-
-
-twitter:
-  username: ricsanfre
-  card: summary
-
-# remote_theme: aksakalli/jekyll-doc-theme@gh-pages
 
 # theme options from https://bootswatch.com/3/
 # comment out this to use default Bootstrap
@@ -58,7 +66,7 @@ exclude:
   - .gitignore
   - README.md
   - vendor
-timezone: Europe/Madrid
+
 
 defaults:
 - scope:
@@ -81,7 +89,7 @@ defaults:
       type: "WebPage"
     toc: true
     comments: true
-    lastmodified: "Jan 29, 2022"
+    last_modified_at: "29-01-2022"
 
 collections:
   docs:

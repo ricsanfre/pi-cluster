@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 redirect_from: /docs/ansible_instructions.md
-lastmodified: "Feb 1, 2022"
+last_modified_at: "01-02-2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
