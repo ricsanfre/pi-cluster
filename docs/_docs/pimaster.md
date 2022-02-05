@@ -2,6 +2,7 @@
 title: Ansible Control Node
 permalink: /docs/pimaster/
 redirect_from: /docs/pimaster.md
+last_modified_at: "05-02-2022"
 ---
 
 A Virtual-BOX VM running on a Windows PC is used as Ansible Control Node, `pimaster` for automating the provisioning of the Raspberry PIs cluster.
@@ -239,7 +240,7 @@ Installation of the whole Ansible environment can be done using a python virtual
 - Step 8. Install molecule vagrant driver
 
   ```shell
-  pip3 install vagrant-python molecule-python molecule-vagrant
+  pip3 install molecule-vagrant python-vagrant
   ```
 
 ## Create public/private SSH key for remote connection users
