@@ -10,7 +10,7 @@ The scope of this project is to create a kubernetes cluster at home using **Rasp
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
 
-As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes like [LongHorn](https://longhorn.io/), 2) centralized monitoring tool like [Prometheus](https://prometheus.io/) 3) centralized log managemeent like EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) and 3) backup/restore solution for the cluster like [Velero](https://velero.io/) and [Restic](https://restic.io/).
+As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes like [LongHorn](https://longhorn.io/), 2) centralized monitoring tool like [Prometheus](https://prometheus.io/) 3) centralized log managemeent like EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) and 3) backup/restore solution for the cluster like [Velero](https://velero.io/) and [Restic](https://restic.net/).
 
 
 The following picture shows the set of opensource solutions used for building this cluster:
