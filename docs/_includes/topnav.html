@@ -1,12 +1,15 @@
 <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
     <div class="container-fluid">
       <a class="navbar-brand" href="{{ site.baseurl }}/">
-        <span><img src="{{ "/assets/img/logonav.png" | relative_url }}" alt="Logo" class="d-inline-block align-text-center"> {{ site.title }}</span>
+        {{ site.title }}
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <a class="navbar-logo" href="{{ site.baseurl }}/">
+          <img src="{{ "/assets/img/pi-logo-reduced.png" | relative_url }}" alt="Logo" class="d-inline-block align-text-center">
+        </a>
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% for item in site.data.navbar %}
           <li class="nav-item">
