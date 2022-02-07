@@ -3,6 +3,6 @@
 <script src="{{ "/assets/js/lunr.min.js" | relative_url }}"></script>
 <script src="{{ "/assets/js/search.js" | relative_url }}"></script>
 
-{% if page.comments %}
+{% if page.comments and jekyll.environment == 'production'%}
 {% include remark42.html %}
 {% endif %}

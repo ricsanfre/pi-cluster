@@ -10,7 +10,7 @@
 
     <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ "/feed.xml" | absolute_url }}" />
 
-    {% if site.matoma_analytics %}
+    {% if site.matoma_analytics and jekyll.environment == 'production'%}
     {% include analytics.html %}
     {% endif %}
 

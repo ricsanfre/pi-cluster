@@ -24,7 +24,7 @@ layout: default
                 Last Update: {{ page.last_modified_at | date: '%b %d, %Y'}}
               </small>
             </div>
-            {% if page.comments %}
+            {% if page.comments and jekyll.environment == 'production' %}
             <div class="mt-2">
               <h2>Comments:</h2>
               <div id="remark42"></div>
