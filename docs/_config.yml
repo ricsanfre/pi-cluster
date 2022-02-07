@@ -1,5 +1,5 @@
 # Site settings
-title: Pi Kubernetes Cluster
+title: Raspberry Pi Kubernetes Cluster
 email: admin@ricsanfre.com
 description: >
   Kubernetes home lab built with Raspberry-Pi nodes and automated with Ansible
