@@ -52,7 +52,7 @@ From software perspective I have develop the following: Ansible playbooks and ro
 
    | Repo | Description | Github |
    | ---| --- | --- | 
-   |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.gitaddress}})|
+   |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.git_address}})|
    {: .table } 
    
 
@@ -80,7 +80,7 @@ From software perspective I have develop the following: Ansible playbooks and ro
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 
-   Source code can be found in the Pi-cluster repository under [`docs` directory]({{git_edit_address}}/docs)
+   Source code can be found in the Pi-cluster repository under [`docs` directory]({{site.git_address}}/tree/master/docs)
 
 
 ## Software used and latest version tested
