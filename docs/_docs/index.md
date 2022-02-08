@@ -31,7 +31,7 @@ The following picture shows the set of opensource solutions used for building th
 
 From hardware perspective I built two different versions of the cluster
 
-- Release 1.0: Basic version using dedicated Flash SSD disks for each node and centrazalized SAN as additional storage
+- Release 1.0: Basic version using dedicated USB flash drive for each node and centrazalized SAN as additional storage
 
 ![Cluster-1.0](/assets/img/pi-cluster.png)
 
