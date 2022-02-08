@@ -66,17 +66,17 @@ From software perspective I have develop the following: Ansible playbooks and ro
    | [ricsanfre.ntp](https://galaxy.ansible.com/ricsanfre/ntp)  | Chrony NTP service configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-ntp) |
    | [ricsanfre.firewall](https://galaxy.ansible.com/ricsanfre/firewall) | NFtables firewall configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-firewall) |
    | [ricsanfre.dnsmasq](https://galaxy.ansible.com/ricsanfre/dnsmasq) | Dnsmasq configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-dnsmasq) |
-   | [ricsanfre.storage]((https://galaxy.ansible.com/ricsanfre/storage))| Configure LVM | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-storage) |
-   | [ricsanfre.iscsi_target]((https://galaxy.ansible.com/ricsanfre/iscsi_target))| Configure iSCSI Target| [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_target) |
-   | [ricsanfre.stoiscsi_initiator]((https://galaxy.ansible.com/ricsanfre/iscsi_initiator))| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator) |
-   | [ricsanfre.k8s_cli]((https://galaxy.ansible.com/ricsanfre/k8s_cli))| Install kubectl and Helm utilities | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-k8s_cli) |
-   | [ricsanfre.fluentbit]((https://galaxy.ansible.com/ricsanfre/fluentbit))| Configure fluentbit | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-fluentbit) |
-   | [ricsanfre.minio]((https://galaxy.ansible.com/ricsanfre/minio))| Configure Mino S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
-   | [ricsanfre.backup]((https://galaxy.ansible.com/ricsanfre/backup))| Configure Restic | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-backup) |
+   | [ricsanfre.storage](https://galaxy.ansible.com/ricsanfre/storage)| Configure LVM | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-storage) |
+   | [ricsanfre.iscsi_target](https://galaxy.ansible.com/ricsanfre/iscsi_target)| Configure iSCSI Target| [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_target) |
+   | [ricsanfre.iscsi_initiator](https://galaxy.ansible.com/ricsanfre/iscsi_initiator)| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator) |
+   | [ricsanfre.k8s_cli](https://galaxy.ansible.com/ricsanfre/k8s_cli)| Install kubectl and Helm utilities | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-k8s_cli) |
+   | [ricsanfre.fluentbit](https://galaxy.ansible.com/ricsanfre/fluentbit)| Configure fluentbit | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-fluentbit) |
+   | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio)| Configure Mino S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
+   | [ricsanfre.backup](https://galaxy.ansible.com/ricsanfre/backup)| Configure Restic | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-backup) |
    {: .table } 
 
 
-3. This documentation website [picluster.ricsanfre.com](picluster.ricsanfre.com), hosted in Github pages.
+3. This documentation website [picluster.ricsanfre.com](https://picluster.ricsanfre.com), hosted in Github pages.
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 
