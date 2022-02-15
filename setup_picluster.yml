@@ -4,8 +4,7 @@
   hosts: gateway
   gather_facts: true
   tags: [gateway]
-  vars:
-    ansible_become: true
+  become: true
   roles:
 
     # OS basic setup tasks
@@ -55,8 +54,7 @@
   hosts: picluster
   gather_facts: true
   tags: [node]
-  vars:
-    ansible_become: true
+  become: true
   roles:
 
     # OS basic setup tasks

@@ -56,8 +56,7 @@
   hosts: control
   gather_facts: true
   tags: [logging]
-  vars:
-    ansible_become: true
+  become: true
   roles:
     - role: logging/external_node
       tags: ['logging']

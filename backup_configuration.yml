@@ -4,8 +4,8 @@
   hosts: node1
   gather_facts: true
   tags: [backup]
+  become: true
   vars:
-    ansible_become: true
     server_hostname: "{{ minio_hostname }}"
     ssl_key_size: 4096
     ssl_certificate_provider: selfsigned
@@ -44,8 +44,7 @@
   hosts: raspberrypi
   gather_facts: true
   tags: [backup]
-  vars:
-    ansible_become: true
+  become: true
   pre_tasks:
     - name: Load CA certificate for restic
       set_fact:
