@@ -47,7 +47,7 @@ The content of this website and the source code to build it (Jekyll static based
 
 ## Usage 
 
-Check in the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder) and Ansible playbooks contained in this report
+Check in the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder) and Ansible playbooks contained in this repository.
 
 ## About the Project
 
