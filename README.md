@@ -20,7 +20,7 @@ The cluster can be re-deployed in minutes as many times as needed for testing ne
 
 ## Scope
 
-Automatically deploy and configure a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and set of cluster basic services such as: 1) distributed block storage for POD's persistent volumes like [LongHorn](https://longhorn.io/), 2) centralized monitoring tool like [Prometheus](https://prometheus.io/) 3) centralized log managemeent like EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) and 3) backup/restore solution for the cluster like [Velero](https://velero.io/) and [Restic](https://restic.io/).
+Automatically deploy and configure a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and set of cluster basic services such as: 1) distributed block storage for POD's persistent volumes like [LongHorn](https://longhorn.io/), 2) centralized monitoring tool like [Prometheus](https://prometheus.io/) 3) centralized log managemeent like EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) and 3) backup/restore solution for the cluster like [Velero](https://velero.io/) and [Restic](https://restic.net/).
 
 The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible:
 
@@ -47,7 +47,7 @@ The content of this website and the source code to build it (Jekyll static based
 
 ## Usage 
 
-Check in the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder) and Ansible playbooks contained in this repository.
+Check out the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder) and Ansible playbooks contained in this repository.
 
 ## About the Project
 
