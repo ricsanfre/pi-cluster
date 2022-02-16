@@ -3,17 +3,21 @@ title: Log Management (EFK)
 permalink: /docs/logging/
 redirect_from: /docs/logging.md
 description: Kuberentes Cluster centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana)
-last_modified_at: "03-02-2022"
+last_modified_at: "16-02-2022"
 
 ---
 
 ELK Stack (Elaticsearch - Logstash - Kibana) enables centralized log monitoring of IT infrastructure.
-As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Fluentd is used instead of Logstash for doing the collection and parsing of logs.
+As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Fluentd, or its lightweight version Fluentbit, is used instead of Logstash for doing the collection and parsing of logs.
 
-EFK stack will be deployed as centralized logging solution for the K3S cluster.
+EFK stack will be deployed as centralized logging solution for the K3S cluster, and to collect the logs of externals cluster nodes, i.e.: `gateway`.
 
 ![K3S-EFK-Architecture](/assets/img/efk_logging_architecture.png)
 
+
+{{site.data.alerts.note}}
+This document contain instructions to install the two logs collector alternatives: Fluentd and Fluentbit. Final solution is based on Fluentbit because it consume less memory resources from our Raspberry Pis.
+{{site.data.alerts.end}}
 
 ## ARM/Kubernetes support
 
@@ -22,7 +26,9 @@ In June 2020, Elastic announced (https://www.elastic.co/blog/elasticsearch-on-ar
 To facilitate the deployment on a Kubernetes cluster [ECK project](https://github.com/elastic/cloud-on-k8s) has been created.
 ECK ([Elastic Cloud on Kubernetes](https://www.elastic.co/guide/en/cloud-on-k8s/current/index.html)) automates the deployment, provisioning, management, and orchestration of ELK Stack (Elasticsearch, Kibana, APM Server, Enterprise Search, Beats, Elastic Agent, and Elastic Maps Server) on Kubernetes based on the operator pattern. 
 
-> NOTE: Logstash deployment is not supported by ECK operator
+{{site.data.alerts.note}}
+Logstash deployment is not supported by ECK operator
+{{site.data.alerts.end}}
 
 Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kubernetes clusters with the buil-in configuration needed to automatically collect and parsing containers logs. See [github repository](https://github.com/fluent/fluentd-kubernetes-daemonset).
 
@@ -39,7 +45,7 @@ Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routin
 
 ## EFK Installation
 
-### ELK Operator installation
+### ECK Operator installation
 
 - Step 1: Add the Elastic repository:
   ```shell
