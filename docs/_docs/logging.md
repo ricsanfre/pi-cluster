@@ -3,7 +3,7 @@ title: Log Management (EFK)
 permalink: /docs/logging/
 redirect_from: /docs/logging.md
 description: Kuberentes Cluster centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana)
-last_modified_at: "16-02-2022"
+last_modified_at: "19-02-2022"
 
 ---
 
@@ -250,21 +250,38 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
 In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to log files on the nodes. To tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend, a process like, fluentd/fluentbit can be used.
 
 Log format used by Kubernetes is different depending on the container runtime used. `docker` container run-time generates logs file in JSON format. `containerd` run-time, used by K3S, uses CRI log format.
-
-    <time_stamp> <stream_type> <P/F> <log>
+```
+<time_stamp> <stream_type> <P/F> <log>
 
 where:
   - <time_stamp> has the format `%Y-%m-%dT%H:%M:%S.%L%z` Date and time including UTC offset
   - <stream_type> is `stdout` or `stderr`
   - <P/F> indicates whether the log line is partial (P), in case of multine logs, or full log line (F)
   - <log>: message log
+```
 
 Fluentd or, its lightweight alternative, Fluentbit are deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster.
 Using this DaemonSet controller, a Fluentd/Fluentbit logging agent Pod is deployed on every node of the cluster.
 
 To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
 
-In addition to container logs, the Fluentd/Fluentbit agent can collect and parse Kubernetes system component logs like kubelet, kube-proxy, systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
+In addition to container logs, the Fluentd/Fluentbit agent can collect and parse logs from Kubernetes processes (kubelet, kube-proxy), systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
+
+In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file need to be collected and parsed in order to have logs comming from Kubernetes processes.
+
+K3S logs can be also viewed with `journactl` command
+
+In master node:
+
+```shell
+sudo journactl -u k3s
+```
+
+In worker node:
+
+```shell
+sudo journalctl -u k3s-agent
+```
 
 
 {{site.data.alerts.note}}: Ubuntu system logs stored in `/var/logs` (auth.log, systlog, kern.log), have a syslog format without priority field, and the timestamp is formatted using system local time.
@@ -279,6 +296,8 @@ Where:
   - <process> and <PID> identifies the process generating the log
 ```
 {{site.data.alerts.end}}
+
+
 
 ### Fluent-bit installation
 
@@ -527,6 +546,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
   ```shell
   helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
   ```
+
 ### Alternative to Fluentbit (Fluentd)
 
 Fluentd will be deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster. Using this DaemonSet controller, a Fluentd logging agent Pod will be deployed on every node of the cluster. To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
