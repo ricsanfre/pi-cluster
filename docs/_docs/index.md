@@ -1,5 +1,5 @@
 ---
-title: Welcome to Rasperry Pi Cluster Project
+title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to use Ansible to automate the deployment and configuration.
