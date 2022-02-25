@@ -1,0 +1,9 @@
+---
+
+- name: Check linkerd istallation
+  command:
+    cmd: linkerd version
+  register: linkerd_version_out
+
+- debug:
+    var: linkerd_version_out

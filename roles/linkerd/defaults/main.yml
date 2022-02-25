@@ -1,0 +1,15 @@
+---
+
+# Version
+linkerd_version: "stable-2.11.1"
+# Architecture
+linkerd_arch: "arm64"
+
+# Package download url and checksum
+linkerd_package_name: "linkerd2-cli-{{ linkerd_version }}-linux-{{ linkerd_arch }}"
+linkerd_package_url: "https://github.com/linkerd/linkerd2/releases/download/{{ linkerd_version }}/{{ linkerd_package_name }}"
+linkerd_checksum: "sha256:{{ linkerd_package_url }}.sha256"
+
+# linkerd install location
+linkerd_install_dir: "/usr/local/bin"
+linkerd_bin: "{{ linkerd_install_dir }}/linkerd"

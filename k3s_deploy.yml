@@ -51,6 +51,8 @@
       tags: ['logging']
     - role: backup/velero
       tags: ['backup']
+    - role: linkerd
+      tags: ['linkerd']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control

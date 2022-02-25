@@ -1,0 +1,17 @@
+---
+
+- name: Check Linkerd installation status
+  stat:
+    path: "{{ linkerd_bin }}"
+  register: _linkerd_bin
+
+- name: linkerd cli installation
+  include_tasks: install_linkerd_cli.yml
+  args:
+    apply:
+      become: true
+  when:
+    - not _linkerd_bin.stat.exists
+
+- name: Linkerd deployment
+  include_tasks: deploy_linkerd.yml

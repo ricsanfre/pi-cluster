@@ -1,0 +1,11 @@
+---
+
+- name: Install linkerd cli
+  get_url:
+    url: "{{ linkerd_package_url }}"
+    dest: "{{ linkerd_bin }}"
+    owner: root
+    group: root
+    mode: '0755'
+    # checksum: "{{ linkerd_checksum }}"
+
