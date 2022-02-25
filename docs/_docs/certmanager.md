@@ -1,5 +1,5 @@
 ---
-title: SSL Certification Management (Cert-Manager)
+title: SSL Certificates (Cert-Manager)
 permalink: /docs/certmanager/
 redirect_from: /docs/certmanager.md
 description: How to deploy a centralized SSL certification management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
