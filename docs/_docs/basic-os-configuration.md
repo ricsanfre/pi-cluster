@@ -1,7 +1,7 @@
 ---
 title: Ubuntu OS initial configurations
-permalink: /docs/os_basic/
-redirect_from: /docs/basic_os_configuration.md
+permalink: /docs/os-basic/
+redirect_from: /docs/basic-os-configuration.md
 description: Basic Ubuntu OS configurations of our Raspberry Pi cluster nodes.
 last_modified_at: "25-02-2022"
 ---

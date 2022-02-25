@@ -1,7 +1,7 @@
 ---
 title: iSCSI commands
-permalink: /docs/iscsi_commands/
-redirect_from: /docs/iscsiadm_commands.md
+permalink: /docs/iscsi-commands/
+redirect_from: /docs/iscsiadm-commands.md
 ---
 
 Discover available targets from a discovery portal:

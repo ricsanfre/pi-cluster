@@ -1,7 +1,7 @@
 ---
 title: Cluster SAN installation (optional)
 permalink: /docs/san/
-redirect_from: /docs/san_installation.md
+redirect_from: /docs/san-installation.md
 description: How to configure iSCSI storage for Raspberry PI cluster nodes deploying a SAN network using a Raspberry Pi node as storage server, iSCSI Target.
 last_modified_at: "25-02-2022"
 ---

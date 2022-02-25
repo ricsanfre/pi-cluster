@@ -11,14 +11,14 @@
   docs:
   - firmware
   - ubuntu
-  - os_basic
+  - os-basic
   - san
   - gateway
   - node
 - title: K3S Installation
   docs:
-  - k3s_installation
-  - k3s_networking
+  - k3s-installation
+  - k3s-networking
   - traefik
   - certmanager
   - longhorn
@@ -31,7 +31,7 @@
   - backup
 - title: Reference Docs
   docs:
-  - k8s_networking
-  - k8s_commands
-  - iscsi_commands
-  - pi_commands
+  - k8s-networking
+  - k8s-commands
+  - iscsi-commands
+  - pi-commands
