@@ -1,7 +1,6 @@
 ---
 title: K3S Installation
 permalink: /docs/k3s-installation/
-redirect_from: /docs/installing-k3s.md
 description: How to install K3s, a lightweight kubernetes distribution, in our Raspberry Pi Kuberentes cluster.
 last_modified_at: "25-02-2022"
 ---

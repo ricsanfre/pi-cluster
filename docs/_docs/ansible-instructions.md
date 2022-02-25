@@ -1,7 +1,6 @@
 ---
 title: Quick Start Instructions
 permalink: /docs/ansible/
-redirect_from: /docs/ansible-instructions.md
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
 last_modified_at: "25-02-2022"
 ---

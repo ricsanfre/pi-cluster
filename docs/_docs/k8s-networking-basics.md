@@ -1,7 +1,6 @@
 ---
 title: Kubernetes networking basics
 permalink: /docs/k8s-networking/
-redirect_from: /docs/k8s-networking-basics.md
 ---
 
 ## Enabling inter-pod and pod-to-pod communication across nodes (CNI)

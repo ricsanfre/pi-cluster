@@ -1,7 +1,6 @@
 ---
 title: Lab Architecture
 permalink: /docs/architecture/
-redirect_from: /docs/architecture.md
 description: Homelab architecture of our Raspberry Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
 last_modified_at: "25-02-2022"
 ---

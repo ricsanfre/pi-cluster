@@ -1,7 +1,6 @@
 ---
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
-redirect_from: /docs/monitoring.md
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
 last_modified_at: "25-02-2022"
 ---

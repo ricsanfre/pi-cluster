@@ -1,7 +1,6 @@
 ---
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
-redirect_from: /docs/ingress-controller.md
 description: How to configure Ingress Contoller based on Traefik in our Raspberry Pi Kuberentes cluster.
 last_modified_at: "25-02-2022"
 ---

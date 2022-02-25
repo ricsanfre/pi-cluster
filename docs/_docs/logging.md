@@ -1,7 +1,6 @@
 ---
 title: Log Management (EFK)
 permalink: /docs/logging/
-redirect_from: /docs/logging.md
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
 last_modified_at: "25-02-2022"
 

@@ -1,7 +1,6 @@
 ---
 title: Distributed Storage (Longhorn)
 permalink: /docs/longhorn/
-redirect_from: /docs/longhorn.md
 description: How to deploy distributed block storage solution based on Longhorn in our Raspberry Pi Kubernetes Cluster.
 last_modified_at: "25-02-2022"
 ---

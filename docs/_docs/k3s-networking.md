@@ -1,7 +1,6 @@
 ---
 title: K3S Networking
 permalink: /docs/k3s-networking/
-redirect_from: /docs/k3s-networking.md
 description: How to configure K3S networking inour Raspberry Pi Kubernetes cluster. How to disable default K3s load balancer and configure Metal LB.
 last_modified_at: "25-02-2022"
 ---

@@ -1,7 +1,6 @@
 ---
 title: Kubernetes commands
 permalink: /docs/k8s-commands/
-redirect_from: /docs/k8s-commands.md
 ---
 
 

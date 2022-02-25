@@ -1,7 +1,6 @@
 ---
 title: Gateway installation
 permalink: /docs/gateway/
-redirect_from: /docs/gateway.md
 description: How to configure a Raspberry Pi as router/firewall of our Raspberry Pi Kubernetes Cluster providing connectivity and basic services (DNS, DHCP, NTP, SAN).
 last_modified_at: "25-02-2022"
 ---
