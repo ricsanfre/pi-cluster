@@ -2,6 +2,8 @@
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
 redirect_from: /docs/ingress_controller.md
+description: How to configure Ingress Contoller based on Traefik in our Raspberry Pi Kuberentes cluster.
+last_modified_at: "25-02-2022"
 ---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.

@@ -2,6 +2,8 @@
 title: Raspberry PI firmware update
 permalink: /docs/firmware/
 redirect_from: /docs/preparing_raspberrypi.md
+description: How to update firmware of our Raspberry Pi cluster nodes. Neeeded for enabling boot from USB and keep it updated.
+last_modified_at: "25-02-2022"
 ---
 
 Raspberry Pi Firmware update procedure and preparing Raspberry Pis for booting from USB

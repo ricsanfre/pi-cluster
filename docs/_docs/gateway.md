@@ -2,6 +2,8 @@
 title: Gateway installation
 permalink: /docs/gateway/
 redirect_from: /docs/gateway.md
+description: How to configure a Raspberry Pi as router/firewall of our Raspberry Pi Kubernetes Cluster providing connectivity and basic services (DNS, DHCP, NTP, SAN).
+last_modified_at: "25-02-2022"
 ---
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.

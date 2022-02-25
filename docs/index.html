@@ -1,6 +1,9 @@
 ---
 layout: default
-title: Home
+title: How to build a homelab automated with Ansible
+description: "This is an educational project to build a Kubernetes cluster using Raspberry Pi nodes kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
+How to automatically configure the cluster nodes and deploy K3s kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution and Velero and Restic as backup solution."
+last_modified_at: "25-02-2022"
 ---
 
 <div class="header-container p-5 mb-4 rounded-3">
@@ -23,7 +26,7 @@ title: Home
               its automation using Ansible.<br>
               The entire process for creating this cluster at home, from cluster design and architecture to step-by-step manual configuration guides, has been documented.
               You can find all this information in the <a href="{{ "/docs/home/" | relative_url }}">docs section</a>, so you can build your own home cluster.
-              Automation code (Ansible source code) is also at your disposal in the <a href="{{ site.git_address | relative_url }}">git repository</a>.
+              Automation code (Ansible source code) is also at your disposal in the <a href="{{ site.git_address | relative_url }}">project's git repository</a>.
               </p>    
         </div>
         <div class="col-md-6 text-center">
@@ -32,11 +35,11 @@ title: Home
     </div>
     <div class="row">
         <p class="lead">
-            The project scope includes the automation of the deployment and configuration of a <b>lightweight Kubernetes</b> flavor based on <a href="https://ks3.io/">K3S</a>
-            and basic cluster services such as: 1) <b>distributed block storage</b> for persistent volumes like 
-            <a href="https://longhorn.io/">Longhorn</a>, 2) <b>centralized monitoring service</b>  like <a href="https://prometheus.io/">Prometheus</a>, 
-            3) <b>centralized log management service</b> like EFK (<a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a>-<a href="https://fluentbit.io/">Fluentbit</a>-<a href="https://www.elastic.co/kibana/">Kibana</a>) 
-            and <b>backup/restore solution</b> like <a href="https://velero.io/">Velero</a> and <a href="https://restic.net/">Restic</a>.
+            The project scope includes the automation of the deployment and configuration of a <b>lightweight Kubernetes</b> flavor, <a href="https://ks3.io/">K3S</a>,
+            and basic cluster services such as: 1) <b>distributed block storage</b> for PODs' persistent volumes, 
+            <a href="https://longhorn.io/">Longhorn</a>, 2) <b>centralized monitoring service</b>, <a href="https://prometheus.io/">Prometheus</a>, 
+            3) <b>centralized log management service</b> EFK (<a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a>-<a href="https://fluentbit.io/">Fluentbit</a>-<a href="https://www.elastic.co/kibana/">Kibana</a>) 
+            and, 4) <b>backup/restore solution</b>, <a href="https://velero.io/">Velero</a> and <a href="https://restic.net/">Restic</a>.
         </p>
     </div>
     <hr>

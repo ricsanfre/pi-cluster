@@ -2,6 +2,8 @@
 title: Cluster SAN installation (optional)
 permalink: /docs/san/
 redirect_from: /docs/san_installation.md
+description: How to configure iSCSI storage for Raspberry PI cluster nodes deploying a SAN network using a Raspberry Pi node as storage server, iSCSI Target.
+last_modified_at: "25-02-2022"
 ---
 
 The idea is to configure one of the Raspberry PIs as a SAN for the lab cluster, connecting some SSD Disk to it (through USB 3.0 ports) and providing LUNs to all the cluster nodes through iSCSI.

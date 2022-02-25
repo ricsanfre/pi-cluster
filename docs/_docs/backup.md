@@ -2,6 +2,8 @@
 title: Backup & Restore
 permalink: /docs/backup/
 redirect_from: /docs/backup.md
+description: How to deploy a backup solution based on Velero and Restic in our Raspberry Pi Kubernetes Cluster.
+last_modified_at: "25-02-2022"
 ---
 
 ## Backup Architecture and Design

@@ -2,6 +2,8 @@
 title: Ubuntu OS Installation
 permalink: /docs/ubuntu/
 redirect_from: /docs/installing_ubuntu.md
+description: How to install ARM-64 based Ubuntu 20.04 OS in of our Raspberry Pi cluster nodes. How to configure boot from USB.
+last_modified_at: "25-02-2022"
 ---
 
 Ubuntu Server 64 bits installation on Raspberry Pi is supported since release 20.04.

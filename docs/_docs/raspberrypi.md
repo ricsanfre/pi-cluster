@@ -2,6 +2,8 @@
 title: Raspberry PI Utilities
 permalink: /docs/pi_commands/
 redirect_from: /docs/raspberrypi.md
+description: Raspberry PI specific commands available in Ubuntu OS for getting information about temperature and throttled status.
+last_modified_at: "25-02-2022"
 ---
 
 Raspberry PI OS contains several specific utilities such as `vcgencmd` that are also available in Ubuntu 20.04 through the package [`libraspberrypi-bin`](https://packages.ubuntu.com/focal-updates/libraspberrypi-bin)

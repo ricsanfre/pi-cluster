@@ -2,6 +2,8 @@
 title: SSL Certification Management (Cert-Manager)
 permalink: /docs/certmanager/
 redirect_from: /docs/certmanager.md
+description: How to deploy a centralized SSL certification management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
+last_modified_at: "25-02-2022"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.

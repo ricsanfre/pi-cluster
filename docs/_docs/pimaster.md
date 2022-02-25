@@ -2,7 +2,8 @@
 title: Ansible Control Node
 permalink: /docs/pimaster/
 redirect_from: /docs/pimaster.md
-last_modified_at: "05-02-2022"
+description: How to configure an Ansible Control node for our Raspberry Pi Kubernetes Cluster. Control node will be used for automating configuration tasks of the cluster using Ansible. How to automate the creation of this control node using a VM with Virtualbox.
+last_modified_at: "25-02-2022"
 ---
 
 A Virtual-BOX VM running on a Windows PC is used as Ansible Control Node, `pimaster` for automating the provisioning of the Raspberry PIs cluster.

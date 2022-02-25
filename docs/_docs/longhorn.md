@@ -2,6 +2,8 @@
 title: Distributed Storage (Longhorn)
 permalink: /docs/longhorn/
 redirect_from: /docs/longhorn.md
+description: How to deploy distributed block storage solution based on Longhorn in our Raspberry Pi Kubernetes Cluster.
+last_modified_at: "25-02-2022"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won`t be able to access the data.
