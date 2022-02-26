@@ -7,3 +7,12 @@
 
 - debug:
     var: linkerd_version_out
+
+
+- name: Linkerd pre-installation checks
+  command:
+    cmd: linkerd check --pre
+  register: linkerd_check_out
+
+- debug:
+    var: linkerd_check_out
