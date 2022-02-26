@@ -81,7 +81,7 @@ The installation procedure followed is the described [here](/docs/ubuntu/) using
 
 After booting from the USB3.0 external storage for the first time, the Raspberry Pi will have SSH connectivity and it will be ready to be automatically configured from the ansible control node `pimaster`.
 
-Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions [here](/docs/os_basic/).
+Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions [here](/docs/os-basic/).
 
 For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 

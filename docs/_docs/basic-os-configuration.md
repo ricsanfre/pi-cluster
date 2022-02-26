@@ -47,7 +47,7 @@ Free resources (computing, memory and storage) since I am not going to use snap 
 
 ### Installing Fake RTC clock
 
-Raspberry PI does not have by default a RTC (real-time clock) keeping the time when the Raspberry PI is off. A RTC module can be added to each RaspberryPI but we won`t do it here since we will use NTP to keep time in sync.
+Raspberry PI does not have by default a RTC (real-time clock) keeping the time when the Raspberry PI is off. A RTC module can be added to each RaspberryPI but we won't do it here since we will use NTP to keep time in sync.
 
 Even when NTP is used to synchronize the time and date, when it boots takes as current-time the time of the first-installation and it could cause problems in boot time when the OS detect that a mount point was created in the future and ask for manual execution of fscsk
 
