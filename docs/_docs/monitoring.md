@@ -115,8 +115,8 @@ Since prometheus frontend does not provide any authentication mechanism, Traefik
       # Use Basic Auth Midleware configured
       traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: self-signed-issuer
-      cert-manager.io/common-name: prometheus
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: prometheus.picluster.ricsanfre.com
   spec:
     tls:
     - hosts:
@@ -176,8 +176,8 @@ Since prometheus frontend does not provide any authentication mechanism, Traefik
       # Enable TLS
       traefik.ingress.kubernetes.io/router.tls: "true"
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: self-signed-issuer
-      cert-manager.io/common-name: grafana
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: grafana.picluster.ricsanfre.com
   spec:
     tls:
     - hosts:
@@ -237,8 +237,8 @@ Since prometheus frontend does not provide any authentication mechanism, Traefik
       # Use Basic Auth Midleware configured
       traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: self-signed-issuer
-      cert-manager.io/common-name: alertmanager
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: alertmanager.picluster.ricsanfre.com
   spec:
     tls:
     - hosts:
