@@ -1,0 +1,23 @@
+---
+
+# - name: Create linkerd-viz namespace.
+#   kubernetes.core.k8s:
+#     name: "{{ k3s_linkerd_namespace }}-viz"
+#     api_version: v1
+#     kind: Namespace
+#     state: present
+
+- name: Deploy Linkerd-viz Helm chart.
+  kubernetes.core.helm:
+    name: linkerd-viz
+    chart_ref: linkerd/linkerd-viz
+    release_namespace: "{{ k3s_linkerd_namespace }}"
+    update_repo_cache: true
+    state: present
+    release_values:
+      prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
+      prometheus:
+        enabled: false
+      grafana:
+        enabled: false
+      grafanaUrl: http://kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local

@@ -1,0 +1,11 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: {{ k3s_linkerd_namespace }}
+  annotations:
+    linkerd.io/inject: disabled
+  labels:
+    linkerd.io/is-control-plane: "true"
+    config.linkerd.io/admission-webhooks: disabled
+    linkerd.io/control-plane-ns: {{ k3s_linkerd_namespace }}
