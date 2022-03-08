@@ -1,17 +1,45 @@
 ---
 
-- name: Check Linkerd installation status
-  stat:
-    path: "{{ linkerd_bin }}"
-  register: _linkerd_bin
+- name: Create linkerd namespace.
+  kubernetes.core.k8s:
+    name: "{{ k3s_linkerd_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
 
-- name: linkerd cli installation
-  include_tasks: install_linkerd_cli.yml
-  args:
-    apply:
-      become: true
-  when:
-    - not _linkerd_bin.stat.exists
+- name: Create linkerd issuer
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_issuer.yml.j2
 
-- name: Linkerd deployment
-  include_tasks: deploy_linkerd.yml
+- name: Get ca.crt from linkerd-identity
+  shell: |
+    kubectl get secret \
+    -n "{{ k3s_linkerd_namespace }}" linkerd-identity-issuer \
+    -o jsonpath="{.data.ca\.crt}" | base64 -d
+  register: output_ca_crt
+
+- name: debugging
+  debug:
+    var: output_ca_crt
+
+- name: Add Linkerd stable repo.
+  kubernetes.core.helm_repository:
+    name: linkerd
+    repo_url: "https://helm.linkerd.io/stable"
+
+- name: Deploy Linkerd Helm chart.
+  kubernetes.core.helm:
+    name: linkerd2
+    chart_ref: linkerd/linkerd2
+    release_namespace: "{{ k3s_linkerd_namespace }}"
+    update_repo_cache: true
+    state: present
+    release_values:
+      installNamespace: false
+      identityTrustAnchorsPEM: "{{ output_ca_crt.stdout }}"
+      identity:
+        issuer:
+          scheme: kubernetes.io/tls
