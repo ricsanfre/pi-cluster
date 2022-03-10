@@ -1,5 +1,8 @@
 ---
 
+- name: Install linkerd CLI
+  include_tasks: install_linkerd_cli.yml
+
 - name: Create linkerd namespace.
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
