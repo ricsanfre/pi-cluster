@@ -11,7 +11,8 @@
   kubernetes.core.helm:
     name: linkerd-viz
     chart_ref: linkerd/linkerd-viz
-    release_namespace: "{{ k3s_linkerd_namespace }}"
+    release_namespace: "{{ k3s_linkerd_namespace }}-viz"
+    create_namespace: true
     update_repo_cache: true
     state: present
     release_values:
@@ -21,3 +22,11 @@
       grafana:
         enabled: false
       grafanaUrl: http://kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local
+
+
+- name: Create Ingress for linkerd-viz dashboard
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_viz_ingress.yml.j2
