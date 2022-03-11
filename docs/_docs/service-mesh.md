@@ -193,29 +193,224 @@ This extension installs the following components into a new namespace linkerd-vi
 - A Grafana instance
 - metrics-api, tap, tap-injector, and web components
 
-Since we have already our monitoring deployment, we will configure Viz extension to use the existing Prometheus and Grafana instance. See linkerd documentation ["Bringing your own Prometheus"](https://linkerd.io/2.11/tasks/external-prometheus/)
+Since we have already our monitoring deployment, we will configure Viz extension to use the existing Prometheus and Grafana instance. See linkerd documentation ["Bringing your own Prometheus"](https://linkerd.io/2.11/tasks/external-prometheus/).
 
 
-- Step 1: Prepare values.yml for Viz helm chart installation
+linkerd-viz dashboard (web component) will be exposed configuring a Ingress resource. By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik does not support a mechanism for ovewritting Host header, the Host validation regexp that the dashboard server uses need to be tweaked using Helm chart paramenter `enforcedHostRegexp`. See document ["Exposing dashboard - DNS Rebinding Protection"](https://linkerd.io/2.11/tasks/exposing-dashboard/#dns-rebinding-protection) for more details.
 
+
+- Step 1: Create namespace
+
+  By default, the helm chart creates a namespace `linkerd-viz` with annotations `linkerd.io/inject: enabled` and `config.linkerd.io/proxy-await: "enabled"`
+
+  Since we are creating the namespace we need to provide the same labels and annotations.
+
+  Create namespace manifest file `linkerd_viz_namespace.yml`
 
   ```yml
+  kind: Namespace
+  apiVersion: v1
+  metadata:
+    name: linkerd-viz
+    annotations:
+      linkerd.io/inject: enabled
+      config.linkerd.io/proxy-await: "enabled"
+    labels:
+      linkerd.io/extension: viz
+  ```
+
+  And apply the manifest with the following command:
+
+
+  ```shell
+  kubectl apply -f linkerd_viz_namespace.yml
+
+  ```
+
+
+- Step 2: Prepare values.yml for Viz helm chart installation
+
+  ```yml
+  # Skip namespace creation
+  installNamespace: false
+  # Disable Prometheus installation and configure external Prometheus URL
   prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
   prometheus:
     enabled: false
-  grafana
+  # Disable Grafana installation and configure external Grafana URL
+  grafana:
     enabled: false
-  grafanaUrl: http://kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local
-  ``` 
-- Step 2: Install linkerd viz extension helm
+  grafanaUrl: kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local:80
+  # Disabling DNS rebinding protection
+  dahsboard:
+    enforcedHostRegexp: ".*"
+  ```
+
+- Step 3: Install linkerd viz extension helm
 
   ```shell
-  helm install linkerd-viz -n linkerd-viz
+  helm install linkerd-viz -n linkerd-viz -f values.yml
 
   ```
   By default, helm chart creates `linkerd-viz` namespace where all components are deployed.
 
-- Step 3: Exposing Linkerd Viz dashboard
 
-  Ingress controller rule can be defined to grant access to Viz dashboard. Linkerd documentation contains information about how to do it using [Traefik as Ingress Controller](https://linkerd.io/2.11/tasks/exposing-dashboard/#traefik)
+- Step 4: Exposing Linkerd Viz dashboard
+
+  Ingress controller rule can be defined to grant access to Viz dashboard. 
+
+  In case of Traefik, it is not needed to mesh Traefik deployment to grant access
+
+  Linkerd documentation contains information about how to configure [Traefik as Ingress Controller](https://linkerd.io/2.11/tasks/exposing-dashboard/#traefik). To enable mTLS in the communication from Ingress Controller, Traefik deployment need to be meshed using "ingress" proxy injection.
+
+- Step 5: Configure Prometheus to scrape metrics from linkerd
+
+  Create `linkerd-prometheus.yml`
+
+
+  ```yml
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: PodMonitor
+  metadata:
+    labels:
+      app: linkerd
+      release: kube-prometheus-stack
+    name: linkerd-controller
+    namespace: k3s-monitoring
+  spec:
+    namespaceSelector:
+      matchNames:
+        - linkerd-viz
+        - linkerd
+    selector:
+      matchLabels: {}
+    podMetricsEndpoints:
+      - relabelings:
+        - sourceLabels:
+          - __meta_kubernetes_pod_container_port_name
+          action: keep
+          regex: admin-http
+        - sourceLabels:
+          - __meta_kubernetes_pod_container_name
+          action: replace
+          targetLabel: component
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: PodMonitor
+  metadata:
+    labels:
+      app: linkerd
+      release: kube-prometheus-stack
+    name: linkerd-service-mirror
+    namespace: k3s-monitoring
+  spec:
+    namespaceSelector:
+      any: true
+    selector:
+      matchLabels: {}
+    podMetricsEndpoints:
+      - relabelings:
+        - sourceLabels:
+          - __meta_kubernetes_pod_label_linkerd_io_control_plane_component
+          - __meta_kubernetes_pod_container_port_name
+          action: keep
+          regex: linkerd-service-mirror;admin-http$
+        - sourceLabels:
+          - __meta_kubernetes_pod_container_name
+          action: replace
+          targetLabel: component
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: PodMonitor
+  metadata:
+    labels:
+      app: linkerd
+      release: kube-prometheus-stack
+    name: linkerd-proxy
+    namespace: k3s-monitoring
+  spec:
+    namespaceSelector:
+      any: true
+    selector:
+      matchLabels: {}
+    podMetricsEndpoints:
+      - relabelings:
+        - sourceLabels:
+          - __meta_kubernetes_pod_container_name
+          - __meta_kubernetes_pod_container_port_name
+          - __meta_kubernetes_pod_label_linkerd_io_control_plane_ns
+          action: keep
+          regex: ^linkerd-proxy;linkerd-admin;linkerd$
+        - sourceLabels: [__meta_kubernetes_namespace]
+          action: replace
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          action: replace
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_label_linkerd_io_proxy_job]
+          action: replace
+          targetLabel: k8s_job
+        - action: labeldrop
+          regex: __meta_kubernetes_pod_label_linkerd_io_proxy_job
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_linkerd_io_proxy_(.+)
+        - action: labeldrop
+          regex: __meta_kubernetes_pod_label_linkerd_io_proxy_(.+)
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_linkerd_io_(.+)
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+          replacement: __tmp_pod_label_$1
+        - action: labelmap
+          regex: __tmp_pod_label_linkerd_io_(.+)
+          replacement:  __tmp_pod_label_$1
+        - action: labeldrop
+          regex: __tmp_pod_label_linkerd_io_(.+)
+        - action: labelmap
+          regex: __tmp_pod_label_(.+)
+  ``` 
+
+  Apply manifest file
+
+  ```shell
+  kubectl apply -f linkerd-prometheus.yml
+
+  ```
+
+  {{site.data.alerts.note}}
+
+  This is a direct translation of the [Prometheus' scrape configuration defined in linkerd documentation](https://linkerd.io/2.11/tasks/external-prometheus/#prometheus-scrape-configuration) to Prometheus Operator based configuration (ServiceMonitor and PodMonitor CRDs).
+
+  {{site.data.alerts.end}}
+   
+- Step 6: Load linkerd dashboards into Grafana
+  
+  Linkerd available Grafana dashboards are located in linkerd2 repository: [linkerd grafana dashboards](https://github.com/linkerd/linkerd2/tree/main/grafana/dashboards)
+
+
+## Configure Ingress Controller
+
+Linkerd does not come with a Ingress Controller. Existing ingress controller can be integrated with Linkerd doing the following:
+  - Configuring Ingress Controller to support Linkerd.
+  - Meshing Ingress Controller pods so that they have the Linkerd proxy installed.
+
+In general, Linkerd can be used with any ingress controller. In order for Linkerd to properly apply features such as route-based metrics and traffic splitting, Linkerd needs the IP/port of the Kubernetes Service. However, by default, many ingresses do their own endpoint selection and pass the IP/port of the destination Pod, rather than the Service as a whole.
+
+More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.11/tasks/using-ingress/).
+
+
+### Meshing Traefik
+
+In order to integrate Traefik with Linkerd the following must be done:
+
+- Traefik should be meshed with ingress mode enabled, i.e. with the `linkerd.io/inject: ingress` annotation rather than the default enabled.
+
+- Configure Ingress rules to use a Traefik's Middleware inserting a specific header, `l5d-dst-override` pointing to the Service IP/Port (using internal DNS name: `<service-name>.<namespace-name>.svc.cluster.local`
+
+Linkerd-proxy configured in ingress mode will take `ld5-dst-override` HTTP header for routing the traffic to the service. 
+
+{{site.data.alerts.important}}
+Since for the routing linkerd is using a HTTP header, only HTTP protocol is supported and not HTTPS.
+{{site.data.alerts.end}}
 
