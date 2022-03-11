@@ -1,7 +1,17 @@
 ---
 
+- name: Check Linkerd CLI installation status
+  stat:
+    path: "{{ linkerd_bin }}"
+  register: _linkerd_bin
+
 - name: Install linkerd CLI
   include_tasks: install_linkerd_cli.yml
+  args:
+    apply:
+      become: true
+  when:
+    - not _linkerd_bin.stat.exists
 
 - name: Create linkerd namespace.
   kubernetes.core.k8s:
