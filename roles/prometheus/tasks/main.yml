@@ -92,22 +92,9 @@
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
   vars:
-    dashboard_name: "{{ item.name }}"
+    dashboard_name: "{{ item | basename | splitext | first }}"
     dashboard_file:
-      name: "{{ item.file }}"
-      content: "{{ lookup('file', 'files/' + item.file ) | string }}"
-  with_items:
-    - name: dashboard-traefik
-      file: traefik-dashboard.json
-    - name: dashboard-longhorn
-      file: longhorn-dashboard.json
-    - name: k3s-controller-manager
-      file: k3s-controllermanager-dashboard.json
-    - name: k3s-scheduler
-      file: k3s-scheduler-dashboard.json
-    - name: k3s-proxy
-      file: k3s-proxy-dashboard.json
-    - name: velero
-      file: velero-dashboard.json
-    - name: minio
-      file: minio-dashboard.json
+      name: "{{ item | basename }}"
+      content: "{{ lookup('file', item ) | string }}"
+  with_fileglob:
+      - "files/*"
