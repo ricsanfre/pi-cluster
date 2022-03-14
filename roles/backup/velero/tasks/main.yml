@@ -70,6 +70,11 @@
             aws_access_key_id: "{{ minio_velero_user }}"
             aws_secret_access_key: "{{ minio_velero_key }}"
 
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_velero_namespace }} --all --timeout=600s"
+  register: velero_pods_ready
+  changed_when: false
 
 - name: Create Full backup Schedule policy
   kubernetes.core.k8s:

@@ -54,6 +54,12 @@
       kubeEtcd:
         enabled: false
 
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_monitoring_namespace }} --all --timeout=600s"
+  register: prometheus_pods_ready
+  changed_when: false
+
 - name: Create metrics services (K3s and Minio)
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
@@ -97,4 +103,4 @@
       name: "{{ item | basename }}"
       content: "{{ lookup('file', item ) | string }}"
   with_fileglob:
-      - "files/*"
+    - "files/*"

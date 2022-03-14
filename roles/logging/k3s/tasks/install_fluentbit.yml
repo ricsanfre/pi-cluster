@@ -13,3 +13,9 @@
     update_repo_cache: true
     state: present
     values: "{{ lookup('template', 'templates/fluentbit_helm_values.yml.j2') | from_yaml }}"
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
+  register: fluentbit_pods_ready
+  changed_when: false

@@ -42,6 +42,18 @@
   when: not longhorn_s3_backup
 
 
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_longhorn_namespace }} --all --timeout=600s"
+  register: longhorn_pods_ready
+  changed_when: false
+
+- name: Repeat task since more pods are created
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_longhorn_namespace }} --all --timeout=600s"
+  register: longhorn_pods_ready
+  changed_when: false
+
 - name: Create Ingress rule for Longhorn UI and Recurring backup job
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"

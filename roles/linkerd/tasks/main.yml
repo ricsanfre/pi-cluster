@@ -34,10 +34,6 @@
     -o jsonpath="{.data.ca\.crt}" | base64 -d
   register: output_ca_crt
 
-- name: debugging
-  debug:
-    var: output_ca_crt
-
 - name: Add Linkerd stable repo.
   kubernetes.core.helm_repository:
     name: linkerd
@@ -56,6 +52,12 @@
       identity:
         issuer:
           scheme: kubernetes.io/tls
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_linkerd_namespace }} --all --timeout=600s"
+  register: linkerd_pods_ready
+  changed_when: false
 
 - name: Install linkerd extensions
   include_tasks: linkerd_extensions.yml

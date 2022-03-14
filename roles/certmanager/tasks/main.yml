@@ -21,6 +21,12 @@
     release_values:
       installCRDs: true
 
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_certmanager_namespace }} --all --timeout=600s"
+  register: certmanager_pods_ready
+  changed_when: false
+
 - name: Configure Cluster Issuers
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"

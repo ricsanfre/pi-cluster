@@ -39,18 +39,18 @@
   roles:
     - role: metallb
       tags: ['metallb']
-    - role: traefik
-      tags: ['traefik']
     - role: certmanager
       tags: ['certmanager']
+    - role: traefik
+      tags: ['traefik']
+    - role: backup/velero
+      tags: ['backup']
     - role: longhorn
       tags: ['longhorn']
     - role: prometheus
       tags: ['monitoring']
     - role: logging/k3s
       tags: ['logging']
-    - role: backup/velero
-      tags: ['backup']
     - role: linkerd
       tags: ['linkerd']
 

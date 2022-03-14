@@ -29,6 +29,11 @@
       dashboard:
         enforcedHostRegexp: .*
 
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_linkerd_namespace }}-viz --all --timeout=600s"
+  register: linkerd_viz_pods_ready
+  changed_when: false
 
 - name: Create Ingress for linkerd-viz dashboard
   kubernetes.core.k8s:
