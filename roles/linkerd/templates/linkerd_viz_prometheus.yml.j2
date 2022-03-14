@@ -15,7 +15,9 @@ spec:
   selector:
     matchLabels: {}
   podMetricsEndpoints:
-    - relabelings:
+    - interval: 10s
+      scrapeTimeout: 10s
+      relabelings:
       - sourceLabels:
         - __meta_kubernetes_pod_container_port_name
         action: keep
@@ -24,6 +26,13 @@ spec:
         - __meta_kubernetes_pod_container_name
         action: replace
         targetLabel: component
+      # Replace job value
+      - source_labels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: linkerd-controller
+
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -39,7 +48,9 @@ spec:
   selector:
     matchLabels: {}
   podMetricsEndpoints:
-    - relabelings:
+    - interval: 10s
+      scrapeTimeout: 10s
+      relabelings:
       - sourceLabels:
         - __meta_kubernetes_pod_label_linkerd_io_control_plane_component
         - __meta_kubernetes_pod_container_port_name
@@ -49,6 +60,12 @@ spec:
         - __meta_kubernetes_pod_container_name
         action: replace
         targetLabel: component
+      # Replace job value
+      - source_labels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: linkerd-service-mirror
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -64,7 +81,9 @@ spec:
   selector:
     matchLabels: {}
   podMetricsEndpoints:
-    - relabelings:
+    - interval: 10s
+      scrapeTimeout: 10s
+      relabelings:
       - sourceLabels:
         - __meta_kubernetes_pod_container_name
         - __meta_kubernetes_pod_container_port_name
@@ -98,3 +117,9 @@ spec:
         regex: __tmp_pod_label_linkerd_io_(.+)
       - action: labelmap
         regex: __tmp_pod_label_(.+)
+      # Replace job value
+      - source_labels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: linkerd-proxy
