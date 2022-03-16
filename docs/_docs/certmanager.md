@@ -7,8 +7,9 @@ last_modified_at: "08-03-2022"
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
 
-It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry.
+It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry. It also keep up to date the associated Kuberentes Secrets storing key pairs used by Ingress resources when securing the incoming communications.
 
+![picluster-certmanager](/assets/img/cert-manager.png)
 
 ## Cert-Manager certificates issuers
 
@@ -26,7 +27,7 @@ We will use this Issuer for bootstrapping our custom CA.
 
 The CA issuer represents a Certificate Authority whereby its certificate and private key are stored inside the cluster as a Kubernetes Secret, and will be used to sign incoming certificate requests. This internal CA certificate can then be used to trust resulting signed certificates.
 
-This issuer type is typically used in a Public Key Infrastructure (PKI) setup to secure your infrastructure components to establish mTLS or otherwise provide a means to issue certificates where you also own the private key. Signed certificates with this custom CA will not be trusted by clients, such a web browser, by default.
+This issuer type is typically used in a private Public Key Infrastructure (PKI) setup to secure your infrastructure components to establish mTLS or otherwise provide a means to issue certificates where you also own the private key. Signed certificates with this custom CA will not be trusted by clients, such a web browser, by default.
 
 ### ACME issuers (Lets Encrypt)
 
@@ -35,7 +36,7 @@ The ACME Issuer type represents a single account registered with the Automated C
 
 {{site.data.alerts.important}}
 
-CertManager has been configured to have in the cluster a custom PKI (Public Key Infrastructure) using a self-signed CA to issue auto-signed certificates.
+CertManager has been configured to have in the cluster a private PKI (Public Key Infrastructure) using a self-signed CA to issue auto-signed certificates.
 
 CertManager integration with Let's Encrypt has not been configured since my DNS provider does not suppport yet the API for automating DNS challenges. See open issue [#16](https://github.com/ricsanfre/pi-cluster/issues/16).
 
