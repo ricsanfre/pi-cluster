@@ -5,13 +5,11 @@ description: How to deploy service-mesh architecture based on Linkerd.
 
 ---
 
-
 ## Why a Service Mesh
 
 Introduce Service Mesh architecture to add observability, traffic management, and security capabilities to internal communications within the cluster.
 
 [Linkerd](https://linkerd.io/) will be deployed in the cluster as a Service Mesh implementation.
-
 
 ## Why Linkerd and not Istio
 
@@ -21,7 +19,6 @@ Most known Service Mesh implementation, [Istio](https://istio.io), is not curren
 
 Moreover,instead of using [Envoy proxy](https://www.envoyproxy.io/), sidecar container  to be deployed with any Pod as communication proxy, Linkerd uses its own ulta-light proxy which reduces the required resource footprint (cpu, memory) and makes it more suitable for Raspberry Pis.
 
-
 ## Automatic mTLS
 
 By default, Linkerd automatically enables mutually-authenticated Transport Layer Security (mTLS) for all TCP traffic between meshed pods. This means that Linkerd adds authenticated, encrypted communication to your application with no extra work on your part. (And because the Linkerd control plane also runs on the data plane, this means that communication between Linkerd’s control plane components are also automatically secured via mTLS.)
@@ -29,8 +26,6 @@ By default, Linkerd automatically enables mutually-authenticated Transport Layer
 The Linkerd control plane contains a certificate authority (CA) called `identity`. This CA issues TLS certificates to each Linkerd data plane proxy. These TLS certificates expire after 24 hours and are automatically rotated. The proxies use these certificates to encrypt and authenticate TCP traffic to other proxies.
 
 On the control plane side, Linkerd maintains a set of credentials in the cluster: a **trust anchor**, and an **issuer certificate and private key**. While Linkerd automatically rotates the TLS certificates for data plane proxies every 24 hours, it does not rotate the TLS credentials and private key associated with the issuer. `cert-manager` can be used to initially generate this issuer certificate and private key and automatically rotate them.
-
-
 
 ## Linkerd Installation
 
@@ -86,7 +81,6 @@ Installation using `Helm` (Release 3):
 
   ```shell
   kubectl apply -f linkerd_namespace.yml
-
   ```
 
 - Step 4: Create `linkerd-identity-issuer` certificate resource
@@ -138,7 +132,6 @@ Installation using `Helm` (Release 3):
 
   ```shell
   kubectl get secret linkerd-identity-issuer -o jsonpath="{.data.ca\.crt}" -n linkerd | base64 -d > ca.crt
-
   ```
 
 - Step 4: Install Linkerd
@@ -164,7 +157,6 @@ Installation using `Helm` (Release 3):
 
   ```shell
   kubectl get configmap linkerd-config -o yaml -n linkerd
-
   ```
   
   The `identiyTrustAnchorPEM` key included in the Configmap should show th ca.crt extracted in Step 3
@@ -224,7 +216,6 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
 
   ```shell
   kubectl apply -f linkerd_viz_namespace.yml
-
   ```
 
 
@@ -250,7 +241,6 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
 
   ```shell
   helm install linkerd-viz -n linkerd-viz -f values.yml
-
   ```
   By default, helm chart creates `linkerd-viz` namespace where all components are deployed.
 
@@ -264,10 +254,9 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
   Linkerd documentation contains information about how to configure [Traefik as Ingress Controller](https://linkerd.io/2.11/tasks/exposing-dashboard/#traefik). To enable mTLS in the communication from Ingress Controller, Traefik deployment need to be meshed using "ingress" proxy injection.
 
 - Step 5: Configure Prometheus to scrape metrics from linkerd
-
+  
   Create `linkerd-prometheus.yml`
-
-
+  
   ```yml
   ---
   apiVersion: monitoring.coreos.com/v1
@@ -286,7 +275,9 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - relabelings:
+      - interval: 10s
+        scrapeTimeout: 10s
+        relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_container_port_name
           action: keep
@@ -295,6 +286,12 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
           - __meta_kubernetes_pod_container_name
           action: replace
           targetLabel: component
+        # Replace job value
+        - source_labels:
+          - __address__
+          action: replace
+          targetLabel: job
+          replacement: linkerd-controller
   ---
   apiVersion: monitoring.coreos.com/v1
   kind: PodMonitor
@@ -310,7 +307,9 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - relabelings:
+      - interval: 10s
+        scrapeTimeout: 10s
+        relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_label_linkerd_io_control_plane_component
           - __meta_kubernetes_pod_container_port_name
@@ -320,6 +319,12 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
           - __meta_kubernetes_pod_container_name
           action: replace
           targetLabel: component
+        # Replace job value
+        - source_labels:
+          - __address__
+          action: replace
+          targetLabel: job
+          replacement: linkerd-service-mirror
   ---
   apiVersion: monitoring.coreos.com/v1
   kind: PodMonitor
@@ -335,7 +340,9 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - relabelings:
+      - interval: 10s
+        scrapeTimeout: 10s
+        relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_container_name
           - __meta_kubernetes_pod_container_port_name
@@ -369,24 +376,37 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
           regex: __tmp_pod_label_linkerd_io_(.+)
         - action: labelmap
           regex: __tmp_pod_label_(.+)
+        # Replace job value
+        - source_labels:
+          - __address__
+          action: replace
+          targetLabel: job
+          replacement: linkerd-proxy
   ``` 
-
+  
   Apply manifest file
 
   ```shell
   kubectl apply -f linkerd-prometheus.yml
-
   ```
 
   {{site.data.alerts.note}}
 
   This is a direct translation of the [Prometheus' scrape configuration defined in linkerd documentation](https://linkerd.io/2.11/tasks/external-prometheus/#prometheus-scrape-configuration) to Prometheus Operator based configuration (ServiceMonitor and PodMonitor CRDs).
 
+  Only two additional changes have been added to match linkerd's Grafana dashboards configuration:
+
+  - Changing `job` label: Prometheus operator by default creates job names and job labels with `<namespace>/<podMonitor/serviceMonitor_name>`. Additional relabel rule has been added to remove namespace from job label matching Grafana dashboard's filters
+
+  - Changing scraping `interval` and `timeout` to 10 seconds, instead default prometheus configuration (30 seconds). Linkerd's Grafana dashboards are configured to calculate rates from metrics in the last 30 seconds.
+
   {{site.data.alerts.end}}
    
 - Step 6: Load linkerd dashboards into Grafana
   
   Linkerd available Grafana dashboards are located in linkerd2 repository: [linkerd grafana dashboards](https://github.com/linkerd/linkerd2/tree/main/grafana/dashboards)
+
+  Follow ["Provision dashboards automatically"](/docs/prometheus/#provisioning-dashboards-automatically) procedure to load Grafana dashboards automatically.
 
 
 ## Configure Ingress Controller
@@ -411,6 +431,6 @@ In order to integrate Traefik with Linkerd the following must be done:
 Linkerd-proxy configured in ingress mode will take `ld5-dst-override` HTTP header for routing the traffic to the service. 
 
 {{site.data.alerts.important}}
-Since for the routing linkerd is using a HTTP header, only HTTP protocol is supported and not HTTPS.
+Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside the cluster) will pass through Linkerd as an opaque TCP stream and Linkerd will only be able to provide byte-level metrics for this side of the connection. The resulting HTTP or gRPC traffic to internal services, of course, will have the full set of metrics and mTLS support.
 {{site.data.alerts.end}}
 
