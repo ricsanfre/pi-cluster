@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "25-02-2022"
+last_modified_at: "18-03-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -682,9 +682,13 @@ Minio dashboard sample can be donwloaded from [grafana.com](https://grafana.com)
 
 ## Provisioning Dashboards automatically
 
-Custom Grafana dashboards can be added creating CongigMap resources, containing dashboard definition in json format, because kube-prometheus-stack configure by default grafana provisioning sidecar to check for new ConfigMaps containing label `grafana_dashboard`
+Grafana dashboards can be provisioned automatically creating ConfigMap resources containing the dashboard json definition. For doing so, a provisioning sidecar container must be enabled.
 
-The default chart values are:
+Check grafana chart [documentation](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
+
+`kube-prometheus-stack` configure by default grafana provisioning sidecar to check for new ConfigMaps containing label `grafana_dashboard`
+
+This are the default helm chart values configuring the sidecar:
 
 ```yml
 grafana:
@@ -700,9 +704,7 @@ grafana:
       labelValue: null
 ```
 
-Check grafana chart [documentation](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
-
-Config Map resouce containing the json dashboard definition as data 
+For provision automatically a new dashboard, a new `ConfigMap` resource must be created, labeled with `grafana_dashboard: 1` and containing as `data` the json file content.
 
 ```yml
 apiVersion: v1
@@ -713,12 +715,25 @@ metadata:
      grafana_dashboard: "1"
 data:
   dashboard.json: |-
-  [...]
+  [json_file_content]
 
 ```
-Due to Grafana´s [issue](https://github.com/grafana/grafana/issues/10786), json files need to be modified before inserting them into ConfigMap yaml file, in order to detect DS_PROMETHEUS datasource. See issue [#18](https://github.com/ricsanfre/pi-cluster/issues/18)
 
-Modify each json file adding the following code to `templating` section
+{{site.data.alerts.important}}
+
+Most of [Grafana community dashboards available](https://grafana.com/grafana/dashboards/) have been exported from a running Grafana and so they include a input  variable (`DS_PROMETHEUS`) which represent a datasource which is referenced in all dashboard panels (`${DS_PROMETHEUS}`). See details in [Grafana export/import documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/).
+
+When automatic provisioning those exported dashboards following the procedure described above, an error appear when accessing them in the UI:
+
+```
+Datasource named ${DS_PROMETHEUS} was not found
+```
+
+There is an open [Grafana´s issue](https://github.com/grafana/grafana/issues/10786), asking for support of dasboard variables in dashboard provisioning.
+
+As a workarround, json files can be modified before inserting them into ConfigMap yaml file, in order to detect DS_PROMETHEUS datasource. See issue [#18](https://github.com/ricsanfre/pi-cluster/issues/18) for more details
+
+Modify each json file, containing `DS_PROMETHEUS` input variable within `__input` json key, adding the following code to `templating.list` key
 
 ```json
 "templating": {
@@ -732,5 +747,7 @@ Modify each json file adding the following code to `templating` section
         "refresh": 1,
         "regex": "",
         "type": "datasource"
-      }
+      },
+    ...
 ```
+{{site.data.alerts.end}}
