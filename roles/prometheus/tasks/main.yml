@@ -97,10 +97,7 @@
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
-  vars:
-    dashboard_name: "{{ item | basename | splitext | first }}"
-    dashboard_file:
-      name: "{{ item | basename }}"
-      content: "{{ lookup('file', item ) | string }}"
+  loop_control:
+    loop_var: dashboard_file
   with_fileglob:
     - "files/*"
