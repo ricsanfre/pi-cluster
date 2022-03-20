@@ -62,6 +62,3 @@
     cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_linkerd_namespace }} --all --timeout=600s"
   register: linkerd_pods_ready
   changed_when: false
-
-- name: Install linkerd extensions
-  include_tasks: linkerd_extensions.yml

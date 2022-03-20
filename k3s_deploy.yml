@@ -41,6 +41,8 @@
       tags: ['metallb']
     - role: certmanager
       tags: ['certmanager']
+    - role: linkerd/control-plane
+      tags: ['linkerd']
     - role: traefik
       tags: ['traefik']
     - role: backup/velero
@@ -49,10 +51,10 @@
       tags: ['longhorn']
     - role: prometheus
       tags: ['monitoring']
+    - role: linkerd/linkerd-viz
+      tags: ['linkerd-viz']
     - role: logging/k3s
       tags: ['logging']
-    - role: linkerd
-      tags: ['linkerd']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control
