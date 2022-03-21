@@ -6,6 +6,17 @@
     kind: Namespace
     state: present
 
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k3s_monitoring_namespace }}"
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
 - name: Add prometheus community chart repo.
   kubernetes.core.helm_repository:
     name: prometheus-community
@@ -19,6 +30,12 @@
     update_repo_cache: true
     state: present
     release_values:
+      # Disable linkerd injection for admission webhooks jobs
+      prometheusOperator:
+        admissionWebhooks:
+          patch:
+            podAnnotations:
+              linkerd.io/inject: disabled
       alertmanager:
         alertmanagerSpec:
           storage:

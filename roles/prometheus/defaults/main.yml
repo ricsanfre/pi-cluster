@@ -13,3 +13,6 @@ prometheus_storage_class: "longhorn"
 
 # Grafana Settings
 prometheus_grafana_password: "s1cret0"
+
+# Enable service mesh
+enable_linkerd: true
