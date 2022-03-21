@@ -24,7 +24,7 @@
       # External Grafana
       grafana:
         enabled: false
-      grafanaUrl: kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local:80
+      grafanaUrl: grafana.picluster.ricsanfre.com:80
       # Disabling DNS rebinding protection
       dashboard:
         enforcedHostRegexp: .*

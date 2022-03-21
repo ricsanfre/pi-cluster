@@ -33,6 +33,10 @@ dnsmasq_additional_dns_hosts:
     desc: "Elasticsearch server"
     hostname: elasticsearch
     ip: 10.0.0.101
+  grafana:
+    desc: "Grafana server"
+    hostname: grafana
+    ip: 10.0.0.100
 
 ####################
 # ntp role variables
