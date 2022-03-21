@@ -98,3 +98,6 @@ fluentbit_filters:
     call: local_timestamp_to_UTC
 
 fluent_bit_log_level: info
+
+# Enable service mesh
+enable_linkerd: true
