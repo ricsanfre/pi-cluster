@@ -409,6 +409,143 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
   Follow ["Provision dashboards automatically"](/docs/prometheus/#provisioning-dashboards-automatically) procedure to load Grafana dashboards automatically.
 
 
+## Meshing a service with linkerd
+
+There are two common ways to define a resource as meshed with Linkerd:
+
+- **Explicit**: add `linkerd.io/inject: enabled` annotation per resource. Annotated pod deployment is injected with linkerd-proxy.
+
+  Annotation can be added automatically using `linkerd` command to inject the annotation
+  
+  ```shell
+  kubectl get -n NAMESPACE deploy -o yaml | linkerd inject - | kubectl apply -f -
+  ```
+  
+  This command takes all deployments resoureces from NAMESPACE and inject the annotation, so linkerd can inject linkerd-proxy automatically
+
+
+- **Implicit**: add `linkerd.io/inject: enabled` annotation for a namespace. Any new pod created within the namespace is automatically injected with linkerd-proxy.
+
+  Using kubectl:
+  ```shell
+  kubectl annotate ns <namespace_name> linkerd.io/inject=enabled
+  ```
+  
+  Through manifest file during namespace creation or patching the resource.
+  ```yml
+  kind: Namespace
+  apiVersion: v1
+  metadata:
+    name: test
+    annotations:
+      linkerd.io/inject: enabled
+  ```
+
+### Problems with Kuberentes Jobs and implicit annotation
+
+
+With `linkerd.io/inject: enabled` annotation at namespace level, [Kubernetes Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/) do not terminate after completion since the Pods created are injected with linkerd-proxy and it continues to run after the job container completes its work. 
+
+That behaviour might cause errors during helm chart installation that deploy Jobs or during executions of scheduled CronJobs.
+
+As stated in this [blog post](https://itnext.io/three-ways-to-use-linkerd-with-kubernetes-jobs-c12ccc6d4c7c) there are different ways to handle this issue, both of them requires to modify Job template definition: 
+
+1) Do not mesh the Jobs resources
+
+Adding `linkerd.io/inject: disabled` annotation to job template definition.
+
+```yml
+jobTemplate:
+  spec:
+    template:
+      metadata:
+        annotations:
+          linkerd.io/inject: disabled
+```
+
+2) Shuting down linkerd-proxy as part of the Job execution. 
+
+This can be done using [`linkerd-await`](https://github.com/linkerd/linkerd-await) as wrapper of the main job command. 
+`linkerd-await` waits till linkerd-proxy is ready then executes the main job command and, when it finishes, it calls the linkerd-proxy `/shutdown` endpoint. 
+  ```shell
+  linked-await --shutdown option <job_commad>
+  ```
+
+See details of implementation of this second workarround [here](https://itnext.io/three-ways-to-use-linkerd-with-kubernetes-jobs-c12ccc6d4c7c)
+
+
+## Meshing cluster services
+
+### Longhorn distributed Storate
+
+#### Error installing Longhorn with namespace implicit annotation
+
+When installing longhorn installation hangs when deploying CSI plugin.
+
+`longhorn-driver-deployer` pod crashes showing an error "Got an error when checking MountProgapgation with node status, Node XX is not support mount propagation"
+
+
+```sh
+oss@node1:~$ kubectl get pods -n longhorn-system
+NAME                                        READY   STATUS             RESTARTS        AGE
+longhorn-ui-84f97cf569-c6fcq                2/2     Running            0               15m
+longhorn-manager-cc7tt                      2/2     Running            0               15m
+longhorn-manager-khrx6                      2/2     Running            0               15m
+longhorn-manager-84zwx                      2/2     Running            0               15m
+instance-manager-e-86ec5db9                 2/2     Running            0               14m
+instance-manager-r-cdcb538b                 2/2     Running            0               14m
+engine-image-ei-4dbdb778-bc9q2              2/2     Running            0               14m
+instance-manager-r-0d602480                 2/2     Running            0               14m
+instance-manager-e-429cc6bf                 2/2     Running            0               14m
+instance-manager-e-af266d5e                 2/2     Running            0               14m
+instance-manager-r-02fad614                 2/2     Running            0               14m
+engine-image-ei-4dbdb778-2785c              2/2     Running            0               14m
+engine-image-ei-4dbdb778-xrj4k              2/2     Running            0               14m
+longhorn-driver-deployer-6bc898bc7b-nmzkc   1/2     CrashLoopBackOff   6 (2m46s ago)   15m
+oss@node1:~$ kubectl logs longhorn-driver-deployer-6bc898bc7b-nmzkc longhorn-driver-deployer -n longhorn-system
+2022/03/20 12:42:58 proto: duplicate proto type registered: VersionResponse
+W0320 12:42:58.148324       1 client_config.go:552] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+time="2022-03-20T12:43:48Z" level=warning msg="Got an error when checking MountPropagation with node status, Node node2 is not support mount propagation"
+time="2022-03-20T12:43:48Z" level=fatal msg="Error deploying driver: CSI cannot be deployed because MountPropagation is not set: Node node2 is not support mount propagation"
+```
+
+### Prometheus Stack
+
+#### Error installing Prometheus Operator with namespace implicit annotation
+
+When deploying `kube-prometheus-stack` helm using an annotated namespace (`linkerd.io/inject: enabled`), causes the Prometheus Operartor to hung.
+
+Job pod `pod/kube-prometheus-stack-admission-create-<randomAlphanumericString>` is created and its status is always `NotReady` since the linkerd-proxy continues to run after the job container ends so the Job Pod never ends.
+
+See [linkerd Prometheus Operator issue](https://github.com/prometheus-community/helm-charts/issues/479). 
+
+To solve this issue linkerd injection must be disabled in the associated jobs created by Prometheus Operator. This can be achieved adding the following parameters to `values.yml` file of kube-prometheus-stack helm chart.
+
+```yml
+prometheusOperator:
+  admissionWebhooks:
+    patch:
+      podAnnotations:
+        linkerd.io/inject: disabled
+```
+
+### EFK
+
+To mesh with linkerd all EFK services, it is enough to use the implicit annotation at namespace level before deploying ECK Operator and create Kibana and Elasticsearch service and before deploying fluentbit chart.
+
+Modify [ECK installation procedure](/docs/logging/#eck-perator-installation) to annotate the corresponding namespace before deploying the helm charts.
+
+```shell
+kubectl annotate ns elastic-system linkerd.io/inject=enabled
+
+kubectl annotaet ns k3s-logging linkerd.io/inject=enabled
+```
+
+Deployment using ECK can be integrated with linkerd. See [ECK-linkerd document](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-service-mesh-linkerd.html)
+
+
+
+
 ## Configure Ingress Controller
 
 Linkerd does not come with a Ingress Controller. Existing ingress controller can be integrated with Linkerd doing the following:
@@ -434,3 +571,12 @@ Linkerd-proxy configured in ingress mode will take `ld5-dst-override` HTTP heade
 Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside the cluster) will pass through Linkerd as an opaque TCP stream and Linkerd will only be able to provide byte-level metrics for this side of the connection. The resulting HTTP or gRPC traffic to internal services, of course, will have the full set of metrics and mTLS support.
 {{site.data.alerts.end}}
 
+
+
+## References
+
+- How Linkerd uses iptables to transparently route Kubernetes traffic [[1]](https://linkerd.io/2021/09/23/how-linkerd-uses-iptables-to-transparently-route-kubernetes-traffic/)
+- Protocol Detection and Opaque Ports in Linkerd [[2]](https://linkerd.io/2021/02/23/protocol-detection-and-opaque-ports-in-linkerd/)
+- x [[3]]()
+- x [[4]]()
+- x [[5]]()
