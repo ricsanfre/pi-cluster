@@ -6,6 +6,17 @@
     kind: Namespace
     state: present
 
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k3s_longhorn_namespace }}"
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
 - name: Add rancher chart repo.
   kubernetes.core.helm_repository:
     name: longhorn
