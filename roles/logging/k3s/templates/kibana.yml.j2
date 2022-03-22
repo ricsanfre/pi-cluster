@@ -5,7 +5,7 @@ metadata:
   name: "{{ efk_cluster_name }}"
   namespace: "{{ k3s_logging_namespace }}"
 spec:
-  version: 7.15.0
+  version: {{ efk_elasticsearch_version }}
   count: 1
   elasticsearchRef:
     name: "{{ efk_cluster_name }}"
