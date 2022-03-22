@@ -29,47 +29,7 @@
     release_namespace: "{{ k3s_monitoring_namespace }}"
     update_repo_cache: true
     state: present
-    release_values:
-      # Disable linkerd injection for admission webhooks jobs
-      prometheusOperator:
-        admissionWebhooks:
-          patch:
-            podAnnotations:
-              linkerd.io/inject: disabled
-      alertmanager:
-        alertmanagerSpec:
-          storage:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: "{{ prometheus_storage_class }}"
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: "{{ prometheus_storage_size }}"
-      prometheus:
-        prometheusSpec:
-          storageSpec:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: "{{ prometheus_storage_class }}"
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: "{{ prometheus_storage_size }}"
-      grafana:
-        adminPassword: "{{ prometheus_grafana_password }}"
-        plugins:
-          - grafana-piechart-panel
-      kubeApiServer:
-        enabled: true
-      kubeControllerManager:
-        enabled: false
-      kubeScheduler:
-        enabled: false
-      kubeProxy:
-        enabled: false
-      kubeEtcd:
-        enabled: false
+    values: "{{ lookup('template', 'templates/prometheus_stack_helm_values.yml.j2') | from_yaml }}"
 
 - name: Wait for pods to be ready
   command:
