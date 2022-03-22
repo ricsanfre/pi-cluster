@@ -2,7 +2,7 @@
 title: Log Management (EFK)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "25-02-2022"
+last_modified_at: "22-03-2022"
 
 ---
 
@@ -96,16 +96,10 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
             requests:
               storage: 5Gi
           storageClassName: longhorn
-    http:    # Making elasticsearch service available from outisde the cluster: Note(3)
-      service:
-        spec:
-          type: LoadBalancer
-          loadBalancerIP: 10.0.0.101
-      tls: # Configuring self-signed certificate with DNS and static IP address: Note(4)
+    http:
+      tls: # Disabling TLS automatic configuration. Note(3)
         selfSignedCertificate:
-          subjectAltNames:
-          - ip: 10.0.0.101
-          - dns: elasticsearch.picluster.ricsanfre.com
+          disabled: true
   ```
   
   {{site.data.alerts.note}} **(1) About Memory mapping configuration**
@@ -126,17 +120,13 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
   See how to configure PersistenVolumeTemplates for Elasticsearh using this operator [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
   {{site.data.alerts.end}}
 
-  {{site.data.alerts.note}} **(3): About accesing ELK services from outside the cluster**
 
-  By default ELK services (elasticsearch, kibana, etc) are accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster they can be configured as `LoadBalancer` service type and specifying a static IP address (`loadBalancerIP`) for the service from the Metal LB pool.
-  This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` service can be configured to send logs to the elasticsearch running in the cluster).
+  {{site.data.alerts.note}} **(3): Disable TLS automatic configuration**
 
-  More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-services.html)
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(4): TLS self-signed certificate**
-
-  Self-signed certificate will be created for elasticsearch, SANS (Service Alternative Names) can be added to the TLS certificate. More details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-transport-settings.html)
+  Disabling TLS automatic configuration in Elasticsearch HTTP server enables Linkerd (Cluster Service Mesh) to gather more statistics about connections. Linkerd is parsing plain text traffic (HTTP) and not encrypted (HTTPS).
+  
+  Linkerd service mesh will enforce secure communications between all PODs.
+  
   {{site.data.alerts.end}}
 
 - Step 2: Apply manifest
@@ -144,17 +134,22 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
   ```shell
   kubectl apply -f manifest.yml
   ```
-- Step 3: Check Services and Pods
+- Step 3: Check Elasticsearch status
   
   ```shell
-  kubectl get services -n k3s-logging
-  NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-  efk-es-transport   ClusterIP      None            <none>        9300/TCP         3h2m
-  efk-es-default     ClusterIP      None            <none>        9200/TCP         3h2m
-  efk-es-http        LoadBalancer   10.43.186.20    10.0.0.102    9200:30079/TCP   147m
+  kubectl get elasticsearch -n k3s-logging
+  NAME   HEALTH   NODES   VERSION   PHASE   AGE
+  efk    yellow   1       7.15.0    Ready   139m
   ```
+   
+  {{site.data.alerts.note}}
 
-### Elasticsearch authentication
+  Elasticsearch status `HEALTH=yellow` indicates that only one node of the Elasticsearch is running (no HA mechanism), `PHASE=Ready` indicates that the server is up and running
+
+  {{site.data.alerts.end}}
+
+
+#### Elasticsearch authentication
 
 By default ECK configures secured communications with auto-signed SSL certificates. Access to its API on port 9200 is only available through https and user authentication is required to allow the connection. ECK defines a `elastic` user and stores its credentials within a kubernetes Secret.
 
@@ -178,6 +173,108 @@ data:
   elastic: "{{ efk_elasticsearch_passwd | b64encode }}"
 ```
 
+#### Accesing Elasticsearch from outside the cluster
+
+By default Elasticsearh HTTP service is accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster Traefik reverse-proxy can be configured to enable external communication with Elasicsearh server.
+
+This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` service can be configured to send logs to the elasticsearch running in the cluster).
+
+- Step 1. Create the ingress rule manifest
+  
+  
+  ```yml
+  ---
+  # HTTPS Ingress
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: elasticsearch-ingress
+    namespace: k3s-logging
+    annotations:
+      # HTTPS as entry point
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Enable TLS
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: elasticsearch.picluster.ricsanfre.com
+  spec:
+    tls:
+      - hosts:
+          - elasticsearch.picluster.ricsanfre.com
+        secretName: elasticsearch-tls
+    rules:
+      - host: elasticsearch.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: efk-es-http
+                  port:
+                    number: 9200
+  ---
+  # http ingress for http->https redirection
+  kind: Ingress
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: elasticsearch-redirect
+    namespace: k3s-logging
+    annotations:
+      # Use redirect Midleware configured
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      # HTTP as entrypoint
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+  spec:
+    rules:
+      - host: elasticsearch.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: efk-es-http
+                  port:
+                    number: 9200
+  ```
+  
+  Traefik ingress rule exposes elasticsearch server as `elasticsearch.picluster.ricsanfre.com` virtual host, routing rules are configured for redirecting all incoming HTTP traffic to HTTPS and TLS is enabled using a certificate generated by Cert-manager. 
+
+  See [Traefik configuration document](/docs/traefik/) for furher details.
+
+- Step 2: Apply manifest
+
+  ```shell
+  kubectl apply -f manifest.yml
+  ```
+- Step 3. Access to Elastic HTTP service
+
+  UI can be access through http://elasticsearch.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
+
+  It should shows the following output (json message)
+
+  ```json
+  {
+    "name" : "efk-es-default-0",
+    "cluster_name" : "efk",
+    "cluster_uuid" : "EQK8niEnSzqZFHmpRSDpgg",
+    "version" : {
+      "number" : "7.15.0",
+      "build_flavor" : "default",
+      "build_type" : "docker",
+      "build_hash" : "79d65f6e357953a5b3cbcc5e2c7c21073d89aa29",
+      "build_date" : "2021-09-16T03:05:29.143308416Z",
+      "build_snapshot" : false,
+      "lucene_version" : "8.9.0",
+      "minimum_wire_compatibility_version" : "6.8.0",
+      "minimum_index_compatibility_version" : "6.0.0-beta1"
+    },
+    "tagline" : "You Know, for Search"
+  }
+  ```
+
 ### Kibana installation
 
 - Step 1. Create a manifest file
@@ -193,7 +290,7 @@ data:
     count: 2 # Elastic Search statefulset deployment with two replicas
     elasticsearchRef:
       name: "elasticsearch"
-    http:  # NOTE disabling selfSigned certificate
+    http:  # NOTE disabling kibana automatic TLS configuration
       tls:
         selfSignedCertificate:
           disabled: true
@@ -202,13 +299,19 @@ data:
   ```shell
   kubectl apply -f manifest.yml
   ```
-- Step 3: Check kibana POD and services
+- Step 3: Check kibana status
   ```shell
-  kubectl get services -n k3s-logging
-  NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-  efk-kb-http              LoadBalancer   10.43.242.252   10.0.0.101    5601:31779/TCP   3h2m
+  kubectl get kibana -n k3s-logging
+  NAME   HEALTH   NODES   VERSION   AGE
+  efk    green    1       7.15.0    171m
   ```
 
+  {{site.data.alerts.note}}
+
+  Kibana status `HEALTH=green` indicates that Kibana is up and running.
+
+  {{site.data.alerts.end}}
+  
 #### Ingress rule for Traefik
 
 Make accesible Kibana UI from outside the cluster through Ingress Controller
@@ -401,7 +504,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Tag_Key tag
           HTTP_User ${FLUENT_ELASTICSEARCH_USER}
           HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
-          tls True
+          tls False
           tls.verify False
           Retry_Limit False
     # fluent-bit.config PARSERS **NOTE 5**
@@ -509,7 +612,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   {{site.data.alerts.note}} **(4): Fluentbit OUTPUT configuration**
 
-  [OUTPUT] configuration by default uses elasticsearch, but it needs to be modified for specifying the access credentials and https protocol specific parameters (use tls and skip SSL certification validation)
+  [OUTPUT] configuration by default uses elasticsearch, but it needs to be modified for specifying the access credentials and https protocol specific parameters (do not use tls).
   {{site.data.alerts.end}}
   
   {{site.data.alerts.note}} **(5): Fluentbit PARSER configuration**
@@ -799,7 +902,7 @@ fluentbit_outputs:
     Tag_Key: tag
     HTTP_User: elastic
     HTTP_Passwd: s1cret0
-    tls: On
+    tls: Off
     tls.verify: Off
     Retry_Limit: False
 # Fluentbit custom parsers

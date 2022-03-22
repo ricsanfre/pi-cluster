@@ -22,12 +22,6 @@ spec:
                 storage: "{{ efk_elasticsearch_storage_size }}"
             storageClassName: "{{ efk_elasticsearch_storage_class }}"
   http:    # Making elasticsearch service available from outisde the cluster
-    service:
-      spec:
-        type: LoadBalancer
-        loadBalancerIP: {{ k3s_elasticsearch_external_ip }}
     tls:
       selfSignedCertificate:
-        subjectAltNames:
-        - ip: {{ k3s_elasticsearch_external_ip }}
-        - dns: {{ elasticsearch_dns }}
+        disabled: true

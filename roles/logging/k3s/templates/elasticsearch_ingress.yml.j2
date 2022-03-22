@@ -1,0 +1,56 @@
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elasticsearch-ingress
+  namespace: {{ k3s_logging_namespace }}
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: ca-issuer
+    cert-manager.io/common-name: {{ elasticsearch_dns }}
+spec:
+  tls:
+    - hosts:
+        - {{ elasticsearch_dns }}
+      secretName: elasticsearch-tls
+  rules:
+    - host: {{ elasticsearch_dns }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ efk_cluster_name }}-es-http
+                port:
+                  number: 9200
+
+---
+# http ingress for http->https redirection
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: elasticsearch-redirect
+  namespace: {{ k3s_logging_namespace }}
+  annotations:
+    # Use redirect Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-redirect@kubernetescrd
+    # HTTP as entrypoint
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: {{ elasticsearch_dns }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ efk_cluster_name }}-es-http
+                port:
+                  number: 9200

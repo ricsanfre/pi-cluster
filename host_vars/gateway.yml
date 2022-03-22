@@ -32,7 +32,7 @@ dnsmasq_additional_dns_hosts:
   elasticsearch:
     desc: "Elasticsearch server"
     hostname: elasticsearch
-    ip: 10.0.0.101
+    ip: 10.0.0.100
   grafana:
     desc: "Grafana server"
     hostname: grafana

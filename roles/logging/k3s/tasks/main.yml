@@ -65,6 +65,7 @@
     - elasticsearch.yml.j2
     - kibana.yml.j2
     - kibana_ingress.yml.j2
+    - elasticsearch_ingress.yml.j2
 
 - name: Wait for Elastic search to be deployed
   command:
