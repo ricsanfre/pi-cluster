@@ -181,7 +181,6 @@ This can be useful for example if elasticsearh database have to be used to monit
 
 - Step 1. Create the ingress rule manifest
   
-  
   ```yml
   ---
   # HTTPS Ingress
@@ -319,26 +318,63 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
 - Step 1. Create the ingress rule manifest
   
   ```yml
+  ---
+  # HTTPS Ingress
   apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
     name: kibana-ingress
     namespace: k3s-logging
     annotations:
-      kubernetes.io/ingress.class: traefik
+      # HTTPS as entry point
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Enable TLS
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: kibana.picluster.ricsanfre.com
+  spec:
+    tls:
+      - hosts:
+          - kibana.picluster.ricsanfre.com
+        secretName: kibana-tls
+    rules:
+      - host: kibana.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: efk-kb-http
+                  port:
+                    number: 5601
+  ---
+  # http ingress for http->https redirection
+  kind: Ingress
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: kibana-redirect
+    namespace: k3s-logging
+    annotations:
+      # Use redirect Midleware configured
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      # HTTP as entrypoint
+      traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
     rules:
-    - host: kibana.picluster.ricsanfre.com
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: "efk-kb-http"
-              port:
-                number: 5601
+      - host: kibana.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: efk-kb-http
+                  port:
+                    number: 5601
   ```
+  
 - Step 2: Apply manifest
   ```shell
   kubectl apply -f manifest.yml
