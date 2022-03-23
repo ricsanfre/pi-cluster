@@ -511,7 +511,8 @@ time="2022-03-20T12:43:48Z" level=fatal msg="Error deploying driver: CSI cannot 
 
 ### Prometheus Stack
 
-#### Error installing Prometheus Operator with namespace implicit annotation
+To mesh with linkerd all Prometheus-stack services, implicit annotation at namespace level can be used before deploying kube-prometheys-stack chart.
+
 
 When deploying `kube-prometheus-stack` helm using an annotated namespace (`linkerd.io/inject: enabled`), causes the Prometheus Operartor to hung.
 
@@ -529,30 +530,71 @@ prometheusOperator:
         linkerd.io/inject: disabled
 ```
 
+Modify [Prometheus installation procedure](/docs/monitoring/) to annotate the corresponding namespace before deploying the helm chart and use the modified values.yml file.
+
+```shell
+kubectl annotate ns k3s-monitoring linkerd.io/inject=enabled
+```
+
+{{site.data.alerts.note}}
+
+`node-exporter` daemonset, which are part of kube-prometheus-stack, are not injected with linkerd-proxy becasue its PODs use hosts network namespace `spec.hostNework=true`. Linkerd injection is disabled for pods with hostNetwork=true.
+
+If you try to inject manually:
+
+```shell
+kubectl get daemonset -n k3s-monitoring -o yaml | linkerd inject -
+
+Error transforming resources:
+failed to inject daemonset/kube-prometheus-stack-prometheus-node-exporter: hostNetwork is enabled
+```
+
+{{site.data.alerts.end}}
+
+
 ### EFK
 
 To mesh with linkerd all EFK services, it is enough to use the implicit annotation at namespace level before deploying ECK Operator and create Kibana and Elasticsearch service and before deploying fluentbit chart.
 
-Modify [ECK installation procedure](/docs/logging/#eck-perator-installation) to annotate the corresponding namespace before deploying the helm charts.
+Modify [EFK installation procedure](/docs/logging/) to annotate the corresponding namespace before deploying the helm charts.
 
 ```shell
 kubectl annotate ns elastic-system linkerd.io/inject=enabled
 
-kubectl annotaet ns k3s-logging linkerd.io/inject=enabled
+kubectl annotate ns k3s-logging linkerd.io/inject=enabled
 ```
 
-Deployment using ECK can be integrated with linkerd. See [ECK-linkerd document](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-service-mesh-linkerd.html)
+When deploying Elasticsearch and Kibana using the ECK operator, it is needed to specify the parameter `automountServiceAccountToken: true`, otherwise the linkerd-proxy is not injected.
+
+The following configuration need to be added to Elastic and Kibana resources
+
+```yml
+podTemplate:
+  spec:
+    automountServiceAccountToken: true
+
+```
+
+For details about how to integrate with linkerd Elastic stack components using ECK operator, see [ECK-linkerd document](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-service-mesh-linkerd.html).
 
 
+{{site.data.alerts.important}}
+
+Elasticsearch automatic TLS configuration that was itinitially configured has been disabled, so Linkerd can gather more metrics about the connections. See [issue #45](https://github.com/ricsanfre/pi-cluster/issues/45)
+
+{{site.data.alerts.end}}
 
 
 ## Configure Ingress Controller
 
 Linkerd does not come with a Ingress Controller. Existing ingress controller can be integrated with Linkerd doing the following:
+
   - Configuring Ingress Controller to support Linkerd.
   - Meshing Ingress Controller pods so that they have the Linkerd proxy installed.
 
-In general, Linkerd can be used with any ingress controller. In order for Linkerd to properly apply features such as route-based metrics and traffic splitting, Linkerd needs the IP/port of the Kubernetes Service. However, by default, many ingresses do their own endpoint selection and pass the IP/port of the destination Pod, rather than the Service as a whole.
+Linkerd can be used with any ingress controller. In order for Linkerd to properly apply features such as route-based metrics and traffic splitting, Linkerd needs the IP/port of the Kubernetes Service as the traffic destination. However, by default, many ingresses, like Traefik, do their own load balance and endpoint selection when forwarding HTTP traffic pass the IP/port of the destination Pod, rather than the Service as a whole.
+
+In order to enable linkerd implementation of load balancing at HTTP request level, Traefik load balancing mechanism must be skipped.
 
 More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.11/tasks/using-ingress/).
 
@@ -561,22 +603,100 @@ More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.1
 
 In order to integrate Traefik with Linkerd the following must be done:
 
-- Traefik should be meshed with ingress mode enabled, i.e. with the `linkerd.io/inject: ingress` annotation rather than the default enabled.
+1. Traefik must be meshed with `ingress mode` enabled, i.e. with the `linkerd.io/inject: ingress` annotation rather than the default enabled.
+  
+   Executing the following command Traefik deployment is injected with  linkerd-proxy in ingress mode:
 
-- Configure Ingress rules to use a Traefik's Middleware inserting a specific header, `l5d-dst-override` pointing to the Service IP/Port (using internal DNS name: `<service-name>.<namespace-name>.svc.cluster.local`
+   ```shell
+   kubectl get deployment traefik -o yaml -n kube-system | linkerd inject --ingress - | kubectl apply -f -
+   ```
 
-Linkerd-proxy configured in ingress mode will take `ld5-dst-override` HTTP header for routing the traffic to the service. 
+   {{site.data.alerts.important}}
 
-{{site.data.alerts.important}}
+   In ingress mode only HTTP traffic is routed by linkerd-proxy. Traefik will stop routing any HTTPS traffic. In this mode we must be sure that Traefil will end all TLS communications coming from ourside de cluster and that it communicate with the internal services only using HTTP.
+
+   This is how we have configured all services within the cluster. Disabling TLS configurations of all internal HTTP services.
+
+   Linkerd at platform level provides that TLS secure layer.
+
+   HTTP communications from clients outside the cluster are secured by Traefik (closing external TLS sessions). From Traefik traffic routing to the cluster will be secured by Linkerd-proxy.
+
+   {{site.data.alerts.end}}
+
+   Since Traefik needs to talk to Kubernetes API using HTTPS standard port (to impliments its own routing and load balancing mechanism), this mode of execution breaks Traefik unless outbound communications using port 443 skips the linkerd-proxy.
+
+   For making Traefik still working with its own loadbalancing/routing mechanism the following command need to be executed.
+
+   ```shell
+   kubectl get deployment traefik -o yaml -n kube-system | linkerd inject --ingress --skip-outbound-ports 443 - | kubectl apply -f - 
+   ```
+
+   See [Linkerd discussion #7387](https://github.com/linkerd/linkerd2/discussions/7387) for further details about this issue.
+
+   Alternative the Traefik helm chart can be configured so the deployed pod contains the required linkerd annotations to enable the ingress mode and skip port 443. The following additional values must be provided
+
+   ```yml
+   deployment:
+      podAnnotations:
+        linkerd.io/inject: ingress
+        config.linkerd.io/skip-outbound-ports: "443"
+   ```
+
+   Traefik is a K3S embedded components that is auto-deployed using Helm. In order to configure Helm chart configuration parameters the official [document](https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig) must be followed. See how to do it in [Traefik configuration documentation](/docs/traefik/)
+
+
+
+2. Replace Traefik routing and load-balancing mechanism by linkerd-proxy routing and load balancing mechanism.
+
+   Configure Ingress resources to use a Traefik's Middleware inserting a specific header, `l5d-dst-override` pointing to the Service IP/Port (using internal DNS name: `<service-name>.<namespace-name>.svc.cluster.local`
+
+   Linkerd-proxy configured in ingress mode will take `ld5-dst-override` HTTP header for routing the traffic to the service.
+
+   When an HTTP (not HTTPS) request is received by a Linkerd proxy, the destination service of that request is identified. 
+
+   The destination service for a request is computed by selecting the value of the first HTTP header to exist of, `l5d-dst-override`, `:authority`, and `Host`. The port component, if included and including the colon, is stripped. That value is mapped to the fully qualified DNS name.
+
+
+   Per ingress resource do the following:
+
+   - Step 1: Create Middleware routing for providing l5d-dst-override HTTP header
+
+      ```yml
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
+      metadata:
+        name: l5d-header-middleware
+        namespace: my-namespace
+      spec:
+        headers:
+          customRequestHeaders:
+            l5d-dst-override: "my-service.my-namespace.svc.cluster.local:80"
+
+      ```
+    - Step 2: Add traefik middleware annotation to Ingress definition
+
+      ```yml
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: my-ingress
+        namespace: my-namespace
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares:
+            my-namespace-l5d-header-middleware@kubernetescrd
+
+      ```
+
+{{site.data.alerts.note}}
+
 Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside the cluster) will pass through Linkerd as an opaque TCP stream and Linkerd will only be able to provide byte-level metrics for this side of the connection. The resulting HTTP or gRPC traffic to internal services, of course, will have the full set of metrics and mTLS support.
+
 {{site.data.alerts.end}}
-
-
 
 ## References
 
 - How Linkerd uses iptables to transparently route Kubernetes traffic [[1]](https://linkerd.io/2021/09/23/how-linkerd-uses-iptables-to-transparently-route-kubernetes-traffic/)
 - Protocol Detection and Opaque Ports in Linkerd [[2]](https://linkerd.io/2021/02/23/protocol-detection-and-opaque-ports-in-linkerd/)
-- x [[3]]()
+- How to configure linkerd service-mesh with Elastic Cloud Operator [[3]](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-service-mesh-linkerd.html)
 - x [[4]]()
 - x [[5]]()

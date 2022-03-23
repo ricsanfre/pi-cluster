@@ -1,3 +1,16 @@
+{% if enable_linkerd is sameas true %}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-grafana
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: "kube-prometheus-stack-grafana.{{ k3s_monitoring_namespace }}.svc.cluster.local:80"
+{% endif %}
+
 ---
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
@@ -13,6 +26,11 @@ metadata:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: ca-issuer
     cert-manager.io/common-name: {{ grafana_dashboard_dns }}
+{% if enable_linkerd is sameas true %}
+    # Linkerd header
+    traefik.ingress.kubernetes.io/router.middlewares:
+      {{ k3s_monitoring_namespace }}-l5d-header-middleware-grafana@kubernetescrd
+{% endif %}
 spec:
   tls:
     - hosts:

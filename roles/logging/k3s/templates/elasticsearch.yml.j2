@@ -25,9 +25,9 @@ spec:
               requests:
                 storage: "{{ efk_elasticsearch_storage_size }}"
             storageClassName: "{{ efk_elasticsearch_storage_class }}"
-      {% if enable_linkerd is sameas true %}
+{% if enable_linkerd is sameas true %}
       # Enabling service account token. linkerd requirement
       podTemplate:
         spec:
           automountServiceAccountToken: true
-      {% endif %}
+{% endif %}

@@ -1,3 +1,15 @@
+{% if enable_linkerd is sameas true %}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-prometheus
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: "kube-prometheus-stack-prometheus.{{ k3s_monitoring_namespace }}.svc.cluster.local:9090"
+{% endif %}
 ---
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
@@ -11,7 +23,11 @@ metadata:
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: 
+      {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
+{% if enable_linkerd is sameas true %}
+      ,{{ k3s_monitoring_namespace }}-l5d-header-middleware-prometheus@kubernetescrd
+{% endif %}
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: ca-issuer
     cert-manager.io/common-name: {{ prometheus_dashboard_dns }}
