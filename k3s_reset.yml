@@ -3,7 +3,7 @@
   become: true
   gather_facts: false
   tasks:
-    - name: Unisntall k3s
+    - name: Uninstall k3s
       command: /usr/local/bin/k3s-uninstall.sh
       changed_when: true
     - import_tasks: tasks/cleaning.yml
@@ -13,7 +13,7 @@
   become: true
   gather_facts: false
   tasks:
-    - name: Unisntall k3s
+    - name: Uninstall k3s
       command: /usr/local/bin/k3s-agent-uninstall.sh
       changed_when: true
     - import_tasks: tasks/cleaning.yml
