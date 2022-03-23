@@ -13,3 +13,9 @@ spec:
     tls:
       selfSignedCertificate:
         disabled: true
+  {% if enable_linkerd is sameas true %}
+  # Enabling service account token. linkerd requirement
+  podTemplate:
+    spec:
+      automountServiceAccountToken: true
+  {% endif %}

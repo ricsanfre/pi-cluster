@@ -6,6 +6,10 @@ metadata:
   namespace: "{{ k3s_logging_namespace }}"
 spec:
   version: {{ efk_elasticsearch_version }}
+  http:    # Making elasticsearch service available from outisde the cluster
+    tls:
+      selfSignedCertificate:
+        disabled: true
   nodeSets:
     - name: default
       count: {{ efk_elasticsearch_nodes }}
@@ -21,7 +25,9 @@ spec:
               requests:
                 storage: "{{ efk_elasticsearch_storage_size }}"
             storageClassName: "{{ efk_elasticsearch_storage_class }}"
-  http:    # Making elasticsearch service available from outisde the cluster
-    tls:
-      selfSignedCertificate:
-        disabled: true
+      {% if enable_linkerd is sameas true %}
+      # Enabling service account token. linkerd requirement
+      podTemplate:
+        spec:
+          automountServiceAccountToken: true
+      {% endif %}
