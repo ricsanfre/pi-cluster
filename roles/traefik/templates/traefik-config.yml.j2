@@ -12,6 +12,11 @@ spec:
       - "--accesslog.format=json"
       - "--accesslog.filepath=/data/access.log"
     deployment:
+{% if enable_linkerd is sameas true %}
+      podAnnotations:
+        linkerd.io/inject: ingress
+        config.linkerd.io/skip-outbound-ports: "443"
+{% endif %}
       additionalContainers:
         - name: stream-accesslog
           image: busybox
