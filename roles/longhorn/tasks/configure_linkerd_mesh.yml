@@ -1,0 +1,32 @@
+---
+# Make longhorn-manager container listen on localhost
+
+- name: Change longhorn-manager POD_IP env variable
+  command:
+    cmd: "kubectl set env daemonset/longhorn-manager -n {{ k3s_longhorn_namespace }} POD_IP=0.0.0.0"
+  register: change_pod_env
+  changed_when: '"daemonset.apps/longhorn-manager env updated" in change_pod_env.stdout'
+
+# Daemon is injectd through anotation (helm chart value)
+# - name: Inject longhorn-manager using linkerd cli
+#   shell: |
+#     set -o pipefail
+#     kubectl get daemonset longhorn-manager -o yaml -n longhorn-system | \
+#     linkerd inject - | kubectl apply -f -
+#   register: longhorn_manager_injection
+#   args:
+#     executable: /bin/bash
+#   changed_when: '"daemonset \"longhorn-manager\" injected" in longhorn_manager_injection.stdout'
+#   failed_when:
+#     - longhorn_manager_injection.rc == 0
+#     - '"Warning: resource daemonsets/longhorn-manager is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply" not in longhorn_manager_injection.stdout'
+
+- name: Inject longhorn-ui using linkerd cli
+  shell: |
+    set -o pipefail
+    kubectl get deployment longhorn-ui -o yaml -n longhorn-system | \
+    linkerd inject - | kubectl apply -f -
+  register: longhorn_ui_injection
+  args:
+    executable: /bin/bash
+  changed_when: '"deployment \"longhorn-ui\" injected" in longhorn_ui_injection.stdout'

@@ -1,0 +1,16 @@
+---
+# longhorn helm chart values
+
+defaultSettings:
+  defaultDataPath: "/storage"
+{% if longhorn_s3_backup is sameas true %}
+  # Backup S3 configuration
+  backupTarget: "s3://{{ minio_longhorn_bucket }}@{{ minio_site_region }}/"
+  backupTargetCredentialSecret: minio-secret
+{% endif %}
+{% if enable_linkerd is sameas true %}
+# Linkerd injection
+# Inject linkerd-proxy 
+annotations:
+  linkerd.io/inject: enabled
+{% endif %}

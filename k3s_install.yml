@@ -23,7 +23,7 @@
 - name: Label K3S worker nodes
   hosts: k3s_master
   tasks:
-    - name: Wait for node {{ item }} to be ready
+    - name: "Wait for worker nodes to be ready"
       command:
         cmd: "kubectl get nodes {{ item }}"
       register: nodes

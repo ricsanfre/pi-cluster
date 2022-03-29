@@ -9,6 +9,9 @@ spec:
   headers:
     customRequestHeaders:
       X-Forwarded-Proto: "https"
+{% if enable_linkerd is sameas true %}
+      l5d-dst-override: "longhorn-frontend.{{ k3s_longhorn_namespace }}.svc.cluster.local:80"
+{% endif %}
 
 ---
 # HTTPS Ingress
