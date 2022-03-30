@@ -2,6 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd.
+last_modified_at: "29-03-2022"
 
 ---
 
@@ -418,11 +419,19 @@ There are two common ways to define a resource as meshed with Linkerd:
   Annotation can be added automatically using `linkerd` command to inject the annotation
   
   ```shell
-  kubectl get -n NAMESPACE deploy -o yaml | linkerd inject - | kubectl apply -f -
+  kubectl get -n NAMESPACE deploy/daemonset/statefulset -o yaml | linkerd inject - | kubectl apply -f -
   ```
   
   This command takes all deployments resoureces from NAMESPACE and inject the annotation, so linkerd can inject linkerd-proxy automatically
 
+  Alternative the deployment/daemonset/statefulset can be manually annotated through the `kubectl patch` command:
+
+  ```shell
+  kubectl patch deployment/daemonset/stateful <name> "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"linkerd.io/inject\":\"enabled\"}}}}}"
+
+  ``` 
+  
+  In both cases deployemnt/daemonset/stateful are redeploy after applying the command.
 
 - **Implicit**: add `linkerd.io/inject: enabled` annotation for a namespace. Any new pod created within the namespace is automatically injected with linkerd-proxy.
 
@@ -476,38 +485,65 @@ See details of implementation of this second workarround [here](https://itnext.i
 
 ## Meshing cluster services
 
-### Longhorn distributed Storate
+### Longhorn
 
-#### Error installing Longhorn with namespace implicit annotation
+Implicit annotation at namespace cannot be used since Longhorn create some kubernetes jobs, and there is no way to annotate them through customization of the helm chart.
 
-When installing longhorn installation hangs when deploying CSI plugin.
+The DaemonSet `longhorn-manager` is customizable via the Helm chart, but the workloads managed by longhorn-manager (e.g. instance managers and jobs) are not. There is an [longhorn's open feature request](https://github.com/longhorn/longhorn/issues/3286) asking for this kind of functionality.
 
-`longhorn-driver-deployer` pod crashes showing an error "Got an error when checking MountProgapgation with node status, Node XX is not support mount propagation"
+By the other way, trying to use explicit annotation and injecting the linkerd-proxy, Longhorn is not being able to be deployed. See [issue #47](https://github.com/ricsanfre/pi-cluster/issues/47).
 
+One of the problems is that `longhorn-manager`, main component of Longhorn control plane, is not accepting connections coming from localhost only connections coming to the assigned IP address. When deploying linkerd-proxy all connections to its API are rejected because linkerd-proxy is using 127.0.0.1 as destination IP-address when routing all the incoming traffic to the container.
 
-```sh
-oss@node1:~$ kubectl get pods -n longhorn-system
-NAME                                        READY   STATUS             RESTARTS        AGE
-longhorn-ui-84f97cf569-c6fcq                2/2     Running            0               15m
-longhorn-manager-cc7tt                      2/2     Running            0               15m
-longhorn-manager-khrx6                      2/2     Running            0               15m
-longhorn-manager-84zwx                      2/2     Running            0               15m
-instance-manager-e-86ec5db9                 2/2     Running            0               14m
-instance-manager-r-cdcb538b                 2/2     Running            0               14m
-engine-image-ei-4dbdb778-bc9q2              2/2     Running            0               14m
-instance-manager-r-0d602480                 2/2     Running            0               14m
-instance-manager-e-429cc6bf                 2/2     Running            0               14m
-instance-manager-e-af266d5e                 2/2     Running            0               14m
-instance-manager-r-02fad614                 2/2     Running            0               14m
-engine-image-ei-4dbdb778-2785c              2/2     Running            0               14m
-engine-image-ei-4dbdb778-xrj4k              2/2     Running            0               14m
-longhorn-driver-deployer-6bc898bc7b-nmzkc   1/2     CrashLoopBackOff   6 (2m46s ago)   15m
-oss@node1:~$ kubectl logs longhorn-driver-deployer-6bc898bc7b-nmzkc longhorn-driver-deployer -n longhorn-system
-2022/03/20 12:42:58 proto: duplicate proto type registered: VersionResponse
-W0320 12:42:58.148324       1 client_config.go:552] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-time="2022-03-20T12:43:48Z" level=warning msg="Got an error when checking MountPropagation with node status, Node node2 is not support mount propagation"
-time="2022-03-20T12:43:48Z" level=fatal msg="Error deploying driver: CSI cannot be deployed because MountPropagation is not set: Node node2 is not support mount propagation"
+{{site.data.alerts.note}}
+
+Linkerd iptables forwarding rules makes that all received traffic by the meshed containers appears to come from localhost.
+
+So containers meshed with linkerd need to be listening on localhost. They should be listening on "0.0.0.0" address (any IP address including localhost: 127.0.0.1)
+
+There is a [linkerd open issue](https://github.com/linkerd/linkerd2/issues/4713) for changing linkerd's default behavior and keep IP addresses when forwarding the traffic using TPROXY.
+
+{{site.data.alerts.end}}
+
+There is a [longhorn open issue](https://github.com/longhorn/longhorn/issues/1315) with a similar problem when trying to mesh with Istio. As a workarround it is proposed to change `longhorn-manager` POD_IP environment variable.
+
+`longhorn-manager` container open the listening port on the IP get form POD_IP environment variable which points to the assigned ip to the POD. See daemonset definition:
+
+```yml
+env:
+- name: POD_NAMESPACE
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.namespace
+- name: POD_IP
+  valueFrom:
+    fieldRef:
+      fieldPath: status.podIP
 ```
+
+- Meshing `longhorn-manager` daemonset
+
+  1) Change environment variable (POD_IP) to make the container listen to localhost connetions
+
+    ```shell
+    kubectl set env daemonset/longhorn-manager -n longhorn-system POD_IP=0.0.0.0
+    ```
+
+  2) Annotate daemonset to deploy linkerd sidecar
+
+    ```shell
+    kubectl patch daemonset longhorn-manager "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"linkerd.io/inject\":\"enabled\"}}}}}" -n longhorn-system
+
+    ```
+- Meshing `longhorn-ui` deployment
+
+  Annotate daemonset to deploy linkerd sidecar
+
+  ```shell
+  kubectl patch deployment longhorn-ui "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"linkerd.io/inject\":\"enabled\"}}}}}" -n longhorn-system
+
+  ``` 
+     
 
 ### Prometheus Stack
 
