@@ -1,0 +1,47 @@
+---
+# velero helm chart values
+
+# AWS backend plugin configuration
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.3.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+# Upgrading CRDs is causing issues
+upgradeCRDs: false
+# Use a kubectl image supporting ARM64
+# bitnami default is not suppporting it
+# kubectl:
+#   image:
+#     repository: rancher/kubectl
+#     tag: v1.21.5
+# Disable volume snapshots. Longhorn deals with them
+snapshotsEnabled: false
+# Deploy restic
+deployRestic: true
+# Minio storage configuration
+configuration:
+  # Cloud provider being used
+  provider: aws
+  backupStorageLocation:
+    provider: aws
+    bucket: "{{ minio_velero_bucket }}"
+    caCert: "{{ lookup('file','certificates/CA.pem') | b64encode | replace('\n', '') }}"
+    config:
+      region: "{{ minio_site_region }}"
+      s3ForcePathStyle: true
+      s3Url: "{{ minio_url }}"
+      insecureSkipTLSVerify: true
+credentials:
+  secretContents:
+    cloud: |
+      [default]
+      aws_access_key_id: "{{ minio_velero_user }}"
+      aws_secret_access_key: "{{ minio_velero_key }}"
+{% if enable_linkerd is sameas true %}
+# Enable linkerd
+podAnnotations:
+  linkerd.io/inject: enabled
+{% endif %}

@@ -547,7 +547,7 @@ env:
 
 ### Prometheus Stack
 
-To mesh with linkerd all Prometheus-stack services, implicit annotation at namespace level can be used before deploying kube-prometheys-stack chart.
+For applying linkerd service mesh to Prometheus-stack services, implicit annotation at namespace level can be used before deploying kube-prometheys-stack chart.
 
 
 When deploying `kube-prometheus-stack` helm using an annotated namespace (`linkerd.io/inject: enabled`), causes the Prometheus Operartor to hung.
@@ -590,7 +590,7 @@ failed to inject daemonset/kube-prometheus-stack-prometheus-node-exporter: hostN
 
 ### EFK
 
-To mesh with linkerd all EFK services, it is enough to use the implicit annotation at namespace level before deploying ECK Operator and create Kibana and Elasticsearch service and before deploying fluentbit chart.
+For applying linkerd service mesh to EFK services, it is enough to use the implicit annotation at namespace level before deploying ECK Operator and create Kibana and Elasticsearch service and before deploying fluentbit chart.
 
 Modify [EFK installation procedure](/docs/logging/) to annotate the corresponding namespace before deploying the helm charts.
 
@@ -619,6 +619,18 @@ For details about how to integrate with linkerd Elastic stack components using E
 Elasticsearch automatic TLS configuration that was itinitially configured has been disabled, so Linkerd can gather more metrics about the connections. See [issue #45](https://github.com/ricsanfre/pi-cluster/issues/45)
 
 {{site.data.alerts.end}}
+
+
+### Velero
+
+For applying linkerd service mesh to Velero services, implicit annotation is used for `velero` deployment and `restic` daemonset.
+
+This annotation can be automatic applied when installing Velero's helm chart using the parameter `podAnnnotations`. This can be achieved adding the following parameters to `values.yml` file of velero helm chart.
+
+```yml
+podAnnotations:
+  linkerd.io/inject: enabled
+```
 
 
 ## Configure Ingress Controller
