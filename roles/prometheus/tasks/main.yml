@@ -77,4 +77,4 @@
   loop_control:
     loop_var: dashboard_file
   with_fileglob:
-    - "files/*"
+    - "dashboards/*"
