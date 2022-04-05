@@ -78,3 +78,4 @@
     loop_var: dashboard_file
   with_fileglob:
     - "dashboards/*"
+    - "dashboards/linkerd/*"
