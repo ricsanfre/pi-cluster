@@ -140,8 +140,9 @@ Installation using `Helm` (Release 3):
 
 ## Cert-Manager Configuration
 
-A PKI (Public Key Infrastructure) with a custom CA, will be created within the cluster and all certificates withing the cluster will be auto-signed by this CA. For doing so, A CA `ClusterIssuer` need be created to be created.
-Root CA certificate is needed for generated this CA Issuer, selfsigned `ClusterIssuer` will be used to generate that root CA certificated (self-signed root CA).
+A PKI (Public Key Infrastructure) with a custom CA will be created in the cluster and all certificates will be auto-signed by this CA. For doing so, A CA `ClusterIssuer` resource need to be created.
+
+Root CA certificate is needed for generated this CA Issuer. A selfsigned `ClusterIssuer` resource will be used to generate that root CA certificate (self-signed root CA).
 
 - Step 1: Create selfsigned `ClusterIssuer`
 
@@ -193,7 +194,7 @@ Root CA certificate is needed for generated this CA Issuer, selfsigned `ClusterI
 
 {{site.data.alerts.important}}
 
-Algorithm used for signing SSL certificates is ECDSA P-256, since it is the one needed as requirement for installing `linkerd`
+Algorithm used for creating private keys is ECDSA P-256. The use of this algorithm is required by the service mesh implementation I have selected for the cluster, Linkerd. RootCa and Linkerd identity issuer certificate must used ECDSA P-256 algorithm.
 
 {{site.data.alerts.end}}
 
