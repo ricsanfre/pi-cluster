@@ -2,7 +2,7 @@
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
 description: How to configure Ingress Contoller based on Traefik in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "25-02-2022"
+last_modified_at: "08-03-2022"
 ---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
@@ -61,7 +61,7 @@ spec:
                   number: 80
 ```
 
-SSL certificates can be created manually and stored in Kubernetes `Secrets`. This manual step can be avoided using Cert-manager.
+SSL certificates can be created manually and stored in Kubernetes `Secrets`.
 
 ```yml
 apiVersion: v1
@@ -73,6 +73,10 @@ data:
   tls.key: base64 encoded key
 type: kubernetes.io/tls
 ```
+
+This manual step can be avoided using Cert-manager and annotating the Ingress resource: `cert-manager.io/cluster-issuer: <issuer_name>`. See further details in [SSL certification management documentation](/docs/certmanager/).
+
+
 
 ### Redirecting HTTP traffic to HTTPS
 
@@ -314,7 +318,7 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
       app.kubernetes.io/name: traefik
   ```
 
-- Create Ingress rules for accesing through HTTPS dashboard UI, using certifcates automatically created by certmanager and providing a basic authentication mechanism.
+- Create Ingress rules for accesing through HTTPS dashboard UI, using certificates automatically created by certmanager and providing a basic authentication mechanism.
   
   ```yml
   ---
@@ -332,13 +336,13 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
       # Use Basic Auth Midleware configured
       traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: self-signed-issuer
-      cert-manager.io/common-name: traefik
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: traefik.picluster.ricsanfre.com
   spec:
     tls:
       - hosts:
           - traefik.picluster.ricsanfre.com
-        secretName: prometheus-tls
+        secretName: traefik-tls
     rules:
       - host: traefik.picluster.ricsanfre.com
         http:

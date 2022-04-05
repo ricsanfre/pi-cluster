@@ -11,3 +11,6 @@ traefik_basic_auth_user: admin
 traefik_basic_auth_passwd: s1cret0
 
 traefik_auth_htpasswd_pair: KKYWRtaW46JGFwcjEkWkRkMWIvNC4kUG9RR244RW5Gc0lWUUFDS3p3VHJrLgoK
+
+# Enable service mesh
+enable_linkerd: true

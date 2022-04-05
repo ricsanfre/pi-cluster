@@ -1,0 +1,64 @@
+---
+
+- name: Check Linkerd CLI installation status
+  stat:
+    path: "{{ linkerd_bin }}"
+  register: _linkerd_bin
+
+- name: Install linkerd CLI
+  include_tasks: install_linkerd_cli.yml
+  args:
+    apply:
+      become: true
+  when:
+    - not _linkerd_bin.stat.exists
+
+- name: Create linkerd namespace.
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_namespace.yml.j2
+
+- name: Create linkerd issuer
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_issuer.yml.j2
+
+- name: Get ca.crt from linkerd-identity
+  shell: |
+    set -o pipefail
+    kubectl get secret \
+    -n "{{ k3s_linkerd_namespace }}" linkerd-identity-issuer \
+    -o jsonpath="{.data.ca\.crt}" | base64 -d
+  args:
+    executable: /bin/bash
+  register: output_ca_crt
+  changed_when: false
+
+- name: Add Linkerd stable repo.
+  kubernetes.core.helm_repository:
+    name: linkerd
+    repo_url: "https://helm.linkerd.io/stable"
+
+- name: Deploy Linkerd Helm chart.
+  kubernetes.core.helm:
+    name: linkerd2
+    chart_ref: linkerd/linkerd2
+    release_namespace: "{{ k3s_linkerd_namespace }}"
+    update_repo_cache: true
+    state: present
+    release_values:
+      installNamespace: false
+      identityTrustAnchorsPEM: "{{ output_ca_crt.stdout }}"
+      identity:
+        issuer:
+          scheme: kubernetes.io/tls
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_linkerd_namespace }} --all --timeout=600s"
+  register: linkerd_pods_ready
+  changed_when: false

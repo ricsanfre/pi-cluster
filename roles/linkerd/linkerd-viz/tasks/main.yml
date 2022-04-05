@@ -1,0 +1,50 @@
+---
+
+- name: Create linkerd-viz namespace.
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_viz_namespace.yml.j2
+
+- name: Deploy Linkerd-viz Helm chart.
+  kubernetes.core.helm:
+    name: linkerd-viz
+    chart_ref: linkerd/linkerd-viz
+    release_namespace: "{{ k3s_linkerd_namespace }}-viz"
+    update_repo_cache: true
+    state: present
+    release_values:
+      # Skip namespace creation
+      installNamespace: false
+      # External Prometheus
+      prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
+      prometheus:
+        enabled: false
+      # External Grafana
+      grafana:
+        enabled: false
+      grafanaUrl: grafana.picluster.ricsanfre.com:80
+      # Disabling DNS rebinding protection
+      dashboard:
+        enforcedHostRegexp: .*
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_linkerd_namespace }}-viz --all --timeout=600s"
+  register: linkerd_viz_pods_ready
+  changed_when: false
+
+- name: Create Ingress for linkerd-viz dashboard
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_viz_ingress.yml.j2
+
+- name: Create Prometheus configuration
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - linkerd_viz_prometheus.yml.j2

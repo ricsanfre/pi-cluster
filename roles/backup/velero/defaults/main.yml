@@ -1,3 +1,6 @@
 ---
 velero_version: v1.7.1
 velero_arch: arm64
+
+# Enable service mesh
+enable_linkerd: true

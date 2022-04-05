@@ -7,5 +7,5 @@ metadata:
   labels:
      grafana_dashboard: "1"
 data:
-  {{ dashboard_file.name }}: |-
-{{ dashboard_file.content | string | indent(4, true) }}
+  {{ dashboard_file_name }}: |-
+{{ dashboard_content | to_nice_json | indent(4, true) }}

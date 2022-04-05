@@ -115,8 +115,8 @@ There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Lo
         traefik-system-basic-auth@kubernetescrd,
         longhorn-system-svc-longhorn-headers@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: self-signed-issuer
-      cert-manager.io/common-name: longhorn
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: storage.picluster.ricsanfre.com
   spec:
     tls:
     - hosts:

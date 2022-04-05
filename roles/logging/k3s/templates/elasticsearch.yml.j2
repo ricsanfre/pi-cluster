@@ -5,7 +5,11 @@ metadata:
   name: "{{ efk_cluster_name }}"
   namespace: "{{ k3s_logging_namespace }}"
 spec:
-  version: 7.15.0
+  version: {{ efk_elasticsearch_version }}
+  http:    # Making elasticsearch service available from outisde the cluster
+    tls:
+      selfSignedCertificate:
+        disabled: true
   nodeSets:
     - name: default
       count: {{ efk_elasticsearch_nodes }}
@@ -21,13 +25,9 @@ spec:
               requests:
                 storage: "{{ efk_elasticsearch_storage_size }}"
             storageClassName: "{{ efk_elasticsearch_storage_class }}"
-  http:    # Making elasticsearch service available from outisde the cluster
-    service:
-      spec:
-        type: LoadBalancer
-        loadBalancerIP: {{ k3s_elasticsearch_external_ip }}
-    tls:
-      selfSignedCertificate:
-        subjectAltNames:
-        - ip: {{ k3s_elasticsearch_external_ip }}
-        - dns: {{ elasticsearch_dns }}
+{% if enable_linkerd is sameas true %}
+      # Enabling service account token. linkerd requirement
+      podTemplate:
+        spec:
+          automountServiceAccountToken: true
+{% endif %}

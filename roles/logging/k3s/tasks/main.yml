@@ -7,26 +7,54 @@
     kind: Namespace
     state: present
 
-# namespace for hosting ELK operator
-- name: Create elk namespace.
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k3s_logging_namespace }}"
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
+# namespace for hosting ECK operator
+- name: Create eck namespace.
   kubernetes.core.k8s:
     name: elastic-system
     api_version: v1
     kind: Namespace
     state: present
 
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: elastic-system
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
 - name: Add elastic chart repo.
   kubernetes.core.helm_repository:
     name: elastic
     repo_url: "https://helm.elastic.co"
 
-- name: Deploy ELK Operator Helm chart.
+- name: Deploy ECK Operator Helm chart.
   kubernetes.core.helm:
     name: elastic-operator
     chart_ref: elastic/eck-operator
     release_namespace: elastic-system
     update_repo_cache: true
     state: present
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace=elastic-system --all --timeout=600s"
+  register: eck_pods_ready
+  changed_when: false
 
 - name: Deploy elasticsearch and kibana
   kubernetes.core.k8s:
@@ -37,6 +65,17 @@
     - elasticsearch.yml.j2
     - kibana.yml.j2
     - kibana_ingress.yml.j2
+    - elasticsearch_ingress.yml.j2
+
+- name: Wait for Elastic search to be deployed
+  command:
+    cmd: "kubectl get elastic -o jsonpath='{.items[*].status.phase}' -n {{ k3s_logging_namespace }}"
+  register: elastic
+  changed_when: false
+  until:
+    - '"Ready"  in elastic.stdout'
+  retries: 10
+  delay: 60
 
 - name: Deploy fluentd
   kubernetes.core.k8s:

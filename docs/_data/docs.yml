@@ -29,6 +29,9 @@
 - title: Cluster Backup
   docs:
   - backup
+- title: Service Mesh
+  docs:
+  - service-mesh
 - title: Reference Docs
   docs:
   - k8s-networking

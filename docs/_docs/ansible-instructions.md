@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "25-02-2022"
+last_modified_at: "05-04-2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -217,7 +217,7 @@ ansible-playbook k3s_install.yml
 
 ### K3S basic services deployment
 
-To deploy and configure basic services (metallb, traefik, certmanager, longhorn, EFK, Prometheus, Velero) run the playbook:
+To deploy and configure basic services (metallb, traefik, certmanager, linkerd, longhorn, EFK, Prometheus, Velero) run the playbook:
 
 ```shell
 ansible-playbook k3s_deploy.yml
@@ -229,15 +229,19 @@ Different ansible tags can be used to select the componentes to deploy:
 ansible-playbook k3s_deploy.yml --tags <ansible_tag>
 ```
 
-| Ansible Tag | Component to configure/deploy |
+The following table shows the different components and their dependencies.
+
+| Ansible Tag | Component to configure/deploy | Dependencies
 |---|---|
-| `metallb` | Metal LB |
-| `traefik` | Traefik | 
-| `certmanager` | Cert-manager |
-| `longhorn` | Longhorn |
-| `logging` | EFK Stack |
-| `monitoring` | Prometheus Stack |
-| `backup` | Velero |
+| `metallb` | Metal LB | - |
+| `certmanager` | Cert-manager | - |
+| `linkerd` | Linkerd | Cert-manager |
+| `traefik` | Traefik | Linkerd |
+| `longhorn` | Longhorn | Linkerd |
+| `monitoring` | Prometheus Stack | Longhorn, Linkerd |
+| `linkerd-viz` | Linkerd Viz | Prometheus Stack, Linkerd |
+| `logging` | EFK Stack | Longhorn, Linkerd |
+| `backup` | Velero | Linkerd |
 {: .table }
 
 ### K3s Cluster reset

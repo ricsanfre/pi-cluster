@@ -1,0 +1,49 @@
+---
+# kube-prometheus-stack helm chart values
+
+{% if enable_linkerd is sameas true %}
+# Disable linkerd injection for admission webhooks jobs
+prometheusOperator:
+  admissionWebhooks:
+    patch:
+      podAnnotations:
+        linkerd.io/inject: disabled
+# Enable serviceaccount automount
+prometheus-node-exporter:
+  serviceAccount:
+    automountServiceAccountToken: true
+{% endif %}
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "{{ prometheus_storage_class }}"
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: "{{ prometheus_storage_size }}"
+prometheus:
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "{{ prometheus_storage_class }}"
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: "{{ prometheus_storage_size }}"
+grafana:
+  adminPassword: "{{ prometheus_grafana_password }}"
+  plugins:
+    - grafana-piechart-panel
+kubeApiServer:
+  enabled: true
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false

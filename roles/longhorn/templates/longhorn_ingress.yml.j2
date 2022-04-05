@@ -9,6 +9,9 @@ spec:
   headers:
     customRequestHeaders:
       X-Forwarded-Proto: "https"
+{% if enable_linkerd is sameas true %}
+      l5d-dst-override: "longhorn-frontend.{{ k3s_longhorn_namespace }}.svc.cluster.local:80"
+{% endif %}
 
 ---
 # HTTPS Ingress
@@ -27,8 +30,8 @@ metadata:
       {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd,
       {{ k3s_longhorn_namespace }}-svc-longhorn-headers@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
-    cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: longhorn
+    cert-manager.io/cluster-issuer: ca-issuer
+    cert-manager.io/common-name: {{ longhorn_dashboard_dns }}
 spec:
   tls:
     - hosts:

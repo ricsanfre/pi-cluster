@@ -2,18 +2,111 @@
 title: SSL Certificates (Cert-Manager)
 permalink: /docs/certmanager/
 description: How to deploy a centralized SSL certification management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "25-02-2022"
+last_modified_at: "08-03-2022"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
 
-It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry.
+It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry. It also keep up to date the associated Kuberentes Secrets storing key pairs used by Ingress resources when securing the incoming communications.
 
-{{site.data.alerts.note}}
-CertManager integration with Let's Encryp has not been configured since my DNS provider does not suppport yet the API for automating DNS challenges. See open issue [#16](https://github.com/ricsanfre/pi-cluster/issues/16).
+![picluster-certmanager](/assets/img/cert-manager.png)
 
-CertManager has been configured to issue selfsigned certificates.
+## Cert-Manager certificates issuers
+
+In cert-manager different kind of certificate issuer can be configured to generate signed SSL certificates
+
+### Self-signed Issuer
+
+The SelfSigned issuer doesn’t represent a certificate authority as such, but instead denotes that certificates will “sign themselves” using a given private key. In other words, the private key of the certificate will be used to sign the certificate itself.
+
+This Issuer type is useful for bootstrapping a root certificate (CA) for a custom PKI (Public Key Infrastructure).
+
+We will use this Issuer for bootstrapping our custom CA.
+
+### CA Issuer
+
+The CA issuer represents a Certificate Authority whereby its certificate and private key are stored inside the cluster as a Kubernetes Secret, and will be used to sign incoming certificate requests. This internal CA certificate can then be used to trust resulting signed certificates.
+
+This issuer type is typically used in a private Public Key Infrastructure (PKI) setup to secure your infrastructure components to establish mTLS or otherwise provide a means to issue certificates where you also own the private key. Signed certificates with this custom CA will not be trusted by clients, such a web browser, by default.
+
+### ACME issuers (Lets Encrypt)
+
+The ACME Issuer type represents a single account registered with the Automated Certificate Management Environment (ACME) Certificate Authority server. See section [Let's Encrypt certificates](#lets-encrypt-certificates). 
+
+
+{{site.data.alerts.important}}
+
+CertManager has been configured to have in the cluster a private PKI (Public Key Infrastructure) using a self-signed CA to issue auto-signed certificates.
+
+CertManager integration with Let's Encrypt has not been configured since my DNS provider does not suppport yet the API for automating DNS challenges. See open issue [#16](https://github.com/ricsanfre/pi-cluster/issues/16).
+
 {{site.data.alerts.end}}
+
+
+## Cert Manager Usage
+
+Cert-manager add a set of Kubernetes custom resource (CRD):
+
+- `Issuer` and `ClusterIssuer`: resources that represent certificate authorities (CA) able to genertate signed certificates in response to certificate signed request (CSR). `Issuer` is a namespaced resource, able to issue certificates only for the namespace where the issuer is located. `ClusterIssuer` is able to issue certificates across all namespaces.
+
+- `Certificate`, resources that represent a human readable definition of a certificate request that need to be generated and keep up to date by an issuer.
+
+In order to generate new SSL certificates a `Certificate` resource can be created. 
+
+Once the Certificate resource is created, Cert-manager signed the certificate issued by the specified issuer and stored it in a `kubernetes.io/tls Secret` resource, which is the one used to secure Ingress resource. See kuberentes [Ingress TLS documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
+
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: testsecret-tls
+  namespace: default
+data:
+  tls.crt: base64 encoded cert
+  tls.key: base64 encoded key
+type: kubernetes.io/tls
+```
+
+See further details in the [cert-manager documentation](https://cert-manager.io/docs/usage/certificate/)
+
+
+### Securing Ingress resources
+
+`Ingress` resources can be configured using annotations, so cert-manager can automatically generate the needed self-signed certificates to secure the incoming communications using HTTPS/TLS
+
+As stated in the [documentation](https://cert-manager.io/docs/usage/ingress/), cert-manager can be used to automatically request TLS signed certificates to secure any `Ingress` resources. By means of annotations cert-manager can generate automatically the needed certificates and store them in corresponding secrets used by Ingress resource
+
+Ingress annotation `cert-manager.io/cluster-issuer` indicates the `ClusterIssuer` to be used.
+
+Ingress rule example:
+
+```yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # add an annotation indicating the issuer to use.
+    cert-manager.io/cluster-issuer: nameOfClusterIssuer
+  name: myIngress
+  namespace: myIngress
+spec:
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: myservice
+            port:
+              number: 80
+  tls: # < placing a host in the TLS config will determine what ends up in the cert's subjectAltNames
+  - hosts:
+    - example.com
+    secretName: myingress-cert # < cert-manager will store the created certificate in this secret.
+```
+
 
 ## Cert Manager Installation
 
@@ -37,7 +130,7 @@ Installation using `Helm` (Release 3):
 - Step 3: Install Cert-Manager
 
     ```shell
-    helm install cert-manager jetstack/cert-manager --namespace certmanager-system --version v1.5.3 --set installCRDs=true
+    helm install cert-manager jetstack/cert-manager --namespace certmanager-system --set installCRDs=true
     ```
 - Step 4: Confirm that the deployment succeeded, run:
 
@@ -45,10 +138,17 @@ Installation using `Helm` (Release 3):
     kubectl -n certmanager-system get pod
     ```
 
-## Self-signed Certificates
+## Cert-Manager Configuration
 
-- Step 1: Create `ClusterIssuer`
-In order to obtain certificates from cert-manager, we need to create an issuer to act as a certificate authority. We have the option of creating an `Issuer` which is a namespaced resource, or a `ClusterIssuer` which is a global resource. We’ll create a self-signed `ClusterIssuer` using the following definition:
+A PKI (Public Key Infrastructure) with a custom CA will be created in the cluster and all certificates will be auto-signed by this CA. For doing so, A CA `ClusterIssuer` resource need to be created.
+
+Root CA certificate is needed for generated this CA Issuer. A selfsigned `ClusterIssuer` resource will be used to generate that root CA certificate (self-signed root CA).
+
+- Step 1: Create selfsigned `ClusterIssuer`
+
+  First step is to create the self-signed issuer for being able to selfsign a custom root certificate of the PKI (CA certificate).
+
+  In order to obtain certificates from cert-manager, we need to create an issuer to act as a certificate authority. We have the option of creating an `Issuer` which is a namespaced resource, or a `ClusterIssuer` which is a global resource. We’ll create a self-signed `ClusterIssuer` using the following definition:
 
   ```yml
   apiVersion: cert-manager.io/v1
@@ -59,44 +159,50 @@ In order to obtain certificates from cert-manager, we need to create an issuer t
     selfSigned: {}
   ```
 
-- Step 2: Configure Ingress rule to automatically use cert-manager to issue self-signed certificates
+- Step 2: Bootstrapping CA Issuers
 
-  As stated in the [documentation](https://cert-manager.io/docs/usage/ingress/), cert-manager can be used to automatically request TLS signed certificates to secure any `Ingress` resources. By means of annotations cert-manager can generate automatically the needed certificates
-
-  Ingress annotation `cert-manager.io/cluster-issuer` indicates the `ClusterIssuer` to be used
-
-  Ingress rule example:
+  Bootstrap a custom root certificate for a private PKI (custom CA) and create the corresponding cert-manager CA issuer
 
   ```yml
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
   metadata:
-    annotations:
-      # add an annotation indicating the issuer to use.
-      cert-manager.io/cluster-issuer: nameOfClusterIssuer
-    name: myIngress
-    namespace: myIngress
+    name: my-selfsigned-ca
+    namespace: sandbox
   spec:
-    rules:
-    - host: example.com
-      http:
-        paths:
-        - pathType: Prefix
-          path: /
-          backend:
-            service:
-              name: myservice
-              port:
-                number: 80
-    tls: # < placing a host in the TLS config will determine what ends up in the cert's subjectAltNames
-    - hosts:
-      - example.com
-      secretName: myingress-cert # < cert-manager will store the created certificate in this secret.
+    isCA: true
+    commonName: my-selfsigned-ca
+    secretName: root-secret
+    privateKey:
+      algorithm: ECDSA
+      size: 256
+    issuerRef:
+      name: selfsigned-issuer
+      kind: ClusterIssuer
+      group: cert-manager.io
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: my-ca-issuer
+    namespace: sandbox
+  spec:
+    ca:
+      secretName: root-secret
   ```
+
+{{site.data.alerts.important}}
+
+Algorithm used for creating private keys is ECDSA P-256. The use of this algorithm is required by the service mesh implementation I have selected for the cluster, Linkerd. RootCa and Linkerd identity issuer certificate must used ECDSA P-256 algorithm.
+
+{{site.data.alerts.end}}
+
+
 
 ## Lets Encrypt Certificates
 
-Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auti-signed SSL Certificates for the websites that are not automatic validated by HTTP browsers.
+Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auto-signed SSL Certificates for the websites that are not automatic validated by HTTP browsers.
 
 The process is the following, we issue a request for a certificate to Let's Encrypt for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME DNS or HTTP validation mechanism. If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
 
@@ -121,7 +227,7 @@ Since Dec 2020, IONOS launched an API for remotelly configure DNS, and so the in
 
 Unfortunally IONOS API is part of a beta program that it is not available yet in my location (Spain).
 
-### Let`s Encrypt HTTP validation method
+### Lets Encrypt HTTP validation method
 
 HTTP validation method requires to actually expose a "challenge URL" in the Public Internet using the DNS domain associated to the SSL certificate.
 

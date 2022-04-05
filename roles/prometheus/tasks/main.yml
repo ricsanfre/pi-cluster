@@ -6,6 +6,17 @@
     kind: Namespace
     state: present
 
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k3s_monitoring_namespace }}"
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
 - name: Add prometheus community chart repo.
   kubernetes.core.helm_repository:
     name: prometheus-community
@@ -18,41 +29,13 @@
     release_namespace: "{{ k3s_monitoring_namespace }}"
     update_repo_cache: true
     state: present
-    release_values:
-      alertmanager:
-        alertmanagerSpec:
-          storage:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: "{{ prometheus_storage_class }}"
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: "{{ prometheus_storage_size }}"
-      prometheus:
-        prometheusSpec:
-          storageSpec:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: "{{ prometheus_storage_class }}"
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: "{{ prometheus_storage_size }}"
-      grafana:
-        adminPassword: "{{ prometheus_grafana_password }}"
-        plugins:
-          - grafana-piechart-panel
-      kubeApiServer:
-        enabled: true
-      kubeControllerManager:
-        enabled: false
-      kubeScheduler:
-        enabled: false
-      kubeProxy:
-        enabled: false
-      kubeEtcd:
-        enabled: false
+    values: "{{ lookup('template', 'templates/prometheus_stack_helm_values.yml.j2') | from_yaml }}"
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_monitoring_namespace }} --all --timeout=600s"
+  register: prometheus_pods_ready
+  changed_when: false
 
 - name: Create metrics services (K3s and Minio)
   kubernetes.core.k8s:
@@ -91,23 +74,8 @@
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
-  vars:
-    dashboard_name: "{{ item.name }}"
-    dashboard_file:
-      name: "{{ item.file }}"
-      content: "{{ lookup('file', 'files/' + item.file ) | string }}"
-  with_items:
-    - name: dashboard-traefik
-      file: traefik-dashboard.json
-    - name: dashboard-longhorn
-      file: longhorn-dashboard.json
-    - name: k3s-controller-manager
-      file: k3s-controllermanager-dashboard.json
-    - name: k3s-scheduler
-      file: k3s-scheduler-dashboard.json
-    - name: k3s-proxy
-      file: k3s-proxy-dashboard.json
-    - name: velero
-      file: velero-dashboard.json
-    - name: minio
-      file: minio-dashboard.json
+  loop_control:
+    loop_var: dashboard_file
+  with_fileglob:
+    - "dashboards/*"
+    - "dashboards/linkerd/*"

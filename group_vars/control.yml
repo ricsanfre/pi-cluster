@@ -31,7 +31,7 @@ fluentbit_outputs:
   - Name: es
     match: "*"
     Host: "{{ elasticsearch_dns }}"
-    Port: 9200
+    Port: 443
     Logstash_Format: true
     Logstash_Prefix: logstash
     Include_Tag_Key: true

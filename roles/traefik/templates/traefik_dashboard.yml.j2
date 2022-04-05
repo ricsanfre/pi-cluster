@@ -33,13 +33,13 @@ metadata:
     # Use Basic Auth Midleware configured
     traefik.ingress.kubernetes.io/router.middlewares: {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
-    cert-manager.io/cluster-issuer: self-signed-issuer
-    cert-manager.io/common-name: traefik
+    cert-manager.io/cluster-issuer: ca-issuer
+    cert-manager.io/common-name: "{{ traefik_dashboard_dns }}"
 spec:
   tls:
     - hosts:
         - {{ traefik_dashboard_dns }}
-      secretName: prometheus-tls
+      secretName: traefik-tls
   rules:
     - host: {{ traefik_dashboard_dns }}
       http:
