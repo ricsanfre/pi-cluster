@@ -36,6 +36,7 @@ fluentbit_outputs:
     Logstash_Prefix: logstash
     Include_Tag_Key: true
     Tag_Key: tag
+    Suppress_Type_Name: true
     HTTP_User: elastic
     HTTP_Passwd: s1cret0
     tls: true

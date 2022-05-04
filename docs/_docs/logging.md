@@ -2,7 +2,7 @@
 title: Log Management (EFK)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "22-03-2022"
+last_modified_at: "04-05-2022"
 
 ---
 
@@ -15,7 +15,7 @@ EFK stack will be deployed as centralized logging solution for the K3S cluster, 
 
 
 {{site.data.alerts.note}}
-This document contain instructions to install the two logs collector alternatives: Fluentd and Fluentbit. Final solution is based on Fluentbit because it consume less memory resources from our Raspberry Pis.
+This document contain instructions to install the two logs collector alternatives: Fluentd and Fluentbit. Final solution is based on Fluentbit because it consumes less memory resources from our Raspberry Pis.
 {{site.data.alerts.end}}
 
 ## ARM/Kubernetes support
@@ -80,7 +80,7 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
     name: efk
     namespace: k3s-logging
   spec:
-    version: 7.15.0
+    version: 8.1.2
     nodeSets:
     - name: default
       count: 1    # One node elastic search cluster
@@ -139,7 +139,7 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
   ```shell
   kubectl get elasticsearch -n k3s-logging
   NAME   HEALTH   NODES   VERSION   PHASE   AGE
-  efk    yellow   1       7.15.0    Ready   139m
+  efk    yellow   1       8.1.2    Ready   139m
   ```
    
   {{site.data.alerts.note}}
@@ -258,17 +258,17 @@ This can be useful for example if elasticsearh database have to be used to monit
   {
     "name" : "efk-es-default-0",
     "cluster_name" : "efk",
-    "cluster_uuid" : "EQK8niEnSzqZFHmpRSDpgg",
+    "cluster_uuid" : "w5BUxIY4SKOtxPUDQfb4lQ",
     "version" : {
-      "number" : "7.15.0",
+      "number" : "8.1.2",
       "build_flavor" : "default",
       "build_type" : "docker",
-      "build_hash" : "79d65f6e357953a5b3cbcc5e2c7c21073d89aa29",
-      "build_date" : "2021-09-16T03:05:29.143308416Z",
+      "build_hash" : "31df9689e80bad366ac20176aa7f2371ea5eb4c1",
+      "build_date" : "2022-03-29T21:18:59.991429448Z",
       "build_snapshot" : false,
-      "lucene_version" : "8.9.0",
-      "minimum_wire_compatibility_version" : "6.8.0",
-      "minimum_index_compatibility_version" : "6.0.0-beta1"
+      "lucene_version" : "9.0.0",
+      "minimum_wire_compatibility_version" : "7.17.0",
+      "minimum_index_compatibility_version" : "7.0.0"
     },
     "tagline" : "You Know, for Search"
   }
@@ -285,7 +285,7 @@ This can be useful for example if elasticsearh database have to be used to monit
     name: kibana
     namespace: k3s-logging
   spec:
-    version: 7.15.0
+    version: 8.1.2
     count: 2 # Elastic Search statefulset deployment with two replicas
     elasticsearchRef:
       name: "elasticsearch"
@@ -302,7 +302,7 @@ This can be useful for example if elasticsearh database have to be used to monit
   ```shell
   kubectl get kibana -n k3s-logging
   NAME   HEALTH   NODES   VERSION   AGE
-  efk    green    1       7.15.0    171m
+  efk    green    1       8.1.2    171m
   ```
 
   {{site.data.alerts.note}}
@@ -536,6 +536,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Port ${FLUENT_ELASTICSEARCH_PORT}
           Logstash_Format True
           Logstash_Prefix logstash
+          Suppress_Type_Name True
           Include_Tag_Key True
           Tag_Key tag
           HTTP_User ${FLUENT_ELASTICSEARCH_USER}
@@ -649,6 +650,15 @@ For speed-up the installation there is available a [helm chart](https://github.c
   {{site.data.alerts.note}} **(4): Fluentbit OUTPUT configuration**
 
   [OUTPUT] configuration by default uses elasticsearch, but it needs to be modified for specifying the access credentials and https protocol specific parameters (do not use tls).
+
+  `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
+
+  ```json
+  {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
+  ``` 
+
+  In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
+
   {{site.data.alerts.end}}
   
   {{site.data.alerts.note}} **(5): Fluentbit PARSER configuration**
@@ -961,6 +971,28 @@ fluentbit_filters:
 With this rules Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to elasticsearch server running on K3S cluster.
 
 Lua script need to be included for translaing local time zone (`Europe\Madrid`) to UTC and the corresponding filter need to be executed. See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5).
+
+
+## Initial Kibana Setup (DataView configuration)
+
+[Kibana's DataView](https://www.elastic.co/guide/en/kibana/master/data-views.html) must be configured in order to access Elasticsearch data.
+
+- Step 1: Open Kibana UI
+
+  Open a browser and go to Kibana's URL (kibana.picluster.ricsanfre.com)
+
+- Step 2: Open "Management Menu"
+
+  ![Kibana-setup-1](/assets/img/kibana-setup-1.png)
+
+- Step 3: Select "Kibana - Data View" menu option and click on "Create data view"
+
+  ![Kibana-setup-2](/assets/img/kibana-setup-2.png)
+
+- Step 4: Set index pattern to logstash-* and timestamp field to @timestamp and click on "Create Index" 
+
+  ![Kibana-setup-3](/assets/img/kibana-setup-3.png)
+
 
 ## References
 
