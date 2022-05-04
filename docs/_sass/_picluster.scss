@@ -219,3 +219,24 @@ html {
   background-color: #2a9fd6;
   border-color: #2180ac;
 }
+
+
+// Post-layout: Content
+.post-content {
+  // Default settings for images
+  img {
+    max-width: 80%;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.post-nav {
+  position: relative;
+  height: calc(100vh - 7rem);
+  nav {
+    font-size:.875rem;
+  }
+}
