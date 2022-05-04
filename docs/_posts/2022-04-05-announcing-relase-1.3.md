@@ -30,7 +30,7 @@ Adding service mesh architecture to kubernetes cluster
 
 ### Release v1.2.0 - 2022-02-03
 
-New website (picluster.ricsanfre.com) and improvements in logging and monitoring solution
+Launched of this website (picluster.ricsanfre.com) and improvements in logging and monitoring solution
 
 #### Release Scope:
 

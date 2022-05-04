@@ -20,7 +20,7 @@ The cluster can be re-deployed in minutes as many times as needed for testing ne
 
 ## Scope
 
-Automatically deploy and configure a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and set of cluster basic services such as: 1) distributed block storage for POD's persistent volumes like [LongHorn](https://longhorn.io/), 2) centralized monitoring tool like [Prometheus](https://prometheus.io/) 3) centralized log managemeent like EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) and 3) backup/restore solution for the cluster like [Velero](https://velero.io/) and [Restic](https://restic.net/).
+Automatically deploy and configure a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) centralized monitoring tool, [Prometheus](https://prometheus.io/) 3) centralized log management, EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/), 3) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/) and 4) service mesh architecture, [Linkerd](https://linkerd.io/)
 
 The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible:
 
