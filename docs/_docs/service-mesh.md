@@ -614,7 +614,7 @@ prometheusOperator:
         linkerd.io/inject: disabled
 ```
 
-Modify [Prometheus installation procedure](/docs/monitoring/) to annotate the corresponding namespace before deploying the helm chart and use the modified values.yml file.
+Modify [Prometheus installation procedure](/docs/prometheus/) to annotate the corresponding namespace before deploying the helm chart and use the modified values.yml file.
 
 ```shell
 kubectl annotate ns k3s-monitoring linkerd.io/inject=enabled
