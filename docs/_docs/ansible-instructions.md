@@ -17,7 +17,7 @@ Step-by-step manual process is also described in this documentation.
 
 - Set-up a Ubuntu Server VM in your laptop to become ansible control node `pimaster`  and create the SSH public/private keys needed for connecting remotely to the servers
 
-  Follow these [instructions](/docs/pimaster/).
+  Follow instructions in ["Ansible Control Node"](/docs/pimaster/).
 
 - Clone [Pi-Cluster Git repo](https://github.com/ricsanfre/pi-cluster) or download using the 'Download ZIP' link on GitHub.
 
@@ -121,13 +121,13 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
 
 ### Update Raspberry Pi firmware
 
-Update firmware in all Raspberry-PIs following the procedure described [here](/docs/firmware/)
+Update firmware in all Raspberry-PIs following the procedure described in ["Raspberry PI firmware update"](/docs/firmware/)
 
 ### Install gateway node
 
 Install `gateway` Operating System on Rapberry PI.
    
-The installation procedure followed is the described [here](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage setup selected:
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage setup selected:
 
 | Storage Configuration | User data    | Network configuration |
 |--------------------| ------------- |-------------|
@@ -163,7 +163,7 @@ Once `gateway` is up and running the rest of the nodes can be installed and conn
 
 Install `node1-4` Operating System on Raspberry Pi
 
-Follow the installation procedure indicated [here](/docs/ubuntu/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
+Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
 
 | Storage Architeture | node1   | node2 | node3 | node 4 |
 |-----------| ------- |-------|-------|--------|

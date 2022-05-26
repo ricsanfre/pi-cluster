@@ -16,7 +16,7 @@ A CNI plugin is responsible for inserting a network interface into the container
 
 `Kubernetes Service` is an abstract way to expose an application running on a set of Pods as a network service. Kubernetes gives Pods their own IP addresses and a single DNS name (and single Virtual IP address) for a set of Pods, and can load-balance across them. Two components are key for this mechanism: `kube-proxy` in charge of implementing the Virtual IP address and load balance mechanism and `kube-dns` responsible for mapping DNS service name to virtual IP address.
 
-See details [here](https://kubernetes.io/docs/concepts/services-networking/service/)
+See details in [Kubernetes documentation - Service Concept](https://kubernetes.io/docs/concepts/services-networking/service/).
 
 ### kube-proxy: Kuberentes Services internal Load-balancing
 
@@ -48,7 +48,7 @@ An Ingress may be configured to give Services externally-reachable URLs, load ba
 
 Every `Ingress` resource belong to `IngressClass` resource that contains information about the `Ingress Controller` implementing the class. This way Ingresses can be implemented by different controllers.
 
-See detailed information [here](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+See detailed information in [Kubernetes documentation - Ingress Contoller Concept](https://kubernetes.io/docs/concepts/services-networking/ingress/).
 
 
 ## Useful references

@@ -79,7 +79,7 @@ Create a Ingress rule to make Longhorn front-end available through the Ingress C
 Longhorn backend is providing not secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
 Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured.
 
-There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Longhorn APIs calls fail. Traefik 2.x ingress controller does not set the WebSocket headers and a specific middleware to route to the Longhorn UI must be specified. See Longhorn specific [documentation](https://longhorn.io/kb/troubleshooting-traefik-2.x-as-ingress-controller/) about how to solve this particular issue.
+There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Longhorn APIs calls fail. Traefik 2.x ingress controller does not set the WebSocket headers and a specific middleware to route to the Longhorn UI must be specified. See [Longhorn documentation: "Troubleshooting Traefik 2.x as ingress controller"](https://longhorn.io/kb/troubleshooting-traefik-2.x-as-ingress-controller/) to know how to solve this particular issue.
 
 
 - Step 1. Create a manifest file `longhorn_ingress.yml`

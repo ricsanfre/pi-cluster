@@ -6,7 +6,7 @@ last_modified_at: "25-02-2022"
 ---
 
 Ubuntu Server 64 bits installation on Raspberry Pi is supported since release 20.04.
-Ubuntu images can be downloaded from [here](https://ubuntu.com/download/raspberry-pi).
+Ubuntu images for Raspberry Pi can be downloaded from [Ubuntu's download page](https://ubuntu.com/download/raspberry-pi).
 
 Ubuntu Server 20.04.3 LTS for ARM64 image will be used.
 

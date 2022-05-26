@@ -29,7 +29,7 @@ ECK ([Elastic Cloud on Kubernetes](https://www.elastic.co/guide/en/cloud-on-k8s/
 Logstash deployment is not supported by ECK operator
 {{site.data.alerts.end}}
 
-Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kubernetes clusters with the buil-in configuration needed to automatically collect and parsing containers logs. See [github repository](https://github.com/fluent/fluentd-kubernetes-daemonset).
+Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kubernetes clusters with the buil-in configuration needed to automatically collect and parsing containers logs.
 
 ## Why EFK and not ELK
 
@@ -69,7 +69,7 @@ Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routin
 
 ### Elasticsearch installation
 
-Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-deploy-elasticsearch.html)
+Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch cluster"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-deploy-elasticsearch.html)
 
 - Step 1: Create a manifest file containing basic configuration: one node elasticsearch using Longhorn as   storageClass and 5GB of storage in the volume claims.
   
@@ -112,12 +112,12 @@ Basic instructions [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k
 
   For production workloads, it is strongly recommended to increase the kernel setting `vm.max_map_count` to 262144 and leave `node.store.allow_mmap` unset.
 
-  See further details [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
+  See further details in [ECK Documentation: "Elastisearch Virtual Memory"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
   {{site.data.alerts.end}}
 
   {{site.data.alerts.note}} **(2): About Persistent Storage**
 
-  See how to configure PersistenVolumeTemplates for Elasticsearh using this operator [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
+  See how to configure PersistenVolumeTemplates for Elasticsearh using this operator in [ECK Documentation: "Volume claim templates"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
   {{site.data.alerts.end}}
 
 
@@ -439,7 +439,7 @@ Where:
 
 ### Fluent-bit installation
 
-Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed). See comparison [here](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
+Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed). Find more details about fluentbit-fluentd comparison in [Fluentbit documentation: "Fluentd & Fluent Bit"]https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
 
 It can be installed and configured to collect and parse Kubernetes logs deploying a daemonset pod (same as fluentd). See fluenbit documentation on how to install it on Kuberentes cluster (https://docs.fluentbit.io/manual/installation/kubernetes).
 
@@ -703,7 +703,7 @@ In addition to container logs, the Fluentd agent will tail Kubernetes system com
 
 Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset). Different docker images are provided pre-configured for collecting and parsing kuberentes logs and to inject them into different destinations, one of them is elasticsearch.
 
-Further documentation can be found [here](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
+Further details can be found in [Fluentd documentation: "Kubernetes deployment"](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` Github repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
 
 Fluentd default image and manifest files need to be adapted for parsing containerd logs. `fluentd -kubernets-daemonsset` images by default are configured for parsing docker logs. See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
 
@@ -915,8 +915,9 @@ Fluentd default image and manifest files need to be adapted for parsing containe
 
 ## Gathering logs from servers outside the kubernetes cluster
 
-For gathering the logs from `gateway` server fluentbit can be installed. Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed). See fluetd/fluetbit comparison [here](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit)
-There official packages for Ubuntu. Installation instructions can be found [here](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
+For gathering the logs from `gateway` server fluentbit will be installed.
+
+There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
 
 For automating configuration tasks, ansible role [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit) has been developed.
 
@@ -970,7 +971,7 @@ fluentbit_filters:
 ```
 With this rules Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to elasticsearch server running on K3S cluster.
 
-Lua script need to be included for translaing local time zone (`Europe\Madrid`) to UTC and the corresponding filter need to be executed. See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5).
+Lua script need to be included for translaing local time zone (`Europe\Madrid`) to UTC and the corresponding filter need to be executed. See [issue #5](https://github.com/ricsanfre/pi-cluster/issues/5).
 
 
 ## Initial Kibana Setup (DataView configuration)

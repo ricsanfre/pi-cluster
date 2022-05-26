@@ -69,7 +69,7 @@ This command:
 
 ## Unbuntu boot from USB
 
-The installation procedure followed is the described [here](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
 
 | Storage Architeture| User data    | Network configuration |
 |--------------------| ------------- |-------------|
@@ -81,7 +81,7 @@ The installation procedure followed is the described [here](/docs/ubuntu/) using
 
 After booting from the USB3.0 external storage for the first time, the Raspberry Pi will have SSH connectivity and it will be ready to be automatically configured from the ansible control node `pimaster`.
 
-Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions [here](/docs/os-basic/).
+Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions in ["Ubuntu OS initial configurations"](/docs/os-basic/).
 
 For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
@@ -630,6 +630,6 @@ iSCSI configuration in `gateway` has been automated developing a couple of ansib
 
 Specific `gateway` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml)
 
-Further details about iSCSI configurations and step-by-step manual instructions are defined [here](/docs/san/).
+Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
 
 `gateway` exposes a dedicated LUN of 100 GB for each of the clusters nodes.

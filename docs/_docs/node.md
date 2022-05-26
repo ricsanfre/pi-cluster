@@ -51,7 +51,9 @@ Only ethernet interface (eth0) will be used connected to the lan switch. Interfa
 
 ## Unbuntu boot from USB
 
-Follow the procedure indicated [here](/docs/ubuntu/) using following cloud-init configuration files (`user-data` and `network-config`). `user-data` file used depends on the storage architectural option selected. Since DHCP is used it is not needed to change default `/boot/network-config` file.
+Follow the procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) described in the table below.
+
+`user-data` file used depends on the storage architectural option selected. Since DHCP is used to configure network interfaces, it is not needed to change default `/boot/network-config` file.
 
 
 | Storage Architeture | node1   | node2 | node3 | node 4 |
@@ -64,14 +66,14 @@ Follow the procedure indicated [here](/docs/ubuntu/) using following cloud-init 
 
 After booting from the USB3.0 external storage for the first time, the Raspberry Pi will have SSH connectivity and it will be ready to be automatically configured from the ansible control node `pimaster`.
 
-Initial configuration tasks includes removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory Split configuration. See instructions [here](/docs/os-basic/).
+Initial configuration tasks includes removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory Split configuration. See instructions in ["Ubuntu OS initial configurations"](/docs/os-basic/).
 
 For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
 ## NTP Server Configuration
 
 `node1-node4` will be configured as NTP clients using NTP server running in `gateway`
-See NTP Configuration instructions [here](/docs/gateway/#ntp-server-configuration)
+See ["NTP Configuration instructions"](/docs/gateway/#ntp-server-configuration).
 
 NTP configuration in `node1-node4` has been automated using ansible role **ricsanfre.ntp**
 
@@ -87,7 +89,7 @@ iSCSI initiator configuration in `node1-node4` have been automated with Ansible 
 
 iSCSI configuration in `node1-node4`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
 
-Further details about iSCSI configurations and step-by-step manual instructions are defined [here](/docs/san/).
+Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
 
 Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
 

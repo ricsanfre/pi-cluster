@@ -563,7 +563,7 @@ Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com
 
 ## Minio Monitoring
 
-Minio monitoring with Prometheus documentation can be found [here](https://docs.min.io/minio/baremetal/monitoring/metrics-alerts/collect-minio-metrics-using-prometheus.html)
+For details see [Minio's documentation: "Collect MinIO Metrics Using Prometheus"](https://docs.min.io/minio/baremetal/monitoring/metrics-alerts/collect-minio-metrics-using-prometheus.html).
 
 {{site.data.alerts.note}}
 Minio Console Dashboard integration has not been configured, instead a Grafana dashboard is provided.

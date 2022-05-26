@@ -481,7 +481,7 @@ With `linkerd.io/inject: enabled` annotation at namespace level, [Kubernetes Job
 
 That behaviour might cause errors during helm chart installation that deploy Jobs or during executions of scheduled CronJobs.
 
-As stated in this [blog post](https://itnext.io/three-ways-to-use-linkerd-with-kubernetes-jobs-c12ccc6d4c7c) there are different ways to handle this issue, both of them requires to modify Job template definition: 
+As stated in this [ITNEXT blog post](https://itnext.io/three-ways-to-use-linkerd-with-kubernetes-jobs-c12ccc6d4c7c) there are different ways to handle this issue, both of them requires to modify Job template definition: 
 
 1) Do not mesh the Jobs resources
 
@@ -504,7 +504,7 @@ This can be done using [`linkerd-await`](https://github.com/linkerd/linkerd-awai
   linked-await --shutdown option <job_commad>
   ```
 
-See details of implementation of this second workarround [here](https://itnext.io/three-ways-to-use-linkerd-with-kubernetes-jobs-c12ccc6d4c7c)
+See details of implementation of this second workarround previously mentioned [ITNEXT blog post](https://itnext.io/three-ways-to-use-linkerd-with-kubernetes-jobs-c12ccc6d4c7c)
 
 
 ## Meshing cluster services

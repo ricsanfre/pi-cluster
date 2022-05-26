@@ -312,7 +312,7 @@ The complete backup workflow is the following:
 
 ![velero-backup-process](/assets/img/velero-backup-process.png)
 
-As storage provider, Minio will be used. See specific installation documentation using Minio as backend [here](https://velero.io/docs/v1.7/contributions/minio/).
+As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/v1.7/contributions/minio/).
 
 
 ### Configuring Minio bucket and user for Velero
@@ -352,7 +352,7 @@ A specific Minio user `velero` is configured with specic access policy to grant 
 
 ```
 
-See more details in Velero's documentation about [aws plugin](https://github.com/vmware-tanzu/velero-plugin-for-aws)
+See more details in [Velero plugin for aws](https://github.com/vmware-tanzu/velero-plugin-for-aws).
 
 
 ### Installing Velero CLI

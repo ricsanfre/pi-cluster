@@ -219,7 +219,7 @@ This method do not require to expose to the Public Internet the web services hos
 3. Cert-manager temporary creates the requested TXT record in the DNS. If Let's Encrypt can read the challenge and it is correct, it will issue the certificates back to cert-manager.
 4. Cert-manager will then store the certificates as secrets, and our website (or whatever) will use those certificates for securing our traffic with TLS.
 
-Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge. For supporting additional DNS providers webhooks can be developed. See supported list and further documentation [here](https://cert-manager.io/docs/configuration/acme/dns01/).
+Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge. For supporting additional DNS providers webhooks can be developed. See supported list and further documentation in [Certmanager documentation: "ACME DNS01" ](https://cert-manager.io/docs/configuration/acme/dns01/).
 
 IONOS, my DNS server provider, is not in the list of supported ones. 
 
