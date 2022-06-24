@@ -22,7 +22,7 @@ efk_elasticsearch_passwd: "s1cret0"
 efk_logging_collector: 'fluentbit'
 
 # Fluentd image version
-efk_fluentd_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
+efk_fluentd_image: "ricsanfre/fluentd-aggregator:latest"
 
 # Configured Timezone
 efk_node_timezone: "Europe/Madrid"
@@ -54,22 +54,13 @@ fluentbit_inputs:
     Path: /var/log/syslog
     Parser: syslog-rfc3164-nopri
 
-# Fluentbit Elasticsearch output
+# Fluentbit Forwarder output
 fluentbit_outputs:
-  - Name: es
+  - Name: forward
     match: "*"
-    Host: ${FLUENT_ELASTICSEARCH_HOST}
-    Port: ${FLUENT_ELASTICSEARCH_PORT}
-    Logstash_Format: true
-    Logstash_Prefix: logstash
-    Suppress_Type_Name: true
-    Include_Tag_Key: true
-    Tag_Key: tag
-    HTTP_User: ${FLUENT_ELASTICSEARCH_USER}
-    HTTP_Passwd: ${FLUENT_ELASTICSEARCH_PASSWORD}
-    tls: false
-    tls.verify: false
-    Retry_Limit: false
+    Host: ${FLUENT_AGGREGATOR_HOST}
+    Port: ${FLUENT_AGGREGATOR_PORT}
+
 # Fluentbit custom parsers
 fluentbit_parsers:
   - Name: syslog-rfc3164-nopri

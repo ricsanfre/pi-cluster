@@ -77,14 +77,12 @@
   retries: 10
   delay: 60
 
-- name: Deploy fluentd
+- name: Deploy fluentd aggregator
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - fluentd.yml.j2
-  when: efk_logging_collector == 'fluentd'
+    - fluentd_aggregator.yml.j2
 
 - name: Deploy fluentbit
   include_tasks: install_fluentbit.yml
-  when: efk_logging_collector == 'fluentbit'

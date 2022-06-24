@@ -7,16 +7,12 @@ last_modified_at: "04-05-2022"
 ---
 
 ELK Stack (Elaticsearch - Logstash - Kibana) enables centralized log monitoring of IT infrastructure.
-As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Fluentd, or its lightweight version Fluentbit, is used instead of Logstash for doing the collection and parsing of logs.
+As an alternative EFK stack (Elastic - Fluentd - Kibana) can be used, where Fluentd, or its lightweight version Fluentbit, is used instead of Logstash for doing the collection, parsing and aggregation of logs.
 
 EFK stack will be deployed as centralized logging solution for the K3S cluster, and to collect the logs of externals cluster nodes, i.e.: `gateway`.
 
 ![K3S-EFK-Architecture](/assets/img/efk_logging_architecture.png)
 
-
-{{site.data.alerts.note}}
-This document contain instructions to install the two logs collector alternatives: Fluentd and Fluentbit. Final solution is based on Fluentbit because it consumes less memory resources from our Raspberry Pis.
-{{site.data.alerts.end}}
 
 ## ARM/Kubernetes support
 
@@ -29,18 +25,117 @@ ECK ([Elastic Cloud on Kubernetes](https://www.elastic.co/guide/en/cloud-on-k8s/
 Logstash deployment is not supported by ECK operator
 {{site.data.alerts.end}}
 
-Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kubernetes clusters with the buil-in configuration needed to automatically collect and parsing containers logs.
+Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kubernetes clusters with the built-in configuration needed to automatically collect and parsing containers logs.
+
 
 ## Why EFK and not ELK
 
 Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routing etc) but I will select Fluentd because:
 
-- **Performance and footprint**: Logstash consumes more memory than Fluentd. Logstash is written in Java and Fluentd is written in Ruby. Fluentd is an efficient log aggregator. For most small to medium-sized deployments, fluentd is fast and consumes relatively minimal resources.
+- **Performance and footprint**: Logstash consumes more memory than Fluentd. Logstash is written in Java and Fluentd is written in Ruby (Fluentbit in C). Fluentd is an efficient log aggregator. For most small to medium-sized deployments, fluentd is fast and consumes relatively minimal resources.
 - **Log Parsing**: Fluentd uses standard built-in parsers (JSON, regex, csv etc.) and Logstash uses plugins for this. This makes Fluentd favorable over Logstash, because it does not need extra plugins installed
 - **Kubernetes deployment**: Docker has a built-in logging driver for Fluentd, but doesn’t have one for Logstash. With Fluentd, no extra agent is required on the container in order to push logs to Fluentd. Logs are directly shipped to Fluentd service from STDOUT without requiring an extra log file. Logstash requires additional agent (Filebeat) in order to read the application logs from STDOUT before they can be sent to Logstash.
 
 - **Fluentd** is a CNCF project
 
+## Collecting Kuberentes logs
+
+### Container Logs
+
+In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to log files on the nodes. To tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend, a process like, fluentd/fluentbit can be used.
+
+Log format used by Kubernetes is different depending on the container runtime used. `docker` container run-time generates logs file in JSON format. `containerd` run-time, used by K3S, uses CRI log format.
+
+```
+<time_stamp> <stream_type> <P/F> <log>
+
+where:
+  - <time_stamp> has the format `%Y-%m-%dT%H:%M:%S.%L%z` Date and time including UTC offset
+  - <stream_type> is `stdout` or `stderr`
+  - <P/F> indicates whether the log line is partial (P), in case of multine logs, or full log line (F)
+  - <log>: message log
+```
+
+Fluentd or, its lightweight alternative, Fluentd/Fluentbit are deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster.
+Using this DaemonSet controller, a Fluentd/Fluentbit logging agent Pod is deployed on every node of the cluster.
+To learn more about this logging architecture, consult [“Cluster-level logging architectures: Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
+
+### Kubernetes processes Logs
+
+In addition to container logs, the Fluentd/Fluentbit agent can collect and parse logs from Kubernetes processes (kubelet, kube-proxy), systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
+
+In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file need to be collected and parsed in order to have logs comming from Kubernetes processes.
+
+K3S logs can be also viewed with `journactl` command
+
+In master node:
+
+```shell
+sudo journactl -u k3s
+```
+
+In worker node:
+
+```shell
+sudo journalctl -u k3s-agent
+```
+
+## Collecting host logs
+
+Fluentbit/Fluentd deployed as daemonsets on kuberentes nodes can be used to collect Ubuntu system logs.
+
+{{site.data.alerts.note}}
+
+Ubuntu system logs stored are `/var/logs` (auth.log, systlog, kern.log). They have a `syslog` format but with some differences from the standard:
+ - Missing priority field
+ - Timestamp is formatted using system local time.
+
+The syslog format is the following:
+
+```
+<time_stamp> <host> <process>[<PID>] <message>
+Where:
+  - <time_stamp> has the format `%b %d %H:%M:%S`: local date and time not including timezone UTC offset
+  - <host>: hostanme
+  - <process> and <PID> identifies the process generating the log
+```
+{{site.data.alerts.end}}
+
+
+## Fluentbit/Fluentd Forwarder and Aggregation Architecture
+
+From all the [common architecture patterns with Fluentbit and Fluentd](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/), forwarder/aggregator architecture will be deployed in the cluster.
+
+![forwarder-aggregator-architecture](https://fluentbit.io/images/blog/blog-forwarder-aggregator.png)
+
+This pattern includes having a lightweight instance deployed on edge, generally where data is created, such as Kubernetes nodes, virtual machines or baremetal servers. These forwarders do minimal processing and then use the forward protocol to send data to a much heavier instance of Fluentd or Fluent Bit. This heavier instance, known as the aggregator, may perform more filtering and processing before routing to the appropriate backend(s).
+
+**Advantages**
+
+- Less resource utilization on the edge devices (maximize throughput)
+- Allow processing to scale independently on the aggregator tier.
+- Easy to add more backends (configuration change in aggregator vs. all forwarders).
+
+**Disadvantages**
+
+- Dedicated resources required for an aggregation instance.
+
+With this architecture in the aggregatio layer logs can be filtered and routed not only to Elastisearch database (default route) but to a different backend to further processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
+
+{{site.data.alerts.note}}
+
+Both fluentbit and fluentd can be deployed as forwarder and/or aggregator.
+
+The differences between fluentbit and fluentd can be found in [Fluentbit documentation: "Fluentd & Fluent Bit"]https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
+
+Main differences are:
+
+- Memory footprint: Fluentbit is a lightweight version of fluentd (just 640 KB memory
+- Number of plugins (input, output, filters connectors): Fluentd has more plugins available, but those plugins need to be installed as gem libraries. Fluentbit's plugins do not need to be installed.
+
+In this deployment fluentbit will be installed as forwarder (plugins available are enough for collecting and parsing kubernetes logs and host logs) and fluentd as aggregator to leverage the big number of plugins available.
+ 
+{{site.data.alerts.end}}
 
 ## EFK Installation
 
@@ -383,63 +478,57 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
 
   UI can be access through http://kibana.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
 
-## Collecting Kuberentes logs with Fluentbit/Fluentd
 
-In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to log files on the nodes. To tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend, a process like, fluentd/fluentbit can be used.
+## Logs Forwarding/Aggregation
 
-Log format used by Kubernetes is different depending on the container runtime used. `docker` container run-time generates logs file in JSON format. `containerd` run-time, used by K3S, uses CRI log format.
-```
-<time_stamp> <stream_type> <P/F> <log>
+### Fluentd installation
 
-where:
-  - <time_stamp> has the format `%Y-%m-%dT%H:%M:%S.%L%z` Date and time including UTC offset
-  - <stream_type> is `stdout` or `stderr`
-  - <P/F> indicates whether the log line is partial (P), in case of multine logs, or full log line (F)
-  - <log>: message log
-```
+Fluentd is deploy as log aggregator, collecting all logs forwarded by Fluentbit agent and using ES as backend for routing all logs.
 
-Fluentd or, its lightweight alternative, Fluentbit are deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster.
-Using this DaemonSet controller, a Fluentd/Fluentbit logging agent Pod is deployed on every node of the cluster.
+Fluentd will be deployed as Kubernetes Deployment (not a daemonset), enabling multiple PODs service replicas, so it can be accesible by Fluentbit pods.
 
-To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
+#### Customized fluentd image
 
-In addition to container logs, the Fluentd/Fluentbit agent can collect and parse logs from Kubernetes processes (kubelet, kube-proxy), systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
+Fluentd official images does not contain any of the needed plugins (elasticsearch, prometheus monitoring, etc.) that need to be installed.
 
-In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file need to be collected and parsed in order to have logs comming from Kubernetes processes.
+As part of this project I have created my own version of the fluentd docker image: (ricsanfre/fluentd-aggregator)[https://github.com/ricsanfre/fluentd-aggregator].
 
-K3S logs can be also viewed with `journactl` command
+My customized docker image is an extension of the [fluentd official image](https://github.com/fluent/fluentd-docker-image).
+Following the instructions for [customizing the image to intall additional plugins] https://github.com/fluent/fluentd-docker-image#3-customize-dockerfile-to-install-plugins-optional
 
-In master node:
+Additionally default fluentd config files have been added to initially configure the docker image as aggregator for elasticsearch. This configuration can be overwritten when deploying the image in kubernetes through the corresponding ConfigMap.
 
-```shell
-sudo journactl -u k3s
-```
-
-In worker node:
-
-```shell
-sudo journalctl -u k3s-agent
-```
-
-
-{{site.data.alerts.note}}: Ubuntu system logs stored in `/var/logs` (auth.log, systlog, kern.log), have a syslog format without priority field, and the timestamp is formatted using system local time.
-
-The syslog format is the following:
+Final Docker file looks like this:
 
 ```
-<time_stamp> <host> <process>[<PID>] <message>
-Where:
-  - <time_stamp> has the format `%b %d %H:%M:%S`: local date and time not including timezone UTC offset
-  - <host>: hostanme
-  - <process> and <PID> identifies the process generating the log
+FROM fluent/fluentd:v1.14-1
+
+
+# UPDATE BASE IMAGE WITH PLUGINS
+
+# Use root account to use apk
+USER root
+
+# below RUN includes plugin as examples elasticsearch is not required
+# you may customize including plugins as you wish
+RUN apk add --no-cache --update --virtual .build-deps \
+        sudo build-base ruby-dev \
+ && sudo gem install fluent-plugin-elasticsearch \
+ && sudo gem install fluent-plugin-prometheus \
+ && sudo gem sources --clear-all \
+ && apk del .build-deps \
+ && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem
+
+USER fluent
+
+# COPY AGGREGATOR CONF FILES
+COPY ./conf/fluent.conf /fluentd/etc/
+COPY ./conf/forwarder.conf /fluentd/etc/
+COPY ./conf/prometheus.conf /fluentd/etc/
 ```
-{{site.data.alerts.end}}
 
 
-
-### Fluent-bit installation
-
-Fluentbit is a lightweight version of fluentd ( just 640 KB not requiring any gem library to be installed). Find more details about fluentbit-fluentd comparison in [Fluentbit documentation: "Fluentd & Fluent Bit"]https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
+### Fluentbit installation
 
 It can be installed and configured to collect and parse Kubernetes logs deploying a daemonset pod (same as fluentd). See fluenbit documentation on how to install it on Kuberentes cluster (https://docs.fluentbit.io/manual/installation/kubernetes).
 

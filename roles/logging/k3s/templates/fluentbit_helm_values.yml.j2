@@ -3,21 +3,12 @@
 
 #fluentbit-container environment variables
 env:
-  # Elastic operator creates elastic service name with format cluster_name-es-http
-  - name: FLUENT_ELASTICSEARCH_HOST
-    value: "{{ efk_cluster_name }}-es-http"
-  # Default elasticsearch default port
-  - name: FLUENT_ELASTICSEARCH_PORT
-    value: "9200"
-  # Elasticsearch user
-  - name: FLUENT_ELASTICSEARCH_USER
-    value: "elastic"
-  # Elastic operator stores elastic user password in a secret
-  - name: FLUENT_ELASTICSEARCH_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: "{{ efk_cluster_name }}-es-elastic-user"
-        key: elastic
+  # Fluentd deployment service
+  - name: FLUENT_AGGREGATOR_HOST
+    value: "fluentd"
+  # Default fluentd forward port
+  - name: FLUENT_AGGREGATOR_PORT
+    value: "24224"
   # Specify TZ
   - name: TZ
     value: "{{ efk_node_timezone }}"
