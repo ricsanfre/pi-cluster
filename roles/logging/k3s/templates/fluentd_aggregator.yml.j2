@@ -90,8 +90,8 @@ spec:
         app: fluentd
     spec:
       containers:
-      - image: "{{ efk_fluentd_image }}"
-        imagePullPolicy: IfNotPresent
+      - image: "{{ efk_fluentd_aggregator_image }}"
+        imagePullPolicy: Always
         name: fluentd
         env:
           # Elastic operator creates elastic service name with format cluster_name-es-http

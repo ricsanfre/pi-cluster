@@ -22,7 +22,9 @@ efk_elasticsearch_passwd: "s1cret0"
 efk_logging_collector: 'fluentbit'
 
 # Fluentd image version
-efk_fluentd_image: "ricsanfre/fluentd-aggregator:latest"
+efk_fluentd_collector_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
+efk_fluentd_aggregator_image: "ricsanfre/fluentd-aggregator:latest"
+
 
 # Configured Timezone
 efk_node_timezone: "Europe/Madrid"
