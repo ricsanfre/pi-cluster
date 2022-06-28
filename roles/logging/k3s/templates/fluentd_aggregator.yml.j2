@@ -112,6 +112,8 @@ spec:
           # Setting a index-prefix for fluentd. By default index is logstash
           - name:  FLUENT_ELASTICSEARCH_INDEX_NAME
             value: fluentd
+          - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
+            value: "true"
         ports:
         - containerPort: 24224
           name: forward
