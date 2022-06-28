@@ -1,0 +1,14 @@
+---
+
+- name: Deploy fluentd aggregator
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - fluentd_aggregator.yml.j2
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod -l app=fluentd --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
+  register: fluentbit_pods_ready
+  changed_when: false
