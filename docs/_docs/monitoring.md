@@ -69,7 +69,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         # List of grafana plugins to be installed
         plugins:
           - grafana-piechart-panel
-            kubeApiServer:
+      kubeApiServer:
         enabled: true
       kubeControllerManager:
         enabled: false
