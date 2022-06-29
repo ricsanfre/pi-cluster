@@ -30,40 +30,86 @@ config:
 
   # fluent-bit.config INPUT
   inputs: |
-{% for input in fluentbit_inputs %}
 
     [INPUT]
-{% for key in input %}
-        {{ key }} {{ input[key] }}
-{% endfor %}
-{% endfor %}
+        Name tail
+        Path /var/log/containers/*.log
+        multiline.parser cri
+        DB /var/log/fluentbit/flb_kube.db
+        Tag kube.*
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines True
+
+    [INPUT]
+        Name tail
+        Tag host.*
+        DB /var/log/fluentbit/flb_host.db
+        Path /var/log/auth.log,/var/log/syslog
+        Parser syslog-rfc3164-nopri
+
   # fluent-bit.config OUTPUT
   outputs: |
-{% for output in fluentbit_outputs %}
 
     [OUTPUT]
-{% for key in output %}
-        {{ key }} {{ output[key] }}
-{% endfor %}
-{% endfor %}
+        Name forward
+        match *
+        Host ${FLUENT_AGGREGATOR_HOST}
+        Port ${FLUENT_AGGREGATOR_PORT}
+
   # fluent-bit.config PARSERS
   customParsers: |
-{% for parser in fluentbit_parsers %}
 
     [PARSER]
-{% for key in parser %}
-        {{ key }} {{ parser[key] }}
-{% endfor %}
-{% endfor %}
+        Name syslog-rfc3164-nopri
+        Format regex
+        Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+        Time_Key time
+        Time_Format %b %d %H:%M:%S
+        Time_Keep False
+
   # fluent-bit.config FILTERS
   filters: |
-{% for item in fluentbit_filters %}
 
     [FILTER]
-{% for key in item %}
-        {{ key }} {{ item[key] }}
-{% endfor %}
-{% endfor %}
+        Name kubernetes
+        Match kube.*
+        Kube_Tag_Prefix kube.var.log.containers.
+        Merge_Log True
+        Merge_Log_Trim True
+        Keep_Log False
+        K8S-Logging.Parser True
+        K8S-Logging.Exclude False
+        Annotations False
+        Labels False
+
+    [FILTER]
+        Name nest
+        Match kube.*
+        Operation lift
+        Nested_under kubernetes
+        Add_prefix kubernetes_
+
+    [FILTER]
+        Name modify
+        Match kube.*
+        Rename kubernetes_pod_name k8s.pod.name
+        Rename kubernetes_namespace_name k8s.namespace.name
+        Rename kubernetes_container_name k8s.container.name
+        Remove kubernetes_container_image
+        Remove kubernetes_docker_id
+        Remove kubernetes_pod_id
+        Remove kubernetes_host
+        Remove kubernetes_container_hash
+        Remove stream
+        Remove _p
+        Rename log message
+        Add k8s.cluster.name picluster
+
+    [FILTER]
+        Name lua
+        Match host.*
+        script /fluent-bit/scripts/adjust_ts.lua
+        call local_timestamp_to_UTC
 
 # Fluentbit config Lua Scripts
 luaScripts:
