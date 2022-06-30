@@ -2,7 +2,7 @@
 title: Log Management (EFK)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "04-05-2022"
+last_modified_at: "30-06-2022"
 
 ---
 
@@ -16,7 +16,7 @@ EFK stack will be deployed as centralized logging solution for the K3S cluster, 
 
 ## ARM/Kubernetes support
 
-In June 2020, Elastic announced (https://www.elastic.co/blog/elasticsearch-on-arm) that starting from 7.8 release they will provide multi-architecture docker images supporting AMD64 and ARM64 architectures.
+In June 2020, Elastic [announced](https://www.elastic.co/blog/elasticsearch-on-arm) that starting from 7.8 release they will provide multi-architecture docker images supporting AMD64 and ARM64 architectures.
 
 To facilitate the deployment on a Kubernetes cluster [ECK project](https://github.com/elastic/cloud-on-k8s) has been created.
 ECK ([Elastic Cloud on Kubernetes](https://www.elastic.co/guide/en/cloud-on-k8s/current/index.html)) automates the deployment, provisioning, management, and orchestration of ELK Stack (Elasticsearch, Kibana, APM Server, Enterprise Search, Beats, Elastic Agent, and Elastic Maps Server) on Kubernetes based on the operator pattern. 
@@ -25,7 +25,7 @@ ECK ([Elastic Cloud on Kubernetes](https://www.elastic.co/guide/en/cloud-on-k8s/
 Logstash deployment is not supported by ECK operator
 {{site.data.alerts.end}}
 
-Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kubernetes clusters with the built-in configuration needed to automatically collect and parsing containers logs.
+Fluentd and Fluentbit both support ARM64 docker images for being deployed on Kubernetes clusters with the built-in configuration needed to automatically collect and parsing containers logs.
 
 
 ## Why EFK and not ELK
@@ -33,18 +33,25 @@ Fluentd/Fluentbit as well support ARM64 docker images for being deployed on Kube
 Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routing etc) but I will select Fluentd because:
 
 - **Performance and footprint**: Logstash consumes more memory than Fluentd. Logstash is written in Java and Fluentd is written in Ruby (Fluentbit in C). Fluentd is an efficient log aggregator. For most small to medium-sized deployments, fluentd is fast and consumes relatively minimal resources.
-- **Log Parsing**: Fluentd uses standard built-in parsers (JSON, regex, csv etc.) and Logstash uses plugins for this. This makes Fluentd favorable over Logstash, because it does not need extra plugins installed
+- **Log Parsing**: Fluentd uses standard built-in parsers (JSON, regex, csv etc.) and Logstash uses plugins for this. This makes Fluentd favorable over Logstash, because it does not need extra plugins installed.
 - **Kubernetes deployment**: Docker has a built-in logging driver for Fluentd, but doesn’t have one for Logstash. With Fluentd, no extra agent is required on the container in order to push logs to Fluentd. Logs are directly shipped to Fluentd service from STDOUT without requiring an extra log file. Logstash requires additional agent (Filebeat) in order to read the application logs from STDOUT before they can be sent to Logstash.
+- **Fluentd** is a CNCF project.
 
-- **Fluentd** is a CNCF project
+## Collecting cluster logs
 
-## Collecting Kuberentes logs
+### Container logs
 
-### Container Logs
+In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to log files on the nodes (`/var/log/containers`). To tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend, a process like, fluentd/fluentbit can be used.
 
-In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to log files on the nodes. To tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend, a process like, fluentd/fluentbit can be used.
+To learn more about kubernetes logging architecture check out [“Cluster-level logging architectures”](https://kubernetes.io/docs/concepts/cluster-administration/logging) from the official Kubernetes docs. The loggin architecture using [node-level log agents](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) is the one implemented with fluentbit/fluentd log collectors. Fluentbit/fluentd proccess run in each node as a kubernetes' daemonset with enough privileges to access to host file system where container logs are stored (`/var/logs/containers` in K3S implementation).
 
-Log format used by Kubernetes is different depending on the container runtime used. `docker` container run-time generates logs file in JSON format. `containerd` run-time, used by K3S, uses CRI log format.
+[Fluentbit and fluentd official helm charts](https://github.com/fluent/helm-charts) deploy the fluentbit/fluentd pods as privileged daemonset.
+
+{{site.data.alerts.important}}
+
+Log format used by Kubernetes is different depending on the container runtime used. `docker` container run-time generates logs in JSON format. 
+
+`containerd` run-time, used by K3S, uses CRI log format:
 
 ```
 <time_stamp> <stream_type> <P/F> <log>
@@ -55,16 +62,15 @@ where:
   - <P/F> indicates whether the log line is partial (P), in case of multine logs, or full log line (F)
   - <log>: message log
 ```
+{{site.data.alerts.end}}
 
-Fluentd or, its lightweight alternative, Fluentd/Fluentbit are deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster.
-Using this DaemonSet controller, a Fluentd/Fluentbit logging agent Pod is deployed on every node of the cluster.
-To learn more about this logging architecture, consult [“Cluster-level logging architectures: Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
+{{site.data.alerts.note}}
+In addition to container logs, same Fluentd/Fluentbit agents deployed as daemonset can collect and parse logs from systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
+{{site.data.alerts.end}}
 
-### Kubernetes processes Logs
+### Kubernetes processes logs
 
-In addition to container logs, the Fluentd/Fluentbit agent can collect and parse logs from Kubernetes processes (kubelet, kube-proxy), systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
-
-In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file need to be collected and parsed in order to have logs comming from Kubernetes processes.
+In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file need to be parsed in order to collect logs from Kubernetes (K3S) processes.
 
 K3S logs can be also viewed with `journactl` command
 
@@ -80,18 +86,17 @@ In worker node:
 sudo journalctl -u k3s-agent
 ```
 
-## Collecting host logs
+### Collecting host logs
 
-Fluentbit/Fluentd deployed as daemonsets on kuberentes nodes can be used to collect Ubuntu system logs.
+OS level logs (`/var/logs`) can be collected with the same agent deployed to collect containers logs (daemonset)  
 
-{{site.data.alerts.note}}
+{{site.data.alerts.important}}
 
-Ubuntu system logs stored are `/var/logs` (auth.log, systlog, kern.log). They have a `syslog` format but with some differences from the standard:
- - Missing priority field
+Some of Ubuntu system logs stored are `/var/logs` (auth.log, systlog, kern.log) have a `syslog` format but with some differences from the standard:
+ - Priority field is missing
  - Timestamp is formatted using system local time.
 
 The syslog format is the following:
-
 ```
 <time_stamp> <host> <process>[<PID>] <message>
 Where:
@@ -99,16 +104,18 @@ Where:
   - <host>: hostanme
   - <process> and <PID> identifies the process generating the log
 ```
+Fluentbit/fluentd custom parser need to be configured to parse this kind of logs.
+
 {{site.data.alerts.end}}
 
 
-## Fluentbit/Fluentd Forwarder and Aggregation Architecture
+## Forwarder/Aggregator Log Architecture
 
-From all the [common architecture patterns with Fluentbit and Fluentd](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/), forwarder/aggregator architecture will be deployed in the cluster.
+Forwarder/aggregator architecture pattern will be implemented with Fluentbit/Fluentd
 
 ![forwarder-aggregator-architecture](https://fluentbit.io/images/blog/blog-forwarder-aggregator.png)
 
-This pattern includes having a lightweight instance deployed on edge, generally where data is created, such as Kubernetes nodes, virtual machines or baremetal servers. These forwarders do minimal processing and then use the forward protocol to send data to a much heavier instance of Fluentd or Fluent Bit. This heavier instance, known as the aggregator, may perform more filtering and processing before routing to the appropriate backend(s).
+This pattern includes having a lightweight instance deployed on edge (forwarder), generally where data is created, such as Kubernetes nodes, virtual machines or baremetal servers. These forwarders do minimal processing and then use the forward protocol to send data to a much heavier instance of Fluentd or Fluent Bit (aggregator). This heavier instance may perform more filtering and processing before routing to the appropriate backend(s).
 
 **Advantages**
 
@@ -120,13 +127,13 @@ This pattern includes having a lightweight instance deployed on edge, generally 
 
 - Dedicated resources required for an aggregation instance.
 
-With this architecture in the aggregatio layer logs can be filtered and routed not only to Elastisearch database (default route) but to a different backend to further processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
+With this architecture, in the aggregation layer, logs can be filtered and routed not only to Elastisearch database (default route) but to a different backend to further processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
 
 {{site.data.alerts.note}}
 
 Both fluentbit and fluentd can be deployed as forwarder and/or aggregator.
 
-The differences between fluentbit and fluentd can be found in [Fluentbit documentation: "Fluentd & Fluent Bit"]https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
+The differences between fluentbit and fluentd can be found in [Fluentbit documentation: "Fluentd & Fluent Bit"](https://docs.fluentbit.io/manual/about/fluentd-and-fluent-bit).
 
 Main differences are:
 
@@ -137,7 +144,16 @@ In this deployment fluentbit will be installed as forwarder (plugins available a
  
 {{site.data.alerts.end}}
 
-## EFK Installation
+For additional details about all common architecture patterns that can be implemented with Fluentbit and Fluentd see ["Common Architecture Patterns with Fluentd and Fluent Bit"](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/).
+
+{{site.data.alerts.note}}
+
+Alternative installation method using a agent/sidecar pattern, where fluentbit or fluentd is collecting and sending the logs to ES backend directly (no aggregation layer), is also described in ["Fluentbit/Fluentd Agent/Sidecar Installation"](/docs/logging-sidecar-agent/).
+
+{{site.data.alerts.end}}
+
+
+## Elasticsearch and Kibana installation
 
 ### ECK Operator installation
 
@@ -489,44 +505,297 @@ Fluentd will be deployed as Kubernetes Deployment (not a daemonset), enabling mu
 
 #### Customized fluentd image
 
-Fluentd official images does not contain any of the needed plugins (elasticsearch, prometheus monitoring, etc.) that need to be installed.
+Fluentd official images do not contain any of the plugins (elasticsearch, prometheus monitoring, etc.) that are needed. A customized fluentd image need to be built.
 
-As part of this project I have created my own version of the fluentd docker image: (ricsanfre/fluentd-aggregator)[https://github.com/ricsanfre/fluentd-aggregator].
+{{site.data.alerts.tip}}
 
-My customized docker image is an extension of the [fluentd official image](https://github.com/fluent/fluentd-docker-image).
-Following the instructions for [customizing the image to intall additional plugins] https://github.com/fluent/fluentd-docker-image#3-customize-dockerfile-to-install-plugins-optional
+You can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
+These images are available in docker hub:
 
-Additionally default fluentd config files have been added to initially configure the docker image as aggregator for elasticsearch. This configuration can be overwritten when deploying the image in kubernetes through the corresponding ConfigMap.
+- `ricsanfre/fluentd-aggregator:v1.14-debian-1`: for amd64 architectures
+- `ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1`: for arm64 architectures
 
-Final Docker file looks like this:
+{{site.data.alerts.end}}
 
+As base image, the [official fluentd docker image](https://github.com/fluent/fluentd-docker-image) can be used. To customize it, follow the instructions in the project repository: ["Customizing the image to intall additional plugins"](https://github.com/fluent/fluentd-docker-image#3-customize-dockerfile-to-install-plugins-optional).
+
+In our case, the list of plugins that need to be added to the default fluentd image are:
+- `fluent-plugin-elasticsearch`: ES as backend for routing the logs
+- `fluent-plugin-prometheus`: Enabling prometheus monitoring
+
+Additionally default fluentd config can be added to the customized docker image, so fluentd can be configured as log aggregator, collecting logs from forwarders (fluentbit/fluentd) and routing all logs to elasticsearch. 
+This fluentd configuration in the docker image can be overwritten when deploying the container in kubernetes, using a [ConfigMap](https://kubernetes.io/es/docs/concepts/configuration/configmap/) mounted as a volume, or when running with `docker run`, using a [bind mount](https://docs.docker.com/storage/bind-mounts/). In both cases the target volume to be mounted is where fluentd expects the configuration files (`/fluentd/etc` in the official images).
+
+{{site.data.alerts.important}}
+
+`fluent-plugin-elasticsearch` plugin configuration requires to set a specific sniffer class for implementing reconnection logic to ES(`sniffer_class_name Fluent::Plugin::ElasticsearchSimpleSniffer`). See plugin documentation [fluent-plugin-elasticsearh: Sniffer Class Name](https://github.com/uken/fluent-plugin-elasticsearch#sniffer-class-name).
+
+The path to the sniffer class need to be passed as parameter to `fluentd` command (-r option), otherwise the fluentd command will give an error
+
+Docker's `entrypoint.sh` in the customized image has to be updated to automatically provide the path to the sniffer class.
+
+```sh
+# First step looking for the sniffer ruby class within the plugin
+SIMPLE_SNIFFER=$( gem contents fluent-plugin-elasticsearch | grep elasticsearch_simple_sniffer.rb )
+
+# Execute fluentd command with -r option for loading the required ruby class
+fluentd -c ${FLUENTD_CONF} ${FLUENTD_OPT} -r ${SIMPLE_SNIFFER}
 ```
-FROM fluent/fluentd:v1.14-1
+
+{{site.data.alerts.end}}
 
 
-# UPDATE BASE IMAGE WITH PLUGINS
+Customized image Dockerfile could look like this:
+
+```dockerfile
+ARG BASE_IMAGE=fluent/fluentd:v1.14-debian-1
+
+FROM $BASE_IMAGE
+
+## 1- Update base image installing fluent plugins. Executing commands `gem install <plugin_name>`
 
 # Use root account to use apk
 USER root
 
-# below RUN includes plugin as examples elasticsearch is not required
-# you may customize including plugins as you wish
-RUN apk add --no-cache --update --virtual .build-deps \
-        sudo build-base ruby-dev \
+RUN buildDeps="sudo make gcc g++ libc-dev" \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends $buildDeps \
  && sudo gem install fluent-plugin-elasticsearch \
  && sudo gem install fluent-plugin-prometheus \
  && sudo gem sources --clear-all \
- && apk del .build-deps \
- && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem
+ && SUDO_FORCE_REMOVE=yes \
+    apt-get purge -y --auto-remove \
+                  -o APT::AutoRemove::RecommendsImportant=false \
+                  $buildDeps \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.ge
 
+## 2) (Optional) Copy customized fluentd config files (fluentd as aggregator)
+COPY ./conf/* /fluentd/etc/
+
+## 3) Modify entrypoint.sh to configure sniffer class
+COPY entrypoint.sh /bin/
+
+## 4) Change to fluent user to run fluentd
 USER fluent
-
-# COPY AGGREGATOR CONF FILES
-COPY ./conf/fluent.conf /fluentd/etc/
-COPY ./conf/forwarder.conf /fluentd/etc/
-COPY ./conf/prometheus.conf /fluentd/etc/
+ENTRYPOINT ["tini",  "--", "/bin/entrypoint.sh"]
+CMD ["fluentd"]
 ```
 
+{{site.data.alerts.important}}
+
+Fluentd official images are not built with multi-architecture support. Different base images need to be used for different architectures. Docker building argument BASE_IMAGE has to be set to use the proper image:
+
+- `fluent/fluentd:v1.14-debian-1`: for building amd64 docker image
+- `fluent/fluentd:v1.14-debian-arm64-1`: for building arm64 docker image
+
+{{site.data.alerts.end}}
+
+#### Deploying fluentd in K3S
+
+Fluentd will not be deployed as privileged daemonset, since it does not need to access to kubernetes logs/APIs. It will be deployed using the following Kubernetes resources:
+- Kubernetes Deployment to deploy fluentd as stateless POD. Number of replicas can be set to provide HA to the service.
+- Kubernetes Service, Cluster IP type, exposing fluentd endpoints to other PODs/processes: Fluentbit forwarders, Prometheus, etc.
+- Kubernetes ConfigMap containing fluentd config files.
+
+Installation procedure:
+
+- Step 1. Create a manifest containing all kubernetes resources
+  
+  ```yml
+  ---
+  # ConfigMap containing fluentd configuration **NOTE 1**
+  # Mounted by the container and mapped to `/etc/fluentd/`
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: fluentd-config
+    namespace: k3s-logging
+  data:
+    fluent.conf: |-
+      # Collect logs from forwarders 
+      <source>
+        @type forward
+        bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
+        port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+      </source>
+      # Prometheus metric exposed on 0.0.0.0:24231/metrics
+      <source>
+        @type prometheus
+        @id in_prometheus
+        bind "#{ENV['FLUENTD_PROMETHEUS_BIND'] || '0.0.0.0'}"
+        port "#{ENV['FLUENTD_PROMETHEUS_PORT'] || '24231'}"
+        metrics_path "#{ENV['FLUENTD_PROMETHEUS_PATH'] || '/metrics'}"
+      </source>
+      <source>
+        @type prometheus_output_monitor
+        @id in_prometheus_output_monitor
+      </source>
+      # Send received logs to elasticsearch
+      <match **>
+         @type elasticsearch
+         @id out_es
+         @log_level info
+         include_tag_key true
+         host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+         port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+         path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
+         scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
+         ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
+         ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+         user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
+         password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
+         reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
+         reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
+         reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
+         log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
+         logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
+         logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
+         logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
+         index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
+         target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
+         type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
+         include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
+         template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
+         template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
+         template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
+         sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
+         request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
+         application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
+         suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
+         enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
+         ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
+         ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
+         ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
+         <buffer>
+           flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+           flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
+           chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
+           queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+           retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+           retry_forever true
+         </buffer>
+      </match>
+  ---
+  # Fluentd Deployment **NOTE 2**
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: fluentd
+    name: fluentd
+    namespace: k3s-logging
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: fluentd
+    template:
+      metadata:
+        labels:
+          app: fluentd
+      spec:
+        containers:
+        - image: ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1
+          imagePullPolicy: Always
+          name: fluentd
+          env:
+            # Elastic operator creates elastic service name with format cluster_name-es-http
+            - name:  FLUENT_ELASTICSEARCH_HOST
+              value: efk-es-http
+              # Default elasticsearch default port
+            - name:  FLUENT_ELASTICSEARCH_PORT
+              value: "9200"
+            # Elasticsearch user
+            - name: FLUENT_ELASTICSEARCH_USER
+              value: "elastic"
+            # Elastic operator stores elastic user password in a secret
+            - name: FLUENT_ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "efk-es-elastic-user"
+                  key: elastic
+            # Setting a index-prefix. By default index is logstash-<date>
+            - name:  FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
+              value: fluentd
+            - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
+              value: "true"
+          ports:
+          - containerPort: 24224
+            name: forward
+            protocol: TCP
+          - containerPort: 24231
+            name: prometheus
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /fluentd/etc
+            name: config
+            readOnly: true
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: fluentd-config
+          name: config
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: fluentd
+    name: fluentd
+    namespace: k3s-logging
+  spec:
+    ports:
+    - name: forward
+      port: 24224
+      protocol: TCP
+      targetPort: forward
+    - name: prometheus
+      port: 24231
+      protocol: TCP
+      targetPort: prometheus
+    selector:
+      app: fluentd
+    sessionAffinity: None
+    type: ClusterIP  
+  ```
+  {{site.data.alerts.note}} **(1): Fluentd ConfigMap**
+
+  Fluentd config file is loaded into a Kubernetes ConfigMap that is mounted as `/etc/fluentd`. This config map contains just a single `fluent.conf` file. It configures fluentd as aggregator.
+
+  - Collects logs from forwarders (port 24224) configuring [forward input plugin](https://docs.fluentd.org/input/forward)
+
+  - Enables Prometheus metrics exposure (port 24231) configuring [prometheus input plugin](https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus). Complete list of configuration parameters in [fluent-plugin-prometheus repository](https://github.com/fluent/fluent-plugin-prometheus)
+
+  - Routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch)
+
+  Plugin configuration values have been defined using container environment variables with default values in case of not being specified.
+
+  {{site.data.alerts.end}}
+
+  {{site.data.alerts.note}} **(2): Fluentd Deployment**
+
+  fluentd POD is deployed as a deployment with 1 replica.
+
+  Elasticsearch plugin configuration are passed to the fluentd pod as environment variables
+  - connection details (`host` and `port`): elasticsearch kubernetes service (`efk-es-http`) and ES port.
+  - access credentials (`user` and `password`) :elastic user password obtaining from the corresponding Secret.
+  - additional plugin parameters: index prefix (`logstash_prefix`), and logging debug messages when receiving from Elasticsearch API (`log_es_400_reason`)
+  - Rest of parameters with default values defined in the ConfigMap.
+
+  ConfigMap containing fluentd config is mounted as `/etc/fluentd` volume.
+  {{site.data.alerts.end}}
+
+
+- Step 2: Apply manifest file
+  ```shell
+  kubectl apply -f manifest.yml
+  ```
+- Step 3: Check fluentd status
+  ```shell
+  kubectl get pods -n k3s-logging
+
+  ```
 
 ### Fluentbit installation
 
@@ -555,21 +824,12 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   # fluentbit-container environment variables. **NOTE 1**
   env:
-    # Elastic operator creates elastic service name with format cluster_name-es-http
-    - name: FLUENT_ELASTICSEARCH_HOST
-      value: "efk-es-http"
-    # Default elasticsearch default port
-    - name: FLUENT_ELASTICSEARCH_PORT
-      value: "9200"
-    # Elasticsearch user
-    - name: FLUENT_ELASTICSEARCH_USER
-      value: "elastic"
-    # Elastic operator stores elastic user password in a secret
-    - name: FLUENT_ELASTICSEARCH_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: "efk-es-elastic-user"
-          key: elastic
+    # Fluentd deployment service
+    - name: FLUENT_AGGREGATOR_HOST
+      value: "fluentd"
+    # Default fluentd forward port
+    - name: FLUENT_AGGREGATOR_PORT
+      value: "24224"
     # Specify TZ
     - name: TZ
       value: "Europe/Madrid"
@@ -619,20 +879,11 @@ For speed-up the installation there is available a [helm chart](https://github.c
     outputs: |
 
       [OUTPUT]
-          Name es
+          Name forward
           match *
-          Host ${FLUENT_ELASTICSEARCH_HOST}
-          Port ${FLUENT_ELASTICSEARCH_PORT}
-          Logstash_Format True
-          Logstash_Prefix logstash
-          Suppress_Type_Name True
-          Include_Tag_Key True
-          Tag_Key tag
-          HTTP_User ${FLUENT_ELASTICSEARCH_USER}
-          HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
-          tls False
-          tls.verify False
-          Retry_Limit False
+          Host ${FLUENT_AGGREGATOR_HOST}
+          Port ${FLUENT_AGGREGATOR_PORT}
+
     # fluent-bit.config PARSERS **NOTE 5**
     customParsers: |
 
@@ -689,7 +940,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
   ```
   {{site.data.alerts.note}} **(1): Daemonset pod environment variables**
 
-  Elasticsearch connection details (IP and port) and access credentials are passed as environment variables to the fluentbit pod (`elastic` user password obtaining from the corresponding Secret).
+  Fluentd aggregator connection details (IP and port) are passed as environment variables to the fluentbit pod, so forwarder output plugin can be configured.
 
   TimeZone (`TZ`) need to be specified so Fluentbit can properly parse logs which timestamp do not contain timezone information (i.e: OS Ubuntu logs like `/var/log/syslog` and `/var/log/auth.log`). 
   {{site.data.alerts.end}}
@@ -700,7 +951,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   {{site.data.alerts.note}} **(3): Fluentbit INPUT configuration**
 
-  [INPUT] default configurationonly parse kuberentes logs, supporting the parsing of multiline logs in multipleformats (docker and cri-o). cri is the format we are interested in.
+  By default helm chart configures fluentbit inputs to parse kuberentes logs, supporting the parsing of multiline logs in multipleformats (docker and cri-o). cri is the format we are interested in.
     ```
     [INPUT]
           Name tail
@@ -713,7 +964,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
   This is a new [multiline core 1.8 functionality](https://docs.fluentbit.io/manual/pipeline/inputs/tail#multiline-core-v1.8). 
   The two options in `multiline.parser` separated by a comma means multi-format: try docker and cri multiline formats.
 
-  For contained logs multiline parser cri is needed. Embedded implementation of this parser applies the following regexp to the input lines:
+  For containerd logs multiline parser cri is needed. Embedded implementation of this parser applies the following regexp to the input lines:
   ```
     "^(?<time>.+) (?<stream>stdout|stderr) (?<_p>F|P) (?<log>.*)$"
   ```
@@ -722,7 +973,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
   Fourth field ("F/P") indicates whether the log is full (one line) or partial (more lines are expected).
   See more details in this fluentbit [feature request](https://github.com/fluent/fluent-bit/issues/1316)
 
-  It also configured the log parsing of a systemd `kubelet.system` service, that it is not available in K3S
+  By default helm chart also configures fluentbit to collect and parse systemd `kubelet.system` service, which is not installed by K3S
   
     ```
         [INPUT]
@@ -738,15 +989,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   {{site.data.alerts.note}} **(4): Fluentbit OUTPUT configuration**
 
-  [OUTPUT] configuration by default uses elasticsearch, but it needs to be modified for specifying the access credentials and https protocol specific parameters (do not use tls).
-
-  `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
-
-  ```json
-  {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
-  ``` 
-
-  In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
+  By default helm chart configures elasticsearch as output. Output need to be modified to configure fluent forward output plugin.
 
   {{site.data.alerts.end}}
   
@@ -783,224 +1026,6 @@ For speed-up the installation there is available a [helm chart](https://github.c
   ```shell
   helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
   ```
-
-### Alternative to Fluentbit (Fluentd)
-
-Fluentd will be deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster. Using this DaemonSet controller, a Fluentd logging agent Pod will be deployed on every node of the cluster. To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
-
-In addition to container logs, the Fluentd agent will tail Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, consult the [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
-
-Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset). Different docker images are provided pre-configured for collecting and parsing kuberentes logs and to inject them into different destinations, one of them is elasticsearch.
-
-Further details can be found in [Fluentd documentation: "Kubernetes deployment"](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` Github repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
-
-Fluentd default image and manifest files need to be adapted for parsing containerd logs. `fluentd -kubernets-daemonsset` images by default are configured for parsing docker logs. See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
-
-- Step 1. Create and apply a manifest file for fluentd role and password
-
-  Fluentd need to access to kubernetes API for querying resources
-
-  ```yml
-  ---
-  apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: fluentd
-    namespace: k3s-logging
-  ---
-  apiVersion: rbac.authorization.k8s.io/v1
-  kind: ClusterRole
-  metadata:
-    name: fluentd
-  rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
-    - namespaces
-    verbs:
-    - get
-    - list
-    - watch
-  ---
-  kind: ClusterRoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: fluentd
-  roleRef:
-    kind: ClusterRole
-    name: fluentd
-    apiGroup: rbac.authorization.k8s.io
-  subjects:
-  - kind: ServiceAccount
-    name: fluentd
-    namespace: "{{ k3s_logging_namespace }}"
-  ```
-
-- Step 2. Create and apply manifest file for fluend additional configuration
-
-  By default `fluentd-kubernetes-daemonset` image configuration add the basic configuration for collecting and parsing kubernetes pods and processes logs and injecting into elasticsearch database.
-
-  No configuration is included for collecting and parsing other logs from the nodes, like /var/log/auth.log (containing all authentication logs) or /var/log/syslog (containing all important node level logs).
-
-  Fluentd images load the configuration from [`/fluentd/etc/fluent.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/debian-elasticsearch7/conf/fluent.conf). This file contains the configuration for injecting all data into elasticsearh and to include `kubernets.conf` file which contains all kubernetes logs parsing configuration. As well a include statement load all configuration stored in `/fluentd/etc/conf.d` 
-
-  ```
-  # AUTOMATICALLY GENERATED
-  # DO NOT EDIT THIS FILE DIRECTLY, USE /templates/conf/fluent.conf.erb
-
-  @include "#{ENV['FLUENTD_SYSTEMD_CONF'] || 'systemd'}.conf"
-  @include "#{ENV['FLUENTD_PROMETHEUS_CONF'] || 'prometheus'}.conf"
-  @include kubernetes.conf
-  @include conf.d/*.conf
-
-  <match **>
-    @type elasticsearch
-    @id out_es
-    @log_level info
-    include_tag_key true
-    host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
-    port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-
-  ...
-
-  ```
-
-  Additional configuration files for parsing auth.log and syslog.log need to be created and passing them to the pod within /fluent/etc/conf.d directory. For doing that a ConfigMap will be created and mounted on fluentd container as /fluentd/etc/conf.d volume.
-
-  ```yml
-  apiVersion: v1
-  data:
-    # Additional configuration for parsing auth.log file
-    auth.conf: |-
-      <source>
-        @type tail
-        path /var/log/auth.log
-        pos_file /var/log/auth.pos
-        tag authlog
-        <parse>
-          @type syslog
-          message_format rfc3164
-          with_priority false
-        </parse>
-      </source>
-    # Additional configuraion for pasing syslog.file
-    syslog.conf: |-
-      <source>
-        @type tail
-        path /var/log/syslog.log
-        pos_file /var/log/syslog.pos
-        tag syslog
-        <parse>
-          @type syslog
-          message_format rfc3164
-          with_priority false
-        </parse>
-      </source>
-
-  kind: ConfigMap
-  metadata:
-    labels:
-      stack: efk
-    name: fluentd-config
-    namespace: k3s-logging
-
-  ```
-
-  - Step 3. Create and apply manifest file for daemonset fluentd pod
-
-  ```yml
-  apiVersion: apps/v1
-  kind: DaemonSet
-  metadata:
-    name: fluentd
-    namespace: k3s-logging
-    labels:
-      k8s-app: fluentd-logging
-      version: v1
-  spec:
-    selector:
-      matchLabels:
-        k8s-app: fluentd-logging
-        version: v1
-    template:
-      metadata:
-        labels:
-          k8s-app: fluentd-logging
-          version: v1
-      spec:
-        serviceAccount: fluentd
-        serviceAccountName: fluentd
-        tolerations:
-        # Schedule this pod on master node
-        - key: node-role.kubernetes.io/master
-          operator: Exists
-          effect: NoSchedule
-        containers:
-        - name: fluentd
-          image: fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1
-          env:
-            # Elastic operator creates elastic service name with format cluster_name-es-http
-            - name:  FLUENT_ELASTICSEARCH_HOST
-              value: efk-es-http
-            # Default elasticsearch default port
-            - name:  FLUENT_ELASTICSEARCH_PORT
-              value: "9200"
-            # Elastic operator enables only HTTPS channels to elaticsearch
-            - name: FLUENT_ELASTICSEARCH_SCHEME
-              value: "https"
-            # Elastic operator creates auto-signed certificates, verification must be disabled
-            - name: FLUENT_ELASTICSEARCH_SSL_VERIFY
-              value: "false"
-            # Elasticsearch user
-            - name: FLUENT_ELASTICSEARCH_USER
-              value: "elastic"
-            # Elastic operator stores elastic user password in a secret
-            - name: FLUENT_ELASTICSEARCH_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: "efk-es-elastic-user"
-                  key: elastic
-            # Setting a index-prefix for fluentd. By default index is logstash
-            - name:  FLUENT_ELASTICSEARCH_INDEX_NAME
-              value: fluentd
-            # Use cri parser for contarinerd based pods
-            - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
-              value: "cri"
-            # Use proper time format parsing for containerd logs
-            - name: FLUENT_CONTAINER_TAIL_PARSER_TIME_FORMAT
-              value: "%Y-%m-%dT%H:%M:%S.%N%:z"
-          resources:
-            limits:
-              memory: 200Mi
-            requests:
-              cpu: 100m
-              memory: 200Mi
-          volumeMounts:
-          # Fluentd need access to node logs /var/log
-          - name: varlog
-            mountPath: /var/log
-          # Fluentd need access to pod logs /var/log/pods
-          - name: dockercontainerlogdirectory
-            mountPath: /var/log/pods
-            readOnly: true
-          # Mounting additional fluentd configuration files
-          - name: fluentd-additional-config-vol
-            mountPath: /fluentd/etc/conf.d
-        terminationGracePeriodSeconds: 30
-        volumes:
-        - name: varlog
-          hostPath:
-            path: /var/log
-        - name: dockercontainerlogdirectory
-          hostPath:
-            path: /var/log/pods
-        - name: fluentd-additional-config-vol
-          configMap:
-            # holds the different fluentd configuration files
-            name: fluentd-config
-  ```
-
 
 ## Gathering logs from servers outside the kubernetes cluster
 

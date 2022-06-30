@@ -32,6 +32,9 @@
 - title: Service Mesh
   docs:
   - service-mesh
+- title: Alternative Config
+  docs:
+  - logging-sidecar-agent
 - title: Reference Docs
   docs:
   - k8s-networking
