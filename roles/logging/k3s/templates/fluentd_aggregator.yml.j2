@@ -11,6 +11,16 @@ data:
       @type forward
       bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
       port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+      # Enabling TLS
+      <transport tls>
+          cert_path /fluentd/certs/tls.crt
+          private_key_path /fluentd/certs/tls.key
+      </transport>
+      # Enabling access security
+      <security>
+        self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+        shared_key "#{ENV['FLUENTD_FORWARD_SEC_SHARED_KEY'] || 'sharedkey'}"
+      </security>
     </source>
     # Prometheus metric exposed on 0.0.0.0:24231/metrics
     <source>
@@ -110,10 +120,16 @@ spec:
                 name: "efk-es-elastic-user"
                 key: elastic
           # Setting a index-prefix for fluentd. By default index is logstash
-          - name:  FLUENT_ELASTICSEARCH_INDEX_NAME
+          - name:  FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
             value: fluentd
           - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
             value: "true"
+          # Fluentd forward security
+          - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+            valueFrom:
+              secretKeyRef:
+                name: fluentd-shared-key
+                key: fluentd-shared-key
         ports:
         - containerPort: 24224
           name: forward
@@ -125,11 +141,17 @@ spec:
         - mountPath: /fluentd/etc
           name: config
           readOnly: true
+        - mountPath: /fluentd/certs
+          name: fluentd-tls
+          readOnly: true
       volumes:
-      - configMap:
+      - name: config
+        configMap:
           defaultMode: 420
           name: fluentd-config
-        name: config
+      - name: fluentd-tls
+        secret:
+          secretName: fluentd-tls
 ---
 apiVersion: v1
 kind: Service

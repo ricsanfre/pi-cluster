@@ -2,6 +2,13 @@
 # Namespace of the ELK/EFK stack
 k3s_logging_namespace: k3s-logging
 
+# Enable service mesh
+enable_linkerd: true
+
+##########################
+# Elasticsearch configuration
+##########################
+
 # EFK cluster name
 efk_cluster_name: "efk"
 
@@ -18,19 +25,21 @@ efk_elasticsearch_storage_class: "longhorn"
 # elastic user password
 efk_elasticsearch_passwd: "s1cret0"
 
-# fluentbit or fluentd collector. Possible values ('fluentbit' or 'fluentd')
-efk_logging_collector: 'fluentbit'
-
-# Fluentd image version
-efk_fluentd_daemonset_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
-efk_fluentd_aggregator_image: "ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1"
-
-
 # Configured Timezone
 efk_node_timezone: "Europe/Madrid"
 
 # Endpoint Service DNS name
 kibana_dashboard_dns: kibana.picluster.ricsanfre.com
+
+##########################
+# fluentd configuration
+##########################
+
+# Fluentd image version
+efk_fluentd_daemonset_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
+efk_fluentd_aggregator_image: "ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1"
+
+fluentd_shared_key: "s1cret0"
 
 ##########################
 # fluentbit configuration
@@ -42,6 +51,3 @@ fluentbit_lua_script:
     content: "{{ lookup('file','files/adjust_ts.lua') }}"
 
 fluent_bit_log_level: info
-
-# Enable service mesh
-enable_linkerd: true

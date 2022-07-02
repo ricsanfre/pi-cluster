@@ -1,5 +1,20 @@
 ---
 
+- name: Create fluentd certificate and forwarder shared key
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - fluentd_certificate.yml.j2
+
+- name: Wait for certificate
+  shell: |
+    while ! kubectl get secret fluentd-tls --namespace {{ k3s_logging_namespace }}
+    do echo "Waiting for my secret. CTRL-C to exit."
+    sleep 1
+    done
+  changed_when: false
+
 - name: Deploy fluentd aggregator
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"

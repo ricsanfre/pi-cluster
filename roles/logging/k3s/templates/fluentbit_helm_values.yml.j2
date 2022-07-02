@@ -9,24 +9,34 @@ env:
   # Default fluentd forward port
   - name: FLUENT_AGGREGATOR_PORT
     value: "24224"
+  - name: FLUENT_AGGREGATOR_SHARED_KEY
+    valueFrom:
+      secretKeyRef:
+        name: fluentd-shared-key
+        key: fluentd-shared-key
+  - name: FLUENT_SELFHOSTNAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
   # Specify TZ
   - name: TZ
     value: "{{ efk_node_timezone }}"
 # Fluentbit config
 config:
+  # Helm chart combines service, inputs, outputs, custom_parsers and filters section
   # fluent-bit.config SERVICE
-  # Helm chart defaults are Ok
-  # service: |
-  #   [SERVICE]
-  #     Daemon Off
-  #     Flush 1
-  #     Log_Level info
-  #     Parsers_File parsers.conf
-  #     Parsers_File custom_parsers.conf
-  #     HTTP_Server On
-  #     HTTP_Listen 0.0.0.0
-  #     HTTP_Port 2020
-  #     Health_Check On
+  service: |
+
+    [SERVICE]
+        Daemon Off
+        Flush 1
+        Log_Level info
+        Parsers_File parsers.conf
+        Parsers_File custom_parsers.conf
+        HTTP_Server On
+        HTTP_Listen 0.0.0.0
+        HTTP_Port 2020
+        Health_Check On
 
   # fluent-bit.config INPUT
   inputs: |
@@ -55,6 +65,10 @@ config:
         match *
         Host ${FLUENT_AGGREGATOR_HOST}
         Port ${FLUENT_AGGREGATOR_PORT}
+        Self_Hostname ${FLUENT_SELFHOSTNAME}
+        Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
+        tls True
+        tls.verify False
 
   # fluent-bit.config PARSERS
   customParsers: |
