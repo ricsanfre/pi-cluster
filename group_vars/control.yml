@@ -28,20 +28,14 @@ fluentbit_filters:
 
 # Fluentbit Elasticsearch output
 fluentbit_outputs:
-  - Name: es
+  - Name: forward
     match: "*"
-    Host: "{{ elasticsearch_dns }}"
-    Port: 443
-    Logstash_Format: true
-    Logstash_Prefix: logstash
-    Include_Tag_Key: true
-    Tag_Key: tag
-    Suppress_Type_Name: true
-    HTTP_User: elastic
-    HTTP_Passwd: s1cret0
+    Host: "{{ fluentd_dns }}"
+    Port: 24224
+    Self_Hostname: "{{ ansible_hostname }}"
+    Shared_Key: s1cret0
     tls: true
     tls.verify: false
-    Retry_Limit: false
 # Fluentbit custom parsers
 fluentbit_custom_parsers:
   - Name: syslog-rfc3164-nopri

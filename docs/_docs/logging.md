@@ -271,7 +271,12 @@ Password is stored in a kubernetes secret (`<efk_cluster_name>-es-elastic-user`)
 kubectl get secret -n k3s-logging efk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
 ```
 
-Setting the password to a well known value is not an officially supported feature by ECK but a workaround exists by creating the {clusterName}-es-elastic-user Secret before creating the Elasticsearch resource with the ECK operator.
+Setting the password to a well known value is not an officially supported feature by ECK but a workaround exists by creating the {clusterName}-es-elastic-user Secret before the Elasticsearch resource (ECK operator).
+
+Generate base64 encoded password 
+```shell
+  echo -n 'supersecret' | base64
+```
 
 ```yml
 apiVersion: v1
@@ -281,7 +286,7 @@ metadata:
   namespace: k3s-logging
 type: Opaque
 data:
-  elastic: "{{ efk_elasticsearch_passwd | b64encode }}"
+  elastic: <base64 encoded efk_elasticsearch_password>
 ```
 
 #### Accesing Elasticsearch from outside the cluster
@@ -594,16 +599,89 @@ Fluentd official images are not built with multi-architecture support. Different
 #### Deploying fluentd in K3S
 
 Fluentd will not be deployed as privileged daemonset, since it does not need to access to kubernetes logs/APIs. It will be deployed using the following Kubernetes resources:
-- Kubernetes Deployment to deploy fluentd as stateless POD. Number of replicas can be set to provide HA to the service.
-- Kubernetes Service, Cluster IP type, exposing fluentd endpoints to other PODs/processes: Fluentbit forwarders, Prometheus, etc.
-- Kubernetes ConfigMap containing fluentd config files.
+- Certmanager's Certificate resource: so certmanager can generate automatically a Kubernetes TLS Secret resource containing fluentd's TLS certificate so secure communications can be enabled between forwarders and aggregator
+- Kubernetes Secret resource to store a shared secret to enable forwarders authentication when connecting to fluentd
+- Kubernetes Deployment resource to deploy fluentd as stateless POD. Number of replicas can be set to provide HA to the service.
+- Kubernetes Service resource, Cluster IP type, exposing fluentd endpoints to other PODs/processes: Fluentbit forwarders, Prometheus, etc.
+- Kubernetes ConfigMap resource containing fluentd config files.
 
-Installation procedure:
+**Installation procedure:**
 
-- Step 1. Create a manifest containing all kubernetes resources
+- Step 1. Create fluentd TLS certificate to enable secure communications between forwarders and aggregator.
+
+  In the fluentd configuration path location to the files containing the TLS certificate and private key must be provided. The TLS Secret containing the certificate and key can be mounted in fluentd POD in a specific location (/fluentd/certs), so fluentd daemon can use them.
+
+
+  Certmanager's ClusterIssuer `ca-issuer`, created during [certmanager installation](/docs/certmanager/), will be used to generate fluentd's TLS Secret automatically.
+
+  Create the following manifest file
+
+  ```
+    apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: fluentd-tls
+    namespace: k3s-logging
+  spec:
+    # Secret names are always required.
+    secretName: fluentd-tls
+    duration: 2160h # 90d
+    renewBefore: 360h # 15d
+    commonName: fluentd.picluster.ricsanfre.com
+    isCA: false
+    privateKey:
+      algorithm: ECDSA
+      size: 256
+    usages:
+      - server auth
+      - client auth
+    dnsNames:
+      - fluentd.picluster.ricsanfre.com
+    isCA: false
+    # ClusterIssuer: ca-issuer.
+    issuerRef:
+      name: ca-issuer
+      kind: ClusterIssuer
+      group: cert-manager.io
+  ```
+
+  This will make Certmanager automatically create a Secret like this:
+
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata
+    name: fluentd-tls
+    namespace: k3s-logging
+  type: kubernetes.io/tls
+  data:
+    ca.crt: <ca cert content base64 encoded>
+    tls.crt: <tls cert content base64 encoded>
+    tls.key: <private key base64 encoded>
+  ```
+
+- Step 2. Create forward protocol shared key
+
+  Generate base64 encoded shared key 
+  ```shell
+  echo -n 'supersecret' | base64
+  ```
+  
+  Create a Secret `fluentd-shared-key` containing the shared key
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: fluentd-shared-key
+    namespace: k3s-logging
+  type: Opaque
+  data:
+    fluentd-shared-key: <base64 encoded password>
+  ```
+
+- Step 3. Create a ConfigMap containing fluentd configuration
   
   ```yml
-  ---
   # ConfigMap containing fluentd configuration **NOTE 1**
   # Mounted by the container and mapped to `/etc/fluentd/`
   apiVersion: v1
@@ -613,11 +691,21 @@ Installation procedure:
     namespace: k3s-logging
   data:
     fluent.conf: |-
-      # Collect logs from forwarders 
+      # Collect logs from forwarders
       <source>
         @type forward
         bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
         port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+        # Enabling TLS
+        <transport tls>
+            cert_path /fluentd/certs/tls.crt
+            private_key_path /fluentd/certs/tls.key
+        </transport>
+        # Enabling access security
+        <security>
+          self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+          shared_key "#{ENV['FLUENTD_FORWARD_SEC_SHARED_KEY'] || 'sharedkey'}"
+        </security>
       </source>
       # Prometheus metric exposed on 0.0.0.0:24231/metrics
       <source>
@@ -676,8 +764,22 @@ Installation procedure:
            retry_forever true
          </buffer>
       </match>
-  ---
-  # Fluentd Deployment **NOTE 2**
+  ```
+
+  Fluentd config file is loaded into a Kubernetes ConfigMap that is mounted as `/etc/fluentd`. This config map contains just a single `fluent.conf` file. It configures fluentd as aggregator.
+
+  - Collects logs from forwarders (port 24224) configuring [forward input plugin](https://docs.fluentd.org/input/forward)
+
+  - Enables Prometheus metrics exposure (port 24231) configuring [prometheus input plugin](https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus). Complete list of configuration parameters in [fluent-plugin-prometheus repository](https://github.com/fluent/fluent-plugin-prometheus)
+
+  - Routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch)
+
+  Plugin configuration values have been defined using container environment variables with default values in case of not being specified.
+
+- Step 3. Create a Deployment resource
+
+  ```yml
+  # Fluentd Deployment
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -720,6 +822,12 @@ Installation procedure:
               value: fluentd
             - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
               value: "true"
+            # Fluentd forward security
+            - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fluentd-shared-key
+                  key: fluentd-shared-key
           ports:
           - containerPort: 24224
             name: forward
@@ -731,12 +839,35 @@ Installation procedure:
           - mountPath: /fluentd/etc
             name: config
             readOnly: true
+          - mountPath: /fluentd/certs
+            name: fluentd-tls
+            readOnly: true
         volumes:
-        - configMap:
+        - name: config
+          configMap:
             defaultMode: 420
             name: fluentd-config
-          name: config
-  ---
+        - name: fluentd-tls
+          secret:
+            secretName: fluentd-tls
+  ```
+  Fluentd POD is deployed as a deployment with 1 replica.
+
+  Elasticsearch plugin configuration are passed to the fluentd pod as environment variables
+  - connection details (`host` and `port`): elasticsearch kubernetes service (`efk-es-http`) and ES port.
+  - access credentials (`user` and `password`) :elastic user password obtaining from the corresponding Secret.
+  - additional plugin parameters: index prefix (`logstash_prefix`), and logging debug messages when receiving from Elasticsearch API (`log_es_400_reason`)
+  - Rest of parameters with default values defined in the ConfigMap.
+
+  Forwarder plugin shared key configuration parameter is also passed to fluentd pod as environment variable, loading the content of the secret generated in step 2. `fluentd-shared-key` 
+  
+  ConfigMap containing fluentd config is mounted as `/fluentd/etc` volume.
+  {{site.data.alerts.end}}
+  TLS Secret containing fluentd's certificate and private key is mounted as `/fluentd/certs` 
+
+- Step 4. Create a Service resource to expose fluentd endpoints internally within the cluster
+  
+  ```yml
   apiVersion: v1
   kind: Service
   metadata:
@@ -759,38 +890,32 @@ Installation procedure:
     sessionAffinity: None
     type: ClusterIP  
   ```
-  {{site.data.alerts.note}} **(1): Fluentd ConfigMap**
+  
+  Both forward and prometheus ports are exposed 
+  
 
-  Fluentd config file is loaded into a Kubernetes ConfigMap that is mounted as `/etc/fluentd`. This config map contains just a single `fluent.conf` file. It configures fluentd as aggregator.
+- Step 5: create a Service resource to expose fluentd forward endpoint outside the cluster (LoadBalancer service type)
+  ```yml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: fluentd
+    name: fluentd-ext
+    namespace: k3s-logging
+  spec:
+    ports:
+    - name: forward-ext
+      port: 24224
+      protocol: TCP
+      targetPort: forward
+    selector:
+      app: fluentd
+    sessionAffinity: None
+    type: LoadBalancer
+    loadBalancerIP: {{ k3s_fluentd_external_ip }}  
+  ```  
 
-  - Collects logs from forwarders (port 24224) configuring [forward input plugin](https://docs.fluentd.org/input/forward)
-
-  - Enables Prometheus metrics exposure (port 24231) configuring [prometheus input plugin](https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus). Complete list of configuration parameters in [fluent-plugin-prometheus repository](https://github.com/fluent/fluent-plugin-prometheus)
-
-  - Routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch)
-
-  Plugin configuration values have been defined using container environment variables with default values in case of not being specified.
-
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(2): Fluentd Deployment**
-
-  fluentd POD is deployed as a deployment with 1 replica.
-
-  Elasticsearch plugin configuration are passed to the fluentd pod as environment variables
-  - connection details (`host` and `port`): elasticsearch kubernetes service (`efk-es-http`) and ES port.
-  - access credentials (`user` and `password`) :elastic user password obtaining from the corresponding Secret.
-  - additional plugin parameters: index prefix (`logstash_prefix`), and logging debug messages when receiving from Elasticsearch API (`log_es_400_reason`)
-  - Rest of parameters with default values defined in the ConfigMap.
-
-  ConfigMap containing fluentd config is mounted as `/etc/fluentd` volume.
-  {{site.data.alerts.end}}
-
-
-- Step 2: Apply manifest file
-  ```shell
-  kubectl apply -f manifest.yml
-  ```
 - Step 3: Check fluentd status
   ```shell
   kubectl get pods -n k3s-logging
@@ -819,10 +944,9 @@ For speed-up the installation there is available a [helm chart](https://github.c
   The final `values.yml` is:
   
   ```yml
-  ---
   # fluentbit helm chart values
 
-  # fluentbit-container environment variables. **NOTE 1**
+  #fluentbit-container environment variables: **NOTE 1**
   env:
     # Fluentd deployment service
     - name: FLUENT_AGGREGATOR_HOST
@@ -830,52 +954,55 @@ For speed-up the installation there is available a [helm chart](https://github.c
     # Default fluentd forward port
     - name: FLUENT_AGGREGATOR_PORT
       value: "24224"
+    - name: FLUENT_AGGREGATOR_SHARED_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluentd-shared-key
+          key: fluentd-shared-key
+    - name: FLUENT_SELFHOSTNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
     # Specify TZ
     - name: TZ
-      value: "Europe/Madrid"
-
+      value: "{{ efk_node_timezone }}"
   # Fluentbit config
   config:
-    # fluent-bit.config SERVICE. **NOTE 2**
-    # Helm chart defaults are Ok
-    # service: |
-    #   [SERVICE]
-    #     Daemon Off
-    #     Flush 1
-    #     Log_Level info
-    #     Parsers_File parsers.conf
-    #     Parsers_File custom_parsers.conf
-    #     HTTP_Server On
-    #     HTTP_Listen 0.0.0.0
-    #     HTTP_Port 2020
-    #     Health_Check On
+    # Helm chart combines service, inputs, outputs, custom_parsers and filters section
+    # fluent-bit.config SERVICE **NOTE 2**
+    service: |
 
-    # fluent-bit.config INPUT. **NOTE 3**
+      [SERVICE]
+          Daemon Off
+          Flush 1
+          Log_Level info
+          Parsers_File parsers.conf
+          Parsers_File custom_parsers.conf
+          HTTP_Server On
+          HTTP_Listen 0.0.0.0
+          HTTP_Port 2020
+          Health_Check On
+
+    # fluent-bit.config INPUT: **NOTE 3**
     inputs: |
 
       [INPUT]
           Name tail
           Path /var/log/containers/*.log
           multiline.parser cri
+          DB /var/log/fluentbit/flb_kube.db
           Tag kube.*
-          DB /var/log/flb_kube.db
           Mem_Buf_Limit 5MB
           Skip_Long_Lines True
 
       [INPUT]
           Name tail
-          Tag node.var.log.auth
-          Path /var/log/auth.log
-          DB /var/log/flb_auth.db
+          Tag host.*
+          DB /var/log/fluentbit/flb_host.db
+          Path /var/log/auth.log,/var/log/syslog
           Parser syslog-rfc3164-nopri
 
-      [INPUT]
-          Name tail
-          Tag node.var.log.syslog
-          Path /var/log/syslog
-          DB /var/log/flb_syslog.db
-          Parser syslog-rfc3164-nopri
-    # fluent-bit.config OUTPUT **NOTE 4**
+    # fluent-bit.config OUTPUT: **NOTE 4**
     outputs: |
 
       [OUTPUT]
@@ -883,8 +1010,12 @@ For speed-up the installation there is available a [helm chart](https://github.c
           match *
           Host ${FLUENT_AGGREGATOR_HOST}
           Port ${FLUENT_AGGREGATOR_PORT}
+          Self_Hostname ${FLUENT_SELFHOSTNAME}
+          Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
+          tls True
+          tls.verify False
 
-    # fluent-bit.config PARSERS **NOTE 5**
+    # fluent-bit.config PARSERS: **NOTE 5**
     customParsers: |
 
       [PARSER]
@@ -895,23 +1026,50 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Time_Format %b %d %H:%M:%S
           Time_Keep False
 
-    # fluent-bit.config FILTERS **NOTE 6**
+    # fluent-bit.config FILTERS: **NOTE 6**
     filters: |
 
       [FILTER]
           Name kubernetes
           Match kube.*
+          Kube_Tag_Prefix kube.var.log.containers.
           Merge_Log True
+          Merge_Log_Trim True
           Keep_Log False
           K8S-Logging.Parser True
-          K8S-Logging.Exclude True
+          K8S-Logging.Exclude False
+          Annotations False
+          Labels False
 
       [FILTER]
-          name lua
-          match node.*
+          Name nest
+          Match kube.*
+          Operation lift
+          Nested_under kubernetes
+          Add_prefix kubernetes_
+
+      [FILTER]
+          Name modify
+          Match kube.*
+          Rename kubernetes_pod_name k8s.pod.name
+          Rename kubernetes_namespace_name k8s.namespace.name
+          Rename kubernetes_container_name k8s.container.name
+          Remove kubernetes_container_image
+          Remove kubernetes_docker_id
+          Remove kubernetes_pod_id
+          Remove kubernetes_host
+          Remove kubernetes_container_hash
+          Remove stream
+          Remove _p
+          Rename log message
+          Add k8s.cluster.name picluster
+
+      [FILTER]
+          Name lua
+          Match host.*
           script /fluent-bit/scripts/adjust_ts.lua
           call local_timestamp_to_UTC
-
+  
   # Fluentbit config Lua Scripts. **NOTE 7**
   luaScripts:
     adjust_ts.lua: |
@@ -940,10 +1098,11 @@ For speed-up the installation there is available a [helm chart](https://github.c
   ```
   {{site.data.alerts.note}} **(1): Daemonset pod environment variables**
 
-  Fluentd aggregator connection details (IP and port) are passed as environment variables to the fluentbit pod, so forwarder output plugin can be configured.
+  Fluentd aggregator connection details (IP, port, shared secret) are passed as environment variables to the fluentbit pod, so forwarder output plugin can be configured.
 
   TimeZone (`TZ`) need to be specified so Fluentbit can properly parse logs which timestamp do not contain timezone information (i.e: OS Ubuntu logs like `/var/log/syslog` and `/var/log/auth.log`). 
   {{site.data.alerts.end}}
+  
   {{site.data.alerts.note}} **(2): Fluentbit SERVICE configuration**
   
   [SERVER] configuration provided by default by the helm chart, enables the HTTP server for being able to scrape Prometheus metric.
