@@ -22,19 +22,21 @@
   - traefik
   - certmanager
   - longhorn
-- title: Cluster Monitoring
+- title: Log Management
   docs:
   - logging
+  - elasticsearch
+  - logging-forwarder-aggregator
+  - logging-sidecar-agent
+- title: Monitoring
+  docs:
   - prometheus
-- title: Cluster Backup
+- title: Backup
   docs:
   - backup
 - title: Service Mesh
   docs:
   - service-mesh
-- title: Alternative Config
-  docs:
-  - logging-sidecar-agent
 - title: Reference Docs
   docs:
   - k8s-networking

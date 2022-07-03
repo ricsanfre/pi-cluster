@@ -1,26 +1,13 @@
 ---
-title: Agent/Sidecar logging (alternative)
+title: Log collection, aggregation and distribution (Agent)
 permalink: /docs/logging-sidecar-agent/
 description: How to deploy fluentbit or fluentd to collect all kubernetes logs and load them to ES. Sidecar/agent deployment pattern as alternative to forwarder/aggregator pattern.
 last_modified_at: "30-06-2022"
 ---
 
-As an alternative to forwarder/aggregator logging architecture pattern, agent /sidecar architecture can be implemented with Fluentbit/Fluentd.
+Both fluentbit and fluentd can be deployed as sidecar/agent. Both of them can be deployed as daemonset on kubernetes nodes using the official helm charts.
 
-![forwarder-sidecar-agent-architecture](https://fluentbit.io/images/blog/blog-sidecar-agent.png)
-
-Similar to the forwarder deployment, the sidecar/agent model uses deploying Fluentd and Fluent Bit on edge. However, instead of sending data to an aggregator, the sidecar/agents send data directly to a backend service.
-
-**Advantages**
-
-- No aggregator is needed; each agent handles backpressure.
-
-**Disadvantages**
-
-- Hard to change configuration across a fleet of agents (E.g., adding another backend or processing)
-- Hard to add more end destinations if needed
-
-## Fluentd-based Sidecar
+## Fluentd-based Agent
 
 Fluentd will be deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster. Using this DaemonSet controller, a Fluentd logging agent Pod will be deployed on every node of the cluster. To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
 
@@ -238,7 +225,7 @@ Fluentd default image and manifest files need to be adapted for parsing containe
   ```
 
 
-## Fluentbit-based Sidecar
+## Fluentbit-based Agent
 
 It can be installed and configured to collect and parse Kubernetes logs deploying a daemonset pod (same as fluentd). See fluenbit documentation on how to install it on Kuberentes cluster (https://docs.fluentbit.io/manual/installation/kubernetes).
 
