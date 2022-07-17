@@ -2,19 +2,19 @@
 title: Log Management Arquitecture (EFK)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "30-06-2022"
+last_modified_at: "17-07-2022"
 
 ---
 
-**ELK Stack (Elaticsearch - Logstash - Kibana)** is a typical centralized architecture for og monitoring of IT infrastructure, where:
+**ELK Stack (Elaticsearch - Logstash - Kibana)** is a typical centralized architecture for log monitoring of IT infrastructure, where:
 
 - Elasticsearch is used as logs storage and search engine.
-- Logstash used for collecting, aggregate and distribute logs
-- Kibana is used as visualization layer
+- Logstash used for collecting, aggregate and distribute logs.
+- Kibana is used as visualization layer.
 
-As an alternative, **EFK stack (Elastic - Fluentd - Kibana)** can be used. In this caseg Fluentd, or its lightweight version Fluentbit, intead of Logstash, ca be used for doing the collection, parsing, aggregation and distribution of logs.
+As an alternative, **EFK stack (Elastic - Fluentd - Kibana)** can be used. In this case, Fluentd, or its lightweight version Fluentbit, can be used, instead of Logstash, for doing the collection, parsing, aggregation and distribution of logs.
 
-EFK stack will be deployed as centralized logging solution for the K3S cluster, and to collect the logs of externals cluster nodes, i.e.: `gateway`.
+EFK stack will be deployed as centralized logging solution for the K3S cluster, and to collect the logs of external nodes part of my homelab (i.e.: `gateway`).
 
 ![K3S-EFK-Architecture](/assets/img/efk_logging_architecture.png)
 
@@ -28,7 +28,7 @@ Fluentd and Fluentbit both support ARM64 docker images for being deployed on Kub
 
 ## Why EFK and not ELK
 
-Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routing etc) but I will select Fluentd because:
+Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routing etc) but I will select Fluentd/Fluentbit because:
 
 - **Performance and footprint**: Logstash consumes more memory than Fluentd. Logstash is written in Java and Fluentd is written in Ruby (Fluentbit in C). Fluentd is an efficient log aggregator. For most small to medium-sized deployments, fluentd is fast and consumes relatively minimal resources.
 
@@ -44,7 +44,7 @@ Fluentd/Fluentbit and Logstash offers simillar capabilities (log parsing, routin
 
 In Kubernetes, containerized applications that log to `stdout` and `stderr` have their log streams captured and redirected to log files on the nodes (`/var/log/containers`). To tail these log files, filter log events, transform the log data, and ship it off to the Elasticsearch logging backend, a process like, fluentd/fluentbit can be used.
 
-To learn more about kubernetes logging architecture check out [“Cluster-level logging architectures”](https://kubernetes.io/docs/concepts/cluster-administration/logging) from the official Kubernetes docs. The loggin architecture using [node-level log agents](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) is the one implemented with fluentbit/fluentd log collectors. Fluentbit/fluentd proccess run in each node as a kubernetes' daemonset with enough privileges to access to host file system where container logs are stored (`/var/logs/containers` in K3S implementation).
+To learn more about kubernetes logging architecture check out [“Cluster-level logging architectures”](https://kubernetes.io/docs/concepts/cluster-administration/logging) from the official Kubernetes docs. Logging architecture using [node-level log agents](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) is the one implemented with fluentbit/fluentd log collectors. Fluentbit/fluentd proccess run in each node as a kubernetes' daemonset with enough privileges to access to host file system where container logs are stored (`/var/logs/containers` in K3S implementation).
 
 [Fluentbit and fluentd official helm charts](https://github.com/fluent/helm-charts) deploy the fluentbit/fluentd pods as privileged daemonset.
 
@@ -69,7 +69,7 @@ where:
 In addition to container logs, same Fluentd/Fluentbit agents deployed as daemonset can collect and parse logs from systemd-based services and OS filesystem level logs (syslog, kern.log, etc).
 {{site.data.alerts.end}}
 
-### Kubernetes processes logs
+### Kubernetes logs
 
 In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file need to be parsed in order to collect logs from Kubernetes (K3S) processes.
 
@@ -87,7 +87,7 @@ In worker node:
 sudo journalctl -u k3s-agent
 ```
 
-### Collecting host logs
+### Host logs
 
 OS level logs (`/var/logs`) can be collected with the same agent deployed to collect containers logs (daemonset)  
 
@@ -111,13 +111,13 @@ Fluentbit/fluentd custom parser need to be configured to parse this kind of logs
 
 ## Log collection, aggregation and distribution architectures
 
-### Forwarder/Aggregator Log Architecture
+### Forwarder/Aggregator log Architecture
 
 Forwarder/aggregator architecture pattern can be implemented with Fluentbit/Fluentd
 
 |![forwarder-aggregator-architecture](https://fluentbit.io/images/blog/blog-forwarder-aggregator.png)|
 |:--:| 
-|*Forwarder/Aggregator Archictecture - Source [Fluentbit.io](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/)*|
+|*Forwarder/Aggregator Architecture - Source [Fluentbit.io](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/)*|
 | |
 
 This pattern includes having a lightweight instance deployed on edge (forwarder), generally where data is created, such as Kubernetes nodes, virtual machines or baremetal servers. These forwarders do minimal processing and then use the forward protocol to send data to a much heavier instance of Fluentd or Fluent Bit (aggregator). This heavier instance may perform more filtering and processing before routing to the appropriate backend(s).
@@ -136,18 +136,16 @@ This pattern includes having a lightweight instance deployed on edge (forwarder)
 
 With this architecture, in the aggregation layer, logs can be filtered and routed not only to Elastisearch database (default route) but to a different backend to further processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
 
-### Agent/sidecar Log Architecture
+### Forwarder-only log architecture
 
-As an alternative to forwarder/aggregator logging architecture pattern, agent /sidecar architecture can be implemented with Fluentbit/Fluentd.
+As an alternative to forwarder/aggregator logging architecture pattern, forwarder-only architecture can be implemented with Fluentbit/Fluentd.
 
 |![forwarder-sidecar-agent-architecture](https://fluentbit.io/images/blog/blog-sidecar-agent.png)|
 |:--:| 
-|*Side car/Agent Archictecture - Source [Fluentbit.io](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/)*|
+|*Side car/Agent Architecture - Source [Fluentbit.io](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/)*|
 | |
 
-Similar to the forwarder deployment, the sidecar/agent model uses deploying Fluentd and Fluent Bit on edge. However, instead of sending data to an aggregator, the sidecar/agents send data directly to a backend service. No aggregation layer is deployed.
-
-Within Kubernetes, this architecture can be further broken down into deploying as a DaemonSet (one agent per Kubernetes node) or deployed inside the same Kubernetes pod as the application (sidecar container).
+Similar to the forwarder deployment, the forwarders-only model deploying Fluentd and Fluent Bit on edge. However, instead of sending data to an aggregator, the forwarder agents send data directly to a backend service. No aggregation layer is deployed.
 
 **Advantages**
 
@@ -175,7 +173,7 @@ The procedure for deploying EFK stack is described in the following pages:
 
   2.1) [Fluentbit/Fluentd forwarder/aggregator architecture installation](/docs/logging-forwarder-aggregator/). Fluentd as aggregator and fluentbit as forwarder.
 
-  2.2) [Fluentbit/Fluentd agent architecture installation](/docs/sidecar-agent/). Fluentbit or fluentd deployed as agent in all kubernetes nodes. These agents collect aggregate and send the logs to ES backend directly (no aggregation layer).
+  2.2) [Fluentbit/Fluentd forwarder-only architecture installation](/docs/logging-forwarder-only/). Fluentbit or fluentd deployed as agent in all kubernetes nodes. These agents collect aggregate and send the logs to ES backend directly (no aggregation layer).
 
 ## References
 

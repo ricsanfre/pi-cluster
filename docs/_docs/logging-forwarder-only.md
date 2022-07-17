@@ -1,11 +1,11 @@
 ---
-title: Log collection, aggregation and distribution (Agent)
-permalink: /docs/logging-sidecar-agent/
-description: How to deploy fluentbit or fluentd to collect all kubernetes logs and load them to ES. Sidecar/agent deployment pattern as alternative to forwarder/aggregator pattern.
-last_modified_at: "30-06-2022"
+title: Log collection, aggregation and distribution (Forwarders-only architecture)
+permalink: /docs/logging-forwarder-only/
+description: How to deploy fluentbit or fluentd to collect all kubernetes logs and load them to ES. Forwarder-only deployment pattern as alternative to forwarder/aggregator pattern.
+last_modified_at: "17-07-2022"
 ---
 
-Both fluentbit and fluentd can be deployed as sidecar/agent. Both of them can be deployed as daemonset on kubernetes nodes using the official helm charts.
+Both fluentbit and fluentd can be deployed as forwarder-only. Both of them can be deployed as daemonset on kubernetes nodes using the official helm charts.
 
 ## Fluentd-based Agent
 
