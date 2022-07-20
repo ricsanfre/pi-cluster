@@ -2,7 +2,7 @@
 title: Log Management Arquitecture (EFK)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "17-07-2022"
+last_modified_at: "20-07-2022"
 
 ---
 
@@ -111,16 +111,33 @@ Fluentbit/fluentd custom parser need to be configured to parse this kind of logs
 
 ## Log collection, aggregation and distribution architectures
 
-### Forwarder/Aggregator log Architecture
+### Forwarder-only architecture
+
+Forwarder-only architecture pattern can be implemented with Fluentbit/Fluentd
+
+![forwarder-only-architecture](/assets/img/logging-forwarder-only.png)
+
+This pattern includes having a logging agent, based on fluentbit or fluentd. deployed on edge (forwarder), generally where data is created, such as Kubernetes nodes, virtual machines or baremetal servers. These forwarder agents collect, parse and filter logs from the edge nodes and send data direclty to a backend service.
+
+**Advantages**
+
+- No aggregator is needed; each agent handles [backpressure](https://docs.fluentbit.io/manual/administration/backpressure).
+
+**Disadvantages**
+
+- Hard to change configuration across a fleet of agents (E.g., adding another backend or processing)
+- Hard to add more end destinations if needed
+
+
+### Forwarder/Aggregator Architecture
+
+As an alternative to forwarder-only logging architecture pattern, forwarder/aggregator architecture can be implemented with Fluentbit/Fluentd.
 
 Forwarder/aggregator architecture pattern can be implemented with Fluentbit/Fluentd
 
-|![forwarder-aggregator-architecture](https://fluentbit.io/images/blog/blog-forwarder-aggregator.png)|
-|:--:| 
-|*Forwarder/Aggregator Architecture - Source [Fluentbit.io](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/)*|
-| |
+![forwarder-forwarder-aggregator-architecture](/assets/img/logging-forwarder-aggregator.png)
 
-This pattern includes having a lightweight instance deployed on edge (forwarder), generally where data is created, such as Kubernetes nodes, virtual machines or baremetal servers. These forwarders do minimal processing and then use the forward protocol to send data to a much heavier instance of Fluentd or Fluent Bit (aggregator). This heavier instance may perform more filtering and processing before routing to the appropriate backend(s).
+Similar to the forwarder-only deployment, lightweight logging agent instance is deployed on edge (forwarder) close to data sources (kubernetes nodes, virtual machines or baremetal servers). In this case, these forwarders do minimal processing and then use the forward protocol to send data to a much heavier instance of Fluentd or Fluent Bit (aggregator). This heavier instance may perform more filtering and processing before routing to the appropriate backend(s).
 
 **Advantages**
 
@@ -135,27 +152,6 @@ This pattern includes having a lightweight instance deployed on edge (forwarder)
 - Dedicated resources required for an aggregation instance.
 
 With this architecture, in the aggregation layer, logs can be filtered and routed not only to Elastisearch database (default route) but to a different backend to further processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
-
-### Forwarder-only log architecture
-
-As an alternative to forwarder/aggregator logging architecture pattern, forwarder-only architecture can be implemented with Fluentbit/Fluentd.
-
-|![forwarder-sidecar-agent-architecture](https://fluentbit.io/images/blog/blog-sidecar-agent.png)|
-|:--:| 
-|*Side car/Agent Architecture - Source [Fluentbit.io](https://fluentbit.io/blog/2020/12/03/common-architecture-patterns-with-fluentd-and-fluent-bit/)*|
-| |
-
-Similar to the forwarder deployment, the forwarders-only model deploying Fluentd and Fluent Bit on edge. However, instead of sending data to an aggregator, the forwarder agents send data directly to a backend service. No aggregation layer is deployed.
-
-**Advantages**
-
-- No aggregator is needed; each agent handles backpressure.
-
-**Disadvantages**
-
-- Hard to change configuration across a fleet of agents (E.g., adding another backend or processing)
-- Hard to add more end destinations if needed
-
 
 {{site.data.alerts.note}}
 

@@ -3,7 +3,7 @@ title: Log collection, aggregation and distribution (Forwarder/Aggregator archit
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analytics can be done using Kibana.
 
-last_modified_at: "03-07-2022"
+last_modified_at: "20-07-2022"
 
 ---
 
@@ -458,7 +458,7 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
 
 ## Fluentbit Forwarder installation
 
-It can be installed and configured to collect and parse Kubernetes logs deploying a daemonset pod (same as fluentd). See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
+Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
 
 For speed-up the installation there is available a [helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluent-bit). Fluentbit config file can be build probiding the proper helm chart values.
 
@@ -536,7 +536,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Path /var/log/auth.log,/var/log/syslog
           Parser syslog-rfc3164-nopri
 
-    # fluent-bit.config OUTPUT: **NOTE 4**
+    # fluent-bit.config OUTPUT
     outputs: |
 
       [OUTPUT]

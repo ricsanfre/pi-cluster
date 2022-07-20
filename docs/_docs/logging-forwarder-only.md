@@ -2,22 +2,260 @@
 title: Log collection, aggregation and distribution (Forwarders-only architecture)
 permalink: /docs/logging-forwarder-only/
 description: How to deploy fluentbit or fluentd to collect all kubernetes logs and load them to ES. Forwarder-only deployment pattern as alternative to forwarder/aggregator pattern.
-last_modified_at: "17-07-2022"
+last_modified_at: "20-07-2022"
 ---
 
-Both fluentbit and fluentd can be deployed as forwarder-only. Both of them can be deployed as daemonset on kubernetes nodes using the official helm charts.
+Both fluentbit and fluentd can be deployed as forwarder-only to collect all kubernetes logs and load them to the backend (ES) directly without aggregation layer. Also they can be deployed as daemonset on kubernetes nodes using the official helm charts.
+
+## Fluentbit-based Agent
+
+Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
+
+For speed-up the installation there is available a [helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluent-bit). fluentbit config file can be 
+
+
+- Step 1. Add fluentbit helm repo
+  ```shell
+  helm repo add fluent https://fluent.github.io/helm-charts
+  ```
+- Step 2. Update helm repo
+  ```shell
+  helm repo update
+  ```
+- Step 3. Create `values.yml` for tuning helm chart deployment.
+  
+  fluentbit configuration can be provided to the helm. See [`values.yml`](https://github.com/fluent/helm-charts/blob/main/charts/fluent-bit/values.yaml)
+  
+  The final `values.yml` is:
+  
+  ```yml
+  ---
+  # fluentbit helm chart values
+
+  # fluentbit-container environment variables.
+  env:
+    # Elastic operator creates elastic service name with format cluster_name-es-http
+    - name: FLUENT_ELASTICSEARCH_HOST
+      value: "efk-es-http"
+    # Default elasticsearch default port
+    - name: FLUENT_ELASTICSEARCH_PORT
+      value: "9200"
+    # Elasticsearch user
+    - name: FLUENT_ELASTICSEARCH_USER
+      value: "elastic"
+    # Elastic operator stores elastic user password in a secret
+    - name: FLUENT_ELASTICSEARCH_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "efk-es-elastic-user"
+          key: elastic
+    # Specify TZ
+    - name: TZ
+      value: "Europe/Madrid"
+
+  # Fluentbit config
+  config:
+    # Helm chart combines service, inputs, outputs, custom_parsers and filters section
+    # fluent-bit.config SERVICE
+    service: |
+
+      [SERVICE]
+          Daemon Off
+          Flush 1
+          Log_Level info
+          Parsers_File parsers.conf
+          Parsers_File custom_parsers.conf
+          HTTP_Server On
+          HTTP_Listen 0.0.0.0
+          HTTP_Port 2020
+          Health_Check On
+
+    # fluent-bit.config INPUT. **NOTE 3**
+    inputs: |
+
+      [INPUT]
+          Name tail
+          Path /var/log/containers/*.log
+          multiline.parser docker, cri
+          DB /var/log/fluentbit/flb_kube.db
+          Tag kube.*
+          Mem_Buf_Limit 5MB
+          Skip_Long_Lines True
+
+      [INPUT]
+          Name tail
+          Tag host.*
+          DB /var/log/fluentbit/flb_host.db
+          Path /var/log/auth.log,/var/log/syslog
+          Parser syslog-rfc3164-nopri
+
+    outputs: |
+
+      [OUTPUT]
+          Name es
+          match *
+          Host ${FLUENT_ELASTICSEARCH_HOST}
+          Port ${FLUENT_ELASTICSEARCH_PORT}
+          Logstash_Format True
+          Logstash_Prefix logstash
+          Suppress_Type_Name True
+          Include_Tag_Key True
+          Tag_Key tag
+          HTTP_User ${FLUENT_ELASTICSEARCH_USER}
+          HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
+          tls False
+          tls.verify False
+          Retry_Limit False
+
+    # fluent-bit.config PARSERS
+    customParsers: |
+
+      [PARSER]
+          Name syslog-rfc3164-nopri
+          Format regex
+          Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+          Time_Key time
+          Time_Format %b %d %H:%M:%S
+          Time_Keep False
+
+    # fluent-bit.config FILTERS **NOTE 6**
+    filters: |
+
+      [FILTER]
+          Name kubernetes
+          Match kube.*
+          Kube_Tag_Prefix kube.var.log.containers.
+          Merge_Log True
+          Merge_Log_Trim True
+          Keep_Log False
+          K8S-Logging.Parser True
+          K8S-Logging.Exclude False
+          Annotations False
+          Labels False
+
+      [FILTER]
+          Name nest
+          Match kube.*
+          Operation lift
+          Nested_under kubernetes
+          Add_prefix kubernetes_
+
+      [FILTER]
+          Name modify
+          Match kube.*
+          Rename kubernetes_pod_name k8s.pod.name
+          Rename kubernetes_namespace_name k8s.namespace.name
+          Rename kubernetes_container_name k8s.container.name
+          Remove kubernetes_container_image
+          Remove kubernetes_docker_id
+          Remove kubernetes_pod_id
+          Remove kubernetes_host
+          Remove kubernetes_container_hash
+          Remove stream
+          Remove _p
+          Rename log message
+          Add k8s.cluster.name picluster
+
+      [FILTER]
+          Name lua
+          Match host.*
+          script /fluent-bit/scripts/adjust_ts.lua
+          call local_timestamp_to_UTC
+
+  # Fluentbit config Lua Scripts.
+  luaScripts:
+    adjust_ts.lua: |
+      function local_timestamp_to_UTC(tag, timestamp, record)
+          local utcdate   = os.date("!*t", ts)
+          local localdate = os.date("*t", ts)
+          localdate.isdst = false -- this is the trick
+          utc_time_diff = os.difftime(os.time(localdate), os.time(utcdate))
+          return 1, timestamp - utc_time_diff, record
+      end
+
+  # Enable fluentbit installation on master node.
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+
+  # Init container. Create directory for fluentbit db
+  initContainers:
+    - name: init-log-directory
+      image: busybox
+      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+  ```
+
+- Step 4. Install chart
+  ```shell
+  helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
+  ```
+
+  {{site.data.alerts.note}} **Chart configuration details**
+
+  [Configuration chart is almost the same as the one described in forwader/aggregator architecture](/docs/logging-forwarder-aggregator/#fluentbit-chart-configuration-details).
+   
+  Changes:
+
+  - Environment variables
+
+    Elasticsearch connection details (IP: `FLUENT_ELASTICSEARCH_HOST` and port: `FLUENT_ELASTICSEARCH_PORT` ) and access credentials (`FLUENT_ELASTICSEARCH_USER` and `FLUENT_ELASTICSEARCH_PASSWD`) are passed as environment variables to the fluentbit pod (`elastic` user password obtaining from the corresponding Secret).
+
+  - Output configuration
+
+    [OUTPUT] configuration routes the logs to elasticsearch.
+
+    ```
+    [OUTPUT]
+        Name es
+        match *
+        Host ${FLUENT_ELASTICSEARCH_HOST}
+        Port ${FLUENT_ELASTICSEARCH_PORT}
+        Logstash_Format True
+        Logstash_Prefix logstash
+        Suppress_Type_Name True
+        Include_Tag_Key True
+        Tag_Key tag
+        HTTP_User ${FLUENT_ELASTICSEARCH_USER}
+        HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
+        tls False
+        tls.verify False
+        Retry_Limit False
+    ```
+    
+    `tls` option is disabled (set to False/Off). TLS communications are enabled by linkerd service mesh.
+
+    `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
+
+    ```json
+    {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
+    ``` 
+    In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
+
+  {{site.data.alerts.end}}
+  
 
 ## Fluentd-based Agent
 
-Fluentd will be deployed on Kubernetes as a DaemonSet, which is a Kubernetes workload type that runs a copy of a given Pod on each Node in the Kubernetes cluster. Using this DaemonSet controller, a Fluentd logging agent Pod will be deployed on every node of the cluster. To learn more about this logging architecture, consult [“Using a node logging agent”](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) from the official Kubernetes docs.
+Fluentd also can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentd: Container Deployment - Kubernetes"](https://docs.fluentd.org/container-deployment/kubernetes).
 
-In addition to container logs, the Fluentd agent will tail Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, consult the [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
 
-Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset). Different docker images are provided pre-configured for collecting and parsing kuberentes logs and to inject them into different destinations, one of them is elasticsearch.
+Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset). Different docker images are provided pre-configured for collecting and parsing kuberentes logs and to inject them into different stinations, one of them is elasticsearch.
+
+This docker images by default fluentd agent parse container logs, and Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, consult the [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
 
 Further details can be found in [Fluentd documentation: "Kubernetes deployment"](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` Github repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
 
-Fluentd default image and manifest files need to be adapted for parsing containerd logs. `fluentd -kubernets-daemonsset` images by default are configured for parsing docker logs. See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
+Fluentd default image and manifest files need to be adapted for parsing containerd logs. `fluentd -kubernets-daemonset` images by default are configured for parsing docker logs. See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
+
+{{site.data.alerts.note}}
+
+In this case instead of installing fluentd daemonset chart. Manual instalation instructions are provided:
+
+{{site.data.alerts.end}}
 
 - Step 1. Create and apply a manifest file for fluentd role and password
 
@@ -222,261 +460,4 @@ Fluentd default image and manifest files need to be adapted for parsing containe
           configMap:
             # holds the different fluentd configuration files
             name: fluentd-config
-  ```
-
-
-## Fluentbit-based Agent
-
-It can be installed and configured to collect and parse Kubernetes logs deploying a daemonset pod (same as fluentd). See fluenbit documentation on how to install it on Kuberentes cluster (https://docs.fluentbit.io/manual/installation/kubernetes).
-
-For speed-up the installation there is available a [helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluent-bit). fluentbit config file can be 
-
-
-- Step 1. Add fluentbit helm repo
-  ```shell
-  helm repo add fluent https://fluent.github.io/helm-charts
-  ```
-- Step 2. Update helm repo
-  ```shell
-  helm repo update
-  ```
-- Step 3. Create `values.yml` for tuning helm chart deployment.
-  
-  fluentbit configuration can be provided to the helm. See [`values.yml`](https://github.com/fluent/helm-charts/blob/main/charts/fluent-bit/values.yaml)
-  
-  The final `values.yml` is:
-  
-  ```yml
-  ---
-  # fluentbit helm chart values
-
-  # fluentbit-container environment variables. **NOTE 1**
-  env:
-    # Elastic operator creates elastic service name with format cluster_name-es-http
-    - name: FLUENT_ELASTICSEARCH_HOST
-      value: "efk-es-http"
-    # Default elasticsearch default port
-    - name: FLUENT_ELASTICSEARCH_PORT
-      value: "9200"
-    # Elasticsearch user
-    - name: FLUENT_ELASTICSEARCH_USER
-      value: "elastic"
-    # Elastic operator stores elastic user password in a secret
-    - name: FLUENT_ELASTICSEARCH_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: "efk-es-elastic-user"
-          key: elastic
-    # Specify TZ
-    - name: TZ
-      value: "Europe/Madrid"
-
-  # Fluentbit config
-  config:
-    # fluent-bit.config SERVICE. **NOTE 2**
-    # Helm chart defaults are Ok
-    # service: |
-    #   [SERVICE]
-    #     Daemon Off
-    #     Flush 1
-    #     Log_Level info
-    #     Parsers_File parsers.conf
-    #     Parsers_File custom_parsers.conf
-    #     HTTP_Server On
-    #     HTTP_Listen 0.0.0.0
-    #     HTTP_Port 2020
-    #     Health_Check On
-
-    # fluent-bit.config INPUT. **NOTE 3**
-    inputs: |
-
-      [INPUT]
-          Name tail
-          Path /var/log/containers/*.log
-          multiline.parser cri
-          Tag kube.*
-          DB /var/log/flb_kube.db
-          Mem_Buf_Limit 5MB
-          Skip_Long_Lines True
-
-      [INPUT]
-          Name tail
-          Tag node.var.log.auth
-          Path /var/log/auth.log
-          DB /var/log/flb_auth.db
-          Parser syslog-rfc3164-nopri
-
-      [INPUT]
-          Name tail
-          Tag node.var.log.syslog
-          Path /var/log/syslog
-          DB /var/log/flb_syslog.db
-          Parser syslog-rfc3164-nopri
-    # fluent-bit.config OUTPUT **NOTE 4**
-    outputs: |
-
-      [OUTPUT]
-          Name es
-          match *
-          Host ${FLUENT_ELASTICSEARCH_HOST}
-          Port ${FLUENT_ELASTICSEARCH_PORT}
-          Logstash_Format True
-          Logstash_Prefix logstash
-          Suppress_Type_Name True
-          Include_Tag_Key True
-          Tag_Key tag
-          HTTP_User ${FLUENT_ELASTICSEARCH_USER}
-          HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
-          tls False
-          tls.verify False
-          Retry_Limit False
-    # fluent-bit.config PARSERS **NOTE 5**
-    customParsers: |
-
-      [PARSER]
-          Name syslog-rfc3164-nopri
-          Format regex
-          Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
-          Time_Key time
-          Time_Format %b %d %H:%M:%S
-          Time_Keep False
-
-    # fluent-bit.config FILTERS **NOTE 6**
-    filters: |
-
-      [FILTER]
-          Name kubernetes
-          Match kube.*
-          Merge_Log True
-          Keep_Log False
-          K8S-Logging.Parser True
-          K8S-Logging.Exclude True
-
-      [FILTER]
-          name lua
-          match node.*
-          script /fluent-bit/scripts/adjust_ts.lua
-          call local_timestamp_to_UTC
-
-  # Fluentbit config Lua Scripts. **NOTE 7**
-  luaScripts:
-    adjust_ts.lua: |
-      function local_timestamp_to_UTC(tag, timestamp, record)
-          local utcdate   = os.date("!*t", ts)
-          local localdate = os.date("*t", ts)
-          localdate.isdst = false -- this is the trick
-          utc_time_diff = os.difftime(os.time(localdate), os.time(utcdate))
-          return 1, timestamp - utc_time_diff, record
-      end
-
-  # Enable fluentbit instalaltion on master node. **NOTE 8**
-  tolerations:
-    - key: node-role.kubernetes.io/master
-      operator: Exists
-      effect: NoSchedule
-
-  # Init container. Create directory for fluentbit db **NOTE 9**
-  initContainers:
-    - name: init-log-directory
-      image: busybox
-      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
-      volumeMounts:
-        - name: varlog
-          mountPath: /var/log
-  ```
-  {{site.data.alerts.note}} **(1): Daemonset pod environment variables**
-
-  Elasticsearch connection details (IP and port) and access credentials are passed as environment variables to the fluentbit pod (`elastic` user password obtaining from the corresponding Secret).
-
-  TimeZone (`TZ`) need to be specified so Fluentbit can properly parse logs which timestamp do not contain timezone information (i.e: OS Ubuntu logs like `/var/log/syslog` and `/var/log/auth.log`). 
-  {{site.data.alerts.end}}
-  {{site.data.alerts.note}} **(2): Fluentbit SERVICE configuration**
-  
-  [SERVER] configuration provided by default by the helm chart, enables the HTTP server for being able to scrape Prometheus metric.
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(3): Fluentbit INPUT configuration**
-
-  By default helm chart configures fluentbit inputs to parse kuberentes logs, supporting the parsing of multiline logs in multipleformats (docker and cri-o). cri is the format we are interested in.
-    ```
-    [INPUT]
-          Name tail
-          Path /var/log/containers/*.log
-          multiline.parser docker, cri
-          Tag kube.*
-          Mem_Buf_Limit 5MB
-          Skip_Long_Lines On
-    ```
-  This is a new [multiline core 1.8 functionality](https://docs.fluentbit.io/manual/pipeline/inputs/tail#multiline-core-v1.8). 
-  The two options in `multiline.parser` separated by a comma means multi-format: try docker and cri multiline formats.
-
-  For contained logs multiline parser cri is needed. Embedded implementation of this parser applies the following regexp to the input lines:
-  ```
-    "^(?<time>.+) (?<stream>stdout|stderr) (?<_p>F|P) (?<log>.*)$"
-  ```
-  See implementation in go [code](https://github.com/fluent/fluent-bit/blob/master/src/multiline/flb_ml_parser_cri.c).
-
-  Fourth field ("F/P") indicates whether the log is full (one line) or partial (more lines are expected).
-  See more details in this fluentbit [feature request](https://github.com/fluent/fluent-bit/issues/1316)
-
-  By default helm chart also configures fluentbit to collect and parse systemd `kubelet.system` service, which is not installed by K3S
-  
-    ```
-        [INPUT]
-          Name systemd
-          Tag host.*
-          Systemd_Filter _SYSTEMD_UNIT=kubelet.service
-          Read_From_Tail On
-    ``` 
-  Default configuration need to be changed since K3S does not use default docker output (it uses cri with specific Time format and it does not install a systemd `kubelet.service`.
-
-  Additional inputs need to be configured for extracting logs from host (`/var/logs/auth` and `/var/log/syslog`)
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(4): Fluentbit OUTPUT configuration**
-
-  [OUTPUT] configuration by default uses elasticsearch, but it needs to be modified for specifying the access credentials and https protocol specific parameters (do not use tls).
-
-  `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
-
-  ```json
-  {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
-  ``` 
-
-  In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
-
-  {{site.data.alerts.end}}
-  
-  {{site.data.alerts.note}} **(5): Fluentbit PARSER configuration**
-
-  [PARSER] default configuration need to be changed to include specific parser for the syslog formats without priority used by Ubuntu in its authentication and syslog files (`/var/log/auth.log` and `/var/log/syslog`).
-  {{site.data.alerts.end}}
-  
-  {{site.data.alerts.note}} **(6): Fluentbit FILTERS configuration**
-
-  [FILTERS] default helm chart configuration includes a filter for enriching logs with Kubernetes metadata. See [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
-
-  Default configuration need to be modified to include local-time-to-utc filter (Lua script), which translates all logs timestamps to UTC for all node local logs (`/var/log/syslog` and `/var/log/auth.log`). Time field included in these logs does not contain information about TimeZone and when parsing them Fluentbit/Elasticsearch assume they are in UTC timezone displaying them in the future, which in my case it is wrong (`Europe/Madrid` timezone).
-  
-  See issue [#5](https://github.com/ricsanfre/pi-cluster/issues/5).
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(7): Lua scripts**
-
-  Helm chart supports the specification of Lua scripts to be used by FILTERS. Helm chart creates a specific ConfigMap with the content of the Lua scripts that are mounted by the pod.
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(8): Enable daemonset deployment of master node**
-
-  `tolerantions` section need to be provided.
-  {{site.data.alerts.end}}
-
-  {{site.data.alerts.note}} **(9): Init container for creating fluentbit DB temporary directory**
-
-  Configure a `initContainer` based on `busybox` image that creates a directory `/var/logs/fluentbit` to store fluentbit Tail database keeping track of monitored files and offsets (`Tail` input `DB` parameter).
-  {{site.data.alerts.end}}
-
-- Step 4. Install chart
-  ```shell
-  helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
   ```
