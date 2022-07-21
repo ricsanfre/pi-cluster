@@ -114,8 +114,6 @@ nft_forward_host_rules:
     - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport {9091, 9092} ct state new accept
   250 port-forwarding from wan:
     - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport 8080 ct state new accept
-  260 fluentd form wan:
-    - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.101 tcp dport 22 ct state new accept
 # NAT Post-routing
 nft_nat_host_postrouting_rules:
   005 masquerade lan to wan:
