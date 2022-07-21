@@ -18,16 +18,16 @@
     release_namespace: "{{ k3s_metallb_namespace }}"
     update_repo_cache: true
     state: present
-    release_values:
-      configInline:
-        address-pools:
-          - name: default
-            protocol: layer2
-            addresses:
-              - "{{ k3s_external_ip_range }}"
 
 - name: Wait for pods to be ready
   command:
     cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_metallb_namespace }} --all --timeout=600s"
   register: metallb_pods_ready
   changed_when: false
+
+- name: Configure IP address pool
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - metallb_config.yml.j2
