@@ -24,106 +24,31 @@ env:
 # Fluentbit config
 config:
   # Helm chart combines service, inputs, outputs, custom_parsers and filters section
+{% if fluentbit_service | length > 0 %}
   # fluent-bit.config SERVICE
   service: |
-
-    [SERVICE]
-        Daemon Off
-        Flush 1
-        Log_Level info
-        Parsers_File parsers.conf
-        Parsers_File custom_parsers.conf
-        HTTP_Server On
-        HTTP_Listen 0.0.0.0
-        HTTP_Port 2020
-        Health_Check On
-
+{{ fluentbit_service | indent(4, True)}}
+{% endif %}
+{% if fluentbit_inputs | length > 0 %}
   # fluent-bit.config INPUT
   inputs: |
-
-    [INPUT]
-        Name tail
-        Path /var/log/containers/*.log
-        multiline.parser cri
-        DB /var/log/fluentbit/flb_kube.db
-        Tag kube.*
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines True
-
-    [INPUT]
-        Name tail
-        Tag host.*
-        DB /var/log/fluentbit/flb_host.db
-        Path /var/log/auth.log,/var/log/syslog
-        Parser syslog-rfc3164-nopri
-
+{{ fluentbit_inputs | indent(4, True)}}
+{% endif %}
+{% if fluentbit_outputs | length > 0 %}
   # fluent-bit.config OUTPUT
   outputs: |
-
-    [OUTPUT]
-        Name forward
-        match *
-        Host ${FLUENT_AGGREGATOR_HOST}
-        Port ${FLUENT_AGGREGATOR_PORT}
-        Self_Hostname ${FLUENT_SELFHOSTNAME}
-        Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
-        tls True
-        tls.verify False
-
+{{ fluentbit_outputs | indent(4, True)}}
+{% endif %}
+{% if fluentbit_custom_parsers | length > 0 %}
   # fluent-bit.config PARSERS
   customParsers: |
-
-    [PARSER]
-        Name syslog-rfc3164-nopri
-        Format regex
-        Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
-        Time_Key time
-        Time_Format %b %d %H:%M:%S
-        Time_Keep False
-
+{{ fluentbit_custom_parsers | indent(4, True)}}
+{% endif %}
+{% if fluentbit_filters | length > 0 %}
   # fluent-bit.config FILTERS
   filters: |
-
-    [FILTER]
-        Name kubernetes
-        Match kube.*
-        Kube_Tag_Prefix kube.var.log.containers.
-        Merge_Log True
-        Merge_Log_Trim True
-        Keep_Log False
-        K8S-Logging.Parser True
-        K8S-Logging.Exclude False
-        Annotations False
-        Labels False
-
-    [FILTER]
-        Name nest
-        Match kube.*
-        Operation lift
-        Nested_under kubernetes
-        Add_prefix kubernetes_
-
-    [FILTER]
-        Name modify
-        Match kube.*
-        Rename kubernetes_pod_name k8s.pod.name
-        Rename kubernetes_namespace_name k8s.namespace.name
-        Rename kubernetes_container_name k8s.container.name
-        Remove kubernetes_container_image
-        Remove kubernetes_docker_id
-        Remove kubernetes_pod_id
-        Remove kubernetes_host
-        Remove kubernetes_container_hash
-        Remove stream
-        Remove _p
-        Rename log message
-        Add k8s.cluster.name picluster
-
-    [FILTER]
-        Name lua
-        Match host.*
-        script /fluent-bit/scripts/adjust_ts.lua
-        call local_timestamp_to_UTC
+{{ fluentbit_filters | indent(4, True)}}
+{% endif %}
 
 # Fluentbit config Lua Scripts
 luaScripts:
