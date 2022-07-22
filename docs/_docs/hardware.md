@@ -2,7 +2,7 @@
 title: Hardware
 permalink: /docs/hardware/
 description: Hardware components used to build our Raspberry Pi Kuberentes cluster. Raspberry Pi differetn storage options benchmarking.
-last_modified_at: "25-02-2022"
+last_modified_at: "22-07-2022"
 
 ---
 
@@ -27,12 +27,15 @@ This is the hardware I'm using to create the cluster:
 
 ## Storage benchmarking
 
-The performance of the different storage configurations for the Raspberry Pi has been tested.
+Different Raspberry PI storage configurations have been tested:
 
-1) Internal SDCard: [SanDisk Ultra 32 GB microSDHC Memory Cards](https://www.amazon.es/SanDisk-SDSQUA4-064G-GN6MA-microSDXC-Adaptador-Rendimiento-dp-B08GY9NYRM/dp/B08GY9NYRM) (Class 10)
-2) Flash Disk USB 3.0: [Samsung USB 3.1 32 GB Fit Plus Flash Disk](https://www.amazon.es/Samsung-FIT-Plus-Memoria-MUF-32AB/dp/B07HPWKS3C)
-3) SSD Disk [Kingston A400 480GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N0TQPQB) + USB3 to SATA Adapter [Startech USB 3.0 to SATA III](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84)
-4) SCSI using a Target SCSI running on Raspberry PI using as USB 3.0 SSD disk
+1. Internal SDCard: [SanDisk Ultra 32 GB microSDHC Memory Cards](https://www.amazon.es/SanDisk-SDSQUA4-064G-GN6MA-microSDXC-Adaptador-Rendimiento-dp-B08GY9NYRM/dp/B08GY9NYRM) (Class 10)
+
+2. Flash Disk USB 3.0: [Samsung USB 3.1 32 GB Fit Plus Flash Disk](https://www.amazon.es/Samsung-FIT-Plus-Memoria-MUF-32AB/dp/B07HPWKS3C)
+
+3. SSD Disk [Kingston A400 480GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N0TQPQB) + USB3 to SATA Adapter [Startech USB 3.0 to SATA III](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84)
+
+4. iSCSI Volumes. Using another Raspberry PI as storage server, configured as iSCSI Target, using a SSD disk attached.
 
 ### Testing procedure
 
@@ -137,9 +140,10 @@ Average-metrics obtained during the tests removing the worst and the best result
 
   ![global_score](/assets/img/benchmarking_score.png)
 
+Conclusions:
 
-1) Clearly `SSD` with USB3.0 to SATA adapter beats the rest in all performance tests.
-2) `SDCard` obtains worst metrics than `FlashDisk` and `iSCSI`
-2) `FlashDisk` and `iSCSI` get simillar performance metrics 
+1. Clearly `SSD` with USB3.0 to SATA adapter beats the rest in all performance tests.
+2. `SDCard` obtains worst metrics than `FlashDisk` and `iSCSI`
+3. `FlashDisk` and `iSCSI` get similar performance metrics
 
-The performace obtained using local attached USB3.0 Flash Disk is quite simillar to the one obtained using iSCSI with a SSD Disk as central storage.
+The performace obtained using local attached USB3.0 Flash Disk is quite similar to the one obtained using iSCSI with RaspberryPI+SSD Disk as central storage.
