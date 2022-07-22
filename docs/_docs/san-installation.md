@@ -135,7 +135,7 @@ Follow these steps for preparing the storage device for hosting the LUNs: add ne
 
 - Step 3. Create LVM Physical Volume
 
-  In case of new device added (`/dev/sdb`). If a partition is used instead (`/dev/sda2`) replace the device in the commands bellow.
+  In case of new device added (`/dev/sdb`). If a partition is used instead (`/dev/sda2`) replace the device in the commands below.
 
   Create physical volume with command `sudo pvcreate <storage_device>`
 
