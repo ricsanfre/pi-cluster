@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to use Ansible to automate the deployment and configuration. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "05-04-2022"
+last_modified_at: "22-07-2022"
 ---
 
 
@@ -12,7 +12,7 @@ The scope of this project is to create a kubernetes cluster at home using **Rasp
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
 
-As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) centralized monitoring tool, [Prometheus](https://prometheus.io/) 3) centralized log management, EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/), 3) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/) and 4) service mesh architecture, [Linkerd](https://linkerd.io/)
+As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) centralized monitoring tool, [Prometheus](https://prometheus.io/), 3) centralized log management, EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/), 4) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), and 5) service mesh architecture, [Linkerd](https://linkerd.io/)
 
 
 The following picture shows the set of opensource solutions used for building this cluster:
@@ -112,5 +112,4 @@ The software used and the latest version tested of each component
 | Backup | Minio | RELEASE.2022-05-04T07-45-27Z | |
 | Backup | Restic | 0.12.1 | |
 | Backup | Velero | 1.8.1 | Helm chart version: velero-2.29.4 |
-
 {: .table }

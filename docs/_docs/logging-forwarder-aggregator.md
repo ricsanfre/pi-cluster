@@ -3,11 +3,11 @@ title: Log collection, aggregation and distribution (Forwarder/Aggregator archit
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analytics can be done using Kibana.
 
-last_modified_at: "20-07-2022"
+last_modified_at: "22-07-2022"
 
 ---
 
-A Forwarder/Aggregator log architecture will be implemented in the Kuberntes cluster with Fluentbit and Fluentd.
+A Forwarder/Aggregator log architecture will be implemented in the Kubernetes cluster with Fluentbit and Fluentd.
 
 Both fluentbit and fluentd can be deployed as forwarder and/or aggregator.
 
@@ -399,7 +399,7 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
 
   TLS Secret containing fluentd's certificate and private key is mounted as `/fluentd/certs` 
 
-- Step 4. Create a Service resource to expose fluentd endpoints internally within the cluster
+- Step 4. Create a Service resource to access fluentd endpoints internally within the cluster
   
   ```yml
   apiVersion: v1
@@ -427,7 +427,6 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
   
   Both forward(24224) and prometheus(24231) ports are exposed.
   
-
 - Step 5: create a Service resource to expose fluentd forward endpoint outside the cluster (LoadBalancer service type)
 
   ```yml
@@ -448,8 +447,9 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
       app: fluentd
     sessionAffinity: None
     type: LoadBalancer
-    loadBalancerIP: {{ k3s_fluentd_external_ip }}  
-  ```  
+    loadBalancerIP: 10.0.0.101
+  ```
+  Fluentd forward service will be available in port 24224 and IP 10.0.0.101 (IP belonging to MetalLB addresses pool). This IP address should be mapped to a DNS record, `fluentd.picluster.ricsanfre.com`, in `gateway` dnsmasq configuration.
 
 - Step 3: Check fluentd status
   ```shell
@@ -797,7 +797,7 @@ The file content has the following sections:
     Annotations False
     Labels False
   ```
-  Fluent-bit kubernets filter enriches logs with Kubernetes metadata parsing log tag information (obtaining pod_name, container_name, container_id namespace) and querying the Kube API (obtaining pod_id, pod labels and annotations). See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
+  Fluent-bit kubernetes filter enriches logs with Kubernetes metadata parsing log tag information (obtaining pod_name, container_name, container_id namespace) and querying the Kube API (obtaining pod_id, pod labels and annotations). See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
 
   Kubernetes annotation and labels are not included in the enrichment process.
   
@@ -916,62 +916,68 @@ Additional pod init-container for creating `/var/log/fluentbit` directory in eac
 `initContainer` is based on `busybox` image that creates a directory `/var/logs/fluentbit`
 
 
-## Gathering logs from servers outside the kubernetes cluster
+## Logs from external nodes
 
-For gathering the logs from `gateway` server fluentbit will be installed.
+For colleting the logs from external nodes (nodes not belonging to kubernetes cluster: i.e: `gateway`),fluentbit will be installed and logs will be forwarded to fluentd aggregator service running within the cluster.
 
 There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
 
-For automating configuration tasks, ansible role [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit) has been developed.
+Fluentbit installation and configuration tasks have been automated with Ansible developing a role: role [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
 
-Fluentbit role input and parsing rules are defined through variables for `control` inventory (group_vars/control.yml), to which gateway belongs to.
+### Fluent bit configuration
 
-```yml
-fluentbit_inputs:
-  - Name: tail
-    Tag: auth
-    Path: /var/log/auth.log
-    Path_key: log_file
-    DB: /run/fluent-bit-auth.state
-    Parser: syslog-rfc3164-nopri
-  - Name: tail
-    Tag: syslog
-    Path: /var/log/syslog
-    Path_key: log_file
-    DB: /run/fluent-bit-syslog.state
-    Parser: syslog-rfc3164-nopri
-# Fluentbit Elasticsearch output
-fluentbit_outputs:
-  - Name: es
-    match: "*"
-    Host: 10.0.0.101
-    Port: 9200
-    Logstash_Format: On
-    Logstash_Prefix: logstash
-    Include_Tag_Key: On
-    Tag_Key: tag
-    HTTP_User: elastic
-    HTTP_Passwd: s1cret0
-    tls: Off
-    tls.verify: Off
-    Retry_Limit: False
-# Fluentbit custom parsers
-fluentbit_custom_parsers:
-  - Name: syslog-rfc3164-nopri
-    Format: regex
-    Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
-    Time_Key: time
-    Time_Format: "%b %d %H:%M:%S"
-    Time_Keep: false
+{{site.data.alerts.note}}
+**ricsanfre.fluentbit** role configuration is defined through a set of ansible variables. This variables are defined at `control` inventory group (group_vars/control.yml), to which `gateway`and `pimaster` belong to.
+{{site.data.alerts.end}}
 
-# Fluentbit_filters
-fluentbit_filters:
-  - name: lua
-    match: "*"
-    script: /etc/td-agent-bit/adjust_ts.lua
-    call: local_timestamp_to_UTC
+Configuration is quite similar to the one defined for the fluentbit-daemonset, removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
 
+`/etc/fluent-bit/fluent-bit.conf`
 ```
-With this rules Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to elasticsearch server running on K3S cluster.
+[SERVICE]
+    Daemon Off
+    Flush 1
+    Log_Level info
+    Parsers_File parsers.conf
+    Parsers_File custom_parsers.conf
+    HTTP_Server On
+    HTTP_Listen 0.0.0.0
+    HTTP_Port 2020
+    Health_Check On
 
-Lua script need to be included for translaing local time zone (`Europe\Madrid`) to UTC and the corresponding filter need to be executed. See [issue #5](https://github.com/ricsanfre/pi-cluster/issues/5).
+[INPUT]
+    Name tail
+    Tag host.*
+    DB /run/fluentbit-state.db
+    Path /var/log/auth.log,/var/log/syslog
+    Parser syslog-rfc3164-nopri
+
+[FILTER]
+    Name lua
+    Match host.*
+    script /etc/fluent-bit/adjust_ts.lua
+    call local_timestamp_to_UTC
+
+[OUTPUT]
+    Name forward
+    Match *
+    Host fluentd.picluster.ricsanfre.com
+    Port 24224
+    Self_Hostname gateway
+    Shared_Key s1cret0
+    tls true
+    tls.verify false
+```
+
+`/etc/fluent-bit/custom_parsers.conf`
+```
+[PARSER]
+    Name syslog-rfc3164-nopri
+    Format regex
+    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key time
+    Time_Format %b %d %H:%M:%S
+    Time_Keep False
+```
+
+With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.

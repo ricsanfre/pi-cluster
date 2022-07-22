@@ -2,7 +2,7 @@
 title: Elasticsearch and Kibana
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "03-07-2022"
+last_modified_at: "22-07-2022"
 
 ---
 
@@ -98,9 +98,11 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
 
   {{site.data.alerts.note}} **(3): Disable TLS automatic configuration**
 
-  Disabling TLS automatic configuration in Elasticsearch HTTP server enables Linkerd (Cluster Service Mesh) to gather more statistics about connections. Linkerd is parsing plain text traffic (HTTP) and not encrypted (HTTPS).
+  By default ECK configures secured communications with auto-signed SSL certificates. Access to its service endpoint on port 9200 is only available through https.
+
+  Disabling TLS automatic configuration in Elasticsearch HTTP server enables Linkerd (Cluster Service Mesh) to gather more statistics about connections. Linkerd is parsing plain text traffic (HTTP) instead of encrypted (HTTPS).
   
-  Linkerd service mesh will enforce secure communications between all PODs.
+  Linkerd service mesh will enforce secure communications using TLS between all PODs.
   
   {{site.data.alerts.end}}
 
@@ -126,9 +128,9 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
 
 #### Elasticsearch authentication
 
-By default ECK configures secured communications with auto-signed SSL certificates. Access to its API on port 9200 is only available through https and user authentication is required to allow the connection. ECK defines a `elastic` user and stores its credentials within a kubernetes Secret.
+By default ECK configures user authentication to access elasticsearch service. ECK defines a default admin esaticsearch user (`elastic`) and with a password which is stored within a kubernetes Secret.
 
-Both to access Kibana UI or to configure Fluetd collector to insert data, secure communications on https must be used and user/password need to be provided 
+Both to access elasticsearch from Kibana GUI or to configure Fluentd collector to insert data, elastic user/password need to be provided.
 
 Password is stored in a kubernetes secret (`<efk_cluster_name>-es-elastic-user`). Execute this command for getting the password
 ```
@@ -155,9 +157,15 @@ data:
 
 #### Accesing Elasticsearch from outside the cluster
 
-By default Elasticsearh HTTP service is accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make them available outside the cluster Traefik reverse-proxy can be configured to enable external communication with Elasicsearh server.
+By default Elasticsearh HTTP service is accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make it available outside the cluster Traefik reverse-proxy can be configured to enable external communication with Elasicsearh server.
 
-This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` service can be configured to send logs to the elasticsearch running in the cluster).
+This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` node can be configured to send logs to the elasticsearch running in the cluster).
+
+{{site.data.alerts.note}}
+
+If log forwarder/aggregator architecture is deployed, this step can be skipped. In this case, fluentd-aggregator forward service is exposed by the cluster.
+
+{{site.data.alerts.end}}
 
 - Step 1. Create the ingress rule manifest
   

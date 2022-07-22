@@ -2,7 +2,7 @@
 title: Log collection, aggregation and distribution (Forwarders-only architecture)
 permalink: /docs/logging-forwarder-only/
 description: How to deploy fluentbit or fluentd to collect all kubernetes logs and load them to ES. Forwarder-only deployment pattern as alternative to forwarder/aggregator pattern.
-last_modified_at: "20-07-2022"
+last_modified_at: "22-07-2022"
 ---
 
 Both fluentbit and fluentd can be deployed as forwarder-only to collect all kubernetes logs and load them to the backend (ES) directly without aggregation layer. Also they can be deployed as daemonset on kubernetes nodes using the official helm charts.
@@ -196,7 +196,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   {{site.data.alerts.note}} **Chart configuration details**
 
-  [Configuration chart is almost the same as the one described in forwader/aggregator architecture](/docs/logging-forwarder-aggregator/#fluentbit-chart-configuration-details).
+  [Configuration is quite similar to the one described in forwader/aggregator architecture](/docs/logging-forwarder-aggregator/#fluentbit-chart-configuration-details).
    
   Changes:
 
@@ -242,19 +242,16 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
 Fluentd also can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentd: Container Deployment - Kubernetes"](https://docs.fluentd.org/container-deployment/kubernetes).
 
+Docker images developed by the community are available to deploy fluentd as a daemonset pod to collect kubernetes logs: check out [`fluent-kubernetes-daemonset` github repo](https://github.com/fluent/fluentd-kubernetes-daemonset). Different docker images are provided pre-configured for collecting and parsing kuberentes logs and to inject them into different destinations, including elasticsearch.
 
-Fluentd can be deployed on Kubernetes cluster as a daemonset pod  using fluentd community docker images in [`fluent-kubernetes-daemonset` repo](https://github.com/fluent/fluentd-kubernetes-daemonset). Different docker images are provided pre-configured for collecting and parsing kuberentes logs and to inject them into different stinations, one of them is elasticsearch.
+This docker images by default configure fluentd agent to parse container logs, and Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, check out [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
 
-This docker images by default fluentd agent parse container logs, and Kubernetes system component logs like kubelet, kube-proxy, and Docker logs. To see a full list of sources tailed by the Fluentd logging agent, consult the [`kubernetes.conf`](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.14/arm64/debian-elasticsearch7/conf/kubernetes.conf) file used to configure the logging agent.
+Further details can be found in [Fluentd documentation: "Kubernetes deployment"](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in [`fluentd-kubernetes-daemonset` Github repo](https://github.com/fluent/fluentd-kubernetes-daemonset). For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
 
-Further details can be found in [Fluentd documentation: "Kubernetes deployment"](https://docs.fluentd.org/container-deployment/kubernetes) and different backends manifest sample files are provided in `fluentd-kubernetes-daemonset` Github repo. For using elasticsearh as backend we will use a manifest file based on this [spec](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml)
-
-Fluentd default image and manifest files need to be adapted for parsing containerd logs. `fluentd -kubernets-daemonset` images by default are configured for parsing docker logs. See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
+Fluentd default image and manifest files need to be adapted for parsing containerd logs. `fluentd -kubernets-daemonset` images by default are configured for parsing docker logs and not cri logs. See this [issue](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/412)
 
 {{site.data.alerts.note}}
-
-In this case instead of installing fluentd daemonset chart. Manual instalation instructions are provided:
-
+In this case instead of installing fluentd daemonset helm chart. Manual installation instructions are provided.
 {{site.data.alerts.end}}
 
 - Step 1. Create and apply a manifest file for fluentd role and password
@@ -461,3 +458,105 @@ In this case instead of installing fluentd daemonset chart. Manual instalation i
             # holds the different fluentd configuration files
             name: fluentd-config
   ```
+
+## Logs from external nodes
+
+For colleting the logs from external nodes (nodes not belonging to kubernetes cluster: i.e: `gateway`),fluentbit will be installed and logs will be forwarded to elasticsearch service running within the cluster.
+
+There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
+
+Fluentbit installation and configuration tasks have been automated with Ansible developing a role: role [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
+
+### Fluent bit configuration
+
+{{site.data.alerts.note}}
+**ricsanfre.fluentbit** role configuration is defined through a set of ansible variables. This variables are defined at `control` inventory group (group_vars/control.yml), to which `gateway`and `pimaster` belong to.
+{{site.data.alerts.end}}
+
+Configuration is quite similar to the one defined for the fluentbit-daemonset, removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
+
+`/etc/fluent-bit/fluent-bit.conf`
+```
+[SERVICE]
+    Daemon Off
+    Flush 1
+    Log_Level info
+    Parsers_File parsers.conf
+    Parsers_File custom_parsers.conf
+    HTTP_Server On
+    HTTP_Listen 0.0.0.0
+    HTTP_Port 2020
+    Health_Check On
+[INPUT]
+    Name tail
+    Tag host.*
+    DB /run/fluentbit-state.db
+    Path /var/log/auth.log,/var/log/syslog
+    Parser syslog-rfc3164-nopri
+
+[FILTER]
+    Name lua
+    Match host.*
+    script /etc/fluent-bit/adjust_ts.lua
+    call local_timestamp_to_UTC
+
+[OUTPUT]
+    Name forward
+    Match *
+    Host fluentd.picluster.ricsanfre.com
+    Port 24224
+    Self_Hostname gateway
+    Shared_Key s1cret0
+    tls true
+    tls.verify false
+```
+
+`/etc/fluent-bit/custom_parsers.conf`
+```
+[PARSER]
+    Name syslog-rfc3164-nopri
+    Format regex
+    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key time
+    Time_Format %b %d %H:%M:%S
+    Time_Keep False
+```
+
+{{site.data.alerts.note}} **Configuration details**
+
+  [Configuration is quite similar to the one described in forwader/aggregator architecture](/docs/logging-forwarder-aggregator/#logs-from-external-nodes).
+   
+  Changes:
+
+  - Output configuration
+
+    [OUTPUT] configuration routes the logs to elasticsearch.
+
+    ```
+    [OUTPUT]
+        Name es
+        match *
+        Host elasticsearch.picluster.ricsanfre.com
+        Port 443
+        Logstash_Format True
+        Logstash_Prefix logstash
+        Suppress_Type_Name True
+        Include_Tag_Key True
+        Tag_Key tag
+        HTTP_User elastic
+        HTTP_Passwd s1cret0
+        tls True
+        tls.verify False
+        Retry_Limit False
+    ```
+    elasticsearch service is accesed through Ingress Controller (Traefik), using default HTTPS port, and DNS name assigned to elasticsearch service (elasticsearch.picluster.ricsanfre.com) which it is mapped to Traefik exposed IP address (10.0.0.100).
+    `tls` option is enabled (set to False/Off). Fluentbit communicates with elasticsearch through Traefik. Communications between Fluent-bit and Traefik are encripted with TLS and communications between Traefik and elasticsearch are encrypted by linkerd service mesh.
+
+    `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
+
+    ```json
+    {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
+    ```
+    In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
+
+  {{site.data.alerts.end}}
