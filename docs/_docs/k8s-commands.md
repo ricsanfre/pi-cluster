@@ -45,6 +45,22 @@ last_modified_at: "03-04-2022"
 
   Port forwarding from binding service `service-name` listening on `internal_port` to `0.0.0.0:external_port`
 
+## How to run curl in Kubernetes (for troubleshooting)
+
+Run curl commands against any POD or service endpoint, running a new pod containing using a utility image containing `curl` command.
+
+Example use [official `curl` docker image](https://hub.docker.com/r/curlimages/curl) which support multiarch (amd64 and arm64)
+
+```
+kubectl run -it --rm --image=curlimages/curl curly -- sh
+```
+
+{{site.data.alerts.note}}
+
+`busybox` image is another useful POD for troubleshooting, but it does not contain `curl` commad (it contains `wget`)
+
+{{site.data.alerts.end}}
+
 
 ## Patching Helm manifest files on the fly using Kustomize
 

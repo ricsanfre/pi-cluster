@@ -68,9 +68,9 @@ logLevel: {{ fluent_bit_log_level }}
 
 # Init container
 initContainers:
-  - name: init-log-directory
+  - name: init-fluentbit-directory
     image: busybox
-    command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
+    command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi ; if [ ! -d /var/log/fluentbit/tail-db ]; then mkdir -p /var/log/fluentbit/tail-db; fi ; if [ ! -d /var/log/fluentbit/storage ]; then mkdir -p /var/log/fluentbit/storage; fi']
     volumeMounts:
       - name: varlog
         mountPath: /var/log

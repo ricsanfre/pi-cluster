@@ -516,24 +516,34 @@ For speed-up the installation there is available a [helm chart](https://github.c
           HTTP_Listen 0.0.0.0
           HTTP_Port 2020
           Health_Check On
+          storage.path /var/log/fluentbit/storage
+          storage.sync normal
+          storage.checksum off
+          storage.backlog.mem_limit 5M
+          storage.metrics on
 
     # fluent-bit.config INPUT:
     inputs: |
 
       [INPUT]
           Name tail
+          Alias input.kube
           Path /var/log/containers/*.log
           multiline.parser docker, cri
           DB /var/log/fluentbit/flb_kube.db
           Tag kube.*
           Mem_Buf_Limit 5MB
+          storage.type filesystem
           Skip_Long_Lines True
 
       [INPUT]
           Name tail
+          Alias input.host
           Tag host.*
           DB /var/log/fluentbit/flb_host.db
           Path /var/log/auth.log,/var/log/syslog
+          Mem_Buf_Limit 5MB
+          storage.type filesystem
           Parser syslog-rfc3164-nopri
 
     # fluent-bit.config OUTPUT
@@ -541,6 +551,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
       [OUTPUT]
           Name forward
+          Alias output.aggregator
           match *
           Host ${FLUENT_AGGREGATOR_HOST}
           Port ${FLUENT_AGGREGATOR_PORT}
@@ -621,11 +632,11 @@ For speed-up the installation there is available a [helm chart](https://github.c
       operator: Exists
       effect: NoSchedule
 
-  # Init container. Create directory for fluentbit db
+  # Init container. Create directory for fluentbit
   initContainers:
-    - name: init-log-directory
+    - name: init-fluentbit-directory
       image: busybox
-      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
+      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi ; if [ ! -d /var/log/fluentbit/tail-db ]; then mkdir -p /var/log/fluentbit/tail-db; fi ; if [ ! -d /var/log/fluentbit/storage ]; then mkdir -p /var/log/fluentbit/storage; fi']
       volumeMounts:
         - name: varlog
           mountPath: /var/log
@@ -697,11 +708,18 @@ The file content has the following sections:
       HTTP_Listen 0.0.0.0
       HTTP_Port 2020
       Health_Check On
+      storage.path /var/log/fluentbit/storage
+      storage.sync normal
+      storage.checksum off
+      storage.backlog.mem_limit 5M
+      storage.metrics on
   ```
 
-  This configuration enables built-in HTTP server (`HTTP_Server On`) so Prometheus metrics can be exposed.
+  This configuration enables built-in HTTP server (`HTTP_Server`, `HTTP_Listen` and `HTTP_Port`) to endpoints enabling [remote monitoring of fluentbit](https://docs.fluentbit.io/manual/administration/monitoring). One of the endpoints, `/api/v1/metrics/prometheus`, exposed metrics in Prometheus format.
 
-  It also loads configuration files containing the log parsers to be used ([PARSER] configuration section) (`Parsers_File`). Fluentbit is using [`parser.conf`](https://github.com/fluent/fluent-bit-docker-image/blob/master/conf/parsers.conf) (file coming from fluentbit official docker image) and `custom_parser.conf` (parser file containing additional parsers defined in the same ConfigMap)
+  It also loads configuration files containing the log parsers to be used ([PARSER] configuration section) (`Parsers_File`). Fluentbit is using [`parser.conf`](https://github.com/fluent/fluent-bit-docker-image/blob/master/conf/parsers.conf) (file coming from fluentbit official docker image) and `custom_parser.conf` (parser file containing additional parsers defined in the same ConfigMap).
+
+  To increase realibility, [fluentbit filesystem buffering mechanism](https://docs.fluentbit.io/manual/administration/buffering-and-storage) is enabled (`storage.path` and `storage.*`) and storage metrics endpoint (`storage.metrics`).
 
 - Fluentbit [INPUT] configuration
 
@@ -712,12 +730,14 @@ The file content has the following sections:
     ```
     [INPUT]
         Name tail
+        Alias input.kube
         Path /var/log/containers/*.log
         multiline.parser docker, cri
         DB /var/log/fluentbit/flb_kube.db
         Tag kube.*
-        Mem_Buf_Limit 5MB
         Skip_Long_Lines True
+        Mem_Buf_Limit 50MB
+        storage.type filesystem
 
     ```
 
@@ -737,18 +757,33 @@ The file content has the following sections:
 
     Fourth field ("F/P") indicates whether the log is full (one line) or partial (more lines are expected). See more details in this fluentbit [feature request](https://github.com/fluent/fluent-bit/issues/1316)
 
+    To increase realibility, [fluentbit memory/filesystem buffering mechanism](https://docs.fluentbit.io/manual/administration/buffering-and-storage) is enabled: (`Mem_Buf_Limit` set to 50MB and `storage.type` set to filesystem).
+
+    `Alias` is configured to provide more readable metrics. See [fluentbit monitoring documentation](https://docs.fluentbit.io/manual/administration/monitoring#configuring-aliases).
+
+    Tail `DB` parameter configured to keeping track of the monitoring files. See [Fluentbit tail input: keeping state"](https://docs.fluentbit.io/manual/pipeline/inputs/tail#keep_state)
+
   - OS level system logs
 
     ```
     [INPUT]
       Name tail
+      Alias input.os
       Tag host.*
       DB /var/log/fluentbit/flb_host.db
       Path /var/log/auth.log,/var/log/syslog
       Parser syslog-rfc3164-nopri
+      Mem_Buf_Limit 50MB
+      storage.type filesystem
     ```
 
     Fluentbit is configured for extracting OS level logs (`/var/logs/auth` and `/var/log/syslog` files), using custom parser `syslog-rfc3164-nopri` (syslog without priority field) defined in `custom_parser.conf` file.
+
+    To increase realibility, [fluentbit memory/filesystem buffering mechanism](https://docs.fluentbit.io/manual/administration/buffering-and-storage) is enabled: (`Mem_Buf_Limit` set to 50MB and `storage.type` set to filesystem).
+
+    `Alias` is configured to provide more readable metrics. See [fluentbit monitoring documentation](https://docs.fluentbit.io/manual/administration/monitoring#configuring-aliases).
+
+    Tail `DB` parameter configured to keeping track of the monitoring files. See [Fluentbit tail input: keeping state"](https://docs.fluentbit.io/manual/pipeline/inputs/tail#keep_state)
 
     {{site.data.alerts.note}}
 
@@ -771,6 +806,7 @@ The file content has the following sections:
   ```
   [OUTPUT]
       Name forward
+      Alias output.aggregator
       match *
       Host ${FLUENT_AGGREGATOR_HOST}
       Port ${FLUENT_AGGREGATOR_PORT}
@@ -781,6 +817,8 @@ The file content has the following sections:
   ```
   Fluentbit is configured to forward all logs to fluentd aggregator using a secure channel (TLS)
   container environment variables are used to confure fluentd connection details and shared key.
+
+  `Alias` is configured to provide more readable metrics. See [fluentbit monitoring documentation](https://docs.fluentbit.io/manual/administration/monitoring#configuring-aliases).
 
 - Fluentbit [FILTERS] configuration
 
@@ -901,16 +939,19 @@ Fluentbit pod tolerations can be configured through helm chart value `toleration
 
 #### Init container for creating fluentbit DB temporary directory
 
-Additional pod init-container for creating `/var/log/fluentbit` directory in each node to store fluentbit Tail plugin database keeping track of monitored files and offsets (`Tail` input `DB` parameter)
+Additional pod init-container for creating `/var/log/fluentbit` directory in each node:
+
+- To store fluentbit Tail plugin database keeping track of monitored files and offsets (`Tail` input `DB` parameter): `/var/log/fluentbit/tail-db`
+- To store fluentbit buffering: `/var/log/fluentbit/storage`
 
 ```yml
- initContainers:
-    - name: init-log-directory
-      image: busybox
-      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi']
-      volumeMounts:
-        - name: varlog
-          mountPath: /var/log
+initContainers:
+  - name: init-fluentbit-directory
+    image: busybox
+    command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi ; if [ ! -d /var/log/fluentbit/tail-db ]; then mkdir -p /var/log/fluentbit/tail-db; fi ; if [ ! -d /var/log/fluentbit/storage ]; then mkdir -p /var/log/fluentbit/storage; fi']
+    volumeMounts:
+      - name: varlog
+        mountPath: /var/log
 ```
 
 `initContainer` is based on `busybox` image that creates a directory `/var/logs/fluentbit`
