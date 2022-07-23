@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: fluent-bit
+    release: kube-prometheus-stack
+  name: fluentbit-prometheus-servicemonitor
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  endpoints:
+    - port: http
+      path: /api/v1/metrics/prometheus
+  namespaceSelector:
+    matchNames:
+      - {{ k3s_logging_namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: fluent-bit
+      app.kubernetes.io/name: fluent-bit

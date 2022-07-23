@@ -49,12 +49,12 @@
       tags: ['backup']
     - role: longhorn
       tags: ['longhorn']
+    - role: logging/k3s
+      tags: ['logging']
     - role: prometheus
       tags: ['monitoring']
     - role: linkerd/linkerd-viz
       tags: ['linkerd-viz']
-    - role: logging/k3s
-      tags: ['logging']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control

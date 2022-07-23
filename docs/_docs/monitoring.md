@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "18-03-2022"
+last_modified_at: "23-07-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -11,15 +11,18 @@ This project collects Kubernetes manifests, Grafana dashboards, and Prometheus r
 
 Components included in this package:
 
-- The Prometheus Operator
-- Highly available Prometheus
-- Highly available Alertmanager
-- Prometheus node-exporter
-- Prometheus Adapter for Kubernetes Metrics APIs
-- kube-state-metrics
-- Grafana
+- The [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator)
+- Highly available [Prometheus](https://prometheus.io/)
+- Highly available [Alertmanager](https://github.com/prometheus/alertmanager)
+- Prometheus [node-exporter](https://github.com/prometheus/node_exporter) to collect metrics from each cluster node
+- [Prometheus Adapter for Kubernetes Metrics APIs](https://github.com/kubernetes-sigs/prometheus-adapter)
+- [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
+- [Grafana](https://grafana.com/)
 
 This stack is meant for cluster monitoring, so it is pre-configured to collect metrics from all Kubernetes components.
+
+![kube-prometheus-stack](/assets/img/prometheus-stack-architecture.png)
+
 
 ## Kube-Prometheus Stack installation
 
@@ -679,6 +682,49 @@ Minio Console Dashboard integration has not been configured, instead a Grafana d
 ### Minio Grafana dashboard
 
 Minio dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13502](https://grafana.com/grafana/dashboards/13502).
+
+
+## Fluentbit/Fluentd Monitoring
+
+### Fluentbit Monitoring
+Fluentbit, when enabling its HTTP server, it exposes several endpoints to perform monitoring tasks. See details in [Fluentbit monitoring doc](https://docs.fluentbit.io/manual/administration/monitoring).
+
+One of the endpoints (`/api/v1/metrics/prometheus`) provides Fluentbit metrics in Prometheus format.
+
+
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Velero metrics endpoint as a Prometheus target.
+
+- Create a manifest file `fluentbit-servicemonitor.yml`
+  
+  ```yml
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: fluent-bit
+      release: kube-prometheus-stack
+    name: fluentbit-prometheus-servicemonitor
+    namespace: k3s-monitoring }}
+  spec:
+    endpoints:
+      - port: http
+        path: /api/v1/metrics/prometheus
+    namespaceSelector:
+      matchNames:
+        - k3s-logging
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: fluent-bit
+        app.kubernetes.io/name: fluent-bit
+  ```
+
+### Fluentd Monitoring
+
+### Fluentbit/Fluentd Grafana dashboard
+
+Fluentbit dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 7752](https://grafana.com/grafana/dashboards/7752).
+
 
 ## Provisioning Dashboards automatically
 

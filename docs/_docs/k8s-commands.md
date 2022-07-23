@@ -45,6 +45,31 @@ last_modified_at: "03-04-2022"
 
   Port forwarding from binding service `service-name` listening on `internal_port` to `0.0.0.0:external_port`
 
+
+- Getting nodes memory/cpu usage
+
+  ```shell
+  kubectl top nodes
+  ```
+
+- Getting top pods sort by cpu
+
+  ```shell
+  kubectl top pods -A --sort-by='cpu'
+  ```
+
+- Getting top pods sort by memory
+
+  ```shell
+  kubectl top pods -A --sort-by='memory'
+  ```
+
+  {{site.data.alerts.note}}
+
+  `kubectl top` uses kubernetes metrics API. [metrics server](https://github.com/kubernetes-sigs/metrics-server)need to be installed, which by default is installed in K3S
+
+  {{site.data.alerts.end}}
+
 ## How to run curl in Kubernetes (for troubleshooting)
 
 Run curl commands against any POD or service endpoint, running a new pod containing using a utility image containing `curl` command.
