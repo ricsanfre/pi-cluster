@@ -150,3 +150,16 @@ fluentbit_custom_parsers: |
 fluentbit_lua_script:
   - name: adjust_ts.lua
     content: "{{ lookup('file','files/adjust_ts.lua') }}"
+
+# fluentbit json exporter sidecar
+fluentbit_json_exporter: |
+  modules:
+    default:
+      metrics:
+        - name: fluenbit_storage_layer
+          type: object
+          path: '{.storage_layer}'
+          help: The total number of chunks in the fs storage
+          values:
+            fs_chunks_up: '{.chunks.fs_chunks_up}'
+            fs_chunks_down: '{.chunks.fs_chunks_down}'

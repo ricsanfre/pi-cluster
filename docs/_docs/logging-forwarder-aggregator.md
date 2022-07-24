@@ -614,6 +614,19 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Match host.*
           script /fluent-bit/scripts/adjust_ts.lua
           call local_timestamp_to_UTC
+    # json-exporter config
+    extraFiles:
+      json-exporter-config.yml: |
+        modules:
+          default:
+            metrics:
+              - name: fluenbit_storage_layer
+                type: object
+                path: '{.storage_layer}'
+                help: The total number of chunks in the fs storage
+                values:
+                  fs_chunks_up: '{.chunks.fs_chunks_up}'
+                  fs_chunks_down: '{.chunks.fs_chunks_down}'
   
   # Fluentbit config Lua Scripts.
   luaScripts:
@@ -640,6 +653,20 @@ For speed-up the installation there is available a [helm chart](https://github.c
       volumeMounts:
         - name: varlog
           mountPath: /var/log
+  # Sidecar container to export storage metrics
+  extraContainers:
+    - name: json-exporter
+      image: quay.io/prometheuscommunity/json-exporter
+      command: ['/bin/json_exporter']
+      args: ['--config.file=/json-exporter-config.yml']
+      ports:
+        - containerPort: 7979
+          name: http
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /json-exporter-config.yml
+          name: config
+          subPath: json-exporter-config.yml        
   ```
 
 - Step 4. Install chart
@@ -956,6 +983,142 @@ initContainers:
 
 `initContainer` is based on `busybox` image that creates a directory `/var/logs/fluentbit`
 
+
+#### Sidecar container for exporting storage metrics
+
+When enabling filesystem buffering (production usual configuration), Fluentbit storage metrics should be monitored as well. These metrics are not exposed by Fluentbit in prometheus format (metrics endpoint: `/api/v1/metrics/prometheus`). They are exposed in JSON format at `/api/v1/storage` endpoint.
+
+The storage output looks like this: 
+```shell
+curl -s http://10.42.2.28:2020/api/v1/storage | jq
+{
+  "storage_layer": {
+    "chunks": {
+      "total_chunks": 0,
+      "mem_chunks": 0,
+      "fs_chunks": 0,
+      "fs_chunks_up": 0,
+      "fs_chunks_down": 0
+    }
+  },
+  "input_chunks": {
+    "input.kube": {
+      "status": {
+        "overlimit": false,
+        "mem_size": "0b",
+        "mem_limit": "47.7M"
+      },
+      "chunks": {
+        "total": 0,
+        "up": 0,
+        "down": 0,
+        "busy": 0,
+        "busy_size": "0b"
+      }
+    },
+    "input.os": {
+      "status": {
+        "overlimit": false,
+        "mem_size": "0b",
+        "mem_limit": "47.7M"
+      },
+      "chunks": {
+        "total": 0,
+        "up": 0,
+        "down": 0,
+        "busy": 0,
+        "busy_size": "0b"
+      }
+    },
+    "storage_backlog.2": {
+      "status": {
+        "overlimit": false,
+        "mem_size": "0b",
+        "mem_limit": "0b"
+      },
+      "chunks": {
+        "total": 0,
+        "up": 0,
+        "down": 0,
+        "busy": 0,
+        "busy_size": "0b"
+      }
+    }
+  }
+}
+```
+where 10.42.2.28 is the IP of fluentbit POD (one of them)
+
+{{site.data.alerts.note}}
+
+To do troubleshooting of APIs with curl command in kuberentes a utility POD can be deployed. In this case [ricsanfre/docker-curl-jq](https://github.com/ricsanfre/docker-curl-jq) docker image is used (simple alpine image containing bash, curl and jq)
+
+It can deployed with command:
+
+```shell
+kubectl run -it --rm --image=ricsanfre/docker-curl-jq curly
+```
+
+{{site.data.alerts.end}}
+
+There is a open issue in Fluentbit to export storage metrics with prometheus format (https://github.com/fluent/fluent-bit/pull/5334).
+
+As alternative, prometheus-json-exporter can be deployed as sidecar to translate storage JSON metrics to Prometheus format. This [FluentCon presentation](https://www.youtube.com/watch?v=OhlyY6glf0A) shows how to do it and to integrate it with Prometheus.
+
+The prometheus-json-exporter config.yml file need to be provided. It has been included as part of fluent-bit ConfigMap as `extraFiles` helm chart variable.
+
+```yml
+  extraFiles:
+    json-exporter-config.yml: |
+    modules:
+      default:
+        metrics:
+          - name: fluenbit_storage_layer
+            type: object
+            path: '{.storage_layer}'
+            help: The total number of chunks in the fs storage
+            values:
+              fs_chunks_up: '{.chunks.fs_chunks_up}'
+              fs_chunks_down: '{.chunks.fs_chunks_down}'
+```
+
+This configuration translate to Prometheus format metrics `fs_chunks_up` and `fs_chunks_down`
+
+This configurationf file is mounted in prometheus-json-exporter sidecarcontainer
+
+To deploy sidecar prometheus-json-exporter `extraContainers`:
+
+```yml
+# Sidecar container to export storage metrics
+extraContainers:
+  - name: json-exporter
+    image: quay.io/prometheuscommunity/json-exporter
+    command: ['/bin/json_exporter']
+    args: ['--config.file=/json-exporter-config.yml']
+    ports:
+      - containerPort: 7979
+        name: http
+        protocol: TCP
+    volumeMounts:
+      - mountPath: /json-exporter-config.yml
+        name: config
+        subPath: json-exporter-config.yml
+```
+
+`json-exporter` start wiht `json-exporter.config.yml` and listen on port 7979.
+
+
+When deployed, the exporter can be tested with the following command:
+
+```shell
+curl "http://10.42.2.28:7979/probe?target=http://localhost:2020/api/v1/storage"
+# HELP fluenbit_storage_layer_fs_chunks_down The total number of chunks in the fs storage
+# TYPE fluenbit_storage_layer_fs_chunks_down untyped
+fluenbit_storage_layer_fs_chunks_down 0
+# HELP fluenbit_storage_layer_fs_chunks_up The total number of chunks in the fs storage
+# TYPE fluenbit_storage_layer_fs_chunks_up untyped
+fluenbit_storage_layer_fs_chunks_up 1
+```
 
 ## Logs from external nodes
 

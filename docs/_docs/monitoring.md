@@ -705,11 +705,16 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
       app: fluent-bit
       release: kube-prometheus-stack
     name: fluentbit-prometheus-servicemonitor
-    namespace: k3s-monitoring }}
+    namespace: k3s-monitoring
   spec:
     endpoints:
-      - port: http
-        path: /api/v1/metrics/prometheus
+      - path: /api/v1/metrics/prometheus
+        targetPort: 2020
+      - params:
+          target:
+          - http://127.0.0.1:2020/api/v1/storage
+        path: /probe
+        targetPort: 7979
     namespaceSelector:
       matchNames:
         - k3s-logging
@@ -719,11 +724,16 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         app.kubernetes.io/name: fluent-bit
   ```
 
+Service monitoring include two endpoints. Fluentbit metrics endpoint (`/api/v1/metrics/prometheus` port TCP 2020) and json-exporter sidecar endpoint (`/probe` port 7979), passing as target parameter fluentbit storage endpoint (`api/v1/storage`)
+
+
 ### Fluentd Monitoring
 
 ### Fluentbit/Fluentd Grafana dashboard
 
 Fluentbit dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 7752](https://grafana.com/grafana/dashboards/7752).
+
+This dashboard has been modified slightly to include fluentbit's storage metrics (chunks up and down).
 
 
 ## Provisioning Dashboards automatically

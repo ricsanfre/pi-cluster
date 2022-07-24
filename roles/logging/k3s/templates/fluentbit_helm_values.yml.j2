@@ -49,6 +49,12 @@ config:
   filters: |
 {{ fluentbit_filters | indent(4, True)}}
 {% endif %}
+{% if fluentbit_json_exporter | length > 0 %}
+  # json exporter configuration
+  extraFiles:
+    json-exporter-config.yml: |
+{{ fluentbit_json_exporter | indent(6, True)}}
+{% endif %}
 
 # Fluentbit config Lua Scripts
 luaScripts:
@@ -74,3 +80,18 @@ initContainers:
     volumeMounts:
       - name: varlog
         mountPath: /var/log
+
+# Sidecar container to export storage metrics
+extraContainers:
+  - name: json-exporter
+    image: quay.io/prometheuscommunity/json-exporter
+    command: ['/bin/json_exporter']
+    args: ['--config.file=/json-exporter-config.yml']
+    ports:
+      - containerPort: 7979
+        name: http
+        protocol: TCP
+    volumeMounts:
+      - mountPath: /json-exporter-config.yml
+        name: config
+        subPath: json-exporter-config.yml

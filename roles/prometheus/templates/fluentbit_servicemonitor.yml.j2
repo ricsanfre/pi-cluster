@@ -9,8 +9,13 @@ metadata:
   namespace: {{ k3s_monitoring_namespace }}
 spec:
   endpoints:
-    - port: http
-      path: /api/v1/metrics/prometheus
+    - path: /api/v1/metrics/prometheus
+      targetPort: 2020
+    - params:
+        target:
+        - http://127.0.0.1:2020/api/v1/storage
+      path: /probe
+      targetPort: 7979
   namespaceSelector:
     matchNames:
       - {{ k3s_logging_namespace }}
