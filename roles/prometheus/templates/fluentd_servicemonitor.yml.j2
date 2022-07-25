@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: fluentd
+    release: kube-prometheus-stack
+  name: fluentd-prometheus-servicemonitor
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  endpoints:
+    - port: prometheus
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - {{ k3s_logging_namespace }}
+  selector:
+    matchLabels:
+      app: fluentd

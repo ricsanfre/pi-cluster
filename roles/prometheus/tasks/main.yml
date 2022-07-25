@@ -72,6 +72,7 @@
     - velero_servicemonitor.yml.j2
     - minio_servicemonitor.yml.j2
     - fluentbit_servicemonitor.yml.j2
+    - fluentd_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml

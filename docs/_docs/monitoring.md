@@ -687,12 +687,12 @@ Minio dashboard sample can be donwloaded from [grafana.com](https://grafana.com)
 ## Fluentbit/Fluentd Monitoring
 
 ### Fluentbit Monitoring
+
 Fluentbit, when enabling its HTTP server, it exposes several endpoints to perform monitoring tasks. See details in [Fluentbit monitoring doc](https://docs.fluentbit.io/manual/administration/monitoring).
 
 One of the endpoints (`/api/v1/metrics/prometheus`) provides Fluentbit metrics in Prometheus format.
 
-
-The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Velero metrics endpoint as a Prometheus target.
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Fluentbit metrics endpoint as a Prometheus target.
 
 - Create a manifest file `fluentbit-servicemonitor.yml`
   
@@ -729,11 +729,61 @@ Service monitoring include two endpoints. Fluentbit metrics endpoint (`/api/v1/m
 
 ### Fluentd Monitoring
 
+In order to monitor Fluentd with Prometheus, `fluent-plugin-prometheus` plugin need to be installed and configured. The custom docker image [fluentd-aggregator](https://github.com/ricsanfre/fluentd-aggregator), I have developed for this project, has this plugin installed.
+
+fluentd.conf file must include configuration of this plugin. It provides '/metrics' endpoint on port 24231.
+
+```
+# Prometheus metric exposed on 0.0.0.0:24231/metrics
+<source>
+  @type prometheus
+  @id in_prometheus
+  bind "#{ENV['FLUENTD_PROMETHEUS_BIND'] || '0.0.0.0'}"
+  port "#{ENV['FLUENTD_PROMETHEUS_PORT'] || '24231'}"
+  metrics_path "#{ENV['FLUENTD_PROMETHEUS_PATH'] || '/metrics'}"
+</source>
+
+<source>
+  @type prometheus_output_monitor
+  @id in_prometheus_output_monitor
+</source>
+```
+
+Check out further details in [Fluentd Documentation: Monitoring by Prometheus] (https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus).
+
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Fluentd metrics endpoint as a Prometheus target.
+
+- Create a manifest file `fluentd-servicemonitor.yml`
+  
+  ```yml
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: fluentd
+      release: kube-prometheus-stack
+    name: fluentd-prometheus-servicemonitor
+    namespace: k3s-monitoring
+  spec:
+    endpoints:
+      - port: prometheus
+        path: /metrics
+    namespaceSelector:
+      matchNames:
+        - k3s-logging
+    selector:
+      matchLabels:
+        app: fluentd
+
+  ```
+
+
 ### Fluentbit/Fluentd Grafana dashboard
 
 Fluentbit dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 7752](https://grafana.com/grafana/dashboards/7752).
 
-This dashboard has been modified slightly to include fluentbit's storage metrics (chunks up and down).
+This dashboard has been modified to include fluentbit's storage metrics (chunks up and down) and to solve some issues with fluentd metrics.
 
 
 ## Provisioning Dashboards automatically
