@@ -84,7 +84,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         enabled: false
   ```
 
-- Step 3: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
+- Step 4: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
 
   ```shell
   helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
@@ -683,6 +683,42 @@ Minio Console Dashboard integration has not been configured, instead a Grafana d
 
 Minio dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13502](https://grafana.com/grafana/dashboards/13502).
 
+
+## Elasticsearch Monitoring
+
+[prometheus-elasticsearch-exporter](https://github.com/prometheus-community/elasticsearch_exporter) need to be installed in order to have Elastic search metrics in Prometheus format. See documentation ["Prometheus elasticsearh exporter installation"](/docs/elasticsearch/#prometheus-elasticsearh-exporter-installation).
+
+This exporter exposes `/metrics` endpoint in port 9108.
+
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Fluentbit metrics endpoint as a Prometheus target.
+
+- Create a manifest file `elasticsearch-servicemonitor.yml`
+  
+  ```yml
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: prometheus-elasticsearch-exporter
+      release: kube-prometheus-stack
+    name: elasticsearch-prometheus-servicemonitor
+    namespace: k3s-monitoring
+  spec:
+    endpoints:
+      - port: http
+        path: /metrics
+    namespaceSelector:
+      matchNames:
+        - k3s-logging
+    selector:
+      matchLabels:
+        app: prometheus-elasticsearch-exporter
+  ```
+
+### Elasticsearch Grafana dashboard
+
+Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-grafana](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
 
 ## Fluentbit/Fluentd Monitoring
 

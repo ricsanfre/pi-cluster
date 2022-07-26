@@ -372,6 +372,63 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
   UI can be access through http://kibana.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
 
 
+### Prometheus elasticsearh exporter installation
+
+In order to monitor elasticsearch with prometheus, [prometheus-elasticsearch-exporter](https://github.com/prometheus-community/elasticsearch_exporter) need to be installed.
+
+For doing the installation [prometheus-elasticsearch-exporter official helm](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-elasticsearch-exporter) will be used.
+
+- Step 1: Add the prometheus community repository
+
+  ```shell
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  ```
+- Step2: Fetch the latest charts from the repository
+
+  ```shell
+  helm repo update
+  ```
+
+- Step 3: Create values.yml for configuring the helm chart
+
+  ```yml
+  ---
+  # Elastic search user
+  env:
+    ES_USERNAME: elastic
+
+  # Elastic search passord from secret
+  extraEnvSecrets:
+    ES_PASSWORD:
+      secret: efk-es-elastic-user
+      key: elastic
+
+  # Elastic search URI
+  es:
+    uri: http://efk-es-http:9200
+  ```
+
+- Step 3: Install prometheus-elasticsearh-exporter in the logging namespace with the overriden values
+
+  ```shell
+  helm install -f values.yml prometheus-elasticsearch-exporter prometheus-community/prometheus-elasticsearch-exporter --namespace k3s-logging
+  ```
+
+When deployed, the exporter generates a Kubernetes Service exposing prometheus-elasticsearch-exporter metrics endpoint (port 9108).
+
+It can be tested with the following command:
+
+```shell
+curl prometheus-elasticsearch-exporter.k3s-logging.svc.cluster.local:9108/metrics
+# HELP elasticsearch_breakers_estimated_size_bytes Estimated size in bytes of breaker
+# TYPE elasticsearch_breakers_estimated_size_bytes gauge
+elasticsearch_breakers_estimated_size_bytes{breaker="eql_sequence",cluster="efk",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="10.42.2.20",name="efk-es-default-0"} 0
+elasticsearch_breakers_estimated_size_bytes{breaker="fielddata",cluster="efk",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="10.42.2.20",name="efk-es-default-0"} 0
+elasticsearch_breakers_estimated_size_bytes{breaker="inflight_requests",cluster="efk",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="10.42.2.20",name="efk-es-default-0"} 0
+elasticsearch_breakers_estimated_size_bytes{breaker="model_inference",cluster="efk",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="10.42.2.20",name="efk-es-default-0"} 0
+...
+```
+
 ## Initial Kibana Setup (DataView configuration)
 
 [Kibana's DataView](https://www.elastic.co/guide/en/kibana/master/data-views.html) must be configured in order to access Elasticsearch data.

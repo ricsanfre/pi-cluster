@@ -11,3 +11,8 @@
 
 - name: Deploy fluentbit forwarder/daemonset
   include_tasks: install_fluentbit.yml
+
+# Deploy Prometheus elasticsearch exporter
+
+- name: Deploy prometheus elasticsearch exporter
+  include_tasks: install_prometheus_elasticsearch_exporter.yml
