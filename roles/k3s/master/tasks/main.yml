@@ -1,4 +1,13 @@
 ---
+- name: Create K3S configuration directory
+  file:
+    path: "{{ k3s_config_directory }}"
+    state: directory
+
+- name: Copy kubelet configuration file
+  copy:
+    dest: "{{ k3s_config_directory }}/kubelet.config"
+    content: "{{ k3s_kubelet_config }}"
 
 - name: Get K3s installation script
   get_url:
