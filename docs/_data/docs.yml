@@ -27,7 +27,6 @@
   - logging
   - elasticsearch
   - logging-forwarder-aggregator
-  - logging-forwarder-only
 - title: Monitoring
   docs:
   - prometheus

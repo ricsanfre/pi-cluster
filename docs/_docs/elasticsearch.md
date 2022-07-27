@@ -2,7 +2,7 @@
 title: Elasticsearch and Kibana
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "22-07-2022"
+last_modified_at: "27-07-2022"
 
 ---
 
@@ -17,9 +17,7 @@ Logstash deployment is not supported by ECK operator
 
 ECK Operator will be used to deploy Elasticsearh and Kibana.
 
-## Elasticsearch and Kibana installation
-
-### ECK Operator installation
+## ECK Operator installation
 
 - Step 1: Add the Elastic repository:
   ```shell
@@ -42,7 +40,7 @@ ECK Operator will be used to deploy Elasticsearh and Kibana.
   kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
   ```
 
-### Elasticsearch installation
+## Elasticsearch installation
 
 Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch cluster"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-deploy-elasticsearch.html)
 
@@ -126,7 +124,7 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
   {{site.data.alerts.end}}
 
 
-#### Elasticsearch authentication
+### Elasticsearch authentication
 
 By default ECK configures user authentication to access elasticsearch service. ECK defines a default admin esaticsearch user (`elastic`) and with a password which is stored within a kubernetes Secret.
 
@@ -155,17 +153,11 @@ data:
   elastic: <base64 encoded efk_elasticsearch_password>
 ```
 
-#### Accesing Elasticsearch from outside the cluster
+### Accesing Elasticsearch from outside the cluster
 
 By default Elasticsearh HTTP service is accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make it available outside the cluster Traefik reverse-proxy can be configured to enable external communication with Elasicsearh server.
 
-This can be useful for example if elasticsearh database have to be used to monitoring logs from servers outside the cluster(i.e: `gateway` node can be configured to send logs to the elasticsearch running in the cluster).
-
-{{site.data.alerts.note}}
-
-If log forwarder/aggregator architecture is deployed, this step can be skipped. In this case, fluentd-aggregator forward service is exposed by the cluster.
-
-{{site.data.alerts.end}}
+This exposure will be useful for doing remote configurations on Elasticsearch through its API from `pimaster` node. For example: to configure backup snapshots.
 
 - Step 1. Create the ingress rule manifest
   
@@ -262,7 +254,7 @@ If log forwarder/aggregator architecture is deployed, this step can be skipped. 
   }
   ```
 
-### Kibana installation
+## Kibana installation
 
 - Step 1. Create a manifest file
   
@@ -299,7 +291,7 @@ If log forwarder/aggregator architecture is deployed, this step can be skipped. 
 
   {{site.data.alerts.end}}
   
-#### Ingress rule for Traefik
+### Ingress rule for Traefik
 
 Make accesible Kibana UI from outside the cluster through Ingress Controller
 
@@ -371,8 +363,31 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
 
   UI can be access through http://kibana.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
 
+### Initial Kibana Setup (DataView configuration)
 
-### Prometheus elasticsearh exporter installation
+[Kibana's DataView](https://www.elastic.co/guide/en/kibana/master/data-views.html) must be configured in order to access Elasticsearch data.
+
+{{site.data.alerts.note}}
+This configuration must be done once data from fluentd has been inserted in ES: A index (`fluentd-<date>`) containing  data has been created.
+{{site.data.alerts.end}}
+
+- Step 1: Open Kibana UI
+
+  Open a browser and go to Kibana's URL (kibana.picluster.ricsanfre.com)
+
+- Step 2: Open "Management Menu"
+
+  ![Kibana-setup-1](/assets/img/kibana-setup-1.png)
+
+- Step 3: Select "Kibana - Data View" menu option and click on "Create data view"
+
+  ![Kibana-setup-2](/assets/img/kibana-setup-2.png)
+
+- Step 4: Set index pattern to fluentd-* and timestamp field to @timestamp and click on "Create Index" 
+
+  ![Kibana-setup-3](/assets/img/kibana-setup-3.png)
+
+## Prometheus elasticsearh exporter installation
 
 In order to monitor elasticsearch with prometheus, [prometheus-elasticsearch-exporter](https://github.com/prometheus-community/elasticsearch_exporter) need to be installed.
 
@@ -383,7 +398,7 @@ For doing the installation [prometheus-elasticsearch-exporter official helm](htt
   ```shell
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   ```
-- Step2: Fetch the latest charts from the repository
+- Step 2: Fetch the latest charts from the repository
 
   ```shell
   helm repo update
@@ -407,6 +422,8 @@ For doing the installation [prometheus-elasticsearch-exporter official helm](htt
   es:
     uri: http://efk-es-http:9200
   ```
+  
+  This config passes ElasticSearch API endpoint (`uri`) and the needed credentials through environement variables(`ES_USERNAME` and `ES_PASSWORD`). 
 
 - Step 3: Install prometheus-elasticsearh-exporter in the logging namespace with the overriden values
 
@@ -414,7 +431,7 @@ For doing the installation [prometheus-elasticsearch-exporter official helm](htt
   helm install -f values.yml prometheus-elasticsearch-exporter prometheus-community/prometheus-elasticsearch-exporter --namespace k3s-logging
   ```
 
-When deployed, the exporter generates a Kubernetes Service exposing prometheus-elasticsearch-exporter metrics endpoint (port 9108).
+When deployed, the exporter generates a Kubernetes Service exposing prometheus-elasticsearch-exporter metrics endpoint (/metrics on port 9108).
 
 It can be tested with the following command:
 
@@ -428,23 +445,3 @@ elasticsearch_breakers_estimated_size_bytes{breaker="inflight_requests",cluster=
 elasticsearch_breakers_estimated_size_bytes{breaker="model_inference",cluster="efk",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="10.42.2.20",name="efk-es-default-0"} 0
 ...
 ```
-
-## Initial Kibana Setup (DataView configuration)
-
-[Kibana's DataView](https://www.elastic.co/guide/en/kibana/master/data-views.html) must be configured in order to access Elasticsearch data.
-
-- Step 1: Open Kibana UI
-
-  Open a browser and go to Kibana's URL (kibana.picluster.ricsanfre.com)
-
-- Step 2: Open "Management Menu"
-
-  ![Kibana-setup-1](/assets/img/kibana-setup-1.png)
-
-- Step 3: Select "Kibana - Data View" menu option and click on "Create data view"
-
-  ![Kibana-setup-2](/assets/img/kibana-setup-2.png)
-
-- Step 4: Set index pattern to fluentd-* and timestamp field to @timestamp and click on "Create Index" 
-
-  ![Kibana-setup-3](/assets/img/kibana-setup-3.png)

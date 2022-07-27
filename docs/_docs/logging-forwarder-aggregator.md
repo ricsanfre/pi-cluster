@@ -1,9 +1,9 @@
 ---
-title: Log collection, aggregation and distribution (Forwarder/Aggregator architecture)
+title: Fluentbit/Fluentd (Forwarder/Aggregator)
 permalink: /docs/logging-forwarder-aggregator/
-description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analytics can be done using Kibana.
+description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analysis can be done using Kibana.
 
-last_modified_at: "22-07-2022"
+last_modified_at: "27-07-2022"
 
 ---
 
