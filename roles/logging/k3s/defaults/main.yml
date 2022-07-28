@@ -74,7 +74,7 @@ fluentbit_inputs: |
       DB /var/log/fluentbit/tail-db/flb_kube.db
       Tag kube.*
       Mem_Buf_Limit 50MB
-      Skip_Long_Lines True
+      Skip_Long_Lines On
       storage.type filesystem
   [INPUT]
       Name tail
@@ -91,14 +91,16 @@ fluentbit_filters: |
   [FILTER]
       Name kubernetes
       Match kube.*
+      Buffer_Size 512k
       Kube_Tag_Prefix kube.var.log.containers.
-      Merge_Log True
-      Merge_Log_Trim True
-      Keep_Log False
-      K8S-Logging.Parser True
-      K8S-Logging.Exclude False
-      Annotations False
-      Labels False
+      Merge_Log On
+      Merge_Log_Trim Off
+      Merge_Log_Key log_processed
+      Keep_Log Off
+      K8S-Logging.Parser On
+      K8S-Logging.Exclude On
+      Annotations Off
+      Labels Off
   [FILTER]
       Name nest
       Match kube.*
@@ -135,8 +137,8 @@ fluentbit_outputs: |
       Port ${FLUENT_AGGREGATOR_PORT}
       Self_Hostname ${FLUENT_SELFHOSTNAME}
       Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
-      tls True
-      tls.verify False
+      tls On
+      tls.verify Off
 # Fluentbit custom parsers
 fluentbit_custom_parsers: |
   [PARSER]
@@ -145,7 +147,7 @@ fluentbit_custom_parsers: |
       Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
       Time_Key time
       Time_Format %b %d %H:%M:%S
-      Time_Keep False
+      Time_Keep Off
 # Lua_scripts
 fluentbit_lua_script:
   - name: adjust_ts.lua

@@ -36,6 +36,15 @@ data:
       @id in_prometheus_output_monitor
     </source>
 
+    <filter kube.**>
+      @type record_transformer
+      enable_ruby true
+      remove_keys log_processed
+      <record>
+        source_log.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+      </record>
+    </filter>
+
     # Send received logs to elasticsearch
     <match **>
        @type elasticsearch

@@ -534,7 +534,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Tag kube.*
           Mem_Buf_Limit 5MB
           storage.type filesystem
-          Skip_Long_Lines True
+          Skip_Long_Lines On
 
       [INPUT]
           Name tail
@@ -557,8 +557,8 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Port ${FLUENT_AGGREGATOR_PORT}
           Self_Hostname ${FLUENT_SELFHOSTNAME}
           Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
-          tls True
-          tls.verify False
+          tls On
+          tls.verify Off
 
     # fluent-bit.config PARSERS:
     customParsers: |
@@ -569,7 +569,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
           Time_Key time
           Time_Format %b %d %H:%M:%S
-          Time_Keep False
+          Time_Keep Off
 
     # fluent-bit.config FILTERS:
     filters: |
@@ -577,14 +577,16 @@ For speed-up the installation there is available a [helm chart](https://github.c
       [FILTER]
           Name kubernetes
           Match kube.*
+          Buffer_Size 512k
           Kube_Tag_Prefix kube.var.log.containers.
-          Merge_Log True
-          Merge_Log_Trim True
-          Keep_Log False
-          K8S-Logging.Parser True
-          K8S-Logging.Exclude False
-          Annotations False
-          Labels False
+          Merge_Log On
+          Merge_Log_Trim Off
+          Merge_Log_Key log_processed
+          Keep_Log Off
+          K8S-Logging.Parser On
+          K8S-Logging.Exclude On
+          Annotations Off
+          Labels Off
 
       [FILTER]
           Name nest
@@ -762,7 +764,7 @@ The file content has the following sections:
         multiline.parser docker, cri
         DB /var/log/fluentbit/flb_kube.db
         Tag kube.*
-        Skip_Long_Lines True
+        Skip_Long_Lines On
         Mem_Buf_Limit 50MB
         storage.type filesystem
 
@@ -839,8 +841,8 @@ The file content has the following sections:
       Port ${FLUENT_AGGREGATOR_PORT}
       Self_Hostname ${FLUENT_SELFHOSTNAME}
       Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
-      tls True
-      tls.verify False
+      tls On
+      tls.verify Off
   ```
   Fluentbit is configured to forward all logs to fluentd aggregator using a secure channel (TLS)
   container environment variables are used to confure fluentd connection details and shared key.
@@ -853,24 +855,62 @@ The file content has the following sections:
   [FILTER]
     Name kubernetes
     Match kube.*
+    Buffer_Size 512k
     Kube_Tag_Prefix kube.var.log.containers.
-    Merge_Log True
-    Merge_Log_Trim True
-    Keep_Log False
-    K8S-Logging.Parser True
-    K8S-Logging.Exclude False
-    Annotations False
-    Labels False
+    Merge_Log On
+    Merge_Log_Key log_processed
+    Merge_Log_Trim Off
+    Keep_Log Off
+    K8S-Logging.Parser On
+    K8S-Logging.Exclude On
+    Annotations Off
+    Labels Off
   ```
-  Fluent-bit kubernetes filter enriches logs with Kubernetes metadata parsing log tag information (obtaining pod_name, container_name, container_id namespace) and querying the Kube API (obtaining pod_id, pod labels and annotations). See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
 
-  Kubernetes annotation and labels are not included in the enrichment process.
-  
   This filter is only applied to kubernetes logs(containing kube.* tag).
+  Fluent-bit kubernetes filter do to main tasks:
+ 
+  - It enriches logs with Kubernetes metadata
 
-  All kubernetes metadata is stored within the processed log as a `kubernetes` map.
+    Parsing log tag information (obtaining pod_name, container_name, container_id namespace) and querying the Kube API (obtaining pod_id, pod labels and annotations).
 
-  Additional filters are configured to reformat this `kubernetes` nested map.
+    See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).    Kubernetes annotation and labels are not included in the enrichment process (`Annotations Off` and `Labels Off`)
+    All kubernetes metadata is stored within the processed log as a `kubernetes` map.
+
+    {{site.data.alerts.important}} **About Buffer_Size when connecting to Kuberenetes API**
+
+    Kuberentes filter's `Buffer_Size` default value is set to 32K which it is not enough for getting data of some of the PODs. With default value, Kubernetes filter was not able to get metadata information for some of the PODs (i.e.: elasticsearh). Increasing its value to 512k makes it work.
+
+    {{site.data.alerts.end}}
+
+  - It further parses `log` field within the CRI log format
+
+    It needs to be enabled (`Merge_Log On`), and, by default it applies a JSON parser to log content. Using specific Kuberenetes POD annotations (`fluentbit.io/parser`, a specific parser for `log` field can be specified at POD and container level (This annotation mechanism need to be activated (`K8sS_Logging.Parser On`).
+
+    See [Fluent-bit kuberentes filter documentation: Processing log value](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes#processing-the-log-value).
+
+    Parsed log field will be added to the processed log as a `log_processed` map (`Merge_Log_Key`).
+
+    {{site.data.alerts.important}} **About Log_Merge and ES ingestion errors** 
+
+    Activating Merge_Log functionality might result in conflicting field types when tryin to ingest into elasticsearch causing its rejection. See [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58).
+
+    To solve this issue a filter rule in the aggregation layer (fluentd) has to be created. This rule will remove `log_processed` field and it will create a new field `source_log.<container-name>`, making unique the fields before ingesting into ES.
+
+    ```
+    <filter kube.**>
+      @type record_transformer
+      enable_ruby true
+      remove_keys log_processed
+      <record>
+        source_log.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+      </record>
+    </filter>
+    ```
+
+    {{site.data.alerts.end}}
+  
+  Additional filters are configured to reformat `kubernetes` nested map.
 
   ```
   [FILTER]
