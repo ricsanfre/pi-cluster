@@ -803,15 +803,15 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
     namespace: k3s-monitoring
   spec:
     endpoints:
-      - port: prometheus
+      - port: metrics
         path: /metrics
     namespaceSelector:
       matchNames:
         - k3s-logging
     selector:
       matchLabels:
-        app: fluentd
-
+        app.kubernetes.io/instance: fluentd
+        app.kubernetes.io/name: fluentd
   ```
 
 

@@ -1,0 +1,21 @@
+---
+#External Service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: fluentd
+  name: fluentd-ext
+  namespace: "{{ k3s_logging_namespace }}"
+spec:
+  ports:
+  - name: forward-ext
+    port: 24224
+    protocol: TCP
+    targetPort: 24224
+  selector:
+    app.kubernetes.io/instance: fluentd
+    app.kubernetes.io/name: fluentd
+  sessionAffinity: None
+  type: LoadBalancer
+  loadBalancerIP: {{ k3s_fluentd_external_ip }}

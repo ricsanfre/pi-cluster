@@ -30,11 +30,17 @@ Fluentd will be deployed as Kubernetes Deployment (not a daemonset), enabling mu
 
 ### Customized fluentd image
 
-Fluentd official images do not contain any of the plugins (elasticsearch, prometheus monitoring, etc.) that are needed. A customized fluentd image need to be built.
+[Fluentd official images](https://github.com/fluent/fluentd-docker-image) do not contain any of the plugins (elasticsearch, prometheus monitoring, etc.) that are needed.
+
+There are also available [fluentd images for kubernetes](https://github.com/fluent/fluentd-kubernetes-daemonset), but they are customized to parse kubernetes logs (deploy fluentd as forwarder and not as aggregator) and there is one image per output plugin (one for elasticsearch, one for kafka, etc.)
+
+Since in the future I might configure the aggregator to dispath logs to another source (i.e Kafka for building a analytics Data Pipeline), I have decided to build a customized fluentd image with just the plugins I need, and containing default configuration to deploy fluentd as aggregator.
 
 {{site.data.alerts.tip}}
 
-You can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
+[fluentd-kubernetes-daemonset images](https://github.com/fluent/fluentd-kubernetes-daemonset) should work for deploying fluentd as Deployment. For outputing to the ES you just need to select the adequate [fluentd-kubernetes-daemonset image tag](https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags).
+
+As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
 These images are available in docker hub:
 
 - `ricsanfre/fluentd-aggregator:v1.14-debian-1`: for amd64 architectures
@@ -102,11 +108,11 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
 COPY ./conf/* /fluentd/etc/
 
 ## 3) Modify entrypoint.sh to configure sniffer class
-COPY entrypoint.sh /bin/
+COPY entrypoint.sh /fluentd/
 
 ## 4) Change to fluent user to run fluentd
 USER fluent
-ENTRYPOINT ["tini",  "--", "/bin/entrypoint.sh"]
+ENTRYPOINT ["tini",  "--", "/fluentd/entrypoint.sh"]
 CMD ["fluentd"]
 ```
 
@@ -132,13 +138,23 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
 
 - Kubernetes Service resource, Cluster IP type, exposing fluentd endpoints to other PODs/processes: Fluentbit forwarders, Prometheus, etc.
 
-- Kubernetes ConfigMap resource containing fluentd config files.
+- Kubernetes ConfigMap resources containing fluentd config files.
 
-**Installation procedure:**
+{{site.data.alerts.note}}
+
+[fluentd official helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluentd) also supports the deployment of fluentd as deployment or statefulset instead of daemonset. In case of deployment, [Kubernetes HPA (Horizontal POD Autoscaler)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) is also supported.
+
+Fluentd aggregator should be deployed in HA, Kubernetes deployment with several replicas. Additionally, [Kubernetes HPA (Horizontal POD Autoscaler)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) should be configured to automatically scale the number of replicas.
+
+The above Kubernetes resources, except TLS certificate and shared secret, are created automatically by the helm chart. I will use the helm chart deployment to ease the installation and maintenace.
+
+{{site.data.alerts.end}}
+
+#### Installation procedure
 
 - Step 1. Create fluentd TLS certificate to enable secure communications between forwarders and aggregator.
 
-  To configure fluentd to use TLS, it is needed the path to the files containing the TLS certificate and private key. The TLS Secret containing the certificate and key can be mounted in fluentd POD in a specific location (/fluentd/certs), so fluentd daemon can use them.
+  To configure fluentd to use TLS, it is needed the path to the files containing the TLS certificate and private key. The TLS Secret containing the certificate and key can be mounted in fluentd POD in a specific location (/etc/fluent/certs), so fluentd proccess can use them.
 
   Certmanager's ClusterIssuer `ca-issuer`, created during [certmanager installation](/docs/certmanager/), will be used to generate fluentd's TLS Secret automatically.
 
@@ -207,27 +223,133 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
     fluentd-shared-key: <base64 encoded password>
   ```
 
-- Step 3. Create a ConfigMap containing fluentd configuration
+- Step 3. Add fluentbit helm repo
+  ```shell
+  helm repo add fluent https://fluent.github.io/helm-charts
+  ```
+- Step 4. Update helm repo
+  ```shell
+  helm repo update
+  ```
+- Step 5. Create `values.yml` for tuning helm chart deployment.
+  
+  fluentd configuration can be provided to the helm. See [`values.yml`](https://github.com/fluent/helm-charts/blob/main/charts/fluentd/values.yaml)
+  
+  Fluentd will be configured with the following helm chart `values.yml`:
   
   ```yml
-  # ConfigMap containing fluentd configuration
-  # Mounted by the container and mapped to `/etc/fluentd/`
-  apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: fluentd-config
-    namespace: k3s-logging
-  data:
-    fluent.conf: |-
-      # Collect logs from forwarders
+  ---
+
+  # Fluentd image
+  image:
+    repository: "ricsanfre/fluentd-aggregator"
+    pullPolicy: "IfNotPresent"
+    tag: "v1.14-debian-arm64-1"
+
+  # Deploy fluentd as deployment
+  kind: "Deployment"
+  # Number of replicas
+  replicaCount: 1
+  # Enabling HPA
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
+  # Do not create serviceAccount and RBAC. Fluentd does not need to get access to kubernetes API.
+  serviceAccount:
+    create: false
+  rbac:
+    create: false
+
+  ## Additional environment variables to set for fluentd pods
+  env:
+    # Path to fluentd conf file
+    - name: "FLUENTD_CONF"
+      value: "../../../etc/fluent/fluent.conf"
+    # Elastic operator creates elastic service name with format cluster_name-es-http
+    - name:  FLUENT_ELASTICSEARCH_HOST
+      value: efk-es-http
+      # Default elasticsearch default port
+    - name:  FLUENT_ELASTICSEARCH_PORT
+      value: "9200"
+    # Elasticsearch user
+    - name: FLUENT_ELASTICSEARCH_USER
+      value: "elastic"
+    # Elastic operator stores elastic user password in a secret
+    - name: FLUENT_ELASTICSEARCH_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "efk-es-elastic-user"
+          key: elastic
+    # Setting a index-prefix for fluentd. By default index is logstash
+    - name: FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
+      value: fluentd
+    - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
+      value: "true"
+    # Fluentd forward security
+    - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluentd-shared-key
+          key: fluentd-shared-key
+
+  # Volumes and VolumeMounts (only configuration files and certificates)
+  volumes:
+    - name: etcfluentd-main
+      configMap:
+        name: fluentd-main
+        defaultMode: 0777
+    - name: etcfluentd-config
+      configMap:
+        name: fluentd-config
+        defaultMode: 0777
+    - name: fluentd-tls
+      secret:
+        secretName: fluentd-tls
+
+  volumeMounts:
+    - name: etcfluentd-main
+      mountPath: /etc/fluent
+    - name: etcfluentd-config
+      mountPath: /etc/fluent/config.d/
+    - mountPath: /etc/fluent/certs
+      name: fluentd-tls
+      readOnly: true
+
+  # Service. Exporting forwarder port (Metric already exposed by chart)
+  service:
+    type: "ClusterIP"
+    annotations: {}
+    ports:
+    - name: forwarder
+      protocol: TCP
+      containerPort: 24224
+
+  ## Fluentd list of plugins to install
+  ##
+  plugins: []
+  # - fluent-plugin-out-http
+
+  ## Do not create additional config maps
+  ##
+  configMapConfigs: []
+
+  ## Fluentd configurations:
+  ##
+  fileConfigs:
+    01_sources.conf: |-
+      ## logs from fluentbit forwarders
       <source>
         @type forward
+        @label @FORWARD
         bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
         port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
         # Enabling TLS
         <transport tls>
-            cert_path /fluentd/certs/tls.crt
-            private_key_path /fluentd/certs/tls.key
+            cert_path /etc/fluent/certs/tls.crt
+            private_key_path /etc/fluent/certs/tls.key
         </transport>
         # Enabling access security
         <security>
@@ -235,199 +357,118 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
           shared_key "#{ENV['FLUENTD_FORWARD_SEC_SHARED_KEY'] || 'sharedkey'}"
         </security>
       </source>
-      # Prometheus metric exposed on 0.0.0.0:24231/metrics
+      ## Enable Prometheus end point
       <source>
         @type prometheus
         @id in_prometheus
-        bind "#{ENV['FLUENTD_PROMETHEUS_BIND'] || '0.0.0.0'}"
-        port "#{ENV['FLUENTD_PROMETHEUS_PORT'] || '24231'}"
-        metrics_path "#{ENV['FLUENTD_PROMETHEUS_PATH'] || '/metrics'}"
+        bind "0.0.0.0"
+        port 24231
+        metrics_path "/metrics"
+      </source>
+      <source>
+        @type prometheus_monitor
+        @id in_prometheus_monitor
       </source>
       <source>
         @type prometheus_output_monitor
         @id in_prometheus_output_monitor
       </source>
-      # Send received logs to elasticsearch
-      <match **>
-         @type elasticsearch
-         @id out_es
-         @log_level info
-         include_tag_key true
-         host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
-         port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-         path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
-         scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
-         ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
-         ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
-         user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
-         password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
-         reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
-         reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
-         reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
-         log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
-         logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
-         logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
-         logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
-         index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
-         target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
-         type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
-         include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
-         template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
-         template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
-         template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
-         sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
-         request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
-         application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
-         suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
-         enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
-         ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
-         ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
-         ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
-         <buffer>
-           flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
-           flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
-           chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
-           queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
-           retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
-           retry_forever true
-         </buffer>
-      </match>
+    02_filters.conf: |-
+      <label @FORWARD>
+        # Re-route fluentd logs
+        <match kube.var.log.containers.fluentd**>
+          @type relabel
+          @label @FLUENT_LOG
+        </match>
+        <filter kube.**>
+          @type record_transformer
+          enable_ruby true
+          remove_keys log_processed
+          <record>
+            json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+          </record>
+        </filter>
+        <match **>
+          @type relabel
+          @label @DISPATCH
+        </match>
+      </label>
+    03_dispatch.conf: |-
+      <label @DISPATCH>
+        <filter **>
+          @type prometheus
+          <metric>
+            name fluentd_input_status_num_records_total
+            type counter
+            desc The total number of incoming records
+            <labels>
+              tag ${tag}
+              hostname ${hostname}
+            </labels>
+          </metric>
+        </filter>
+        <match **>
+          @type relabel
+          @label @OUTPUT
+        </match>
+      </label>
+    04_outputs.conf: |-
+      <label @OUTPUT>
+        # Send received logs to elasticsearch
+        <match **>
+          @type elasticsearch
+          @id out_es
+          @log_level info
+          include_tag_key true
+          host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+          port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+          path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
+          scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
+          ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
+          ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+          user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
+          password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
+          reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
+          reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
+          reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
+          log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
+          logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
+          logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
+          logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
+          index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
+          target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
+          type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
+          include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
+          template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
+          template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
+          template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
+          sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
+          request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
+          application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
+          suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
+          enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
+          ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
+          ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
+          ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
+          <buffer>
+            flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+            flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
+            chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
+            queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+            retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+            retry_forever true
+          </buffer>
+        </match>
+      </label>
   ```
 
-  Fluentd config file (`fluent.conf`) is loaded into a Kubernetes ConfigMap that will be mounted as `/etc/fluentd` within the fluentd pod.
+- Step 6: create a Service resource to expose only fluentd forward endpoint outside the cluster (LoadBalancer service type)
 
-  It configures fluentd as log aggregator. With this configuration fluentd:
+  {{site.data.alerts.note}}
 
-  - collects logs from forwarders (port 24224) configuring [forward input plugin](https://docs.fluentd.org/input/forward)
+  Helm chart creates a Service resource (ClusterIP) exposing all ports (forward and metrics ports). Outide the cluster only forward port should be available.
 
-  - enables Prometheus metrics exposure (port 24231) configuring [prometheus input plugin](https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus). Complete list of configuration parameters in [fluent-plugin-prometheus repository](https://github.com/fluent/fluent-plugin-prometheus)
-
-  - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch)
-
-  Plugin configuration values have been defined using container environment variables with default values in case of not being specified.
-
-- Step 3. Create a Deployment resource
-
-  ```yml
-  # Fluentd Deployment
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    labels:
-      app: fluentd
-    name: fluentd
-    namespace: k3s-logging
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
-        app: fluentd
-    template:
-      metadata:
-        labels:
-          app: fluentd
-      spec:
-        containers:
-        - image: ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1
-          imagePullPolicy: Always
-          name: fluentd
-          env:
-            # Elastic operator creates elastic service name with format cluster_name-es-http
-            - name:  FLUENT_ELASTICSEARCH_HOST
-              value: efk-es-http
-              # Default elasticsearch default port
-            - name:  FLUENT_ELASTICSEARCH_PORT
-              value: "9200"
-            # Elasticsearch user
-            - name: FLUENT_ELASTICSEARCH_USER
-              value: "elastic"
-            # Elastic operator stores elastic user password in a secret
-            - name: FLUENT_ELASTICSEARCH_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: "efk-es-elastic-user"
-                  key: elastic
-            # Setting a index-prefix. By default index is logstash-<date>
-            - name:  FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
-              value: fluentd
-            - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
-              value: "true"
-            # Fluentd forward security
-            - name: FLUENTD_FORWARD_SEC_SHARED_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: fluentd-shared-key
-                  key: fluentd-shared-key
-          ports:
-          - containerPort: 24224
-            name: forward
-            protocol: TCP
-          - containerPort: 24231
-            name: prometheus
-            protocol: TCP
-          volumeMounts:
-          - mountPath: /fluentd/etc
-            name: config
-            readOnly: true
-          - mountPath: /fluentd/certs
-            name: fluentd-tls
-            readOnly: true
-        volumes:
-        - name: config
-          configMap:
-            defaultMode: 420
-            name: fluentd-config
-        - name: fluentd-tls
-          secret:
-            secretName: fluentd-tls
-  ```
-  Fluentd POD is deployed as a Deployment using fluentd custom image.
-
-  Elasticsearch plugin configuration are passed to the fluentd pod as environment variables:
-
-  - connection details (`host` and `port`): elasticsearch kubernetes service (`efk-es-http`) and ES port.
-
-  - access credentials (`user` and `password`): elastic user password obtained from the corresponding Secret.
-
-  - additional plugin parameters: setting index prefix (`logstash_prefix`) and enabling debug messages when receiving errors from Elasticsearch API (`log_es_400_reason`)
-
-  - rest of parameters with default values defined in the ConfigMap.
-
-  Forwarder plugin shared key configuration parameter is also passed to fluentd pod as environment variable, loading the content of the secret generated in step 2: `fluentd-shared-key`.
-
-  ConfigMap containing fluentd config is mounted as `/fluentd/etc` volume.
-
-  TLS Secret containing fluentd's certificate and private key is mounted as `/fluentd/certs` 
-
-- Step 4. Create a Service resource to access fluentd endpoints internally within the cluster
-  
-  ```yml
-  apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: fluentd
-    name: fluentd
-    namespace: k3s-logging
-  spec:
-    ports:
-    - name: forward
-      port: 24224
-      protocol: TCP
-      targetPort: forward
-    - name: prometheus
-      port: 24231
-      protocol: TCP
-      targetPort: prometheus
-    selector:
-      app: fluentd
-    sessionAffinity: None
-    type: ClusterIP  
-  ```
-  
-  Both forward(24224) and prometheus(24231) ports are exposed.
-  
-- Step 5: create a Service resource to expose fluentd forward endpoint outside the cluster (LoadBalancer service type)
+  {{site.data.alerts.end}}
 
   ```yml
   apiVersion: v1
@@ -442,9 +483,10 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
     - name: forward-ext
       port: 24224
       protocol: TCP
-      targetPort: forward
+      targetPort: 24224
     selector:
-      app: fluentd
+      app.kubernetes.io/instance: fluentd
+      app.kubernetes.io/name: fluentd
     sessionAffinity: None
     type: LoadBalancer
     loadBalancerIP: 10.0.0.101
@@ -453,15 +495,382 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
 
 - Step 3: Check fluentd status
   ```shell
-  kubectl get pods -n k3s-logging
+  kubectl get all -l app.kubernetes.io/name=fluentd -n k3s-logging
   ```
+
+### Fluentd chart configuration details
+
+The Helm chart deploy fluentd as a Deployment, passing environment values to the pod and mounting as volumes different ConfigMaps. These ConfigMaps contain the fluentd configuration files and TLS secret used in forward protocol (communication with the fluentbit forwarders).
+
+#### Fluentd deployed as Deployment
+
+```yml
+# Fluentd image
+image:
+  repository: "ricsanfre/fluentd-aggregator"
+  pullPolicy: "IfNotPresent"
+  tag: "v1.14-debian-arm64-1"
+
+# Deploy fluentd as deployment
+kind: "Deployment"
+
+# Number of replicas
+replicaCount: 1
+
+# Enabling HPA
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+# Do not create serviceAccount and RBAC. Fluentd does not need to get access to kubernetes API.
+serviceAccount:
+  create: false
+rbac:
+  create: false
+```
+
+Fluentd is deployed as Deployment (`kind: "Deployment"`) with 1 replica (`replicaCount: 1`, using custom fluentd image (`image.repository: "ricsanfre/fluentd-aggregator` and `image.tag`).
+
+Service account (`serviceAccount.create: false`) and corresponding RoleBinding (`rbac.create: false`) are not created since fluentd aggregator does not need to access to Kubernetes API.
+
+HPA autoscaling is also configured (`autoscaling.enabling: true`).
+
+#### Fluentd container environment variables.
+
+
+```yml
+## Additional environment variables to set for fluentd pods
+env:
+  # Path to fluentd conf file
+  - name: "FLUENTD_CONF"
+    value: "../../../etc/fluent/fluent.conf"
+  # Elastic operator creates elastic service name with format cluster_name-es-http
+  - name:  FLUENT_ELASTICSEARCH_HOST
+    value: efk-es-http
+    # Default elasticsearch default port
+  - name:  FLUENT_ELASTICSEARCH_PORT
+    value: "9200"
+  # Elasticsearch user
+  - name: FLUENT_ELASTICSEARCH_USER
+    value: "elastic"
+  # Elastic operator stores elastic user password in a secret
+  - name: FLUENT_ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: "efk-es-elastic-user"
+        key: elastic
+  # Setting a index-prefix for fluentd. By default index is logstash
+  - name: FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
+    value: fluentd
+  - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
+    value: "true"
+  # Fluentd forward security
+  - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+    valueFrom:
+      secretKeyRef:
+        name: fluentd-shared-key
+        key: fluentd-shared-key
+```
+
+fluentd docker image and configuration files use the following environment variables:
+
+- Path to main fluentd config file (`FLUENTD_CONF`) pointing at `/etc/fluent/fluent.conf` file. 
+
+  {{site.data.alerts.note}}
+
+  `FLUENTD_CONF` environment variable is used by docker image to load main config file from `/fluentd/conf/${FLUEND_CONF}`. A relative path from `/fluentd/conf/` directory need to be provided to match environment variable definition in the docker image.
+
+  {{site.data.alerts.end}}
+
+- Elasticsearch output plugin configuration:
+
+  - ES connection details (`FLUENT_ELASTICSEARCH_HOST` and `FLUENT_ELASTICSEARCH_PORT`): elasticsearch kubernetes service (`efk-es-http`) and ES port.
+
+  - ES access credentials (`FLUENT_ELASTICSEARCH_USER` and `FLUENT_ELASTICSEARCH_PASSWORD`): elastic user password obtained from the corresponding Secret (`efk-es-elastic-user` created during ES installation)
+
+  - additional plugin parameters: setting index prefix (`FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX`) and enabling debug messages when receiving errors from Elasticsearch API (`FLUENT_ELASTICSEARCH_LOG_ES_400_REASON`)
+
+  - rest of parameters of the plugin with default values defined in the configuration.
+
+- Forwarder input plugin configuration:
+
+  - Shared key used for authentication(`FLUENTD_FORWARD_SEC_SHARED_KEY`), loading the content of the secret generated in step 2 of installation procedure: `fluentd-shared-key`.
+
+
+#### Fluentd POD volumes and volume mounts
+
+```yml
+# Volumes and VolumeMounts (only configuration files and certificates)
+volumes:
+  - name: etcfluentd-main
+    configMap:
+      name: fluentd-main
+      defaultMode: 0777
+  - name: etcfluentd-config
+    configMap:
+      name: fluentd-config
+      defaultMode: 0777
+  - name: fluentd-tls
+    secret:
+      secretName: fluentd-tls
+
+volumeMounts:
+  - name: etcfluentd-main
+    mountPath: /etc/fluent
+  - name: etcfluentd-config
+    mountPath: /etc/fluent/config.d/
+  - mountPath: /etc/fluent/certs
+    name: fluentd-tls
+    readOnly: true
+```
+
+ConfigMaps created by the helm chart are mounted in the fluentd container:
+
+- ConfigMap `fluentd-main`, containing fluentd main config file (`fluent.conf`), is mounted as `/etc/fluent` volume.
+
+- ConfigMap `fluentd-config`, containing fluentd config files included by main config file is mounted as `/etc/fluent/config.d`
+
+Additional Secret, contining fluentd TLS certificate and key is also mounted:
+
+- Secret `fluentd-tls`, generated in step 1 of the installation procedure, containing fluentd certificate and key
+  TLS Secret containing fluentd's certificate and private key, is mounted as `/etc/fluent/certs`.
+
+#### Fluentd Service and other configurations
+
+```yml
+# Service. Exporting forwarder port (Metric already exposed by chart)
+service:
+  type: "ClusterIP"
+  annotations: {}
+  ports:
+  - name: forwarder
+    protocol: TCP
+    containerPort: 24224
+
+## Fluentd list of plugins to install
+##
+plugins: []
+# - fluent-plugin-out-http
+
+## Do not create additional config maps
+##
+configMapConfigs: []
+```
+
+Fluetd service is configured as ClusterIP, exposing `forwarder` port (By default Helm chart also exposes prometheus `/metrics` endpoint in port 24231 ).
+
+The helm chart can be also configured to install fluentd plugins on start-up (`plugins`) and to load aditional fluentd config directories `configMapConfigs`.
+
+{{site.data.alerts.note}}
+  
+Set configMapConfigs to null to avoid loading default configMaps created by the Helm chart containing systemd input plugin configuration and prometheus default config.
+
+{{site.data.alerts.end}}
+
+#### Fluentd configuration files
+
+Fluentd main config file (`fluent.conf`) is loaded into a Kubernetes ConfigMap(`fluentd-main`) that will be mounted as `/etc/fluent.conf` within the fluentd pod.
+
+The content created by default by the helm chart is the following:
+
+`/etc/fluent.conf`:
+```
+# do not collect fluentd logs to avoid infinite loops.
+<label @FLUENT_LOG>
+  <match **>
+    @type null
+    @id ignore_fluent_logs
+  </match>
+</label>
+
+@include config.d/*.conf
+```
+
+Default configuration only contains a rule for discarding fluentd own logs (labeled as @FLUENT_LOG) and includes the configuration of all files located in `/etc/fluent/config.d` directory. All files contained in that directory are stored in another ConfigMap (`fluentd-config`).
+
+{{site.data.alerts.note}}
+
+It is not needed to change the default content of the `fluent.conf` created by Helm Chart.
+
+{{site.data.alerts.end}}
+
+`fluentd-config` ConfigMap is configured with the content loaded in `fileConfigs` helm Chart value.
+
+- Sources (input plugins) configuration:
+
+  `/etc/fluent/conf.d/01_sources.conf`
+
+  ```xml
+  ## logs from fluentbit forwarders
+  <source>
+    @type forward
+    @label @FORWARD
+    bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
+    port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+    # Enabling TLS
+    <transport tls>
+        cert_path /etc/fluent/certs/tls.crt
+        private_key_path /etc/fluent/certs/tls.key
+    </transport>
+    # Enabling access security
+    <security>
+      self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+      shared_key "#{ENV['FLUENTD_FORWARD_SEC_SHARED_KEY'] || 'sharedkey'}"
+    </security>
+  </source>
+  ## Enable Prometheus end point
+  <source>
+    @type prometheus
+    @id in_prometheus
+    bind "0.0.0.0"
+    port 24231
+    metrics_path "/metrics"
+  </source>
+  <source>
+    @type prometheus_monitor
+    @id in_prometheus_monitor
+  </source>
+  <source>
+    @type prometheus_output_monitor
+    @id in_prometheus_output_monitor
+  </source>
+  ```
+  With this configuration, fluentd:
+
+  - collects logs from forwarders (port 24224) configuring [forward input plugin](https://docs.fluentd.org/input/forward). TLS and authentication is configured.
+
+  - enables Prometheus metrics exposure (port 24231) configuring [prometheus input plugin](https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus). Complete list of configuration parameters in [fluent-plugin-prometheus repository](https://github.com/fluent/fluent-plugin-prometheus)
+
+  - labels (`@FORWARD`) all coming records from fluent-bit forwarders to perform further processing and routing.
+
+- Filters configuration:
+
+  `/etc/fluent/conf.d/02_filters.conf`
+
+  ```xml
+  <label @FORWARD>
+    # Re-route fluentd logs
+    <match kube.var.log.containers.fluentd**>
+      @type relabel
+      @label @FLUENT_LOG
+    </match>
+    <filter kube.**>
+      @type record_transformer
+      enable_ruby true
+      remove_keys log_processed
+      <record>
+        json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+      </record>
+    </filter>
+    <match **>
+      @type relabel
+      @label @DISPATCH
+    </match>
+  </label>
+  ```
+
+  With this configuration, fluentd:
+  
+  - relabels (`@FLUENT_LOG`) logs coming from fluentd itself to reroute them (discard them).
+
+  - removes `log_processed` field, and creates a new field `json_message.<container-name>` containing original `log_processed` field but copied to a unique map using container name `k8s.container.name`. This way we assure that all log fields are unique avoiding errors during the ingestion into ES.
+
+  - relabels (`@DISPATCH`)the rest of logs to be dispatched to the outputs
+
+- Dispatch configuration
+
+  `/etc/fluent/conf.d/03_dispatch.conf`
+
+  ```xml
+  <label @DISPATCH>
+    <filter **>
+      @type prometheus
+      <metric>
+        name fluentd_input_status_num_records_total
+        type counter
+        desc The total number of incoming records
+        <labels>
+          tag ${tag}
+          hostname ${hostname}
+        </labels>
+      </metric>
+    </filter>
+    <match **>
+      @type relabel
+      @label @OUTPUT
+    </match>
+  </label>
+  ```
+
+  With this configuration, fluentd:
+
+  - counts per tag and hostname, incoming records to provide the corresponding prometheus metric `fluentd_input_status_num_records_total`
+
+- Ouptut plugin configuration
+
+  `/etc/fluent/conf.d/04_outputs.conf`
+
+  ```xml
+  <label @OUTPUT>
+    # Send received logs to elasticsearch
+    <match **>
+      @type elasticsearch
+      @id out_es
+      @log_level info
+      include_tag_key true
+      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
+      scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
+      ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
+      ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+      user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
+      password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
+      reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
+      reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
+      reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
+      log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
+      logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
+      logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
+      logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
+      index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
+      target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
+      type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
+      include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
+      template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
+      template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
+      template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
+      sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
+      request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
+      application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
+      suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
+      enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
+      ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
+      ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
+      ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
+      <buffer>
+        flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+        flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
+        chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
+        queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+        retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+        retry_forever true
+      </buffer>
+    </match>
+  </label>
+  ```
+  
+  With this configuration fluentd:
+
+  - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch).
 
 ## Fluentbit Forwarder installation
 
 Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
 
 For speed-up the installation there is available a [helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluent-bit). Fluentbit config file can be build probiding the proper helm chart values.
-
 
 - Step 1. Add fluentbit helm repo
   ```shell
@@ -674,6 +1083,11 @@ For speed-up the installation there is available a [helm chart](https://github.c
 - Step 4. Install chart
   ```shell
   helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
+  ```
+
+- Step 5: Check fluent-bit status
+  ```shell
+  kubectl get all -l app.kubernetes.io/name=fluent-bit -n k3s-logging
   ```
 
 ### Fluentbit chart configuration details
@@ -895,7 +1309,7 @@ The file content has the following sections:
 
     Activating Merge_Log functionality might result in conflicting field types when tryin to ingest into elasticsearch causing its rejection. See [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58).
 
-    To solve this issue a filter rule in the aggregation layer (fluentd) has to be created. This rule will remove `log_processed` field and it will create a new field `source_log.<container-name>`, making unique the fields before ingesting into ES.
+    To solve this issue a filter rule in the aggregation layer (fluentd) has to be created. This rule will remove `log_processed` field and it will create a new field `json_message.<container-name>`, making unique the fields before ingesting into ES.
 
     ```
     <filter kube.**>
@@ -903,7 +1317,7 @@ The file content has the following sections:
       enable_ruby true
       remove_keys log_processed
       <record>
-        source_log.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+        json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
       </record>
     </filter>
     ```

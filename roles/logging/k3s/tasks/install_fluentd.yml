@@ -15,15 +15,29 @@
     done
   changed_when: false
 
-- name: Deploy fluentd aggregator
+- name: Add fluent chart repo.
+  kubernetes.core.helm_repository:
+    name: fluent
+    repo_url: "https://fluent.github.io/helm-charts"
+
+- name: Deploy fluentd Helm chart.
+  kubernetes.core.helm:
+    name: fluentd
+    chart_ref: fluent/fluentd
+    release_namespace: "{{ k3s_logging_namespace }}"
+    update_repo_cache: true
+    state: present
+    values: "{{ lookup('template', 'templates/fluentd_aggregator_helm_values.yml.j2') | from_yaml }}"
+
+- name: Create fluentd external service
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - fluentd_aggregator.yml.j2
+    - fluentd_service_ext.yml.j2
 
 - name: Wait for pods to be ready
   command:
-    cmd: "kubectl wait --for=condition=Ready pod -l app=fluentd --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
+    cmd: "kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=fluentd --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
   register: fluentbit_pods_ready
   changed_when: false

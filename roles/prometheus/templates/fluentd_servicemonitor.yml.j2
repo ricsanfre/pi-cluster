@@ -9,11 +9,12 @@ metadata:
   namespace: {{ k3s_monitoring_namespace }}
 spec:
   endpoints:
-    - port: prometheus
+    - port: metrics
       path: /metrics
   namespaceSelector:
     matchNames:
       - {{ k3s_logging_namespace }}
   selector:
     matchLabels:
-      app: fluentd
+      app.kubernetes.io/instance: fluentd
+      app.kubernetes.io/name: fluentd

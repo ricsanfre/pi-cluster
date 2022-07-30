@@ -16,6 +16,6 @@
 
 - name: Wait for pods to be ready
   command:
-    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
+    cmd: "kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=fluent-bit --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
   register: fluentbit_pods_ready
   changed_when: false
