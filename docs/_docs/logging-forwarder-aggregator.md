@@ -3,7 +3,7 @@ title: Fluentbit/Fluentd (Forwarder/Aggregator)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analysis can be done using Kibana.
 
-last_modified_at: "27-07-2022"
+last_modified_at: "31-07-2022"
 
 ---
 
@@ -1574,6 +1574,71 @@ fluenbit_storage_layer_fs_chunks_down 0
 fluenbit_storage_layer_fs_chunks_up 1
 ```
 
+
+### About Forwarder Only Architecture
+
+For deploying fluent-bit in forwarder-only architecture, without aggregation layer, only the following helm chart configuration changes need to be applied:
+
+- Environment variables
+
+  ```yml
+  env:
+  # Elastic operator creates elastic service name with format cluster_name-es-http
+  - name: FLUENT_ELASTICSEARCH_HOST
+    value: "efk-es-http"
+  # Default elasticsearch default port
+  - name: FLUENT_ELASTICSEARCH_PORT
+    value: "9200"
+  # Elasticsearch user
+  - name: FLUENT_ELASTICSEARCH_USER
+    value: "elastic"
+  # Elastic operator stores elastic user password in a secret
+  - name: FLUENT_ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: "efk-es-elastic-user"
+        key: elastic
+  # Specify TZ
+  - name: TZ
+    value: "Europe/Madrid"
+  ```
+
+  Elasticsearch connection details (IP: `FLUENT_ELASTICSEARCH_HOST` and port: `FLUENT_ELASTICSEARCH_PORT` ) and access credentials (`FLUENT_ELASTICSEARCH_USER` and `FLUENT_ELASTICSEARCH_PASSWD`) are passed as environment variables to the fluentbit pod (`elastic` user password obtaining from the corresponding Secret).
+
+- Output plugin configuration
+
+  In this case, [OUTPUT] configuration routes the logs directly to elasticsearch.
+
+  ```yml
+  config:
+    outputs: |
+
+      [OUTPUT]
+          Name es
+          match *
+          Host ${FLUENT_ELASTICSEARCH_HOST}
+          Port ${FLUENT_ELASTICSEARCH_PORT}
+          Logstash_Format True
+          Logstash_Prefix logstash
+          Suppress_Type_Name True
+          Include_Tag_Key True
+          Tag_Key tag
+          HTTP_User ${FLUENT_ELASTICSEARCH_USER}
+          HTTP_Passwd ${FLUENT_ELASTICSEARCH_PASSWORD}
+          tls False
+          tls.verify False
+          Retry_Limit False
+  ```
+  
+  `tls` option is disabled (set to False/Off). TLS communications are enabled by linkerd service mesh.
+
+  `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
+
+  ```json
+  {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
+  ``` 
+  In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
+
 ## Logs from external nodes
 
 For colleting the logs from external nodes (nodes not belonging to kubernetes cluster: i.e: `gateway`),fluentbit will be installed and logs will be forwarded to fluentd aggregator service running within the cluster.
@@ -1639,3 +1704,39 @@ Configuration is quite similar to the one defined for the fluentbit-daemonset, r
 ```
 
 With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
+
+
+### About Forwarder Only Architecture
+
+For deploying fluent-bit as forwarder-only architecture, only the following changes need to be applied:
+
+- Output configuration
+
+  [OUTPUT] configuration routes the logs to elasticsearch.
+
+  ```
+  [OUTPUT]
+      Name es
+      match *
+      Host elasticsearch.picluster.ricsanfre.com
+      Port 443
+      Logstash_Format True
+      Logstash_Prefix logstash
+      Suppress_Type_Name True
+      Include_Tag_Key True
+      Tag_Key tag
+      HTTP_User elastic
+      HTTP_Passwd s1cret0
+      tls True
+      tls.verify False
+      Retry_Limit False
+  ```
+  elasticsearch service is accesed through Ingress Controller (Traefik), using default HTTPS port, and DNS name assigned to elasticsearch service (elasticsearch.picluster.ricsanfre.com) which it is mapped to Traefik exposed IP address (10.0.0.100).
+  `tls` option is enabled (set to False/Off). Fluentbit communicates with elasticsearch through Traefik. Communications between Fluent-bit and Traefik are encripted with TLS and communications between Traefik and elasticsearch are encrypted by linkerd service mesh.
+
+  `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
+
+  ```json
+  {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
+  ```
+  In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.
