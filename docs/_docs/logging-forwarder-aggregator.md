@@ -1265,6 +1265,24 @@ The file content has the following sections:
 
 - Fluentbit [FILTERS] configuration
 
+  **Multiline Filter**
+  ```
+  [FILTER]
+      name                  multiline
+      match                 *
+      multiline.key_content log
+      multiline.parser      java,python,go
+  ```
+
+  This filter activates fluentbit built-in mutiline parsers/filters (availible since v1.8.2) to concatenate Multiline or Stack trace log messages. By derfault java, python and go stack traces parsins is supported. 
+
+  See furthter details [multiline filter doc](https://docs.fluentbit.io/manual/pipeline/filters/multiline-stacktrace).
+
+  {{site.data.alerts.note}}
+  Multiline parser built-in capability is already configured for Tail input (using cri parsers) to parse possible multiline containerd logs. In this case this multiline filter is needed to apply mutiline filter to the `log` field (original app log), field extracted applyinc CRI parser while parsing containerd log.
+  {{site.data.alerts.end}}
+
+  **Kubernetes Filter**
   ```
   [FILTER]
     Name kubernetes
@@ -1323,6 +1341,8 @@ The file content has the following sections:
     ```
 
     {{site.data.alerts.end}}
+
+  **Nest filter**
   
   Additional filters are configured to reformat `kubernetes` nested map.
 
@@ -1337,6 +1357,7 @@ The file content has the following sections:
   
   [`nest` filter](https://docs.fluentbit.io/manual/pipeline/filters/nest) remove the nested map `kubernetes` and moving all its records to the root map renaming them with the prefix `kubernetes_`.
 
+  **Modify filter**
   ```
   [FILTER]
       Name modify
@@ -1357,6 +1378,7 @@ The file content has the following sections:
   
   [`modify` filter](https://docs.fluentbit.io/manual/pipeline/filters/modify) removing and renaming some logs fields.
 
+  **Lua filter**
   The following filter need to be applied to host logs (OS level). Logs tagged as `host.*`
 
   ```

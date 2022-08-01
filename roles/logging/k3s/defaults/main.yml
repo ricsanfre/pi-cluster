@@ -89,6 +89,11 @@ fluentbit_inputs: |
 # Fluentbit_filters
 fluentbit_filters: |
   [FILTER]
+      name                  multiline
+      match                 *
+      multiline.key_content log
+      multiline.parser      java,python,go
+  [FILTER]
       Name kubernetes
       Match kube.*
       Buffer_Size 512k
