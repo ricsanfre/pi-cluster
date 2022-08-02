@@ -7,9 +7,9 @@ last_modified_at: "23-07-2022"
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
 
-This project collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
+That project collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
 
-Components included in this package:
+Components included in kube-stack package:
 
 - The [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator)
 - Highly available [Prometheus](https://prometheus.io/)
@@ -21,8 +21,24 @@ Components included in this package:
 
 This stack is meant for cluster monitoring, so it is pre-configured to collect metrics from all Kubernetes components.
 
+The architecture of components deployed is showed in the following image.
+
 ![kube-prometheus-stack](/assets/img/prometheus-stack-architecture.png)
 
+## About Prometheus Operator
+
+Prometheus operator is deployed and it manages Prometheus and AlertManager deployments and configuration through the use of Kubernetes CRD (Custom Resource Definitions):
+
+- `Prometheus` and `AlertManager` CRDs: declaratively defines a desired Prometheus/AlertManager setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage. For each object of these types a set of StatefulSet is deployed.
+- `ServiceMonitor`/`PodMonitor`/`Probe` CRDs: manages Prometheus service discovery configuration, defining how a dynamic set of services/pods/static-targets should be monitored.
+- `PrometheusRules` CRD: defines alerting rules (prometheus rules)
+- `AlertManagerConfig` CRD defines Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. 
+
+{{site.data.alerts.note}}
+
+More details about Prometheus Operator CRDs can be found in [Prometheus Operator Design Documentation](https://prometheus-operator.dev/docs/operator/design/).
+
+{{site.data.alerts.end}}
 
 ## Kube-Prometheus Stack installation
 
@@ -89,6 +105,93 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   ```shell
   helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
   ```
+
+It creates the following Prometheus CRD
+
+```yml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  annotations:
+    meta.helm.sh/release-name: kube-prometheus-stack
+    meta.helm.sh/release-namespace: k3s-monitoring
+  creationTimestamp: "2022-08-01T16:31:56Z"
+  generation: 1
+  labels:
+    app: kube-prometheus-stack-prometheus
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 39.2.1
+    chart: kube-prometheus-stack-39.2.1
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-prometheus
+  namespace: k3s-monitoring
+  resourceVersion: "37885"
+  uid: 9d915c45-690d-4459-b745-20f0fe8f5a9c
+spec:
+  alerting:
+    alertmanagers:
+    - apiVersion: v2
+      name: kube-prometheus-stack-alertmanager
+      namespace: k3s-monitoring
+      pathPrefix: /
+      port: http-web
+  enableAdminAPI: false
+  evaluationInterval: 30s
+  externalUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring:9090
+  image: quay.io/prometheus/prometheus:v2.37.0
+  listenLocal: false
+  logFormat: logfmt
+  logLevel: info
+  paused: false
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  portName: http-web
+  probeNamespaceSelector: {}
+  probeSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  replicas: 1
+  retention: 10d
+  routePrefix: /
+  ruleNamespaceSelector: {}
+  ruleSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  scrapeInterval: 30s
+  securityContext:
+    fsGroup: 2000
+    runAsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: kube-prometheus-stack-prometheus
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  shards: 1
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: longhorn
+  version: v2.37.0
+```
+
+Important configuration is:
+
+-  Which CRDs (PodMonitor, ServiceMonitor and Probe) are applicable to this particular instance of Prometheus services:  `podMonitorSelector`, `serviceMonitorSelector`, and `probeSelector` introduces a defaul filtering rule (Objects must include a label `release: kube-prometheus-stack`)
+- Default scrape interval to be applicable (`scrapeInterval`: 30sg). It can be overwitten in PodMonitor/ServiceMonitor/Probe particular configuration.
+
+
 
 ## Ingress resources configuration
 
@@ -821,6 +924,104 @@ Fluentbit dashboard sample can be donwloaded from [grafana.com](https://grafana.
 
 This dashboard has been modified to include fluentbit's storage metrics (chunks up and down) and to solve some issues with fluentd metrics.
 
+
+## External Nodes Monitoring
+
+- Install Node metrics exporter
+
+  Instead of installed Prometheus Node Exporter, fluentbit built-in similar functionallity can be used.
+
+  Fluentbit's [node-exporter-metric](https://docs.fluentbit.io/manual/pipeline/inputs/node-exporter-metrics) and [prometheus-exporter](https://docs.fluentbit.io/manual/pipeline/outputs/prometheus-exporter) plugins can be configured to expose `gateway` metrics that can be scraped by Prometheus.
+
+  Add to node's fluent.conf file the following configuration:
+
+  ```
+  [INPUT]
+      name node_exporter_metrics
+      tag node_metrics
+      scrape_interval 30
+  ```
+  
+  It configures node exporter input plugin to get node metrics
+
+  ```
+  [OUTPUT]
+      name prometheus_exporter
+      match node_metrics
+      host 0.0.0.0
+      port 2021
+  ```
+
+  It configures prometheuss output plugin to expose metrics endpoint `/metrics` in port 2021
+
+- Create a manifest file external-node-metrics-service.yml for creating the Kuberentes service pointing to a external server used by Prometheus to scrape External nodes metrics.
+
+  This service. as it happens with k3s-metrics, and Minio must be a headless service and without selector and the endpoints must be defined explicitely
+
+  The service will be use the Fluentbit metrics endpoint (TCP port 2021) for scraping all metrics.
+
+  ```yml
+  ---
+  # Headless service for External Node metrics. No Selector
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: external-node-metrics-service
+    labels:
+      app: external-node-metrics
+    namespace: k3s-monitoring
+  spec:
+    clusterIP: None
+    ports:
+    - name: http-metrics
+      port: 2021
+      protocol: TCP
+      targetPort: 2021
+    type: ClusterIP
+  ---
+  # Endpoint for the headless service without selector
+  apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: external-node-metrics-servcie
+    namespace: k3s-monitoring
+  subsets:
+  - addresses:
+    - ip: 10.0.0.1
+    ports:
+    - name: http-metrics
+      port: 2021
+      protocol: TCP
+  ```
+  - Creates `ServiceMonitoring` CRD to automatically discover External nodes metrics endpoint as a Prometheus target.
+
+  ```yml
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      app: external-node-metrics
+      release: kube-prometheus-stack
+    name: external-nodes-prometheus-servicemonitor
+    namespace: k3s-monitoring
+  spec:
+    endpoints:
+      - port: http-metrics
+        path: /metrics
+        scheme: http
+    namespaceSelector:
+      matchNames:
+      - k3s-monitoring
+    selector:
+      matchLabels:
+        app: external-node-metrics
+  ```
+
+- Apply manifest file
+  ```shell
+  kubectl apply -f exterlnal-node-metrics-service.yml external-node-servicemonitor.yml
+  ```
+- Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
 
 ## Provisioning Dashboards automatically
 

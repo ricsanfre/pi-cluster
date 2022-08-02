@@ -1,0 +1,32 @@
+---
+# Headless service for External Node metrics. No Selector
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-node-metrics-service
+  labels:
+    app: external-node-metrics
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 2021
+    protocol: TCP
+    targetPort: 2021
+  type: ClusterIP
+
+---
+# Endpoint for the headless service without selector
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: external-node-metrics-service
+  namespace: {{ k3s_monitoring_namespace }}
+subsets:
+- addresses:
+  - ip: 10.0.0.1
+  ports:
+  - name: http-metrics
+    port: 2021
+    protocol: TCP

@@ -11,6 +11,10 @@ fluentbit_inputs: |
       DB /run/fluentbit-state.db
       Path /var/log/auth.log,/var/log/syslog
       Parser syslog-rfc3164-nopri
+  [INPUT]
+      name node_exporter_metrics
+      tag node_metrics
+      scrape_interval 30
 # Fluentbit_filters
 fluentbit_filters: |
   [FILTER]
@@ -29,6 +33,11 @@ fluentbit_outputs: |
       Shared_Key s1cret0
       tls true
       tls.verify false
+  [OUTPUT]
+      name prometheus_exporter
+      match node_metrics
+      host 0.0.0.0
+      port 2021
 # Fluentbit custom parsers
 fluentbit_custom_parsers: |
   [PARSER]
