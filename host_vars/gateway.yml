@@ -51,7 +51,7 @@ ntp_allow_hosts: [10.0.0.0/24]
 # firewall role variables
 #########################
 
-in_tcp_port: '{ ssh, https, http, iscsi-target, 2021 }'
+in_tcp_port: '{ ssh, https, http, iscsi-target, 9100 }'
 in_udp_port: '{ snmp, domain, ntp, bootps }'
 forward_tcp_port: '{ http, https, ssh }'
 forward_udp_port: '{ domain, ntp }'

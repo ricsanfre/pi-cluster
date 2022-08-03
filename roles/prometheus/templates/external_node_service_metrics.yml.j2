@@ -5,7 +5,9 @@ kind: Service
 metadata:
   name: external-node-metrics-service
   labels:
-    app: external-node-metrics
+    app: prometheus-node-exporter
+    release: kube-prometheus-stack
+    jobLabel: node-exporter
   namespace: {{ k3s_monitoring_namespace }}
 spec:
   clusterIP: None
@@ -13,7 +15,7 @@ spec:
   - name: http-metrics
     port: 2021
     protocol: TCP
-    targetPort: 2021
+    targetPort: 9100
   type: ClusterIP
 
 ---
@@ -28,5 +30,5 @@ subsets:
   - ip: 10.0.0.1
   ports:
   - name: http-metrics
-    port: 2021
+    port: 9100
     protocol: TCP

@@ -75,7 +75,6 @@
     - fluentbit_servicemonitor.yml.j2
     - fluentd_servicemonitor.yml.j2
     - elasticsearch_servicemonitor.yml.j2
-    - external_node_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml

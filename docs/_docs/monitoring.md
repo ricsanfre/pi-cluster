@@ -399,7 +399,7 @@ In order to monitor Kubernetes components (Scheduler, Controller Manager and Pro
 
 - Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape K3S metrics.
 
-  This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), for allowing Prometheus service discovery process of each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitely
+  This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), for allowing Prometheus service discovery process of each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitly
 
   The service will be use the k3s-proxy endpoint (TCP port 10249) for scraping all metrics. 
   
@@ -699,7 +699,7 @@ Minio Console Dashboard integration has not been configured, instead a Grafana d
 
 - Create a manifest file `minio-metrics-service.yml` for creating the Kuberentes service pointing to a external server used by Prometheus to scrape Minio metrics.
 
-  This service. as it happens with k3s-metrics must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) and [without selector](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the endpoints must be defined explicitely
+  This service. as it happens with k3s-metrics must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) and [without selector](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the endpoints must be defined explicitly
 
   The service will be use the Minio endpoint (TCP port 9091) for scraping all metrics.
   ```yml
@@ -929,7 +929,7 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
 
 - Install Node metrics exporter
 
-  Instead of installed Prometheus Node Exporter, fluentbit built-in similar functionallity can be used.
+  Instead of installing Prometheus Node Exporter, fluentbit built-in similar functionallity can be used.
 
   Fluentbit's [node-exporter-metric](https://docs.fluentbit.io/manual/pipeline/inputs/node-exporter-metrics) and [prometheus-exporter](https://docs.fluentbit.io/manual/pipeline/outputs/prometheus-exporter) plugins can be configured to expose `gateway` metrics that can be scraped by Prometheus.
 
@@ -949,16 +949,17 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
       name prometheus_exporter
       match node_metrics
       host 0.0.0.0
-      port 2021
+      port 9100
   ```
 
-  It configures prometheuss output plugin to expose metrics endpoint `/metrics` in port 2021
+  It configures prometheuss output plugin to expose metrics endpoint `/metrics` in port 9100.
 
 - Create a manifest file external-node-metrics-service.yml for creating the Kuberentes service pointing to a external server used by Prometheus to scrape External nodes metrics.
 
-  This service. as it happens with k3s-metrics, and Minio must be a headless service and without selector and the endpoints must be defined explicitely
+  This service. as it happens with k3s-metrics, and Minio must be a headless service and without selector and the endpoints must be defined explicitly.
 
-  The service will be use the Fluentbit metrics endpoint (TCP port 2021) for scraping all metrics.
+
+  The service will be use the Fluentbit metrics endpoint (TCP port 9100) for scraping all metrics.
 
   ```yml
   ---
@@ -968,15 +969,17 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
   metadata:
     name: external-node-metrics-service
     labels:
-      app: external-node-metrics
+      app: prometheus-node-exporter
+      release: kube-prometheus-stack
+      jobLabel: node-exporter
     namespace: k3s-monitoring
   spec:
     clusterIP: None
     ports:
     - name: http-metrics
-      port: 2021
+      port: 9100
       protocol: TCP
-      targetPort: 2021
+      targetPort: 9100
     type: ClusterIP
   ---
   # Endpoint for the headless service without selector
@@ -990,38 +993,68 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
     - ip: 10.0.0.1
     ports:
     - name: http-metrics
-      port: 2021
+      port: 9100
       protocol: TCP
   ```
-  - Creates `ServiceMonitoring` CRD to automatically discover External nodes metrics endpoint as a Prometheus target.
+  
+  The service has been configured with specific labels so it matches the discovery rules configured in the Node-Exporter ServiceMonitoring Object (part of the kube-prometheus installation) and no new service monitoring need to be configured and the new nodes will appear in the corresponing Grafana dashboards.
 
+  
+      app: prometheus-node-exporter
+      release: kube-prometheus-stack
+      jobLabel: node-exporter
+
+
+  Prometheus-Node-Exporter Service Monitor is the following:
   ```yml
   apiVersion: monitoring.coreos.com/v1
   kind: ServiceMonitor
   metadata:
+    annotations:
+      meta.helm.sh/release-name: kube-prometheus-stack
+      meta.helm.sh/release-namespace: k3s-monitoring
+    generation: 1
     labels:
-      app: external-node-metrics
+      app: prometheus-node-exporter
+      app.kubernetes.io/managed-by: Helm
+      chart: prometheus-node-exporter-3.3.1
+      heritage: Helm
+      jobLabel: node-exporter
       release: kube-prometheus-stack
-    name: external-nodes-prometheus-servicemonitor
+    name: kube-prometheus-stack-prometheus-node-exporter
     namespace: k3s-monitoring
+    resourceVersion: "6369"
   spec:
     endpoints:
-      - port: http-metrics
-        path: /metrics
-        scheme: http
-    namespaceSelector:
-      matchNames:
-      - k3s-monitoring
+    - port: http-metrics
+      scheme: http
+    jobLabel: jobLabel
     selector:
       matchLabels:
-        app: external-node-metrics
+        app: prometheus-node-exporter
+        release: kube-prometheus-stack
+  ```
+  
+  `spec.selector.matchLabels` configuration specifies which labels values must contain the services in order to be discovered by this ServiceMonitor object.
+  ```yml
+  app: prometheus-node-exporter
+  release: kube-prometheus-stack
+  ```
+
+  `jobLabel` configuration specifies the name of a service label which contains the job_label assigned to all the metrics. That is why `jobLabel` label is added to the new service with the corresponding value (`node-exporter`). This jobLabel is used in all configured Grafana's dashboards, so it need to be configured to reuse them for the external nodes.
+  ```yml
+  jobLabel: node-exporter
   ```
 
 - Apply manifest file
   ```shell
-  kubectl apply -f exterlnal-node-metrics-service.yml external-node-servicemonitor.yml
+  kubectl apply -f exterlnal-node-metrics-service.yml
   ```
 - Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
+
+### Grafana dashboards
+
+Not need to install additional dashboards. Node-exporter dashboards pre-integrated by kube-stack shows the external nodes metrics.
 
 ## Provisioning Dashboards automatically
 
