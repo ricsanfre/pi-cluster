@@ -46,6 +46,47 @@ last_modified_at: "03-04-2022"
   Port forwarding from binding service `service-name` listening on `internal_port` to `0.0.0.0:external_port`
 
 
+- Getting nodes memory/cpu usage
+
+  ```shell
+  kubectl top nodes
+  ```
+
+- Getting top pods sort by cpu
+
+  ```shell
+  kubectl top pods -A --sort-by='cpu'
+  ```
+
+- Getting top pods sort by memory
+
+  ```shell
+  kubectl top pods -A --sort-by='memory'
+  ```
+
+  {{site.data.alerts.note}}
+
+  `kubectl top` uses kubernetes metrics API. [metrics server](https://github.com/kubernetes-sigs/metrics-server)need to be installed, which by default is installed in K3S
+
+  {{site.data.alerts.end}}
+
+## How to run curl in Kubernetes (for troubleshooting)
+
+Run curl commands against any POD or service endpoint, running a new pod containing using a utility image containing `curl` command.
+
+Example use [official `curl` docker image](https://hub.docker.com/r/curlimages/curl) which support multiarch (amd64 and arm64)
+
+```
+kubectl run -it --rm --image=curlimages/curl curly -- sh
+```
+
+{{site.data.alerts.note}}
+
+`busybox` image is another useful POD for troubleshooting, but it does not contain `curl` commad (it contains `wget`)
+
+{{site.data.alerts.end}}
+
+
 ## Patching Helm manifest files on the fly using Kustomize
 
 Helm provides the possibility of manipulate, configure, and/or validate rendered manifests before they are installed by Helm: [`--post-rendering` option](https://helm.sh/docs/topics/advanced/#post-rendering). This enables the use of [`kustomize`](https://kustomize.io/) to apply configuration changes without the need to fork a public chart or requiring chart maintainers to specify every last configuration option for a piece of software.

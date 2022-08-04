@@ -4,20 +4,21 @@ layout: default
 
 <div class="fluid-container">
     <div class="row">
-
-        <div class="post-nav col-md-3">
-            <div class="well">
-                <h4>Recent News</h4>
-                <ul class="list-unstyled post-list-container nav nav-pills flex-column">
-                    {% for post in site.posts limit:10 %}
-                    <li class="nav-item"><a class="nav-link" href="{{ post.url | relative_url }}" {% if page.title==post.title %} class="active" {% endif %}>{{ post.title }}</a></li>
-                    {% endfor %}
-                    <li class="nav-item"><a class="nav-link" href="{{ "/allposts" | relative_url }}">All news ...</a></li>
-                </ul>
+        <div class="post-nav col-2 collapse d-lg-block">
+            <div class="flex-shrink-0 p-3">
+                <span class="docs-nav-title fs-5 fw-semibold pb-3 mb-3 text-decoration-none border-bottom">Recent News</span>
+                <li class="mb-1">
+                    <ul class="list-unstyled post-list-container nav nav-pills flex-column fw-normal pb-1 small">
+                        {% for post in site.posts limit:10 %}
+                        <li class="nav-item"><a class="nav-link" href="{{ post.url | relative_url }}" {% if page.title==post.title %} class="active" {% endif %}>{{ post.title }}</a></li>
+                        {% endfor %}
+                        <li class="nav-item"><a class="nav-link" href="{{ "/allposts" | relative_url }}">All news ...</a></li>
+                    </ul>
+                </li>
             </div>
         </div>
 
-        <div class="post-content col-md-9">
+        <div class="post-content col" data-bs-spy="scroll" data-bs-target="#navdoc-toc" data-bs-offset="0" tabindex="0">
             <h1>{{ page.title }}</h1>
             <p>{{ page.date | date: "%b %-d, %Y" }}{% if page.author %} • {{ page.author }}{% endif %}{% if page.meta %} • {{ page.meta }}{% endif %}</p>
             <div  id="markdown-content-container">{{ content }}</div>
@@ -37,6 +38,9 @@ layout: default
                 </li>
                 {% endif %}
             </ul>
+        </div>
+        <div class="docs-toc col-2 collapse d-lg-block" id="navdoc-toc">
+            {% include docs_toc.html %}
         </div>
 
     </div>

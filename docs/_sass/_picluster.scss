@@ -203,7 +203,7 @@ html {
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
-.docs-content::-webkit-scrollbar, .docs-nav::-webkit-scrollbar, .docs-toc::-webkit-scrollbar {
+.docs-content::-webkit-scrollbar, .docs-nav::-webkit-scrollbar, .docs-toc::-webkit-scrollbar, .post-content::-webkit-scrollbar {
   display: none;
 }
 
@@ -223,6 +223,12 @@ html {
 
 // Post-layout: Content
 .post-content {
+
+  position: relative;
+  height: calc(100vh - 7rem);
+  margin-top: 0.5rem;
+  overflow-y: scroll;
+  margin-left: 0.5rem;
   // Default settings for images
   img {
     max-width: 80%;
@@ -238,5 +244,36 @@ html {
   height: calc(100vh - 7rem);
   nav {
     font-size:.875rem;
+    box-shadow: none;
+    ul {
+      padding-left:0;
+      list-style:none;
+      ul  {
+        padding-left:1rem;
+        // margin-top:.25rem;
+      }
+    }
+    li {
+      // margin-bottom:.25rem;
+    }
+    a {
+      color:inherit;
+      code { 
+        font:inherit;
+      }
+    }
+    a:not(:hover) {
+      text-decoration:none
+    }
+    a:active {
+      font-weight: bold;
+      text-decoration: underline;
+    }
   }
+  .docs-nav-title {
+    color: white;
+  }
+  .nav-pills .nav-link.active {
+    background-color: $gray-600;
+  }  
 }

@@ -2,11 +2,11 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "25-02-2022"
+last_modified_at: "27-07-2022"
 ---
 
 
-K3S is a lightweight kubernetes built for IoT and edge computing, provided by the company Rancher. The following picture shows the K3S architecture
+K3S is a lightweight kubernetes built for IoT and edge computing, provided by the company Rancher. The following picture shows the K3S architecture (source [K3S](https://k3s.io/)).
 
 ![K3S Architecture](/assets/img/how-it-works-k3s-revised.svg)
 
@@ -50,12 +50,42 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
 
 ## Master installation (node1)
 
-- Step 1: Installing K3S control plane node
+- Step 1: Prepare K3S kubelet configuration file
+
+  Create file `/etc/rancher/k3s/kubelet.config`
+
+  ```yml
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+  ```
+
+  This kubelet configuration enables new kubernetes feature [Graceful node shutdown](https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/). This feature is available since Kuberentes 1.21, it is still in beta status, and it ensures that pods follow the normal [pod termination process](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) during the node shutdown.
+
+  See further details in ["Kuberentes documentation: Graceful-shutdown"](https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown).
+
+
+  {{site.data.alerts.note}}
+
+  After installation, we will see that `kubelet` (k3s-server proccess) has taken [systemd's inhibitor lock](https://www.freedesktop.org/wiki/Software/systemd/inhibit/), which is the mechanism used by Kubernetes to implement the gracefully shutdown the pods.
+
+    ```shell  
+    sudo systemd-inhibit --list
+    WHO                          UID USER PID  COMM            WHAT     WHY                                                       MODE 
+    ModemManager                 0   root 728  ModemManager    sleep    ModemManager needs to reset devices                       delay
+    Unattended Upgrades Shutdown 0   root 767  unattended-upgr shutdown Stop ongoing upgrades or perform upgrades before shutdown delay
+    kubelet                      0   root 4474 k3s-server      shutdown Kubelet needs time to handle node shutdown                delay
+    ```
+
+  {{site.data.alerts.end}}
+
+- Step 2: Installing K3S control plane node
 
     For installing the master node execute the following command:
 
     ```shell
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-controller-manager-arg 'address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kube-scheduler-arg 'address=0.0.0.0'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
     ```
     Where:
     - `server_token` is shared secret within the cluster for allowing connection of worker nodes
@@ -63,7 +93,9 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
     - `--node-taint 'node-role.kubernetes.io/master=true:NoSchedule'` makes master node not schedulable to run any pod. Only pods marked with specific tolerance will be scheduled on master node. 
     - `--disable servicelb` to disable default service load balancer installed by K3S (Klipper Load Balancer)
     - `--kube-controller-manager.arg`, `--kube-scheduler-arg` and `--kube-proxy-arg` to bind those components not only to 127.0.0.1 and enable metrics scraping from a external node.
-    
+    - `--kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'` provides kubelet configuraion parameters. See [Kubernetes Doc: Kubelet Config File](https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/) 
+
+
     <br>
     
     {{site.data.alerts.important}}
@@ -79,11 +111,11 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
     See this [K3S PR](https://github.com/k3s-io/k3s/pull/1275) where this feature was introduced.  
     {{site.data.alerts.end}}
 
-- Step 2: Install Helm utility
+- Step 3: Install Helm utility
 
     Kubectl is installed as part of the k3s server installation (`/usr/local/bin/kubectl`), but helm need to be installed following this [instructions](https://helm.sh/docs/intro/install/).
 
-- Step 3: Copy k3s configuration file to Kubernets default directory (`$HOME/.kube/config`), so `kubectl` and `helm` utilities can find the way to connect to the cluster.
+- Step 4: Copy k3s configuration file to Kubernets default directory (`$HOME/.kube/config`), so `kubectl` and `helm` utilities can find the way to connect to the cluster.
 
    ```shell
    mkdir $HOME/.kube
@@ -92,21 +124,35 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
 
 ## Workers installation (node2-node4)
 
-- Step 1: Installing K3S worker node
+
+- Step 1: Prepare K3S kubelet configuration file
+
+  Create file `/etc/rancher/k3s/kubelet.config`
+
+  ```yml
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+  ```
+
+- Step 2: Installing K3S worker node
 
   For installing the master node execute the following command:
 
   ```shell
-  curl -sfL https://get.k3s.io | K3S_URL='https://<k3s_master_ip>:6443' K3S_TOKEN=<server_token> sh -s - --node-label 'node_type=worker'
+  curl -sfL https://get.k3s.io | K3S_URL='https://<k3s_master_ip>:6443' K3S_TOKEN=<server_token> sh -s - --node-label 'node_type=worker --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config''
   ```
   Where:
   - `server_token` is shared secret within the cluster for allowing connection of worker nodes
   - `k3s_master_ip` is the k3s master node ip
   - `--node-label 'node_type=worker'` add a custom label `node_type` to the worker node.
+   - `--kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'` provides kubelet configuraion parameters. See [Kubernetes Doc: Kubelet Config File](https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/) 
+
 
   <br>
  
-- Step 2: Specify role label for worker nodes
+- Step 3: Specify role label for worker nodes
 
   From master node (`node1`) assign a role label to worker nodes, so when executing `kubectl get nodes` command ROLE column show worker role for workers nodes.
 

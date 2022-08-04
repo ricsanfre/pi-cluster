@@ -102,7 +102,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: fluentd
-          image: "{{ efk_fluentd_image }}"
+          image: "{{ efk_fluentd_daemonset_image }}"
           env:
             # Elastic operator creates elastic service name with format cluster_name-es-http
             - name: FLUENT_ELASTICSEARCH_HOST

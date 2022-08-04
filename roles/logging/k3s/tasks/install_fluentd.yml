@@ -1,0 +1,43 @@
+---
+
+- name: Create fluentd certificate and forwarder shared key
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - fluentd_certificate.yml.j2
+
+- name: Wait for certificate
+  shell: |
+    while ! kubectl get secret fluentd-tls --namespace {{ k3s_logging_namespace }}
+    do echo "Waiting for my secret. CTRL-C to exit."
+    sleep 1
+    done
+  changed_when: false
+
+- name: Add fluent chart repo.
+  kubernetes.core.helm_repository:
+    name: fluent
+    repo_url: "https://fluent.github.io/helm-charts"
+
+- name: Deploy fluentd Helm chart.
+  kubernetes.core.helm:
+    name: fluentd
+    chart_ref: fluent/fluentd
+    release_namespace: "{{ k3s_logging_namespace }}"
+    update_repo_cache: true
+    state: present
+    values: "{{ lookup('template', 'templates/fluentd_aggregator_helm_values.yml.j2') | from_yaml }}"
+
+- name: Create fluentd external service
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - fluentd_service_ext.yml.j2
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=fluentd --namespace={{ k3s_logging_namespace }} --timeout=600s"
+  register: fluentbit_pods_ready
+  changed_when: false

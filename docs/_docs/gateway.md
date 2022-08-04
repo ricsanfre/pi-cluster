@@ -286,19 +286,52 @@ As a modular example:
   chain forward {
       # 000 policy
           type filter hook forward priority 0; policy drop;
-        # 005 global
-          jump global
-        # 200 lan to wan tcp
-          iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept ct state new accept
-        # 210 wan to lan udp
-          iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
-        # 220 ssh from wan
-          iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
-        # 230 http from wan
-          iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
-    }
+      # 005 global
+        jump global
+      # 200 lan to wan tcp
+        iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept ct state new accept
+      # 210 lan to wan udp
+        iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
+      # 220 ssh from wan
+        iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
+      # 230 http from wan
+        iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
 
+    }
   ```
+  
+  These forwarding rules enables:
+
+  - Outgoing traffic (from the cluster): all tcp/udp traffic is allowed.
+  - Incoming traffic (to the cluster): only the following traffic is allowed:
+    - SSH
+    - HTTP and HTTPS on standard ports (TCP 80 and 443).
+
+
+  {{site.data.alerts.note}}
+
+  Additional rules can be configured to enable the traffic to different services running in the cluster. For example:
+
+  - To access to Minio console running on **node1**, the following rule need to be added.
+
+    ```
+    # 240 s3 from wan
+    iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport {9091, 9092} ct state new accept
+    ```
+
+  - To access kubernetes port-forwarding feature from my laptop connected to home network, the following rule need to be enable:
+    ```
+    # 250 port-forwarding from wan
+    iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport 8080 ct state new accept
+    ``` 
+    
+    This rule enables incoming traffic to node1 in port 8080 which can be used to configure port-forward feature to access to any service.
+
+    ```shell
+    kubectl port-forward svc/[service-name] -n [namespace] [external-port]:[internal-port] --addess 0.0.0.0
+    ```
+
+  {{site.data.alerts.end}}
 
 - NAT pre-routing rules
 
@@ -465,9 +498,23 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   host-record=ntp.picluster.ricsanfre.com,10.0.0.1
   # DNS Server
   host-record=dns.picluster.ricsanfre.com,10.0.0.1
-  # S3 Server
-  host-record=s3.picluster.ricsanfre.com,10.0.0.11
   ```
+
+  {{site.data.alerts.note}}
+
+  Additional DNS records can be added for the different services exposed by the cluster. For example:
+
+  - S3 service DNS name pointing to `node1`
+    ```
+    # S3 Server
+    host-record=s3.picluster.ricsanfre.com,10.0.0.11
+    ```
+  - Grafana DNS service pointing to Ingress Controller IP address (from MetaLB pool)
+    ```
+    # Grafana
+    host-record=grafana.picluster.ricsanfre.com,10.0.0.100
+    ```
+  {{site.data.alerts.end}}
 
 - Step 3. Restart dnsmasq service
 
@@ -514,7 +561,7 @@ DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are 
    
    ```shell
    sudo dhclient -r <interface>
-  ```
+   ```
 	
 4. Obtain a new DHCP lease
 
@@ -526,9 +573,9 @@ DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are 
 
 Ubuntu 20.04 comes with systemd-resolved service that provides a DNS stub resolver on Ubuntu 20.04. A stub resolver is a small DNS client running on the server that provides network name resolution to local applications and implements a DNS caching.
 
-The DNS servers contacted are determined from the global settings in /etc/systemd/resolved.conf, the per-link static settings in /etc/systemd/network/*.network files, the per-link dynamic settings received over DHCP, information provided via resolvectl(1), and any DNS server information made available by other system services.
+The DNS servers contacted are determined from the global settings in /etc/systemd/resolved.conf, the per-link static settings in `/etc/systemd/network/*.network` files, the per-link dynamic settings received over DHCP, information provided via resolvectl(1), and any DNS server information made available by other system services.
 
-All nodes of the cluster will receive the configuration of the DNS server in the cluster (dnsmasq running in `gateway` node) from DHCP. But `gateway` node need to be configured to use local dnsmaq service instead of the default DNS servers  received by the DCHP connection to my home network (my home network configuration)
+All nodes of the cluster will receive the configuration of the DNS server in the cluster (dnsmasq running in `gateway` node) from DHCP. But `gateway` node need to be configured to use local dnsmaq service instead of the default DNS servers  received by the DCHP connection to my home network (my home network configuration).
 
 To check the name server used by the local resolver run:
 

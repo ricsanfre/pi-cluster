@@ -2,7 +2,7 @@
 title: K3S Networking
 permalink: /docs/k3s-networking/
 description: How to configure K3S networking inour Raspberry Pi Kubernetes cluster. How to disable default K3s load balancer and configure Metal LB.
-last_modified_at: "25-02-2022"
+last_modified_at: "21-07-2022"
 ---
 
 {{site.data.alerts.note}}
@@ -157,27 +157,53 @@ Installation using `Helm` (Release 3):
     kubectl create namespace metallb-system
     ```
 
-- Step 4. Create `values.yml` for configuring the installation. Metallb protocol specification and external ip address pool allocation
-
-    ```yml
-    configInline:
-      address-pools:
-        - name: default
-            protocol: layer2
-            addresses:
-              - 10.0.0.100-10.0.0.200
-    ```
-
-- Step 5: Install Metallb in the metallb-system namespace.
+- Step 4: Install Metallb in the metallb-system namespace.
 
     ```shell
-    helm install metallb metallb/metallb --namespace metallb-system -f values.yml
+    helm install metallb metallb/metallb --namespace metallb-system
     ```
-- Step 6: Confirm that the deployment succeeded, run:
+  
+  
+- Step 5: Confirm that the deployment succeeded, run:
 
     ```shell
     kubectl -n metallb-system get pod
     ```
+
+- Step 6: Configure IP addess pool and the announcement method (L2 configuration)
+
+  Create the following manifest file: `metallb-config.yaml`
+    ```yml
+    ---
+    # Metallb address pool
+    apiVersion: metallb.io/v1beta1
+    kind: IPAddressPool
+    metadata:
+      name: picluster-pool
+      namespace: metallb-system
+    spec:
+      addresses:
+      - 10.0.0.100-10.0.0.200
+
+    ---
+    # L2 configuration
+    apiVersion: metallb.io/v1beta1
+    kind: L2Advertisement
+    metadata:
+      name: example
+      namespace: metallb-system
+    spec:
+      ipAddressPools:
+      - picluster-pool
+
+    ```
+   
+   Apply the manifest file
+
+   ```shell
+   kubectl apply -f metallb-config.yaml
+   ```
+
     After a while, metallb is deployed and traefik LoadBalancer service gets its externa-ip from the configured pool and is accessible from outside the cluster
 
     ```shell
@@ -188,3 +214,19 @@ Installation using `Helm` (Release 3):
     kube-system   metrics-server   ClusterIP      10.43.169.140   <none>        443/TCP                      63m
     kube-system   traefik          LoadBalancer   10.43.50.56     10.0.0.100    80:30582/TCP,443:30123/TCP   60m
     ```
+{{site.data.alerts.important}}
+
+  In previous chart releases there was a way to configure MetallB in deployment time providing the following values.yaml:
+  
+  ```yml
+    configInline:
+      address-pools:
+        - name: default
+            protocol: layer2
+            addresses:
+              - 10.0.0.100-10.0.0.200
+  ```
+  Helm chart `configInline` in `values.yaml` has been deprecated since MetalLB 0.13.
+  Configuration must be done creating the corresponding MetalLB Kubernets CRD (`IPAddressPool` and `L2Advertisement`). See [MetalLB configuration documentation](https://metallb.universe.tf/configuration/).
+
+{{site.data.alerts.end}}

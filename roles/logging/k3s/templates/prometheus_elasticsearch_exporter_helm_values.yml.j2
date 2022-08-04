@@ -1,0 +1,15 @@
+---
+
+# Elastic search user
+env:
+  ES_USERNAME: elastic
+
+# Elastic search passord from secret
+extraEnvSecrets:
+  ES_PASSWORD:
+    secret: {{ efk_cluster_name }}-es-elastic-user
+    key: elastic
+
+# Elastic search URI
+es:
+  uri: http://{{ efk_cluster_name }}-es-http:9200

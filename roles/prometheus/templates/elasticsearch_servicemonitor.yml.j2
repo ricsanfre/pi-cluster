@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: prometheus-elasticsearch-exporter
+    release: kube-prometheus-stack
+  name: elasticsearch-prometheus-servicemonitor
+  namespace: {{ k3s_monitoring_namespace }}
+spec:
+  endpoints:
+    - port: http
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - {{ k3s_logging_namespace }}
+  selector:
+    matchLabels:
+      app: prometheus-elasticsearch-exporter

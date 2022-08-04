@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to use Ansible to automate the deployment and configuration. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "05-04-2022"
+last_modified_at: "24-07-2022"
 ---
 
 
@@ -12,7 +12,7 @@ The scope of this project is to create a kubernetes cluster at home using **Rasp
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
 
-As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) centralized monitoring tool, [Prometheus](https://prometheus.io/) 3) centralized log management, EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/), 3) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/) and 4) service mesh architecture, [Linkerd](https://linkerd.io/)
+As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://ks3.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) centralized monitoring tool, [Prometheus](https://prometheus.io/), 3) centralized log management, EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/), 4) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), and 5) service mesh architecture, [Linkerd](https://linkerd.io/)
 
 
 The following picture shows the set of opensource solutions used for building this cluster:
@@ -94,23 +94,30 @@ The software used and the latest version tested of each component
 | OS | Ubuntu | 20.04.3 | OS need to be tweaked for Raspberry PI when booting from external USB  |
 | Control | Ansible | 2.12.1  | |
 | Control | cloud-init | 21.4 | version pre-integrated into Ubuntu 20.04 |
-| Kubernetes | K3S | v1.22.7 | K3S version|
+| Kubernetes | K3S | v1.24.3 | K3S version|
 | Kubernetes | Helm | v3.6.3 ||
-| Computing | containerd | v1.5.9-k3s1 | version pre-integrated into K3S |
-| Networking | Flannel | v0.16.13 | version pre-integrated into K3S |
-| Networking | CoreDNS | v1.8.6 | version pre-integrated into K3S |
-| Networking | Metal LB | v0.12.1 | Helm chart version:  metallb-0.12.1 |
-| Service Mesh | Linkerd | v2.11.2 | Helm chart version: linkerd2-2.11.2 |
-| Service Proxy | Traefik | v2.6.1 | Helm chart: traefik-10.14.100 version pre-integrated into K3S |
-| Storage | Longhorn | v1.2.4 | Helm chart version: longhorn-1.2.4 |
-| SSL Certificates | Certmanager | v1.8 | Helm chart version: cert-manager-v1.8  |
-| Logging | ECK Operator |  2.1.0 | Helm chart version: eck-operator-2.1.0 |
+| Metrics | Kubernetes Metrics Server | v0.5.2 | version pre-integrated into K3S |
+| Computing | containerd | v1.5.13-k3s1 | version pre-integrated into K3S |
+| Networking | Flannel | v0.18.1 | version pre-integrated into K3S |
+| Networking | CoreDNS | v1.9.1 | version pre-integrated into K3S |
+| Networking | Metal LB | v0.13.4 | Helm chart version:  metallb-0.13.4 |
+| Service Mesh | Linkerd | v2.11.4 | Helm chart version: linkerd2-2.11.4 |
+| Service Proxy | Traefik | v2.6.2 | Helm chart: traefik-10.14.100 version pre-integrated into K3S |
+| Storage | Longhorn | v1.3.0 | Helm chart version: longhorn-1.3.0 |
+| SSL Certificates | Certmanager | v1.9.1 | Helm chart version: cert-manager-v1.9.1  |
+| Logging | ECK Operator |  2.3.0 | Helm chart version: eck-operator-2.3.0 |
 | Logging | Elastic Search | 8.1.2 | Deployed with ECK Operator |
 | Logging | Kibana | 8.1.2 | Deployed with ECK Operator |
-| Logging | Fluentbit | 1.8.15 | Helm chart version: fluent-bit-0.19.23 |
-| Monitoring | Kube Prometheus Stack | 0.56.0 | Helm chart version: kube-prometheus-stack-35.0.3 |
+| Logging | Fluentbit | 1.9.6 | Helm chart version: fluent-bit-0.20.4 |
+| Logging | Fluentd | 1.14 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.14|
+| Monitoring | Kube Prometheus Stack | 0.58.0 | Helm chart version: kube-prometheus-stack-39.1.0 |
+| Monitoring | Prometheus Operator | 0.58.0 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-39.1.0   |
+| Monitoring | Prometheus | 2.37 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-39.1.0 |
+| Monitoring | AlertManager | 0.24 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-39.1.0 |
+| Monitoring | Grafana | 9.0.4 | Helm chart version grafana-6.32.9. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.1.0 |
+| Monitoring | Prometheus Node Exporter | 1.3.1 | Helm chart version: prometheus-node-exporter-3.3.1. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.1.0 |
+| Monitoring | Prometheus Elasticsearch Exporter | 1.3.0 | Helm chart version: prometheus-elasticsearch-exporter-4.13.0 |
 | Backup | Minio | RELEASE.2022-05-04T07-45-27Z | |
 | Backup | Restic | 0.12.1 | |
-| Backup | Velero | 1.8.1 | Helm chart version: velero-2.29.4 |
-
+| Backup | Velero | 1.9.0 | Helm chart version: velero-2.30.1 |
 {: .table }

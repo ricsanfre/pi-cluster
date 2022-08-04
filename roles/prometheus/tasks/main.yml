@@ -37,13 +37,14 @@
   register: prometheus_pods_ready
   changed_when: false
 
-- name: Create metrics services (K3s and Minio)
+- name: Create metrics services (K3s, Minio an External Nodes)
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
     - k3s_service_metrics.yml.j2
     - minio_service_metrics.yml.j2
+    - external_node_service_metrics.yml.j2
 
 - name: Generate minio prometheus bearer token
   include_tasks: tasks/create_minio_bearer_token.yml
@@ -71,6 +72,9 @@
     - k3s_servicemonitor.yml.j2
     - velero_servicemonitor.yml.j2
     - minio_servicemonitor.yml.j2
+    - fluentbit_servicemonitor.yml.j2
+    - fluentd_servicemonitor.yml.j2
+    - elasticsearch_servicemonitor.yml.j2
 
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml

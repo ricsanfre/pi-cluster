@@ -1,0 +1,206 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+  namespace: "{{ k3s_logging_namespace }}"
+data:
+  fluent.conf: |-
+    # Collect logs from forwarders
+    <source>
+      @type forward
+      bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
+      port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+      # Enabling TLS
+      <transport tls>
+          cert_path /fluentd/certs/tls.crt
+          private_key_path /fluentd/certs/tls.key
+      </transport>
+      # Enabling access security
+      <security>
+        self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+        shared_key "#{ENV['FLUENTD_FORWARD_SEC_SHARED_KEY'] || 'sharedkey'}"
+      </security>
+    </source>
+    # Prometheus metric exposed on 0.0.0.0:24231/metrics
+    <source>
+      @type prometheus
+      @id in_prometheus
+      bind "#{ENV['FLUENTD_PROMETHEUS_BIND'] || '0.0.0.0'}"
+      port "#{ENV['FLUENTD_PROMETHEUS_PORT'] || '24231'}"
+      metrics_path "#{ENV['FLUENTD_PROMETHEUS_PATH'] || '/metrics'}"
+    </source>
+
+    <source>
+      @type prometheus_output_monitor
+      @id in_prometheus_output_monitor
+    </source>
+
+    <filter kube.**>
+      @type record_transformer
+      enable_ruby true
+      remove_keys log_processed
+      <record>
+        source_log.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+      </record>
+    </filter>
+
+    # Send received logs to elasticsearch
+    <match **>
+       @type elasticsearch
+       @id out_es
+       @log_level info
+       include_tag_key true
+       host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+       port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+       path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
+       scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
+       ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
+       ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+       user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
+       password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
+       reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
+       reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
+       reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
+       log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
+       logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
+       logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
+       logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
+       index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
+       target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
+       type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
+       include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
+       template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
+       template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
+       template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
+       sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
+       request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
+       application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
+       suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
+       enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
+       ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
+       ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
+       ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
+       <buffer>
+         flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+         flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
+         chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
+         queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+         retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+         retry_forever true
+       </buffer>
+    </match>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: fluentd
+  name: fluentd
+  namespace: "{{ k3s_logging_namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+      - image: "{{ efk_fluentd_aggregator_image }}"
+        imagePullPolicy: Always
+        name: fluentd
+        env:
+          # Elastic operator creates elastic service name with format cluster_name-es-http
+          - name:  FLUENT_ELASTICSEARCH_HOST
+            value: efk-es-http
+            # Default elasticsearch default port
+          - name:  FLUENT_ELASTICSEARCH_PORT
+            value: "9200"
+          # Elasticsearch user
+          - name: FLUENT_ELASTICSEARCH_USER
+            value: "elastic"
+          # Elastic operator stores elastic user password in a secret
+          - name: FLUENT_ELASTICSEARCH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "efk-es-elastic-user"
+                key: elastic
+          # Setting a index-prefix for fluentd. By default index is logstash
+          - name:  FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
+            value: fluentd
+          - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
+            value: "true"
+          # Fluentd forward security
+          - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+            valueFrom:
+              secretKeyRef:
+                name: fluentd-shared-key
+                key: fluentd-shared-key
+        ports:
+        - containerPort: 24224
+          name: forward
+          protocol: TCP
+        - containerPort: 24231
+          name: prometheus
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /fluentd/etc
+          name: config
+          readOnly: true
+        - mountPath: /fluentd/certs
+          name: fluentd-tls
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          defaultMode: 420
+          name: fluentd-config
+      - name: fluentd-tls
+        secret:
+          secretName: fluentd-tls
+---
+# Internal Service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: fluentd
+  name: fluentd
+  namespace: "{{ k3s_logging_namespace }}"
+spec:
+  ports:
+  - name: forward
+    port: 24224
+    protocol: TCP
+    targetPort: forward
+  - name: prometheus
+    port: 24231
+    protocol: TCP
+    targetPort: prometheus
+  selector:
+    app: fluentd
+  sessionAffinity: None
+  type: ClusterIP
+---
+#External Service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: fluentd
+  name: fluentd-ext
+  namespace: "{{ k3s_logging_namespace }}"
+spec:
+  ports:
+  - name: forward-ext
+    port: 24224
+    protocol: TCP
+    targetPort: forward
+  selector:
+    app: fluentd
+  sessionAffinity: None
+  type: LoadBalancer
+  loadBalancerIP: {{ k3s_fluentd_external_ip }}

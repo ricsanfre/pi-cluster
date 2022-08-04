@@ -17,7 +17,7 @@ roles:
   - name: ricsanfre.k8s_cli
     version: v1.0.0
   - name: ricsanfre.fluentbit
-    version: v1.0.3
+    version: v1.0.4
   - name: ricsanfre.minio
     version: v1.0.7
   - name: ricsanfre.backup

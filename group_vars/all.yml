@@ -23,6 +23,7 @@ grafana_dashboard_dns: "grafana.{{ dns_domain }}"
 prometheus_dashboard_dns: "prometheus.{{ dns_domain }}"
 alertmanager_dashboard_dns: "alertmanager.{{ dns_domain }}"
 elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
+fluentd_dns: "fluentd.{{ dns_domain }}"
 linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
 
 #######################

@@ -3,51 +3,47 @@
 # fluentbit configuration
 ##########################
 
-
 # Fluentbit_inputs
-fluentbit_inputs:
-  - Name: tail
-    Tag: auth
-    Path: /var/log/auth.log
-    Path_key: log_file
-    DB: /run/fluent-bit-auth.state
-    Parser: syslog-rfc3164-nopri
-  - Name: tail
-    Tag: syslog
-    Path: /var/log/syslog
-    Path_key: log_file
-    DB: /run/fluent-bit-syslog.state
-    Parser: syslog-rfc3164-nopri
-
+fluentbit_inputs: |
+  [INPUT]
+      Name tail
+      Tag host.*
+      DB /run/fluentbit-state.db
+      Path /var/log/auth.log,/var/log/syslog
+      Parser syslog-rfc3164-nopri
+  [INPUT]
+      name node_exporter_metrics
+      tag node_metrics
+      scrape_interval 30
 # Fluentbit_filters
-fluentbit_filters:
-  - name: lua
-    match: "*"
-    script: /etc/td-agent-bit/adjust_ts.lua
-    call: local_timestamp_to_UTC
-
+fluentbit_filters: |
+  [FILTER]
+      Name lua
+      Match host.*
+      script /etc/fluent-bit/adjust_ts.lua
+      call local_timestamp_to_UTC
 # Fluentbit Elasticsearch output
-fluentbit_outputs:
-  - Name: es
-    match: "*"
-    Host: "{{ elasticsearch_dns }}"
-    Port: 443
-    Logstash_Format: true
-    Logstash_Prefix: logstash
-    Include_Tag_Key: true
-    Tag_Key: tag
-    Suppress_Type_Name: true
-    HTTP_User: elastic
-    HTTP_Passwd: s1cret0
-    tls: true
-    tls.verify: false
-    Retry_Limit: false
+fluentbit_outputs: |
+  [OUTPUT]
+      Name forward
+      Match *
+      Host {{ fluentd_dns }}
+      Port 24224
+      Self_Hostname {{ ansible_hostname }}
+      Shared_Key s1cret0
+      tls true
+      tls.verify false
+  [OUTPUT]
+      name prometheus_exporter
+      match node_metrics
+      host 0.0.0.0
+      port 9100
 # Fluentbit custom parsers
-fluentbit_custom_parsers:
-  - Name: syslog-rfc3164-nopri
-    Format: regex
-    Regex: /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
-    Time_Key: time
-    Time_Format: "%b %d %H:%M:%S"
-    Time_Keep: false  # Remove duplicated time field, avoid elasticsearh processing error
-#    Time_Offset: "+0200"  # Add TimeZone UTC offset
+fluentbit_custom_parsers: |
+  [PARSER]
+      Name syslog-rfc3164-nopri
+      Format regex
+      Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+      Time_Key time
+      Time_Format %b %d %H:%M:%S
+      Time_Keep False

@@ -21,18 +21,29 @@ k3s_master_ip: 10.0.0.11
 # k3s shared token
 k3s_token: s1cret0
 
+# k3s config directory
+k3s_config_directory: /etc/rancher/k3s
+
+# kubelet configuration
+k3s_kubelet_config: |
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+
 # Extra arguments for k3s installation scripts
 k3s_server_extra_args: >-
   --write-kubeconfig-mode '0644'
   --disable 'servicelb'
   --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
   --kube-controller-manager-arg 'bind-address=0.0.0.0'
-  --kube-controller-manager-arg 'address=0.0.0.0'
   --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
   --kube-scheduler-arg 'bind-address=0.0.0.0'
-  --kube-scheduler-arg 'address=0.0.0.0'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
 
-k3s_worker_extra_args: "--node-label 'node_type=worker'"
+k3s_worker_extra_args: >-
+  --node-label 'node_type=worker'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
 
 # Namespaces
 k3s_metallb_namespace: metallb-system
@@ -50,8 +61,8 @@ k3s_linkerd_viz_namespace: linkerd-viz
 k3s_external_ip_range: "10.0.0.100-10.0.0.200"
 # External IP for Kubernets Ingress
 k3s_ingress_external_ip: 10.0.0.100
-# External IP for elasticsearch
-k3s_elasticsearch_external_ip: 10.0.0.101
+# External IP for fluentd
+k3s_fluentd_external_ip: 10.0.0.101
 
 # Traefik configuration
 # HTTP Basic auth credentials

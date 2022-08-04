@@ -22,11 +22,15 @@
   - traefik
   - certmanager
   - longhorn
-- title: Cluster Monitoring
+- title: Log Management
   docs:
   - logging
+  - elasticsearch
+  - logging-forwarder-aggregator
+- title: Monitoring
+  docs:
   - prometheus
-- title: Cluster Backup
+- title: Backup
   docs:
   - backup
 - title: Service Mesh
