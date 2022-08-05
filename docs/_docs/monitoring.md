@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "03-08-2022"
+last_modified_at: "05-08-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -38,9 +38,13 @@ Prometheus operator is deployed and it manages Prometheus and AlertManager deplo
 
 More details about Prometheus Operator CRDs can be found in [Prometheus Operator Design Documentation](https://prometheus-operator.dev/docs/operator/design/).
 
+Spec of the different CRDs can be found in [Prometheus Operator API reference guide](https://prometheus-operator.dev/docs/operator/api/)
+
 {{site.data.alerts.end}}
 
 ## Kube-Prometheus Stack installation
+
+### Helm chart installation
 
 Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) maintaind by the community
 
@@ -62,42 +66,42 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 - Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password, list of plugins to be installed and disabling the monitoring of kubernetes components (Scheduler, Controller Manager and Proxy). See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22)
 
   ```yml
-      alertmanager:
-        alertmanagerSpec:
-          storage:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: longhorn
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: 50Gi
-      prometheus:
-        prometheusSpec:
-          storageSpec:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: longhorn
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: 50Gi
-      grafana:
-        # Admin user password
-        adminPassword: "admin_password"
-        # List of grafana plugins to be installed
-        plugins:
-          - grafana-piechart-panel
-      kubeApiServer:
-        enabled: true
-      kubeControllerManager:
-        enabled: false
-      kubeScheduler:
-        enabled: false
-      kubeProxy:
-        enabled: false
-      kubeEtcd:
-        enabled: false
+  alertmanager:
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi
+  prometheus:
+    prometheusSpec:
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi
+  grafana:
+    # Admin user password
+    adminPassword: "admin_password"
+    # List of grafana plugins to be installed
+    plugins:
+      - grafana-piechart-panel
+  kubeApiServer:
+    enabled: true
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeEtcd:
+    enabled: false
   ```
 
 - Step 4: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
@@ -106,94 +110,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
   ```
 
-It creates the following Prometheus CRD
-
-```yml
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  annotations:
-    meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
-  creationTimestamp: "2022-08-01T16:31:56Z"
-  generation: 1
-  labels:
-    app: kube-prometheus-stack-prometheus
-    app.kubernetes.io/instance: kube-prometheus-stack
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 39.2.1
-    chart: kube-prometheus-stack-39.2.1
-    heritage: Helm
-    release: kube-prometheus-stack
-  name: kube-prometheus-stack-prometheus
-  namespace: k3s-monitoring
-  resourceVersion: "37885"
-  uid: 9d915c45-690d-4459-b745-20f0fe8f5a9c
-spec:
-  alerting:
-    alertmanagers:
-    - apiVersion: v2
-      name: kube-prometheus-stack-alertmanager
-      namespace: k3s-monitoring
-      pathPrefix: /
-      port: http-web
-  enableAdminAPI: false
-  evaluationInterval: 30s
-  externalUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring:9090
-  image: quay.io/prometheus/prometheus:v2.37.0
-  listenLocal: false
-  logFormat: logfmt
-  logLevel: info
-  paused: false
-  podMonitorNamespaceSelector: {}
-  podMonitorSelector:
-    matchLabels:
-      release: kube-prometheus-stack
-  portName: http-web
-  probeNamespaceSelector: {}
-  probeSelector:
-    matchLabels:
-      release: kube-prometheus-stack
-  replicas: 1
-  retention: 10d
-  routePrefix: /
-  ruleNamespaceSelector: {}
-  ruleSelector:
-    matchLabels:
-      release: kube-prometheus-stack
-  scrapeInterval: 30s
-  securityContext:
-    fsGroup: 2000
-    runAsGroup: 2000
-    runAsNonRoot: true
-    runAsUser: 1000
-  serviceAccountName: kube-prometheus-stack-prometheus
-  serviceMonitorNamespaceSelector: {}
-  serviceMonitorSelector:
-    matchLabels:
-      release: kube-prometheus-stack
-  shards: 1
-  storage:
-    volumeClaimTemplate:
-      spec:
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5Gi
-        storageClassName: longhorn
-  version: v2.37.0
-```
-
-Important configuration is:
-
--  Which CRDs (PodMonitor, ServiceMonitor and Probe) are applicable to this particular instance of Prometheus services:  `podMonitorSelector`, `serviceMonitorSelector`, and `probeSelector` introduces a defaul filtering rule (Objects must include a label `release: kube-prometheus-stack`)
-- Default scrape interval to be applicable (`scrapeInterval`: 30sg). It can be overwitten in PodMonitor/ServiceMonitor/Probe particular configuration.
-
-
-
-## Ingress resources configuration
+### Ingress resources configuration
 
 Enable external access to Prometheus, Grafana and AlertManager through Ingress Controller
 
@@ -392,7 +309,484 @@ Since prometheus frontend does not provide any authentication mechanism, Traefik
   kubectl apply -f prometheus_ingress.yml grafana_ingress.yml alertmanager_ingress.yml
   ```
 
-## K3S components monitoring
+## What has been deployed by kube-stack?
+
+### Prometheus Operator 
+
+The above installation procedure, deploys Prometheus Operator and creates the following needed Prometheus and AlertManager Objects, which make the operator to deploy the corresponding Prometheus and AlertManager PODs (as StatefulSets).
+
+Note that the final specification can be changed in helm chart values (`prometheus.prometheusSpec` and `alertmanager.alertmanagerSpec`)
+
+#### Prometheus Object
+
+This object contain the desirable configuration of the Prometheus Server
+
+```yml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  annotations:
+    meta.helm.sh/release-name: kube-prometheus-stack
+    meta.helm.sh/release-namespace: k3s-monitoring
+  labels:
+    app: kube-prometheus-stack-prometheus
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 39.2.1
+    chart: kube-prometheus-stack-39.2.1
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-prometheus
+  namespace: k3s-monitoring
+spec:
+  alerting:
+    alertmanagers:
+    - apiVersion: v2
+      name: kube-prometheus-stack-alertmanager
+      namespace: k3s-monitoring
+      pathPrefix: /
+      port: http-web
+  enableAdminAPI: false
+  evaluationInterval: 30s
+  externalUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring:9090
+  image: quay.io/prometheus/prometheus:v2.37.0
+  listenLocal: false
+  logFormat: logfmt
+  logLevel: info
+  paused: false
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  portName: http-web
+  probeNamespaceSelector: {}
+  probeSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  replicas: 1
+  retention: 10d
+  routePrefix: /
+  ruleNamespaceSelector: {}
+  ruleSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  scrapeInterval: 30s
+  securityContext:
+    fsGroup: 2000
+    runAsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: kube-prometheus-stack-prometheus
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector:
+    matchLabels:
+      release: kube-prometheus-stack
+  shards: 1
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: longhorn
+  version: v2.37.0
+```
+
+- Prometheus version and image installed (v2.37.0) (`spec.version` and `spec.image`).
+
+- HA Configuration. Number of shards and replicas per shard (`spec.shards` and `spec.replicas`).
+
+  Prometheus basic HA mechanism is through replication. Two (or more) instances (replicas) need to be running with the same configuration except that they will have one external label with a different value to identify them. The Prometheus instances scrape the same targets and evaluate the same rules.
+ 
+  There is additional HA mechanims, Prometheus' sharding, which splits targets to be scraped into shards and each shard is assigned to a Prometheus server instace (or to a set, number of replicas).
+
+  The main drawback of this sharding solution is that, to query all data, query federation (e.g. Thanos Query) and distributed rule evaluation engine (e.g. Thanos Ruler) should be deployed.
+
+  Number of shards matches the number of StatefulSet objects to be deployed and numner of replicas are the number of PODs of each StatefulSet.
+
+  {{site.data.alerts.note}}
+
+  In my cluster, mainly due to lack of resources, HA mechanism is not configured (only one shard and one replica are specified).
+
+  For details about HA configuration check [Prometheus Operator: High Availability](https://prometheus-operator.dev/docs/operator/high-availability/#prometheus)
+
+  {{site.data.alerts.end}}
+
+- AlertManager server connected to this instance of Prometheus for perfoming the alerting (`spec.alerting.alertManager`). The connection parameters specified by default matches the `AlertManager` object created by kube-prometheus-stack
+
+- Default scrape interval to be applicable (`spec.scrapeInterval`: 30sg). It can be overwitten in PodMonitor/ServiceMonitor/Probe particular configuration.
+
+- Data retention policy (`retention`: 10d)
+
+- Persistent volume specification (`storage:
+    volumeClaimTemplate:`) used by the Statefulset objects deployed. In my case volume claim from Longhorn.
+
+- Rules for filtering the Objects (PodMonitor, ServiceMonitor, Probe and PrometheusRule) that applies to this particular instance of Prometheus services:  `spec.podMonitorSelector`, `spec.serviceMonitorSelector`, `spec.probeSelector`, and `spec.rulesSelector` introduces a filtering rule (Objects must include a label `release: kube-prometheus-stack`).
+
+  The following diagram, from official prometheus operator documentation, shows an example of how the filtering rules are applied. A Deployment and Service called my-app is being monitored by Prometheus based on a ServiceMonitor named my-service-monitor: 
+
+  |![prometheus-operator-crds](/assets/img/prometheus-custom-metrics-elements-1024x555.png) |
+  |:---:|
+  | *[Source](https://prometheus-operator.dev/docs/operator/troubleshooting/#overview-of-servicemonitor-tagging-and-related-elements): Prometheus Operator Documentation* |
+
+#### AlertManager Object
+
+This object contain the desirable configuration of the AlertManager Server
+
+```yml
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  annotations:
+    meta.helm.sh/release-name: kube-prometheus-stack
+    meta.helm.sh/release-namespace: k3s-monitoring
+  labels:
+    app: kube-prometheus-stack-alertmanager
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 39.4.0
+    chart: kube-prometheus-stack-39.4.0
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-alertmanager
+  namespace: k3s-monitoring
+spec:
+  alertmanagerConfigNamespaceSelector: {}
+  alertmanagerConfigSelector: {}
+  externalUrl: http://kube-prometheus-stack-alertmanager.k3s-monitoring:9093
+  image: quay.io/prometheus/alertmanager:v0.24.0
+  listenLocal: false
+  logFormat: logfmt
+  logLevel: info
+  paused: false
+  portName: http-web
+  replicas: 1
+  retention: 120h
+  routePrefix: /
+  securityContext:
+    fsGroup: 2000
+    runAsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: kube-prometheus-stack-alertmanager
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: longhorn
+  version: v0.24.0
+```
+
+- A version and image: v0.24.0 (`spec.version` and `spec.image`)
+
+- HA Configuration. Number of replicas (`spec.shards` and `spec.replicas`).
+
+- Data retention policy (`retention`: 120h)
+
+- Persistent volume specification (`storage:
+    volumeClaimTemplate:`) used by the Statefulset objects deployed. In my case volume claim from Longhorn.
+
+#### ServiceMonitor Objects
+
+`kube-prometheus-stack` creates several ServiceMonitor objects to start scraping metrics from all the components deployed:
+
+- Node Exporter
+- Grafana
+- Kube-State-Metrics
+- Prometheus
+- AlertManager
+- Prometheus Operator
+
+and the following Kubernetes services and processes depending on the configuration of the helm chart
+
+- coreDNS
+- Kube Api server
+- kubelet
+- Kube Controller Manager
+- Kubernetes Scheduler
+- Kubernetes etc
+- Kube Proxy
+
+
+In my chart configuration monitoring of ControllerManager, Scheduler, KubeProxy and Kube etc is disabled. See below section ["K3S components monitoring"](#k3s-components-monitoring)
+
+
+```yml
+  kubeApiServer:
+    enabled: true
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+```
+
+### Grafana
+
+[Grafana helm chart](https://github.com/grafana/helm-charts/tree/main/charts/grafana) is deployed as a subchart of the kube-prometheus-stack helm chart.
+
+Kube-prometheus-stack helm chart `grafana` value is used to pass the configuration to grafana's chart.
+
+In my case, on top of default values.yml, only admin password and specific plugin has been specified. Plugin `grafana-piechart-panel` is needed by Traefik's dashboard, that will be deployed later.
+
+```yml
+grafana:
+  # Admin user password
+  adminPassword: "admin_password"
+  # List of grafana plugins to be installed
+  plugins:
+    - grafana-piechart-panel
+```
+
+#### Provisioning Dashboards automatically
+
+[Grafana dashboards](https://grafana.com/docs/grafana/latest/dashboards/) can be configured through provider definitions (yaml files) located in a provisioning directory (`/etc/grafana/provisioning/dashboards`). This yaml file contains the directory from where dashboards in json format can be loaded. See Grafana Tutorial: [Provision dashboards and data sources](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)
+
+When Grafana is deployed in Kubernetes using the helm chart, dashboards can be automatically provisioned enabling a side car provisioner.
+
+Grafana helm chart creates the following `/etc/grafana/provisioning/dashboard/provider.yml` file, which makes Grafana load all json dashboards from `/tmp/dashboards`
+```
+apiVersion: 1
+providers:
+- name: 'sidecarProvider'
+  orgId: 1
+  folder: ''
+  type: file
+  disableDeletion: false
+  allowUiUpdates: false
+  updateIntervalSeconds: 30
+  options:
+    foldersFromFilesStructure: false
+    path: /tmp/dashboards
+```
+
+With this sidecar provisioner, Grafana dashboards can be provisioned automatically creating ConfigMap resources containing the dashboard json definition. A provisioning sidecar container must be enabled in order to check in real time for those ConfigMaps and automatically copy them to the provisioning directory (`/tmp/dashboards`).
+
+Check out ["Grafana chart documentation: Sidecar for Dashboards"](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
+
+`kube-prometheus-stack` configure by default grafana provisioning sidecar to check only for new ConfigMaps containing label `grafana_dashboard`
+
+This are the default helm chart values configuring the sidecar:
+
+```yml
+grafana:
+  sidecar:
+    dashboards:
+      SCProvider: true
+      annotations: {}
+      defaultFolderName: null
+      enabled: true
+      folder: /tmp/dashboards
+      folderAnnotation: null
+      label: grafana_dashboard
+      labelValue: null
+```
+
+For provision automatically a new dashboard, a new `ConfigMap` resource must be created, labeled with `grafana_dashboard: 1` and containing as `data` the json file content.
+
+```yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample-grafana-dashboard
+  labels:
+     grafana_dashboard: "1"
+data:
+  dashboard.json: |-
+  [json_file_content]
+
+```
+
+Following this procedure kube-prometheus-stack helm chart automatically deploy a set of Dashboards for monitoring metrics coming from Kubernetes processes and from Node Exporter. The list of [kube-prometheus-stack grafana dashboards](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/grafana/dashboards-1.14)
+
+For each dashboard a ConfigMap containing the json definition is created.
+
+You can get all of them running the following command
+
+```shell
+kubectl get cm -l "grafana_dashboard=1" -n k3s-monitoring
+```
+
+{{site.data.alerts.important}}
+
+Most of [Grafana community dashboards available](https://grafana.com/grafana/dashboards/) have been exported from a running Grafana and so they include a input  variable (`DS_PROMETHEUS`) which represent a datasource which is referenced in all dashboard panels (`${DS_PROMETHEUS}`). See details in [Grafana export/import documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/).
+
+When automatic provisioning those exported dashboards following the procedure described above, an error appear when accessing them in the UI:
+
+```
+Datasource named ${DS_PROMETHEUS} was not found
+```
+
+There is an open [Grafana´s issue](https://github.com/grafana/grafana/issues/10786), asking for support of dasboard variables in dashboard provisioning.
+
+As a workarround, json files can be modified before inserting them into ConfigMap yaml file, in order to detect DS_PROMETHEUS datasource. See issue [#18](https://github.com/ricsanfre/pi-cluster/issues/18) for more details
+
+Modify each json file, containing `DS_PROMETHEUS` input variable within `__input` json key, adding the following code to `templating.list` key
+
+```json
+"templating": {
+    "list": [
+      {
+        "hide": 0,
+        "label": "datasource",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+    ...
+```
+{{site.data.alerts.end}}
+
+
+#### Provisioning DataSources automatically
+
+[Grafana datasources](https://grafana.com/docs/grafana/latest/datasources/) can be configured through yml files located in a provisioning directory (`/etc/grafana/provisioning/datasources`). See Grafana Tutorial: [Provision dashboards and data sources](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)
+
+When deploying Grafana in Kubernetes, datasources config files can be imported from ConfigMaps. This is implemented by a sidecar container that copies these ConfigMaps to its provisioning directory.
+
+Check out ["Grafana chart documentation: Sidecar for Datasources"](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-datasources) explaining how to enable/use this init container.
+
+`kube-prometheus-stack` enables by default grafana datasource sidecar to check for new ConfigMaps containing label `grafana_datasource`
+
+```yml
+sidecar:
+  datasources:
+    enabled: true
+    defaultDatasourceEnabled: true
+    uid: prometheus
+    annotations: {}
+    createPrometheusReplicasDatasources: false
+    label: grafana_datasource
+    labelValue: "1"
+    exemplarTraceIdDestinations: {}
+```
+
+and it also creates a ConfigMap containig the datasource matching the label `grafana_datasource`, so it is loaded by the sidecar container into Grafana's provisioning directory.
+
+This is the datasource automatically created by kube-prometheus-stack for connecting Grafana to the Prometheus server. (Datasource Prometheus)
+
+```yml
+apiVersion: v1
+data:
+  datasource.yaml: |-
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      uid: prometheus
+      url: http://kube-prometheus-stack-prometheus.k3s-monitoring:9090/
+      access: proxy
+      isDefault: true
+      jsonData:
+        timeInterval: 30s
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: kube-prometheus-stack
+    meta.helm.sh/release-namespace: k3s-monitoring
+  labels:
+    app: kube-prometheus-stack-grafana
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 39.4.0
+    chart: kube-prometheus-stack-39.4.0
+    grafana_datasource: "1"
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-grafana-datasource
+  namespace: k3s-monitoring
+```
+
+### Prometheus Node Exporter
+
+[Prometheus Node exportet helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter) is deployed as a dependency of the kube-prometheus-stack helm chart.This chart deploys Prometheus Node Exporter in all cluster nodes as daemonset
+
+Kube-prometheus-stack helm chart `prometheus-node-exporter` value is used to pass the configuration to node exporter's chart.
+
+Default [kube-prometheus-stack's values.yml](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml) file contains the following configuration which is not changed in the installation procedure defined above
+
+```yml
+prometheus-node-exporter:
+  namespaceOverride: ""
+  podLabels:
+    ## Add the 'node-exporter' label to be used by serviceMonitor to match standard common usage in rules and grafana dashboards
+    ##
+    jobLabel: node-exporter
+  extraArgs:
+    - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+  service:
+    portName: http-metrics
+  prometheus:
+    monitor:
+      enabled: true
+
+      jobLabel: jobLabel
+
+      ## Scrape interval. If not set, the Prometheus default scrape interval is used.
+      ##
+      interval: ""
+
+      ## How long until a scrape request times out. If not set, the Prometheus default scape timeout is used.
+      ##
+      scrapeTimeout: ""
+
+      ## proxyUrl: URL of a proxy that should be used for scraping.
+      ##
+      proxyUrl: ""
+
+      ## MetricRelabelConfigs to apply to samples after scraping, but before ingestion.
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+      ##
+      metricRelabelings: []
+      # - sourceLabels: [__name__]
+      #   separator: ;
+      #   regex: ^node_mountstats_nfs_(event|operations|transport)_.+
+      #   replacement: $1
+      #   action: drop
+
+      ## RelabelConfigs to apply to samples before scraping
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+      ##
+      relabelings: []
+      # - sourceLabels: [__meta_kubernetes_pod_node_name]
+      #   separator: ;
+      #   regex: ^(.*)$
+      #   targetLabel: nodename
+      #   replacement: $1
+      #   action: replace
+  rbac:
+    ## If true, create PSPs for node-exporter
+    ##
+    pspEnabled: false
+
+```
+
+Default configuration, just exclude from the monitoring several mount points and file types (`extra`) and creates the corresponding ServiceMonitor object to start scrapping metrics from this exporter.
+
+
+### Kube State Metrics
+
+
+## Monitoring K3S components and Services
+
+
+### K3S components monitoring
 
 In order to monitor Kubernetes components (Scheduler, Controller Manager and Proxy), default resources created by kube-prometheus-operator (headless service, service monitor and grafana dashboards) are not valid for monitoring K3S because  K3S is emitting the same metrics on the three end-points, causing prometheus to consume high memory causing worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
 
@@ -469,7 +863,7 @@ In order to monitor Kubernetes components (Scheduler, Controller Manager and Pro
   ```
 - Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
 
-### K3S Grafana dashboards
+#### K3S Grafana dashboards
 
 Kubernetes-controller-manager, kubernetes-proxy and kuberetes-scheduler dashboards can be donwloaded from [grafana.com](https://grafana.com):
 
@@ -477,7 +871,7 @@ Kubernetes-controller-manager, kubernetes-proxy and kuberetes-scheduler dashboar
 - Kube Controller Manager: [dashboard-id 12122](https://grafana.com/grafana/dashboards/12122)
 - Kube Scheduler: [dashboard-id 12130](https://grafana.com/grafana/dashboards/12130)
 
-## Traefik Monitoring
+### Traefik Monitoring
 
 The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Traefik metrics endpoint as a Prometheus target.
 
@@ -517,12 +911,12 @@ Set `label.release` to the value specified for the helm release during Prometheu
 
 - Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
 
-### Traefik Grafana dashboard
+#### Traefik Grafana dashboard
 
 Traefik dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11462](https://grafana.com/grafana/dashboards/11462). This dashboard has as prerequisite to have installed `grafana-piechart-panel` plugin. The list of plugins to be installed can be specified during kube-prometheus-stack helm deployment as values (`grafana.plugins` variable).
 
 
-## Longhorn Monitoring
+### Longhorn Monitoring
 
 As stated by official [documentation](https://longhorn.io/docs/1.2.2/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
 
@@ -566,11 +960,11 @@ Set `label.release` to the value specified for the helm release during Prometheu
 - Check target is automatically discovered in Prometheus UI:`http://prometheus/targets`
 
 
-### Longhorn Grafana dashboard
+#### Longhorn Grafana dashboard
 
 Longhorn dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13032](https://grafana.com/grafana/dashboards/13032).
 
-## Velero Monitoring
+### Velero Monitoring
 
 By default velero helm chart is configured to expose Prometheus metrics in port 8085
 Backend endpoint is already exposing Prometheus metrics.
@@ -663,11 +1057,11 @@ Set `label.release` to the value specified for the helm release during Prometheu
   http://prometheus.picluster.ricsanfre/targets
 
 
-### Velero Grafana dashboard
+#### Velero Grafana dashboard
 
 Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11055](https://grafana.com/grafana/dashboards/11055).
 
-## Minio Monitoring
+### Minio Monitoring
 
 For details see [Minio's documentation: "Collect MinIO Metrics Using Prometheus"](https://docs.min.io/minio/baremetal/monitoring/metrics-alerts/collect-minio-metrics-using-prometheus.html).
 
@@ -782,12 +1176,12 @@ Minio Console Dashboard integration has not been configured, instead a Grafana d
   ```
 - Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
 
-### Minio Grafana dashboard
+#### Minio Grafana dashboard
 
 Minio dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13502](https://grafana.com/grafana/dashboards/13502).
 
 
-## Elasticsearch Monitoring
+### Elasticsearch Monitoring
 
 [prometheus-elasticsearch-exporter](https://github.com/prometheus-community/elasticsearch_exporter) need to be installed in order to have Elastic search metrics in Prometheus format. See documentation ["Prometheus elasticsearh exporter installation"](/docs/elasticsearch/#prometheus-elasticsearh-exporter-installation).
 
@@ -819,13 +1213,13 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         app: prometheus-elasticsearch-exporter
   ```
 
-### Elasticsearch Grafana dashboard
+#### Elasticsearch Grafana dashboard
 
 Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-grafana](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
 
-## Fluentbit/Fluentd Monitoring
+### Fluentbit/Fluentd Monitoring
 
-### Fluentbit Monitoring
+#### Fluentbit Monitoring
 
 Fluentbit, when enabling its HTTP server, it exposes several endpoints to perform monitoring tasks. See details in [Fluentbit monitoring doc](https://docs.fluentbit.io/manual/administration/monitoring).
 
@@ -866,7 +1260,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
 Service monitoring include two endpoints. Fluentbit metrics endpoint (`/api/v1/metrics/prometheus` port TCP 2020) and json-exporter sidecar endpoint (`/probe` port 7979), passing as target parameter fluentbit storage endpoint (`api/v1/storage`)
 
 
-### Fluentd Monitoring
+#### Fluentd Monitoring
 
 In order to monitor Fluentd with Prometheus, `fluent-plugin-prometheus` plugin need to be installed and configured. The custom docker image [fluentd-aggregator](https://github.com/ricsanfre/fluentd-aggregator), I have developed for this project, has this plugin installed.
 
@@ -918,14 +1312,14 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
   ```
 
 
-### Fluentbit/Fluentd Grafana dashboard
+#### Fluentbit/Fluentd Grafana dashboard
 
 Fluentbit dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 7752](https://grafana.com/grafana/dashboards/7752).
 
 This dashboard has been modified to include fluentbit's storage metrics (chunks up and down) and to solve some issues with fluentd metrics.
 
 
-## External Nodes Monitoring
+### External Nodes Monitoring
 
 - Install Node metrics exporter
 
@@ -1052,78 +1446,6 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
   ```
 - Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
 
-### Grafana dashboards
+#### Grafana dashboards
 
 Not need to install additional dashboards. Node-exporter dashboards pre-integrated by kube-stack shows the external nodes metrics.
-
-## Provisioning Dashboards automatically
-
-Grafana dashboards can be provisioned automatically creating ConfigMap resources containing the dashboard json definition. For doing so, a provisioning sidecar container must be enabled.
-
-Check grafana chart [documentation](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
-
-`kube-prometheus-stack` configure by default grafana provisioning sidecar to check for new ConfigMaps containing label `grafana_dashboard`
-
-This are the default helm chart values configuring the sidecar:
-
-```yml
-grafana:
-  sidecar:
-    dashboards:
-      SCProvider: true
-      annotations: {}
-      defaultFolderName: null
-      enabled: true
-      folder: /tmp/dashboards
-      folderAnnotation: null
-      label: grafana_dashboard
-      labelValue: null
-```
-
-For provision automatically a new dashboard, a new `ConfigMap` resource must be created, labeled with `grafana_dashboard: 1` and containing as `data` the json file content.
-
-```yml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sample-grafana-dashboard
-  labels:
-     grafana_dashboard: "1"
-data:
-  dashboard.json: |-
-  [json_file_content]
-
-```
-
-{{site.data.alerts.important}}
-
-Most of [Grafana community dashboards available](https://grafana.com/grafana/dashboards/) have been exported from a running Grafana and so they include a input  variable (`DS_PROMETHEUS`) which represent a datasource which is referenced in all dashboard panels (`${DS_PROMETHEUS}`). See details in [Grafana export/import documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/).
-
-When automatic provisioning those exported dashboards following the procedure described above, an error appear when accessing them in the UI:
-
-```
-Datasource named ${DS_PROMETHEUS} was not found
-```
-
-There is an open [Grafana´s issue](https://github.com/grafana/grafana/issues/10786), asking for support of dasboard variables in dashboard provisioning.
-
-As a workarround, json files can be modified before inserting them into ConfigMap yaml file, in order to detect DS_PROMETHEUS datasource. See issue [#18](https://github.com/ricsanfre/pi-cluster/issues/18) for more details
-
-Modify each json file, containing `DS_PROMETHEUS` input variable within `__input` json key, adding the following code to `templating.list` key
-
-```json
-"templating": {
-    "list": [
-      {
-        "hide": 0,
-        "label": "datasource",
-        "name": "DS_PROMETHEUS",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "regex": "",
-        "type": "datasource"
-      },
-    ...
-```
-{{site.data.alerts.end}}
