@@ -2,21 +2,20 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "05-08-2022"
+last_modified_at: "06-08-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
 
 That project collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
 
-Components included in kube-stack package:
+Components included in kube-stack package are:
 
-- The [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator)
+- [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator)
 - Highly available [Prometheus](https://prometheus.io/)
 - Highly available [Alertmanager](https://github.com/prometheus/alertmanager)
-- Prometheus [node-exporter](https://github.com/prometheus/node_exporter) to collect metrics from each cluster node
-- [Prometheus Adapter for Kubernetes Metrics APIs](https://github.com/kubernetes-sigs/prometheus-adapter)
-- [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
+- [prometheus-node-exporter](https://github.com/prometheus/node_exporter) to collect metrics from each cluster node
+- [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) to collect metrics about the state of kubernetes' objects.
 - [Grafana](https://grafana.com/)
 
 This stack is meant for cluster monitoring, so it is pre-configured to collect metrics from all Kubernetes components.
@@ -313,7 +312,7 @@ Since prometheus frontend does not provide any authentication mechanism, Traefik
 
 ### Prometheus Operator 
 
-The above installation procedure, deploys Prometheus Operator and creates the following needed Prometheus and AlertManager Objects, which make the operator to deploy the corresponding Prometheus and AlertManager PODs (as StatefulSets).
+The above installation procedure, deploys Prometheus Operator and creates the needed `Prometheus` and `AlertManager` Objects, which make the operator to deploy the corresponding Prometheus and AlertManager PODs (as StatefulSets).
 
 Note that the final specification can be changed in helm chart values (`prometheus.prometheusSpec` and `alertmanager.alertmanagerSpec`)
 
@@ -395,13 +394,15 @@ spec:
   version: v2.37.0
 ```
 
+This `Prometheus` object specifies the following Prometheus configuration:
+
 - Prometheus version and image installed (v2.37.0) (`spec.version` and `spec.image`).
 
 - HA Configuration. Number of shards and replicas per shard (`spec.shards` and `spec.replicas`).
 
-  Prometheus basic HA mechanism is through replication. Two (or more) instances (replicas) need to be running with the same configuration except that they will have one external label with a different value to identify them. The Prometheus instances scrape the same targets and evaluate the same rules.
+  Prometheus basic HA mechanism is implemented through replication. Two (or more) instances (replicas) need to be running with the same configuration except that they will have one external label with a different value to identify them. The Prometheus instances scrape the same targets and evaluate the same rules.
  
-  There is additional HA mechanims, Prometheus' sharding, which splits targets to be scraped into shards and each shard is assigned to a Prometheus server instace (or to a set, number of replicas).
+  There is additional HA mechanims, Prometheus' sharding, which splits targets to be scraped into shards and each shard is assigned to a Prometheus server instance (or to a set, number of replicas).
 
   The main drawback of this sharding solution is that, to query all data, query federation (e.g. Thanos Query) and distributed rule evaluation engine (e.g. Thanos Ruler) should be deployed.
 
@@ -424,7 +425,7 @@ spec:
 - Persistent volume specification (`storage:
     volumeClaimTemplate:`) used by the Statefulset objects deployed. In my case volume claim from Longhorn.
 
-- Rules for filtering the Objects (PodMonitor, ServiceMonitor, Probe and PrometheusRule) that applies to this particular instance of Prometheus services:  `spec.podMonitorSelector`, `spec.serviceMonitorSelector`, `spec.probeSelector`, and `spec.rulesSelector` introduces a filtering rule (Objects must include a label `release: kube-prometheus-stack`).
+- Rules for filtering the Objects (`PodMonitor`, `ServiceMonitor`, `Probe` and `PrometheusRule`) that applies to this particular instance of Prometheus services:  `spec.podMonitorSelector`, `spec.serviceMonitorSelector`, `spec.probeSelector`, and `spec.rulesSelector` introduces a filtering rule (Objects must include a label `release: kube-prometheus-stack`).
 
   The following diagram, from official prometheus operator documentation, shows an example of how the filtering rules are applied. A Deployment and Service called my-app is being monitored by Prometheus based on a ServiceMonitor named my-service-monitor: 
 
@@ -485,6 +486,8 @@ spec:
   version: v0.24.0
 ```
 
+This `AlartManager` object specifies the following Alert Manager configuration:
+
 - A version and image: v0.24.0 (`spec.version` and `spec.image`)
 
 - HA Configuration. Number of replicas (`spec.shards` and `spec.replicas`).
@@ -532,6 +535,10 @@ In my chart configuration monitoring of ControllerManager, Scheduler, KubeProxy 
     enabled: false
 ```
 
+#### PrometheusRule Objects
+
+
+
 ### Grafana
 
 [Grafana helm chart](https://github.com/grafana/helm-charts/tree/main/charts/grafana) is deployed as a subchart of the kube-prometheus-stack helm chart.
@@ -553,7 +560,7 @@ grafana:
 
 [Grafana dashboards](https://grafana.com/docs/grafana/latest/dashboards/) can be configured through provider definitions (yaml files) located in a provisioning directory (`/etc/grafana/provisioning/dashboards`). This yaml file contains the directory from where dashboards in json format can be loaded. See Grafana Tutorial: [Provision dashboards and data sources](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)
 
-When Grafana is deployed in Kubernetes using the helm chart, dashboards can be automatically provisioned enabling a side car provisioner.
+When Grafana is deployed in Kubernetes using the helm chart, dashboards can be automatically provisioned enabling a sidecar container provisioner.
 
 Grafana helm chart creates the following `/etc/grafana/provisioning/dashboard/provider.yml` file, which makes Grafana load all json dashboards from `/tmp/dashboards`
 ```
@@ -571,7 +578,7 @@ providers:
     path: /tmp/dashboards
 ```
 
-With this sidecar provisioner, Grafana dashboards can be provisioned automatically creating ConfigMap resources containing the dashboard json definition. A provisioning sidecar container must be enabled in order to check in real time for those ConfigMaps and automatically copy them to the provisioning directory (`/tmp/dashboards`).
+With this sidecar provider enabled, Grafana dashboards can be provisioned automatically creating ConfigMap resources containing the dashboard json definition. A provisioning sidecar container must be enabled in order to look for those ConfigMaps in real time and automatically copy them to the provisioning directory (`/tmp/dashboards`).
 
 Check out ["Grafana chart documentation: Sidecar for Dashboards"](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
 
@@ -777,19 +784,70 @@ prometheus-node-exporter:
 
 ```
 
-Default configuration, just exclude from the monitoring several mount points and file types (`extra`) and creates the corresponding ServiceMonitor object to start scrapping metrics from this exporter.
+Default configuration, just exclude from the monitoring several mount points and file types (`extraArgs`) and creates the corresponding ServiceMonitor object to start scrapping metrics from this exporter.
 
+Prometheus-node-exporter's metrics are exposed in TCP port 9100 (`/metrics` endpoint) of each of daemonset PODs.
 
 ### Kube State Metrics
 
+[Prometheus Kube State Metrics helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) is deployed as a dependency of the kube-prometheus-stack helm chart.
+
+This chart deploys [kube-state-metrics agent](https://github.com/kubernetes/kube-state-metrics). kube-state-metrics (KSM) is a simple service that listens to the Kubernetes API server and generates metrics about the state of the objects.
+
+Kube-prometheus-stack helm chart `kube-state-metrics` value is used to pass the configuration to kube-state-metrics's chart.
+
+Kube-state-metrics' metrics are exposed in TCP port 8080 (`/metrics` endpoint)
 
 ## Monitoring K3S components and Services
 
+In this section, it is detailed the procedures to activate Prometheus monitoring for K3S components and each of the services.
+
+The procedure includes the needed services/endpoints that need to be activated, the `ServiceMonitor`/`PodMonitor`/`Probe` objects that need to be created to configure Prometheus' service discovery, and the dashboards in json format that need to be imported in Grafana to visualize the metrics of each service.
+
+{{site.data.alerts.note}}
+
+For provisioning the dashboards specified in the next sections, a correponding ConfigMap should be created, one per dashboard (json file), following the procedure described above.
+
+```yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample-grafana-dashboard
+  labels:
+     grafana_dashboard: "1"
+data:
+  dashboard.json: |-
+  [json_file_content]
+
+```
+{{site.data.alerts.end}}
 
 ### K3S components monitoring
 
-In order to monitor Kubernetes components (Scheduler, Controller Manager and Proxy), default resources created by kube-prometheus-operator (headless service, service monitor and grafana dashboards) are not valid for monitoring K3S because  K3S is emitting the same metrics on the three end-points, causing prometheus to consume high memory causing worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
+By default, K3S cluster components (Scheduler, Controller Manager and Proxy) do not expose its endpoints to be able to collect metrics (their services are bind to 127.0.0.1, not allowing external queries). The following K3S intallation arguments need to be provided, to change this behaviour.
 
+```
+--kube-controller-manager-arg 'bind-address=0.0.0.0' 
+--kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+--kube-scheduler-arg 'bind-address=0.0.0.0
+```
+
+By other hand, default resources created by kube-prometheus-operator (headless service, service monitor and grafana dashboards) to monitor these compoenents are not valid for K3S.
+
+K3S is emitting the same metrics on the three end-points, and if the monitoring is activated for all of them, prometheus starts to consume high memory causing eventually a worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
+
+That is the reason why in kube-prometheus-stack values.yml file those components are disabled:
+
+```yml
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeProxy:
+    enabled: false
+```
+
+We will configure manually all kubernetes resources needed to scrape the available metrics just from one of the components (k3s-proxy endpoint).
 
 - Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape K3S metrics.
 
@@ -870,6 +928,7 @@ Kubernetes-controller-manager, kubernetes-proxy and kuberetes-scheduler dashboar
 - Kube Proxy: [dashboard-id 12129](https://grafana.com/grafana/dashboards/12129)
 - Kube Controller Manager: [dashboard-id 12122](https://grafana.com/grafana/dashboards/12122)
 - Kube Scheduler: [dashboard-id 12130](https://grafana.com/grafana/dashboards/12130)
+
 
 ### Traefik Monitoring
 
