@@ -30,7 +30,7 @@ Prometheus operator is deployed and it manages Prometheus and AlertManager deplo
 
 - `Prometheus` and `AlertManager` CRDs: declaratively defines a desired Prometheus/AlertManager setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage. For each object of these types a set of StatefulSet is deployed.
 - `ServiceMonitor`/`PodMonitor`/`Probe` CRDs: manages Prometheus service discovery configuration, defining how a dynamic set of services/pods/static-targets should be monitored.
-- `PrometheusRules` CRD: defines alerting rules (prometheus rules)
+- `PrometheusRules` CRD: defines alerting and Prometheus' generated metrics rules (prometheus rules)
 - `AlertManagerConfig` CRD defines Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. 
 
 {{site.data.alerts.note}}
@@ -418,7 +418,9 @@ This `Prometheus` object specifies the following Prometheus configuration:
 
 - AlertManager server connected to this instance of Prometheus for perfoming the alerting (`spec.alerting.alertManager`). The connection parameters specified by default matches the `AlertManager` object created by kube-prometheus-stack
 
-- Default scrape interval to be applicable (`spec.scrapeInterval`: 30sg). It can be overwitten in PodMonitor/ServiceMonitor/Probe particular configuration.
+- Default scrape interval, how often Prometheus scrapes targets (`spec.scrapeInterval`: 30sg). It can be overwitten in PodMonitor/ServiceMonitor/Probe particular configuration.
+
+- Rules evaluation period, how often Prometheus evaluates rules (`evaluationInterval: 30s`)
 
 - Data retention policy (`retention`: 10d)
 
@@ -537,6 +539,9 @@ In my chart configuration monitoring of ControllerManager, Scheduler, KubeProxy 
 
 #### PrometheusRule Objects
 
+`kube-prometheus-stack` creates several `PrometheusRule` objects to specify the alerts and the metrics that Prometheus generated based on the scraped metrics.
+
+The rules provisioned can be found here: [Prometheus rules created by kube-prometheus-stack chart] (https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/prometheus/rules-1.14)
 
 
 ### Grafana
