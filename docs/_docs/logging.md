@@ -2,7 +2,7 @@
 title: Log Management Arquitecture (EFK)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "27-07-2022"
+last_modified_at: "08-08-2022"
 
 ---
 
@@ -102,8 +102,8 @@ Two different architectures can be implemented with Fluentbit and Fluentd
 
 <table>
   <tr>
-    <td><img src="/assets/img/logging-forwarder-only.png" width="400" /></td>
-    <td><img src="/assets/img/logging-forwarder-aggregator.png" width="400" /></td>
+    <td><img src="/assets/img/logging-forwarder-only.png" alt="logging-forwarder-only" width="400" /></td>
+    <td><img src="/assets/img/logging-forwarder-aggregator.png" alt="logging-forwarder-aggregator" width="400" /></td>
   </tr>
 </table>
 
