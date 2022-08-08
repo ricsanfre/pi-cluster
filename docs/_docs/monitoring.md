@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "06-08-2022"
+last_modified_at: "08-08-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -26,11 +26,11 @@ The architecture of components deployed is showed in the following image.
 
 ## About Prometheus Operator
 
-Prometheus operator is deployed and it manages Prometheus and AlertManager deployments and configuration through the use of Kubernetes CRD (Custom Resource Definitions):
+Prometheus operator manages Prometheus and AlertManager deployments and their configuration through the use of Kubernetes CRD (Custom Resource Definitions):
 
-- `Prometheus` and `AlertManager` CRDs: declaratively defines a desired Prometheus/AlertManager setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage. For each object of these types a set of StatefulSet is deployed.
+- `Prometheus` and `AlertManager` CRDs: declaratively defines a desired Prometheus/AlertManager setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage.
 - `ServiceMonitor`/`PodMonitor`/`Probe` CRDs: manages Prometheus service discovery configuration, defining how a dynamic set of services/pods/static-targets should be monitored.
-- `PrometheusRules` CRD: defines alerting and Prometheus' generated metrics rules (prometheus rules)
+- `PrometheusRules` CRD: defines Prometheus' alerting and recording rules. Alerting rules, to define alert conditions to be notified (via AlertManager), and recording rules, allowing Prometheus to precompute frequently needed or computationally expensive expressions and save their result as a new set of time series.
 - `AlertManagerConfig` CRD defines Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. 
 
 {{site.data.alerts.note}}
@@ -47,7 +47,7 @@ Spec of the different CRDs can be found in [Prometheus Operator API reference gu
 
 Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) maintaind by the community
 
-- Step 1: Add the Elastic repository
+- Step 1: Add the Prometheus repository
 
   ```shell
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -62,7 +62,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   ```shell
   kubectl create namespace monitoring
   ```
-- Step 3: Create values.yml for configuring VolumeClaimTemplates using longhorn and Grafana's admin password, list of plugins to be installed and disabling the monitoring of kubernetes components (Scheduler, Controller Manager and Proxy). See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22)
+- Step 3: Create values.yml for configuring POD's volumes using longhorn, set Grafana's configuration (admin password and list of plugins to be installed) and disabling the monitoring of kubernetes components (Scheduler, Controller Manager and Proxy). See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
 
   ```yml
   alertmanager:
@@ -539,16 +539,15 @@ In my chart configuration monitoring of ControllerManager, Scheduler, KubeProxy 
 
 #### PrometheusRule Objects
 
-`kube-prometheus-stack` creates several `PrometheusRule` objects to specify the alerts and the metrics that Prometheus generated based on the scraped metrics.
+`kube-prometheus-stack` creates several `PrometheusRule` objects to specify the alerts and the metrics that Prometheus generated based on the scraped metrics (alerting and record rules)
 
-The rules provisioned can be found here: [Prometheus rules created by kube-prometheus-stack chart] (https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/prometheus/rules-1.14)
-
+The rules provisioned can be found here: [Prometheus rules created by kube-prometheus-stack chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/prometheus/rules-1.14).
 
 ### Grafana
 
 [Grafana helm chart](https://github.com/grafana/helm-charts/tree/main/charts/grafana) is deployed as a subchart of the kube-prometheus-stack helm chart.
 
-Kube-prometheus-stack helm chart `grafana` value is used to pass the configuration to grafana's chart.
+Kube-prometheus-stack's helm chart `grafana` value is used to pass the configuration to grafana's chart.
 
 In my case, on top of default values.yml, only admin password and specific plugin has been specified. Plugin `grafana-piechart-panel` is needed by Traefik's dashboard, that will be deployed later.
 
@@ -568,7 +567,7 @@ grafana:
 When Grafana is deployed in Kubernetes using the helm chart, dashboards can be automatically provisioned enabling a sidecar container provisioner.
 
 Grafana helm chart creates the following `/etc/grafana/provisioning/dashboard/provider.yml` file, which makes Grafana load all json dashboards from `/tmp/dashboards`
-```
+```yml
 apiVersion: 1
 providers:
 - name: 'sidecarProvider'
@@ -670,9 +669,9 @@ Modify each json file, containing `DS_PROMETHEUS` input variable within `__input
 
 When deploying Grafana in Kubernetes, datasources config files can be imported from ConfigMaps. This is implemented by a sidecar container that copies these ConfigMaps to its provisioning directory.
 
-Check out ["Grafana chart documentation: Sidecar for Datasources"](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-datasources) explaining how to enable/use this init container.
+Check out ["Grafana chart documentation: Sidecar for Datasources"](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-datasources) explaining how to enable/use this sidecar container.
 
-`kube-prometheus-stack` enables by default grafana datasource sidecar to check for new ConfigMaps containing label `grafana_datasource`
+`kube-prometheus-stack` enables by default grafana datasource sidecar to check for new ConfigMaps containing label `grafana_datasource`.
 
 ```yml
 sidecar:
@@ -685,11 +684,9 @@ sidecar:
     label: grafana_datasource
     labelValue: "1"
     exemplarTraceIdDestinations: {}
-```
+``` 
 
-and it also creates a ConfigMap containig the datasource matching the label `grafana_datasource`, so it is loaded by the sidecar container into Grafana's provisioning directory.
-
-This is the datasource automatically created by kube-prometheus-stack for connecting Grafana to the Prometheus server. (Datasource Prometheus)
+This is the ConfigMap, automatically created by `kube-prometheus-stack`, including the datasource definition for connecting Grafana to the Prometheus server: (Datasource name `Prometheus`)
 
 ```yml
 apiVersion: v1
@@ -724,11 +721,13 @@ metadata:
   namespace: k3s-monitoring
 ```
 
+The ConfigMap includes the `grafana_datasource` label, so it is loaded by the sidecar container into Grafana's provisioning directory.
+
 ### Prometheus Node Exporter
 
-[Prometheus Node exportet helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter) is deployed as a dependency of the kube-prometheus-stack helm chart.This chart deploys Prometheus Node Exporter in all cluster nodes as daemonset
+[Prometheus Node exportet helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter) is deployed as a subchart of the kube-prometheus-stack helm chart.This chart deploys Prometheus Node Exporter in all cluster nodes as daemonset
 
-Kube-prometheus-stack helm chart `prometheus-node-exporter` value is used to pass the configuration to node exporter's chart.
+Kube-prometheus-stack's helm chart `prometheus-node-exporter` value is used to pass the configuration to node exporter's chart.
 
 Default [kube-prometheus-stack's values.yml](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml) file contains the following configuration which is not changed in the installation procedure defined above
 
@@ -789,25 +788,25 @@ prometheus-node-exporter:
 
 ```
 
-Default configuration, just exclude from the monitoring several mount points and file types (`extraArgs`) and creates the corresponding ServiceMonitor object to start scrapping metrics from this exporter.
+Default configuration just excludes from the monitoring several mount points and file types (`extraArgs`) and it creates the corresponding ServiceMonitor object to start scrapping metrics from this exporter.
 
-Prometheus-node-exporter's metrics are exposed in TCP port 9100 (`/metrics` endpoint) of each of daemonset PODs.
+Prometheus-node-exporter's metrics are exposed in TCP port 9100 (`/metrics` endpoint) of each  daemonset PODs.
 
 ### Kube State Metrics
 
-[Prometheus Kube State Metrics helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) is deployed as a dependency of the kube-prometheus-stack helm chart.
+[Prometheus Kube State Metrics helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) is deployed as a subchart of the kube-prometheus-stack helm chart.
 
 This chart deploys [kube-state-metrics agent](https://github.com/kubernetes/kube-state-metrics). kube-state-metrics (KSM) is a simple service that listens to the Kubernetes API server and generates metrics about the state of the objects.
 
-Kube-prometheus-stack helm chart `kube-state-metrics` value is used to pass the configuration to kube-state-metrics's chart.
+Kube-prometheus-stack's helm chart `kube-state-metrics` value is used to pass the configuration to kube-state-metrics's chart.
 
-Kube-state-metrics' metrics are exposed in TCP port 8080 (`/metrics` endpoint)
+Kube-state-metrics' metrics are exposed in TCP port 8080 (`/metrics` endpoint).
 
-## Monitoring K3S components and Services
+## K3S and Cluster Services Monitoring
 
-In this section, it is detailed the procedures to activate Prometheus monitoring for K3S components and each of the services.
+In this section, it is detailed the procedures to activate Prometheus monitoring for K3S components and each of the kubernetes services deployed.
 
-The procedure includes the needed services/endpoints that need to be activated, the `ServiceMonitor`/`PodMonitor`/`Probe` objects that need to be created to configure Prometheus' service discovery, and the dashboards in json format that need to be imported in Grafana to visualize the metrics of each service.
+The procedure includes the services/endpoints that need to be created, the `ServiceMonitor`/`PodMonitor`/`Probe` objects that need to be created to configure Prometheus' service discovery, and the dashboards, in json format, that need to be imported in Grafana to visualize the metrics of each service.
 
 {{site.data.alerts.note}}
 
@@ -829,7 +828,7 @@ data:
 
 ### K3S components monitoring
 
-By default, K3S cluster components (Scheduler, Controller Manager and Proxy) do not expose its endpoints to be able to collect metrics (their services are bind to 127.0.0.1, not allowing external queries). The following K3S intallation arguments need to be provided, to change this behaviour.
+By default, K3S components (Scheduler, Controller Manager and Proxy) do not expose their endpoints to be able to collect metrics. Their `/metrics` endpoints are bind to 127.0.0.1, exposing them only to localhost, not allowing the remote query. The following K3S intallation arguments need to be provided, to change this behaviour.
 
 ```
 --kube-controller-manager-arg 'bind-address=0.0.0.0' 
@@ -837,22 +836,22 @@ By default, K3S cluster components (Scheduler, Controller Manager and Proxy) do 
 --kube-scheduler-arg 'bind-address=0.0.0.0
 ```
 
-By other hand, default resources created by kube-prometheus-operator (headless service, service monitor and grafana dashboards) to monitor these compoenents are not valid for K3S.
+By other hand, default resources created by kube-prometheus-stack (headless service, service monitor and grafana dashboards) to monitor these components are not valid for K3S.
 
-K3S is emitting the same metrics on the three end-points, and if the monitoring is activated for all of them, prometheus starts to consume high memory causing eventually a worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
+K3S is emitting the same metrics on the three end-points (contoller, proxy and scheduler), and if the monitoring is activated for all of them, prometheus starts to consume high memory causing eventually a worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
 
-That is the reason why in kube-prometheus-stack values.yml file those components are disabled:
+That is the reason why in kube-prometheus-stack values.yml file those components are disabled, and thus not Objects are created for activate its monitoring (headless services, ServiceMonitor and Dashboards)
 
 ```yml
-  kubeControllerManager:
-    enabled: false
-  kubeScheduler:
-    enabled: false
-  kubeProxy:
-    enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
 ```
 
-We will configure manually all kubernetes resources needed to scrape the available metrics just from one of the components (k3s-proxy endpoint).
+Instead, we will configure manually all kubernetes resources needed to scrape the available metrics just from one of the components (k3s-proxy endpoint).
 
 - Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape K3S metrics.
 
