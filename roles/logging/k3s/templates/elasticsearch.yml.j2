@@ -25,9 +25,18 @@ spec:
               requests:
                 storage: "{{ efk_elasticsearch_storage_size }}"
             storageClassName: "{{ efk_elasticsearch_storage_class }}"
-{% if enable_linkerd is sameas true %}
-      # Enabling service account token. linkerd requirement
+
       podTemplate:
         spec:
+{% if enable_linkerd is sameas true %}
+          # Enabling service account token. linkerd requirement
           automountServiceAccountToken: true
 {% endif %}
+          # Limiting Resources consumption
+          containers:
+          - name: elasticsearch
+            resources:
+              requests:
+                memory: {{ efk_elasticsearch_mem_limit }}
+              limits:
+                memory: {{ efk_elasticsearch_mem_limit }}
