@@ -50,20 +50,8 @@
 
 - name: Check longhorn status. Wait for all components to start
   command:
-    cmd: "/usr/local/bin/check_lh.sh --withRetry"
+    cmd: "/usr/local/bin/check_lh.sh"
   changed_when: false
-
-# - name: Wait for pods to be ready
-#   command:
-#     cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_longhorn_namespace }} --all --timeout=600s"
-#   register: longhorn_pods_ready
-#   changed_when: false
-#
-# - name: Repeat task since more pods are created
-#   command:
-#     cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_longhorn_namespace }} --all --timeout=600s"
-#   register: longhorn_pods_ready
-#   changed_when: false
 
 - name: Enable linkerd integration
   include_tasks: configure_linkerd_mesh.yml
