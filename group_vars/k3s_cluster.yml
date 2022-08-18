@@ -44,6 +44,7 @@ k3s_server_extra_args: >-
 k3s_worker_extra_args: >-
   --node-label 'node_type=worker'
   --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
 
 # Namespaces
 k3s_metallb_namespace: metallb-system

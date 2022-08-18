@@ -8,6 +8,7 @@ metadata:
   name: longhorn-prometheus-servicemonitor
   namespace: {{ k3s_monitoring_namespace }}
 spec:
+  jobLabel: app.kubernetes.io/name
   selector:
     matchLabels:
       app: longhorn-manager

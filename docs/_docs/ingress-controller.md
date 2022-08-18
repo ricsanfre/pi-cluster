@@ -270,7 +270,8 @@ A Kuberentes Service must be created for enabling the access to Prometheus metri
     namespace: kube-system
     labels:
       app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik-metrics
+      app.kubernetes.io/name: traefik
+      app.kubernetes.io/component: traefik-metrics
   spec:
     type: ClusterIP
     ports:
@@ -305,7 +306,8 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
     namespace: kube-system
     labels:
       app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik-dashboard
+      app.kubernetes.io/name: traefik
+      app.kubernetes.io/component: traefik-dashboard
   spec:
     type: ClusterIP
     ports:

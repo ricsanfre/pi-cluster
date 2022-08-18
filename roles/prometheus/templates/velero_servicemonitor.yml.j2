@@ -8,6 +8,7 @@ metadata:
   name: velero-prometheus-servicemonitor
   namespace: {{ k3s_monitoring_namespace }}
 spec:
+  jobLabel: app.kubernetes.io/name
   endpoints:
     - port: http-monitoring
       path: /metrics

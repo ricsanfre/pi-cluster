@@ -5,7 +5,7 @@ kind: Service
 metadata:
   name: minio-metrics-service
   labels:
-    app: minio-metrics
+    app.kubernetes.io/name: minio
   namespace: kube-system
 spec:
   clusterIP: None

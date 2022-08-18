@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "27-07-2022"
+last_modified_at: "19-08-2022"
 ---
 
 
@@ -141,14 +141,14 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
   For installing the master node execute the following command:
 
   ```shell
-  curl -sfL https://get.k3s.io | K3S_URL='https://<k3s_master_ip>:6443' K3S_TOKEN=<server_token> sh -s - --node-label 'node_type=worker --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config''
+  curl -sfL https://get.k3s.io | K3S_URL='https://<k3s_master_ip>:6443' K3S_TOKEN=<server_token> sh -s - --node-label 'node_type=worker --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-proxy-arg 'metrics-bind-address=0.0.0.0''
   ```
   Where:
   - `server_token` is shared secret within the cluster for allowing connection of worker nodes
   - `k3s_master_ip` is the k3s master node ip
   - `--node-label 'node_type=worker'` add a custom label `node_type` to the worker node.
-   - `--kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'` provides kubelet configuraion parameters. See [Kubernetes Doc: Kubelet Config File](https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/) 
-
+  - `--kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'` provides kubelet configuraion parameters. See [Kubernetes Doc: Kubelet Config File](https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/)
+  - `--kube-proxy-arg 'metrics-bind-address=0.0.0.0'` to enable kube-proxy metrics scraping from a external node
 
   <br>
  

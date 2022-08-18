@@ -5,7 +5,7 @@ kind: Service
 metadata:
   name: k3s-metrics-service
   labels:
-    app: k3s-metrics
+    app.kubernetes.io/name: k3s
   namespace: kube-system
 spec:
   clusterIP: None
@@ -26,6 +26,9 @@ metadata:
 subsets:
 - addresses:
   - ip: 10.0.0.11
+  - ip: 10.0.0.12
+  - ip: 10.0.0.13
+  - ip: 10.0.0.14
   ports:
   - name: http-metrics
     port: 10249

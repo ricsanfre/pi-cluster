@@ -13,7 +13,8 @@ spec:
     - kube-system
   selector:
     matchLabels:
-      app: k3s-metrics
+      app.kubernetes.io/name: k3s
+  jobLabel: app.kubernetes.io/name
   endpoints:
     - port: http-metrics
       path: /metrics

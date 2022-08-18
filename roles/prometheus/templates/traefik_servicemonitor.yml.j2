@@ -8,6 +8,7 @@ metadata:
   name: traefik-prometheus-servicemonitor
   namespace: {{ k3s_monitoring_namespace }}
 spec:
+  jobLabel: app.kubernetes.io/name
   endpoints:
     - port: metrics
       path: /metrics
@@ -17,4 +18,5 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik-metrics
+      app.kubernetes.io/name: traefik
+      app.kubernetes.io/component: traefik-metrics

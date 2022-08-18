@@ -8,6 +8,15 @@ prometheusOperator:
     patch:
       podAnnotations:
         linkerd.io/inject: disabled
+  serviceMonitor:
+    relabelings:
+    # Replace job value
+    - sourceLabels:
+      - __address__
+      action: replace
+      targetLabel: job
+      replacement: prometheus-operator
+
 # Enable serviceaccount automount
 prometheus-node-exporter:
   serviceAccount:
@@ -23,6 +32,14 @@ alertmanager:
           resources:
             requests:
               storage: "{{ prometheus_storage_size }}"
+  serviceMonitor:
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: alertmanager
 prometheus:
   prometheusSpec:
     storageSpec:
@@ -33,10 +50,28 @@ prometheus:
           resources:
             requests:
               storage: "{{ prometheus_storage_size }}"
+  serviceMonitor:
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: prometheus
 grafana:
   adminPassword: "{{ prometheus_grafana_password }}"
   plugins:
     - grafana-piechart-panel
+  serviceMonitor:
+    labels:
+      release: kube-prometheus-stack
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: grafana
 kubeApiServer:
   enabled: true
 kubeControllerManager:

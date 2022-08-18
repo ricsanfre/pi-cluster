@@ -85,7 +85,7 @@
                     "tableColumn": "",
                     "targets": [
                         {
-                            "expr": "sum(up{cluster=\"$cluster\", job=\"k3s-metrics-service\"})",
+                            "expr": "sum(up{cluster=\"$cluster\", job=\"k3s\"})",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "",
@@ -154,7 +154,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "sum(rate(workqueue_adds_total{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m])) by (cluster, instance, name)",
+                            "expr": "sum(rate(workqueue_adds_total{cluster=\"$cluster\", job=\"k3s\", instance=~\"$instance\"}[5m])) by (cluster, instance, name)",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{cluster}} {{instance}} {{name}}",
@@ -260,7 +260,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "sum(rate(workqueue_depth{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m])) by (cluster, instance, name)",
+                            "expr": "sum(rate(workqueue_depth{cluster=\"$cluster\", job=\"k3s\", instance=~\"$instance\"}[5m])) by (cluster, instance, name)",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{cluster}} {{instance}} {{name}}",
@@ -366,7 +366,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m])) by (cluster, instance, name, le))",
+                            "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s\", instance=~\"$instance\"}[5m])) by (cluster, instance, name, le))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{cluster}} {{instance}} {{name}}",
@@ -472,28 +472,28 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"2..\"}[5m]))",
+                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s\", instance=~\"$instance\",code=~\"2..\"}[5m]))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "2xx",
                             "refId": "A"
                         },
                         {
-                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"3..\"}[5m]))",
+                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s\", instance=~\"$instance\",code=~\"3..\"}[5m]))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "3xx",
                             "refId": "B"
                         },
                         {
-                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"4..\"}[5m]))",
+                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s\", instance=~\"$instance\",code=~\"4..\"}[5m]))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "4xx",
                             "refId": "C"
                         },
                         {
-                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"5..\"}[5m]))",
+                            "expr": "sum(rate(rest_client_requests_total{job=\"k3s\", instance=~\"$instance\",code=~\"5..\"}[5m]))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "5xx",
@@ -586,7 +586,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\", verb=\"POST\"}[5m])) by (verb, url, le))",
+                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s\", instance=~\"$instance\", verb=\"POST\"}[5m])) by (verb, url, le))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{verb}} {{url}}",
@@ -692,7 +692,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\", verb=\"GET\"}[5m])) by (verb, url, le))",
+                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s\", instance=~\"$instance\", verb=\"GET\"}[5m])) by (verb, url, le))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{verb}} {{url}}",
@@ -798,7 +798,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "process_resident_memory_bytes{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\"}",
+                            "expr": "process_resident_memory_bytes{cluster=\"$cluster\", job=\"k3s\",instance=~\"$instance\"}",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{instance}}",
@@ -891,7 +891,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\"}[5m])",
+                            "expr": "rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"k3s\",instance=~\"$instance\"}[5m])",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{instance}}",
@@ -984,7 +984,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "go_goroutines{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\"}",
+                            "expr": "go_goroutines{cluster=\"$cluster\", job=\"k3s\",instance=~\"$instance\"}",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{instance}}",
@@ -1078,7 +1078,7 @@
                 "options": [
 
                 ],
-                "query": "label_values(up{job=\"k3s-metrics-service\"}, cluster)",
+                "query": "label_values(up{job=\"k3s\"}, cluster)",
                 "refresh": 2,
                 "regex": "",
                 "sort": 1,
@@ -1104,7 +1104,7 @@
                 "options": [
 
                 ],
-                "query": "label_values(up{cluster=\"$cluster\", job=\"k3s-metrics-service\"}, instance)",
+                "query": "label_values(up{cluster=\"$cluster\", job=\"k3s\"}, instance)",
                 "refresh": 2,
                 "regex": "",
                 "sort": 1,
