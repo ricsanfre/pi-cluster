@@ -91,7 +91,7 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
 
   - About Persistent Storage configuration
 
-    Longhorn is configured as PODs persistent volumes
+    Longhorn is configured for Elastisearch POD's persistent volumes
 
     ```yml
     volumeClaimTemplates:
