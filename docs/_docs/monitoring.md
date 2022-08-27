@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "18-08-2022"
+last_modified_at: "27-08-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -65,6 +65,19 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 - Step 3: Create values.yml 
 
   ```yml
+  prometheusOperator:
+    # Relabeling job name for operator metrics
+    serviceMonitor:
+      relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: prometheus-operator
+    # Disable creation of kubelet service
+    kubeletService:
+      enabled: false
   alertmanager:
     alertmanagerSpec:
       storage:
@@ -86,6 +99,13 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           replacement: alertmanager
   prometheus:
     prometheusSpec:
+      # Resources request and limits
+      resources:
+        requests:
+          memory: 1Gi
+        limits:
+          memory: 1Gi
+      # PVC configuration
       storageSpec:
         volumeClaimTemplate:
           spec:
@@ -120,6 +140,12 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           action: replace
           targetLabel: job
           replacement: grafana
+  # Disabling monitoring of K8s services.
+  # Monitoring of K3S components will be configured out of kube-prometheus-stack
+  kubelet:
+    enabled: false
+  kubeApiServer:
+    enabled: false
   kubeControllerManager:
     enabled: false
   kubeScheduler:
@@ -128,14 +154,40 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     enabled: false
   kubeEtcd:
     enabled: false
+  # Disable K8S Prometheus Rules
+  # Rules for K3S components will be configured out of kube-prometheus-stack
+  defaultRules:
+    create: true
+    rules:
+      etcd: false
+      k8s: false
+      kubeApiserverAvailability: false
+      kubeApiserverBurnrate: false
+      kubeApiserverHistogram: false
+      kubeApiserverSlos: false
+      kubeControllerManager: false
+      kubelet: false
+      kubeProxy: false
+      kubernetesApps: false
+      kubernetesResources: false
+      kubernetesStorage: false
+      kubernetesSystem: false
+      kubeScheduler: false
   ```
 
   The above chart values.yml:
 
   - Configures AlerManager and Prometheus' PODs persistent volumes to use longhorn
   (`alertmanager.alertmanagerSpec.storage.volumeClaimTemplate` and `prometheus.   prometheusSpec.storageSpec.volumeClaimTemplate`)
+  
+  - Set memroy resource limits for Prometheus POD `prometheus.prometheusSpec.resources`
+
   - Sets Grafana's specific configuration (admin password `grafana.adminPassword` and list of plugins to be installed: `grafana.plugins`).
-  - Disables monitoring of some kubernetes components (Scheduler, Controller Manager and Proxy): `kubeController.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` and `kubeEtcd`. See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
+  
+  - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd`.
+
+  Monitoring of K3s components will be configured outside kube-prometheus-stack. See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
+  
   - Sets specific configuration for the ServiceMonitor objects associated with Prometheus, Prometheus Operator and Grafana monitoring, relabeling the job name (`grafana.serviceMonitor.relabelings`, `prometheus.serviceMonitor.relabelings` and `prometheusOperator.serviceMonitor.relabelings`) and setting the proper label for Grafana's ServiceMonitor (`grafana.serviceMonitor.labels.release`) to match the selector of Prometheus Operator (otherwise Grafana is not monitored).
 
 
@@ -557,27 +609,22 @@ and the following Kubernetes services and processes depending on the configurati
 - Kube Proxy
 
 
-In my chart configuration monitoring of ControllerManager, Scheduler, KubeProxy and Kube etc is disabled. See below section ["K3S components monitoring"](#k3s-components-monitoring)
+In the chart configuration, monitoring of kube-controller-manager, kube-scheduler, kube-proxy, kubelet components has been disabled. 
 
+See below section ["K3S components monitoring"](#k3s-components-monitoring) to know the reason why this has been disabled in kube-prometheus-stack and how to configure the monitoring of K3s.
 
-```yml
-  kubeApiServer:
-    enabled: true
-  kubeControllerManager:
-    enabled: false
-  kubeScheduler:
-    enabled: false
-  kubeProxy:
-    enabled: false
-  kubeEtcd:
-    enabled: false
-```
+Only the monitoring of `coreDNS` component has not been disabled.
+
 
 #### PrometheusRule Objects
 
 `kube-prometheus-stack` creates several `PrometheusRule` objects to specify the alerts and the metrics that Prometheus generated based on the scraped metrics (alerting and record rules)
 
 The rules provisioned can be found here: [Prometheus rules created by kube-prometheus-stack chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/prometheus/rules-1.14).
+
+Since monitoring of K8S components (kube-controller-manager, kube-scheduler, kube-proxy, kubelet) has been disabled in the chart configuration, correponding PrometheusRules objects are not created.
+
+See below section ["K3S components monitoring"](#k3s-components-monitoring) to know how to configure manually those rules.
 
 ### Grafana
 
@@ -658,6 +705,8 @@ data:
 Following this procedure kube-prometheus-stack helm chart automatically deploy a set of Dashboards for monitoring metrics coming from Kubernetes processes and from Node Exporter. The list of [kube-prometheus-stack grafana dashboards](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/grafana/dashboards-1.14)
 
 For each dashboard a ConfigMap containing the json definition is created.
+
+For the K8s disabled components kube-prometheus-stack do not deploy the corresponding dashboard, so they need to be added manually. See below section ["K3S components monitoring"](#k3s-components-monitoring) to know how to add manually those dashboards.
 
 You can get all of them running the following command
 
@@ -874,7 +923,6 @@ These components are:
 - kube-scheduler (exposing `/metrics` endpoint at TCP 10259)
 - kubelet (exposing `/metrics`,  `/metrics/cadvisor`, `/metrics/resource` and `/metrics/probes` endpoints at TCP 10250)
 
-
 {{site.data.alerts.note}}
 
 TCP ports numbers exposed by kube-scheduler and kube-controller-manager have changed from  kubernetes release 1.22 (from 10251/10252 to 10257/10259) and now require https authenticated connection. Kubernetes authorized service account is needed.
@@ -884,291 +932,7 @@ Only kube-proxy endpoint remains open using HTTP, the rest of the ports are now 
 {{site.data.alerts.end}}
 
 
-#### kubelet monitoring
-
-By default kube-prometheus-stack configure Prometheus Operator to create a kubelet service.
-
-In default values.yml:
-```yml
-prometheusOperator:
-  kubeletService:
-    enabled: true
-    namespace: kube-system
-
-```
-
-With that configuration, Prometheus Operator creates `kube-prometheus-stack-kubelet` headless service in `kube-system` namespace
-
-```yml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: prometheus-operator
-    app.kubernetes.io/name: kubelet
-    k8s-app: kubelet
-  name: kube-prometheus-stack-kubelet
-  namespace: kube-system
-spec:
-  clusterIP: None
-  clusterIPs:
-  - None
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  - IPv6
-  ipFamilyPolicy: RequireDualStack
-  ports:
-  - name: https-metrics
-    port: 10250
-    protocol: TCP
-    targetPort: 10250
-  - name: http-metrics
-    port: 10255
-    protocol: TCP
-    targetPort: 10255
-  - name: cadvisor
-    port: 4194
-    protocol: TCP
-    targetPort: 4194
-  sessionAffinity: None
-  type: ClusterIP
-status:
-  loadBalancer: {}
-
-```
-with the following Endpoints, addresing ports 10250, 10255 and 4194 of each cluster node
-
-```yml
-apiVersion: v1
-kind: Endpoints
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: prometheus-operator
-    app.kubernetes.io/name: kubelet
-    k8s-app: kubelet
-  name: kube-prometheus-stack-kubelet
-  namespace: kube-system
-subsets:
-- addresses:
-  - ip: 10.0.0.13
-    targetRef:
-      kind: Node
-      name: node3
-      uid: 1f667b56-d244-4b61-92c0-bbfa9f227ed9
-  - ip: 10.0.0.11
-    targetRef:
-      kind: Node
-      name: node1
-      uid: 8d0a9fd1-516c-4fd0-8b98-3229c4d5b46a
-  - ip: 10.0.0.14
-    targetRef:
-      kind: Node
-      name: node4
-      uid: e8a7b0a7-dbb4-4dea-9e49-2785b5f5e58e
-  - ip: 10.0.0.12
-    targetRef:
-      kind: Node
-      name: node2
-      uid: df7cbd53-2d18-42c3-812c-428f247323d1
-  ports:
-  - name: https-metrics
-    port: 10250
-    protocol: TCP
-  - name: http-metrics
-    port: 10255
-    protocol: TCP
-  - name: cadvisor
-    port: 4194
-    protocol: TCP
-```
-
-
-It also creates the ServiceMonitor object to start scraping metrics from kubelet metrics endpoint
-
-In default values.yml:
-```
-kubelet:
-  enabled: true
-  namespace: kube-system
-  serviceMonitor:
-    https: true
-    ## Enable scraping /metrics/cadvisor from kubelet's service
-    ##
-    cAdvisor: true
-    ## Enable scraping /metrics/probes from kubelet's service
-    ##
-    probes: true
-    ## Enable scraping /metrics/resource from kubelet's service
-    ## This is disabled by default because container metrics are already exposed by cAdvisor
-    ##
-    resource: false
-```
-
-Default configuration contains also prometheus relabeling configurations.
-
-Finally ServiceMonitor `kube-prometheus-stack-kubelet` object created is:
-
-```yml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  annotations:
-    meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
-  creationTimestamp: "2022-08-18T16:22:15Z"
-  generation: 1
-  labels:
-    app: kube-prometheus-stack-kubelet
-    app.kubernetes.io/instance: kube-prometheus-stack
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 39.8.0
-    chart: kube-prometheus-stack-39.8.0
-    heritage: Helm
-    release: kube-prometheus-stack
-  name: kube-prometheus-stack-kubelet
-  namespace: k3s-monitoring
-  resourceVersion: "6778"
-  uid: a077abb0-2db6-45df-bc46-e8873d9bf8a4
-spec:
-  endpoints:
-  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    honorLabels: true
-    port: https-metrics
-    relabelings:
-    - action: replace
-      sourceLabels:
-      - __metrics_path__
-      targetLabel: metrics_path
-    scheme: https
-    tlsConfig:
-      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecureSkipVerify: true
-  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    honorLabels: true
-    metricRelabelings:
-    - action: drop
-      regex: container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)
-      sourceLabels:
-      - __name__
-    - action: drop
-      regex: container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
-      sourceLabels:
-      - __name__
-    - action: drop
-      regex: container_memory_(mapped_file|swap)
-      sourceLabels:
-      - __name__
-    - action: drop
-      regex: container_(file_descriptors|tasks_state|threads_max)
-      sourceLabels:
-      - __name__
-    - action: drop
-      regex: container_spec.*
-      sourceLabels:
-      - __name__
-    - action: drop
-      regex: .+;
-      sourceLabels:
-      - id
-      - pod
-    path: /metrics/cadvisor
-    port: https-metrics
-    relabelings:
-    - action: replace
-      sourceLabels:
-      - __metrics_path__
-      targetLabel: metrics_path
-    scheme: https
-    tlsConfig:
-      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecureSkipVerify: true
-  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    honorLabels: true
-    path: /metrics/probes
-    port: https-metrics
-    relabelings:
-    - action: replace
-      sourceLabels:
-      - __metrics_path__
-      targetLabel: metrics_path
-    scheme: https
-    tlsConfig:
-      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecureSkipVerify: true
-  jobLabel: k8s-app
-  namespaceSelector:
-    matchNames:
-    - kube-system
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: kubelet
-      k8s-app: kubelet
-```
-
-#### kube-api monitoring
-
-Enabled by default in kube-prometheus-stack
-
-```yml
-kubeApiServer:
-  enabled: true
-  tlsConfig:
-    serverName: kubernetes
-    insecureSkipVerify: false
-    ...
-```
-
-Creates the ServiceMonitor `kube-prometheus-stack-apiserver` needed to scrape metrics from kube-api
-```
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  annotations:
-    meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
-  creationTimestamp: "2022-08-18T16:22:15Z"
-  generation: 1
-  labels:
-    app: kube-prometheus-stack-apiserver
-    app.kubernetes.io/instance: kube-prometheus-stack
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 39.8.0
-    chart: kube-prometheus-stack-39.8.0
-    heritage: Helm
-    release: kube-prometheus-stack
-  name: kube-prometheus-stack-apiserver
-  namespace: k3s-monitoring
-spec:
-  endpoints:
-  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    metricRelabelings:
-    - action: drop
-      regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
-      sourceLabels:
-      - __name__
-      - le
-    port: https
-    scheme: https
-    tlsConfig:
-      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecureSkipVerify: false
-      serverName: kubernetes
-  jobLabel: component
-  namespaceSelector:
-    matchNames:
-    - default
-  selector:
-    matchLabels:
-      component: apiserver
-      provider: kubernetes
-```
-
-#### kube-scheduler, kube-controller-manager and kube-proxy monitoring
-
-Some of these components do not expose by default any endpoint and it must be enabled using `--bind-address` argument.
+{{site.data.alerts.important}}
 
 By default, K3S components (Scheduler, Controller Manager and Proxy) do not expose their endpoints to be able to collect metrics. Their `/metrics` endpoints are bind to 127.0.0.1, exposing them only to localhost, not allowing the remote query. The following K3S intallation arguments need to be provided, to change this behaviour.
 
@@ -1177,29 +941,81 @@ By default, K3S components (Scheduler, Controller Manager and Proxy) do not expo
 --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
 --kube-scheduler-arg 'bind-address=0.0.0.0
 ```
+{{site.data.alerts.end}}
 
-By other hand, default resources created by kube-prometheus-stack (headless service, service monitor and grafana dashboards) to monitor these components are not valid for K3S.
 
-K3S is emitting the same metrics on the three end-points (contoller, proxy and scheduler), and if the monitoring is activated for all of them, prometheus starts to consume high memory causing eventually a worker node outage. See issue [#22](https://github.com/ricsanfre/pi-cluster/issues/22) for more details.
+kube-prometheus-stack is able to create the kubernetes resources and Grafana dashboards to be able to scrape the metrics from all K8S components in a standard distribution of Kubernetes, but these objects are not valid for a K3S cluster.
 
-That is the reason why in kube-prometheus-stack values.yml file, those components are disabled, and thus Kuberentes resources are not created for activate its monitoring (headless services, ServiceMonitor and Dashboards)
+K3S distribution has a special behavior related to metrics exposure. K3s deploys in each cluster node only one process ( `k3s-server` running on master nodes or `k3s-agent` running on worker nodes). All k8s components running in the node share the same memory.
+
+K3s is emitting metrics from all k8s components deployed in the node no matter which '/metrics' endpoint is scrapped (api-server, kubelet (TCP 10250), kube-proxy (TCP 10249), kube-scheduler (TCP 10251), kube-controller-manager (TCP 10257)).
+
+`node1`, k3s master, running all k8s componets, is emitting the same metrics in all the ports. `node2-node4`, k3s workers, only running kubelet and kube-proxy components, emit the same metrics in both TCP 10250 and 10249 ports.
+
+Enabling the scraping of all different metrics TCP ports (10249,10250,10251, 10257 and apiserver) causes the ingestion of duplicated metrics. Duplicated metrics in Prometheus need to be avoided so memory and CPU consumption can be reduced.
+
+By the other hand, kubelet additional metrics endpoints (`/metrics/cadvisor`, `/metrics/resource` and `/metrics/probes`) are only available at TCP 10250.
+
+Thus, the solution is to scrape only the metrics endpoints available in kubelet port (TCP 10250): `/metrics`, `/metrics/cadvisor`, `/metrics/resource` and `/metrics/probes`
+
+That it the reason why monitoring of K8s kuberentes components has been disabled in kube-prometheus-stack chart configuration.
 
 ```yml
+# Disable creation of kubelet service
+prometheusOperator:
+  kubeletService:
+    enabled: false
+# Disabling monitoring of K8s services.
+# Monitoring of K3S components will be configured out of kube-prometheus-stack
+kubelet:
+  enabled: false
+kubeApiServer:
+  enabled: false
 kubeControllerManager:
   enabled: false
 kubeScheduler:
   enabled: false
 kubeProxy:
   enabled: false
+kubeEtcd:
+  enabled: false
+# Disable K8S Prometheus Rules
+# Rules for K3S components will be configured out of kube-prometheus-stack
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    k8s: false
+    kubeApiserverAvailability: false
+    kubeApiserverBurnrate: false
+    kubeApiserverHistogram: false
+    kubeApiserverSlos: false
+    kubeControllerManager: false
+    kubelet: false
+    kubeProxy: true
+    kubernetesApps: false
+    kubernetesResources: false
+    kubernetesStorage: false
+    kubernetesSystem: true
+    kubeScheduler: false
 ```
 
-Instead, we will configure manually all kubernetes resources needed to scrape the available metrics just from one of the components (k3s-proxy endpoint).
+With this configuration the kubernetes resources (headless `Service`, `ServiceMonitor` and `PrometeusRules`) are not created for activate K8S components monitoring and correponding Grafana's dashboards are not deployed. 
 
-- Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape K3S metrics.
+{{site.data.alerts.note}}
+
+See issue [#67](https://github.com/ricsanfre/pi-cluster/issues/67) for details about the analysis of the duplicates and the proposed solution
+
+{{site.data.alerts.end}}
+
+
+The solution is to configure manually all kubernetes resources needed to scrape the available metrics just from one of the TCP metric ports (kubelet endpoints).
+
+- Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape all K3S metrics.
 
   This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), for allowing Prometheus service discovery process of each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitly
 
-  The service will be use the k3s-proxy endpoint (TCP port 10249) for scraping all metrics. 
+  The service will be use the kubelet endpoint (TCP port 10250) for scraping all K3S metrics available in each node. 
   
   ```yml
   ---
@@ -1214,10 +1030,10 @@ Instead, we will configure manually all kubernetes resources needed to scrape th
   spec:
     clusterIP: None
     ports:
-    - name: http-metrics
-      port: 10249
+    - name: https-metrics
+      port: 10250
       protocol: TCP
-      targetPort: 10249
+      targetPort: 10250
     type: ClusterIP
   ---
   # Endpoint for the headless service without selector
@@ -1233,42 +1049,129 @@ Instead, we will configure manually all kubernetes resources needed to scrape th
     - ip: 10.0.0.13
     - ip: 10.0.0.14
     ports:
-    - name: http-metrics
-      port: 10249
+    - name: https-metrics
+      port: 10250
       protocol: TCP
   ```
 
-- Create manifest file for defining the service monitor resource for let Prometheus discover this target
+- Create manifest file for defining the service monitor resource for let Prometheus discover these targets
 
   The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover K3S metrics endpoint as a Prometheus target.
+
+  A single ServiceMonitor resource to enable the collection of all k8s components metrics from unique port TCP 10250. This `ServiceMonitor` includes all relabeling/dropping rules defined by the ServiceMonitor resources that kube-prometheus-stack chart creates by default for each individual k8s component.
 
   ```yml
   apiVersion: monitoring.coreos.com/v1
   kind: ServiceMonitor
   metadata:
     labels:
-      app: k3s
       release: kube-prometheus-stack
-    name: k3s-prometheus-servicemonitor
+    name: k3s-monitoring
     namespace: k3s-monitoring
   spec:
+    endpoints:
+    # /metrics endpoint
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      honorLabels: true
+      metricRelabelings:
+      # apiserver
+      - action: drop
+        regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
+        sourceLabels:
+        - __name__
+        - le
+      port: https-metrics
+      relabelings:
+      - action: replace
+        sourceLabels:
+        - __metrics_path__
+        targetLabel: metrics_path
+      scheme: https
+      tlsConfig:
+        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecureSkipVerify: true
+    # /metrics/cadvisor
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      honorLabels: true
+      metricRelabelings:
+      - action: drop
+        regex: container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)
+        sourceLabels:
+        - __name__
+      - action: drop
+        regex: container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
+        sourceLabels:
+        - __name__
+      - action: drop
+        regex: container_memory_(mapped_file|swap)
+        sourceLabels:
+        - __name__
+      - action: drop
+        regex: container_(file_descriptors|tasks_state|threads_max)
+        sourceLabels:
+        - __name__
+      - action: drop
+        regex: container_spec.*
+        sourceLabels:
+        - __name__
+      path: /metrics/cadvisor
+      port: https-metrics
+      relabelings:
+      - action: replace
+        sourceLabels:
+        - __metrics_path__
+        targetLabel: metrics_path
+      scheme: https
+      tlsConfig:
+        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecureSkipVerify: true
+      # /metrics/probes
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      honorLabels: true
+      path: /metrics/probes
+      port: https-metrics
+      relabelings:
+      - action: replace
+        sourceLabels:
+        - __metrics_path__
+        targetLabel: metrics_path
+      scheme: https
+      tlsConfig:
+        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecureSkipVerify: true
+    jobLabel: app.kubernetes.io/name
     namespaceSelector:
       matchNames:
       - kube-system
     selector:
       matchLabels:
         app.kubernetes.io/name: k3s
-    jobLabel: app.kubernetes.io/name
-    endpoints:
-      - port: http-metrics
-        path: /metrics
-  ```
+    ```
+
+- kube-prometheus-stack's Prometheus rules associated to K8s components are not intalled when disabling their monitoring. Anyway those rules are not valid for K3S since it contains promQL queries filtering metrics by job labels "apiserver", "kubelet", etc. 
+
+  kube-prometheus-stack creates by default different PrometheusRules resources, but all of them are included in single manifest file in prometheus-operator source repository: [kubernetesControlPlane-prometheusRule.yaml](https://github.com/prometheus-operator/kube-prometheus/blob/main/manifests/kubernetesControlPlane-prometheusRule.yaml)
+
+  Modify the yaml file to replace job labels names:
+
+  Replace the following strings:
+
+  - `job="apiserver"`
+  - `job="kubelet"`
+  - `job="kube-proxy"`
+  - `job="kube-scheduler"`
+  - `job="kube-controller-manager"`
+
+  by:
+
+  `job="k3s"`
+
 
 - Apply manifest file
   ```shell
-  kubectl apply -f k3s-metrics-service.yml k3s-servicemonitor.yml
+  kubectl apply -f k3s-metrics-service.yml k3s-servicemonitor.yml kubernetesControlPlane-prometheusRule.yaml
   ```
-- Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
+- Check targets are automatically discovered in Prometheus UI: `http://prometheus/targets`
 
 
 #### coreDNS monitoring
@@ -1373,14 +1276,32 @@ spec:
 
 #### K3S Grafana dashboards
 
-Kubernetes-controller-manager, kubernetes-proxy and kuberetes-scheduler dashboards can be donwloaded from [grafana.com](https://grafana.com):
+kube-prometheus-stack should install the Grafana dashboards corresponding to K8S components, but since their monitoring is disabled in the helm chart configuration, they need to be intalled manually.
 
-- Kube Proxy: [dashboard-id 12129](https://grafana.com/grafana/dashboards/12129)
-- Kube Controller Manager: [dashboard-id 12122](https://grafana.com/grafana/dashboards/12122)
-- Kube Scheduler: [dashboard-id 12130](https://grafana.com/grafana/dashboards/12130)
+Kubernetes components dashboards can be donwloaded from [grafana.com](https://grafana.com):
 
+- kubelet dashboard: [ID 16361](https://grafana.com/grafana/dashboards/16361-kubernetes-kubelet/)
+- apiserver dashboard [ID 12654](https://grafana.com/grafana/dashboards/12654-kubernetes-api-server)
+- etcd dashboard [ID 16359](https://grafana.com/grafana/dashboards/16359-etcd/)
+- kube-scheduler [ID 12130](https://grafana.com/grafana/dashboards/12130-kubernetes-scheduler/)
+- kube-controller-manager [ID 12122](https://grafana.com/grafana/dashboards/12122-kubernetes-controller-manager)
+- kube-proxy [ID 12129](https://grafana.com/grafana/dashboards/12129-kubernetes-proxy)
 
-The dashboards for other components (kube-api, kubelet and coredns) are included by kube-prometheus-stack
+These Grafana's dashboards need to be modified because promQL queries using job name label (kubelet, apiserver, etc.) that are not used in our configuration. In our configuration only one scrapping job ("k3s") is configured to scrape metrics from all K3S components.
+
+The following changes need to be applied to json files:
+
+Replace the following strings:
+
+- `job=\"apiserver\"`
+- `job=\"kubelet\"`
+- `job=\"kube-proxy\"`
+- `job=\"kube-scheduler\"`
+- `job=\"kube-controller-manager\"`
+
+by:
+
+`job=\"k3s\"`
 
 ### Traefik Monitoring
 
