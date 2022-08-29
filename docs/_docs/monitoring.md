@@ -60,7 +60,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 - Step 3: Create namespace
 
   ```shell
-  kubectl create namespace monitoring
+  kubectl create namespace k3s-monitoring
   ```
 - Step 3: Create values.yml 
 
@@ -194,7 +194,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 - Step 4: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
 
   ```shell
-  helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+  helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace k3s-monitoring
   ```
 
 ### Ingress resources configuration
@@ -1000,7 +1000,7 @@ defaultRules:
     kubeScheduler: false
 ```
 
-With this configuration the kubernetes resources (headless `Service`, `ServiceMonitor` and `PrometeusRules`) are not created for activate K8S components monitoring and correponding Grafana's dashboards are not deployed. 
+With this configuration the kubernetes resources (headless `Service`, `ServiceMonitor` and `PrometheusRules`) are not created for activate K8S components monitoring and correponding Grafana's dashboards are not deployed. 
 
 {{site.data.alerts.note}}
 
@@ -1025,7 +1025,7 @@ The solution is to configure manually all kubernetes resources needed to scrape 
   metadata:
     name: k3s-metrics-service
     labels:
-      app.kubernetes.io/name: k3s
+      app.kubernetes.io/name: kubelet
     namespace: kube-system
   spec:
     clusterIP: None
@@ -1145,8 +1145,16 @@ The solution is to configure manually all kubernetes resources needed to scrape 
       - kube-system
     selector:
       matchLabels:
-        app.kubernetes.io/name: k3s
+        app.kubernetes.io/name: kubelet
     ```
+
+  {{site.data.alerts.note}}
+
+  This ServiceMonitor configures a single Prometheus' scrapping job (job="kubelet").
+
+  "kubelet" job label is kept so less dahsboards need to be modified. Most of "Computer Resources" type dashboards are using kubelet metrics and the promQL queries in the dashboard are filter metrics by label job="kubelet".
+
+  {{site.data.alerts.end}}
 
 - kube-prometheus-stack's Prometheus rules associated to K8s components are not intalled when disabling their monitoring. Anyway those rules are not valid for K3S since it contains promQL queries filtering metrics by job labels "apiserver", "kubelet", etc. 
 
@@ -1154,17 +1162,20 @@ The solution is to configure manually all kubernetes resources needed to scrape 
 
   Modify the yaml file to replace job labels names:
 
-  Replace the following strings:
+  - Replace job labels names
+    Replace the following strings:
 
-  - `job="apiserver"`
-  - `job="kubelet"`
-  - `job="kube-proxy"`
-  - `job="kube-scheduler"`
-  - `job="kube-controller-manager"`
+    - `job="apiserver"`
+    - `job="kube-proxy"`
+    - `job="kube-scheduler"`
+    - `job="kube-controller-manager"`
 
-  by:
+    by:
 
-  `job="k3s"`
+    `job="kubelet"`
+
+  - Add the following label so it match the PrometheusOperator selector for rules
+    `release: kube-prometheus-stack`
 
 
 - Apply manifest file
@@ -1287,21 +1298,20 @@ Kubernetes components dashboards can be donwloaded from [grafana.com](https://gr
 - kube-controller-manager [ID 12122](https://grafana.com/grafana/dashboards/12122-kubernetes-controller-manager)
 - kube-proxy [ID 12129](https://grafana.com/grafana/dashboards/12129-kubernetes-proxy)
 
-These Grafana's dashboards need to be modified because promQL queries using job name label (kubelet, apiserver, etc.) that are not used in our configuration. In our configuration only one scrapping job ("k3s") is configured to scrape metrics from all K3S components.
+These Grafana's dashboards need to be modified because promQL queries using job name label (kube-scheduler, kube-proxy, apiserver, etc.) that are not used in our configuration. In our configuration only one scrapping job ("kubelet") is configured to scrape metrics from all K3S components.
 
 The following changes need to be applied to json files:
 
 Replace the following strings:
 
 - `job=\"apiserver\"`
-- `job=\"kubelet\"`
 - `job=\"kube-proxy\"`
 - `job=\"kube-scheduler\"`
 - `job=\"kube-controller-manager\"`
 
 by:
 
-`job=\"k3s\"`
+`job=\"kubelet\"`
 
 ### Traefik Monitoring
 

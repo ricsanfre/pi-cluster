@@ -960,7 +960,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(workqueue_adds_total{job=\"k3s\", instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, name)",
+              "expr": "sum(rate(workqueue_adds_total{job=\"kubelet\", instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, name)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} {{name}}",
@@ -1040,7 +1040,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(workqueue_depth{job=\"k3s\", instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, name)",
+              "expr": "sum(rate(workqueue_depth{job=\"kubelet\", instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, name)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} {{name}}",
@@ -1120,7 +1120,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"k3s\", instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, name, le))",
+              "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"kubelet\", instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, name, le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} {{name}}",
@@ -1213,7 +1213,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "etcd_helper_cache_entry_total{job=\"k3s\", instance=~\"$instance\", cluster=\"$cluster\"}",
+              "expr": "etcd_helper_cache_entry_total{job=\"kubelet\", instance=~\"$instance\", cluster=\"$cluster\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}}",
@@ -1293,14 +1293,14 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(etcd_helper_cache_hit_total{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance)",
+              "expr": "sum(rate(etcd_helper_cache_hit_total{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} hit",
               "refId": "A"
             },
             {
-              "expr": "sum(rate(etcd_helper_cache_miss_total{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance)",
+              "expr": "sum(rate(etcd_helper_cache_miss_total{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} miss",
@@ -1380,14 +1380,14 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99,sum(rate(etcd_request_cache_get_duration_seconds_bucket{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, le))",
+              "expr": "histogram_quantile(0.99,sum(rate(etcd_request_cache_get_duration_seconds_bucket{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} get",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.99,sum(rate(etcd_request_cache_add_duration_seconds_bucket{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, le))",
+              "expr": "histogram_quantile(0.99,sum(rate(etcd_request_cache_add_duration_seconds_bucket{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])) by (instance, le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} miss",
@@ -1480,7 +1480,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "process_resident_memory_bytes{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}",
+              "expr": "process_resident_memory_bytes{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}}",
@@ -1560,7 +1560,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(process_cpu_seconds_total{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])",
+              "expr": "rate(process_cpu_seconds_total{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}[5m])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}}",
@@ -1640,7 +1640,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_goroutines{job=\"k3s\",instance=~\"$instance\", cluster=\"$cluster\"}",
+              "expr": "go_goroutines{job=\"kubelet\",instance=~\"$instance\", cluster=\"$cluster\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}}",
@@ -1747,7 +1747,7 @@
         "multi": false,
         "name": "instance",
         "options": [],
-        "query": "label_values(apiserver_request_total{job=\"k3s\", cluster=\"$cluster\"}, instance)",
+        "query": "label_values(apiserver_request_total{job=\"kubelet\", cluster=\"$cluster\"}, instance)",
         "refresh": 2,
         "regex": "",
         "sort": 1,
