@@ -300,9 +300,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - interval: 10s
-        scrapeTimeout: 10s
-        relabelings:
+      - relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_container_port_name
           action: keep
@@ -312,7 +310,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
           action: replace
           targetLabel: component
         # Replace job value
-        - source_labels:
+        - sourceLabels:
           - __address__
           action: replace
           targetLabel: job
@@ -332,9 +330,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - interval: 10s
-        scrapeTimeout: 10s
-        relabelings:
+      - relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_label_linkerd_io_control_plane_component
           - __meta_kubernetes_pod_container_port_name
@@ -365,8 +361,6 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - interval: 10s
-        scrapeTimeout: 10s
         relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_container_name
@@ -402,7 +396,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
         - action: labelmap
           regex: __tmp_pod_label_(.+)
         # Replace job value
-        - source_labels:
+        - sourceLabels:
           - __address__
           action: replace
           targetLabel: job
