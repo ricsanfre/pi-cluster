@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "27-08-2022"
+last_modified_at: "06-09-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -80,6 +80,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
       enabled: false
   alertmanager:
     alertmanagerSpec:
+      # PVC configuration
       storage:
         volumeClaimTemplate:
           spec:
@@ -180,15 +181,17 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   - Configures AlerManager and Prometheus' PODs persistent volumes to use longhorn
   (`alertmanager.alertmanagerSpec.storage.volumeClaimTemplate` and `prometheus.   prometheusSpec.storageSpec.volumeClaimTemplate`)
   
-  - Set memroy resource limits for Prometheus POD `prometheus.prometheusSpec.resources`
+  - Set memory resource limits for Prometheus POD `prometheus.prometheusSpec.resources`
 
   - Sets Grafana's specific configuration (admin password `grafana.adminPassword` and list of plugins to be installed: `grafana.plugins`).
   
   - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd`.
-
-  Monitoring of K3s components will be configured outside kube-prometheus-stack. See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
+    
+    Monitoring of K3s components will be configured outside kube-prometheus-stack. See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
   
-  - Sets specific configuration for the ServiceMonitor objects associated with Prometheus, Prometheus Operator and Grafana monitoring, relabeling the job name (`grafana.serviceMonitor.relabelings`, `prometheus.serviceMonitor.relabelings` and `prometheusOperator.serviceMonitor.relabelings`) and setting the proper label for Grafana's ServiceMonitor (`grafana.serviceMonitor.labels.release`) to match the selector of Prometheus Operator (otherwise Grafana is not monitored).
+  - Sets specific configuration for the ServiceMonitor objects associated with Prometheus, Prometheus Operator and Grafana monitoring.
+
+    Relabeling the job name (`grafana.serviceMonitor.relabelings`, `prometheus.serviceMonitor.relabelings` and `prometheusOperator.serviceMonitor.relabelings`) and setting the proper label for Grafana's ServiceMonitor (`grafana.serviceMonitor.labels.release`) to match the selector of Prometheus Operator (otherwise Grafana is not monitored).
 
 
 - Step 4: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
@@ -925,16 +928,18 @@ These components are:
 
 {{site.data.alerts.note}}
 
-TCP ports numbers exposed by kube-scheduler and kube-controller-manager have changed from  kubernetes release 1.22 (from 10251/10252 to 10257/10259) and now require https authenticated connection. Kubernetes authorized service account is needed.
+TCP ports numbers exposed by kube-scheduler and kube-controller-manager have changed from  kubernetes release 1.22 (from 10251/10252 to 10257/10259). 
 
-Only kube-proxy endpoint remains open using HTTP, the rest of the ports are now using HTTPS.
+It also now requires https authenticated connection. Kubernetes authorized service account is needed. Only kube-proxy endpoint remains open using HTTP, the rest of the ports are now using HTTPS.
 
 {{site.data.alerts.end}}
 
 
 {{site.data.alerts.important}}
 
-By default, K3S components (Scheduler, Controller Manager and Proxy) do not expose their endpoints to be able to collect metrics. Their `/metrics` endpoints are bind to 127.0.0.1, exposing them only to localhost, not allowing the remote query. The following K3S intallation arguments need to be provided, to change this behaviour.
+By default, K3S components (Scheduler, Controller Manager and Proxy) do not expose their endpoints to be able to collect metrics. Their `/metrics` endpoints are bind to 127.0.0.1, exposing them only to localhost, not allowing the remote query.
+
+The following K3S intallation arguments need to be provided, to change this behaviour.
 
 ```
 --kube-controller-manager-arg 'bind-address=0.0.0.0' 
@@ -944,13 +949,11 @@ By default, K3S components (Scheduler, Controller Manager and Proxy) do not expo
 {{site.data.alerts.end}}
 
 
-kube-prometheus-stack is able to create the kubernetes resources and Grafana dashboards to be able to scrape the metrics from all K8S components in a standard distribution of Kubernetes, but these objects are not valid for a K3S cluster.
+kube-prometheus-stack creates the kubernetes resources needed to scrape the metrics from all K8S components in a standard distribution of Kubernetes, but these objects are not valid for a K3S cluster.
 
-K3S distribution has a special behavior related to metrics exposure. K3s deploys in each cluster node only one process ( `k3s-server` running on master nodes or `k3s-agent` running on worker nodes). All k8s components running in the node share the same memory.
+K3S distribution has a special behavior related to metrics exposure. K3s deploys  one process in each cluster node: `k3s-server` running on master nodes or `k3s-agent` running on worker nodes. All kubernetes components running in the node share the same memory, and so K3s is emitting the same metrics in all `/metrics` endpoints available in a node: api-server, kubelet (TCP 10250), kube-proxy (TCP 10249), kube-scheduler (TCP 10251) and kube-controller-manager (TCP 10257). When polling one of the kubernetes components metrics endpoints, the metrics belonging to other kubernetes components are not filtered out.
 
-K3s is emitting metrics from all k8s components deployed in the node no matter which '/metrics' endpoint is scrapped (api-server, kubelet (TCP 10250), kube-proxy (TCP 10249), kube-scheduler (TCP 10251), kube-controller-manager (TCP 10257)).
-
-`node1`, k3s master, running all k8s componets, is emitting the same metrics in all the ports. `node2-node4`, k3s workers, only running kubelet and kube-proxy components, emit the same metrics in both TCP 10250 and 10249 ports.
+`node1`, k3s master, running all kubernetes components, is emitting the same metrics in all the ports. `node2-node4`, k3s workers, only running kubelet and kube-proxy components, emit the same metrics in both TCP 10250 and 10249 ports.
 
 Enabling the scraping of all different metrics TCP ports (10249,10250,10251, 10257 and apiserver) causes the ingestion of duplicated metrics. Duplicated metrics in Prometheus need to be avoided so memory and CPU consumption can be reduced.
 
@@ -1009,11 +1012,11 @@ See issue [#67](https://github.com/ricsanfre/pi-cluster/issues/67) for details a
 {{site.data.alerts.end}}
 
 
-The solution is to configure manually all kubernetes resources needed to scrape the available metrics just from one of the TCP metric ports (kubelet endpoints).
+To configure manually all kubernetes resources needed to scrape the available metrics from kubelet metrics endpoints, follow this procedure:
 
 - Create a manifest file `k3s-metrics-service.yml` for creating the Kuberentes service used by Prometheus to scrape all K3S metrics.
 
-  This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), for allowing Prometheus service discovery process of each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitly
+  This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), `spec.clusterIP=None`, allowing Prometheus to discover each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitly.
 
   The service will be use the kubelet endpoint (TCP port 10250) for scraping all K3S metrics available in each node. 
   
