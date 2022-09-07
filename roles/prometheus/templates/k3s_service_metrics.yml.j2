@@ -1,19 +1,21 @@
 ---
-# Headless service for K3S metrics. No Selector
+# Headless service (no selector) for K3S metrics.
+# Only kubelet port (TCP: 10250) need to be scrapped
+# Metrics from all k8s components running in the node are exposed in this port.
 apiVersion: v1
 kind: Service
 metadata:
   name: k3s-metrics-service
   labels:
-    app: k3s-metrics
+    app.kubernetes.io/name: kubelet
   namespace: kube-system
 spec:
   clusterIP: None
   ports:
-  - name: http-metrics
-    port: 10249
+  - name: https-metrics
+    port: 10250
     protocol: TCP
-    targetPort: 10249
+    targetPort: 10250
   type: ClusterIP
 
 ---
@@ -26,7 +28,10 @@ metadata:
 subsets:
 - addresses:
   - ip: 10.0.0.11
+  - ip: 10.0.0.12
+  - ip: 10.0.0.13
+  - ip: 10.0.0.14
   ports:
-  - name: http-metrics
-    port: 10249
+  - name: https-metrics
+    port: 10250
     protocol: TCP

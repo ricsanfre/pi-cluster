@@ -3,7 +3,7 @@ title: Fluentbit/Fluentd (Forwarder/Aggregator)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analysis can be done using Kibana.
 
-last_modified_at: "03-08-2022"
+last_modified_at: "04-09-2022"
 
 ---
 
@@ -41,11 +41,9 @@ Since in the future I might configure the aggregator to dispath logs to another 
 [fluentd-kubernetes-daemonset images](https://github.com/fluent/fluentd-kubernetes-daemonset) should work for deploying fluentd as Deployment. For outputing to the ES you just need to select the adequate [fluentd-kubernetes-daemonset image tag](https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags).
 
 As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
-These images are available in docker hub:
+The multi-architecture (amd64/arm64) image is available in docker hub:
 
-- `ricsanfre/fluentd-aggregator:v1.14-debian-1`: for amd64 architectures
-
-- `ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1`: for arm64 architectures
+- `ricsanfre/fluentd-aggregator:v1.15.2-debian-1.0`
 
 {{site.data.alerts.end}}
 
@@ -82,7 +80,7 @@ fluentd -c ${FLUENTD_CONF} ${FLUENTD_OPT} -r ${SIMPLE_SNIFFER}
 Customized image Dockerfile could look like this:
 
 ```dockerfile
-ARG BASE_IMAGE=fluent/fluentd:v1.14-debian-1
+ARG BASE_IMAGE=fluent/fluentd:v1.15.2-debian-1.0
 
 FROM $BASE_IMAGE
 
@@ -118,11 +116,16 @@ CMD ["fluentd"]
 
 {{site.data.alerts.important}}
 
-Fluentd official images are not built with multi-architecture support. Different base images need to be used for different architectures. Docker building argument BASE_IMAGE has to be set to use the proper image:
+Starting from fluentd v1.15, official base images supporting multi-architecture (amd64/arm64) are provided.
+
+- `fluent/fluentd:v1.15.2-debian-1.0`: multiarch image for arm64(AArch64) and amd64(x86_64) architectures
+
+In previous versions, different tags where needed for different architectures
 
 - `fluent/fluentd:v1.14-debian-1`: for building amd64 docker image
-
+ 
 - `fluent/fluentd:v1.14-debian-arm64-1`: for building arm64 docker image
+
 
 {{site.data.alerts.end}}
 
@@ -244,7 +247,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
   image:
     repository: "ricsanfre/fluentd-aggregator"
     pullPolicy: "IfNotPresent"
-    tag: "v1.14-debian-arm64-1"
+    tag: "v1.15.2-debian-1.0"
 
   # Deploy fluentd as deployment
   kind: "Deployment"
@@ -462,7 +465,13 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
       </label>
   ```
 
-- Step 6: create a Service resource to expose only fluentd forward endpoint outside the cluster (LoadBalancer service type)
+
+- Step 6. Install chart
+  ```shell
+  helm install fluentd fluent/fluentd -f values.yml --namespace k3s-logging
+  ```
+
+- Step 7: create a Service resource to expose only fluentd forward endpoint outside the cluster (LoadBalancer service type)
 
   {{site.data.alerts.note}}
 
@@ -493,7 +502,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
   ```
   Fluentd forward service will be available in port 24224 and IP 10.0.0.101 (IP belonging to MetalLB addresses pool). This IP address should be mapped to a DNS record, `fluentd.picluster.ricsanfre.com`, in `gateway` dnsmasq configuration.
 
-- Step 3: Check fluentd status
+- Step 8: Check fluentd status
   ```shell
   kubectl get all -l app.kubernetes.io/name=fluentd -n k3s-logging
   ```
@@ -509,7 +518,7 @@ The Helm chart deploy fluentd as a Deployment, passing environment values to the
 image:
   repository: "ricsanfre/fluentd-aggregator"
   pullPolicy: "IfNotPresent"
-  tag: "v1.14-debian-arm64-1"
+  tag: "v1.15.2-debian-1.0"
 
 # Deploy fluentd as deployment
 kind: "Deployment"

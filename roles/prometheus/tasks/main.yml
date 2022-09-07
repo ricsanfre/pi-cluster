@@ -76,6 +76,14 @@
     - fluentd_servicemonitor.yml.j2
     - elasticsearch_servicemonitor.yml.j2
 
+
+- name: Configure Prometheus rules
+  include_tasks: configure_prometheus_rules.yml
+  loop_control:
+    loop_var: rules_file
+  with_fileglob:
+    - "rules/*"
+
 - name: Configure Grafana Dashboards
   include_tasks: configure_grafana_dashboards.yml
   loop_control:
@@ -83,3 +91,4 @@
   with_fileglob:
     - "dashboards/*"
     - "dashboards/linkerd/*"
+    - "dashboards/k3s/*"

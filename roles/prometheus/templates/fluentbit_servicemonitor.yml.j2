@@ -8,6 +8,7 @@ metadata:
   name: fluentbit-prometheus-servicemonitor
   namespace: {{ k3s_monitoring_namespace }}
 spec:
+  jobLabel: app.kubernetes.io/name
   endpoints:
     - path: /api/v1/metrics/prometheus
       targetPort: 2020

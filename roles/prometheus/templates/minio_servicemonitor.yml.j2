@@ -18,6 +18,7 @@ metadata:
   name: minio-prometheus-servicemonitor
   namespace: {{ k3s_monitoring_namespace }}
 spec:
+  jobLabel: app.kubernetes.io/name
   endpoints:
     - port: http-metrics
       path: /minio/v2/metrics/cluster
@@ -32,4 +33,4 @@ spec:
     - kube-system
   selector:
     matchLabels:
-      app: minio-metrics
+      app.kubernetes.io/name: minio

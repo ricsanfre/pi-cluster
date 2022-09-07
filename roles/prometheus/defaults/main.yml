@@ -16,3 +16,6 @@ prometheus_grafana_password: "s1cret0"
 
 # Enable service mesh
 enable_linkerd: true
+
+# Resource limit
+prometheus_mem_limit: "1Gi"

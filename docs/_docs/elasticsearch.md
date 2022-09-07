@@ -2,7 +2,7 @@
 title: Elasticsearch and Kibana
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "27-07-2022"
+last_modified_at: "15-08-2022"
 
 ---
 
@@ -58,8 +58,43 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
     - name: default
       count: 1    # One node elastic search cluster
       config:
-        node.store.allow_mmap: false # Disable memory mapping: Note(1)
-      volumeClaimTemplates: # Specify Longhorn as storge class and 5GB of storage: Note(2)
+        node.store.allow_mmap: false # Disable memory mapping
+      volumeClaimTemplates: 
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+            storageClassName: longhorn
+    http:
+      tls: # Disabling TLS automatic configuration. Note(3)
+        selfSignedCertificate:
+          disabled: true
+
+  ```
+  
+  - About Virtual Memory configuration (mmap)
+
+    By default, Elasticsearch uses memory mapping (`mmap`) to efficiently access indices. To disable this default mechanism add the following configuration option:
+
+    ```yml
+    node.store.allow_nmap: false
+    ```
+    Usually, default values for virtual address space on Linux distributions are too low for Elasticsearch to work properly, which may result in out-of-memory exceptions. This is why `mmap` is disable.
+
+    For production workloads, it is strongly recommended to increase the kernel setting `vm.max_map_count` to 262144 and leave `node.store.allow_mmap` unset.
+
+    See further details in [ECK Documentation: "Elastisearch Virtual Memory"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
+
+  - About Persistent Storage configuration
+
+    Longhorn is configured for Elastisearch POD's persistent volumes
+
+    ```yml
+    volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
         spec:
@@ -69,40 +104,60 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
             requests:
               storage: 5Gi
           storageClassName: longhorn
+    ```
+
+    See how to configure PersistenVolumeTemplates for Elasticsearh using this operator in [ECK Documentation: "Volume claim templates"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
+
+
+  - Disable TLS configuration
+
+
+    ```yml
     http:
-      tls: # Disabling TLS automatic configuration. Note(3)
+      tls:
         selfSignedCertificate:
           disabled: true
-  ```
+
+    ```
+
+    By default ECK configures secured communications with auto-signed SSL certificates. Access to its service endpoint on port 9200 is only available through https.
+
+    Disabling TLS automatic configuration in Elasticsearch HTTP server enables Linkerd (Cluster Service Mesh) to gather more statistics about connections. Linkerd is parsing plain text traffic (HTTP) instead of encrypted (HTTPS).
+    
+    Linkerd service mesh will enforce secure communications using TLS between all PODs.
   
-  {{site.data.alerts.note}} **(1) About Memory mapping configuration**
+  - About limiting resources assigned to ES
 
-  By default, Elasticsearch uses memory mapping (`mmap`) to efficiently access indices. To disable this default mechanism add the following configuration option:
-  ```yml
-  node.store.allow_nmap: false
-  ```
-  Usually, default values for virtual address space on Linux distributions are too low for Elasticsearch to work properly, which may result in out-of-memory exceptions. This is why `mmap` is disable.
+    In Kubernetes, limits in the consumption of resources (CPU and memory) can be assigned to PODs. See ["Kubernetes Doc - Resource Management for Pods and Containers"](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 
-  For production workloads, it is strongly recommended to increase the kernel setting `vm.max_map_count` to 262144 and leave `node.store.allow_mmap` unset.
+    `resource requests` defines the minimum amount of resources that must be available for a Pod to be scheduled; `resource limits` defines the maximum amount of resources that a Pod is allowed to consume. 
 
-  See further details in [ECK Documentation: "Elastisearch Virtual Memory"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
-  {{site.data.alerts.end}}
+    When you specify the `resource request` for containers in a Pod, the kube-scheduler uses this information to decide which node to place the Pod on. When you specify a `resource limit` for a container, the kubelet enforces those limits so that the running container is not allowed to use more of that resource than the limit you set. The kubelet also reserves at least the request amount of that system resource specifically for that container to use.
 
-  {{site.data.alerts.note}} **(2): About Persistent Storage**
+    In case of using ECK Operator is it recommended to specify those resource limits and resource request to each of the Objects created by the Operator.
+    See details on how to setup those limits in [ECK Documentation - Manage compute resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html).
 
-  See how to configure PersistenVolumeTemplates for Elasticsearh using this operator in [ECK Documentation: "Volume claim templates"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
-  {{site.data.alerts.end}}
+    For example memory heap assigned to JVM is calculated based on that resource limits, "The heap size of the JVM is automatically calculated based on the node roles and the available memory. The available memory is defined by the value of `resources.limits.memory` set on the elasticsearch container in the Pod template, or the available memory on the Kubernetes node is no limit is set".
 
+    By default, ECK does not specify any limit to CPU resource and it defines `resources.limits.memory` for ElasticSearch POD set to 2GB.
 
-  {{site.data.alerts.note}} **(3): Disable TLS automatic configuration**
+    In production environment this default limit should be increased. In lab environments where memory resources are limited it can be decreased to reduce ES memory footprint.
 
-  By default ECK configures secured communications with auto-signed SSL certificates. Access to its service endpoint on port 9200 is only available through https.
+    In both scenarios, the limit can be changed in in `Elasticsearch` object (`podTemplate` section).
 
-  Disabling TLS automatic configuration in Elasticsearch HTTP server enables Linkerd (Cluster Service Mesh) to gather more statistics about connections. Linkerd is parsing plain text traffic (HTTP) instead of encrypted (HTTPS).
-  
-  Linkerd service mesh will enforce secure communications using TLS between all PODs.
-  
-  {{site.data.alerts.end}}
+    ```yml
+      podTemplate:
+        # Limiting Resources consumption
+        spec:
+          containers:
+          - name: elasticsearch
+            resources:
+              requests:
+                memory: 1Gi
+              limits:
+                memory: 1Gi
+
+    ```
 
 - Step 2: Apply manifest
   

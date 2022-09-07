@@ -85,7 +85,7 @@
                     "tableColumn": "",
                     "targets": [
                         {
-                            "expr": "sum(up{cluster=\"$cluster\", job=\"k3s-metrics-service\"})",
+                            "expr": "sum(up{cluster=\"$cluster\", job=\"kubelet\"})",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "",
@@ -123,16 +123,16 @@
                     },
                     "id": 3,
                     "legend": {
-                        "alignAsTable": false,
+                        "alignAsTable": true,
                         "avg": false,
-                        "current": false,
+                        "current": true,
                         "max": false,
                         "min": false,
-                        "rightSide": false,
+                        "rightSide": true,
                         "show": true,
                         "sideWidth": null,
                         "total": false,
-                        "values": false
+                        "values": true
                     },
                     "lines": true,
                     "linewidth": 1,
@@ -154,11 +154,32 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "sum(rate(kubeproxy_sync_proxy_rules_duration_seconds_count{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m]))",
+                            "expr": "sum(rate(scheduler_e2e_scheduling_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[5m])) by (cluster, instance)",
                             "format": "time_series",
                             "intervalFactor": 2,
-                            "legendFormat": "rate",
+                            "legendFormat": "{{cluster}} {{instance}} e2e",
                             "refId": "A"
+                        },
+                        {
+                            "expr": "sum(rate(scheduler_binding_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[5m])) by (cluster, instance)",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "{{cluster}} {{instance}} binding",
+                            "refId": "B"
+                        },
+                        {
+                            "expr": "sum(rate(scheduler_scheduling_algorithm_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[5m])) by (cluster, instance)",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "{{cluster}} {{instance}} scheduling algorithm",
+                            "refId": "C"
+                        },
+                        {
+                            "expr": "sum(rate(scheduler_volume_scheduling_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[5m])) by (cluster, instance)",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "{{cluster}} {{instance}} volume",
+                            "refId": "D"
                         }
                     ],
                     "thresholds": [
@@ -166,7 +187,7 @@
                     ],
                     "timeFrom": null,
                     "timeShift": null,
-                    "title": "Rules Sync Rate",
+                    "title": "Scheduling Rate",
                     "tooltip": {
                         "shared": false,
                         "sort": 0,
@@ -247,11 +268,32 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "histogram_quantile(0.99,rate(kubeproxy_sync_proxy_rules_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m]))",
+                            "expr": "histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[5m])) by (cluster, instance, le))",
                             "format": "time_series",
                             "intervalFactor": 2,
-                            "legendFormat": "{{instance}}",
+                            "legendFormat": "{{cluster}} {{instance}} e2e",
                             "refId": "A"
+                        },
+                        {
+                            "expr": "histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[5m])) by (cluster, instance, le))",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "{{cluster}} {{instance}} binding",
+                            "refId": "B"
+                        },
+                        {
+                            "expr": "histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[5m])) by (cluster, instance, le))",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "{{cluster}} {{instance}} scheduling algorithm",
+                            "refId": "C"
+                        },
+                        {
+                            "expr": "histogram_quantile(0.99, sum(rate(scheduler_volume_scheduling_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[5m])) by (cluster, instance, le))",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "{{cluster}} {{instance}} volume",
+                            "refId": "D"
                         }
                     ],
                     "thresholds": [
@@ -259,7 +301,7 @@
                     ],
                     "timeFrom": null,
                     "timeShift": null,
-                    "title": "Rule Sync Latency 99th Quantile",
+                    "title": "Scheduling latency 99th Quantile",
                     "tooltip": {
                         "shared": false,
                         "sort": 0,
@@ -348,16 +390,37 @@
 
                     ],
                     "spaceLength": 10,
-                    "span": 6,
+                    "span": 4,
                     "stack": false,
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "sum(rate(kubeproxy_network_programming_duration_seconds_count{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m]))",
+                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\",code=~\"2..\"}[5m]))",
                             "format": "time_series",
                             "intervalFactor": 2,
-                            "legendFormat": "rate",
+                            "legendFormat": "2xx",
                             "refId": "A"
+                        },
+                        {
+                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\",code=~\"3..\"}[5m]))",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "3xx",
+                            "refId": "B"
+                        },
+                        {
+                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\",code=~\"4..\"}[5m]))",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "4xx",
+                            "refId": "C"
+                        },
+                        {
+                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\",code=~\"5..\"}[5m]))",
+                            "format": "time_series",
+                            "intervalFactor": 2,
+                            "legendFormat": "5xx",
+                            "refId": "D"
                         }
                     ],
                     "thresholds": [
@@ -365,7 +428,7 @@
                     ],
                     "timeFrom": null,
                     "timeShift": null,
-                    "title": "Network Programming Rate",
+                    "title": "Kube API Request Rate",
                     "tooltip": {
                         "shared": false,
                         "sort": 0,
@@ -415,226 +478,6 @@
                     },
                     "id": 6,
                     "legend": {
-                        "alignAsTable": true,
-                        "avg": false,
-                        "current": true,
-                        "max": false,
-                        "min": false,
-                        "rightSide": true,
-                        "show": true,
-                        "sideWidth": null,
-                        "total": false,
-                        "values": true
-                    },
-                    "lines": true,
-                    "linewidth": 1,
-                    "links": [
-
-                    ],
-                    "nullPointMode": "null",
-                    "percentage": false,
-                    "pointradius": 5,
-                    "points": false,
-                    "renderer": "flot",
-                    "repeat": null,
-                    "seriesOverrides": [
-
-                    ],
-                    "spaceLength": 10,
-                    "span": 6,
-                    "stack": false,
-                    "steppedLine": false,
-                    "targets": [
-                        {
-                            "expr": "histogram_quantile(0.99, sum(rate(kubeproxy_network_programming_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\"}[5m])) by (instance, le))",
-                            "format": "time_series",
-                            "intervalFactor": 2,
-                            "legendFormat": "{{instance}}",
-                            "refId": "A"
-                        }
-                    ],
-                    "thresholds": [
-
-                    ],
-                    "timeFrom": null,
-                    "timeShift": null,
-                    "title": "Network Programming Latency 99th Quantile",
-                    "tooltip": {
-                        "shared": false,
-                        "sort": 0,
-                        "value_type": "individual"
-                    },
-                    "type": "graph",
-                    "xaxis": {
-                        "buckets": null,
-                        "mode": "time",
-                        "name": null,
-                        "show": true,
-                        "values": [
-
-                        ]
-                    },
-                    "yaxes": [
-                        {
-                            "format": "s",
-                            "label": null,
-                            "logBase": 1,
-                            "max": null,
-                            "min": 0,
-                            "show": true
-                        },
-                        {
-                            "format": "s",
-                            "label": null,
-                            "logBase": 1,
-                            "max": null,
-                            "min": 0,
-                            "show": true
-                        }
-                    ]
-                }
-            ],
-            "repeat": null,
-            "repeatIteration": null,
-            "repeatRowId": null,
-            "showTitle": false,
-            "title": "Dashboard Row",
-            "titleSize": "h6",
-            "type": "row"
-        },
-        {
-            "collapse": false,
-            "collapsed": false,
-            "panels": [
-                {
-                    "aliasColors": {
-
-                    },
-                    "bars": false,
-                    "dashLength": 10,
-                    "dashes": false,
-                    "datasource": "$datasource",
-                    "fill": 1,
-                    "fillGradient": 0,
-                    "gridPos": {
-
-                    },
-                    "id": 7,
-                    "legend": {
-                        "alignAsTable": false,
-                        "avg": false,
-                        "current": false,
-                        "max": false,
-                        "min": false,
-                        "rightSide": false,
-                        "show": true,
-                        "sideWidth": null,
-                        "total": false,
-                        "values": false
-                    },
-                    "lines": true,
-                    "linewidth": 1,
-                    "links": [
-
-                    ],
-                    "nullPointMode": "null",
-                    "percentage": false,
-                    "pointradius": 5,
-                    "points": false,
-                    "renderer": "flot",
-                    "repeat": null,
-                    "seriesOverrides": [
-
-                    ],
-                    "spaceLength": 10,
-                    "span": 4,
-                    "stack": false,
-                    "steppedLine": false,
-                    "targets": [
-                        {
-                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"2..\"}[5m]))",
-                            "format": "time_series",
-                            "intervalFactor": 2,
-                            "legendFormat": "2xx",
-                            "refId": "A"
-                        },
-                        {
-                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"3..\"}[5m]))",
-                            "format": "time_series",
-                            "intervalFactor": 2,
-                            "legendFormat": "3xx",
-                            "refId": "B"
-                        },
-                        {
-                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"4..\"}[5m]))",
-                            "format": "time_series",
-                            "intervalFactor": 2,
-                            "legendFormat": "4xx",
-                            "refId": "C"
-                        },
-                        {
-                            "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\",code=~\"5..\"}[5m]))",
-                            "format": "time_series",
-                            "intervalFactor": 2,
-                            "legendFormat": "5xx",
-                            "refId": "D"
-                        }
-                    ],
-                    "thresholds": [
-
-                    ],
-                    "timeFrom": null,
-                    "timeShift": null,
-                    "title": "Kube API Request Rate",
-                    "tooltip": {
-                        "shared": false,
-                        "sort": 0,
-                        "value_type": "individual"
-                    },
-                    "type": "graph",
-                    "xaxis": {
-                        "buckets": null,
-                        "mode": "time",
-                        "name": null,
-                        "show": true,
-                        "values": [
-
-                        ]
-                    },
-                    "yaxes": [
-                        {
-                            "format": "ops",
-                            "label": null,
-                            "logBase": 1,
-                            "max": null,
-                            "min": null,
-                            "show": true
-                        },
-                        {
-                            "format": "ops",
-                            "label": null,
-                            "logBase": 1,
-                            "max": null,
-                            "min": null,
-                            "show": true
-                        }
-                    ]
-                },
-                {
-                    "aliasColors": {
-
-                    },
-                    "bars": false,
-                    "dashLength": 10,
-                    "dashes": false,
-                    "datasource": "$datasource",
-                    "fill": 1,
-                    "fillGradient": 0,
-                    "gridPos": {
-
-                    },
-                    "id": 8,
-                    "legend": {
                         "alignAsTable": false,
                         "avg": false,
                         "current": false,
@@ -666,7 +509,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\",verb=\"POST\"}[5m])) by (verb, url, le))",
+                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\", verb=\"POST\"}[5m])) by (verb, url, le))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{verb}} {{url}}",
@@ -739,7 +582,7 @@
                     "gridPos": {
 
                     },
-                    "id": 9,
+                    "id": 7,
                     "legend": {
                         "alignAsTable": true,
                         "avg": false,
@@ -772,7 +615,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\", instance=~\"$instance\", verb=\"GET\"}[5m])) by (verb, url, le))",
+                            "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\", verb=\"GET\"}[5m])) by (verb, url, le))",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{verb}} {{url}}",
@@ -845,7 +688,7 @@
                     "gridPos": {
 
                     },
-                    "id": 10,
+                    "id": 8,
                     "legend": {
                         "alignAsTable": false,
                         "avg": false,
@@ -878,7 +721,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "process_resident_memory_bytes{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\"}",
+                            "expr": "process_resident_memory_bytes{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{instance}}",
@@ -938,7 +781,7 @@
                     "gridPos": {
 
                     },
-                    "id": 11,
+                    "id": 9,
                     "legend": {
                         "alignAsTable": false,
                         "avg": false,
@@ -971,7 +814,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\"}[5m])",
+                            "expr": "rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[5m])",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{instance}}",
@@ -1001,7 +844,7 @@
                     },
                     "yaxes": [
                         {
-                            "format": "short",
+                            "format": "bytes",
                             "label": null,
                             "logBase": 1,
                             "max": null,
@@ -1009,7 +852,7 @@
                             "show": true
                         },
                         {
-                            "format": "short",
+                            "format": "bytes",
                             "label": null,
                             "logBase": 1,
                             "max": null,
@@ -1031,7 +874,7 @@
                     "gridPos": {
 
                     },
-                    "id": 12,
+                    "id": 10,
                     "legend": {
                         "alignAsTable": false,
                         "avg": false,
@@ -1064,7 +907,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "expr": "go_goroutines{cluster=\"$cluster\", job=\"k3s-metrics-service\",instance=~\"$instance\"}",
+                            "expr": "go_goroutines{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{instance}}",
@@ -1158,7 +1001,7 @@
                 "options": [
 
                 ],
-                "query": "label_values(kube_pod_info, cluster)",
+                "query": "label_values(up{job=\"kubelet\"}, cluster)",
                 "refresh": 2,
                 "regex": "",
                 "sort": 1,
@@ -1184,7 +1027,7 @@
                 "options": [
 
                 ],
-                "query": "label_values(kubeproxy_network_programming_duration_seconds_bucket{cluster=\"$cluster\", job=\"k3s-metrics-service\"}, instance)",
+                "query": "label_values(process_cpu_seconds_total{cluster=\"$cluster\", job=\"kubelet\"}, instance)",
                 "refresh": 2,
                 "regex": "",
                 "sort": 1,
@@ -1228,7 +1071,7 @@
         ]
     },
     "timezone": "utc",
-    "title": "Kubernetes / Proxy",
-    "uid": "632e265de029684c40b21cb76bca4f94",
+    "title": "Kubernetes / Scheduler",
+    "uid": "2e6b6a3b4bddf1427b3a55aa1311c656",
     "version": 0
 }

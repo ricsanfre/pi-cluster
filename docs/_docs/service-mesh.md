@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "05-04-2022"
+last_modified_at: "17-08-2022"
 
 ---
 
@@ -300,9 +300,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - interval: 10s
-        scrapeTimeout: 10s
-        relabelings:
+      - relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_container_port_name
           action: keep
@@ -312,7 +310,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
           action: replace
           targetLabel: component
         # Replace job value
-        - source_labels:
+        - sourceLabels:
           - __address__
           action: replace
           targetLabel: job
@@ -332,9 +330,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - interval: 10s
-        scrapeTimeout: 10s
-        relabelings:
+      - relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_label_linkerd_io_control_plane_component
           - __meta_kubernetes_pod_container_port_name
@@ -365,8 +361,6 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
     selector:
       matchLabels: {}
     podMetricsEndpoints:
-      - interval: 10s
-        scrapeTimeout: 10s
         relabelings:
         - sourceLabels:
           - __meta_kubernetes_pod_container_name
@@ -402,7 +396,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
         - action: labelmap
           regex: __tmp_pod_label_(.+)
         # Replace job value
-        - source_labels:
+        - sourceLabels:
           - __address__
           action: replace
           targetLabel: job
@@ -792,10 +786,10 @@ Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside th
 ## References
 
 
-- Linkerd vs Istio Benchmarks ([1])(https://linkerd.io/2021/11/29/linkerd-vs-istio-benchmarks-2021/)
-- Why Linkerd does not use Envoy proxy ([2])(https://linkerd.io/2020/12/03/why-linkerd-doesnt-use-envoy/)
-- Linkerd architecture ([3])(https://linkerd.io/2.11/reference/architecture/)
-- How Linkerd uses iptables to transparently route Kubernetes traffic [[4]](https://linkerd.io/2021/09/23/how-linkerd-uses-iptables-to-transparently-route-kubernetes-traffic/)
-- Protocol Detection and Opaque Ports in Linkerd [[5]](https://linkerd.io/2021/02/23/protocol-detection-and-opaque-ports-in-linkerd/)
-- Linkerd gRPC load balancing vs default Kubernetes kube-proxy([6])(https://kubernetes.io/blog/2018/11/07/grpc-load-balancing-on-kubernetes-without-tears/)
-- How to configure linkerd service-mesh with Elastic Cloud Operator [[7]](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-service-mesh-linkerd.html)
+- [Linkerd vs Istio Benchmarks](https://linkerd.io/2021/11/29/linkerd-vs-istio-benchmarks-2021/)
+- [Why Linkerd does not use Envoy proxy](https://linkerd.io/2020/12/03/why-linkerd-doesnt-use-envoy/)
+- [Linkerd architecture](https://linkerd.io/2.11/reference/architecture/)
+- [How Linkerd uses iptables to transparently route Kubernetes traffic](https://linkerd.io/2021/09/23/how-linkerd-uses-iptables-to-transparently-route-kubernetes-traffic/)
+- [Protocol Detection and Opaque Ports in Linkerd](https://linkerd.io/2021/02/23/protocol-detection-and-opaque-ports-in-linkerd/)
+- [Linkerd gRPC load balancing vs default Kubernetes kube-proxy](https://kubernetes.io/blog/2018/11/07/grpc-load-balancing-on-kubernetes-without-tears/)
+- [How to configure linkerd service-mesh with Elastic Cloud Operator](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-service-mesh-linkerd.html)

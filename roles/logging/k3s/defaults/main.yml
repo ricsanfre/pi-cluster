@@ -25,6 +25,10 @@ efk_elasticsearch_storage_class: "longhorn"
 # elastic user password
 efk_elasticsearch_passwd: "s1cret0"
 
+# Memory usage limits
+efk_elasticsearch_mem_limit: "1Gi"
+efk_kibana_mem_limit: "512Mi"
+
 # Configured Timezone
 efk_node_timezone: "Europe/Madrid"
 

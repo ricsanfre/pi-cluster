@@ -1,18 +1,32 @@
 ---
 # kube-prometheus-stack helm chart values
 
-{% if enable_linkerd is sameas true %}
-# Disable linkerd injection for admission webhooks jobs
 prometheusOperator:
+{% if enable_linkerd is sameas true %}
+  # Disable linkerd injection for admission webhooks jobs
   admissionWebhooks:
     patch:
       podAnnotations:
         linkerd.io/inject: disabled
+{% endif %}
+  # Relabeling job name for operator metrics
+  serviceMonitor:
+    relabelings:
+    # Replace job value
+    - sourceLabels:
+      - __address__
+      action: replace
+      targetLabel: job
+      replacement: prometheus-operator
+  # Disable creation of kubelet service
+  kubeletService:
+    enabled: false
+
 # Enable serviceaccount automount
 prometheus-node-exporter:
   serviceAccount:
     automountServiceAccountToken: true
-{% endif %}
+
 alertmanager:
   alertmanagerSpec:
     storage:
@@ -23,8 +37,23 @@ alertmanager:
           resources:
             requests:
               storage: "{{ prometheus_storage_size }}"
+  serviceMonitor:
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: alertmanager
 prometheus:
   prometheusSpec:
+    # Resources request and limits
+    resources:
+      requests:
+        memory: {{ prometheus_mem_limit }}
+      limits:
+        memory: {{ prometheus_mem_limit }}
+    # PVC configuration
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -33,12 +62,37 @@ prometheus:
           resources:
             requests:
               storage: "{{ prometheus_storage_size }}"
+  serviceMonitor:
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: prometheus
 grafana:
+  # Set admin password
   adminPassword: "{{ prometheus_grafana_password }}"
+  # Install required plugins
   plugins:
     - grafana-piechart-panel
+  # Relabel job name of Grafana's metrics
+  serviceMonitor:
+    labels:
+      release: kube-prometheus-stack
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: grafana
+# Disabling monitoring of K8s services.
+# Monitoring of K3S components will be configured out of kube-prometheus-stack
+kubelet:
+  enabled: false
 kubeApiServer:
-  enabled: true
+  enabled: false
 kubeControllerManager:
   enabled: false
 kubeScheduler:
@@ -47,3 +101,22 @@ kubeProxy:
   enabled: false
 kubeEtcd:
   enabled: false
+# Disable K8S Prometheus Rules
+# Rules for K3S components will be configured out of kube-prometheus-stack
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    k8s: false
+    kubeApiserverAvailability: false
+    kubeApiserverBurnrate: false
+    kubeApiserverHistogram: false
+    kubeApiserverSlos: false
+    kubeControllerManager: false
+    kubelet: false
+    kubeProxy: false
+    kubernetesApps: false
+    kubernetesResources: false
+    kubernetesStorage: false
+    kubernetesSystem: false
+    kubeScheduler: false

@@ -15,9 +15,7 @@ spec:
   selector:
     matchLabels: {}
   podMetricsEndpoints:
-    - interval: 10s
-      scrapeTimeout: 10s
-      relabelings:
+    - relabelings:
       - sourceLabels:
         - __meta_kubernetes_pod_container_port_name
         action: keep
@@ -27,7 +25,7 @@ spec:
         action: replace
         targetLabel: component
       # Replace job value
-      - source_labels:
+      - sourceLabels:
         - __address__
         action: replace
         targetLabel: job
@@ -48,9 +46,7 @@ spec:
   selector:
     matchLabels: {}
   podMetricsEndpoints:
-    - interval: 10s
-      scrapeTimeout: 10s
-      relabelings:
+    - relabelings:
       - sourceLabels:
         - __meta_kubernetes_pod_label_linkerd_io_control_plane_component
         - __meta_kubernetes_pod_container_port_name
@@ -61,7 +57,7 @@ spec:
         action: replace
         targetLabel: component
       # Replace job value
-      - source_labels:
+      - sourceLabels:
         - __address__
         action: replace
         targetLabel: job
@@ -118,7 +114,7 @@ spec:
       - action: labelmap
         regex: __tmp_pod_label_(.+)
       # Replace job value
-      - source_labels:
+      - sourceLabels:
         - __address__
         action: replace
         targetLabel: job

@@ -13,9 +13,18 @@ spec:
     tls:
       selfSignedCertificate:
         disabled: true
-{% if enable_linkerd is sameas true %}
-  # Enabling service account token. linkerd requirement
   podTemplate:
     spec:
+{% if enable_linkerd is sameas true %}
+      # Enabling service account token. linkerd requirement
       automountServiceAccountToken: true
 {% endif %}
+      # Limiting Resources consumption
+      containers:
+      - name: kibana
+        resources:
+          requests:
+            memory: 1Gi
+          limits:
+            memory: 1Gi
+

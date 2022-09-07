@@ -11,6 +11,7 @@
   kubernetes.core.helm:
     name: linkerd-viz
     chart_ref: linkerd/linkerd-viz
+    chart_version: 2.11.4
     release_namespace: "{{ k3s_linkerd_namespace }}-viz"
     update_repo_cache: true
     state: present
