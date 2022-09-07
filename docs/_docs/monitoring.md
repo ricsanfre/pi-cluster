@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "06-09-2022"
+last_modified_at: "07-09-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -185,7 +185,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 
   - Sets Grafana's specific configuration (admin password `grafana.adminPassword` and list of plugins to be installed: `grafana.plugins`).
   
-  - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd`.
+  - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd.enabled`.
     
     Monitoring of K3s components will be configured outside kube-prometheus-stack. See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
   
@@ -601,7 +601,7 @@ This `AlartManager` object specifies the following Alert Manager configuration:
 - AlertManager
 - Prometheus Operator
 
-and the following Kubernetes services and processes depending on the configuration of the helm chart
+and the following Kubernetes services and processes depending on the configuration of the helm chart.
 
 - coreDNS
 - Kube Api server
@@ -611,13 +611,10 @@ and the following Kubernetes services and processes depending on the configurati
 - Kubernetes etc
 - Kube Proxy
 
-
-In the chart configuration, monitoring of kube-controller-manager, kube-scheduler, kube-proxy, kubelet components has been disabled. 
-
-See below section ["K3S components monitoring"](#k3s-components-monitoring) to know the reason why this has been disabled in kube-prometheus-stack and how to configure the monitoring of K3s.
-
+In the chart configuration, monitoring of kube-controller-manager, kube-scheduler, kube-proxy, kubelet components has been disabled.
 Only the monitoring of `coreDNS` component has not been disabled.
 
+See below section, ["K3S components monitoring"](#k3s-components-monitoring), to know why monitoring of kubernetes components has been disabled in kube-prometheus-stack and how to configure manually the monitoring of K3s.
 
 #### PrometheusRule Objects
 
@@ -627,7 +624,7 @@ The rules provisioned can be found here: [Prometheus rules created by kube-prome
 
 Since monitoring of K8S components (kube-controller-manager, kube-scheduler, kube-proxy, kubelet) has been disabled in the chart configuration, correponding PrometheusRules objects are not created.
 
-See below section ["K3S components monitoring"](#k3s-components-monitoring) to know how to configure manually those rules.
+See below section, ["K3S components monitoring"](#k3s-components-monitoring), to know how to configure manually those rules.
 
 ### Grafana
 
@@ -892,9 +889,9 @@ Kube-state-metrics' metrics are exposed in TCP port 8080 (`/metrics` endpoint).
 
 ## K3S and Cluster Services Monitoring
 
-In this section, it is detailed the procedures to activate Prometheus monitoring for K3S components and each of the kubernetes services deployed.
+In this section, it is detailed the procedures to activate Prometheus monitoring for K3S components and the cluster services deployed.
 
-The procedure includes the services/endpoints that need to be created, the `ServiceMonitor`/`PodMonitor`/`Probe` objects that need to be created to configure Prometheus' service discovery, and the dashboards, in json format, that need to be imported in Grafana to visualize the metrics of each service.
+The procedure includes the creation of Kuberentes resources, `Services`/`Endpoints` and `ServiceMonitor`/`PodMonitor`/`Probe`, that need to be created to configure Prometheus' service discovery and monitoring configuration. It also includes the dashboards, in json format, that need to be imported in Grafana to visualize the metrics of each particular service.
 
 {{site.data.alerts.note}}
 
@@ -916,9 +913,7 @@ data:
 
 ### K3S components monitoring
 
-[Kuberentes Documentation - System Metrics](https://kubernetes.io/docs/concepts/cluster-administration/system-metrics/) details which Kubernetes components expose metrics in Prometheus format:
-
-These components are:
+[Kuberentes Documentation - System Metrics](https://kubernetes.io/docs/concepts/cluster-administration/system-metrics/) details the Kubernetes components exposing metrics in Prometheus format:
 
 - kube-controller-manager (exposing `metrics` endpoint at TCP 10257)
 - kube-proxy (exposing `/metrics` endpoint at TCP 10249)
@@ -930,7 +925,9 @@ These components are:
 
 TCP ports numbers exposed by kube-scheduler and kube-controller-manager have changed from  kubernetes release 1.22 (from 10251/10252 to 10257/10259). 
 
-It also now requires https authenticated connection. Kubernetes authorized service account is needed. Only kube-proxy endpoint remains open using HTTP, the rest of the ports are now using HTTPS.
+Additional change is that https authenticated connection is required too. Thus, Kubernetes authorized service account is needed to access the metrics service.
+
+Only kube-proxy endpoint remains open using HTTP, the rest of the ports are now using HTTPS.
 
 {{site.data.alerts.end}}
 
@@ -961,7 +958,13 @@ By the other hand, kubelet additional metrics endpoints (`/metrics/cadvisor`, `/
 
 Thus, the solution is to scrape only the metrics endpoints available in kubelet port (TCP 10250): `/metrics`, `/metrics/cadvisor`, `/metrics/resource` and `/metrics/probes`
 
-That it the reason why monitoring of K8s kuberentes components has been disabled in kube-prometheus-stack chart configuration.
+{{site.data.alerts.note}}
+
+See issue [#67](https://github.com/ricsanfre/pi-cluster/issues/67) for details about the analysis of the duplicates and the proposed solution
+
+{{site.data.alerts.end}}
+
+This is the reason why monitoring of K8s kuberentes components has been disabled in kube-prometheus-stack chart configuration.
 
 ```yml
 # Disable creation of kubelet service
@@ -1003,14 +1006,7 @@ defaultRules:
     kubeScheduler: false
 ```
 
-With this configuration the kubernetes resources (headless `Service`, `ServiceMonitor` and `PrometheusRules`) are not created for activate K8S components monitoring and correponding Grafana's dashboards are not deployed. 
-
-{{site.data.alerts.note}}
-
-See issue [#67](https://github.com/ricsanfre/pi-cluster/issues/67) for details about the analysis of the duplicates and the proposed solution
-
-{{site.data.alerts.end}}
-
+With this configuration, the kubernetes resources (headless `Service`, `ServiceMonitor` and `PrometheusRules`) are not created for activate K8S components monitoring and correponding Grafana's dashboards are not deployed. 
 
 To configure manually all kubernetes resources needed to scrape the available metrics from kubelet metrics endpoints, follow this procedure:
 
@@ -1061,7 +1057,9 @@ To configure manually all kubernetes resources needed to scrape the available me
 
   The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover K3S metrics endpoint as a Prometheus target.
 
-  A single ServiceMonitor resource to enable the collection of all k8s components metrics from unique port TCP 10250. This `ServiceMonitor` includes all relabeling/dropping rules defined by the ServiceMonitor resources that kube-prometheus-stack chart creates by default for each individual k8s component.
+  A single ServiceMonitor resource to enable the collection of all k8s components metrics from unique port TCP 10250.
+
+  This `ServiceMonitor` includes all Prometheus' relabeling/dropping rules defined by the ServiceMonitor resources that kube-prometheus-stack chart would have created if monitoring of all k8s component were activated.
 
   ```yml
   apiVersion: monitoring.coreos.com/v1
@@ -1155,7 +1153,7 @@ To configure manually all kubernetes resources needed to scrape the available me
 
   This ServiceMonitor configures a single Prometheus' scrapping job (job="kubelet").
 
-  "kubelet" job label is kept so less dahsboards need to be modified. Most of "Computer Resources" type dashboards are using kubelet metrics and the promQL queries in the dashboard are filter metrics by label job="kubelet".
+  "kubelet" job label is kept so less dahsboards need to be modified. Most of "Computer Resources - X" dashboards are using kubelet metrics and the promQL queries in the dashboard are filter metrics by label job="kubelet".
 
   {{site.data.alerts.end}}
 
@@ -1166,6 +1164,7 @@ To configure manually all kubernetes resources needed to scrape the available me
   Modify the yaml file to replace job labels names:
 
   - Replace job labels names
+
     Replace the following strings:
 
     - `job="apiserver"`
@@ -1178,14 +1177,25 @@ To configure manually all kubernetes resources needed to scrape the available me
     `job="kubelet"`
 
   - Add the following label so it match the PrometheusOperator selector for rules
-    `release: kube-prometheus-stack`
+
+    ```yml
+    apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+     labels:
+       release: kube-prometheus-stack` 
+    ```
 
 
 - Apply manifest file
+
   ```shell
   kubectl apply -f k3s-metrics-service.yml k3s-servicemonitor.yml kubernetesControlPlane-prometheusRule.yaml
   ```
-- Check targets are automatically discovered in Prometheus UI: `http://prometheus/targets`
+
+- Check targets are automatically discovered in Prometheus UI: 
+
+  `http://prometheus/targets`
 
 
 #### coreDNS monitoring
@@ -1400,7 +1410,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
 {{site.data.alerts.important}}
 Set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
 
-`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
+`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`).
 
 {{site.data.alerts.end}}
 
