@@ -68,6 +68,20 @@ That trust-anchor anc ClusterIssuer will be used to generate linkerd certificate
 
 ### Linkerd Installation using Helm
 
+
+{{site.data.alerts.note}}
+
+Starting from release 2.12, linkerd installation procedure has changed.
+
+[Linkerd v2.12 installation procedure using helm](https://linkerd.io/2.12/tasks/install-helm/) requires to deploy two different new charts:
+- `linkerd-crd`
+- `linkerd-control-plane`
+
+Chart available from previous versions (till v2.11.4), `linkerd2`, is not used anymore.
+
+{{site.data.alerts.end}}
+
+
 Installation using `Helm` (Release 3):
 
 - Step 1: Add the Linkerd Helm stable repository:
@@ -145,13 +159,13 @@ Installation using `Helm` (Release 3):
 
   Certificate is creates as CA (isCA:true) because it will be use by linkerd to issue mTLS certificates.
 
-- Step 2: Command certmanger to create the `Certificate` and the associated `Secret`.
+- Step 5: Command certmanger to create the `Certificate` and the associated `Secret`.
 
   ```shell
   kubectl apply -f linkerd-identity-issuer.yml
   ```
 
-- Step 3: Get CA certificate used to sign the linkerd-identy-issuer certificate
+- Step 6: Get CA certificate used to sign the linkerd-identy-issuer certificate
 
   Linkerd installation procedure (using Helm chart of `linkerd` CLI), requires to pass as parameter the trust-anchor (root certiticate) used to sign the linkerd-identy-issuer. It can be obtained from the associated Secret with the following commad.
 
@@ -159,24 +173,30 @@ Installation using `Helm` (Release 3):
   kubectl get secret linkerd-identity-issuer -o jsonpath="{.data.ca\.crt}" -n linkerd | base64 -d > ca.crt
   ```
 
-- Step 4: Install Linkerd
+- Step 7: Install Linkerd CRDs Helm
 
   ```shell
-  helm install linkerd2 \
+  helm install linkerd-crds linkerd/linkerd-crds -n linkerd
+  ```
+
+- Step 8: Install Linkerd control Plane Helm
+
+  ```shell
+  helm install linkerd-control-plane \
   --set-file identityTrustAnchorsPEM=ca.crt \
   --set identity.issuer.scheme=kubernetes.io/tls \
   --set installNamespace=false \
-  linkerd/linkerd2 \
+  linkerd/linkerd-control-plane \
   -n linkerd
   ```
 
-- Step 5: Confirm that the deployment succeeded, run:
+- Step 9: Confirm that the deployment succeeded, run:
 
   ```shell
   kubectl -n linkerd get pod
   ```
 
-- Step 6: Check linkerd control plane configmap
+- Step 10: Check linkerd control plane configmap
 
   Check that the ca.crt is properly included in linkerd configmap
 
@@ -184,7 +204,7 @@ Installation using `Helm` (Release 3):
   kubectl get configmap linkerd-config -o yaml -n linkerd
   ```
   
-  The `identiyTrustAnchorPEM` key included in the Configmap should show th ca.crt extracted in Step 3
+  The `identiyTrustAnchorPEM` key included in the Configmap should show the ca.crt extracted in Step 3
   
   ```yml
     identityTrustAnchorsPEM: |-
