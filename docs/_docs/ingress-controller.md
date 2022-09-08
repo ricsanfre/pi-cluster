@@ -2,7 +2,7 @@
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
 description: How to configure Ingress Contoller based on Traefik in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "08-03-2022"
+last_modified_at: "08-09-2022"
 ---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
@@ -438,6 +438,18 @@ Since Traefik helm deployment is managed directly by K3S, a specific K3S procedu
 {{site.data.alerts.end}}
 
 
+## Enabling cross-namespaces references in IngressRoute resources
+
+As alternative to standard `Ingress` kuberentes resources, Traefik's specific CRD, `IngressRoute` can be used. This CRD allows advanced routing configurations not possible to do with `Ingress` available Traefik's annotations.
+
+`IngressRoute` resources only can reference other Traefik's resources, i.e: `Middleware` located in the same namespace.
+To change this, and allow IngresRoute access resources defined in other namespaces, [`allowCrossNamespace`](https://doc.traefik.io/traefik/providers/kubernetes-crd/#allowcrossnamespace) Traefik helm chart value must be set to true.
+
+
+{{site.data.alerts.important}}
+Since Traefik helm deployment is managed directly by K3S, a specific K3S procedure need to be followed to change the configuration of the Helm chart. See section [below](#traefik-helmchart-configuration).
+{{site.data.alerts.end}}
+
 ## Traefik HelmChart Configuration
 
 Traefik is a K3S embedded components that is auto-deployed using Helm. In order to configure Helm chart configuration parameters the official [document](https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig) must be followed.
@@ -476,6 +488,11 @@ Traefik is a K3S embedded components that is auto-deployed using Helm. In order 
       service:
         spec:
           loadBalancerIP: 10.0.0.100
+      # Enable cross namespace references
+      providers:
+        kubernetesCRD:
+          enabled: true
+          allowCrossNamespace: true
   ```
    
 - Copy file `traefik-config.yml` file to `/var/lib/rancher/k3s/server/manifests/` in the master node.

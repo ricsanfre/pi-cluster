@@ -34,3 +34,8 @@ spec:
     service:
       spec:
         loadBalancerIP: {{ k3s_ingress_external_ip }}
+    # Enable cross namespace references
+    providers:
+      kubernetesCRD:
+        enabled: true
+        allowCrossNamespace: true
