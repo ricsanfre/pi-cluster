@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "17-08-2022"
+last_modified_at: "09-09-2022"
 
 ---
 
@@ -54,9 +54,9 @@ In our cluster we will use `certmanager` to generate the **trust anchor** (root 
 
 ## Linkerd Installation
 
-Installation procedure to use cert-manager and being able to automatically rotate control-plane tls credentials is described in [linkerd documentation](https://linkerd.io/2.11/tasks/automatically-rotating-control-plane-tls-credentials/).
+Installation procedure using cert-manager to automatically rotate control-plane tls credentials is described in [linkerd documentation](https://linkerd.io/2.12/tasks/automatically-rotating-control-plane-tls-credentials/).
 
-The following instalation procedure is a slightly different from the one proposed in that documentation since we will use as linkerd trust-anchor the root CA and CA ClusterIssuer already created during Cert-manager installation and configuration for the cluster.
+The following instalation procedure is a slightly different from the one proposed in that documentation since we will use, as linkerd trust-anchor, the root CA and CA ClusterIssuer already created during Cert-manager installation and configuration for the cluster.
 
 ### Installation pre-requisite: Configure Cert-Manager
 
@@ -227,13 +227,16 @@ Linkerd provides a full on-cluster metrics stack, a web dashboard, and pre-confi
 This extension installs the following components into a new namespace linkerd-viz:
 
 - A Prometheus instance
-- A Grafana instance
 - metrics-api, tap, tap-injector, and web components
 
-Since we have already our monitoring deployment, we will configure Viz extension to use the existing Prometheus and Grafana instance. See linkerd documentation ["Bringing your own Prometheus"](https://linkerd.io/2.11/tasks/external-prometheus/).
 
+Since we have already our monitoring deployment, we will configure Viz extension to use the existing Prometheus and Grafana instance. See linkerd documentation ["Bringing your own Prometheus"](https://linkerd.io/2.12/tasks/external-prometheus/).
 
-linkerd-viz dashboard (web component) will be exposed configuring a Ingress resource. By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik does not support a mechanism for ovewritting Host header, the Host validation regexp that the dashboard server uses need to be tweaked using Helm chart paramenter `enforcedHostRegexp`. See document ["Exposing dashboard - DNS Rebinding Protection"](https://linkerd.io/2.11/tasks/exposing-dashboard/#dns-rebinding-protection) for more details.
+Linkerd-viz dashboard (web component) will be exposed configuring a Ingress resource. 
+
+From Linkerd-viz release 2.12, Grafana component installation is not included. External Grafana need to be configured to enable drill-down from linkerd-viz's dashboards metrics to Grafana's dashboards.
+
+By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik does not support a mechanism for ovewritting Host header, Host validation regexp, used by dashboard server, need to be tweaked using Helm chart parameter `enforcedHostRegexp`. See document ["Exposing dashboard - DNS Rebinding Protection"](https://linkerd.io/2.12/tasks/exposing-dashboard/#dns-rebinding-protection) for more details.
 
 
 - Step 1: Create namespace
@@ -263,20 +266,20 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
   kubectl apply -f linkerd_viz_namespace.yml
   ```
 
-
 - Step 2: Prepare values.yml for Viz helm chart installation
 
   ```yml
   # Skip namespace creation
   installNamespace: false
-  # Disable Prometheus installation and configure external Prometheus URL
-  prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
+
+  # Disable prometheus installation
   prometheus:
     enabled: false
-  # Disable Grafana installation and configure external Grafana URL
+  # Configure external Prometheus URL
+  prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
+  # External Grafana
   grafana:
-    enabled: false
-  grafanaUrl: kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local:80
+    url: kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local
   # Disabling DNS rebinding protection
   dahsboard:
     enforcedHostRegexp: ".*"
@@ -296,7 +299,7 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
 
   In case of Traefik, it is not needed to mesh Traefik deployment to grant access
 
-  Linkerd documentation contains information about how to configure [Traefik as Ingress Controller](https://linkerd.io/2.11/tasks/exposing-dashboard/#traefik). To enable mTLS in the communication from Ingress Controller, Traefik deployment need to be meshed using "ingress" proxy injection.
+  Linkerd documentation contains information about how to configure [Traefik as Ingress Controller](https://linkerd.io/2.12/tasks/exposing-dashboard/#traefik). To enable mTLS in the communication from Ingress Controller, Traefik deployment need to be meshed using "ingress" proxy injection.
 
 - Step 5: Configure Prometheus to scrape metrics from linkerd
   
@@ -431,13 +434,13 @@ linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
 
   {{site.data.alerts.note}}
 
-  This is a direct translation of the [Prometheus' scrape configuration defined in linkerd documentation](https://linkerd.io/2.11/tasks/external-prometheus/#prometheus-scrape-configuration) to Prometheus Operator based configuration (ServiceMonitor and PodMonitor CRDs).
+  This is a direct translation of the [Prometheus' scrape configuration defined in linkerd documentation](https://linkerd.io/2.12/tasks/external-prometheus/#prometheus-scrape-configuration) to Prometheus Operator based configuration (ServiceMonitor and PodMonitor CRDs).
 
-  Only two additional changes have been added to match linkerd's Grafana dashboards configuration:
+  Only two additional changes have been made:
 
-  - Changing `job` label: Prometheus operator by default creates job names and job labels with `<namespace>/<podMonitor/serviceMonitor_name>`. Additional relabel rule has been added to remove namespace from job label matching Grafana dashboard's filters
+  - Changing `job` label: Prometheus operator by default creates job names and job labels with `<namespace>/<podMonitor/serviceMonitor_name>`. Additional relabel rule has been added to remove namespace from job label matching Grafana dashboard's filters.
 
-  - Changing scraping `interval` and `timeout` to 10 seconds, instead default prometheus configuration (30 seconds). Linkerd's Grafana dashboards are configured to calculate rates from metrics in the last 30 seconds.
+  - Removing scraping `interval` and `timeout` configuration set to 10 seconds, so Prometheus defaults are used (30 seconds), reducing the impact on memory and cpu consumption.
 
   {{site.data.alerts.end}}
    
@@ -706,7 +709,7 @@ Linkerd can be used with any ingress controller. In order for Linkerd to properl
 
 In order to enable linkerd implementation of load balancing at HTTP request level, Traefik load balancing mechanism must be skipped.
 
-More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.11/tasks/using-ingress/).
+More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.12/tasks/using-ingress/).
 
 
 ### Meshing Traefik
@@ -755,7 +758,6 @@ In order to integrate Traefik with Linkerd the following must be done:
    Traefik is a K3S embedded components that is auto-deployed using Helm. In order to configure Helm chart configuration parameters the official [document](https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig) must be followed. See how to do it in [Traefik configuration documentation](/docs/traefik/)
 
 
-
 2. Replace Traefik routing and load-balancing mechanism by linkerd-proxy routing and load balancing mechanism.
 
    Configure Ingress resources to use a Traefik's Middleware inserting a specific header, `l5d-dst-override` pointing to the Service IP/Port (using internal DNS name: `<service-name>.<namespace-name>.svc.cluster.local`
@@ -783,7 +785,9 @@ In order to integrate Traefik with Linkerd the following must be done:
             l5d-dst-override: "my-service.my-namespace.svc.cluster.local:80"
 
       ```
-    - Step 2: Add traefik middleware annotation to Ingress definition
+    - Step 2: Add traefik Middleware in Ingress configuration
+
+      Through annotation in Ingress resource.
 
       ```yml
       apiVersion: networking.k8s.io/v1
@@ -794,6 +798,28 @@ In order to integrate Traefik with Linkerd the following must be done:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares:
             my-namespace-l5d-header-middleware@kubernetescrd
+
+      ```
+
+      Or within `middlewares` key in IngressRoute definition
+
+      ```yml
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: IngressRoute
+      metadata:
+        name: my-ingress-route
+        namespace: my-namespace
+      spec:
+        routes:
+        - kind: Rule
+          match: Host(`mydomain`)
+          services:
+          - name: my-service
+            port: 8080
+            namespace: my-namespace
+          middlewares:
+            - name: l5d-header-middleware
+              namespace: my-namespace
 
       ```
 
@@ -808,7 +834,7 @@ Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside th
 
 - [Linkerd vs Istio Benchmarks](https://linkerd.io/2021/11/29/linkerd-vs-istio-benchmarks-2021/)
 - [Why Linkerd does not use Envoy proxy](https://linkerd.io/2020/12/03/why-linkerd-doesnt-use-envoy/)
-- [Linkerd architecture](https://linkerd.io/2.11/reference/architecture/)
+- [Linkerd architecture](https://linkerd.io/2.12/reference/architecture/)
 - [How Linkerd uses iptables to transparently route Kubernetes traffic](https://linkerd.io/2021/09/23/how-linkerd-uses-iptables-to-transparently-route-kubernetes-traffic/)
 - [Protocol Detection and Opaque Ports in Linkerd](https://linkerd.io/2021/02/23/protocol-detection-and-opaque-ports-in-linkerd/)
 - [Linkerd gRPC load balancing vs default Kubernetes kube-proxy](https://kubernetes.io/blog/2018/11/07/grpc-load-balancing-on-kubernetes-without-tears/)
