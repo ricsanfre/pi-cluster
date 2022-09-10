@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to use Ansible to automate the deployment and configuration. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "07-09-2022"
+last_modified_at: "10-09-2022"
 ---
 
 
@@ -102,7 +102,7 @@ The software used and the latest version tested of each component
 | Networking | CoreDNS | v1.9.1 | version pre-integrated into K3S |
 | Networking | Metal LB | v0.13.4 | Helm chart version:  metallb-0.13.4 |
 | Service Mesh | Linkerd | v2.11.4 | Helm chart version: linkerd2-2.11.4 |
-| Service Proxy | Traefik | v2.6.2 | Helm chart: traefik-10.14.100 version pre-integrated into K3S |
+| Service Proxy | Traefik | v2.8.4 | Helm chart: traefik-10.24.2  |
 | Storage | Longhorn | v1.3.1 | Helm chart version: longhorn-1.3.1 |
 | SSL Certificates | Certmanager | v1.9.1 | Helm chart version: cert-manager-v1.9.1  |
 | Logging | ECK Operator |  2.4.0 | Helm chart version: eck-operator-2.4.0 |

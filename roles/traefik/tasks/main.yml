@@ -1,14 +1,5 @@
 ---
 
-- name: Configure K3S embedded Traefik Helm Chart
-  template:
-    dest: "/var/lib/rancher/k3s/server/manifests/traefik-config.yaml"
-    src: templates/traefik-config.yml.j2
-    owner: root
-    group: root
-    mode: 0600
-  become: true
-
 - name: Create traefik namespace.
   kubernetes.core.k8s:
     name: "{{ k3s_traefik_namespace }}"
@@ -16,10 +7,30 @@
     kind: Namespace
     state: present
 
+- name: Add Traefik chart repo.
+  kubernetes.core.helm_repository:
+    name: traefik
+    repo_url: "https://helm.traefik.io/traefik"
+
+- name: Deploy traefik Helm chart.
+  kubernetes.core.helm:
+    name: traefik
+    chart_ref: traefik/traefik
+    release_namespace: "{{ k3s_traefik_namespace }}"
+    update_repo_cache: true
+    state: present
+    values: "{{ lookup('template', 'templates/traefik_helm_values.yml.j2') | from_yaml }}"
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_traefik_namespace }} --all --timeout=600s"
+  register: metallb_pods_ready
+  changed_when: false
+
 - name: Create Basic authentication credentials
   include_tasks: create_basic_auth_credentials.yml
 
-- name: Configura Traefik
+- name: Configure Traefik
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
