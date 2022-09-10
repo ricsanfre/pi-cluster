@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "05-04-2022"
+last_modified_at: "10-09-2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -104,9 +104,9 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
   <br>
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/centralized_san/centralized_san_target.yml`: `storage_volumegroups` and `storage_volumes` variables. Sizes of the different LUNs can be tweaked to fit the size of the SSD Disk used. I used a 480GB disk so, I was able to create LUNs of 100GB for each of the nodes.
 
-- **Dedicated disks** setup assumes that all cluster nodes (`node1-4`) have a SSD disk attached that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
+- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
 
-  Final `node1-4` disk configuration is:
+  Final `node1-5` disk configuration is:
 
   - /dev/sda1: Boot partition
   - /dev/sda2: Root filesystem
@@ -161,14 +161,14 @@ ansible-playbook setup_picluster.yml --tags "gateway"
 
 Once `gateway` is up and running the rest of the nodes can be installed and connected to the LAN switch, so they can obtain automatic network configuration via DHCP.
 
-Install `node1-4` Operating System on Raspberry Pi
+Install `node1-5` Operating System on Raspberry Pi
 
 Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
 
-| Storage Architeture | node1   | node2 | node3 | node 4 |
-|-----------| ------- |-------|-------|--------|
-| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) |
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) |
+| Storage Architeture | node1   | node2 | node3 | node4 | node5 |
+|-----------| ------- |-------|-------|--------|--------|
+| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data) |
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data) |
 {: .table }
 
 {{site.data.alerts.warning}}**About SSH keys**
@@ -191,7 +191,7 @@ ansible-playbook setup_picluster.yml --tags "node"
 
 ### Configuring backup server (S3) and OS level backup
 
-Configure backup server (Playbook assumes S3 server is installed in `node1`) and automated backup tasks at OS level with restic in all nodes (`node1-node4` and `gateway`) running the playbook:
+Configure backup server (Playbook assumes S3 server is installed in `node1`) and automated backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
 
 ```shell
 ansible-playbook backup_configuration.yml

@@ -34,8 +34,8 @@ dnsmasq_additional_dns_hosts:
     hostname: elasticsearch
     ip: 10.0.0.100
   grafana:
-    desc: "Grafana server"
-    hostname: grafana
+    desc: "Monitor server"
+    hostname: monitoring
     ip: 10.0.0.100
   fluentd:
     desc: "Fluentd server"

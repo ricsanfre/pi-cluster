@@ -2,7 +2,7 @@
 title: Lab Architecture
 permalink: /docs/architecture/
 description: Homelab architecture of our Raspberry Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "25-02-2022"
+last_modified_at: "10-09-2022"
 ---
 
 
@@ -17,11 +17,11 @@ For building the K3S cluster, using bare metal servers instead of virtual machin
 
 ### K3S Nodes
 
-A K3S cluster composed of 4 Raspberry Pi 4 (4GB), one master node `node1` and three worker nodes `node2`, `node3` and `node4` connected to a dedicated LAN switch.
+A K3S cluster composed of one master node (`node1`) and four worker nodes (`node2`, `node3` , `node4` and `node5`). `node1-node4` running on Raspberry Pi 4B-4GB and `node5` on Raspberry Pi 4B-8GB.
  
 ### Firewall
 
-A Raspberry PI 4 (2GB), `gateway` will be used as Router/Firewall to isolate lab network from my home network,. It will also provide networking services to my lab network: Internet Access, DNS, NTP and DHCP services.
+A Raspberry PI 4B-2GB, `gateway`, will be used as Router/Firewall to isolate lab network from my home network,. It will also provide networking services to my lab network: Internet Access, DNS, NTP and DHCP services.
 
 ### Control Node
 
@@ -29,7 +29,7 @@ As Ansible control node, `pimaster`, a VM running on my laptop will be used. Its
 
 ## Networking
 
-A 8 GE ports LAN switch, NetGear GS108-300PES, supporting VLAN configuration and remote management, is used to provide connectivity to all Raspberry Pis (`gateway` and `node1-node4`), using Raspeberry PI Gigabit Ethernet port.
+A 8 GE ports LAN switch, NetGear GS108-300PES, supporting VLAN configuration and remote management, is used to provide connectivity to all Raspberry Pis (`gateway` and `node1-node5`), using Raspberry PI Gigabit Ethernet port.
 
 `gateway` will be also connected to my home network using its WIFI interface in order to route and filter traffic comming in/out the cluster.
 
@@ -47,7 +47,7 @@ Two different storage alternatives can be appied:
 
 `gateway` uses local storage attached directly to USB 3.0 port (Fash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
 
-For having better cluster performance `node1-node4` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
+For having better cluster performance `node1-node5` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
 
 ![pi-cluster-HW-2.0](/assets/img/pi-cluster-2.0.png)
 
@@ -56,11 +56,11 @@ For having better cluster performance `node1-node4` will use SSDs attached to US
 
 A cheaper alternative architecture, instead of using dedicated SSD disks for each cluster node, one single SSD disk can be used for configuring a SAN service.
 
-Each cluster node `node1-node4` can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
+Each cluster node `node1-node5` can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
  
 As additional storage (required by distributed storage solution), iSCSI SAN can be deployed instead of attaching an additional USB Flash Disks to each of the nodes.
 
-A SAN (Storage Access Network) can be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node4`.
+A SAN (Storage Access Network) can be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node5`.
 
 As storage device, a SSD disk was attached to `gateway` node. This SSD disk was used as well to host the OS.
 
