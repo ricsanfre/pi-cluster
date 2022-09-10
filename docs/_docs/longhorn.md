@@ -21,7 +21,7 @@ Longhorn uses internally iSCSI to expose the block device presented by the Longh
 
 ![longhorn](https://github.com/longhorn/longhorn-engine/raw/master/overview.png)
 
-Since all cluster nodes (`node1-node4`) have been already configured as iSCSI Initiators all pre-requisties are met.
+Since all cluster nodes (`node1-node5`) have been already configured as iSCSI Initiators all pre-requisties are met.
 
 ### Longhorn issues with Multipath
 

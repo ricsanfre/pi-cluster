@@ -2,17 +2,17 @@
 title: Cluster Node configuration
 permalink: /docs/node/
 description: How to configure a Raspberry Pi nodes of our Raspberry Pi Kubernetes Cluster. Ubuntu cloud-init configuration files, and basic OS configuration.
-last_modified_at: "25-02-2022"
+last_modified_at: "10-09-2022"
 ---
 
-4 Raspberry Pi (4GB), `node1`, `node2`, `node3` and `node4`, will be used as nodes for the Kubernetes cluster.
-`node1` will be acting as **master node** and `node2/3/4` as **worker nodes**
+4 Raspberry Pi 4B, `node1`, `node2`, `node3`, `node4` and `node5`, will be used as nodes for the Kubernetes cluster.
+`node1` will be acting as **master node** and `node2/3/4/5` as **worker nodes**
 
 ## Hardware
 
-`node1-4` are based on a Raspberry Pi 4B 4GB booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+`node1-5` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
 
-- Dedicated disks storage architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node4`.
+- Dedicated disks storage architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node5`.
 - Centralized SAN architecture: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
 
 ## Storage configuration. Dedicated Disks
@@ -39,11 +39,11 @@ This command:
   - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
   - And labels it as an LVM partition (-t option)
 
-For `node1-node4`, the new partition created in boot time, `/dev/sda2`, uses most of the disk space leaving just 30GB for the root filesystem. This partition is then added to a LVM Volume Group and a unique Logical Volume is created. Lastly the Logical Volume is formatted (`ext4`) and mounted as `/storage`.
+For `node1-node5`, the new partition created in boot time, `/dev/sda2`, uses most of the disk space leaving just 30GB for the root filesystem. This partition is then added to a LVM Volume Group and a unique Logical Volume is created. Lastly the Logical Volume is formatted (`ext4`) and mounted as `/storage`.
 
 LVM partition and formatting tasks have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
 
-Specific `node1-node4` ansible variables to be used by this role are stored in [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml)
+Specific `node1-node5` ansible variables to be used by this role are stored in [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml)
 
 ## Network Configuration
 
@@ -72,28 +72,28 @@ For automating all this initial configuration tasks, ansible role **basic_setup*
 
 ## NTP Server Configuration
 
-`node1-node4` will be configured as NTP clients using NTP server running in `gateway`
+`node1-node5` will be configured as NTP clients using NTP server running in `gateway`
 See ["NTP Configuration instructions"](/docs/gateway/#ntp-server-configuration).
 
-NTP configuration in `node1-node4` has been automated using ansible role **ricsanfre.ntp**
+NTP configuration in `node1-node5` has been automated using ansible role **ricsanfre.ntp**
 
 ## iSCSI configuration. Dedicated Disks
 
 Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. All nodes of the cluster need to be configured as iSCSI initiators, When configurin iSCSI initiator, authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
 
-iSCSI initiator configuration in `node1-node4` have been automated with Ansible developing the ansible role: **ricsanfre.iscsi_initiator**.
+iSCSI initiator configuration in `node1-node5` have been automated with Ansible developing the ansible role: **ricsanfre.iscsi_initiator**.
 
 ## iSCSI configuration. Centralized SAN
 
-`node1-node4` are configured as iSCSI Initiator to use iSCSI volumes exposed by `gateway`
+`node1-node5` are configured as iSCSI Initiator to use iSCSI volumes exposed by `gateway`
 
-iSCSI configuration in `node1-node4`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
+iSCSI configuration in `node1-node5`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
 
 Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
 
 Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
 
-Specific `node1-node4` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml)
+Specific `node1-node5` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml)
 
 {{site.data.alerts.important}}
 

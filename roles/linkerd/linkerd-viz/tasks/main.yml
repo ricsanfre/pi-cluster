@@ -11,7 +11,6 @@
   kubernetes.core.helm:
     name: linkerd-viz
     chart_ref: linkerd/linkerd-viz
-    chart_version: 2.11.4
     release_namespace: "{{ k3s_linkerd_namespace }}-viz"
     update_repo_cache: true
     state: present
@@ -19,13 +18,12 @@
       # Skip namespace creation
       installNamespace: false
       # External Prometheus
-      prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
+      prometheusUrl: http://kube-prometheus-stack-prometheus.{{ k3s_monitoring_namespace }}.svc.cluster.local:9090
       prometheus:
         enabled: false
       # External Grafana
       grafana:
-        enabled: false
-      grafanaUrl: grafana.picluster.ricsanfre.com:80
+        url: kube-prometheus-stack-grafana.{{ k3s_monitoring_namespace }}.svc.cluster.local
       # Disabling DNS rebinding protection
       dashboard:
         enforcedHostRegexp: .*

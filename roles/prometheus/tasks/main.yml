@@ -58,9 +58,7 @@
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
-    - prometheus_ingress.yml.j2
-    - grafana_ingress.yml.j2
-    - alertmanager_ingress.yml.j2
+    - monitoring_ingress.yml.j2
 
 - name: Configure Service Monitors
   kubernetes.core.k8s:

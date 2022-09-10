@@ -52,7 +52,7 @@ Raspberry PI does not have by default a RTC (real-time clock) keeping the time w
 Even when NTP is used to synchronize the time and date, when it boots takes as current-time the time of the first-installation and it could cause problems in boot time when the OS detect that a mount point was created in the future and ask for manual execution of fscsk
 
 {{site.data.alerts.note}}
-I have detected this behaviour with my Raspberry PIs when mounting the iSCSI LUNs in `node1-node4` and after rebooting the server, the server never comes up.
+I have detected this behaviour with my Raspberry PIs when mounting the iSCSI LUNs in `node1-node5` and after rebooting the server, the server never comes up.
 {{site.data.alerts.end}}
 
 As a side effect the NTP synchronizatio will also take longer since NTP adjust the time in small steps.

@@ -29,6 +29,10 @@ prometheus-node-exporter:
 
 alertmanager:
   alertmanagerSpec:
+    # Subpath /alertmanager configuration
+    externalUrl: http://{{ monitoring_dns }}/alertmanager/
+    routePrefix: /
+    # PVC config
     storage:
       volumeClaimTemplate:
         spec:
@@ -47,6 +51,9 @@ alertmanager:
         replacement: alertmanager
 prometheus:
   prometheusSpec:
+    # Subpath /prometheus configuration
+    externalUrl: http://{{ monitoring_dns }}/prometheus/
+    routePrefix: /
     # Resources request and limits
     resources:
       requests:
@@ -71,6 +78,12 @@ prometheus:
         targetLabel: job
         replacement: prometheus
 grafana:
+  # Configuring /grafana subpath
+  grafana.ini:
+    server:
+      domain: {{ monitoring_dns }}
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      serve_from_sub_path: true
   # Set admin password
   adminPassword: "{{ prometheus_grafana_password }}"
   # Install required plugins

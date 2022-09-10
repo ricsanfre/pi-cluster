@@ -2,7 +2,7 @@
 title: Gateway installation
 permalink: /docs/gateway/
 description: How to configure a Raspberry Pi as router/firewall of our Raspberry Pi Kubernetes Cluster providing connectivity and basic services (DNS, DHCP, NTP, SAN).
-last_modified_at: "25-02-2022"
+last_modified_at: "10-09-2022"
 ---
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
@@ -10,7 +10,7 @@ It will also provide DNS, NTP and DHCP services to my lab network. In case of de
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
-In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node4**): Ubuntu 20.04.3 64 bits.
+In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node5**): Ubuntu 20.04.3 64 bits.
 
 
 ## Hardware
@@ -480,6 +480,7 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   dhcp-host=e4:5f:01:2d:fd:19,10.0.0.12
   dhcp-host=e4:5f:01:2f:49:05,10.0.0.13
   dhcp-host=e4:5f:01:2f:54:82,10.0.0.14
+  dhcp-host=e4:5f:01:d9:ec:5c,10.0.0.15
 
   # Adding additional DHCP hosts
   # Ethernet Switch
@@ -492,6 +493,7 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   host-record=node2.picluster.ricsanfre.com,10.0.0.12
   host-record=node3.picluster.ricsanfre.com,10.0.0.13
   host-record=node4.picluster.ricsanfre.com,10.0.0.14
+  host-record=node5.picluster.ricsanfre.com,10.0.0.15
 
   # Adding additional DNS
   # NTP Server
@@ -509,10 +511,10 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
     # S3 Server
     host-record=s3.picluster.ricsanfre.com,10.0.0.11
     ```
-  - Grafana DNS service pointing to Ingress Controller IP address (from MetaLB pool)
+  - Monitoring DNS service pointing to Ingress Controller IP address (from MetaLB pool)
     ```
-    # Grafana
-    host-record=grafana.picluster.ricsanfre.com,10.0.0.100
+    # Monitoring
+    host-record=monitoring.picluster.ricsanfre.com,10.0.0.100
     ```
   {{site.data.alerts.end}}
 
@@ -563,11 +565,33 @@ DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are 
    sudo dhclient -r <interface>
    ```
 	
-4. Obtain a new DHCP lease
+4. Obtain a new DHCP lease (DHCP client)
 
    ```shell
    sudo dhclient <interface>
 	 ```
+
+5. Relesase DHCP lease (DHCP server)
+
+   ```shell
+   sudo dhcp_release <interface> <address> <MAC address> <client_id>
+   ```
+
+   `<interface>`, `<address>` , `<MAC address>` and `<client_id>` are columns in file `/var/lib/misc/dnsmasq.leases`
+
+   ```shell
+   cat `/var/lib/misc/dnsmasq.leases`
+   1662325792 e4:5f:01:2f:54:82 10.0.0.14 node4 ff:ce:f0:c5:95:00:02:00:00:ab:11:1d:5c:ee:f7:30:5a:1c:c3
+   1662325794 e4:5f:01:2d:fd:19 10.0.0.12 node2 ff:59:1d:0c:2c:00:02:00:00:ab:11:a2:0c:7b:67:b5:0d:a0:b6
+   1662325795 e4:5f:01:2f:49:05 10.0.0.13 node3 ff:2b:f0:10:76:00:02:00:00:ab:11:f4:83:c3:e4:cd:06:92:25
+   1662325796 dc:a6:32:9c:29:b9 10.0.0.11 node1 ff:38:f0:78:87:00:02:00:00:ab:11:f1:8d:67:ed:9f:35:f9:9b
+   ```
+ 
+   Format in the file is:
+
+   ```shell
+   <lease_expire_time_stamp> <MAC address> <address> <hostname> <client_id>
+   ```
 
 ### Additional connfiguration: Updating DNS resolver
 
@@ -608,7 +632,7 @@ Since ntp and ntpdate are deprecated **chrony** package will be used for configu
 
 **gateway** will be hosting a NTP server and the rest of cluster nodes will be configured as NTP Clients.
 
-For automating ntp configuration tasks on all nodes (gateway and node1-4), ansible role [**ricsanfre.ntp**](https://galaxy.ansible.com/ricsanfre/ntp) has been created.
+For automating ntp configuration tasks on all nodes (gateway and node1-5), ansible role [**ricsanfre.ntp**](https://galaxy.ansible.com/ricsanfre/ntp) has been created.
 
 - Step 1. Install chrony
 
@@ -633,7 +657,7 @@ For automating ntp configuration tasks on all nodes (gateway and node1-4), ansib
     allow 10.0.0.0/24
     ```
 
-  - In **node1-4**:
+  - In **node1-5**:
 
     Configure gateway as NTP server
    
@@ -671,7 +695,7 @@ Check time synchronization with Chronyc
 
 ## iSCSI configuration. Centralized SAN
 
-`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node4`
+`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node5`
 
 iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
 

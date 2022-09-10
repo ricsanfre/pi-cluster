@@ -14,7 +14,7 @@ spec:
       path: /metrics
   namespaceSelector:
     matchNames:
-      - kube-system
+      - {{ k3s_traefik_namespace }}
   selector:
     matchLabels:
       app.kubernetes.io/instance: traefik

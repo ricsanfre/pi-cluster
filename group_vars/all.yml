@@ -19,11 +19,9 @@ dns_domain: picluster.ricsanfre.com
 traefik_dashboard_dns: "traefik.{{ dns_domain }}"
 longhorn_dashboard_dns: "storage.{{ dns_domain }}"
 kibana_dashboard_dns: "kibana.{{ dns_domain }}"
-grafana_dashboard_dns: "grafana.{{ dns_domain }}"
-prometheus_dashboard_dns: "prometheus.{{ dns_domain }}"
-alertmanager_dashboard_dns: "alertmanager.{{ dns_domain }}"
 elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
 fluentd_dns: "fluentd.{{ dns_domain }}"
+monitoring_dns: "monitoring.{{ dns_domain }}"
 linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
 
 #######################

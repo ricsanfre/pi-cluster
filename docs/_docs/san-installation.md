@@ -9,12 +9,12 @@ The idea is to configure one of the Raspberry PIs as a SAN for the lab cluster, 
 
 A storage on a SAN network is called iSCSI Target, a Client which connects to iSCSI Target is called iSCSI Initiator.
 
-In my home lab, `gateway` will be the iSCSI Target and `node1-node4` will be the iSCSI Initiators.
+In my home lab, `gateway` will be the iSCSI Target and `node1-node5` will be the iSCSI Initiators.
 
 ```
 +----------------------+         |             +----------------------+
 | [   iSCSI Target   ] |10.0.0.1 | 10.0.0.11-14| [ iSCSI Initiator  ] |
-|        gateway       +---------+-------------+        node1-4       |
+|        gateway       +---------+-------------+        node1-5       |
 |                      |                       |                      |
 +----------------------+                       +----------------------+
 
@@ -245,7 +245,7 @@ Follow these steps for preparing the storage device for hosting the LUNs: add ne
   In the Initiator server check the iqn (iSCSI Qualifier Name) within the file `/etc/iscsi/initiatorname.iscsi`
 
   {{site.data.alerts.important}}
-  Assign unique iqn (iSCSI Initiator Qualifier Name) to each cluster node (`node1-4`). See section [Configuring iSCSI Inititator](#configuring-iscsi-initiator)
+  Assign unique iqn (iSCSI Initiator Qualifier Name) to each cluster node (`node1-5`). See section [Configuring iSCSI Inititator](#configuring-iscsi-initiator)
   {{site.data.alerts.end}}
 
   Create ACL for the iSCSI Initiator. 
