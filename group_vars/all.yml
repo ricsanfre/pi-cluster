@@ -35,9 +35,12 @@ minio_site_region: "eu-west-1"
 
 # Restic configuration
 restic_repository: "s3:{{ minio_url }}/restic"
-restic_aws_access_key_id: restic
-restic_aws_secret_access_key: supers1cret0
 restic_use_ca_cert: true
+restic_environment:
+  - name: AWS_ACCESS_KEY_ID
+    value: "restic"
+  - name: AWS_SECRET_ACCESS_KEY
+    value: "s1cret0"
 # Deactivate clean service. Only enabled in one node
 restic_clean_service: false
 restic_backups_dirs:
