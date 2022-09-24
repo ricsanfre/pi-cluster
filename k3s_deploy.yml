@@ -36,6 +36,11 @@
         state: present
       tags: ['always']
 
+    # Include vault variables
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
+
   roles:
     - role: metallb
       tags: ['metallb']
@@ -61,6 +66,10 @@
   gather_facts: true
   tags: [logging]
   become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
     - role: logging/external_node
       tags: ['logging']

@@ -63,11 +63,79 @@ The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH
 - Modify [`all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) file to include your ansible remote UNIX user (`ansible_user` variable) and 
   
 
-### Modify Ansible Playbook variables
+### Configuring Ansible Playbooks
+
+#### Encrypting secrets/key variables
+
+All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using Ansible Vault.
+
+This file is a Ansible vars file containing just a unique yaml variable, `vault`: a yaml dictionary containing all keys/passwords used by the different cluster components.
+
+vault.yml sample file is like this:
+
+```yml
+---
+# Encrypted variables - Ansible Vault
+vault:
+  # K3s secrets
+  k3s:
+    k3s_token: s1cret0
+  # traefik secrets
+  traefik:
+    basic_auth_passwd: s1cret0
+  # Minio S3 secrets
+  minio:
+    root_password: supers1cret0
+    longhorn_key: supers1cret0
+    velero_key: supers1cret0
+    restic_key: supers1cret0
+  # elastic search
+....
+```
+All needed password-type variables used by the Playbooks are in the sample file `var/picluster-vault.yml`. This file is not encrypted and must be used to start the ansible setup.
+
+The steps to configure passwords/keys used in all Playbooks is the following:
+
+1. Copy sample yaml `var/picluster-vault.yml` file and rename it as `var/vault.yml`
+
+2. Edit content of the file specifying your own values for each of the key/password/secret specified.
+
+3. Encrypt file using ansible-vault
+
+   ```shell
+   ansible-vault encrypt vault.yml
+   ```
+   The command ask for a ansible vault password to encrypt the file.
+   After executing the command the file `vault.yml` is encrypted. Yaml content file is not readable.
+
+   {{site.data.alerts.note}}
+  
+   The file can be decrypted using the following command
+
+   ```shell
+   ansible-vault decrypt vault.yml
+   ```
+   The password using during encryption need to be provided to decrypt the file
+   After executing the command the file `vault.yml` is decrypted and show the content in plain text.
+
+   {{site.data.alerts.end}}
+
+
+{{site.data.alerts.important}}
+
+When using encrypted vault.yaml file all ansible playbooks need to be executed with the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
+
+```shell
+ansible-playbook playbook.yml --ask-vault-pass
+```
+{{site.data.alerts.end}}
+
+
+#### Modify Ansible Playbook variables
 
 Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars`directories to meet your specific configuration.
 
-The following table shows the variable files defined at ansible`s group and host levels
+The following table shows the variable files defined at ansible's group and host levels
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
@@ -77,6 +145,7 @@ The following table shows the variable files defined at ansible`s group and host
 | [`group_vars/k3s_master.yml`]({{ site.git_edit_address }}/group_vars/k3s_master.yml) | K3s master nodes |
 | [`host_vars/gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) | gateway node specific variables|
 {: .table }
+
 
 The following table shows the variable files used for configuring the storage and the backup server
 
@@ -186,7 +255,7 @@ Before applying the cloud-init files of the table above, remember to change the 
 For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), executes the playbook:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "node"
+ansible-playbook setup_picluster.yml --tags "node" [--ask-vault-pass]
 ```
 
 ### Configuring backup server (S3) and OS level backup
@@ -194,7 +263,7 @@ ansible-playbook setup_picluster.yml --tags "node"
 Configure backup server (Playbook assumes S3 server is installed in `node1`) and automated backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
 
 ```shell
-ansible-playbook backup_configuration.yml
+ansible-playbook backup_configuration.yml [--ask-vault-pass]
 ```
 
 {{site.data.alerts.note}}
@@ -212,7 +281,7 @@ Variable `restic_clean_service` which configure and schedule restic's purging ac
 To install K3S cluster execute the playbook:
 
 ```shell
-ansible-playbook k3s_install.yml
+ansible-playbook k3s_install.yml [--ask-vault-pass]
 ```
 
 ### K3S basic services deployment
@@ -220,13 +289,13 @@ ansible-playbook k3s_install.yml
 To deploy and configure basic services (metallb, traefik, certmanager, linkerd, longhorn, EFK, Prometheus, Velero) run the playbook:
 
 ```shell
-ansible-playbook k3s_deploy.yml
+ansible-playbook k3s_deploy.yml [--ask-vault-pass]
 ```
 
 Different ansible tags can be used to select the componentes to deploy:
 
 ```shell
-ansible-playbook k3s_deploy.yml --tags <ansible_tag>
+ansible-playbook k3s_deploy.yml --tags <ansible_tag> [--ask-vault-pass]
 ```
 
 The following table shows the different components and their dependencies.

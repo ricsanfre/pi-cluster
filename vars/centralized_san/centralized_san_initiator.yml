@@ -20,9 +20,9 @@ open_iscsi_targets:
     login: true
     node_auth: CHAP
     node_user: "{{ open_iscsi_initiator_name }}"
-    node_pass: s1cret0
+    node_pass: "{{ vault.san.iscsi.node_pass }}"
     node_user_in: iqn.2021-07.com.ricsanfre:gateway
-    node_pass_in: 0tr0s1cret0
+    node_pass_in: "{{ vault.san.iscsi.password_mutual }}"
 
 #############################################
 # Storage role variables. Mount iSCSI volumes

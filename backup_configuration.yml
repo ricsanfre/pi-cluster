@@ -15,6 +15,10 @@
     organization_name: Ricsanfre
 
   pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
+
     - name: Generate custom CA
       include_tasks: tasks/generate_custom_ca.yml
       args:
@@ -46,6 +50,9 @@
   tags: [backup]
   become: true
   pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
     - name: Load CA certificate for restic
       set_fact:
         restic_ca_cert: "{{ lookup('file','certificates/CA.pem') }}"

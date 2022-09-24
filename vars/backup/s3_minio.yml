@@ -6,7 +6,7 @@ minio_server_datadirs:
 
 # Minio admin credentials
 minio_root_user: "minioadmin"
-minio_root_password: "supers1cret0"
+minio_root_password: "{{ vault.minio.root_password }}"
 
 # Minio site region configuration
 minio_site_region: "eu-west-1"
@@ -27,17 +27,17 @@ minio_buckets:
 # Minio users and ACLs
 minio_users:
   - name: restic
-    password: supers1cret0
+    password: "{{ vault.minio.restic_key }}"
     buckets_acl:
       - name: restic
         policy: read-write
   - name: longhorn
-    password: supers1cret0
+    password: "{{ vault.minio.longhorn_key }}"
     buckets_acl:
       - name: k3s-longhorn
         policy: read-write
   - name: velero
-    password: supers1cret0
+    password: "{{ vault.minio.velero_key }}"
     buckets_acl:
       - name: k3s-velero
         policy: custom

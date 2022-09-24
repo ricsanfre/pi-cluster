@@ -30,7 +30,7 @@ fluentbit_outputs: |
       Host {{ fluentd_dns }}
       Port 24224
       Self_Hostname {{ ansible_hostname }}
-      Shared_Key s1cret0
+      Shared_Key {{ fluentd_shared_key }}
       tls true
       tls.verify false
   [OUTPUT]

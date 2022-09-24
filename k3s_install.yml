@@ -4,12 +4,20 @@
   hosts: k3s_cluster
   gather_facts: true
   become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
     - role: k3s/prereq
 
 - name: Install K3S master node
   hosts: k3s_master
   become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
     - role: k3s/master
     - role: ricsanfre.k8s_cli
@@ -17,11 +25,19 @@
 - name: Install K3S worker nodes
   hosts: k3s_worker
   become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
     - role: k3s/worker
 
 - name: Label K3S worker nodes
   hosts: k3s_master
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   tasks:
     - name: "Wait for worker nodes to be ready"
       command:

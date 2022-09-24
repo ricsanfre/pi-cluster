@@ -40,7 +40,7 @@ restic_environment:
   - name: AWS_ACCESS_KEY_ID
     value: "restic"
   - name: AWS_SECRET_ACCESS_KEY
-    value: "s1cret0"
+    value: "{{ vault.minio.restic_key }}"
 # Deactivate clean service. Only enabled in one node
 restic_clean_service: false
 restic_backups_dirs:
@@ -55,3 +55,19 @@ restic_backups_dirs:
   - path: '/home/oss'
     exclude:
       - pattern: '.cache'
+
+#######################
+# Logging configuration
+#######################
+
+# Fluentd-fluentbit shared key
+fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
+efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"
+
+
+#######################
+# Monitoring configuration
+#######################
+
+# Grafana admin user password
+prometheus_grafana_password: "{{ vault.grafana.admin_password}}"

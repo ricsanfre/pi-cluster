@@ -19,7 +19,7 @@ ntp_servers:
 k3s_master_ip: 10.0.0.11
 
 # k3s shared token
-k3s_token: s1cret0
+k3s_token: "{{ vault.k3s.k3s_token }}"
 
 # k3s config directory
 k3s_config_directory: /etc/rancher/k3s
@@ -69,15 +69,15 @@ k3s_fluentd_external_ip: 10.0.0.101
 # Traefik configuration
 # HTTP Basic auth credentials
 traefik_basic_auth_user: admin
-traefik_basic_auth_passwd: s1cret0
+traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth_passwd }}"
 
 # Velero configuration
 minio_velero_user: velero
-minio_velero_key: supers1cret0
+minio_velero_key: "{{ vault.minio.velero_key }}"
 minio_velero_bucket: k3s-velero
 
 # Longhorn backup configuration
 longhorn_s3_backup: true
 minio_longhorn_user: longhorn
-minio_longhorn_key: supers1cret0
+minio_longhorn_key: "{{ vault.minio.longhorn_key }}"
 minio_longhorn_bucket: k3s-longhorn
