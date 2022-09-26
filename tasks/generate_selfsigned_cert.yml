@@ -14,7 +14,7 @@
     organization_name: "{{ organization_name }}"
     email_address: "{{ email_address }}"
     common_name: "{{ server_hostname }}"
-    subject_alt_name: "DNS:{{ server_hostname }},IP:{{ ansible_default_ipv4.address }}"
+    subject_alt_name: "DNS:{{ server_hostname }}"
 
 - name: Self-signing CSR
   openssl_certificate:

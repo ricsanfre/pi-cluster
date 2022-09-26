@@ -15,6 +15,9 @@ minio_site_region: "eu-west-1"
 minio_enable_tls: true
 minio_validate_certificate: false
 
+# Minio server url
+minio_server_url: "{{ minio_url }}"
+
 # Minio Buckets
 minio_buckets:
   - name: restic

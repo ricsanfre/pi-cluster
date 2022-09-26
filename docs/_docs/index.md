@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to use Ansible to automate the deployment and configuration. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "10-09-2022"
+last_modified_at: "26-09-2022"
 ---
 
 
@@ -117,7 +117,7 @@ The software used and the latest version tested of each component
 | Monitoring | Grafana | 9.0.5 | Helm chart version grafana-6.32.10. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
 | Monitoring | Prometheus Node Exporter | 1.3.1 | Helm chart version: prometheus-node-exporter-3.3.1. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
 | Monitoring | Prometheus Elasticsearch Exporter | 1.5.0 | Helm chart version: prometheus-elasticsearch-exporter-4.14.0 |
-| Backup | Minio | RELEASE.2022-05-04T07-45-27Z | |
+| Backup | Minio | RELEASE.2022-09-22T18-57-27Z | |
 | Backup | Restic | 0.12.1 | |
 | Backup | Velero | 1.9.1 | Helm chart version: velero-2.31.3 |
 {: .table }

@@ -2,7 +2,7 @@
 title: Backup & Restore
 permalink: /docs/backup/
 description: How to deploy a backup solution based on Velero and Restic in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "25-02-2022"
+last_modified_at: "26-09-2022"
 ---
 
 ## Backup Architecture and Design
@@ -99,6 +99,8 @@ Minio installation and configuration tasks have been automated with Ansible deve
   MINIO_ROOT_PASSWORD="<admin_user_passwd>"
   # Minio server region
   MINIO_SITE_REGION="eu-west-1"
+  # Minio server URL
+  MINIO_SERVER_URL="https://s3.picluster.ricsanfre.com:9091"
   ```
 
   Minio server start-up command is:
@@ -110,13 +112,42 @@ Minio installation and configuration tasks have been automated with Ansible deve
   `restic` backup to a S3 Object Storage backend using self-signed certificates does not work (See issue [#26](https://github.com/ricsanfre/pi-cluster/issues/26)). However, it works if SSL certificates are signed using a custom CA.
 
   1) Create a self-signed CA key and self-signed certificate
+
+     ```shell
+     openssl req -x509 \
+            -sha256 \
+            -nodes \
+            -newkey rsa:4096 \
+            -subj "/CN=Ricsanfre CA" \
+            -keyout rootCA.key -out rootCA.crt
+     ```
   2) Create a SSL certificate for Minio server signed using the custom CA
-  3) Copy public certificate as `/etc/minio/ssl/public.crt`
-  4) Copy private key as `/etc/minio/ssl/private.key`
+    
+     ```shell
+     openssl req -new -nodes -newkey rsa:4096 \
+                 -keyout minio.key \
+                 -out minio.csr \
+                 -batch \
+                 -subj "/C=ES/ST=Madrid/L=Madrid/O=Ricsanfre CA/OU=picluster/CN=s3.picluster.ricsanfre.com"
+
+      openssl x509 -req -days 365000 -set_serial 01 \
+            -extfile <(printf "subjectAltName=DNS:s3.picluster.ricsanfre.com") \
+            -in minio.csr \
+            -out minio.crt \
+            -CA rootCA.crt \
+            -CAkey rootCA.key
+     ```
+
+  3) Copy public certificate `minio.crt` as `/etc/minio/ssl/public.crt`
+  4) Copy private key `minio.key` as `/etc/minio/ssl/private.key`
   5) Restart minio server.
   
   {{site.data.alerts.note}}
-  Certificates creation has been automated with Ansible using openssl module.
+
+  Certificate must be created for the DNS name associated to MINIO S3 service, i.e `s3.picluster.ricsanfre.com`.
+
+  `MINIO_SERVER_URL` environment variable need to be configured, to avoid issues with TLS certificates without IP Subject Alternative Names.
+
   {{site.data.alerts.end}}
 
 - Minio Buckets
