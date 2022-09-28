@@ -71,6 +71,16 @@ k3s_fluentd_external_ip: 10.0.0.101
 traefik_basic_auth_user: admin
 traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth_passwd }}"
 
+# Certmanager configuration
+# Letsencrypt ACME DNS01 provider
+
+certmanager_letsencrypt_acme_dns01_provider: ionos
+certmanager_enable_letsencrypt_acme_dns01: true
+certmanager_ionos_webhook_groupName: acme.ricsanfre.com
+ionos_public_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
+ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+acme_issuer_email: admin@ricsanfre.com
+
 # Velero configuration
 minio_velero_user: velero
 minio_velero_key: "{{ vault.minio.velero_key }}"

@@ -27,3 +27,8 @@ vault:
   # Grafana
   grafana:
     admin_password: s1cret0
+  # Certmanager
+  certmanager:
+    ionos:
+      public_prefix: your-public-prefix
+      secret: your-key

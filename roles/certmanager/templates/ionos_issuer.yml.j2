@@ -1,0 +1,29 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-ionos-staging
+  namespace: {{ k3s_certmanager_namespace }}
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: {{ acme_issuer_email }}
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-ionos-staging-key
+    # Enable the dns01 challenge provider
+    solvers:
+      - dns01:
+          webhook:
+            groupName: {{ certmanager_ionos_webhook_groupName }}
+            solverName: ionos
+            config:
+              apiUrl: https://api.hosting.ionos.com/dns/v1
+              publicKeySecretRef:
+                key: IONOS_PUBLIC_PREFIX
+                name: ionos-secret
+              secretKeySecretRef:
+                key: IONOS_SECRET
+                name: ionos-secret

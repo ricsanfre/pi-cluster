@@ -34,3 +34,7 @@
   with_items:
     - selfsigned_issuer.yml.j2
     - ca_issuer.yml.j2
+
+- name: Configure Letsencrypt ACME DNS01
+  include_tasks: configure_acme_dns01_provider_{{ certmanager_letsencrypt_acme_dns01_provider }}.yml
+  when: certmanager_enable_letsencrypt_acme_dns01
