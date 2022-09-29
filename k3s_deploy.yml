@@ -40,6 +40,10 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+      tags: ["always"]
 
   roles:
     - role: metallb
@@ -67,8 +71,13 @@
   tags: [logging]
   become: true
   pre_tasks:
+    # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
+      tags: ["always"]
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
       tags: ["always"]
   roles:
     - role: logging/external_node

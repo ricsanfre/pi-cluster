@@ -15,10 +15,14 @@
     organization_name: Ricsanfre
 
   pre_tasks:
+    # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
-
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+      tags: ["always"]
     - name: Generate custom CA
       include_tasks: tasks/generate_custom_ca.yml
       args:

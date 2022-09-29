@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "10-09-2022"
+last_modified_at: "29-09-2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -43,7 +43,7 @@ Adjust [`inventory.yml`]({{ site.git_edit_address }}/inventory.yml) inventory fi
 
 If you maintain the private network assigned to the cluster (10.0.0.0/24) and the hostnames and IP addresses. The only field that you must change in `inventory.yml` file is the field `mac` containing the node's mac address. This information will be used to configure automatically DHCP server and assign the proper IP to each node.
 
-This information can be taken when Raspberry PI is booted for first time during the firmware update step (see below).
+This information can be taken when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
 
 {{site.data.alerts.end}}
 
@@ -147,10 +147,11 @@ The following table shows the variable files defined at ansible's group and host
 {: .table }
 
 
-The following table shows the variable files used for configuring the storage and the backup server
+The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
 
 | Specific Variable File | Configuration |
 |----|----|
+| [`vars/picluster.yml`]({{ site.git_edit_address }}/vars/picluster.yml) | K3S cluster and services configuration variables |
 | [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
 | [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
 | [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
@@ -223,7 +224,7 @@ Before applying the cloud-init files of the table above, remember to change the 
 For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), executes the playbook:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "gateway"
+ansible-playbook setup_picluster.yml --tags "gateway" [--ask-vault-pass]
 ```
 
 ### Install cluster nodes.

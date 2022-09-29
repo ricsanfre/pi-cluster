@@ -8,6 +8,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+      tags: ["always"]
   roles:
     - role: k3s/prereq
 
@@ -17,6 +20,9 @@
   pre_tasks:
     - name: Include vault variables
       include_vars: "vars/vault.yml"
+      tags: ["always"]
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/master
@@ -29,6 +35,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+      tags: ["always"]
   roles:
     - role: k3s/worker
 
@@ -37,6 +46,9 @@
   pre_tasks:
     - name: Include vault variables
       include_vars: "vars/vault.yml"
+      tags: ["always"]
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
       tags: ["always"]
   tasks:
     - name: "Wait for worker nodes to be ready"

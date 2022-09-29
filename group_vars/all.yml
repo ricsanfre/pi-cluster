@@ -15,32 +15,9 @@ centralized_san: false
 dns_server: 10.0.0.1
 dns_domain: picluster.ricsanfre.com
 
-# DNS cluster service end-points
-traefik_dashboard_dns: "traefik.{{ dns_domain }}"
-longhorn_dashboard_dns: "storage.{{ dns_domain }}"
-kibana_dashboard_dns: "kibana.{{ dns_domain }}"
-elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
-fluentd_dns: "fluentd.{{ dns_domain }}"
-monitoring_dns: "monitoring.{{ dns_domain }}"
-linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
-
-#######################
-# backup configuration
-#######################
-
-# Minio S3 Server
-minio_hostname: "s3.{{ dns_domain }}"
-minio_url: "https://{{ minio_hostname }}:9091"
-minio_site_region: "eu-west-1"
-
-# Restic configuration
-restic_repository: "s3:{{ minio_url }}/restic"
-restic_use_ca_cert: true
-restic_environment:
-  - name: AWS_ACCESS_KEY_ID
-    value: "restic"
-  - name: AWS_SECRET_ACCESS_KEY
-    value: "{{ vault.minio.restic_key }}"
+############################
+# restic backup role variables
+############################
 # Deactivate clean service. Only enabled in one node
 restic_clean_service: false
 restic_backups_dirs:
@@ -55,19 +32,3 @@ restic_backups_dirs:
   - path: '/home/oss'
     exclude:
       - pattern: '.cache'
-
-#######################
-# Logging configuration
-#######################
-
-# Fluentd-fluentbit shared key
-fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
-efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"
-
-
-#######################
-# Monitoring configuration
-#######################
-
-# Grafana admin user password
-prometheus_grafana_password: "{{ vault.grafana.admin_password}}"
