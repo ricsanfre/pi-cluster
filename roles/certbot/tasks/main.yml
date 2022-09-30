@@ -1,0 +1,47 @@
+---
+
+- name: Ensure python virtualenv is installed.
+  package:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+  become: true
+  tags: ['always']
+
+- name: Install certbot and ionos plugin in venvironment
+  pip:
+    name:
+      - certbot
+      - certbot-dns-ionos
+    virtualenv: "{{ certbot_venv }}"
+    state: present
+  tags: ['always']
+
+- name: Create working directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0750
+  with_items:
+    - "{{ certbot_venv }}/logs"
+    - "{{ certbot_venv }}/config"
+    - "{{ certbot_venv }}/.secrets"
+
+- name: Copy ionos secret file
+  template:
+    src: "{{ item.template }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  with_items:
+    - template: ionos-credentials.ini.j2
+      dest: "{{ certbot_venv }}/.secrets/ionos-credentials.ini"
+
+- name: Copy certbot wrapper script
+  template:
+    src: "{{ item.template }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  with_items:
+    - template: certbot.sh.j2
+      dest: "{{ certbot_venv }}/certbot-wrapper.sh"
