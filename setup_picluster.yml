@@ -6,9 +6,9 @@
   tags: [gateway]
   become: true
   pre_tasks:
-  - name: Include vault variables
-    include_vars: "vars/vault.yml"
-    tags: ["always"]
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
 
     # OS basic setup tasks
@@ -60,11 +60,10 @@
   tags: [node]
   become: true
   pre_tasks:
-  - name: Include vault variables
-    include_vars: "vars/vault.yml"
-    tags: ["always"]
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
-
     # OS basic setup tasks
     - role: basic_setup
       tags: [os]

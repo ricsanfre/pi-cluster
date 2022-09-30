@@ -8,5 +8,10 @@ longhorn_dashboard_dns: storage.picluster.ricsanfre.com
 # Enable S3 backup
 longhorn_s3_backup: true
 
+# Mini user, key and bucket
+minio_longhorn_user: longhorn
+minio_longhorn_key: s1cret0
+minio_longhorn_bucket: k3s-longhorn
+
 # Enable service mesh
 enable_linkerd: true
