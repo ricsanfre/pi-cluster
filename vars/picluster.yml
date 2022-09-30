@@ -79,15 +79,15 @@ fluentd_dns: "fluentd.{{ dns_domain }}"
 monitoring_dns: "monitoring.{{ dns_domain }}"
 linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
 
-###############
-# CertManager #
-###############
+######################
+# CertManager and TLS#
+######################
 
-# Enabling Letsencrypt ACME DNS01 provider
-certmanager_enable_letsencrypt_acme_dns01: true
+# Enable letsencrypt certificates
+enable_letsencrypt_acme_dns01: true
 
 # Setting ACME DNS01 provider
-certmanager_letsencrypt_acme_dns01_provider: ionos
+letsencrypt_acme_dns01_provider: ionos
 
 # Configuring certmanager-ionos-webhook
 certmanager_ionos_webhook_groupName: acme.ricsanfre.com

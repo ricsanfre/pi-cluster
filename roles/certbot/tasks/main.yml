@@ -8,6 +8,7 @@
     state: present
   become: true
   tags: ['always']
+  when: install_python_packages
 
 - name: Install certbot and ionos plugin in venvironment
   pip:
@@ -15,6 +16,7 @@
       - certbot
       - certbot-dns-ionos
     virtualenv: "{{ certbot_venv }}"
+    virtualenv_command: "python3 -m venv"
     state: present
   tags: ['always']
 
@@ -26,13 +28,20 @@
   with_items:
     - "{{ certbot_venv }}/logs"
     - "{{ certbot_venv }}/config"
+
+- name: Create secret directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0700
+  with_items:
     - "{{ certbot_venv }}/.secrets"
 
 - name: Copy ionos secret file
   template:
     src: "{{ item.template }}"
     dest: "{{ item.dest }}"
-    mode: 0644
+    mode: 0600
   with_items:
     - template: ionos-credentials.ini.j2
       dest: "{{ certbot_venv }}/.secrets/ionos-credentials.ini"
@@ -44,4 +53,6 @@
     mode: 0755
   with_items:
     - template: certbot.sh.j2
+      dest: "{{ certbot_venv }}/certbot-create-cert.sh"
+    - template: certbot-wrapper.sh.j2
       dest: "{{ certbot_venv }}/certbot-wrapper.sh"

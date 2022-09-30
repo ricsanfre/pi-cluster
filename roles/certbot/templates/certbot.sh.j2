@@ -11,5 +11,7 @@
   --dns-ionos-propagation-seconds 900 \
   --server https://acme-v02.api.letsencrypt.org/directory \
   --agree-tos \
+  --non-interactive \
   --rsa-key-size 4096 \
+  -m {{ certbot_email }} \
   -d $1
