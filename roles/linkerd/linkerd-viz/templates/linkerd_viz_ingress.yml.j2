@@ -15,7 +15,7 @@ metadata:
       {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ tls_issuer }}-issuer
-    cert-manager.io/common-name: linkerd
+    cert-manager.io/common-name: {{ linkerd_dashboard_dns }}
 spec:
   tls:
     - hosts:
