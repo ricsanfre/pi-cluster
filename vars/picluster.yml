@@ -83,8 +83,14 @@ linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
 # CertManager and TLS#
 ######################
 
+# TLS issuer. Possible values "ca" or "letsencrypt"
+# TLS certificates are CA selfsigned
+# tls_issuer: ca
+# TLS certificates are signed by letsencrypt
+tls_issuer: letsencrypt
+
 # Enable letsencrypt certificates
-enable_letsencrypt_acme_dns01: true
+enable_letsencrypt: true
 
 # Setting ACME DNS01 provider
 letsencrypt_acme_dns01_provider: ionos
