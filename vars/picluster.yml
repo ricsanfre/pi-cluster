@@ -1,0 +1,158 @@
+---
+# Pi Cluster variables
+
+#######
+# K3S #
+#######
+
+# k3s master node IP
+k3s_master_ip: 10.0.0.11
+
+# k3s shared token
+k3s_token: "{{ vault.k3s.k3s_token }}"
+
+# k3s config directory
+k3s_config_directory: /etc/rancher/k3s
+
+# kubelet configuration
+k3s_kubelet_config: |
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+
+# Extra arguments for k3s server installation
+k3s_server_extra_args: >-
+  --write-kubeconfig-mode '0644'
+  --disable 'servicelb'
+  --disable 'traefik'
+  --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
+  --kube-controller-manager-arg 'bind-address=0.0.0.0'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+  --kube-scheduler-arg 'bind-address=0.0.0.0'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+
+# Extra arguments for k3s agent installation
+k3s_worker_extra_args: >-
+  --node-label 'node_type=worker'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+
+##############
+# Namespaces #
+##############
+
+k3s_metallb_namespace: metallb-system
+k3s_traefik_namespace: traefik-system
+k3s_longhorn_namespace: longhorn-system
+k3s_certmanager_namespace: certmanager-system
+k3s_logging_namespace: k3s-logging
+k3s_monitoring_namespace: k3s-monitoring
+k3s_velero_namespace: velero-system
+k3s_linkerd_namespace: linkerd
+k3s_linkerd_viz_namespace: linkerd-viz
+
+###########
+# MetalLB #
+###########
+# k3s external ip range: Metal LB pool configuration
+k3s_external_ip_range: "10.0.0.100-10.0.0.200"
+# External IP for Kubernets Ingress
+k3s_ingress_external_ip: 10.0.0.100
+# External IP for fluentd
+k3s_fluentd_external_ip: 10.0.0.101
+
+###########
+# Traefik #
+###########
+
+# HTTP Basic auth credentials
+traefik_basic_auth_user: admin
+traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth_passwd }}"
+
+# DNS cluster service end-points
+traefik_dashboard_dns: "traefik.{{ dns_domain }}"
+longhorn_dashboard_dns: "storage.{{ dns_domain }}"
+kibana_dashboard_dns: "kibana.{{ dns_domain }}"
+elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
+fluentd_dns: "fluentd.{{ dns_domain }}"
+monitoring_dns: "monitoring.{{ dns_domain }}"
+linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
+
+######################
+# CertManager and TLS#
+######################
+
+# TLS issuer. Possible values "ca" or "letsencrypt"
+# TLS certificates are CA selfsigned
+# tls_issuer: ca
+# TLS certificates are signed by letsencrypt
+tls_issuer: letsencrypt
+
+# Enable letsencrypt certificates
+enable_letsencrypt: true
+
+# Setting ACME DNS01 provider
+letsencrypt_acme_dns01_provider: ionos
+
+# Configuring certmanager-ionos-webhook
+certmanager_ionos_webhook_groupName: acme.ricsanfre.com
+ionos_public_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
+ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+acme_issuer_email: admin@ricsanfre.com
+
+
+#######################
+# backup configuration
+#######################
+
+# Minio S3 Server
+minio_hostname: "s3.{{ dns_domain }}"
+minio_url: "https://{{ minio_hostname }}:9091"
+minio_site_region: "eu-west-1"
+
+# Restic S3 repository configuration
+restic_repository: "s3:{{ minio_url }}/restic"
+restic_use_ca_cert: true
+restic_environment:
+  - name: AWS_ACCESS_KEY_ID
+    value: "restic"
+  - name: AWS_SECRET_ACCESS_KEY
+    value: "{{ vault.minio.restic_key }}"
+
+##########
+# Velero #
+##########
+
+# Minio user, key and bucket
+minio_velero_user: velero
+minio_velero_key: "{{ vault.minio.velero_key }}"
+minio_velero_bucket: k3s-velero
+
+############
+# Longhorn #
+############
+
+# Enable S3 backup
+longhorn_s3_backup: true
+# Mini user, key and bucket
+minio_longhorn_user: longhorn
+minio_longhorn_key: "{{ vault.minio.longhorn_key }}"
+minio_longhorn_bucket: k3s-longhorn
+
+################
+# Logging: EFK #
+################
+
+# Fluentd-fluentbit shared key
+fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
+
+# Elasticsearch 'elastic' user password
+efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"
+
+##############
+# Monitoring #
+##############
+
+# Grafana admin user password
+prometheus_grafana_password: "{{ vault.grafana.admin_password}}"

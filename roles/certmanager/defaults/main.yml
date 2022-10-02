@@ -1,3 +1,15 @@
 ---
 # Namespace for cert-manager
 k3s_certmanager_namespace: certmanager-system
+
+# enable letsencrypt ACME dns01 provider
+enable_letsencrypt: false
+
+# letsencrypt ACM dns01 provider
+letsencrypt_acme_dns01_provider: ""
+
+# Ionos configuration
+certmanager_ionos_webhook_groupName: ""
+ionos_public_prefix: ""
+ionos_secret: ""
+acme_issuer_email: ""

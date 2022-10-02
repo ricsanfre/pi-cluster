@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "10-09-2022"
+last_modified_at: "02-10-2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -27,11 +27,11 @@ Step-by-step manual process is also described in this documentation.
 
 - Install Ansible requirements:
 
-   Developed Ansible playbooks depend on external roles that need to be installed.
+  Developed Ansible playbooks depend on external roles that need to be installed.
 
-   ```shell
-   ansible-galaxy install -r requirements.yml
-   ```
+  ```shell
+  ansible-galaxy install -r requirements.yml
+  ```
 
 ## Ansible playbooks configuration
 
@@ -43,7 +43,7 @@ Adjust [`inventory.yml`]({{ site.git_edit_address }}/inventory.yml) inventory fi
 
 If you maintain the private network assigned to the cluster (10.0.0.0/24) and the hostnames and IP addresses. The only field that you must change in `inventory.yml` file is the field `mac` containing the node's mac address. This information will be used to configure automatically DHCP server and assign the proper IP to each node.
 
-This information can be taken when Raspberry PI is booted for first time during the firmware update step (see below).
+This information can be taken when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
 
 {{site.data.alerts.end}}
 
@@ -63,11 +63,79 @@ The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH
 - Modify [`all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) file to include your ansible remote UNIX user (`ansible_user` variable) and 
   
 
-### Modify Ansible Playbook variables
+### Configuring Ansible Playbooks
 
-Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars`directories to meet your specific configuration.
+#### Encrypting secrets/key variables
 
-The following table shows the variable files defined at ansible`s group and host levels
+All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
+
+`vault.yml` file is a Ansible vars file containing just a unique yaml variable, `vault`: a yaml dictionary containing all keys/passwords used by the different cluster components.
+
+vault.yml sample file is like this:
+
+```yml
+---
+# Encrypted variables - Ansible Vault
+vault:
+  # K3s secrets
+  k3s:
+    k3s_token: s1cret0
+  # traefik secrets
+  traefik:
+    basic_auth_passwd: s1cret0
+  # Minio S3 secrets
+  minio:
+    root_password: supers1cret0
+    longhorn_key: supers1cret0
+    velero_key: supers1cret0
+    restic_key: supers1cret0
+  # elastic search
+....
+```
+All needed password-type variables used by the Playbooks are in the sample file `var/picluster-vault.yml`. This file is not encrypted and must be used to start the ansible setup.
+
+The steps to configure passwords/keys used in all Playbooks is the following:
+
+1. Copy sample yaml `var/picluster-vault.yml` file and rename it as `var/vault.yml`
+
+2. Edit content of the file specifying your own values for each of the key/password/secret specified.
+
+3. Encrypt file using ansible-vault
+
+   ```shell
+   ansible-vault encrypt vault.yml
+   ```
+   The command ask for a ansible vault password to encrypt the file.
+   After executing the command the file `vault.yml` is encrypted. Yaml content file is not readable.
+
+   {{site.data.alerts.note}}
+  
+   The file can be decrypted using the following command
+
+   ```shell
+   ansible-vault decrypt vault.yml
+   ```
+   The password using during encryption need to be provided to decrypt the file
+   After executing the command the file `vault.yml` is decrypted and show the content in plain text.
+
+   {{site.data.alerts.end}}
+
+
+{{site.data.alerts.important}}
+
+When using encrypted vault.yaml file all playbooks executed with `ansible-playbook` command need the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
+
+```shell
+ansible-playbook playbook.yml --ask-vault-pass
+```
+{{site.data.alerts.end}}
+
+
+#### Modify Ansible Playbook variables
+
+Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars` directories to meet your specific configuration.
+
+The following table shows the variable files defined at ansible's group and host levels
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
@@ -78,10 +146,12 @@ The following table shows the variable files defined at ansible`s group and host
 | [`host_vars/gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) | gateway node specific variables|
 {: .table }
 
-The following table shows the variable files used for configuring the storage and the backup server
+
+The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
 
 | Specific Variable File | Configuration |
 |----|----|
+| [`vars/picluster.yml`]({{ site.git_edit_address }}/vars/picluster.yml) | K3S cluster and services configuration variables |
 | [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
 | [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
 | [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
@@ -154,7 +224,7 @@ Before applying the cloud-init files of the table above, remember to change the 
 For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), executes the playbook:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "gateway"
+ansible-playbook setup_picluster.yml --tags "gateway" [--ask-vault-pass]
 ```
 
 ### Install cluster nodes.
@@ -283,4 +353,4 @@ To automatically update Ubuntu OS packages run the following playbook:
 ansible-playbook update.yml
 ```
 
-This playbook automatically updates OS packages to the latest stable version and it performs a system reboot if needed. 
+This playbook automatically updates OS packages to the latest stable version and it performs a system reboot if needed.

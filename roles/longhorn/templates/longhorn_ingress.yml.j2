@@ -30,7 +30,7 @@ metadata:
       {{ k3s_traefik_namespace }}-basic-auth@kubernetescrd,
       {{ k3s_longhorn_namespace }}-svc-longhorn-headers@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
-    cert-manager.io/cluster-issuer: ca-issuer
+    cert-manager.io/cluster-issuer: {{ tls_issuer }}-issuer
     cert-manager.io/common-name: {{ longhorn_dashboard_dns }}
 spec:
   tls:

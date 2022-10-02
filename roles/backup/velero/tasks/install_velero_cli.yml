@@ -1,5 +1,15 @@
 ---
 
+- name: Get latest relesase
+  uri:
+    url: https://api.github.com/repos/vmware-tanzu/velero/releases/latest
+    return_content: true
+  register: json_response
+
+- name: Set velero velero version
+  set_fact:
+    velero_version: "{{ json_response.json.tag_name }}"
+
 - name: Download Velero CLI
   get_url:
     url: https://github.com/vmware-tanzu/velero/releases/download/{{ velero_version }}/velero-{{ velero_version }}-linux-{{ velero_arch }}.tar.gz

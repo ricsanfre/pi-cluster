@@ -2,7 +2,7 @@
 title: SSL Certificates (Cert-Manager)
 permalink: /docs/certmanager/
 description: How to deploy a centralized SSL certification management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "08-03-2022"
+last_modified_at: "02-10-2022"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
@@ -36,9 +36,13 @@ The ACME Issuer type represents a single account registered with the Automated C
 
 {{site.data.alerts.important}}
 
-CertManager has been configured to have in the cluster a private PKI (Public Key Infrastructure) using a self-signed CA to issue auto-signed certificates.
+CertManager is configured to deploy in the cluster a private PKI (Public Key Infrastructure) using a self-signed CA to issue auto-signed certificates.
 
-CertManager integration with Let's Encrypt has not been configured since my DNS provider does not suppport yet the API for automating DNS challenges. See open issue [#16](https://github.com/ricsanfre/pi-cluster/issues/16).
+Such private PKI will be used internally by Linkerd to issue certiticates to each POD to implement mTLS communictions.
+
+CertManager also is configured to deliver valid certificates, using your own DNS domain, through its integration with Let's Encrypt using ACM DNS challenges. Configuration is provided for using IONOS DNS provider, using developer API available to automate challenge resolution. Similar configuration can be implemented for other supported DNS providers.
+
+Valid certificates signed by Letscript will be used for cluster exposed services.
 
 {{site.data.alerts.end}}
 
@@ -53,13 +57,26 @@ Cert-manager add a set of Kubernetes custom resource (CRD):
 
 In order to generate new SSL certificates a `Certificate` resource can be created. 
 
+```yml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-test-com
+spec:
+  dnsNames:
+    - 'example.com'
+  issuerRef:
+    name: nameOfClusterIssuer
+  secretName: example-test-com-tls
+```
+
 Once the Certificate resource is created, Cert-manager signed the certificate issued by the specified issuer and stored it in a `kubernetes.io/tls Secret` resource, which is the one used to secure Ingress resource. See kuberentes [Ingress TLS documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
 
 ```yml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: testsecret-tls
+  name: example-test-com-tls
   namespace: default
 data:
   tls.crt: base64 encoded cert
@@ -106,7 +123,6 @@ spec:
     - example.com
     secretName: myingress-cert # < cert-manager will store the created certificate in this secret.
 ```
-
 
 ## Cert Manager Installation
 
@@ -169,7 +185,7 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
   kind: Certificate
   metadata:
     name: my-selfsigned-ca
-    namespace: sandbox
+    namespace: certmanager-system
   spec:
     isCA: true
     commonName: my-selfsigned-ca
@@ -186,7 +202,7 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
   kind: ClusterIssuer
   metadata:
     name: my-ca-issuer
-    namespace: sandbox
+    namespace: certmanager-system
   spec:
     ca:
       secretName: root-secret
@@ -198,8 +214,6 @@ Algorithm used for creating private keys is ECDSA P-256. The use of this algorit
 
 {{site.data.alerts.end}}
 
-
-
 ## Lets Encrypt Certificates
 
 Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auto-signed SSL Certificates for the websites that are not automatic validated by HTTP browsers.
@@ -207,7 +221,6 @@ Lets Encrypt provide publicly validated TLS certificates for free. Not need to g
 The process is the following, we issue a request for a certificate to Let's Encrypt for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME DNS or HTTP validation mechanism. If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
 
 For details see cert-manager [ACME issuer type documentation](https://cert-manager.io/docs/configuration/acme/)
-
 
 ### Let's Encrypt DNS validation method
 
@@ -221,11 +234,198 @@ This method do not require to expose to the Public Internet the web services hos
 
 Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge. For supporting additional DNS providers webhooks can be developed. See supported list and further documentation in [Certmanager documentation: "ACME DNS01" ](https://cert-manager.io/docs/configuration/acme/dns01/).
 
-IONOS, my DNS server provider, is not in the list of supported ones. 
+IONOS, my DNS server provider, is not supported by Certmanager (neither OOTB support nor through supported external webhooks). Even when it is not officially supported by the community, there is a github project  providing a [IONOS cert-manager webhook](https://github.com/fabmade/cert-manager-webhook-ionos).
 
-Since Dec 2020, IONOS launched an API for remotelly configure DNS, and so the integration could be possible as it is detailed in this [post](https://dev.to/devlix-blog/automate-let-s-encrypt-automate-let-s-encrypt-wildcard-certificate-creation-with-ionos-dns-rest-api-o23). This new API can be used as well for developing a Certbot plugin ([Cerbot](https://certbot.eff.org/) is an opensource software to automate the interaction with Let's Encrypt). See implementation in this [git repository](https://github.com/helgeerbe/certbot-dns-ionos).
+This ionos-webhook uses the [IONOS developer API](https://developer.hosting.ionos.es/), allowing the remote configuration of the DNS using a RESTFUL API.
 
-Unfortunally IONOS API is part of a beta program that it is not available yet in my location (Spain).
+This IONOS developer API can be used also with Certbot. [Cerbot](https://certbot.eff.org/) is an opensource software to automate the interaction with Let's Encrypt. A Certbot plugin is needed to automate DNS challenge process using IONOS developer API. See an implementation of such Cerbot plugin in this [cerbot-dns-ionos project](https://github.com/helgeerbe/certbot-dns-ionos).
+
+#### Creating IONOS developer API Key
+
+To use IONOS developer API, first API key must be created.
+
+Follow [IONOS developer API: Get Started instructions](https://developer.hosting.ionos.es/docs/getstarted) to obtain API key.
+
+API key is composed of two parts:  Public Prefix (public key) and Secret (private key)
+
+#### Installing Certbot IONOS
+
+In `pimaster` node, Certbot and [certbot-dns-ionos plugin](https://github.com/helgeerbe/certbot-dns-ionos) can be installed so, Lets encrypt certificates can be issued.
+
+Cerbot will be installed in a python virtualenv. Similar procedure to the one used to build ansible developer environment.
+
+Execute all the following commands from $HOME directory.
+
+- Step 1. Create Virtual Env for Ansible
+
+  ```shell
+  python3 -m venv letsencrypt
+  ```
+
+- Step 2. Activate Virtual Environment
+
+  ```shell
+  source letsencrypt/bin/activate
+  ```
+
+- Step 3. Upgrade setuptools and pip packages
+
+  ```shell
+  pip3 install --upgrade pip setuptools
+  ```
+
+- Step 4. Install certbot and certbot-ionos-plugin
+
+  ```shell
+  pip3 install certbot certbot-dns-ionos
+  ```
+
+- Step 5. Create certbot working directories
+
+  ```shell
+  mkdir -p letsencrypt/config
+  mkdir -p letsencrypt/logs
+  mkdir -p letsencrypt/.secrets
+  chmod 700 letsencrypt/.secrets
+  ```
+
+- Step 6. Create ionos credentials file `letsencrypt/.secrets/ionos-credentials.ini`
+
+  ```
+  dns_ionos_prefix = myapikeyprefix
+  dns_ionos_secret = verysecureapikeysecret
+  dns_ionos_endpoint = https://api.hosting.ionos.com
+  ```
+  
+  In this file, IONOS API key prefix and secret need to be provided
+
+- Step 7. Change permission of `ionos-credentials.ini` file
+
+  ```shell
+  chmod 600 letsencrypt/.secrets/ionos-credentials.ini
+  ```
+
+- Step 8. Certificate can be created using the following command
+
+  ```shell
+  letsencrypt/bin/certbot certonly \
+  --config-dir letsencrypt/config \
+  --work-dir letsencrypt \
+  --logs-dir letsencrypt/logs \
+  --authenticator dns-ionos \
+  --dns-ionos-credentials letsencrypt/.secrets/ionos-credentials.ini \
+  --dns-ionos-propagation-seconds 900 \
+  --server https://acme-v02.api.letsencrypt.org/directory \
+  --agree-tos \
+  --non-interactive \
+  --rsa-key-size 4096 \
+  -m <your-email> \
+  -d <host_dns>
+  ```
+  
+  Signed certificate will be stored in letsencrypt/config.
+
+  {{site.data.alerts.note}}
+
+  Certificates managed by certbot can be listed using the commad:
+
+  ```shell
+  letsencrypt/bin/certbot certificates \
+  --config-dir letsencrypt/config \
+  --work-dir letsencrypt \
+  --logs-dir letsencrypt/logs \
+  ```
+
+  Certificate and key path are showed. Also expiration date is showed.
+
+  To automatic renew the certificates the following command can be executed periodically in a cron
+
+  ```shell
+  letsencrypt/bin/certbot/certbot renew
+  ```
+
+  {{site.data.alerts.end}}
+
+
+#### Configuring Certmanager Letsencrypt
+
+- Step 1: Install cert-manager-webhook-ionos chart repo:
+
+  ```shell
+  helm repo add cert-manager-webhook-ionos https://fabmade.github.io/cert-manager-webhook-ionos
+  ```
+- Step 2: Fetch the latest charts from the repository:
+
+  ```shell
+  helm repo update
+  ```
+- Step 3: Create values.yml file for customizing helm chart
+
+  ```yml
+  ---
+  groupName: acme.<your-domain>
+
+  certManager:
+    namespace: certmanager-system
+    serviceAccountName: certmanager-cert-manager
+  ```
+  `groupName` is a unique identifier that need to be referenced in each Issuer's `webhook` stanza to inform cert-manager of where to send challengePayload resources in order to solve the DNS01 challenge. `acme.<yourdomain>` can be used.
+
+  CertManager namespace and its servceAccount name need to be specified.
+
+- Step 4: Install cert-manager-webhook-ionos
+
+  ```shell
+  helm install cert-manager-webhook-ionos cert-manager-webhook-ionos/cert-manager-webhook-ionos -n certmanager-system -f values-certmanager-ionos.yml
+  ```
+
+- Step 5: Create IONOS API secret
+
+  ```yml
+  apiVersion: v1
+  stringData:
+    IONOS_PUBLIC_PREFIX: <your-public-key>
+    IONOS_SECRET: <your-private-key>
+  kind: Secret
+  metadata:
+    name: ionos-secret
+    namespace: certmanager-system
+  type: Opaque
+  ```
+
+- Step 6: Configure a Letsencrypt Cluster Issuer
+
+  ```yml
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: letsencrypt-issuer
+    namespace: certmanager-system
+    spec:
+        acme:
+          # The ACME server URL
+          server: https://acme-v02.api.letsencrypt.org/directory
+          # Email address used for ACME registration
+          email: <your-email-address>
+          # Name of a secret used to store the ACME account private key
+          privateKeySecretRef:
+            name: letsencrypt-ionos-prod
+          # Enable the dns01 challenge provider
+          solvers:
+            - dns01:
+                webhook:
+                  groupName: acme.<your-domain>
+                  solverName: ionos
+                  config:
+                    apiUrl: https://api.hosting.ionos.com/dns/v1
+                    publicKeySecretRef:
+                      key: IONOS_PUBLIC_PREFIX
+                      name: ionos-secret
+                    secretKeySecretRef:
+                      key: IONOS_SECRET
+                      name: ionos-secret
+  ```
 
 ### Lets Encrypt HTTP validation method
 
@@ -255,7 +455,7 @@ For this procedure to work it is needed to enable and route HTTP traffic from th
 Lets Encrypt validation process includes to make a resolution of the domain included in the certificate requests.
 
 In my home network only a public dysnamic IP is available from my ISP. My DNS provider, 1&1 IONOS supports DynDNS with an open protocol [Domain Connect](https://www.domainconnect.org/).
-To configure DynDNS IONOS provide the following [instructions](https://www.ionos.com/help/domains/configuring-your-ip-address/connecting-a-domain-to-a-network-with-a-changing-ip-using-dynamic-dns-linux/).
+To configure DynDNS IONOS provider, follow these [instructions](https://www.ionos.com/help/domains/configuring-your-ip-address/connecting-a-domain-to-a-network-with-a-changing-ip-using-dynamic-dns-linux/).
 
 - Step 1: Install python package
 

@@ -86,7 +86,7 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
 
 - Step 8: Configure docker daemon.
 
-  - Edit file `/etc/docker/daemon.json´
+  - Edit file `/etc/docker/daemon.json`
 	
     Set storage driver to overlay2 and to use systemd for the management of the container’s cgroups.
     Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
@@ -200,13 +200,13 @@ Installation of the whole Ansible environment can be done using a python virtual
 - Step 2. Create Virtual Env for Ansible
 
   ```shell
-  python3 -m venv ansible_env
+  python3 -m venv ansible
   ```
 
 - Step 3. Activate Virtual Environment
 
   ```shell
-  source ansible_env/bin/activate
+  source ansible/bin/activate
   ```
   
   {{site.data.alerts.note}}

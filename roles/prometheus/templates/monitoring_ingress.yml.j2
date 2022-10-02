@@ -61,7 +61,7 @@ metadata:
 spec:
   secretName: monitoring-secret
   issuerRef:
-    name: ca-issuer
+    name: {{ tls_issuer }}-issuer
     kind: ClusterIssuer
   commonName: {{ monitoring_dns }}
   dnsNames:

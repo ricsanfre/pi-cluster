@@ -5,6 +5,10 @@
   gather_facts: true
   tags: [gateway]
   become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
 
     # OS basic setup tasks
@@ -55,8 +59,11 @@
   gather_facts: true
   tags: [node]
   become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
   roles:
-
     # OS basic setup tasks
     - role: basic_setup
       tags: [os]
