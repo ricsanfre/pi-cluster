@@ -2,7 +2,7 @@
 title: Backup & Restore
 permalink: /docs/backup/
 description: How to deploy a backup solution based on Velero and Restic in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "26-09-2022"
+last_modified_at: "02-10-2022"
 ---
 
 ## Backup Architecture and Design
@@ -76,16 +76,49 @@ For a more secured and multi-user Minio installation the instructions of this [p
 
 Minio installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.minio**. This role, installs Minio Server and Minio Client and automatically create S3 buckets, and configure users and ACLs for securing the access.
 
-### Minio Configuration
+### Minio installation (baremetal server)
 
-- Minio Server configuration parameters:
-  - Minio Server API Port: 9091
-  - Minio Console Port: 9092
-  - Minio Storage data dir: `/storage/minio`
-  - Minio Site Region: `eu-west-1`
-  - SSL certificates stored in /etc/minio/ssl.
+- Step 1. Create minio's UNIX user/group
 
-  Minio Enviroment variables stored in `/etc/minio/minio.conf` file:
+  ```shell
+  sudo groupadd minio
+  sudo useradd minio -g minio
+  sudo 
+  $ sudo chown minio-user -R /srv/minio/data
+  ```
+- Step 2. Create minio's S3 storage directory
+
+  ```shell
+  sudo mkdir /storage/minio
+  chown -R minio:minio /storage/minio
+  chmod -R 750 /storage/minio
+  ```
+
+- Step 3. Create minio's config directories
+
+  ```shell
+  sudo mkdir -p /etc/minio
+  sudo mkdir -p /etc/minio/ssl
+  sudo mkdir -p /etc/minio/policy
+  chown -R minio:minio /etc/minio
+  chmod -R 750 /etc/minio
+  ```
+
+- Step 4. Download server binary (`minio`) and minio client (`mc`) and copy them to `/usr/local/bin`
+
+  ```shell
+   wget https://dl.min.io/server/minio/release/linux-<arch>/minio
+   wget https://dl.minio.io/client/mc/release/linux-<arch>/mc
+   chmod +x minio
+   chmod +x mc
+   sudo mv minio /usr/local/bin/minio
+   sudo mv mc /usr/local/bin/mc
+  ```
+  where `<arch>` is amd64 or arm64.
+
+- Step 5: Create minio Config file `/etc/minio/minio.conf`
+
+  This file contains environment variables that will be used by minio server.
   ```
   # Minio local volumes.
   MINIO_VOLUMES="/storage/minio"
@@ -103,15 +136,84 @@ Minio installation and configuration tasks have been automated with Ansible deve
   MINIO_SERVER_URL="https://s3.picluster.ricsanfre.com:9091"
   ```
 
-  Minio server start-up command is:
+  Minio is configured with the following parameters:
+
+  - Minio Server API Port 9091 (`MINIO_OPTS`="--address :9091")
+  - Minio Console Port: 9092 (`MINIO_OPTS`="--console-address :9092")
+  - Minio Storage data dir (`MINIO_VOLUMES`): `/storage/minio`
+  - Minio Site Region (`MINIO_SITE_REGION`): `eu-west-1`
+  - SSL certificates stored in (`MINIO_OPTS`="--certs-dir /etc/minio/ssl"): `/etc/minio/ssl`.
+  - Minio server URL (`MINIO_SERVER_URL`): Url used to connecto to Minio Server API
+
+- Step 6. Create systemd minio service file `/etc/systemd/system/minio.service`
+
+  ```
+  [Unit]
+  Description=MinIO
+  Documentation=https://docs.min.io
+  Wants=network-online.target
+  After=network-online.target
+  AssertFileIsExecutable=/usr/local/bin/minio
+
+  [Service]
+  WorkingDirectory=/usr/local/
+
+  User=minio
+  Group=minio
+  ProtectProc=invisible
+
+  EnvironmentFile=/etc/minio/minio.conf
+  ExecStartPre=/bin/bash -c "if [ -z \"${MINIO_VOLUMES}\" ]; then echo \"Variable MINIO_VOLUMES not set in /etc/minio/minio.conf\"; exit 1; fi"
+
+  ExecStart=/usr/local/bin/minio server $MINIO_OPTS $MINIO_VOLUMES
+
+  # Let systemd restart this service always
+  Restart=always
+
+  # Specifies the maximum file descriptor number that can be opened by this process
+  LimitNOFILE=65536
+
+  # Specifies the maximum number of threads this process can create
+  TasksMax=infinity
+
+  # Disable timeout logic and wait until process is stopped
+  TimeoutStopSec=infinity
+  SendSIGKILL=no
+
+  [Install]
+  WantedBy=multi-user.target
+  ```
+  This service start minio server using minio UNIX group, loading environment variables located in `/etc/minio/minio.conf` and executing the following startup command:
+
   ```shell
   /usr/local/minio server $MINIO_OPTS $MINIO_VOLUMES
   ```
-- Minio SSL certificates
+
+- Step 7. Enable minio systemd service
+
+  ```shell
+  sudo systemctl enable minio.service
+  ```
+
+- Step 8. Create Minio SSL certificate
+
+  In case you have your own domain, a valid SSL certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Minio server, using [Certbot](https://certbot.eff.org/).
+
+  See certbot installation instructions in [CertManager - Letsencrypt Certificates Section](/docs/certmanager/#installing-certbot-ionos). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
+
+  Letsencrypt using HTTP challenge is avoided for security reasons (cluster services are not exposed to public internet).
+
+  If generating valid SSL certificate is not possible, selfsigned certificates with a custom CA can be used instead.
+
+  {{site.data.alerts.important}}
 
   `restic` backup to a S3 Object Storage backend using self-signed certificates does not work (See issue [#26](https://github.com/ricsanfre/pi-cluster/issues/26)). However, it works if SSL certificates are signed using a custom CA.
 
-  1) Create a self-signed CA key and self-signed certificate
+  {{site.data.alerts.end}}
+
+  Follow this procedure for creating a self-signed certificate for Minio Server
+
+  1. Create a self-signed CA key and self-signed certificate
 
      ```shell
      openssl req -x509 \
@@ -121,7 +223,7 @@ Minio installation and configuration tasks have been automated with Ansible deve
             -subj "/CN=Ricsanfre CA" \
             -keyout rootCA.key -out rootCA.crt
      ```
-  2) Create a SSL certificate for Minio server signed using the custom CA
+  2. Create a SSL certificate for Minio server signed using the custom CA
     
      ```shell
      openssl req -new -nodes -newkey rsa:4096 \
@@ -138,10 +240,27 @@ Minio installation and configuration tasks have been automated with Ansible deve
             -CAkey rootCA.key
      ```
 
-  3) Copy public certificate `minio.crt` as `/etc/minio/ssl/public.crt`
-  4) Copy private key `minio.key` as `/etc/minio/ssl/private.key`
-  5) Restart minio server.
-  
+  Once the certificate is created, public certificate and private key need to be installed in Minio server following this procedure:
+
+
+  1. Copy public certificate `minio.crt` as `/etc/minio/ssl/public.crt`
+
+     ```shell
+     sudo cp minio.crt /etc/minio/ssl/public.crt
+     sudo chown minio:minio /etc/minio/ssl/public.crt
+     ```
+  2. Copy private key `minio.key` as `/etc/minio/ssl/private.key`
+
+     ```shell
+     cp minio.key /etc/minio/ssl/private.key
+     sudo chown minio:minio /etc/minio/ssl/private.key
+     ```
+  3. Restart minio server.
+     
+     ```shell
+     sudo systemctl restart minio.service
+     ```
+
   {{site.data.alerts.note}}
 
   Certificate must be created for the DNS name associated to MINIO S3 service, i.e `s3.picluster.ricsanfre.com`.
@@ -150,23 +269,35 @@ Minio installation and configuration tasks have been automated with Ansible deve
 
   {{site.data.alerts.end}}
 
-- Minio Buckets
+  To connect to Minio console use the URL https://s3.picluster.ricsanfre.com:9091
+
+- Step 9. Configure minio client: `mc`
+
+  Configure connection alias to minio server.
+  
+  ```shell
+  mc alias set minio_alias <minio_url> <minio_root_user> <minio_root_password>
+  ```
+
+- Step 10. Create Minio Buckets using `mc`
+
+  The following buckets need to be created for backing-up different cluster components:
+
   - Longhorn Backup: `k3s-longhorn`
   - Velero Backup: `k3s-velero`
   - OS backup: `restic`
 
   Buckets can be created using Minio's CLI (`mc`)
-  ```
-  mc mb <minio_alias>/<bucket_name> 
-  
-  Where: <minio_alias> is the mc's alias connection to Minio Server using admin user credentials
-  ```
 
   ```shell
-  mc alias set minio_alias <minio_url> <minio_root_user> <minio_root_password>
+  mc mb <minio_alias>/<bucket_name> 
   ```
+  Where: `<minio_alias>` is the mc's alias connection to Minio Server using admin user credentials, created in step 10.
 
-- Minio Users and ACLs
+- Step 11. Configure Minio Users and ACLs
+
+  Following users will be created to grant access to Minio S3 buckets:
+
   - `longhorn` with read-write access to `k3s-longhorn` bucket.
   - `velero` with read-write access to `k3s-velero` bucket. 
   - `restic` with read-write access to `restic` bucket
@@ -176,6 +307,7 @@ Minio installation and configuration tasks have been automated with Ansible deve
   mc admin user add <minio_alias> <user_name> <user_password>
   ```
   Access policies to the different buckets can be assigned to the different users using the command:
+
   ```shell
   mc admin policy add <minio_alias> <user_name> user_policy.json
   ```
@@ -201,7 +333,7 @@ Minio installation and configuration tasks have been automated with Ansible deve
     ]
   }
   ``` 
-  This policy grants read-write access to `bucket_name`.
+  This policy grants read-write access to `bucket_name`. For each user a different json need to be created, granting access to dedicated bucket. Those json files can be stored in `/etc/minio/policy` directory.
 
 ## OS Filesystem backup with Restic
 
@@ -251,9 +383,15 @@ restic repository info can be passed to `restic` command through environment var
 
 ### Copy CA SSL certificates
 
-In case Minio S3 server is using secure communications using a not valid certificate (self-signed or signed with custom CA), restic command must be used with `--cacert <path_to_CA.pem_file` option to let restic validate the server certificate. 
+In case Minio S3 server is using secure communications using a not valid certificate (self-signed or signed with custom CA), restic command must be used with `--cacert <path_to_CA.pem_file` option to let restic validate the server certificate.
 
 Copy CA.pem, used to sign Minio SSL certificate into `/etc/restic/ssl/CA.pem` 
+
+{{site.data.alerts.note}}
+
+In case of self-signed certificates using a custom CA, all `restic` commands detailed below, need to be executed with the following additional argument: `--cacert /etc/restic/ssl/CA.pem`.
+
+{{site.data.alerts.end}}
 
 ### Restic repository initialization
 
@@ -262,12 +400,12 @@ restic repository (stored within Minio's S3 bucket) need to be initialized befor
 For initilizing the repo execute:
 
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem init
+restic init
 ```
 For checking whether the repo is initialized or not execute:
 
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem init cat config
+restic init cat config
 ```
 That command shows the information about the repository (file `config` stored within the S3 bucket)
 
@@ -275,29 +413,29 @@ That command shows the information about the repository (file `config` stored wi
 
 For manually launch backup process, execute
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem backup <path_to_backup>
+restic backup <path_to_backup>
 ```
 Backups snapshots can be displayed executing
 
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem snapshots
+restic snapshots
 ```
 ### Restic repository maintenance tasks
 
 For checking repository inconsistencies and fixing them
 
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem check
+restic check
 ```
 For applying data retention policy (i.e.: maintain 30 days old snapshots)
 
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem forget --keep-within 30d
+restic forget --keep-within 30d
 ```
 For purging repository old data:
 
 ```shell
-restic --cacert /etc/restic/ssl/CA.pem prune
+restic prune
 ```
 ### Restic backup schedule and concurrent backups
 
@@ -447,37 +585,37 @@ Installation using `Helm` (Release 3):
         volumeMounts:
           - mountPath: /target
             name: plugins
-    # Upgrading CRDs is causing issues
-    upgradeCRDs: false
-    # Use a kubectl image supporting ARM64
-    # bitnami default is not suppporting it
-    # kubectl:
-    #   image:
-    #     repository: rancher/kubectl
-    #     tag: v1.21.5
-    # Disable volume snapshots. Longhorn deals with them
-    snapshotsEnabled: false
-    # Deploy restic for backing up volumes
-    deployRestic: true
-    # Minio storage configuration
-    configuration:
-      # Cloud provider being used
+  # Upgrading CRDs is causing issues
+  upgradeCRDs: false
+  # Use a kubectl image supporting ARM64
+  # bitnami default is not suppporting it
+  # kubectl:
+  #   image:
+  #     repository: rancher/kubectl
+  #     tag: v1.21.5
+  # Disable volume snapshots. Longhorn deals with them
+  snapshotsEnabled: false
+  # Deploy restic for backing up volumes
+  deployRestic: true
+  # Minio storage configuration
+  configuration:
+    # Cloud provider being used
+    provider: aws
+    backupStorageLocation:
       provider: aws
-      backupStorageLocation:
-        provider: aws
-        bucket: <velero_bucket>
-        caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
-        config:
-          region: eu-west-1
-          s3ForcePathStyle: true
-          s3Url: https://minio.example.com:9091
-          insecureSkipTLSVerify: true
-    credentials:
-      secretContents:
-        cloud: |
-          [default]
-          aws_access_key_id: <minio_velero_user> # Not encoded
-          aws_secret_access_key: <minio_velero_pass> # Not encoded
+      bucket: <velero_bucket>
+      caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
+      config:
+        region: eu-west-1
+        s3ForcePathStyle: true
+        s3Url: https://minio.example.com:9091
+        insecureSkipTLSVerify: true
+  credentials:
+    secretContents:
+      cloud: |
+        [default]
+        aws_access_key_id: <minio_velero_user> # Not encoded
+        aws_secret_access_key: <minio_velero_pass> # Not encoded
   ```
 
   {{site.data.alerts.warning}} **(1):**
@@ -485,10 +623,10 @@ Installation using `Helm` (Release 3):
   Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue either.
   {{site.data.alerts.end}}
   {{site.data.alerts.important}} **(2):**
-  Custom CA certificate must be passed as `caCert` parameter (base64 encoded and removing any '\n' character)
+  In case of using a self-signed certificate for Minio server, custom CA certificate must be passed as `configuration.backupStorageLocation.caCert` parameter (base64 encoded and removing any '\n' character)
   {{site.data.alerts.end}}
  
-- Step 5: Install Veleor in the velero-system namespace with the overriden values
+- Step 5: Install Velero in the velero-system namespace with the overriden values
 
   ```shell
   helm install velero vmware-tanzu/velero --namespace velero-system -f values.yml
@@ -710,6 +848,12 @@ Create kuberentes secret resource containing Minio end-point access information 
   AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
   ```
 
+  {{site.data.alerts.note}}
+
+  AWS_CERT parameter is only needed in case of using a self-signed certificate.
+
+  {{site.data.alerts.end}}
+
   For encoding the different access paramenters the following commands can be used:
 
   ```shell
@@ -795,9 +939,9 @@ See details in [documentation](https://longhorn.io/docs/1.2.3/snapshots-and-back
 
 ## References
 
-- K3S Backup/Restore official documentation [[1]](https://rancher.com/docs/k3s/latest/en/backup-restore/)
-- Longhorn Backup/Restore official documentation [[2]](https://longhorn.io/docs/1.2.3/snapshots-and-backups/)
-- Bare metal Minio documentation[[3]](https://docs.min.io/minio/baremetal/)
-- Create a Multi-User MinIO Server for S3-Compatible Object Hosting [[4]](https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting)
-- Backup Longhorn Volumes to a Minio S3 bucket [[5]](https://www.civo.com/learn/backup-longhorn-volumes-to-a-minio-s3-bucket)
+- [K3S Backup/Restore official documentation](https://rancher.com/docs/k3s/latest/en/backup-restore/)
+- [Longhorn Backup/Restore official documentation](https://longhorn.io/docs/1.3.1/snapshots-and-backups/)
+- [Bare metal Minio documentation](https://docs.min.io/minio/baremetal/)
+- [Create a Multi-User MinIO Server for S3-Compatible Object Hosting](https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting)
+- [Backup Longhorn Volumes to a Minio S3 bucket](https://www.civo.com/learn/backup-longhorn-volumes-to-a-minio-s3-bucket)
 

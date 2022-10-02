@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "29-09-2022"
+last_modified_at: "02-10-2022"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -27,11 +27,11 @@ Step-by-step manual process is also described in this documentation.
 
 - Install Ansible requirements:
 
-   Developed Ansible playbooks depend on external roles that need to be installed.
+  Developed Ansible playbooks depend on external roles that need to be installed.
 
-   ```shell
-   ansible-galaxy install -r requirements.yml
-   ```
+  ```shell
+  ansible-galaxy install -r requirements.yml
+  ```
 
 ## Ansible playbooks configuration
 
@@ -67,9 +67,9 @@ The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH
 
 #### Encrypting secrets/key variables
 
-All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using Ansible Vault.
+All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
 
-This file is a Ansible vars file containing just a unique yaml variable, `vault`: a yaml dictionary containing all keys/passwords used by the different cluster components.
+`vault.yml` file is a Ansible vars file containing just a unique yaml variable, `vault`: a yaml dictionary containing all keys/passwords used by the different cluster components.
 
 vault.yml sample file is like this:
 
@@ -123,7 +123,7 @@ The steps to configure passwords/keys used in all Playbooks is the following:
 
 {{site.data.alerts.important}}
 
-When using encrypted vault.yaml file all ansible playbooks need to be executed with the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
+When using encrypted vault.yaml file all playbooks executed with `ansible-playbook` command need the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
 
 ```shell
 ansible-playbook playbook.yml --ask-vault-pass
@@ -133,7 +133,7 @@ ansible-playbook playbook.yml --ask-vault-pass
 
 #### Modify Ansible Playbook variables
 
-Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars`directories to meet your specific configuration.
+Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars` directories to meet your specific configuration.
 
 The following table shows the variable files defined at ansible's group and host levels
 
@@ -256,7 +256,7 @@ Before applying the cloud-init files of the table above, remember to change the 
 For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), executes the playbook:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "node" [--ask-vault-pass]
+ansible-playbook setup_picluster.yml --tags "node"
 ```
 
 ### Configuring backup server (S3) and OS level backup
@@ -264,7 +264,7 @@ ansible-playbook setup_picluster.yml --tags "node" [--ask-vault-pass]
 Configure backup server (Playbook assumes S3 server is installed in `node1`) and automated backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
 
 ```shell
-ansible-playbook backup_configuration.yml [--ask-vault-pass]
+ansible-playbook backup_configuration.yml
 ```
 
 {{site.data.alerts.note}}
@@ -282,7 +282,7 @@ Variable `restic_clean_service` which configure and schedule restic's purging ac
 To install K3S cluster execute the playbook:
 
 ```shell
-ansible-playbook k3s_install.yml [--ask-vault-pass]
+ansible-playbook k3s_install.yml
 ```
 
 ### K3S basic services deployment
@@ -290,13 +290,13 @@ ansible-playbook k3s_install.yml [--ask-vault-pass]
 To deploy and configure basic services (metallb, traefik, certmanager, linkerd, longhorn, EFK, Prometheus, Velero) run the playbook:
 
 ```shell
-ansible-playbook k3s_deploy.yml [--ask-vault-pass]
+ansible-playbook k3s_deploy.yml
 ```
 
 Different ansible tags can be used to select the componentes to deploy:
 
 ```shell
-ansible-playbook k3s_deploy.yml --tags <ansible_tag> [--ask-vault-pass]
+ansible-playbook k3s_deploy.yml --tags <ansible_tag>
 ```
 
 The following table shows the different components and their dependencies.
@@ -353,4 +353,4 @@ To automatically update Ubuntu OS packages run the following playbook:
 ansible-playbook update.yml
 ```
 
-This playbook automatically updates OS packages to the latest stable version and it performs a system reboot if needed. 
+This playbook automatically updates OS packages to the latest stable version and it performs a system reboot if needed.
