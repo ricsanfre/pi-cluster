@@ -15,3 +15,6 @@ minio_longhorn_bucket: k3s-longhorn
 
 # Enable service mesh
 enable_linkerd: true
+
+# Enable longhorn csi snapshots
+enable_longhorn_csi_snapshots: true

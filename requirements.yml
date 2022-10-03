@@ -24,4 +24,4 @@ roles:
     version: v1.1.2
 collections:
   - name: kubernetes.core
-    version: 2.1.1
+    version: 2.3.2

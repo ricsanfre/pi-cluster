@@ -53,6 +53,10 @@
     cmd: "/usr/local/bin/check_lh.sh"
   changed_when: false
 
+- name: Configure Longhorn CSI snapshots
+  include_tasks: configure_csi_snapshots.yml
+  when: enable_longhorn_csi_snapshots
+
 - name: Enable linkerd integration
   include_tasks: configure_linkerd_mesh.yml
   when: enable_linkerd
@@ -75,3 +79,4 @@
         annotations:
           storageclass.kubernetes.io/is-default-class: "false"
     state: patched
+
