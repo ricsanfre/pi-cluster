@@ -79,4 +79,3 @@
         annotations:
           storageclass.kubernetes.io/is-default-class: "false"
     state: patched
-

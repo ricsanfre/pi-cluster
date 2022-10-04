@@ -2,7 +2,7 @@
 
 - name: Get csi-snapshotter crd definitions
   subversion:
-    repo: https://github.com/kubernetes-csi/external-snapshotter/trunk/client/config/crd
+    repo: "{{ external_snapshotter_base_url }}/client/config/crd"
     export: true
     dest: csi-external-snapshotter/crd
     force: true
@@ -10,7 +10,7 @@
 
 - name: Get snapshot controller definitions
   subversion:
-    repo: https://github.com/kubernetes-csi/external-snapshotter/trunk/deploy/kubernetes/snapshot-controller
+    repo: "{{ external_snapshotter_base_url }}/deploy/kubernetes/snapshot-controller"
     export: true
     dest: csi-external-snapshotter/snapshot-controller
     force: true
