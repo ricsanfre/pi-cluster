@@ -13,7 +13,6 @@
     kind: Namespace
     state: present
 
-
 - name: Configure velero CLI
   include_tasks: configure_velero_cli.yml
 
@@ -37,9 +36,10 @@
   register: velero_pods_ready
   changed_when: false
 
-- name: Create Full backup Schedule policy
+- name: Create Longhorn volume snapshot class and full backup Schedule policy
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
+    - velero_volume_snapshot_class.yml.j2
     - velero_full_schedule.yml.j2

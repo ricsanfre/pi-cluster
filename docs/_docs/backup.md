@@ -2,7 +2,7 @@
 title: Backup & Restore
 permalink: /docs/backup/
 description: How to deploy a backup solution based on Velero and Restic in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "02-10-2022"
+last_modified_at: "10-10-2022"
 ---
 
 ## Backup Architecture and Design
@@ -33,34 +33,44 @@ The backup architecture is the following:
 
 - PODs Persistent Volumes backup and restore.
 
-  Velero supports, Persistent Volumes backup/restore procedures using `restic` as backup engine (https://velero.io/docs/v1.7/restic/) using the same S3 backend configured within Velero for backing up the cluster configuration. 
-
-  Longhorn also provides its own mechanisms for doing the backups and to take snapshots of the persistent volumes. See Longhorn [documentation](https://longhorn.io/docs/1.2.2/snapshots-and-backups/). For configuring the backup in Longhorn is needed to define a backup target, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets. [Minio](https://min.io) can be used as backend.
-
   Applications running in Kubernetes needs to be backed up in a consistent state. It means that before copying the filesystem is it required to freeze the application and make it flush all the pending changes to disk before making the copy. Once the backup is finished, the application can be unfreeze.
   1) Application Freeze and flush to disk
   2) Filesystem level backup
   3) Application unfreeze.
 
-  Velero supports the definition of [backup hooks](https://velero.io/docs/v1.7/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations, 
+  Longhorn provides its own mechanisms for doing the backups and to take snapshots of the persistent volumes. See Longhorn [documentation](https://longhorn.io/docs/1.3.1/snapshots-and-backups/).
 
-  Longhorn does not currently support application consistent volumes snapshots/backups, see open [issue](https://github.com/longhorn/longhorn/issues/2128). 
-  Enabling within K3S cluster the new Kubernetes CSI feature: [Volume Snapshots](https://kubernetes.io/docs/concepts/storage/volume-snapshots/) allows to programmatically create backups and so orchestrate consistent backups:
+  Longhorn does not currently support application consistent volumes snapshots/backups, see [longhorn open issue #2128](https://github.com/longhorn/longhorn/issues/2128).
+
+  Longhorn does support, from release 1.2.4, [Kubernetes CSI snapshot API](https://kubernetes.io/docs/concepts/storage/volume-snapshots/) to take snapshots/backups programmatically. See Longhorn documentation: [CSI Snapshot Support](https://longhorn.io/docs/1.3.1/snapshots-and-backups/csi-snapshot-support/).
+
+  Enabling CSI snaphot support in Longhorn allows to programmatically backups and so orchestrate consistent backups:
   ```shell
-  kubectl exec pod -- app_feeze_command
+  # Freeze POD's filesystem
+  kubectl exec pod -- app_feeze_commandç
+  # Take snapshot using CSI Snapshot
   kubectl apply -f volume_snapshot.yml
   # wait till snapshot finish
+  # Unfreeze POD's filesystem
   kubectl exec pod -- app_unfreeze_command
   ```
-  This CSI feature is supported by Longhorn. See Longhorn documentation: [CSI Snapshot Support](https://longhorn.io/docs/1.2.2/snapshots-and-backups/csi-snapshot-support/create-a-backup-via-csi/). K3S currently does not come with a preintegrated Snapshot Controller, but external controller could be used (https://github.com/kubernetes-csi/external-snapshotter).
+
+  Velero also support CSI snapshot API to take Persistent Volumes snapshots, through CSI provider, Longorn, when backing-up the PODs. See Velero [CSI snaphsot support documentation](https://velero.io/docs/v1.9/csi/).
 
   {{site.data.alerts.note}}
-  CSI Snaphot Support is not yet supported in current pi-cluster release. To be implemented and tested in the future 
+
+  Velero also supports, Persistent Volumes backup/restore procedures using `restic` as backup engine (https://velero.io/docs/v1.9/restic/) using the same S3 backend configured within Velero for backing up the cluster configuration. But restic support will be disabled in Velero, instead CSI snapshots will be used.
+
   {{site.data.alerts.end}}
 
-  Both mechanism for backing up Persistent Volumes (Velero and Longhorn) will be enabled in my cluster.
+  For orchestrating application-consistent backups, Velero supports the definition of [backup hooks](https://velero.io/docs/v1.9/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations.
 
-All the above mechanisms supports as backup backend, a S3-compliant storage infrastructure. For this reason, open-source project [Minio](https://min.io/) will be deployed.
+  Integrating Container Storage Interface (CSI) snapshot support into Velero and Longhorn enables Velero to backup and restore CSI-backed volumes using the [Kubernetes CSI Snapshot feature](https://kubernetes.io/docs/concepts/storage/volume-snapshots/).
+
+- Minio as backup backend
+
+  All the above mechanisms supports as backup backend, a S3-compliant storage infrastructure. For this reason, open-source project [Minio](https://min.io/) will be deployed for the Pi Cluster.
+
 
 ## Backup server hardware infrastructure
 
@@ -469,6 +479,210 @@ Backup policies scheduling
 - Daily backup at 03:00 (executed from all nodes)
 - Daily restic repo maintenance at 06:00 (executed from `gateway` node)
 
+
+## Enable CSI snapshots support in K3S
+
+K3S distribution currently does not come with a preintegrated Snapshot Controller that is needed to enable CSI Snapshot feature. An external snapshot controller need to be deployed. K3S can be configured to use [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter).
+
+To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/1.3.1/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
+
+{{site.data.alerts.note}}
+
+Longhorn 1.3.1 CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release 4.0. Do not install latest version available of External Snapshotter.
+
+{{site.data.alerts.end}}
+
+- Step 1. Install the Snapshot CRDs.
+
+  Download the yaml files from https://github.com/kubernetes-csi/external-snapshotter/tree/release-4.0/client/config/crd.
+
+  This can be done using `svn` export command
+
+  ```shell
+  mkdir tmp
+  cd tmp
+  svn export https://github.com/kubernetes-csi/external-snapshotter/branches/release-4.0/client/config/crd
+  kubectl apply -f client/config/crd
+  ```
+
+- Step 2. Deploy Snapshot Controller.
+
+  Extract manifest files
+  ```shell
+  svn export https://github.com/kubernetes-csi/external-snapshotter/branches/release-4.0/deploy/kubernetes/snapshot-controller
+  ```
+
+  Prepare kustomize yaml file to change the installation namespace (set value to `kube-system`)
+
+  `./deploy/kubernetes/snapshot-controller/kustomization.yaml`
+
+  ```yaml
+  ---
+  apiVersion: kustomize.config.k8s.io/v1beta1
+  kind: Kustomization
+  namespace: kube-system
+  resources:
+    - rbac-snapshot-controller.yaml
+    - setup-snapshot-controller.yaml
+  ```
+
+  Deploy Snapshot-Controller
+  ```shell
+  kubectl apply -k ./deploy/kubernetes/snapshot-controller
+  ```
+
+## Longhorn backup configuration
+
+For configuring the backup in Longhorn is needed to define a backup target, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets. [Minio](https://min.io) can be used as backend.
+
+### Minio end-point credentials
+
+Create kuberentes secret resource containing Minio end-point access information and credentials
+
+- Create manifest file `longhorn-minio-secret.yml`
+
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+  name: minio-secret
+  namespace: longhorn-system
+  type: Opaque
+  data:
+  AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
+  AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
+  AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
+  AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
+  ```
+
+  {{site.data.alerts.note}}
+
+  AWS_CERT parameter is only needed in case of using a self-signed certificate.
+
+  {{site.data.alerts.end}}
+
+  For encoding the different access paramenters the following commands can be used:
+
+  ```shell
+  echo -n minio_url | base64
+  echo -n minio_access_key_id | base64
+  echo -n minio_secret_access_key | base64
+  cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
+  ```
+
+  {{site.data.alerts.important}}
+  As the command shows, SSL certificates in the validation chain must be concatenated and `\n` characters from the base64 encoded SSL pem must be removed.
+  {{site.data.alerts.end}}
+
+- Apply manifest file
+
+  ```shell
+  kubectl apply -f longhorn-s3-secret.yml
+  ```
+
+### Configure Longhorn backup target
+
+Go to the Longhorn UI. In the top navigation bar, click Settings. In the Backup section, set Backup Target to:
+
+```
+s3://<bucket-name>@<minio-s3-region>/
+```
+
+{{site.data.alerts.important}}
+Make sure that you have `/` at the end, otherwise you will get an error.
+{{site.data.alerts.end}}
+
+In the Backup section set Backup Target Credential Secret to the secret resource created before
+
+```
+minio-secret
+```
+
+![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
+
+### Target can be automatically configured when deploying helm chart
+
+Additional overriden values can be provided to helm chart deployment to configure S3 target.
+
+```yml
+defaultSettings:
+  backupTarget: s3://longhorn@eu-west-1/
+  backupTargetCredentialSecret: minio-secret
+```
+
+### Scheduling longhorn volumes backup
+
+A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
+See details in [documentation](https://longhorn.io/docs/1.2.3/snapshots-and-backups/scheduling-backups-and-snapshots/).
+
+- Create `RecurringJob` manifest resource
+
+  ```yml
+  ---
+  apiVersion: longhorn.io/v1beta1
+  kind: RecurringJob
+  metadata:
+    name: backup
+    namespace: longhorn-system
+  spec:
+    cron: "0 5 * * *"
+    task: "backup"
+    groups:
+    - default
+    retain: 2
+    concurrency: 2
+    labels:
+      type: 'full'
+      schedule: 'daily'
+  ```
+
+  This will create  recurring backup job for `default`. Longhorn will automatically add a volume to the default group when the volume has no recurring job.
+
+- Apply manifest file
+
+  ```shell  
+  kubectl apply -f recurring_job.yml
+  ```
+
+{{site.data.alerts.note}}
+
+Since full cluster backup will be scheduled using Velero, including Longhorn's Persistent Volumes using CSI Snapshots, the previous job is not needed.
+
+{{site.data.alerts.end}}
+
+
+### Configure Longhorn CSI Snapshots
+
+VolumeSnapshotClass objects from CSI Snapshot API need to be configured
+
+- Create VolumeSnapshotClass to create Longhorn snapshots (in-cluster snapshots, not backed up to S3 backend)
+
+  ```yml
+  # CSI VolumeSnapshot Associated With Longhorn Snapshot
+  kind: VolumeSnapshotClass
+  apiVersion: snapshot.storage.k8s.io/v1
+  metadata:
+    name: longhorn-snapshot-vsc
+  driver: driver.longhorn.io
+  deletionPolicy: Delete
+  parameters:
+    type: snap
+  ```
+
+- Create VolumeSnapshotClass to create Longhorn backups (backed up to S3 backend)
+
+  ```yml
+  # CSI VolumeSnapshot Associated With Longhorn Backup
+  kind: VolumeSnapshotClass
+  apiVersion: snapshot.storage.k8s.io/v1
+  metadata:
+    name: longhorn-backup-vsc
+  driver: driver.longhorn.io
+  deletionPolicy: Delete
+  parameters:
+    type: bak
+  ```
+
 ## Kubernetes Backup with Velero
 
 ### Velero installation and configuration
@@ -578,25 +792,129 @@ Installation using `Helm` (Release 3):
 - Step 4: Create values.yml for Velero helm chart deployment
   
   ```yml
+  # AWS backend and CSI plugins configuration
   initContainers:
-      - name: velero-plugin-for-aws
-        image: velero/velero-plugin-for-aws:v1.3.0
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-          - mountPath: /target
-            name: plugins
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.3.0
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
+    - name: velero-plugin-for-csi
+      image: ricsanfre/velero-plugin-for-csi:v0.3.1
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins      
   # Upgrading CRDs is causing issues
   upgradeCRDs: false
   # Use a kubectl image supporting ARM64
   # bitnami default is not suppporting it
-  # kubectl:
-  #   image:
-  #     repository: rancher/kubectl
-  #     tag: v1.21.5
+  kubectl:
+     image:
+       repository: ricsanfre/docker-kubectl-helm
+       tag: latest
   # Disable volume snapshots. Longhorn deals with them
   snapshotsEnabled: false
-  # Deploy restic for backing up volumes
-  deployRestic: true
+  # Do not deploy restic for backing up volumes
+  deployRestic: false
+  # Minio storage configuration
+  configuration:
+    # Cloud provider being used
+    provider: aws
+    backupStorageLocation:
+      provider: aws
+      bucket: <velero_bucket>
+      caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
+      config:
+        region: eu-west-1
+        s3ForcePathStyle: true
+        s3Url: https://minio.example.com:9091
+        insecureSkipTLSVerify: true
+    # Enable CSI snapshot support
+    features: EnableCSI
+  credentials:
+    secretContents:
+      cloud: |
+        [default]
+        aws_access_key_id: <minio_velero_user> # Not encoded
+        aws_secret_access_key: <minio_velero_pass> # Not encoded
+  ```
+
+- Step 5: Install Velero in the velero-system namespace with the overriden values
+
+  ```shell
+  helm install velero vmware-tanzu/velero --namespace velero-system -f values.yml
+  ```
+- Step 6: Confirm that the deployment succeeded, run:
+
+  ```shell
+  kubectl -n velero-system get pod
+  ```
+
+### Velero chart configuration details
+
+
+- Velero plugins installation
+
+  The chart configuration install the following velero plugins as `initContainers`:
+  - `velero-plugin-for-aws` to enable S3 Minio as backup backend.
+  - `velero-plugin-for-csi` to enable CSI Snapshot support
+
+  ```yml
+  # AWS backend and CSI plugins configuration
+  initContainers:
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.3.0
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
+    - name: velero-plugin-for-csi
+      image: ricsanfre/velero-plugin-for-csi:v0.3.1
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins 
+  ```
+
+  {{site.data.alerts.note}}
+
+  Official docker image `velero/velero-plugin-for-csi` does not support ARM64 architecture yet.
+
+  I have created my onwn docker image supporting multiarchitecture (ARM64 and AMD64): `ricsanfre/velero-plugin-for-csi`.
+
+  {{site.data.alerts.end}}
+
+
+- Upgrade CRDs procedure
+
+  Helm installation procedure, create a Kubernetes job for upgrading Velero CRDs (`upgradeCRDs: true`). Default values causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami (`bitnami/kubectl`). Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
+
+  As alternative a ARM64 docker image containing kubectl binary need to be used. I have developed my own docker image for this purpose: [ricsanfre/docker-kubectl-helm](https://github.com/ricsanfre/docker-kubectl-helm)
+
+  ```yml
+  # Upgrading CRDs is causing issues with bitami docker images
+  upgradeCRDs: true
+  # Use a kubectl image supporting ARM64
+  # bitnami default is not suppporting it
+  kubectl:
+     image:
+       repository: ricsanfre/docker-kubectl-helm
+       tag: latest
+  ```
+
+- Enable Velero CSI Snapshots
+
+  ```yml
+  configuration:
+     # Enable CSI snapshot support
+    features: EnableCSI  
+  ```
+  
+- Configure Minio S3 server as backup backend
+
+  ```yml
   # Minio storage configuration
   configuration:
     # Cloud provider being used
@@ -616,26 +934,14 @@ Installation using `Helm` (Release 3):
         [default]
         aws_access_key_id: <minio_velero_user> # Not encoded
         aws_secret_access_key: <minio_velero_pass> # Not encoded
-  ```
 
-  {{site.data.alerts.warning}} **(1):**
-  `upgradeCRDs` set to true causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami. Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
-  Changing it to a ARM64 docker image (i.e Rancher) does not solve the issue either.
+  ```
+  
+  Minio server connection data (`configuration.backupStorageLocation.config`) ,minio credentials (`credentials.secretContents`), and bucket(`configuration.backupStorageLocation.bucket`) to be used.
+
+  {{site.data.alerts.note}}
+   In case of using a self-signed certificate for Minio server, custom CA certificate must be passed as `configuration.backupStorageLocation.caCert` parameter (base64 encoded and removing any '\n' character)
   {{site.data.alerts.end}}
-  {{site.data.alerts.important}} **(2):**
-  In case of using a self-signed certificate for Minio server, custom CA certificate must be passed as `configuration.backupStorageLocation.caCert` parameter (base64 encoded and removing any '\n' character)
-  {{site.data.alerts.end}}
- 
-- Step 5: Install Velero in the velero-system namespace with the overriden values
-
-  ```shell
-  helm install velero vmware-tanzu/velero --namespace velero-system -f values.yml
-  ```
-- Step 6: Confirm that the deployment succeeded, run:
-
-  ```shell
-  kubectl -n velero-system get pod
-  ```
 
 ### Testing Velero installation
 
@@ -825,117 +1131,6 @@ spec:
     ttl: 720h0m0s
 ```
 
-## Longhorn backup configuration
-
-
-### Minio end-point credentials
-
-Create kuberentes secret resource containing Minio end-point access information and credentials
-
-- Create manifest file `longhorn-minio-secret.yml`
-
-  ```yml
-  apiVersion: v1
-  kind: Secret
-  metadata:
-  name: minio-secret
-  namespace: longhorn-system
-  type: Opaque
-  data:
-  AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
-  AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
-  AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
-  AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
-  ```
-
-  {{site.data.alerts.note}}
-
-  AWS_CERT parameter is only needed in case of using a self-signed certificate.
-
-  {{site.data.alerts.end}}
-
-  For encoding the different access paramenters the following commands can be used:
-
-  ```shell
-  echo -n minio_url | base64
-  echo -n minio_access_key_id | base64
-  echo -n minio_secret_access_key | base64
-  cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
-  ```
-
-  {{site.data.alerts.important}}
-  As the command shows, SSL certificates in the validation chain must be concatenated and `\n` characters from the base64 encoded SSL pem must be removed.
-  {{site.data.alerts.end}}
-
-- Apply manifest file
-
-  ```shell
-  kubectl apply -f longhorn-s3-secret.yml
-  ```
-
-### Configure Longhorn backup target
-
-Go to the Longhorn UI. In the top navigation bar, click Settings. In the Backup section, set Backup Target to:
-
-```
-s3://<bucket-name>@<minio-s3-region>/
-```
-
-{{site.data.alerts.important}}
-Make sure that you have `/` at the end, otherwise you will get an error.
-{{site.data.alerts.end}}
-
-In the Backup section set Backup Target Credential Secret to the secret resource created before
-
-```
-minio-secret
-```
-
-![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
-
-### Target can be automatically configured when deploying helm chart
-
-Additional overriden values can be provided to helm chart deployment to configure S3 target.
-
-```yml
-defaultSettings:
-  backupTarget: s3://longhorn@eu-west-1/
-  backupTargetCredentialSecret: minio-secret
-```
-
-### Scheduling longhorn volumes backup
-
-A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
-See details in [documentation](https://longhorn.io/docs/1.2.3/snapshots-and-backups/scheduling-backups-and-snapshots/).
-
-- Create `RecurringJob` manifest resource
-
-  ```yml
-  ---
-  apiVersion: longhorn.io/v1beta1
-  kind: RecurringJob
-  metadata:
-    name: backup
-    namespace: longhorn-system
-  spec:
-    cron: "0 5 * * *"
-    task: "backup"
-    groups:
-    - default
-    retain: 2
-    concurrency: 2
-    labels:
-      type: 'full'
-      schedule: 'daily'
-  ```
-
-  This will create  recurring backup job for `default`. Longhorn will automatically add a volume to the default group when the volume has no recurring job.
-
-- Apply manifest file
-
-  ```shell  
-  kubectl apply -f recurring_job.yml
-  ```
 
 ## References
 

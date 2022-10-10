@@ -61,13 +61,12 @@
   include_tasks: configure_linkerd_mesh.yml
   when: enable_linkerd
 
-- name: Create Ingress rule for Longhorn UI and Recurring backup job
+- name: Create Ingress rule for Longhorn UI
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
     - longhorn_ingress.yml.j2
-    - longhorn_backup_job.yml.j2
 
 - name: Patching Local-path storage resource. Set it as non-default
   kubernetes.core.k8s:
