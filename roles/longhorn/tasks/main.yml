@@ -53,17 +53,20 @@
     cmd: "/usr/local/bin/check_lh.sh"
   changed_when: false
 
+- name: Configure Longhorn CSI snapshots
+  include_tasks: configure_csi_snapshots.yml
+  when: enable_longhorn_csi_snapshots
+
 - name: Enable linkerd integration
   include_tasks: configure_linkerd_mesh.yml
   when: enable_linkerd
 
-- name: Create Ingress rule for Longhorn UI and Recurring backup job
+- name: Create Ingress rule for Longhorn UI
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'templates/' + item ) }}"
     state: present
   with_items:
     - longhorn_ingress.yml.j2
-    - longhorn_backup_job.yml.j2
 
 - name: Patching Local-path storage resource. Set it as non-default
   kubernetes.core.k8s:

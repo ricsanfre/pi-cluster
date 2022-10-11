@@ -94,30 +94,30 @@ The software used and the latest version tested of each component
 | OS | Ubuntu | 20.04.3 | OS need to be tweaked for Raspberry PI when booting from external USB  |
 | Control | Ansible | 2.12.1  | |
 | Control | cloud-init | 21.4 | version pre-integrated into Ubuntu 20.04 |
-| Kubernetes | K3S | v1.24.4 | K3S version|
+| Kubernetes | K3S | v1.24.6 | K3S version|
 | Kubernetes | Helm | v3.6.3 ||
 | Metrics | Kubernetes Metrics Server | v0.5.2 | version pre-integrated into K3S |
-| Computing | containerd | v1.5.13-k3s1 | version pre-integrated into K3S |
-| Networking | Flannel | v0.19.1 | version pre-integrated into K3S |
+| Computing | containerd | v1.6.8-k3s1 | version pre-integrated into K3S |
+| Networking | Flannel | v0.19.2 | version pre-integrated into K3S |
 | Networking | CoreDNS | v1.9.1 | version pre-integrated into K3S |
-| Networking | Metal LB | v0.13.4 | Helm chart version:  metallb-0.13.4 |
-| Service Mesh | Linkerd | v2.11.4 | Helm chart version: linkerd2-2.11.4 |
-| Service Proxy | Traefik | v2.8.4 | Helm chart: traefik-10.24.2  |
+| Networking | Metal LB | v0.13.5 | Helm chart version:  metallb-0.13.5 |
+| Service Mesh | Linkerd | v2.12.1 | Helm chart version: linkerd-control-plane-1.9.3 |
+| Service Proxy | Traefik | v2.9.1 | Helm chart: traefik-13.0.0  |
 | Storage | Longhorn | v1.3.1 | Helm chart version: longhorn-1.3.1 |
 | SSL Certificates | Certmanager | v1.9.1 | Helm chart version: cert-manager-v1.9.1  |
 | Logging | ECK Operator |  2.4.0 | Helm chart version: eck-operator-2.4.0 |
 | Logging | Elastic Search | 8.1.2 | Deployed with ECK Operator |
 | Logging | Kibana | 8.1.2 | Deployed with ECK Operator |
-| Logging | Fluentbit | 1.9.7 | Helm chart version: fluent-bit-0.20.6 |
+| Logging | Fluentbit | 1.9.9 | Helm chart version: fluent-bit-0.20.9 |
 | Logging | Fluentd | 1.15.2 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.2|
-| Monitoring | Kube Prometheus Stack | 0.58.0 | Helm chart version: kube-prometheus-stack-39.11.0 |
-| Monitoring | Prometheus Operator | 0.58.0 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-39.11.0   |
-| Monitoring | Prometheus | 2.37 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-39.11.0 |
-| Monitoring | AlertManager | 0.24 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-39.11.0 |
-| Monitoring | Grafana | 9.0.5 | Helm chart version grafana-6.32.10. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
+| Monitoring | Kube Prometheus Stack | 0.60.1 | Helm chart version: kube-prometheus-stack-41.0.0 |
+| Monitoring | Prometheus Operator | 0.59.2 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-41.0.0   |
+| Monitoring | Prometheus | 2.39 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-41.0.0 |
+| Monitoring | AlertManager | 0.24 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-41.0.0 |
+| Monitoring | Grafana | 9.1.7 | Helm chart version grafana-6.32.10. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
 | Monitoring | Prometheus Node Exporter | 1.3.1 | Helm chart version: prometheus-node-exporter-3.3.1. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
-| Monitoring | Prometheus Elasticsearch Exporter | 1.5.0 | Helm chart version: prometheus-elasticsearch-exporter-4.14.0 |
+| Monitoring | Prometheus Elasticsearch Exporter | 1.5.0 | Helm chart version: prometheus-elasticsearch-exporter-4.15.0 |
 | Backup | Minio | RELEASE.2022-09-22T18-57-27Z | |
 | Backup | Restic | 0.12.1 | |
-| Backup | Velero | 1.9.1 | Helm chart version: velero-2.31.3 |
+| Backup | Velero | 1.9.2 | Helm chart version: velero-2.31.9 |
 {: .table }

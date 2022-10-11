@@ -15,3 +15,10 @@ minio_longhorn_bucket: k3s-longhorn
 
 # Enable service mesh
 enable_linkerd: true
+
+# Enable longhorn csi snapshots
+enable_longhorn_csi_snapshots: true
+
+# External snapshotter URL
+# Longhorn is using release 4.0 of external-snapshotter
+external_snapshotter_base_url: https://github.com/kubernetes-csi/external-snapshotter/branches/release-4.0

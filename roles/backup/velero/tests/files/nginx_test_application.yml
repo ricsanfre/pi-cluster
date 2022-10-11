@@ -40,7 +40,6 @@ spec:
       labels:
         app: nginx
       annotations:
-        backup.velero.io/backup-volumes: nginx-logs
         pre.hook.backup.velero.io/container: fsfreeze
         pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
         post.hook.backup.velero.io/container: fsfreeze

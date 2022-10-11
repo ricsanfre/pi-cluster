@@ -1,0 +1,34 @@
+---
+
+- name: Get csi-snapshotter crd definitions
+  subversion:
+    repo: "{{ external_snapshotter_base_url }}/client/config/crd"
+    export: true
+    dest: roles/longhorn/csi-external-snapshotter/crd
+    force: true
+  delegate_to: localhost
+
+- name: Get snapshot controller definitions
+  subversion:
+    repo: "{{ external_snapshotter_base_url }}/deploy/kubernetes/snapshot-controller"
+    export: true
+    dest: roles/longhorn/csi-external-snapshotter/snapshot-controller
+    force: true
+  delegate_to: localhost
+
+- name: Deploy csi-snapshotter CRDs
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='roles/longhorn/csi-external-snapshotter/crd') }}"
+    state: present
+
+- name: Deploy snapshot controller
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='roles/longhorn/csi-external-snapshotter/snapshot-controller') }}"
+    state: present
+
+- name: Create Default VolumeSnapshotClass
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - longhorn_volumesnapshotclass.yml.j2

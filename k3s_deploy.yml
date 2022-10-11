@@ -54,10 +54,10 @@
       tags: ['linkerd']
     - role: traefik
       tags: ['traefik']
-    - role: backup/velero
-      tags: ['backup']
     - role: longhorn
       tags: ['longhorn']
+    - role: backup/velero
+      tags: ['backup']
     - role: logging/k3s
       tags: ['logging']
     - role: prometheus
