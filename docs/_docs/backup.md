@@ -659,7 +659,7 @@ Since full cluster backup will be scheduled using Velero, including Longhorn's P
 
 VolumeSnapshotClass objects from CSI Snapshot API need to be configured
 
-- Create VolumeSnapshotClass to create Longhorn snapshots (in-cluster snapshots, not backed up to S3 backend)
+- Create VolumeSnapshotClass to create Longhorn snapshots (in-cluster snapshots, not backed up to S3 backend), `volume_snapshotclass_snap.yml`
 
   ```yml
   # CSI VolumeSnapshot Associated With Longhorn Snapshot
@@ -673,7 +673,7 @@ VolumeSnapshotClass objects from CSI Snapshot API need to be configured
     type: snap
   ```
 
-- Create VolumeSnapshotClass to create Longhorn backups (backed up to S3 backend)
+- Create VolumeSnapshotClass to create Longhorn backups (backed up to S3 backend), `volume_snapshotclass_bak.yml`
 
   ```yml
   # CSI VolumeSnapshot Associated With Longhorn Backup
@@ -685,6 +685,12 @@ VolumeSnapshotClass objects from CSI Snapshot API need to be configured
   deletionPolicy: Delete
   parameters:
     type: bak
+  ```
+
+- Apply manifest file
+
+  ```shell
+  kubectl apply -f volume_snapshotclass_snap.yml volume_snapshotclass_bak.yml
   ```
 
 ## Kubernetes Backup with Velero
@@ -850,15 +856,42 @@ Installation using `Helm` (Release 3):
   kubectl -n velero-system get pod
   ```
 
-### Velero chart configuration details
+- Step 7: Configure VolumeSnapshotClass
 
+  Create manifest file `volume_snapshotclass_velero.yml`
+
+  ```yml
+  # CSI VolumeSnapshot Associated With Longhorn Backup
+  kind: VolumeSnapshotClass
+  apiVersion: snapshot.storage.k8s.io/v1
+  metadata:
+    name: velero-longhorn-backup-vsc
+    labels:
+      velero.io/csi-volumesnapshot-class: "true"
+  driver: driver.longhorn.io
+  deletionPolicy: Retain
+  parameters:
+    type: bak
+  ```
+  This VolumeSnapshotClass will be used by Velero to create VolumeSnapshot objects when orchestrating PV backups. The VolumeSnapshotClass to be used, from all the configured in the system, is the one with the label "velero.io/csi-volumesnapshot-class".
+
+  Setting a DeletionPolicy of Retain on the VolumeSnapshotClass will preserve the volume snapshot in the storage system for the lifetime of the Velero backup and will prevent the deletion of the volume snapshot, in the storage system, in the event of a disaster where the namespace with the VolumeSnapshot object may be lost.
+
+  Apply manifest file
+
+  ```shell
+  kubectl apply -f volume_snapshotclass_velero.yml
+  ```
+
+### Velero chart configuration details
 
 - Velero plugins installation
 
-  The chart configuration install the following velero plugins as `initContainers`:
+  The chart configuration deploys the following velero plugins as `initContainers`:
   - `velero-plugin-for-aws` to enable S3 Minio as backup backend.
   - `velero-plugin-for-csi` to enable CSI Snapshot support
 
+  
   ```yml
   # AWS backend and CSI plugins configuration
   initContainers:
