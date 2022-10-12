@@ -30,7 +30,7 @@ The following picture shows the set of opensource solutions used so far in the c
 
 ## Cluster architecture and hardware
 
-Home lab architecture, showed in the picture below, consist of a Kubernetes cluster of 4 nodes (1 master and 3 workers) and a firewall, built with another Raspberry PI, to isolate cluster network from your home network.
+Home lab architecture, showed in the picture below, consist of a Kubernetes cluster of 5 nodes (1 master and 4 workers) and a firewall, built with another Raspberry PI, to isolate cluster network from your home network.
 
 
 <p align="center">

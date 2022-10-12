@@ -40,7 +40,7 @@ CertManager is configured to deploy in the cluster a private PKI (Public Key Inf
 
 Such private PKI will be used internally by Linkerd to issue certiticates to each POD to implement mTLS communictions.
 
-CertManager also is configured to deliver valid certificates, using your own DNS domain, through its integration with Let's Encrypt using ACM DNS challenges. Configuration is provided for using IONOS DNS provider, using developer API available to automate challenge resolution. Similar configuration can be implemented for other supported DNS providers.
+CertManager also is configured to deliver valid certificates, using your own DNS domain, through its integration with Let's Encrypt using ACME DNS challenges. Configuration is provided for using IONOS DNS provider, using developer API available to automate challenge resolution. Similar configuration can be implemented for other supported DNS providers.
 
 Valid certificates signed by Letscript will be used for cluster exposed services.
 
