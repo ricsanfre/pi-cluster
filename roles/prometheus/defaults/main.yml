@@ -1,6 +1,6 @@
 ---
 
-k3s_monitoring_namespace: k3s-monitoring
+k3s_monitoring_namespace: monitoring
 
 # Endpoint Service DNS name
 monitoring_dns: monitoring.picluster.ricsanfre.com
