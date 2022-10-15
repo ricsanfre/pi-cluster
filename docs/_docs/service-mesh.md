@@ -276,10 +276,10 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
   prometheus:
     enabled: false
   # Configure external Prometheus URL
-  prometheusUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring.svc.cluster.local:9090
+  prometheusUrl: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
   # External Grafana
   grafana:
-    url: kube-prometheus-stack-grafana.k3s-monitoring.svc.cluster.local
+    url: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
   # Disabling DNS rebinding protection
   dahsboard:
     enforcedHostRegexp: ".*"
@@ -314,7 +314,7 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
       app: linkerd
       release: kube-prometheus-stack
     name: linkerd-controller
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     namespaceSelector:
       matchNames:
@@ -346,7 +346,7 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
       app: linkerd
       release: kube-prometheus-stack
     name: linkerd-service-mirror
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     namespaceSelector:
       any: true
@@ -377,7 +377,7 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
       app: linkerd
       release: kube-prometheus-stack
     name: linkerd-proxy
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     namespaceSelector:
       any: true
@@ -634,7 +634,7 @@ prometheusOperator:
 Modify [Prometheus installation procedure](/docs/prometheus/) to annotate the corresponding namespace before deploying the helm chart and use the modified values.yml file.
 
 ```shell
-kubectl annotate ns k3s-monitoring linkerd.io/inject=enabled
+kubectl annotate ns monitoring linkerd.io/inject=enabled
 ```
 
 {{site.data.alerts.note}}
@@ -644,7 +644,7 @@ kubectl annotate ns k3s-monitoring linkerd.io/inject=enabled
 If you try to inject manually:
 
 ```shell
-kubectl get daemonset -n k3s-monitoring -o yaml | linkerd inject -
+kubectl get daemonset -n monitoring -o yaml | linkerd inject -
 
 Error transforming resources:
 failed to inject daemonset/kube-prometheus-stack-prometheus-node-exporter: hostNetwork is enabled
@@ -660,9 +660,7 @@ For applying linkerd service mesh to EFK services, it is enough to use the impli
 Modify [EFK installation procedure](/docs/logging/) to annotate the corresponding namespace before deploying the helm charts.
 
 ```shell
-kubectl annotate ns elastic-system linkerd.io/inject=enabled
-
-kubectl annotate ns k3s-logging linkerd.io/inject=enabled
+kubectl annotate ns logging linkerd.io/inject=enabled
 ```
 
 When deploying Elasticsearch and Kibana using the ECK operator, it is needed to specify the parameter `automountServiceAccountToken: true`, otherwise the linkerd-proxy is not injected.

@@ -60,7 +60,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 - Step 3: Create namespace
 
   ```shell
-  kubectl create namespace k3s-monitoring
+  kubectl create namespace monitoring
   ```
 - Step 3: Create values.yml 
 
@@ -220,7 +220,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 - Step 4: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
 
   ```shell
-  helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace k3s-monitoring
+  helm install -f values.yml kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
   ```
 
 ### Ingress resources configuration
@@ -289,7 +289,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
   kind: Middleware
   metadata:
     name: stripprefix
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     stripPrefix:
       prefixes:
@@ -308,7 +308,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
   kind: IngressRoute
   metadata:
     name: monitoring-http
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     entryPoints:
       - web
@@ -318,7 +318,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
       priority: 1
       middlewares:
         - name: redirect
-          namespace: traefik-system
+          namespace: traefik
       services:
         - kind: TraefikService
           name: noop@internal
@@ -334,7 +334,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
   kind: IngressRoute
   metadata:
     name: monitoring-https
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     entryPoints:
       - websecure
@@ -344,32 +344,32 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
       services:
       - name: kube-prometheus-stack-prometheus
         port: 9090
-        namespace: k3s-monitoring
+        namespace: monitoring
       middlewares:
         - name: basic-auth
-          namespace: traefik-system
+          namespace: traefik
         - name: stripprefix
-          namespace: k3s-monitoring
+          namespace: monitoring
     - kind: Rule
       match: Host(`monitoring.picluster.ricsanfre.com`) && PathPrefix(`/alertmanager`)
       services:
       - name: kube-prometheus-stack-alertmanager
         port: 9093
-        namespace: k3s-monitoring
+        namespace: monitoring
       middlewares:
         - name: basic-auth
-          namespace: traefik-system
+          namespace: traefik
         - name: stripprefix
-          namespace: k3s-monitoring
+          namespace: monitoring
     - kind: Rule
       match: Host(`monitoring.picluster.ricsanfre.com`) && PathPrefix(`/grafana`)
       services:
       - name: kube-prometheus-stack-grafana
         port: 80
-        namespace: k3s-monitoring
+        namespace: monitoring
       middlewares:
         - name: stripprefix
-          namespace: k3s-monitoring
+          namespace: monitoring
     tls:
       secretName: monitoring-secret
   ```
@@ -406,7 +406,7 @@ kind: Prometheus
 metadata:
   annotations:
     meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
+    meta.helm.sh/release-namespace: monitoring
   labels:
     app: kube-prometheus-stack-prometheus
     app.kubernetes.io/instance: kube-prometheus-stack
@@ -417,18 +417,18 @@ metadata:
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-prometheus
-  namespace: k3s-monitoring
+  namespace: monitoring
 spec:
   alerting:
     alertmanagers:
     - apiVersion: v2
       name: kube-prometheus-stack-alertmanager
-      namespace: k3s-monitoring
+      namespace: monitoring
       pathPrefix: /
       port: http-web
   enableAdminAPI: false
   evaluationInterval: 30s
-  externalUrl: http://kube-prometheus-stack-prometheus.k3s-monitoring:9090
+  externalUrl: http://kube-prometheus-stack-prometheus.monitoring:9090
   image: quay.io/prometheus/prometheus:v2.37.0
   listenLocal: false
   logFormat: logfmt
@@ -525,7 +525,7 @@ kind: Alertmanager
 metadata:
   annotations:
     meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
+    meta.helm.sh/release-namespace: monitoring
   labels:
     app: kube-prometheus-stack-alertmanager
     app.kubernetes.io/instance: kube-prometheus-stack
@@ -536,11 +536,11 @@ metadata:
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-alertmanager
-  namespace: k3s-monitoring
+  namespace: monitoring
 spec:
   alertmanagerConfigNamespaceSelector: {}
   alertmanagerConfigSelector: {}
-  externalUrl: http://kube-prometheus-stack-alertmanager.k3s-monitoring:9093
+  externalUrl: http://kube-prometheus-stack-alertmanager.monitoring:9093
   image: quay.io/prometheus/alertmanager:v0.24.0
   listenLocal: false
   logFormat: logfmt
@@ -700,7 +700,7 @@ For the K8s disabled components kube-prometheus-stack do not deploy the correspo
 You can get all of them running the following command
 
 ```shell
-kubectl get cm -l "grafana_dashboard=1" -n k3s-monitoring
+kubectl get cm -l "grafana_dashboard=1" -n monitoring
 ```
 
 {{site.data.alerts.important}}
@@ -771,7 +771,7 @@ data:
     - name: Prometheus
       type: prometheus
       uid: prometheus
-      url: http://kube-prometheus-stack-prometheus.k3s-monitoring:9090/
+      url: http://kube-prometheus-stack-prometheus.monitoring:9090/
       access: proxy
       isDefault: true
       jsonData:
@@ -780,7 +780,7 @@ kind: ConfigMap
 metadata:
   annotations:
     meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
+    meta.helm.sh/release-namespace: monitoring
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: kube-prometheus-stack
@@ -792,7 +792,7 @@ metadata:
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-grafana-datasource
-  namespace: k3s-monitoring
+  namespace: monitoring
 ```
 
 The ConfigMap includes the `grafana_datasource` label, so it is loaded by the sidecar container into Grafana's provisioning directory.
@@ -1057,7 +1057,7 @@ To configure manually all kubernetes resources needed to scrape the available me
     labels:
       release: kube-prometheus-stack
     name: k3s-monitoring
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     endpoints:
     # /metrics endpoint
@@ -1209,7 +1209,7 @@ kind: Service
 metadata:
   annotations:
     meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
+    meta.helm.sh/release-namespace: monitoring
   creationTimestamp: "2022-08-18T16:22:12Z"
   labels:
     app: kube-prometheus-stack-coredns
@@ -1255,7 +1255,7 @@ kind: ServiceMonitor
 metadata:
   annotations:
     meta.helm.sh/release-name: kube-prometheus-stack
-    meta.helm.sh/release-namespace: k3s-monitoring
+    meta.helm.sh/release-namespace: monitoring
   creationTimestamp: "2022-08-18T16:22:15Z"
   generation: 1
   labels:
@@ -1268,7 +1268,7 @@ metadata:
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-coredns
-  namespace: k3s-monitoring
+  namespace: monitoring
   resourceVersion: "6777"
   uid: 065442b6-6ead-447b-86cd-775a673ad071
 spec:
@@ -1330,7 +1330,7 @@ metadata:
     app: traefik
     release: kube-prometheus-stack
   name: traefik
-  namespace: k3s-monitoring
+  namespace: monitoring
 spec:
   jobLabel: app.kubernetes.io/name
   endpoints:
@@ -1338,7 +1338,7 @@ spec:
       path: /metrics
   namespaceSelector:
     matchNames:
-      - traefik-system
+      - traefik
   selector:
     matchLabels:
       app.kubernetes.io/instance: traefik
@@ -1383,7 +1383,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
       app: longhorn
       release: kube-prometheus-stack
     name: longhorn-prometheus-servicemonitor
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     jobLabel: app.kubernetes.io/name
     selector:
@@ -1424,7 +1424,7 @@ Backend endpoint is already exposing Prometheus metrics.
 It can be confirmed checking velero service
 
 ```shell
-kubectl get svc velero -n velero-system -o yaml
+kubectl get svc velero -n velero -o yaml
 ```
 ```yml
 apiVersion: v1
@@ -1432,7 +1432,7 @@ kind: Service
 metadata:
   annotations:
     meta.helm.sh/release-name: velero
-    meta.helm.sh/release-namespace: velero-system
+    meta.helm.sh/release-namespace: velero
   creationTimestamp: "2021-12-31T11:36:39Z"
   labels:
     app.kubernetes.io/instance: velero
@@ -1440,7 +1440,7 @@ metadata:
     app.kubernetes.io/name: velero
     helm.sh/chart: velero-2.27.1
   name: velero
-  namespace: velero-system
+  namespace: velero
   resourceVersion: "9811"
   uid: 3a6707ba-0e0f-49c3-83fe-4f61645f6fd0
 spec:
@@ -1482,7 +1482,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
       app: velero
       release: kube-prometheus-stack
     name: velero-prometheus-servicemonitor
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     jobLabel: app.kubernetes.io/name
     endpoints:
@@ -1490,7 +1490,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         path: /metrics
     namespaceSelector:
       matchNames:
-        - velero-system
+        - velero
     selector:
       matchLabels:
         app.kubernetes.io/instance: velero
@@ -1596,7 +1596,7 @@ Minio Console Dashboard integration has not been configured, instead a Grafana d
   type: Opaque
   metadata:
     name: minio-monitor-token
-    namespace: k3s-monitoring
+    namespace: monitoring
   data:
     token: < minio_bearer_token | b64encode >
   ---
@@ -1607,7 +1607,7 @@ Minio Console Dashboard integration has not been configured, instead a Grafana d
       app: minio
       release: kube-prometheus-stack
     name: minio-prometheus-servicemonitor
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     jobLabel: app.kubernetes.io/name
     endpoints:
@@ -1656,14 +1656,14 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
       app: prometheus-elasticsearch-exporter
       release: kube-prometheus-stack
     name: elasticsearch-prometheus-servicemonitor
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     endpoints:
       - port: http
         path: /metrics
     namespaceSelector:
       matchNames:
-        - k3s-logging
+        - logging
     selector:
       matchLabels:
         app: prometheus-elasticsearch-exporter
@@ -1694,7 +1694,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
       app: fluent-bit
       release: kube-prometheus-stack
     name: fluentbit-prometheus-servicemonitor
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     jobLabel: app.kubernetes.io/name
     endpoints:
@@ -1707,7 +1707,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         targetPort: 7979
     namespaceSelector:
       matchNames:
-        - k3s-logging
+        - logging
     selector:
       matchLabels:
         app.kubernetes.io/instance: fluent-bit
@@ -1754,7 +1754,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
       app: fluentd
       release: kube-prometheus-stack
     name: fluentd-prometheus-servicemonitor
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     jobLabel: app.kubernetes.io/name
     endpoints:
@@ -1762,7 +1762,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         path: /metrics
     namespaceSelector:
       matchNames:
-        - k3s-logging
+        - logging
     selector:
       matchLabels:
         app.kubernetes.io/instance: fluentd
@@ -1824,7 +1824,7 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
       app: prometheus-node-exporter
       release: kube-prometheus-stack
       jobLabel: node-exporter
-    namespace: k3s-monitoring
+    namespace: monitoring
   spec:
     clusterIP: None
     ports:
@@ -1839,7 +1839,7 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
   kind: Endpoints
   metadata:
     name: external-node-metrics-servcie
-    namespace: k3s-monitoring
+    namespace: monitoring
   subsets:
   - addresses:
     - ip: 10.0.0.1
@@ -1864,7 +1864,7 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
   metadata:
     annotations:
       meta.helm.sh/release-name: kube-prometheus-stack
-      meta.helm.sh/release-namespace: k3s-monitoring
+      meta.helm.sh/release-namespace: monitoring
     generation: 1
     labels:
       app: prometheus-node-exporter
@@ -1874,7 +1874,7 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
       jobLabel: node-exporter
       release: kube-prometheus-stack
     name: kube-prometheus-stack-prometheus-node-exporter
-    namespace: k3s-monitoring
+    namespace: monitoring
     resourceVersion: "6369"
   spec:
     endpoints:

@@ -14,7 +14,7 @@ Traefik is a modern HTTP reverse proxy and load balancer made to deploy microser
 
 Traefik K3S add-on is disabled during K3s installation, so it can be installed manually to have full control over the version and its initial configuration.
 
-K3s provides a mechanism to customize traefik chart once the installation is over, but some parameters like namespace to be used cannot be modified. By default it is installed in `kube-system` namespace. Specifying a specific namespace `traefik-system` for all resources that need to be created for configuring Traefik will keep kubernetes configuration cleaner than deploying everything on `kube-system` namespace.
+K3s provides a mechanism to customize traefik chart once the installation is over, but some parameters like namespace to be used cannot be modified. By default it is installed in `kube-system` namespace. Specifying a specific namespace `traefik` for all resources that need to be created for configuring Traefik will keep kubernetes configuration cleaner than deploying everything on `kube-system` namespace.
 
 {{site.data.alerts.end}}
 
@@ -36,7 +36,7 @@ Installation using `Helm` (Release 3):
 - Step 3: Create namespace
 
     ```shell
-    kubectl create namespace traefik-system
+    kubectl create namespace traefik
     ```
 - Step 4: Create helm values file `traefik-values.yml`
 
@@ -77,13 +77,13 @@ Installation using `Helm` (Release 3):
 - Step 5: Install Traefik
 
     ```shell
-    helm -f traefik-values.yml install traefik traefik/traefik --namespace traefik-system
+    helm -f traefik-values.yml install traefik traefik/traefik --namespace traefik
     ```
 
 - Step 6: Confirm that the deployment succeeded, run:
 
     ```shell
-    kubectl -n traefik-system get pod
+    kubectl -n traefik get pod
     ```
 
 ### Helm chart configuration details
@@ -178,7 +178,7 @@ A Kuberentes Service must be created for enabling the access to Prometheus metri
   kind: Service
   metadata:
     name: traefik-metrics
-    namespace: traefik-system
+    namespace: traefik
     labels:
       app.kubernetes.io/instance: traefik
       app.kubernetes.io/name: traefik
@@ -214,7 +214,7 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
   kind: Service
   metadata:
     name: traefik-dashboard
-    namespace: traefik-system
+    namespace: traefik
     labels:
       app.kubernetes.io/instance: traefik
       app.kubernetes.io/name: traefik
@@ -240,14 +240,14 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
   kind: Ingress
   metadata:
     name: traefik-ingress
-    namespace: traefik-system
+    namespace: traefik
     annotations:
       # HTTPS as entry point
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       # Enable TLS
       traefik.ingress.kubernetes.io/router.tls: "true"
       # Use Basic Auth Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-basic-auth@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
       cert-manager.io/common-name: traefik.picluster.ricsanfre.com
@@ -273,10 +273,10 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
   apiVersion: networking.k8s.io/v1
   metadata:
     name: traefik-redirect
-    namespace: traefik-system
+    namespace: traefik
     annotations:
       # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
       # HTTP as entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
@@ -383,7 +383,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: redirect
-  namespace: traefik-system
+  namespace: traefik
 spec:
   redirectScheme:
     scheme: https
@@ -404,7 +404,7 @@ metadata:
     # HTTP entrypoint enabled
     traefik.ingress.kubernetes.io/router.entrypoints: web
     # Use HTTP to HTTPS redirect middleware
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
 spec:
   rules:
     - host: whoami
@@ -444,7 +444,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: basic-auth-secret
-  namespace: traefik-system
+  namespace: traefik
 data:
   users: |2
     <base64 encoded username:password pair>
@@ -476,7 +476,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: basic-auth-secret
-  namespace: traefik-system
+  namespace: traefik
 data:
   users: |2
     b3NzOiRhcHIxJDNlZTVURy83JFpmY1NRQlV6SFpIMFZTak9NZGJ5UDANCg0K
@@ -491,7 +491,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: basic-auth
-  namespace: traefik-system
+  namespace: traefik
 spec:
   basicAuth:
     secret: basic-auth-secret
@@ -510,7 +510,7 @@ metadata:
   name: whoami
   namespace: whoami
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-basic-auth@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-basic-auth@kubernetescrd
 spec:
   rules:
     - host: whoami

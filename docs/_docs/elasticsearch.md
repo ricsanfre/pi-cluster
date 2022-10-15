@@ -29,29 +29,29 @@ ECK Operator will be used to deploy Elasticsearh and Kibana.
   ```
 - Step 3: Create namespace
   ```shell
-  kubectl create namespace elastic-system
+  kubectl create namespace logging
   ```
-- Step 3: Install Longhorn in the elastic-system namespace
+- Step 3: Install ECK operator in the `logging` namespace
   ```shell
-  helm install elastic-operator elastic/eck-operator --namespace elastic-system
+  helm install elastic-operator elastic/eck-operator --namespace logging
   ```
 - Step 4: Monitor operator logs:
   ```shell
-  kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
+  kubectl -n logging logs -f statefulset.apps/elastic-operator
   ```
 
 ## Elasticsearch installation
 
 Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch cluster"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-deploy-elasticsearch.html)
 
-- Step 1: Create a manifest file containing basic configuration: one node elasticsearch using Longhorn as   storageClass and 5GB of storage in the volume claims.
+- Step 1: Create a manifest file containing basic configuration: one node elasticsearch using Longhorn as storageClass and 5GB of storage in the volume claims.
   
   ```yml
   apiVersion: elasticsearch.k8s.elastic.co/v1
   kind: Elasticsearch
   metadata:
     name: efk
-    namespace: k3s-logging
+    namespace: logging
   spec:
     version: 8.1.2
     nodeSets:
@@ -167,7 +167,7 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
 - Step 3: Check Elasticsearch status
   
   ```shell
-  kubectl get elasticsearch -n k3s-logging
+  kubectl get elasticsearch -n logging
   NAME   HEALTH   NODES   VERSION   PHASE   AGE
   efk    yellow   1       8.1.2    Ready   139m
   ```
@@ -187,7 +187,7 @@ Both to access elasticsearch from Kibana GUI or to configure Fluentd collector t
 
 Password is stored in a kubernetes secret (`<efk_cluster_name>-es-elastic-user`). Execute this command for getting the password
 ```
-kubectl get secret -n k3s-logging efk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+kubectl get secret -n logging efk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
 ```
 
 Setting the password to a well known value is not an officially supported feature by ECK but a workaround exists by creating the {clusterName}-es-elastic-user Secret before the Elasticsearch resource (ECK operator).
@@ -202,7 +202,7 @@ apiVersion: v1
 kind: Secret
 metadata: 
   name: efk-es-elastic-user
-  namespace: k3s-logging
+  namespace: logging
 type: Opaque
 data:
   elastic: <base64 encoded efk_elasticsearch_password>
@@ -223,7 +223,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   kind: Ingress
   metadata:
     name: elasticsearch-ingress
-    namespace: k3s-logging
+    namespace: logging
     annotations:
       # HTTPS as entry point
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -254,10 +254,10 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   apiVersion: networking.k8s.io/v1
   metadata:
     name: elasticsearch-redirect
-    namespace: k3s-logging
+    namespace: logging
     annotations:
       # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
       # HTTP as entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
@@ -318,7 +318,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   kind: Kibana
   metadata:
     name: kibana
-    namespace: k3s-logging
+    namespace: logging
   spec:
     version: 8.1.2
     count: 2 # Elastic Search statefulset deployment with two replicas
@@ -335,7 +335,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   ```
 - Step 3: Check kibana status
   ```shell
-  kubectl get kibana -n k3s-logging
+  kubectl get kibana -n logging
   NAME   HEALTH   NODES   VERSION   AGE
   efk    green    1       8.1.2    171m
   ```
@@ -359,7 +359,7 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
   kind: Ingress
   metadata:
     name: kibana-ingress
-    namespace: k3s-logging
+    namespace: logging
     annotations:
       # HTTPS as entry point
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -390,10 +390,10 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
   apiVersion: networking.k8s.io/v1
   metadata:
     name: kibana-redirect
-    namespace: k3s-logging
+    namespace: logging
     annotations:
       # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
       # HTTP as entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
@@ -483,7 +483,7 @@ For doing the installation [prometheus-elasticsearch-exporter official helm](htt
 - Step 3: Install prometheus-elasticsearh-exporter in the logging namespace with the overriden values
 
   ```shell
-  helm install -f values.yml prometheus-elasticsearch-exporter prometheus-community/prometheus-elasticsearch-exporter --namespace k3s-logging
+  helm install -f values.yml prometheus-elasticsearch-exporter prometheus-community/prometheus-elasticsearch-exporter --namespace logging
   ```
 
 When deployed, the exporter generates a Kubernetes Service exposing prometheus-elasticsearch-exporter metrics endpoint (/metrics on port 9108).
@@ -491,7 +491,7 @@ When deployed, the exporter generates a Kubernetes Service exposing prometheus-e
 It can be tested with the following command:
 
 ```shell
-curl prometheus-elasticsearch-exporter.k3s-logging.svc.cluster.local:9108/metrics
+curl prometheus-elasticsearch-exporter.logging.svc.cluster.local:9108/metrics
 # HELP elasticsearch_breakers_estimated_size_bytes Estimated size in bytes of breaker
 # TYPE elasticsearch_breakers_estimated_size_bytes gauge
 elasticsearch_breakers_estimated_size_bytes{breaker="eql_sequence",cluster="efk",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="10.42.2.20",name="efk-es-default-0"} 0

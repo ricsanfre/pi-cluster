@@ -119,7 +119,7 @@ There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Lo
       traefik.ingress.kubernetes.io/router.tls: "true"
       # Use Basic Auth Midleware configured
       traefik.ingress.kubernetes.io/router.middlewares: 
-        traefik-system-basic-auth@kubernetescrd,
+        traefik-basic-auth@kubernetescrd,
         longhorn-system-svc-longhorn-headers@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
@@ -149,7 +149,7 @@ There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Lo
     namespace: longhorn-system
     annotations:
       # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
       # HTTP as entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:

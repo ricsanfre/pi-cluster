@@ -1,6 +1,6 @@
 ---
 # Namespace for cert-manager
-k3s_certmanager_namespace: certmanager-system
+k3s_certmanager_namespace: certmanager
 
 # enable letsencrypt ACME dns01 provider
 enable_letsencrypt: false

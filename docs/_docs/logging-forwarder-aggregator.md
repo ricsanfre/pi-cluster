@@ -168,7 +168,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
   kind: Certificate
   metadata:
     name: fluentd-tls
-    namespace: k3s-logging
+    namespace: logging
   spec:
     # Secret names are always required.
     secretName: fluentd-tls
@@ -199,7 +199,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
   kind: Secret
   metadata
     name: fluentd-tls
-    namespace: k3s-logging
+    namespace: logging
   type: kubernetes.io/tls
   data:
     ca.crt: <ca cert content base64 encoded>
@@ -220,7 +220,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
   kind: Secret
   metadata:
     name: fluentd-shared-key
-    namespace: k3s-logging
+    namespace: logging
   type: Opaque
   data:
     fluentd-shared-key: <base64 encoded password>
@@ -468,7 +468,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
 
 - Step 6. Install chart
   ```shell
-  helm install fluentd fluent/fluentd -f values.yml --namespace k3s-logging
+  helm install fluentd fluent/fluentd -f values.yml --namespace logging
   ```
 
 - Step 7: create a Service resource to expose only fluentd forward endpoint outside the cluster (LoadBalancer service type)
@@ -486,7 +486,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
     labels:
       app: fluentd
     name: fluentd-ext
-    namespace: k3s-logging
+    namespace: logging
   spec:
     ports:
     - name: forward-ext
@@ -504,7 +504,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
 
 - Step 8: Check fluentd status
   ```shell
-  kubectl get all -l app.kubernetes.io/name=fluentd -n k3s-logging
+  kubectl get all -l app.kubernetes.io/name=fluentd -n logging
   ```
 
 ### Fluentd chart configuration details
@@ -1096,12 +1096,12 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
 - Step 4. Install chart
   ```shell
-  helm install fluent-bit fluent/fluent-bit -f values.yml --namespace k3s-logging
+  helm install fluent-bit fluent/fluent-bit -f values.yml --namespace logging
   ```
 
 - Step 5: Check fluent-bit status
   ```shell
-  kubectl get all -l app.kubernetes.io/name=fluent-bit -n k3s-logging
+  kubectl get all -l app.kubernetes.io/name=fluent-bit -n logging
   ```
 
 ### Fluentbit chart configuration details

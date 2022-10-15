@@ -797,7 +797,7 @@ Installation using `Helm` (Release 3):
 - Step 3: Create namespace
 
   ```shell
-  kubectl create namespace velero-system
+  kubectl create namespace velero
   ```
 - Step 4: Create values.yml for Velero helm chart deployment
   
@@ -845,15 +845,15 @@ Installation using `Helm` (Release 3):
         aws_secret_access_key: <minio_velero_pass> # Not encoded
   ```
 
-- Step 5: Install Velero in the velero-system namespace with the overriden values
+- Step 5: Install Velero in the `velero` namespace with the overriden values
 
   ```shell
-  helm install velero vmware-tanzu/velero --namespace velero-system -f values.yml
+  helm install velero vmware-tanzu/velero --namespace velero -f values.yml
   ```
 - Step 6: Confirm that the deployment succeeded, run:
 
   ```shell
-  kubectl -n velero-system get pod
+  kubectl -n velero get pod
   ```
 
 - Step 7: Configure VolumeSnapshotClass
@@ -1143,7 +1143,7 @@ apiVersion: velero.io/v1
 kind: Schedule
 metadata:
   name: full
-  namespace: velero-system
+  namespace: velero
 spec:
   schedule: 0 4 * * *
   template:

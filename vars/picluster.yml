@@ -42,13 +42,13 @@ k3s_worker_extra_args: >-
 # Namespaces #
 ##############
 
-k3s_metallb_namespace: metallb-system
-k3s_traefik_namespace: traefik-system
+k3s_metallb_namespace: metallb
+k3s_traefik_namespace: traefik
 k3s_longhorn_namespace: longhorn-system
-k3s_certmanager_namespace: certmanager-system
-k3s_logging_namespace: k3s-logging
-k3s_monitoring_namespace: k3s-monitoring
-k3s_velero_namespace: velero-system
+k3s_certmanager_namespace: certmanager
+k3s_logging_namespace: logging
+k3s_monitoring_namespace: monitoring
+k3s_velero_namespace: velero
 k3s_linkerd_namespace: linkerd
 k3s_linkerd_viz_namespace: linkerd-viz
 

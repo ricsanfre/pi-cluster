@@ -141,17 +141,17 @@ Installation using `Helm` (Release 3):
 - Step 3: Create namespace
 
     ```shell
-    kubectl create namespace certmanager-system
+    kubectl create namespace certmanager
     ```
 - Step 3: Install Cert-Manager
 
     ```shell
-    helm install cert-manager jetstack/cert-manager --namespace certmanager-system --set installCRDs=true
+    helm install cert-manager jetstack/cert-manager --namespace certmanager --set installCRDs=true
     ```
 - Step 4: Confirm that the deployment succeeded, run:
 
     ```shell
-    kubectl -n certmanager-system get pod
+    kubectl -n certmanager get pod
     ```
 
 ## Cert-Manager Configuration
@@ -185,7 +185,7 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
   kind: Certificate
   metadata:
     name: my-selfsigned-ca
-    namespace: certmanager-system
+    namespace: certmanager
   spec:
     isCA: true
     commonName: my-selfsigned-ca
@@ -202,7 +202,7 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
   kind: ClusterIssuer
   metadata:
     name: my-ca-issuer
-    namespace: certmanager-system
+    namespace: certmanager
   spec:
     ca:
       secretName: root-secret
@@ -366,7 +366,7 @@ Execute all the following commands from $HOME directory.
   groupName: acme.<your-domain>
 
   certManager:
-    namespace: certmanager-system
+    namespace: certmanager
     serviceAccountName: certmanager-cert-manager
   ```
   `groupName` is a unique identifier that need to be referenced in each Issuer's `webhook` stanza to inform cert-manager of where to send challengePayload resources in order to solve the DNS01 challenge. `acme.<yourdomain>` can be used.
@@ -376,7 +376,7 @@ Execute all the following commands from $HOME directory.
 - Step 4: Install cert-manager-webhook-ionos
 
   ```shell
-  helm install cert-manager-webhook-ionos cert-manager-webhook-ionos/cert-manager-webhook-ionos -n certmanager-system -f values-certmanager-ionos.yml
+  helm install cert-manager-webhook-ionos cert-manager-webhook-ionos/cert-manager-webhook-ionos -n certmanager -f values-certmanager-ionos.yml
   ```
 
 - Step 5: Create IONOS API secret
@@ -389,7 +389,7 @@ Execute all the following commands from $HOME directory.
   kind: Secret
   metadata:
     name: ionos-secret
-    namespace: certmanager-system
+    namespace: certmanager
   type: Opaque
   ```
 
@@ -401,7 +401,7 @@ Execute all the following commands from $HOME directory.
   kind: ClusterIssuer
   metadata:
     name: letsencrypt-issuer
-    namespace: certmanager-system
+    namespace: certmanager
     spec:
         acme:
           # The ACME server URL
