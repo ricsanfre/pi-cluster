@@ -3,7 +3,7 @@ apiVersion: velero.io/v1
 kind: Schedule
 metadata:
   name: full
-  namespace: velero-system
+  namespace: {{ k3s_velero_namespace }}
 spec:
   schedule: 0 4 * * *
   template:

@@ -318,7 +318,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
       priority: 1
       middlewares:
         - name: redirect
-          namespace: traefik-system
+          namespace: traefik
       services:
         - kind: TraefikService
           name: noop@internal
@@ -347,7 +347,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
         namespace: k3s-monitoring
       middlewares:
         - name: basic-auth
-          namespace: traefik-system
+          namespace: traefik
         - name: stripprefix
           namespace: k3s-monitoring
     - kind: Rule
@@ -358,7 +358,7 @@ TLS certificate and its corresponding secret, used to configure TLS communicatio
         namespace: k3s-monitoring
       middlewares:
         - name: basic-auth
-          namespace: traefik-system
+          namespace: traefik
         - name: stripprefix
           namespace: k3s-monitoring
     - kind: Rule
@@ -1338,7 +1338,7 @@ spec:
       path: /metrics
   namespaceSelector:
     matchNames:
-      - traefik-system
+      - traefik
   selector:
     matchLabels:
       app.kubernetes.io/instance: traefik
@@ -1424,7 +1424,7 @@ Backend endpoint is already exposing Prometheus metrics.
 It can be confirmed checking velero service
 
 ```shell
-kubectl get svc velero -n velero-system -o yaml
+kubectl get svc velero -n velero -o yaml
 ```
 ```yml
 apiVersion: v1
@@ -1432,7 +1432,7 @@ kind: Service
 metadata:
   annotations:
     meta.helm.sh/release-name: velero
-    meta.helm.sh/release-namespace: velero-system
+    meta.helm.sh/release-namespace: velero
   creationTimestamp: "2021-12-31T11:36:39Z"
   labels:
     app.kubernetes.io/instance: velero
@@ -1440,7 +1440,7 @@ metadata:
     app.kubernetes.io/name: velero
     helm.sh/chart: velero-2.27.1
   name: velero
-  namespace: velero-system
+  namespace: velero
   resourceVersion: "9811"
   uid: 3a6707ba-0e0f-49c3-83fe-4f61645f6fd0
 spec:
@@ -1490,7 +1490,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         path: /metrics
     namespaceSelector:
       matchNames:
-        - velero-system
+        - velero
     selector:
       matchLabels:
         app.kubernetes.io/instance: velero

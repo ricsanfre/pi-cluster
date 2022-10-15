@@ -154,20 +154,20 @@ Installation using `Helm` (Release 3):
 - Step 3: Create namespace
 
     ```shell
-    kubectl create namespace metallb-system
+    kubectl create namespace metallb
     ```
 
-- Step 4: Install Metallb in the metallb-system namespace.
+- Step 4: Install Metallb in the `metallb` namespace.
 
     ```shell
-    helm install metallb metallb/metallb --namespace metallb-system
+    helm install metallb metallb/metallb --namespace metallb
     ```
   
   
 - Step 5: Confirm that the deployment succeeded, run:
 
     ```shell
-    kubectl -n metallb-system get pod
+    kubectl -n metallb get pod
     ```
 
 - Step 6: Configure IP addess pool and the announcement method (L2 configuration)
@@ -180,7 +180,7 @@ Installation using `Helm` (Release 3):
     kind: IPAddressPool
     metadata:
       name: picluster-pool
-      namespace: metallb-system
+      namespace: metallb
     spec:
       addresses:
       - 10.0.0.100-10.0.0.200
@@ -191,7 +191,7 @@ Installation using `Helm` (Release 3):
     kind: L2Advertisement
     metadata:
       name: example
-      namespace: metallb-system
+      namespace: metallb
     spec:
       ipAddressPools:
       - picluster-pool

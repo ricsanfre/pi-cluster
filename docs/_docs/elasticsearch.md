@@ -257,7 +257,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
     namespace: k3s-logging
     annotations:
       # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
       # HTTP as entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
@@ -393,7 +393,7 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
     namespace: k3s-logging
     annotations:
       # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-system-redirect@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
       # HTTP as entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
