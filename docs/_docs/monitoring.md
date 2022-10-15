@@ -1663,7 +1663,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         path: /metrics
     namespaceSelector:
       matchNames:
-        - k3s-logging
+        - logging
     selector:
       matchLabels:
         app: prometheus-elasticsearch-exporter
@@ -1707,7 +1707,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         targetPort: 7979
     namespaceSelector:
       matchNames:
-        - k3s-logging
+        - logging
     selector:
       matchLabels:
         app.kubernetes.io/instance: fluent-bit
@@ -1762,7 +1762,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         path: /metrics
     namespaceSelector:
       matchNames:
-        - k3s-logging
+        - logging
     selector:
       matchLabels:
         app.kubernetes.io/instance: fluentd

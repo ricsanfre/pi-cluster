@@ -1,6 +1,6 @@
 ---
 # Namespace of the ELK/EFK stack
-k3s_logging_namespace: k3s-logging
+k3s_logging_namespace: logging
 
 # Enable service mesh
 enable_linkerd: true

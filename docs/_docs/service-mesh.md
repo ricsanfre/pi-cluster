@@ -660,9 +660,7 @@ For applying linkerd service mesh to EFK services, it is enough to use the impli
 Modify [EFK installation procedure](/docs/logging/) to annotate the corresponding namespace before deploying the helm charts.
 
 ```shell
-kubectl annotate ns elastic-system linkerd.io/inject=enabled
-
-kubectl annotate ns k3s-logging linkerd.io/inject=enabled
+kubectl annotate ns logging linkerd.io/inject=enabled
 ```
 
 When deploying Elasticsearch and Kibana using the ECK operator, it is needed to specify the parameter `automountServiceAccountToken: true`, otherwise the linkerd-proxy is not injected.

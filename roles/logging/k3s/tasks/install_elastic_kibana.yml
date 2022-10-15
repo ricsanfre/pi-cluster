@@ -19,25 +19,6 @@
           linkerd.io/inject: enabled
   when: enable_linkerd
 
-# namespace for hosting ECK operator
-- name: Create eck namespace.
-  kubernetes.core.k8s:
-    name: elastic-system
-    api_version: v1
-    kind: Namespace
-    state: present
-
-- name: Annotate namespace to enable linkerd
-  kubernetes.core.k8s:
-    definition:
-      kind: Namespace
-      apiVersion: v1
-      metadata:
-        name: elastic-system
-        annotations:
-          linkerd.io/inject: enabled
-  when: enable_linkerd
-
 - name: Add elastic chart repo.
   kubernetes.core.helm_repository:
     name: elastic
@@ -47,13 +28,13 @@
   kubernetes.core.helm:
     name: elastic-operator
     chart_ref: elastic/eck-operator
-    release_namespace: elastic-system
+    release_namespace: "{{ k3s_logging_namespace }}"
     update_repo_cache: true
     state: present
 
 - name: Wait for pods to be ready
   command:
-    cmd: "kubectl wait --for=condition=Ready pod --namespace=elastic-system --all --timeout=600s"
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
   register: eck_pods_ready
   changed_when: false
 
