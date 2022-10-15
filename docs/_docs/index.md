@@ -114,8 +114,8 @@ The software used and the latest version tested of each component
 | Monitoring | Prometheus Operator | 0.59.2 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-41.0.0   |
 | Monitoring | Prometheus | 2.39 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-41.0.0 |
 | Monitoring | AlertManager | 0.24 | Installed by Kube Prometheus Stack. Helm chart version: kube-prometheus-stack-41.0.0 |
-| Monitoring | Grafana | 9.1.7 | Helm chart version grafana-6.32.10. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
-| Monitoring | Prometheus Node Exporter | 1.3.1 | Helm chart version: prometheus-node-exporter-3.3.1. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-39.11.0 |
+| Monitoring | Grafana | 9.1.7 | Helm chart version grafana-6.32.10. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-41.0.0 |
+| Monitoring | Prometheus Node Exporter | 1.3.1 | Helm chart version: prometheus-node-exporter-4.3.0. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: kube-prometheus-stack-41.0.0 |
 | Monitoring | Prometheus Elasticsearch Exporter | 1.5.0 | Helm chart version: prometheus-elasticsearch-exporter-4.15.0 |
 | Backup | Minio | RELEASE.2022-09-22T18-57-27Z | |
 | Backup | Restic | 0.12.1 | |
