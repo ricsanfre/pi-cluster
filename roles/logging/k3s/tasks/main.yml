@@ -4,8 +4,11 @@
 - name: Deploy Elasticsearch and Kibana
   include_tasks: install_elastic_kibana.yml
 
-# Deploy fluentbit/fluentd aggregator architecture
+# Deploy Loki
+- name: Deploy Loki
+  include_tasks: install_loki.yml
 
+# Deploy fluentbit/fluentd aggregator architecture
 - name: Deploy fluentd aggregator
   include_tasks: install_fluentd.yml
 
@@ -13,6 +16,5 @@
   include_tasks: install_fluentbit.yml
 
 # Deploy Prometheus elasticsearch exporter
-
 - name: Deploy prometheus elasticsearch exporter
   include_tasks: install_prometheus_elasticsearch_exporter.yml

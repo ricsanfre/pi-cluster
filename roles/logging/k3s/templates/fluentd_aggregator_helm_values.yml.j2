@@ -54,6 +54,15 @@ env:
       secretKeyRef:
         name: fluentd-shared-key
         key: fluentd-shared-key
+  # Loki url
+  - name: LOKI_URL
+    value: "http://loki-gateway"
+  # Loki username
+  - name: LOKI_USERNAME
+    value: ""
+  # Loki password
+  - name: LOKI_PASSWORD
+    value: ""
 
 # Volumes and VolumeMounts (only configuration files and certificates)
 volumes:
@@ -140,12 +149,26 @@ fileConfigs:
         @type relabel
         @label @FLUENT_LOG
       </match>
+      ## Get kubernetes fields
+      <filter kube.**>
+        @type record_modifier
+        remove_keys kubernetes, __dummy__, __dummy2__
+        <record>
+          __dummy__   ${ p = record["kubernetes"]["labels"]["app"]; p.nil? ? p : record['app'] = p; }
+          __dummy2__   ${ p = record["kubernetes"]["labels"]["app.kubernetes.io/name"]; p.nil? ? p : record['app'] = p; }
+          namespace ${ record.dig("kubernetes","namespace_name") }
+          pod ${ record.dig("kubernetes", "pod_name") }
+          container ${ record.dig("kubernetes", "container_name") }
+          node_name ${ record.dig("kubernetes", "host")}
+        </record>
+      </filter>
+      ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
       <filter kube.**>
         @type record_transformer
         enable_ruby true
         remove_keys log_processed
         <record>
-          json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+          json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
         </record>
       </filter>
       <match **>
@@ -155,6 +178,7 @@ fileConfigs:
     </label>
   03_dispatch.conf: |-
     <label @DISPATCH>
+      # Calculate prometheus metrics
       <filter **>
         @type prometheus
         <metric>
@@ -167,13 +191,21 @@ fileConfigs:
           </labels>
         </metric>
       </filter>
+      # Copy log stream to different outputs
       <match **>
-        @type relabel
-        @label @OUTPUT
+        @type copy
+        <store>
+          @type relabel
+          @label @OUTPUT_ES
+        </store>
+        <store>
+          @type relabel
+          @label @OUTPUT_LOKI
+        </store>  
       </match>
     </label>
   04_outputs.conf: |-
-    <label @OUTPUT>
+    <label @OUTPUT_ES>
       # Send received logs to elasticsearch
       <match **>
         @type elasticsearch
@@ -216,6 +248,33 @@ fileConfigs:
           chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
           queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
           retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+          retry_forever true
+        </buffer>
+      </match>
+    </label>
+    <label @OUTPUT_LOKI>
+      # Send received logs to Loki
+      <match kube.**>
+        @type loki
+        @id out_loki
+        @log_level info
+        url "#{ENV['LOKI_URL']}"
+        username "#{ENV['LOKI_USERNAME'] || use_default}"
+        password "#{ENV['LOKI_PASSWORDD'] || use_default}"
+        extra_labels {"job": "fluentd"}
+        <label>
+           app
+           container
+           pod
+           namespace
+           node_name
+        </label>
+        <buffer>
+          flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+          flush_interval 5s
+          chunk_limit_size 2M
+          queue_limit_length 32
+          retry_max_interval 30
           retry_forever true
         </buffer>
       </match>

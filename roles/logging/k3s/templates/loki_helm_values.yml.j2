@@ -1,0 +1,16 @@
+---
+
+loki:
+  # Disable authentication
+  auth_enabled: false
+
+# persistence:
+#  size: {{ loki_storage_size }}
+#  storageClass: {{ loki_storage_class }}
+
+# Disable self-monitoring
+monitoring:
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
