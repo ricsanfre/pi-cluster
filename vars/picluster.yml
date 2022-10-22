@@ -108,6 +108,7 @@ acme_issuer_email: admin@ricsanfre.com
 
 # Minio S3 Server
 minio_hostname: "s3.{{ dns_domain }}"
+minio_endpoint: "{{ minio_hostname }}:9091"
 minio_url: "https://{{ minio_hostname }}:9091"
 minio_site_region: "eu-west-1"
 
@@ -149,6 +150,11 @@ fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
 
 # Elasticsearch 'elastic' user password
 efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"
+
+# Loki minio user, key and bucket
+minio_loki_user: loki
+minio_loki_key: "{{ vault.minio.loki_key }}"
+minio_loki_bucket: k3s-loki
 
 ##############
 # Monitoring #

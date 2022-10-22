@@ -42,6 +42,11 @@ kibana_dashboard_dns: kibana.picluster.ricsanfre.com
 loki_storage_class: "longhorn"
 loki_storage_size: "5Gi"
 
+# Mini user, key and bucket
+minio_loki_user: loki
+minio_loki_key: s1cret0
+minio_loki_bucket: k3s-loki
+
 ##########################
 # fluentd configuration
 ##########################
