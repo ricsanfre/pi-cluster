@@ -34,7 +34,7 @@
 
 - name: Wait for pods to be ready
   command:
-    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} -l app.kubernetes.io/name=elastic-operator --timeout=600s"
   register: eck_pods_ready
   changed_when: false
 
