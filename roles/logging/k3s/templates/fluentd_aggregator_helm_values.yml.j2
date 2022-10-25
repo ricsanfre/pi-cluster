@@ -270,7 +270,7 @@ fileConfigs:
            node_name
         </label>
         <buffer>
-          flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+          flush_thread_count 8
           flush_interval 5s
           chunk_limit_size 2M
           queue_limit_length 32
