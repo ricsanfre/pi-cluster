@@ -130,44 +130,93 @@ Installation from helm chart. There are two alternatives:
   loki:
     # Disable multi-tenant support
     auth_enabled: false
-    # Set Minio as backend storage
+
+    # S3 backend storage configuration
     storage:
+      bucketNames:
+        chunks: <minio_loki_bucket>
+        ruler: <minio_loki_bucket>
       type: s3
-    # S3 backend storage config
-    storage_config:
-      aws:
-        bucketnames: <minio_loki_bucket>
+      s3:
         endpoint: <minio_endpoint>
         region: <minio_site_region>
-        access_key_id: <minio_loki_user>
-        secret_access_key: <minio_loki_key>
+        secretAccessKey: <minio_loki_key>
+        accessKeyId: <minio_loki_user>
+        s3ForcePathStyle: true
         insecure: false
-        sse_encryption: false
         http_config:
           idle_conn_timeout: 90s
           response_header_timeout: 0s
           insecure_skip_verify: false
-        s3forcepathstyle: true
-      boltdb_shipper:
-        active_index_directory: /var/loki/boltdb-shipper-active
-        cache_location: /var/loki/boltdb-shipper-cache
-        cache_ttl: 24h
-        shared_store: s3
+
+  # Configuration for the write
+  write:
+    # Number of replicas for the write
+    replicas: 2
+    persistence:
+      # -- Size of persistent disk
+      size: 10Gi
+      # -- Storage class to be used.
+      storageClass: longhorn
+
+  # Configuration for the read
+  read:
+    # Number of replicas for the read
+    replicas: 2
+    persistence:
+      # -- Size of persistent disk
+      size: 10Gi
+      # -- Storage class to be used.
+      storageClass: longhorn
+
+  # Configuration for the gateway
+  gateway:
+    # -- Specifies whether the gateway should be enabled
+    enabled: true
+    # -- Number of replicas for the gateway
+    replicas: 1
+
+  # Disable mino installation
+  minio:
+    enabled: false
+
   # Disable self-monitoring
   monitoring:
     selfMonitoring:
       enabled: false
       grafanaAgent:
         installOperator: false
+      lokiCanary:
+          enabled: false
+
+  # Disable helm-test
+  test:
+    enabled: false
   ```
 
   This configuration:
 
   - Disable multi-tenant support (`auth_enabled: false`) so it is not needed to provide org_id in HTTP headers.
 
-  - Enable S3 as storage backend.
+  - Enable S3 as storage backend, providing Minio credentials and bucket.
 
-  - Disable self-monitoring and Grafana Agent Operator.
+  - Configure two replicas for write (`write`) and read (`read`) component and persistent volumes using Longhorn
+
+  - Enable one replica for gateway component (`gateway`)
+
+  - Disable minio server installation (`minio.enabled`)
+
+  - Disable self-monitoring (`monitoring.selfmonitoring`) and helm-test validation (`test.enabled`)
+
+- Step 3: Install Loki in `logging` namespace
+  ```shell
+  helm install loki grafana/loki -f loki-values.yml --namespace logging
+  ```
+- Step 4: Check status of Loki pods
+  ```shell
+  kubectl get pods -l app.kubernetes.io/name=loki -n logging
+  ```
+  
 
 ## Grafana Configuration
 
