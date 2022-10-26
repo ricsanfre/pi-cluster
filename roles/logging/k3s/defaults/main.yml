@@ -5,6 +5,9 @@ k3s_logging_namespace: logging
 # Enable service mesh
 enable_linkerd: true
 
+# Enable elasticsearch and kibana
+enable_elastic_search: true
+
 ##########################
 # Elasticsearch configuration
 ##########################

@@ -28,6 +28,7 @@ env:
   # Path to fluentd conf file
   - name: "FLUENTD_CONF"
     value: "../../../etc/fluent/fluent.conf"
+{% if enable_elastic_search is sameas true %}
   # Elastic operator creates elastic service name with format cluster_name-es-http
   - name:  FLUENT_ELASTICSEARCH_HOST
     value: efk-es-http
@@ -48,6 +49,7 @@ env:
     value: fluentd
   - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
     value: "true"
+{% endif %}
   # Fluentd forward security
   - name: FLUENTD_FORWARD_SEC_SHARED_KEY
     valueFrom:
@@ -194,10 +196,12 @@ fileConfigs:
       # Copy log stream to different outputs
       <match **>
         @type copy
+{% if enable_elastic_search is sameas true %}
         <store>
           @type relabel
           @label @OUTPUT_ES
         </store>
+{% endif %}
         <store>
           @type relabel
           @label @OUTPUT_LOKI
@@ -205,6 +209,7 @@ fileConfigs:
       </match>
     </label>
   04_outputs.conf: |-
+{% if enable_elastic_search is sameas true %}
     <label @OUTPUT_ES>
       # Send received logs to elasticsearch
       <match **>
@@ -252,6 +257,7 @@ fileConfigs:
         </buffer>
       </match>
     </label>
+{% endif %}
     <label @OUTPUT_LOKI>
       # Send received logs to Loki
       <match kube.**>

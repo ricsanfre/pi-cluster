@@ -1,24 +1,5 @@
 ---
 
-# namespace for hosting EFK stack
-- name: Create k3s-logging namespace.
-  kubernetes.core.k8s:
-    name: "{{ k3s_logging_namespace }}"
-    api_version: v1
-    kind: Namespace
-    state: present
-
-- name: Annotate namespace to enable linkerd
-  kubernetes.core.k8s:
-    definition:
-      kind: Namespace
-      apiVersion: v1
-      metadata:
-        name: "{{ k3s_logging_namespace }}"
-        annotations:
-          linkerd.io/inject: enabled
-  when: enable_linkerd
-
 - name: Add elastic chart repo.
   kubernetes.core.helm_repository:
     name: elastic

@@ -141,9 +141,12 @@ minio_longhorn_user: longhorn
 minio_longhorn_key: "{{ vault.minio.longhorn_key }}"
 minio_longhorn_bucket: k3s-longhorn
 
-################
-# Logging: EFK #
-################
+#######################
+# Logging: EFK + Loki #
+#######################
+
+# Enable elasticsearch and kibana
+enable_elastic_search: true
 
 # Fluentd-fluentbit shared key
 fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
