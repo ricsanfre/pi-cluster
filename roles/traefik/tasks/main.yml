@@ -16,6 +16,7 @@
   kubernetes.core.helm:
     name: traefik
     chart_ref: traefik/traefik
+    chart_version: "{{ traefik_chart_version }}"
     release_namespace: "{{ k3s_traefik_namespace }}"
     update_repo_cache: true
     state: present

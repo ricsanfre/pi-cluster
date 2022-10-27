@@ -43,6 +43,7 @@
   kubernetes.core.helm:
     name: longhorn
     chart_ref: longhorn/longhorn
+    chart_version: "{{ longhorn_chart_version }}"
     update_repo_cache: true
     release_namespace: "{{ k3s_longhorn_namespace }}"
     state: present

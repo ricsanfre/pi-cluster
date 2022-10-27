@@ -9,6 +9,7 @@
   kubernetes.core.helm:
     name: loki
     chart_ref: grafana/loki
+    chart_version: "{{ loki_chart_version }}"
     release_namespace: "{{ k3s_logging_namespace }}"
     update_repo_cache: true
     state: present

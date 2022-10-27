@@ -5,6 +5,8 @@ k3s_traefik_namespace: traefik
 # Endpoint Service DNS name
 traefik_dashboard_dns: traefik.picluster.ricsanfre.com
 
+# Traefik chart version
+traefik_chart_version: 18.1.0
 
 # Basic auth user/passwd
 traefik_basic_auth_user: admin

@@ -12,6 +12,7 @@
     name: linkerd-viz
     chart_ref: linkerd/linkerd-viz
     release_namespace: "{{ k3s_linkerd_namespace }}-viz"
+    chart_version: "{{ linkerd_viz_chart_version }}"
     update_repo_cache: true
     state: present
     release_values:

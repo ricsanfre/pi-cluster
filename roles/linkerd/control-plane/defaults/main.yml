@@ -1,7 +1,9 @@
 ---
 
 # Version
-linkerd_version: "stable-2.12.1"
+linkerd_version: "stable-2.12.2"
+linkerd_chart_version: 1.9.4
+
 # Architecture
 linkerd_arch: "arm64"
 

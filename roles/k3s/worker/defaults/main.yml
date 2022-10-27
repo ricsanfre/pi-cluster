@@ -6,3 +6,6 @@ k3s_master_ip: 10.0.0.1
 
 # Extra afrguments for installation script
 k3s_worker_extra_args: "--node-label 'node_type=worker'"
+
+# Setting K3s version
+k3s_version: v1.24.7+k3s1

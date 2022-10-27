@@ -10,6 +10,7 @@
     name: fluent-bit
     chart_ref: fluent/fluent-bit
     release_namespace: "{{ k3s_logging_namespace }}"
+    chart_version: "{{ fluentbit_chart_version }}"
     update_repo_cache: true
     state: present
     values: "{{ lookup('template', 'templates/fluentbit_helm_values.yml.j2') | from_yaml }}"

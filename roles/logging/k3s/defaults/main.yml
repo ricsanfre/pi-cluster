@@ -8,6 +8,9 @@ enable_linkerd: true
 # Enable elasticsearch and kibana
 enable_elastic_search: true
 
+# ECK operator chart version
+eck_operator_chart_version: 2.4.0
+
 ##########################
 # Elasticsearch configuration
 ##########################
@@ -38,9 +41,14 @@ efk_node_timezone: "Europe/Madrid"
 # Endpoint Service DNS name
 kibana_dashboard_dns: kibana.picluster.ricsanfre.com
 
+# Promethes-eslasticsearch-exporter helm chart
+prometheus_es_exporter_chart_version: 4.15.1
+
 ##########################
 # Loki configuration
 ##########################
+
+loki_chart_version: 3.3.0
 
 loki_storage_class: "longhorn"
 loki_storage_size: "5Gi"
@@ -58,11 +66,16 @@ minio_loki_bucket: k3s-loki
 efk_fluentd_daemonset_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
 efk_fluentd_aggregator_image: "ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1"
 
+# Helm chart version
+fluentd_chart_version: 0.3.9
+
 fluentd_shared_key: "s1cret0"
 
 ##########################
 # fluentbit configuration
 ##########################
+
+fluentbit_chart_version: 0.20.9
 
 fluent_bit_log_level: info
 
