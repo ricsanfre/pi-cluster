@@ -164,15 +164,6 @@ fileConfigs:
           host ${ record.dig("kubernetes", "host")}
         </record>
       </filter>
-      ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
-      <filter kube.**>
-        @type record_transformer
-        enable_ruby true
-        remove_keys log_processed
-        <record>
-          json_message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
-        </record>
-      </filter>
       <match **>
         @type relabel
         @label @DISPATCH
@@ -211,6 +202,15 @@ fileConfigs:
   04_outputs.conf: |-
 {% if enable_elastic_search is sameas true %}
     <label @OUTPUT_ES>
+      ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+      <filter kube.**>
+        @type record_transformer
+        enable_ruby true
+        remove_keys log_processed
+        <record>
+          message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+        </record>
+      </filter>
       # Send received logs to elasticsearch
       <match **>
         @type elasticsearch
@@ -259,7 +259,14 @@ fileConfigs:
     </label>
 {% endif %}
     <label @OUTPUT_LOKI>
-      # Send received logs to Loki
+      # Rename log_proccessed to message
+      <filter kube.**>
+        @type record_modifier
+        remove_keys __dummy__, log_processed
+        <record>
+          __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
+        </record>
+      </filter>
       <match **>
         @type loki
         @id out_loki_kube
