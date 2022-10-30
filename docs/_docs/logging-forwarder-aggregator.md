@@ -3,7 +3,7 @@ title: Fluentbit/Fluentd (Forwarder/Aggregator)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
-last_modified_at: "25-10-2022"
+last_modified_at: "30-10-2022"
 
 ---
 
@@ -408,16 +408,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
             namespace ${ record.dig("kubernetes","namespace_name") }
             pod ${ record.dig("kubernetes", "pod_name") }
             container ${ record.dig("kubernetes", "container_name") }
-            node_name ${ record.dig("kubernetes", "host")}
-          </record>
-        </filter>
-        ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
-        <filter kube.**>
-          @type record_transformer
-          enable_ruby true
-          remove_keys log_processed
-          <record>
-            json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+            host ${ record.dig("kubernetes", "host")}
           </record>
         </filter>
         <match **>
@@ -436,7 +427,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
             desc The total number of incoming records
             <labels>
               tag ${tag}
-              hostname ${hostname}
+              hostname ${host}
             </labels>
           </metric>
         </filter>
@@ -455,6 +446,15 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
       </label>
     04_outputs.conf: |-
       <label @OUTPUT_ES>
+        ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+        <filter kube.**>
+          @type record_transformer
+          enable_ruby true
+          remove_keys log_processed
+          <record>
+            json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+          </record>
+        </filter>
         # Send received logs to elasticsearch
         <match **>
           @type elasticsearch
@@ -502,8 +502,16 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
         </match>
       </label>
       <label @OUTPUT_LOKI>
+        # Rename log_proccessed to message
+        <filter kube.**>
+          @type record_modifier
+          remove_keys __dummy__, log_processed
+          <record>
+            __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
+          </record>
+        </filter>
         # Send received logs to Loki
-        <match kube.**>
+        <match **>
           @type loki
           @id out_loki
           @log_level info
@@ -511,12 +519,14 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
           username "#{ENV['LOKI_USERNAME'] || use_default}"
           password "#{ENV['LOKI_PASSWORDD'] || use_default}"
           extra_labels {"job": "fluentd"}
+          line_format json
           <label>
              app
              container
              pod
              namespace
-             node_name
+             host
+             filename
           </label>
           <buffer>
             flush_thread_count 8
@@ -858,15 +868,6 @@ It is not needed to change the default content of the `fluent.conf` created by H
         node_name ${ record.dig("kubernetes", "host")}
       </record>
     </filter>
-    ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
-    <filter kube.**>
-      @type record_transformer
-      enable_ruby true
-      remove_keys log_processed
-      <record>
-        json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
-      </record>
-    </filter>
     <match **>
       @type relabel
       @label @DISPATCH
@@ -879,8 +880,6 @@ It is not needed to change the default content of the `fluent.conf` created by H
   - relabels (`@FLUENT_LOG`) logs coming from fluentd itself to reroute them (discard them).
 
   - extract kubernetes metadata (`kubernetes` field added by fluentbit kubernetes filter) and add new fields: `app`, `pod`, `namespace`, `container` and `node_name`. Remove `kubernetes` object from the log.
-
-  - removes `log_processed` field, and creates a new field `json_message.<container-name>` containing original `log_processed` field but copied to a unique map using container name `container`. This way we assure that all log fields are unique avoiding errors during the ingestion into ES.
 
   - relabels (`@DISPATCH`)the rest of logs to be dispatched to the outputs
 
@@ -930,6 +929,15 @@ It is not needed to change the default content of the `fluent.conf` created by H
 
   ```xml
   <label @OUTPUT_ES>
+    ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+    <filter kube.**>
+      @type record_transformer
+      enable_ruby true
+      remove_keys log_processed
+      <record>
+        message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+      </record>
+    </filter>    
     # Send received logs to elasticsearch
     <match **>
       @type elasticsearch
@@ -977,8 +985,16 @@ It is not needed to change the default content of the `fluent.conf` created by H
     </match>
   </label>
   <label @OUTPUT_LOKI>
+    # Rename log_proccessed to message
+    <filter kube.**>
+      @type record_modifier
+      remove_keys __dummy__, log_processed
+      <record>
+        __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
+      </record>
+    </filter>
     # Send received logs to Loki
-    <match kube.**>
+    <match **>
       @type loki
       @id out_loki
       @log_level info
@@ -991,7 +1007,8 @@ It is not needed to change the default content of the `fluent.conf` created by H
          container
          pod
          namespace
-         node_name
+         host
+         filename
       </label>
       <buffer>
         flush_thread_count 8
@@ -1008,8 +1025,12 @@ It is not needed to change the default content of the `fluent.conf` created by H
   With this configuration fluentd:
 
   - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch).
+    Before routing them it applies the following filter
+    - remove `log_processed` field, and creates a new field `message_<container-name>` containing original `log_processed` field but copied to a unique map using container name `container`. This way we assure that all log fields are unique avoiding errors during the ingestion into ES.
 
-  - routes all kuberentes logs to Loki configuring [loki output plugin](https://grafana.com/docs/loki/latest/clients/fluentd/). It adds the following labels to each log stream: app, pod, container, namespace, node_name and job.
+  - routes all logs to Loki configuring [loki output plugin](https://grafana.com/docs/loki/latest/clients/fluentd/). It adds the following labels to each log stream: app, pod, container, namespace, node_name and job.
+    Before routing them it applies the following filter
+    - rename `log_processed` field to `message` field.
 
 
 ## Fluentbit Forwarder installation
@@ -1034,6 +1055,10 @@ For speed-up the installation there is available a [helm chart](https://github.c
   
   ```yml
   # fluentbit helm chart values
+
+  # Install fluentbit 2.0.2
+  image:
+    tag: 2.0.2
 
   #fluentbit-container environment variables:
   env:
@@ -1084,6 +1109,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Name tail
           Alias input.kube
           Path /var/log/containers/*.log
+          Path_Key filename
           multiline.parser docker, cri
           DB /var/log/fluentbit/flb_kube.db
           Tag kube.*
@@ -1097,6 +1123,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Tag host.*
           DB /var/log/fluentbit/flb_host.db
           Path /var/log/auth.log,/var/log/syslog
+          Path_Key filename
           Mem_Buf_Limit 5MB
           storage.type filesystem
           Parser syslog-rfc3164-nopri
@@ -1227,6 +1254,18 @@ For speed-up the installation there is available a [helm chart](https://github.c
 ### Fluentbit chart configuration details
 
 The Helm chart deploy fluent-bit as a DaemonSet, passing environment values to the pod and mounting as volumes two different ConfigMaps. These ConfigMaps contain the fluent-bit configuration files and the lua scripts that can be used during the parsing.
+
+#### Install fluent-bit 2.0.2
+
+There is an issue making Fluentbit stop working when adding key_path to tail plugin  key_path when multiparser built-in feature: [Fuentbit issue #6240](https://github.com/fluent/fluent-bit/issues/6240). This issue is currently solved in release 2.0.2.
+
+Fluentbit helm chart tcurrently is installing release 1.9.9 of fluentbit docker image. The following chart configuration installs release 2.0.2
+
+```yml
+# Install fluentbit 2.0.2
+image:
+  tag: 2.0.2
+```
 
 #### Fluent-bit container environment variables.
 
