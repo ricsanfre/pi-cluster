@@ -102,6 +102,7 @@ fluentbit_inputs: |
       Name tail
       Alias input.kube
       Path /var/log/containers/*.log
+      Path_Key filename
       multiline.parser cri
       DB /var/log/fluentbit/tail-db/flb_kube.db
       Tag kube.*
@@ -114,6 +115,7 @@ fluentbit_inputs: |
       Tag host.*
       DB /var/log/fluentbit/tail-db/flb_host.db
       Path /var/log/auth.log,/var/log/syslog
+      Path_Key filename
       Mem_Buf_Limit 50MB
       Parser syslog-rfc3164-nopri
       storage.type filesystem

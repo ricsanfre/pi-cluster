@@ -161,7 +161,7 @@ fileConfigs:
           namespace ${ record.dig("kubernetes","namespace_name") }
           pod ${ record.dig("kubernetes", "pod_name") }
           container ${ record.dig("kubernetes", "container_name") }
-          node_name ${ record.dig("kubernetes", "host")}
+          host ${ record.dig("kubernetes", "host")}
         </record>
       </filter>
       ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
@@ -170,7 +170,7 @@ fileConfigs:
         enable_ruby true
         remove_keys log_processed
         <record>
-          json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+          json_message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
         </record>
       </filter>
       <match **>
@@ -189,7 +189,7 @@ fileConfigs:
           desc The total number of incoming records
           <labels>
             tag ${tag}
-            hostname ${hostname}
+            hostname ${host}
           </labels>
         </metric>
       </filter>
@@ -262,18 +262,42 @@ fileConfigs:
       # Send received logs to Loki
       <match kube.**>
         @type loki
-        @id out_loki
+        @id out_loki_kube
         @log_level info
         url "#{ENV['LOKI_URL']}"
         username "#{ENV['LOKI_USERNAME'] || use_default}"
         password "#{ENV['LOKI_PASSWORDD'] || use_default}"
-        extra_labels {"job": "fluentd"}
+        extra_labels {"job": "kube"}
+        line_format json
         <label>
            app
            container
            pod
            namespace
-           node_name
+           host
+           filename
+        </label>
+        <buffer>
+          flush_thread_count 8
+          flush_interval 5s
+          chunk_limit_size 2M
+          queue_limit_length 32
+          retry_max_interval 30
+          retry_forever true
+        </buffer>
+      </match>
+      <match host.**>
+        @type loki
+        @id out_loki_host
+        @log_level info
+        url "#{ENV['LOKI_URL']}"
+        username "#{ENV['LOKI_USERNAME'] || use_default}"
+        password "#{ENV['LOKI_PASSWORDD'] || use_default}"
+        extra_labels {"job": "host"}
+        line_format json
+        <label>
+           host
+           filename
         </label>
         <buffer>
           flush_thread_count 8
