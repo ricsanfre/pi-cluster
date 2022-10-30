@@ -260,42 +260,20 @@ fileConfigs:
 {% endif %}
     <label @OUTPUT_LOKI>
       # Send received logs to Loki
-      <match kube.**>
+      <match **>
         @type loki
         @id out_loki_kube
         @log_level info
         url "#{ENV['LOKI_URL']}"
         username "#{ENV['LOKI_USERNAME'] || use_default}"
         password "#{ENV['LOKI_PASSWORDD'] || use_default}"
-        extra_labels {"job": "kube"}
+        extra_labels {"job": "fluentd"}
         line_format json
         <label>
            app
            container
            pod
            namespace
-           host
-           filename
-        </label>
-        <buffer>
-          flush_thread_count 8
-          flush_interval 5s
-          chunk_limit_size 2M
-          queue_limit_length 32
-          retry_max_interval 30
-          retry_forever true
-        </buffer>
-      </match>
-      <match host.**>
-        @type loki
-        @id out_loki_host
-        @log_level info
-        url "#{ENV['LOKI_URL']}"
-        username "#{ENV['LOKI_USERNAME'] || use_default}"
-        password "#{ENV['LOKI_PASSWORDD'] || use_default}"
-        extra_labels {"job": "host"}
-        line_format json
-        <label>
            host
            filename
         </label>
