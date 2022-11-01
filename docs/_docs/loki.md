@@ -1,8 +1,8 @@
 ---
-title: Loki
+title: Loki and Grafana
 permalink: /docs/loki/
-description: How to deploy Loki in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "24-10-2022"
+description: How to deploy Grafana Loki in our Raspberry Pi Kuberentes cluster.
+last_modified_at: "01-11-2022"
 
 ---
 
@@ -32,6 +32,9 @@ All Loki components are included within a single binary (docker image) that  sup
 Further details in Loki architecture documentation: [Loki components](https://grafana.com/docs/loki/latest/fundamentals/architecture/components/) and [deployment modes](https://grafana.com/docs/loki/latest/fundamentals/architecture/deployment-modes/)
 
 Loki will be installed using Simple scalable deployment mode using as S3 Object Storage Server (Minio) as backend.
+
+
+![K3S-LOKI-Architecture](/assets/img/loki-architecture.png)
 
 ## Configure S3 Minio Server
 

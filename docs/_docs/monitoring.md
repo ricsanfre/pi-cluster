@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "09-09-2022"
+last_modified_at: "01-11-2022"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -153,6 +153,11 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           action: replace
           targetLabel: job
           replacement: grafana
+    # Additional data source: Loki
+    additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.logging.svc.cluster.local
   # Disabling monitoring of K8s services.
   # Monitoring of K3S components will be configured out of kube-prometheus-stack
   kubelet:
@@ -621,15 +626,43 @@ See below section, ["K3S components monitoring"](#k3s-components-monitoring), to
 
 Kube-prometheus-stack's helm chart `grafana` value is used to pass the configuration to grafana's chart.
 
-In my case, on top of default values.yml, only admin password and specific plugin has been specified. Plugin `grafana-piechart-panel` is needed by Traefik's dashboard, that will be deployed later.
+The following chart configuration is provided:
+
+- Grafana front-ed configured to run behind HTTP proxy in /grafana subpath (`grafana.ini.server`)
+- Admin password is specified (`grafana.adminPassword`)
+- Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
+- Loki data source is added (`grafana.additionalDataSource`)
+- Grafana ServiceMonitor label and job label is configured (`serviceMonitor`)
 
 ```yml
 grafana:
+  # Configuring /grafana subpath
+  grafana.ini:
+    server:
+      domain: monitoring.picluster.ricsanfre.com
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      serve_from_sub_path: true
   # Admin user password
   adminPassword: "admin_password"
   # List of grafana plugins to be installed
   plugins:
     - grafana-piechart-panel
+  # ServiceMonitor label and job relabel
+  serviceMonitor:
+    labels:
+      release: kube-prometheus-stack
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: grafana
+  # Additional data source: Loki
+  additionalDataSources:
+  - name: Loki
+    type: loki
+    url: http://loki-gateway.logging.svc.cluster.local
 ```
 
 #### Provisioning Dashboards automatically
