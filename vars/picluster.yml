@@ -34,6 +34,7 @@ k3s_server_extra_args: >-
   --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
   --kube-scheduler-arg 'bind-address=0.0.0.0'
   --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
 
 # Extra arguments for k3s agent installation
 k3s_worker_extra_args: >-
