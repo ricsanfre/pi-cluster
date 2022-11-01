@@ -322,28 +322,83 @@ If you mess anything up in your Kubernetes cluster, and want to start fresh, the
 ansible-playbook k3s_reset.yml
 ```
 
-{{site.data.alerts.note}}
+### Updating K3S and cluster component releases
 
-Reset can be used as well whenever we want to test the latest stable software version of the components of the cluster (K3S, Cert-manager, Longhorn, EFK, Prometheus, etc.).
-After a cluster reset:
-  - Execution of `k3s_install.yml` playbook will install latest stable version of K3S
-  - Execution of `k3s_deploy.yml` playbook will install latest Helm Chart version of the different components.
+Release version of each component to be installed is specified within variables in `var/pi_cluster.yml`
 
-{{site.data.alerts.end}}
+```yml
+# k3s version
+k3s_version: v1.24.7+k3s1
 
-## Shutting down the Raspeberry Pi Cluster
+# Metallb helm chart version
+metallb_chart_version: 0.13.7
+
+# Traefik chart version
+traefik_chart_version: 18.1.0
+
+# Cert-manager chart version
+certmanager_chart_version: v1.10.0
+certmanager_ionos_chart_version: 1.0.1
+
+# Linkerd version
+linkerd_version: "stable-2.12.2"
+linkerd_chart_version: 1.9.4
+linkerd_viz_chart_version: 30.3.4
+
+# Velero version
+velero_chart_version: 2.32.1
+velero_version: v1.9.2
+
+# Longhorn chart version
+longhorn_chart_version: 1.3.2
+
+# ECK operator chart version
+eck_operator_chart_version: 2.4.0
+
+# Promethes-eslasticsearch-exporter helm chart
+prometheus_es_exporter_chart_version: 4.15.1
+
+# Fluentbit/Fluentd helm chart version
+fluentd_chart_version: 0.3.9
+fluentbit_chart_version: 0.20.9
+
+# Loki helm version
+loki_chart_version: 3.3.0
+
+# kube-prometheus-stack helm chart
+kube_prometheus_stack_chart_version: 41.6.1
+```
+
+## Shutting down the Raspberry Pi Cluster
 
 To automatically shut down the Raspberry PI cluster, Ansible can be used.
 
-For shutting down the cluster run this command:
+[Kubernetes graceful node shutdown feature](https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/) is enabled in the culster. This feature is documented [here](https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown). and it ensures that pods follow the normal [pod termination process](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) during the node shutdown.
 
-```shell
-ansible-playbook shutdown.yml
-```
+For doing a controlled shutdown of the cluster execute the following commands
 
-This playbook will connect to each Raspberry PI in the cluster (including `gateway` node) and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
+- Step 1: Shutdown K3S workers nodes:
 
-After a couple of minutes all raspberry pi will be shutdown. You can notice that when the Switch ethernet ports LEDs are off. Then it is safe to unplug the Raspberry PIs.
+  ```shell
+  ansible-playbook shutdown.yml --limit k3s_worker
+  ```
+  Command `shutdown -h 1m` is sent to each k3s-worker. Wait for workers nodes to shutdown.
+
+- Step 2: Shutdown K3S master nodes:
+
+  ```shell
+  ansible-playbook shutdown.yml --limit k3s_master
+  ```
+  Command `shutdown -h 1m` is sent to each k3s-master. Wait for master nodes to shutdown.
+
+- Step 3: Shutdown gateway node:
+  ```shell
+  ansible-playbook shutdown.yml --limit gateway
+  ```
+
+`shutdown.yml` playbook connects to each Raspberry PI in the cluster and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
+
+After a few minutes, all raspberry pi will be shutdown. You can notice that when the Switch ethernet ports LEDs are off. Then it is safe to unplug the Raspberry PIs.
 
 ## Updating Ubuntu packages
 

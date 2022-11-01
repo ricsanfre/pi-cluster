@@ -9,6 +9,7 @@
   kubernetes.core.helm:
     name: cert-manager-webhook-ionos
     chart_ref: cert-manager-webhook-ionos/cert-manager-webhook-ionos
+    chart_version: "{{ certmanager_ionos_chart_version }}"
     update_repo_cache: true
     release_namespace: "{{ k3s_certmanager_namespace }}"
     state: present

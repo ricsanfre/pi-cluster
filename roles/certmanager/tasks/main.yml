@@ -15,6 +15,7 @@
   kubernetes.core.helm:
     name: certmanager
     chart_ref: jetstack/cert-manager
+    chart_version: "{{ certmanager_chart_version }}"
     update_repo_cache: true
     release_namespace: "{{ k3s_certmanager_namespace }}"
     state: present

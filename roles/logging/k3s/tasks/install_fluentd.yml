@@ -24,6 +24,7 @@
   kubernetes.core.helm:
     name: fluentd
     chart_ref: fluent/fluentd
+    chart_version: "{{ fluentd_chart_version }}"
     release_namespace: "{{ k3s_logging_namespace }}"
     update_repo_cache: true
     state: present

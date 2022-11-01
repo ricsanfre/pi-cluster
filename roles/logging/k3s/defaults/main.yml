@@ -5,6 +5,12 @@ k3s_logging_namespace: logging
 # Enable service mesh
 enable_linkerd: true
 
+# Enable elasticsearch and kibana
+enable_elastic_search: true
+
+# ECK operator chart version
+eck_operator_chart_version: 2.4.0
+
 ##########################
 # Elasticsearch configuration
 ##########################
@@ -35,6 +41,23 @@ efk_node_timezone: "Europe/Madrid"
 # Endpoint Service DNS name
 kibana_dashboard_dns: kibana.picluster.ricsanfre.com
 
+# Promethes-eslasticsearch-exporter helm chart
+prometheus_es_exporter_chart_version: 4.15.1
+
+##########################
+# Loki configuration
+##########################
+
+loki_chart_version: 3.3.0
+
+loki_storage_class: "longhorn"
+loki_storage_size: "5Gi"
+
+# Mini user, key and bucket
+minio_loki_user: loki
+minio_loki_key: s1cret0
+minio_loki_bucket: k3s-loki
+
 ##########################
 # fluentd configuration
 ##########################
@@ -43,11 +66,16 @@ kibana_dashboard_dns: kibana.picluster.ricsanfre.com
 efk_fluentd_daemonset_image: "fluent/fluentd-kubernetes-daemonset:v1.14-debian-elasticsearch7-1"
 efk_fluentd_aggregator_image: "ricsanfre/fluentd-aggregator:v1.14-debian-arm64-1"
 
+# Helm chart version
+fluentd_chart_version: 0.3.9
+
 fluentd_shared_key: "s1cret0"
 
 ##########################
 # fluentbit configuration
 ##########################
+
+fluentbit_chart_version: 0.20.9
 
 fluent_bit_log_level: info
 
@@ -74,6 +102,7 @@ fluentbit_inputs: |
       Name tail
       Alias input.kube
       Path /var/log/containers/*.log
+      Path_Key filename
       multiline.parser cri
       DB /var/log/fluentbit/tail-db/flb_kube.db
       Tag kube.*
@@ -86,6 +115,7 @@ fluentbit_inputs: |
       Tag host.*
       DB /var/log/fluentbit/tail-db/flb_host.db
       Path /var/log/auth.log,/var/log/syslog
+      Path_Key filename
       Mem_Buf_Limit 50MB
       Parser syslog-rfc3164-nopri
       storage.type filesystem
@@ -109,28 +139,14 @@ fluentbit_filters: |
       K8S-Logging.Parser On
       K8S-Logging.Exclude On
       Annotations Off
-      Labels Off
-  [FILTER]
-      Name nest
-      Match kube.*
-      Operation lift
-      Nested_under kubernetes
-      Add_prefix kubernetes_
+      Labels On
+
   [FILTER]
       Name modify
       Match kube.*
-      Rename kubernetes_pod_name k8s.pod.name
-      Rename kubernetes_namespace_name k8s.namespace.name
-      Rename kubernetes_container_name k8s.container.name
-      Remove kubernetes_container_image
-      Remove kubernetes_docker_id
-      Remove kubernetes_pod_id
-      Remove kubernetes_host
-      Remove kubernetes_container_hash
-      Remove stream
       Remove _p
       Rename log message
-      Add k8s.cluster.name picluster
+
   [FILTER]
       Name lua
       Match host.*

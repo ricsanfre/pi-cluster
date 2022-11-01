@@ -25,6 +25,7 @@
   kubernetes.core.helm:
     name: velero
     chart_ref: vmware-tanzu/velero
+    chart_version: "{{ velero_chart_version }}"
     update_repo_cache: true
     release_namespace: "{{ k3s_velero_namespace }}"
     state: present

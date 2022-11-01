@@ -1,9 +1,9 @@
 ---
 title: Fluentbit/Fluentd (Forwarder/Aggregator)
 permalink: /docs/logging-forwarder-aggregator/
-description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch, so log analysis can be done using Kibana.
+description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
-last_modified_at: "04-09-2022"
+last_modified_at: "30-10-2022"
 
 ---
 
@@ -55,6 +55,10 @@ In our case, the list of plugins that need to be added to the default fluentd im
 
 - `fluent-plugin-prometheus`: Enabling prometheus monitoring
 
+- `fluent-plugin-record-modifier`: record_modifier filter faster and lightweight than embedded transform_record filter.
+
+- `fluent-plugin-grafana-loki`: enabling Loki as destination for routing the logs
+
 Additionally default fluentd config can be added to the customized docker image, so fluentd can be configured as log aggregator, collecting logs from forwarders (fluentbit/fluentd) and routing all logs to elasticsearch. 
 This fluentd configuration in the docker image can be overwritten when deploying the container in kubernetes, using a [ConfigMap](https://kubernetes.io/es/docs/concepts/configuration/configmap/) mounted as a volume, or when running with `docker run`, using a [bind mount](https://docs.docker.com/storage/bind-mounts/). In both cases the target volume to be mounted is where fluentd expects the configuration files (`/fluentd/etc` in the official images).
 
@@ -94,6 +98,8 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
  && apt-get install -y --no-install-recommends $buildDeps \
  && sudo gem install fluent-plugin-elasticsearch \
  && sudo gem install fluent-plugin-prometheus \
+ && sudo gem install fluent-plugin-record-modifier \
+ && sudo gem install fluent-plugin-grafana-loki \
  && sudo gem sources --clear-all \
  && SUDO_FORCE_REMOVE=yes \
     apt-get purge -y --auto-remove \
@@ -297,6 +303,15 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
         secretKeyRef:
           name: fluentd-shared-key
           key: fluentd-shared-key
+    # Loki url
+    - name: LOKI_URL
+      value: "http://loki-gateway"
+    # Loki username
+    - name: LOKI_USERNAME
+      value: ""
+    # Loki password
+    - name: LOKI_PASSWORD
+      value: ""
 
   # Volumes and VolumeMounts (only configuration files and certificates)
   volumes:
@@ -378,17 +393,22 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
       </source>
     02_filters.conf: |-
       <label @FORWARD>
-        # Re-route fluentd logs
+        # Re-route fluentd logs. Discard them
         <match kube.var.log.containers.fluentd**>
           @type relabel
           @label @FLUENT_LOG
         </match>
+        ## Get kubernetes fields
         <filter kube.**>
-          @type record_transformer
-          enable_ruby true
-          remove_keys log_processed
+          @type record_modifier
+          remove_keys kubernetes, __dummy__, __dummy2__
           <record>
-            json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+            __dummy__   ${ p = record["kubernetes"]["labels"]["app"]; p.nil? ? p : record['app'] = p; }
+            __dummy2__   ${ p = record["kubernetes"]["labels"]["app.kubernetes.io/name"]; p.nil? ? p : record['app'] = p; }
+            namespace ${ record.dig("kubernetes","namespace_name") }
+            pod ${ record.dig("kubernetes", "pod_name") }
+            container ${ record.dig("kubernetes", "container_name") }
+            host ${ record.dig("kubernetes", "host")}
           </record>
         </filter>
         <match **>
@@ -398,6 +418,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
       </label>
     03_dispatch.conf: |-
       <label @DISPATCH>
+        # Calculate prometheus metrics
         <filter **>
           @type prometheus
           <metric>
@@ -406,17 +427,34 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
             desc The total number of incoming records
             <labels>
               tag ${tag}
-              hostname ${hostname}
+              hostname ${host}
             </labels>
           </metric>
         </filter>
+        # Copy log stream to different outputs
         <match **>
-          @type relabel
-          @label @OUTPUT
+          @type copy
+          <store>
+            @type relabel
+            @label @OUTPUT_ES
+          </store>
+          <store>
+            @type relabel
+            @label @OUTPUT_LOKI
+          </store>  
         </match>
       </label>
     04_outputs.conf: |-
-      <label @OUTPUT>
+      <label @OUTPUT_ES>
+        ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+        <filter kube.**>
+          @type record_transformer
+          enable_ruby true
+          remove_keys log_processed
+          <record>
+            json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+          </record>
+        </filter>
         # Send received logs to elasticsearch
         <match **>
           @type elasticsearch
@@ -459,6 +497,43 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
             chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
             queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
             retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+            retry_forever true
+          </buffer>
+        </match>
+      </label>
+      <label @OUTPUT_LOKI>
+        # Rename log_proccessed to message
+        <filter kube.**>
+          @type record_modifier
+          remove_keys __dummy__, log_processed
+          <record>
+            __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
+          </record>
+        </filter>
+        # Send received logs to Loki
+        <match **>
+          @type loki
+          @id out_loki
+          @log_level info
+          url "#{ENV['LOKI_URL']}"
+          username "#{ENV['LOKI_USERNAME'] || use_default}"
+          password "#{ENV['LOKI_PASSWORDD'] || use_default}"
+          extra_labels {"job": "fluentd"}
+          line_format json
+          <label>
+             app
+             container
+             pod
+             namespace
+             host
+             filename
+          </label>
+          <buffer>
+            flush_thread_count 8
+            flush_interval 5s
+            chunk_limit_size 2M
+            queue_limit_length 32
+            retry_max_interval 30
             retry_forever true
           </buffer>
         </match>
@@ -581,6 +656,15 @@ env:
       secretKeyRef:
         name: fluentd-shared-key
         key: fluentd-shared-key
+  # Loki url
+  - name: LOKI_URL
+    value: "http://loki-gateway"
+  # Loki username
+  - name: LOKI_USERNAME
+    value: ""
+  # Loki password
+  - name: LOKI_PASSWORD
+    value: ""
 ```
 
 fluentd docker image and configuration files use the following environment variables:
@@ -603,9 +687,15 @@ fluentd docker image and configuration files use the following environment varia
 
   - rest of parameters of the plugin with default values defined in the configuration.
 
+- Loki output plugin configuration
+
+  - Loki connection details (`LOKI_URL`). URL of the gateway component: `loki-gateway` service installed in the same namespace (`logging`).
+  - Loki authentication credentials (`LOKI_USERNAME` and `LOKI_PASSWORD`). By default authentication is not configured in loki-gateway, so this credentials can be null.
+
 - Forwarder input plugin configuration:
 
   - Shared key used for authentication(`FLUENTD_FORWARD_SEC_SHARED_KEY`), loading the content of the secret generated in step 2 of installation procedure: `fluentd-shared-key`.
+
 
 
 #### Fluentd POD volumes and volume mounts
@@ -765,12 +855,17 @@ It is not needed to change the default content of the `fluent.conf` created by H
       @type relabel
       @label @FLUENT_LOG
     </match>
+    ## Get kubernetes fields
     <filter kube.**>
-      @type record_transformer
-      enable_ruby true
-      remove_keys log_processed
+      @type record_modifier
+      remove_keys kubernetes, __dummy__, __dummy2__
       <record>
-        json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+        __dummy__   ${ p = record["kubernetes"]["labels"]["app"]; p.nil? ? p : record['app'] = p; }
+        __dummy2__   ${ p = record["kubernetes"]["labels"]["app.kubernetes.io/name"]; p.nil? ? p : record['app'] = p; }
+        namespace ${ record.dig("kubernetes","namespace_name") }
+        pod ${ record.dig("kubernetes", "pod_name") }
+        container ${ record.dig("kubernetes", "container_name") }
+        node_name ${ record.dig("kubernetes", "host")}
       </record>
     </filter>
     <match **>
@@ -784,7 +879,7 @@ It is not needed to change the default content of the `fluent.conf` created by H
   
   - relabels (`@FLUENT_LOG`) logs coming from fluentd itself to reroute them (discard them).
 
-  - removes `log_processed` field, and creates a new field `json_message.<container-name>` containing original `log_processed` field but copied to a unique map using container name `k8s.container.name`. This way we assure that all log fields are unique avoiding errors during the ingestion into ES.
+  - extract kubernetes metadata (`kubernetes` field added by fluentbit kubernetes filter) and add new fields: `app`, `pod`, `namespace`, `container` and `node_name`. Remove `kubernetes` object from the log.
 
   - relabels (`@DISPATCH`)the rest of logs to be dispatched to the outputs
 
@@ -794,6 +889,7 @@ It is not needed to change the default content of the `fluent.conf` created by H
 
   ```xml
   <label @DISPATCH>
+    # Calculate prometheus metrics
     <filter **>
       @type prometheus
       <metric>
@@ -806,9 +902,17 @@ It is not needed to change the default content of the `fluent.conf` created by H
         </labels>
       </metric>
     </filter>
+    # Copy log stream to different outputs
     <match **>
-      @type relabel
-      @label @OUTPUT
+      @type copy
+      <store>
+        @type relabel
+        @label @OUTPUT_ES
+      </store>
+      <store>
+        @type relabel
+        @label @OUTPUT_LOKI
+      </store>  
     </match>
   </label>
   ```
@@ -817,12 +921,23 @@ It is not needed to change the default content of the `fluent.conf` created by H
 
   - counts per tag and hostname, incoming records to provide the corresponding prometheus metric `fluentd_input_status_num_records_total`
 
+  - copy log stream to route to two differents outputs (ES and Loki)
+
 - Ouptut plugin configuration
 
   `/etc/fluent/conf.d/04_outputs.conf`
 
   ```xml
-  <label @OUTPUT>
+  <label @OUTPUT_ES>
+    ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+    <filter kube.**>
+      @type record_transformer
+      enable_ruby true
+      remove_keys log_processed
+      <record>
+        message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+      </record>
+    </filter>    
     # Send received logs to elasticsearch
     <match **>
       @type elasticsearch
@@ -869,11 +984,54 @@ It is not needed to change the default content of the `fluent.conf` created by H
       </buffer>
     </match>
   </label>
+  <label @OUTPUT_LOKI>
+    # Rename log_proccessed to message
+    <filter kube.**>
+      @type record_modifier
+      remove_keys __dummy__, log_processed
+      <record>
+        __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
+      </record>
+    </filter>
+    # Send received logs to Loki
+    <match **>
+      @type loki
+      @id out_loki
+      @log_level info
+      url "#{ENV['LOKI_URL']}"
+      username "#{ENV['LOKI_USERNAME'] || use_default}"
+      password "#{ENV['LOKI_PASSWORDD'] || use_default}"
+      extra_labels {"job": "fluentd"}
+      <label>
+         app
+         container
+         pod
+         namespace
+         host
+         filename
+      </label>
+      <buffer>
+        flush_thread_count 8
+        flush_interval 5s
+        chunk_limit_size 2M
+        queue_limit_length 32
+        retry_max_interval 30
+        retry_forever true
+      </buffer>
+    </match>
+  </label>  
   ```
   
   With this configuration fluentd:
 
   - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch).
+    Before routing them it applies the following filter
+    - remove `log_processed` field, and creates a new field `message_<container-name>` containing original `log_processed` field but copied to a unique map using container name `container`. This way we assure that all log fields are unique avoiding errors during the ingestion into ES.
+
+  - routes all logs to Loki configuring [loki output plugin](https://grafana.com/docs/loki/latest/clients/fluentd/). It adds the following labels to each log stream: app, pod, container, namespace, node_name and job.
+    Before routing them it applies the following filter
+    - rename `log_processed` field to `message` field.
+
 
 ## Fluentbit Forwarder installation
 
@@ -897,6 +1055,10 @@ For speed-up the installation there is available a [helm chart](https://github.c
   
   ```yml
   # fluentbit helm chart values
+
+  # Install fluentbit 2.0.2
+  image:
+    tag: 2.0.2
 
   #fluentbit-container environment variables:
   env:
@@ -947,6 +1109,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Name tail
           Alias input.kube
           Path /var/log/containers/*.log
+          Path_Key filename
           multiline.parser docker, cri
           DB /var/log/fluentbit/flb_kube.db
           Tag kube.*
@@ -960,6 +1123,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Tag host.*
           DB /var/log/fluentbit/flb_host.db
           Path /var/log/auth.log,/var/log/syslog
+          Path_Key filename
           Mem_Buf_Limit 5MB
           storage.type filesystem
           Parser syslog-rfc3164-nopri
@@ -1009,30 +1173,13 @@ For speed-up the installation there is available a [helm chart](https://github.c
           K8S-Logging.Parser On
           K8S-Logging.Exclude On
           Annotations Off
-          Labels Off
-
-      [FILTER]
-          Name nest
-          Match kube.*
-          Operation lift
-          Nested_under kubernetes
-          Add_prefix kubernetes_
+          Labels On
 
       [FILTER]
           Name modify
           Match kube.*
-          Rename kubernetes_pod_name k8s.pod.name
-          Rename kubernetes_namespace_name k8s.namespace.name
-          Rename kubernetes_container_name k8s.container.name
-          Remove kubernetes_container_image
-          Remove kubernetes_docker_id
-          Remove kubernetes_pod_id
-          Remove kubernetes_host
-          Remove kubernetes_container_hash
-          Remove stream
           Remove _p
           Rename log message
-          Add k8s.cluster.name picluster
 
       [FILTER]
           Name lua
@@ -1107,6 +1254,18 @@ For speed-up the installation there is available a [helm chart](https://github.c
 ### Fluentbit chart configuration details
 
 The Helm chart deploy fluent-bit as a DaemonSet, passing environment values to the pod and mounting as volumes two different ConfigMaps. These ConfigMaps contain the fluent-bit configuration files and the lua scripts that can be used during the parsing.
+
+#### Install fluent-bit 2.0.2
+
+There is an issue making Fluentbit stop working when adding key_path to tail plugin  key_path when multiparser built-in feature: [Fuentbit issue #6240](https://github.com/fluent/fluent-bit/issues/6240). This issue is currently solved in release 2.0.2.
+
+Fluentbit helm chart tcurrently is installing release 1.9.9 of fluentbit docker image. The following chart configuration installs release 2.0.2
+
+```yml
+# Install fluentbit 2.0.2
+image:
+  tag: 2.0.2
+```
 
 #### Fluent-bit container environment variables.
 
@@ -1312,7 +1471,7 @@ The file content has the following sections:
     K8S-Logging.Parser On
     K8S-Logging.Exclude On
     Annotations Off
-    Labels Off
+    Labels On
   ```
 
   This filter is only applied to kubernetes logs(containing kube.* tag).
@@ -1322,7 +1481,7 @@ The file content has the following sections:
 
     Parsing log tag information (obtaining pod_name, container_name, container_id namespace) and querying the Kube API (obtaining pod_id, pod labels and annotations).
 
-    See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).    Kubernetes annotation and labels are not included in the enrichment process (`Annotations Off` and `Labels Off`)
+    See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).    Kubernetes labels are included in the enrichment process but annotations are not (`Annotations Off` and `Labels On`)
     All kubernetes metadata is stored within the processed log as a `kubernetes` map.
 
     {{site.data.alerts.important}} **About Buffer_Size when connecting to Kuberenetes API**
@@ -1351,45 +1510,21 @@ The file content has the following sections:
       enable_ruby true
       remove_keys log_processed
       <record>
-        json_message.${record["k8s.container.name"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+        json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
       </record>
     </filter>
     ```
 
     {{site.data.alerts.end}}
 
-  **Nest filter**
-  
-  Additional filters are configured to reformat `kubernetes` nested map.
-
-  ```
-  [FILTER]
-      Name nest
-      Match kube.*
-      Operation lift
-      Nested_under kubernetes
-      Add_prefix kubernetes_
-  ```
-  
-  [`nest` filter](https://docs.fluentbit.io/manual/pipeline/filters/nest) remove the nested map `kubernetes` and moving all its records to the root map renaming them with the prefix `kubernetes_`.
 
   **Modify filter**
   ```
   [FILTER]
       Name modify
       Match kube.*
-      Rename kubernetes_pod_name k8s.pod.name
-      Rename kubernetes_namespace_name k8s.namespace.name
-      Rename kubernetes_container_name k8s.container.name
-      Remove kubernetes_container_image
-      Remove kubernetes_docker_id
-      Remove kubernetes_pod_id
-      Remove kubernetes_host
-      Remove kubernetes_container_hash
-      Remove stream
       Remove _p
       Rename log message
-      Add k8s.cluster.name picluster
   ```
   
   [`modify` filter](https://docs.fluentbit.io/manual/pipeline/filters/modify) removing and renaming some logs fields.
@@ -1742,39 +1877,3 @@ Configuration is quite similar to the one defined for the fluentbit-daemonset, r
 ```
 
 With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
-
-
-### About Forwarder Only Architecture
-
-For deploying fluent-bit as forwarder-only architecture, only the following changes need to be applied:
-
-- Output configuration
-
-  [OUTPUT] configuration routes the logs to elasticsearch.
-
-  ```
-  [OUTPUT]
-      Name es
-      match *
-      Host elasticsearch.picluster.ricsanfre.com
-      Port 443
-      Logstash_Format True
-      Logstash_Prefix logstash
-      Suppress_Type_Name True
-      Include_Tag_Key True
-      Tag_Key tag
-      HTTP_User elastic
-      HTTP_Passwd s1cret0
-      tls True
-      tls.verify False
-      Retry_Limit False
-  ```
-  elasticsearch service is accesed through Ingress Controller (Traefik), using default HTTPS port, and DNS name assigned to elasticsearch service (elasticsearch.picluster.ricsanfre.com) which it is mapped to Traefik exposed IP address (10.0.0.100).
-  `tls` option is enabled (set to False/Off). Fluentbit communicates with elasticsearch through Traefik. Communications between Fluent-bit and Traefik are encripted with TLS and communications between Traefik and elasticsearch are encrypted by linkerd service mesh.
-
-  `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
-
-  ```json
-  {"error":{"root_cause":[{"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"}],"type":"illegal_argument_exception","reason":"Action/metadata line [1] contains an unknown parameter [_type]"},"status":400}
-  ```
-  In release v7.x the log is just a warning but in v8 the error causes fluentbit to fail injecting logs into Elasticsearch.

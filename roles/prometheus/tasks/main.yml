@@ -26,6 +26,7 @@
   kubernetes.core.helm:
     name: kube-prometheus-stack
     chart_ref: prometheus-community/kube-prometheus-stack
+    chart_version: "{{ kube_prometheus_stack_chart_version }}"
     release_namespace: "{{ k3s_monitoring_namespace }}"
     update_repo_cache: true
     state: present

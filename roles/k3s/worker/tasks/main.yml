@@ -19,5 +19,6 @@
   command: "/tmp/k3s_install.sh {{ k3s_worker_extra_args }}"
   environment:
     K3S_TOKEN: "{{ k3s_token }}"
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
     K3S_URL: "https://{{ k3s_master_ip }}:6443"
   changed_when: true

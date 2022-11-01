@@ -18,6 +18,7 @@ vault:
     longhorn_key: supers1cret0
     velero_key: supers1cret0
     restic_key: supers1cret0
+    loki_key: supers1cret0
   # elastic search
   elasticsearch:
     admin_password: s1cret0

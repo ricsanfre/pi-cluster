@@ -1,11 +1,34 @@
 ---
 
+# namespace for logging solution
+- name: Create k3s-logging namespace.
+  kubernetes.core.k8s:
+    name: "{{ k3s_logging_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k3s_logging_namespace }}"
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
 # Deploy ECK operator, elasticsearh and kibana
 - name: Deploy Elasticsearch and Kibana
   include_tasks: install_elastic_kibana.yml
+  when: enable_elastic_search
+
+# Deploy Loki
+- name: Deploy Loki
+  include_tasks: install_loki.yml
 
 # Deploy fluentbit/fluentd aggregator architecture
-
 - name: Deploy fluentd aggregator
   include_tasks: install_fluentd.yml
 
@@ -13,6 +36,6 @@
   include_tasks: install_fluentbit.yml
 
 # Deploy Prometheus elasticsearch exporter
-
 - name: Deploy prometheus elasticsearch exporter
   include_tasks: install_prometheus_elasticsearch_exporter.yml
+  when: enable_elastic_search

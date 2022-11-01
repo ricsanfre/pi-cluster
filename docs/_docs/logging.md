@@ -1,20 +1,57 @@
 ---
-title: Log Management Arquitecture (EFK)
+title: Log Management Arquitecture
 permalink: /docs/logging/
-description: How to deploy centralized logging solution based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "08-08-2022"
+description: How to deploy centralized logging solution in our Raspberry Pi Kubernetes cluser. Two alternatives, one based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) and another based on FLG Stack (Fluentbit/Fluentd - Loki - Grafana) 
+
+last_modified_at: "25-10-2022"
 
 ---
 
-**EFK stack (Elastic - Fluentd/Fluentbit - Kibana)** will be deployed as centralized logging solution for the Kubernetes cluster. In this stack :
 
-- Elasticsearch is used as logs storage and search engine.
-- Fluentd/Fluentbit used for collecting, aggregate and distribute logs.
-- Kibana is used as visualization layer.
+## EFK vs PLG Stacks
+
+Two different stacks can be deployed as centralized logging solution for the kubernetes cluster:
+
+- **EFK stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/))**, where:
+  - *Elasticsearch* is used as logs storage and search engine
+  - *Fluentd/Fluentbit* used for collecting, aggregate and distribute logs
+  - *Kibana* is used as visualization layer.
+
+  This is a mature open-source stack for implementing centralized log management and log analytics capabilities.
+  Since Elasticsearch indexes the whole content of the logs the resources required by the solution in terms of storage and memory are high.
+
+- **PLG stack ([Promtail](https://grafana.com/docs/loki/latest/clients/promtail/) - [Loki](https://grafana.com/oss/loki/) - [Grafana](https://grafana.com/oss/grafana/))**, where:
+  - *Promtail* is used as log collector
+  - *Loki* as log storage/aggregator
+  - *Grafana* as visualization layer.
+
+  Loki is a lightweigh alternative to Elasticsearch providing a horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus for Kubernetes environments.
+
+  Loki consumption of resources is lower than ES because it does not index the contents of the logs, it rather indexes a set of labels for each log stream. 
+
+In the cluster both stacks can be deployed to deliver complimentary logs-based monitoring (observability) and advance log analytics capabilities.
+
+The logging architecture will have the following components:
+
+1. Loki as key component of the Observability platform. Loki, managing logs like prometheus metrics, with the same labels, makes possible to join in the same Grafana dashboards metrics (prometheus), logs (Loki) and traces (jaegger) belonging to the same context (pod, application, container). This way Grafana can be used as single plane of glass for monitoring cluster services.
+
+2. ElasticSearh/Kibana providing advance log analytics capabilities. Loki indexing capabilities are limited to logs labels while ES indexes whole content of the logs. Kibana provides many visualization tools to do analysis on ES indexed data, such as location maps, machine learning for anomaly detection, and graphs to discover relationships in data.
+
+3. Common architecture for log collection, aggregation and distribution based on Fluentbit/Fluentd. Fluentbit/Fluentd can be used to distribute logs to both logs storage platform (ES and Loki) instead of deploying two separate log collectors (Fluentbit and Promtail).
+
+   Fluentbit/Fluentd selected over Promtail, because it is a general purpose log colletor/distributor, that can be used to ingest logs from different sources (not only kubernetes), parsing and filtering them, and route them to different destinations. Promtail is tailored only to work only with Loki.
+
+
+{{site.data.alerts.note}}
+
+In the cluster you can decide to install EFK (Elatic-Fluent-Kibana) stack or FLG (Fluent-Loki-Grafana) stack or both, sharing the same log collection and distribution layer (Fluentbit/Fluentd)
+
+{{site.data.alerts.end}}
+
 
 The architecture is shown in the following picture
 
-![K3S-EFK-Architecture](/assets/img/efk_logging_architecture.png)
+![K3S-EFK-LOKI-Architecture](/assets/img/efk-loki-logging-architecture.png)
 
 This solution will not only process logs from kubernetes cluster but also collects the logs from external nodes (i.e.: `gateway` node.)
 
@@ -23,6 +60,10 @@ This solution will not only process logs from kubernetes cluster but also collec
 In June 2020, Elastic [announced](https://www.elastic.co/blog/elasticsearch-on-arm) that starting from 7.8 release they will provide multi-architecture docker images supporting AMD64 and ARM64 architectures.
 
 Fluentd and Fluentbit both support ARM64 docker images for being deployed on Kubernetes clusters with the built-in configuration needed to automatically collect and parsing containers logs.
+
+Loki also supports ARM64 docker images.
+
+
 {{site.data.alerts.end}}
 
 
@@ -136,7 +177,7 @@ Similar to the forwarder-only deployment, lightweight logging agent instance is 
 
 - Dedicated resources required for an aggregation instance.
 
-With this architecture, in the aggregation layer, logs can be filtered and routed not only to Elastisearch database (default route) but to a different backend to further processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
+With this architecture, in the aggregation layer, logs can be filtered and routed to different logs backends: Elastisearch and Loki. In the future different backend can be added to do further online processing. For example Kafka can be deployed as backend to build a Data Streaming Analytics architecture (Kafka, Apache Spark, Flink, etc) and route only the logs from a specfic application. 
 
 {{site.data.alerts.note}}
 
@@ -146,13 +187,15 @@ For additional details about all common architecture patterns that can be implem
 
 {{site.data.alerts.end}}
 
-## EFK Installation procedure
+## Logging solution installation procedure
 
-The procedure for deploying EFK stack is described in the following pages:
+The procedure for deploying logging solution stack is described in the following pages:
 
 1. [Elasticsearch and Kibana installation](/docs/elasticsearch/)
 
-2. [Fluentbit/Fluentd forwarder/aggregator architecture installation](/docs/logging-forwarder-aggregator/).
+2. [Loki installation](/docs/loki/)
+
+3. [Fluentbit/Fluentd forwarder/aggregator architecture installation](/docs/logging-forwarder-aggregator/).
 
 
 ## References

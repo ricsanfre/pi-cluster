@@ -15,6 +15,7 @@
   kubernetes.core.helm:
     name: metallb
     chart_ref: metallb/metallb
+    chart_version: "{{ metallb_chart_version }}"
     release_namespace: "{{ k3s_metallb_namespace }}"
     update_repo_cache: true
     state: present

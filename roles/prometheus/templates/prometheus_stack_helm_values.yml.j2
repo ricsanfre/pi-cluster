@@ -100,6 +100,12 @@ grafana:
         action: replace
         targetLabel: job
         replacement: grafana
+  # Additional data source
+  additionalDataSources:
+  - name: Loki
+    type: loki
+    url: http://loki-gateway.{{ k3s_logging_namespace }}.svc.cluster.local
+
 # Disabling monitoring of K8s services.
 # Monitoring of K3S components will be configured out of kube-prometheus-stack
 kubelet:

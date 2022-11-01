@@ -9,6 +9,7 @@
   kubernetes.core.helm:
     name: prometheus-elasticsearch-exporter
     chart_ref: prometheus-community/prometheus-elasticsearch-exporter
+    chart_version: "{{ prometheus_es_exporter_chart_version }}"
     release_namespace: "{{ k3s_logging_namespace }}"
     update_repo_cache: true
     state: present

@@ -300,6 +300,10 @@ Minio installation and configuration tasks have been automated with Ansible deve
   - Velero Backup: `k3s-velero`
   - OS backup: `restic`
 
+  Also as backend storage for Loki the following bucket need to be configured
+
+  - Loki Storage: `k3s-loki`
+
   Buckets can be created using Minio's CLI (`mc`)
 
   ```shell
@@ -314,6 +318,7 @@ Minio installation and configuration tasks have been automated with Ansible deve
   - `longhorn` with read-write access to `k3s-longhorn` bucket.
   - `velero` with read-write access to `k3s-velero` bucket. 
   - `restic` with read-write access to `restic` bucket
+  - `loki` with read-write access to `k3s-loki` bucket
   
   Users can be created usinng Minio's CLI
   ```shell

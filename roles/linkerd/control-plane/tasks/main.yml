@@ -55,6 +55,7 @@
   kubernetes.core.helm:
     name: linkerd-control-plane
     chart_ref: linkerd/linkerd-control-plane
+    chart_version: "{{ linkerd_chart_version }}"
     release_namespace: "{{ k3s_linkerd_namespace }}"
     update_repo_cache: true
     state: present

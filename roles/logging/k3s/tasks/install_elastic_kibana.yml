@@ -1,24 +1,5 @@
 ---
 
-# namespace for hosting EFK stack
-- name: Create k3s-logging namespace.
-  kubernetes.core.k8s:
-    name: "{{ k3s_logging_namespace }}"
-    api_version: v1
-    kind: Namespace
-    state: present
-
-- name: Annotate namespace to enable linkerd
-  kubernetes.core.k8s:
-    definition:
-      kind: Namespace
-      apiVersion: v1
-      metadata:
-        name: "{{ k3s_logging_namespace }}"
-        annotations:
-          linkerd.io/inject: enabled
-  when: enable_linkerd
-
 - name: Add elastic chart repo.
   kubernetes.core.helm_repository:
     name: elastic
@@ -28,13 +9,14 @@
   kubernetes.core.helm:
     name: elastic-operator
     chart_ref: elastic/eck-operator
+    chart_version: "{{ eck_operator_chart_version }}"
     release_namespace: "{{ k3s_logging_namespace }}"
     update_repo_cache: true
     state: present
 
 - name: Wait for pods to be ready
   command:
-    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} --all --timeout=600s"
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_logging_namespace }} -l app.kubernetes.io/name=elastic-operator --timeout=600s"
   register: eck_pods_ready
   changed_when: false
 

@@ -1,0 +1,22 @@
+---
+
+- name: Add Grafana chart repo.
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: "https://grafana.github.io/helm-charts"
+
+- name: Deploy Loki Helm chart.
+  kubernetes.core.helm:
+    name: loki
+    chart_ref: grafana/loki
+    chart_version: "{{ loki_chart_version }}"
+    release_namespace: "{{ k3s_logging_namespace }}"
+    update_repo_cache: true
+    state: present
+    values: "{{ lookup('template', 'templates/loki_helm_values.yml.j2') | from_yaml }}"
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=loki --namespace={{ k3s_logging_namespace }} --timeout=600s"
+  register: loki_pods_ready
+  changed_when: false

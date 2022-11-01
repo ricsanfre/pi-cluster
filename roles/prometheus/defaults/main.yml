@@ -2,6 +2,9 @@
 
 k3s_monitoring_namespace: monitoring
 
+# kube-prometheus-stack helm chart
+kube_prometheus_stack_chart_version: 41.6.1
+
 # Endpoint Service DNS name
 monitoring_dns: monitoring.picluster.ricsanfre.com
 

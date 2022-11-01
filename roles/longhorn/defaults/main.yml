@@ -2,6 +2,9 @@
 # Namespace for Longhorn
 k3s_longhorn_namespace: longhorn-system
 
+# Longhorn chart version
+longhorn_chart_version: 1.3.2
+
 # Endpoint Service DNS name
 longhorn_dashboard_dns: storage.picluster.ricsanfre.com
 
