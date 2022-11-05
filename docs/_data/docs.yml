@@ -22,15 +22,16 @@
   - traefik
   - certmanager
   - longhorn
-- title: Log Management
+- title: Monitoring (Logging)
   docs:
   - logging
   - elasticsearch
   - loki
   - logging-forwarder-aggregator
-- title: Monitoring
+- title: Monitoring (Metrics & Traces)
   docs:
   - prometheus
+  - tracing
 - title: Backup
   docs:
   - backup

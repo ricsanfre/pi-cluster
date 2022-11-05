@@ -60,6 +60,8 @@
       tags: ['backup']
     - role: logging/k3s
       tags: ['logging']
+    - role: tracing
+      tags: ['tracing']
     - role: prometheus
       tags: ['monitoring']
     - role: linkerd/linkerd-viz
