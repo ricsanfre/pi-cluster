@@ -15,3 +15,7 @@ linkerd_checksum: "sha256:{{ linkerd_package_url }}.sha256"
 # linkerd install location
 linkerd_install_dir: "/usr/local/bin"
 linkerd_bin: "{{ linkerd_install_dir }}/linkerd"
+
+# linkerd identity issuer certificate
+issuer_certificate_duration: "48h"
+issuer_certificate_renewbefore: "23h"

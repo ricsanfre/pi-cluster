@@ -125,6 +125,10 @@ linkerd_version: "stable-2.12.2"
 linkerd_chart_version: 1.9.4
 linkerd_viz_chart_version: 30.3.4
 
+# linkerd identity issuer certificate
+issuer_certificate_duration: "2160h"    # 90d
+issuer_certificate_renewbefore: "360h"  # 15d
+
 #######################
 # backup configuration
 #######################
