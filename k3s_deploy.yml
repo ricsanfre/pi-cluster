@@ -66,6 +66,8 @@
       tags: ['monitoring']
     - role: linkerd/linkerd-viz
       tags: ['linkerd-viz']
+    - role: linkerd/linkerd-jaeger
+      tags: ['linkerd-jaeger']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control
