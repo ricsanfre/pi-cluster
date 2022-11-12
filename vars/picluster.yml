@@ -193,7 +193,7 @@ fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
 
 # Helm chart version
 fluentd_chart_version: 0.3.9
-fluentbit_chart_version: 0.20.9
+fluentbit_chart_version: 0.21.0
 
 # Elasticsearch 'elastic' user password
 efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"

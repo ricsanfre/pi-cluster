@@ -108,7 +108,7 @@ The software used and the latest version tested of each component
 | Logging | ECK Operator |  2.4.0 | Helm chart version: 2.4.0 |
 | Logging | Elastic Search | 8.1.2 | Deployed with ECK Operator |
 | Logging | Kibana | 8.1.2 | Deployed with ECK Operator |
-| Logging | Fluentbit | 2.0.2 | Helm chart version: 0.20.9. Installing fluent 2.0.2 instead of default 1.9.9 |
+| Logging | Fluentbit | 2.0.4 | Helm chart version: 0.21.0 |
 | Logging | Fluentd | 1.15.2 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.2|
 | Logging | Loki | 2.6.1 | Helm chart grafana/loki version: 3.3.0 |
 | Monitoring | Kube Prometheus Stack | 0.60.1 | Helm chart version: 41.6.1 |
