@@ -294,8 +294,6 @@ Grafana's Loki data source can be configured to detect traceID automatically and
 
 See [Loki data source - derived Fields](https://grafana.com/docs/grafana/latest/datasources/loki/#derived-fields).
 
-In order to automatically detect traceID from Traefik logs following configuration need to be provided to kube-prometheus-stack.
-
 This can be done automatically when installing kube-prometheus-stack providing the following helm chart configuration:
 
 ```yml
@@ -319,6 +317,7 @@ grafana
     url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
 ```
 
+A derived field `TraceID` is added to logs whose message contains field `request_X-B3-Traceid` (Traefik access logs).
 
 ## Testing with Emojivoto application
 
@@ -332,5 +331,51 @@ Linkerd's testing application emojivoto can be used to test the tracing solution
 - Step 2: Configure emojivoto applicatio to emit spans to Tempo
 
   ```shell
-  kubectl -n emojivoto set env --all deploy OC_AGENT_HOST=tempo-distributor.tempo:55678
+  kubectl -n emojivoto set env --all deploy OC_AGENT_HOST=tempo-distributor.tracing:55678
   ```
+
+- Step 3: Create Ingress
+
+  ```yml
+  kind: Ingress
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: emojivoto
+    namespace: emojivoto
+    annotations:
+      # HTTP as entrypoint
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+  spec:
+    rules:
+      - host: emojivoto.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: web-svc
+                  port:
+                    number: 80
+  ```
+
+- Step 4: Connect to emojivoto.picluster.ricsanfre.com and vote!!
+
+  ![emoji-vote](/assets/img/emojivoto.png)
+
+- Step 5: Connect to Grafana, select Explorer and Loki data source
+
+  Filter logs usin LQL: 
+  ```
+  {app="traefik"} | json | message_RequestHost="emojivoto.picluster.ricsanfre.com" |  message_RequestPath=~"/api/vote.+"
+  ```
+
+  Logs containing the votes made in step 5 are displayed.
+
+  ![emojivote-logs](/assets/img/emojivoto-logs.png)
+
+- Open details of one of the logs and click on Tempo link, traces to that specific transaction are showed
+
+  ![emojivote-logs](/assets/img/emojivoto-loki-tempo.png)
+
+  
