@@ -5,6 +5,17 @@ description: How to deploy a distributed tracing solution based on Grafana Tempo
 last_modified_at: "19-11-2022"
 ---
 
+
+Distributed tracing solution for Kuberentes cluster is based on [Grafana Tempo](https://grafana.com/oss/tempo/).
+
+![tracing-architecture](/assets/img/tracing-architecture.png)
+
+
+Grafana Tempo is used as traces backend and Grafana as front-end. Tempo, integrates a [Open Telemetry collector](https://opentelemetry.io/docs/collector/) enabling the ingestion of traces generated with common open source tracing protocols like Jaeger, Zipkin, and OpenTelemetry.
+
+Tempo requires only object storage backend to operate, and is integrated with Grafana, Prometheus, and Loki. Minio S3 Object Store will be used as Tempo backend.
+
+
 ## Tempo architecture
 
 Tempo architecture is displayed in the following picture (source: [Grafana documentation](https://grafana.com/docs/tempo/latest/operations/architecture/)):
@@ -29,13 +40,10 @@ All Tempo components are included within a single binary (docker image) that  su
 
   In microservices mode, components are deployed in distinct processes. Scaling and HA is specified by microservice.
 
-  - Write nodes: supporting write path. *Distributor* and *Ingestor* components, responsible to store logs and indexes in the back-end storage (Minio S3 storage)
-  - Read nodes: supporting read path. *Ruler*, *Querier* and *Frontend Querier* components, responsible to answer to log queries.
-  - Gateway node: a load balancer in front of Loki (nginx based), which directs `/loki/api/v1/push` traffic to the write nodes. All other requests go to the read nodes. Traffic should be sent in a round robin fashion.
 
 Further details in Tempo architecture documentation: [Tempo Architecture](https://grafana.com/docs/tempo/latest/operations/architecture/) and [Tempo deployment](https://grafana.com/docs/tempo/latest/operations/deployment/)
 
-Loki will be installed using Simple scalable deployment mode using as S3 Object Storage Server (Minio) as backend.
+Tempo will be installed using microservices mode configuring S3 Object Storage Server (Minio) as backend.
 
 ## Configure S3 Minio Server
 
@@ -180,10 +188,6 @@ Where `user_policy.json`, contains the following AWS access policies definition:
   kubectl get pods -l app.kubernetes.io/name=loki -n logging
   ```
   
-
-
-
-
 ## Linkerd traces integration
 
 [Linkerd-jaeger extension](https://linkerd.io/2.12/tasks/distributed-tracing/) is needed for activating the emisson of traces of linkerd-proxys components.

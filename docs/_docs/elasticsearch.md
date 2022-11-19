@@ -1,5 +1,5 @@
 ---
-title: Elasticsearch and Kibana
+title: Logging - Log Analytics (Elasticsearch and Kibana)
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Raspberry Pi Kuberentes cluster.
 last_modified_at: "15-08-2022"
