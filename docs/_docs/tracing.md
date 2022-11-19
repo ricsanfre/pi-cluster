@@ -37,8 +37,6 @@ Further details in Tempo architecture documentation: [Tempo Architecture](https:
 
 Loki will be installed using Simple scalable deployment mode using as S3 Object Storage Server (Minio) as backend.
 
-
-
 ## Configure S3 Minio Server
 
 Minio Storage server is used as Tempo long-term data storage. 
@@ -106,7 +104,9 @@ Where `user_policy.json`, contains the following AWS access policies definition:
         }
     ]
 }
-``` 
+```
+
+## Tempo Installation
 
 - Step 1: Add the Grafana repository:
   ```shell
