@@ -1,5 +1,5 @@
 ---
-title: Loki and Grafana
+title: Logging - Logs Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kuberentes cluster.
 last_modified_at: "01-11-2022"
@@ -8,7 +8,7 @@ last_modified_at: "01-11-2022"
 
 ## Loki architecture
 
-Loki architecture is displayed in the following picture (source: [Grafana documentation](https://grafana.com/docs/loki/latest/fundamentals/architecture/loki)):
+Loki architecture is displayed in the following picture (source: [Grafana documentation](https://grafana.com/docs/loki/latest/fundamentals/architecture/components)):
 
 ![LOKI-Architecture-Components](https://grafana.com/docs/loki/latest/fundamentals/architecture/loki_architecture_components.svg)
 

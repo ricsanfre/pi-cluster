@@ -1,5 +1,5 @@
 ---
-title: Fluentbit/Fluentd (Forwarder/Aggregator)
+title: Logging - Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
@@ -1056,10 +1056,6 @@ For speed-up the installation there is available a [helm chart](https://github.c
   ```yml
   # fluentbit helm chart values
 
-  # Install fluentbit 2.0.2
-  image:
-    tag: 2.0.2
-
   #fluentbit-container environment variables:
   env:
     # Fluentd deployment service
@@ -1254,18 +1250,6 @@ For speed-up the installation there is available a [helm chart](https://github.c
 ### Fluentbit chart configuration details
 
 The Helm chart deploy fluent-bit as a DaemonSet, passing environment values to the pod and mounting as volumes two different ConfigMaps. These ConfigMaps contain the fluent-bit configuration files and the lua scripts that can be used during the parsing.
-
-#### Install fluent-bit 2.0.2
-
-There is an issue making Fluentbit stop working when adding key_path to tail plugin  key_path when multiparser built-in feature: [Fuentbit issue #6240](https://github.com/fluent/fluent-bit/issues/6240). This issue is currently solved in release 2.0.2.
-
-Fluentbit helm chart tcurrently is installing release 1.9.9 of fluentbit docker image. The following chart configuration installs release 2.0.2
-
-```yml
-# Install fluentbit 2.0.2
-image:
-  tag: 2.0.2
-```
 
 #### Fluent-bit container environment variables.
 

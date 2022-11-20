@@ -1,11 +1,25 @@
 ---
 # Traefik helm chart values
 
+# Enable access log
+logs:
+  access:
+    enabled: true
+    format: json
+    fields:
+      general:
+        defaultmode: keep
+{% if enable_tracing is sameas true %}
+      headers:
+        defaultmode: drop
+        names:
+          X-B3-Traceid: keep
+{% endif %}
+
+# Print access log to file instead of stdout
 additionalArguments:
-  - "--metrics.prometheus=true"
-  - "--accesslog"
-  - "--accesslog.format=json"
   - "--accesslog.filepath=/data/access.log"
+
 deployment:
 {% if enable_linkerd is sameas true %}
   podAnnotations:
@@ -34,3 +48,12 @@ providers:
   kubernetesCRD:
     enabled: true
     allowCrossNamespace: true
+
+{% if enable_tracing is sameas true %}
+tracing:
+  zipkin:
+    httpEndpoint: http://tempo-distributor.{{ k3s_tracing_namespace }}.svc.cluster.local:9411/api/v2/spans
+    sameSpan: true
+    id128Bit: true
+    sampleRate: 1.0
+{% endif %}

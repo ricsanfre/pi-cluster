@@ -28,6 +28,8 @@ minio_buckets:
     policy: read-write
   - name: k3s-loki
     policy: read-write
+  - name: k3s-tempo
+    policy: read-write
 
 # Minio users and ACLs
 minio_users:
@@ -73,3 +75,24 @@ minio_users:
     buckets_acl:
       - name: k3s-loki
         policy: read-write
+
+  - name: tempo
+    password: "{{ vault.minio.tempo_key }}"
+    buckets_acl:
+      - name: k3s-tempo
+        policy: custom
+        custom:
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:PutObject",
+                  "s3:GetObject",
+                  "s3:ListBucket",
+                  "s3:DeleteObject",
+                  "s3:GetObjectTagging",
+                  "s3:PutObjectTagging"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-tempo/*",
+                  "arn:aws:s3:::k3s-tempo"
+              ]

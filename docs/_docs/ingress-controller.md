@@ -42,10 +42,18 @@ Installation using `Helm` (Release 3):
 
   ```yml
   # Enabling prometheus metrics and access logs
+  # Enable access log
+  logs:
+    access:
+      enabled: true
+      format: json
+  # This is translated to traefik parameters
+  # "--metrics.prometheus=true"
+  # "--accesslog"
+  # "--accesslog.format=json"
+  
+  # Print access log to file instead of stdout
   additionalArguments:
-    - "--metrics.prometheus=true"
-    - "--accesslog"
-    - "--accesslog.format=json"
     - "--accesslog.filepath=/data/access.log"
   deployment:
     # Adding access logs sidecar

@@ -1069,6 +1069,7 @@ To configure manually all kubernetes resources needed to scrape the available me
     - ip: 10.0.0.12
     - ip: 10.0.0.13
     - ip: 10.0.0.14
+    - ip: 10.0.0.15
     ports:
     - name: https-metrics
       port: 10250

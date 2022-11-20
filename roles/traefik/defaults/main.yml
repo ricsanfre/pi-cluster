@@ -16,3 +16,6 @@ traefik_auth_htpasswd_pair: KKYWRtaW46JGFwcjEkWkRkMWIvNC4kUG9RR244RW5Gc0lWUUFDS3
 
 # Enable service mesh
 enable_linkerd: true
+
+# Enable tracing
+enable_tracing: true

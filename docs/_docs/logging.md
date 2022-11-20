@@ -1,9 +1,9 @@
 ---
-title: Log Management Arquitecture
+title: Logging (EFK and Loki)
 permalink: /docs/logging/
 description: How to deploy centralized logging solution in our Raspberry Pi Kubernetes cluser. Two alternatives, one based on EFK stack (Elasticsearch- Fluentd/Fluentbit - Kibana) and another based on FLG Stack (Fluentbit/Fluentd - Loki - Grafana) 
 
-last_modified_at: "25-10-2022"
+last_modified_at: "19-11-2022"
 
 ---
 
@@ -40,7 +40,6 @@ The logging architecture will have the following components:
 3. Common architecture for log collection, aggregation and distribution based on Fluentbit/Fluentd. Fluentbit/Fluentd can be used to distribute logs to both logs storage platform (ES and Loki) instead of deploying two separate log collectors (Fluentbit and Promtail).
 
    Fluentbit/Fluentd selected over Promtail, because it is a general purpose log colletor/distributor, that can be used to ingest logs from different sources (not only kubernetes), parsing and filtering them, and route them to different destinations. Promtail is tailored only to work only with Loki.
-
 
 {{site.data.alerts.note}}
 

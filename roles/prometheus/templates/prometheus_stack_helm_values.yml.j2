@@ -104,7 +104,20 @@ grafana:
   additionalDataSources:
   - name: Loki
     type: loki
+    uid: loki
+    access: proxy
     url: http://loki-gateway.{{ k3s_logging_namespace }}.svc.cluster.local
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+          name: TraceID
+          url: $${__value.raw}
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.{{ k3s_tracing_namespace }}.svc.cluster.local:3100
 
 # Disabling monitoring of K8s services.
 # Monitoring of K3S components will be configured out of kube-prometheus-stack

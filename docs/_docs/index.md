@@ -12,7 +12,7 @@ The scope of this project is to create a kubernetes cluster at home using **Rasp
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
 
-As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) centralized monitoring tool, [Prometheus](https://prometheus.io/), 3) centralized log management, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), 4) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), and 5) service mesh architecture, [Linkerd](https://linkerd.io/)
+As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), 3) service mesh architecture, [Linkerd](https://linkerd.io/), and 4) observability platform based on metrics monitoring solution, [Prometheus](https://prometheus.io/), logging and analytics solution, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), and distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
 
 
 The following picture shows the set of opensource solutions used for building this cluster:
@@ -108,7 +108,7 @@ The software used and the latest version tested of each component
 | Logging | ECK Operator |  2.4.0 | Helm chart version: 2.4.0 |
 | Logging | Elastic Search | 8.1.2 | Deployed with ECK Operator |
 | Logging | Kibana | 8.1.2 | Deployed with ECK Operator |
-| Logging | Fluentbit | 2.0.2 | Helm chart version: 0.20.9. Installing fluent 2.0.2 instead of default 1.9.9 |
+| Logging | Fluentbit | 2.0.4 | Helm chart version: 0.21.0 |
 | Logging | Fluentd | 1.15.2 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.2|
 | Logging | Loki | 2.6.1 | Helm chart grafana/loki version: 3.3.0 |
 | Monitoring | Kube Prometheus Stack | 0.60.1 | Helm chart version: 41.6.1 |

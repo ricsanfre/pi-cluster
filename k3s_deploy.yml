@@ -60,10 +60,14 @@
       tags: ['backup']
     - role: logging/k3s
       tags: ['logging']
+    - role: tracing
+      tags: ['tracing']
     - role: prometheus
       tags: ['monitoring']
     - role: linkerd/linkerd-viz
       tags: ['linkerd-viz']
+    - role: linkerd/linkerd-jaeger
+      tags: ['linkerd-jaeger']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control

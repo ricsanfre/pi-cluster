@@ -34,6 +34,7 @@ k3s_server_extra_args: >-
   --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
   --kube-scheduler-arg 'bind-address=0.0.0.0'
   --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
 
 # Extra arguments for k3s agent installation
 k3s_worker_extra_args: >-
@@ -54,6 +55,7 @@ k3s_monitoring_namespace: monitoring
 k3s_velero_namespace: velero
 k3s_linkerd_namespace: linkerd
 k3s_linkerd_viz_namespace: linkerd-viz
+k3s_tracing_namespace: tracing
 
 ###########
 # MetalLB #
@@ -122,6 +124,11 @@ certmanager_ionos_chart_version: 1.0.1
 linkerd_version: "stable-2.12.2"
 linkerd_chart_version: 1.9.4
 linkerd_viz_chart_version: 30.3.4
+linkerd_jaeger_chart_version: 30.4.4
+
+# linkerd identity issuer certificate
+issuer_certificate_duration: "2160h"    # 90d
+issuer_certificate_renewbefore: "360h"  # 15d
 
 #######################
 # backup configuration
@@ -187,7 +194,7 @@ fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
 
 # Helm chart version
 fluentd_chart_version: 0.3.9
-fluentbit_chart_version: 0.20.9
+fluentbit_chart_version: 0.21.0
 
 # Elasticsearch 'elastic' user password
 efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"
@@ -209,3 +216,19 @@ kube_prometheus_stack_chart_version: 41.6.1
 
 # Grafana admin user password
 prometheus_grafana_password: "{{ vault.grafana.admin_password}}"
+
+
+#######################
+# Tracing: Tempo      #
+#######################
+
+# Tempo chart version
+tempo_distributed_chart_version: 0.27.4
+
+# Tempo minio user, key and bucket
+minio_tempo_user: tempo
+minio_tempo_key: "{{ vault.minio.tempo_key }}"
+minio_tempo_bucket: k3s-tempo
+
+# Enable logging of received spans
+tempo_log_spans: true
