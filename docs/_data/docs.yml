@@ -26,9 +26,9 @@
   docs:
   - observability
   - logging
-  - logging-forwarder-aggregator
   - loki
   - elasticsearch
+  - logging-forwarder-aggregator
   - prometheus
   - tracing
 - title: Backup

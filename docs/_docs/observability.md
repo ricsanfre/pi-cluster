@@ -14,14 +14,28 @@ The observability/monitoring solution for Raspberry Pi cluster is the following:
 This solution allow to monitor application traces, logs and metrics providing a single pane of glass where all information from an application can be showed in dashboards.
 
 Monitoring solution is based on the following components:
-- [Loki](https://grafana.com/oss/loki/) (logs monitoring)
-- [Grafana Tempo](https://grafana.com/oss/tempo/) (traces monitoring)
-- [Prometheus](https://prometheus.io/) (metrics monitoring)
-- [Grafana](https://grafana.com/oss/grafana/) (monitoring single pane of glass)
+- [Loki](https://grafana.com/oss/loki/) (logging)
+- [Grafana Tempo](https://grafana.com/oss/tempo/) (distributed tracing)
+- [Prometheus](https://prometheus.io/) (monitoring)
+- [Grafana](https://grafana.com/oss/grafana/) (single pane of glass)
 
 Logging solution is complemented with a log analytics solution based on Elasticsearch and Kibana.
 
 ![K3S-logs-observability-analytics](/assets/img/logs_loki_es.png)
 
-Common logs collection and distrution layer based on fluentbit/fluentd is used to feed logs to Logs Analytics platform (ES) and Logs Monitoring platform (Loki).
+Common log collection and distrution layer, implemented with fluentbit/fluentd, feeds logs to Log Analytics platform (ES) and Log Monitoring platform (Loki).
 
+
+## Observability solution installation procedure
+
+The procedure for deploying observability solution stack is described in the following pages:
+
+1. **Logging**
+   - [Logging Architecture (EFK + LG)](/docs/logging/)
+   - [Log Aggregation - Loki installation and configuration](/docs/loki/)
+   - [Log Analytics - Elasticsearch and Kibana installation and configuration](/docs/elasticsearch/)
+   - [Log collection and distribution - Fluentbit/Fluentd installation and configuration](/docs/logging-forwarder-aggregator/)
+2. **Monitoring**
+   - [Prometheus installation and configuration](/docs/prometheus/)
+3. **Distributing tracing**
+   - [Grafana Tempo installation and configuration](/docs/tracing/)
