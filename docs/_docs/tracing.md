@@ -190,33 +190,8 @@ Where `user_policy.json`, contains the following AWS access policies definition:
   
 ## Linkerd traces integration
 
-[Linkerd-jaeger extension](https://linkerd.io/2.12/tasks/distributed-tracing/) is needed for activating the emisson of traces of linkerd-proxys components.
+Follow procedure described in ["Service Mesh (Linkerd) - Linkerd Jaeger extension installation"](/docs/service-mesh/#linkerd-jaeger-extension-installation) to enable linkerd distributing tracing capability.
 
-Linkerd jaegger extension, by default, installs Jaeger, as tracing solution backend, [OpenTelemetry collector](https://opentelemetry.io/docs/collector/), to collect and distribute traces to Jaeger backend and Jaegger-injector, responsible for configuring the Linkerd proxies to emit spans.
-
-Tempo will be used, instead of Jaeger, and Tempo distributor component has a embedded OpenTelemetry collector. So non of those components will be installe. Only jaeger-injector needs to be installed.
-
-- Step 1. Prepare linked-jaeger-values.yml
-
-  ```yml
-  collector:
-    enabled: false
-  jaeger:
-    enabled: false
-  webhook:
-    collectorSvcAddr: tempo-distributor.tracing:55678
-    collectorSvcAccount: tempo
-  ```
-  This configuration disables Jaeger and OTel Collector installation and configures jaeger-injector to send traces span to tempo-distributor component using OpenCensus receiver (port 55678)
-
-  `webhook.collectorSvcAddr` is OpenCensus endpoint distributor receiver
-  `webhook.collectorSvcAccount` is service account name used by Tempo.
-
-- Step 2. Install jaeger-extensiong helm chart
-
-  ```shell
-  helm install linkerd-jaeger -n linkerd-jaeger --create-namespace linkerd/linkerd-jaeger -f linkerd-jaeger-values.yml
-  ```
 
 ## Traefik traces integration
 
@@ -224,7 +199,7 @@ The ingress is a key component for distributed tracing solution because it is re
 
 Distributed tracing systems all rely on propagate the trace context throuhg the chain of involved services. This trace contex is encoding in HTTP request headers. Of the available propagation protocols, B3 is the only one supported by Linkerd, and so this is the one to be used in the whole system.
 
-Traefik uses OpenTracet to export traces to different backends. 
+Traefik uses OpenTrace to export traces to different backends. 
 
 To activate tracing using B3 propagation protocol, the following options need to be provided
   
