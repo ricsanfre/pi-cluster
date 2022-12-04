@@ -1,0 +1,88 @@
+---
+
+- name: Bootstrap Cluster
+  hosts: k3s_master
+  gather_facts: false
+
+  collections:
+    - kubernetes.core
+
+  environment:
+    # The location of the kubeconfig file on the master.
+    K8S_AUTH_KUBECONFIG: ~/.kube/config
+
+  pre_tasks:
+    # Install kubernetes core collection dependencies (kubernetes python package) using PIP.
+    - name: Ensure PIP is installed.
+      package:
+        name:
+          - python3-pip
+          - python3-setuptools
+        state: present
+      become: true
+      tags: ['always']
+
+    - name: Ensure kubernetes Python library is installed.
+      pip:
+        name: kubernetes
+        state: present
+      become: true
+      tags: ['always']
+
+    # Install Helm diff plugin to have a better idempotence check
+    - name: Intall Helm Plugin
+      kubernetes.core.helm_plugin:
+        plugin_path: "https://github.com/databus23/helm-diff"
+        state: present
+      tags: ['always']
+
+  tasks:
+    - name: Create argo-cd namespace.
+      kubernetes.core.k8s:
+        name: "argocd"
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Copy argocd and root chart files
+      ansible.builtin.copy:
+        src: "argocd/apps/{{ item }}"
+        dest: /tmp/charts
+      with_items:
+        - "argocd"
+        - "root"
+
+    - name: Deploy Argo CD Helm chart.
+      shell: |
+        set -o pipefail
+        helm template \
+        --dependency-update \
+        --include-crds \
+        --namespace argocd \
+        argocd /tmp/charts/argocd \
+        | kubectl apply -n argocd -f -
+      args:
+        executable: /bin/bash
+
+    - name: Wait for CRDs to be ready
+      command:
+        cmd: "kubectl wait --for condition=Established crd/applications.argoproj.io crd/applicationsets.argoproj.io --timeout=600s"
+      register: linkerd_pods_ready
+      changed_when: false
+
+    - name: Deploy root Helm chart.
+      shell: |
+        set -o pipefail
+        helm template \
+        --dependency-update \
+        --include-crds \
+        --namespace argocd \
+        root /tmp/charts/root \
+        | kubectl apply -n argocd -f -
+      args:
+        executable: /bin/bash
+
+    - name: Recursively remove tmp directory
+      ansible.builtin.file:
+        path: /tmp/charts
+        state: absent
