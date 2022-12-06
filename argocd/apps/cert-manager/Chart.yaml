@@ -8,3 +8,6 @@ dependencies:
   - name: trust-manager
     version: v0.3.0
     repository: https://charts.jetstack.io
+  - name: cert-manager-webhook-ionos
+    version: 1.0.1
+    repository: https://fabmade.github.io/cert-manager-webhook-ionos
