@@ -16,7 +16,7 @@ spec:
     solvers:
       - dns01:
           webhook:
-            groupName: {{ .Values.cert-manager-webhook-ionos.webhook_groupName}}
+            groupName: {{ .Values.cert-manager-webhook-ionos.groupName}}
             solverName: ionos
             config:
               apiUrl: https://api.hosting.ionos.com/dns/v1
