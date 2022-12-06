@@ -1,0 +1,20 @@
+# Metallb address pool
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: picluster-pool
+  namespace: {{ .Release.Namespace }}
+spec:
+  addresses:
+  - "10.0.0.100-10.0.0.200"
+
+---
+# L2 configuration
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2-picluster-pool
+  namespace: {{ .Release.Namespace }}
+spec:
+  ipAddressPools:
+  - picluster-pool
