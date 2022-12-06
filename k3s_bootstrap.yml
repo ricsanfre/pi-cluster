@@ -44,12 +44,19 @@
         kind: Namespace
         state: present
 
+    - name: Create bootstrap namespace.
+      kubernetes.core.k8s:
+        name: "bootstrap"
+        api_version: v1
+        kind: Namespace
+        state: present
+
     - name: Copy argocd and root chart files
       ansible.builtin.copy:
-        src: "argocd/apps/{{ item }}"
+        src: "argocd/{{ item }}"
         dest: /tmp/charts
       with_items:
-        - "argocd"
+        - "apps/argocd"
         - "bootstrap"
 
     - name: Deploy Argo CD Helm chart.
@@ -76,9 +83,9 @@
         helm template \
         --dependency-update \
         --include-crds \
-        --namespace bootstrap \
-        root /tmp/charts/root \
-        | kubectl apply -n bootstrap -f -
+        --namespace argocd \
+        bootstrap /tmp/charts/bootstrap \
+        | kubectl apply -n argocd -f -
       args:
         executable: /bin/bash
 
