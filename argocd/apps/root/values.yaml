@@ -1,0 +1,3 @@
+gitops:
+  repo: http://gitea-http.gitea:3000/ops/homelab
+  revision: master
