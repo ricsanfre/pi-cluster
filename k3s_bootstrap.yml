@@ -50,7 +50,7 @@
         dest: /tmp/charts
       with_items:
         - "argocd"
-        - "root"
+        - "bootstrap"
 
     - name: Deploy Argo CD Helm chart.
       shell: |
@@ -70,15 +70,15 @@
       register: linkerd_pods_ready
       changed_when: false
 
-    - name: Deploy root Helm chart.
+    - name: Deploy bootstrap Helm chart.
       shell: |
         set -o pipefail
         helm template \
         --dependency-update \
         --include-crds \
-        --namespace argocd \
+        --namespace bootstrap \
         root /tmp/charts/root \
-        | kubectl apply -n argocd -f -
+        | kubectl apply -n bootstrap -f -
       args:
         executable: /bin/bash
 
