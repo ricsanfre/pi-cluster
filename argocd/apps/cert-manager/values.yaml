@@ -2,4 +2,6 @@ cert-manager:
   installCRDs: true
 cert-manager-webhook-ionos:
   groupName: acme.ricsanfre.com
-  acme_issuer_email: admin@ricsanfre.com
+
+acme_issuer_email: admin@ricsanfre.com
+webhook_groupName: acme.ricsanfre.com
