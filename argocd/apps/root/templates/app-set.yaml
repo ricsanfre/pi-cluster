@@ -12,15 +12,15 @@ spec:
           - path: argocd/apps/*
   template:
     metadata:
-      name: '{{ path.basename }}'
+      name: '{{ `{{path.basename}}` }}'
     spec:
       destination:
         name: in-cluster
-        namespace: '{{ path.basename }}'
+        namespace: '{{ `{{path.basename}}` }}'
       project: default
       source:
         repoURL: {{ $.Values.gitops.repo }}
-        path: '{{ path }}'
+        path: '{{ `{{path}}` }}'
         targetRevision: {{ $.Values.gitops.revision }}
       syncPolicy:
         automated:
