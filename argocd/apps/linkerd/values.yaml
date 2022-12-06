@@ -1,0 +1,5 @@
+linkerd-control-plane:
+  identity:
+    externalCA: true
+    issuer:
+      scheme: kubernetes.io/tls
