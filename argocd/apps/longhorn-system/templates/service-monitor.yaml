@@ -1,0 +1,22 @@
+{{- if (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: longhorn
+    release: kube-prometheus-stack
+  name: longhorn-prometheus-servicemonitor
+  namespace: {{ .Release.Namespace }}
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: manager
+
+{{- end }}

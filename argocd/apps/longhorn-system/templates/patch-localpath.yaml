@@ -1,0 +1,7 @@
+# Patch local-path storage class as not default
+apiVersion: v1
+kind: StorageClass
+metadata:
+  name: local-path
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
