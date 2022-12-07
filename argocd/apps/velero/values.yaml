@@ -1,0 +1,44 @@
+# velero helm chart values
+velero:
+  # AWS backend and CSI plugins configuration
+  initContainers:
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.3.0
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
+    - name: velero-plugin-for-csi
+      image: ricsanfre/velero-plugin-for-csi:v0.3.1
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
+
+  # Use a kubectl image supporting ARM64
+  # bitnami default is not suppporting it
+  kubectl:
+    image:
+      repository: ricsanfre/docker-kubectl-helm
+      tag: latest
+
+  # Velero Configuration
+  configuration:
+    # Configure Minio as backup backend
+    provider: aws
+    backupStorageLocation:
+      provider: aws
+      bucket: k3s-velero
+      config:
+        region: eu-west-1
+        s3ForcePathStyle: true
+        s3Url: https://s3.picluster.ricsanfre.com:9091
+        # insecureSkipTLSVerify: true
+    # Enable CSI snapshot support
+    features: EnableCSI
+  credentials:
+    existingSecret: velero-secret
+
+  # Enable linkerd
+  podAnnotations:
+    linkerd.io/inject: enabled
