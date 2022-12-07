@@ -9,7 +9,7 @@ spec:
     hooks: {}
     includedNamespaces:
     - '*'
-    included_resources:
+    includedResources:
     - '*'
     includeClusterResources: true
     metadata:
