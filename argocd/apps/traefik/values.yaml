@@ -51,6 +51,13 @@ traefik:
     kubernetesCRD:
       enabled: true
       allowCrossNamespace: true
+  
+  # Enable prometheus metric service
+  metrics:
+    prometheus:
+      service:
+        enabled: true
+
   # Configuring tracing backend
   tracing:
     zipkin:
