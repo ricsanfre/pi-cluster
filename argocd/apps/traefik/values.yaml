@@ -1,0 +1,60 @@
+# Traefik helm chart values
+traefik
+  # Configure access log
+  logs:
+    access:
+      # Enable access log
+      enabled: true
+      # Generate access log in json format
+      format: json
+      # Configure access log field
+      fields:
+        # keep all access fields
+        general:
+          defaultmode: keep
+        # Add header field B3 tracing protocol header field
+        headers:
+          defaultmode: drop
+          names:
+            X-B3-Traceid: keep
+
+  # Print access log to file instead of stdout
+  additionalArguments:
+    - "--accesslog.filepath=/data/access.log"
+
+  deployment:
+    # Linkerd ingress configuration
+    podAnnotations:
+      linkerd.io/inject: ingress
+      config.linkerd.io/skip-outbound-ports: "443"
+    # Access log sidecar container
+    additionalContainers:
+      - name: stream-accesslog
+        image: busybox
+        args:
+        - /bin/sh
+        - -c
+        - tail -n+1 -F /data/access.log
+        imagePullPolicy: Always
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data
+          name: data
+  # Set specific LoadBalancer IP address for Ingress service
+  service:
+    spec:
+      loadBalancerIP: 10.0.0.100
+  # Enable cross namespace references
+  providers:
+    kubernetesCRD:
+      enabled: true
+      allowCrossNamespace: true
+  # Configuring tracing backend
+  tracing:
+    zipkin:
+      httpEndpoint: http://tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
+      sameSpan: true
+      id128Bit: true
+      sampleRate: 1.0
