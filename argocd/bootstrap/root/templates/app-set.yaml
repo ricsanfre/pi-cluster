@@ -15,7 +15,7 @@ spec:
     metadata:
       name: '{{ `{{path.basename}}` }}'
       annotations:
-        argocd.argoproj.io/sync-wave: {{ $stack.wave }}
+        argocd.argoproj.io/sync-wave: '{{ $stack.wave }}'
     spec:
       destination:
         name: in-cluster
