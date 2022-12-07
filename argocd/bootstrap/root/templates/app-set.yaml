@@ -1,4 +1,5 @@
 {{- range $index, $stack := .Values.stacks }}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
