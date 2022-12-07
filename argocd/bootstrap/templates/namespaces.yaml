@@ -1,0 +1,25 @@
+# Create annotated namespaces
+
+# logging namespace
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: logging
+  annotations:
+    linkerd.io/inject: enabled
+---
+# monitoring
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: monitoring
+  annotations:
+    linkerd.io/inject: enabled
+---
+# tracing
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: tracing
+  annotations:
+    linkerd.io/inject: enabled
