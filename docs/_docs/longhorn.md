@@ -259,6 +259,15 @@ Ansible playbook has been developed for automatically create this testing POD `r
 
 ## Setting Longhorn as default Kubernetes StorageClass
 
+
+{{site.data.alerts.note}}
+
+This step is not needed if K3s is installed disabling Local Path Provisioner (installation option: `--disable local-storage`).
+
+In case that this parameter is not configured the following procedure need to be applied.
+
+{{site.data.alerts.end}}
+
 By default K3S comes with Rancher’s Local Path Provisioner and this enables the ability to create persistent volume claims out of the box using local storage on the respective node.
 
 In order to use Longhorn as default storageClass whenever a new Helm is installed, Local Path Provisioner need to be removed from default storage class.
@@ -284,3 +293,5 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 ```
 
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
+
+

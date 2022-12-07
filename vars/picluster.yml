@@ -29,6 +29,7 @@ k3s_server_extra_args: >-
   --write-kubeconfig-mode '0644'
   --disable 'servicelb'
   --disable 'traefik'
+  --disable 'local-storage'
   --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
   --kube-controller-manager-arg 'bind-address=0.0.0.0'
   --kube-proxy-arg 'metrics-bind-address=0.0.0.0'

@@ -85,14 +85,15 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
     For installing the master node execute the following command:
 
     ```shell
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb' --disable 'traefik' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb' --disable 'traefik' --disable 'local-path' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
     ```
     Where:
     - `server_token` is shared secret within the cluster for allowing connection of worker nodes
     - `--write-kubeconfig-mode '0644'` gives read permissions to kubeconfig file located in `/etc/rancher/k3s/k3s.yaml`
     - `--node-taint 'node-role.kubernetes.io/master=true:NoSchedule'` makes master node not schedulable to run any pod. Only pods marked with specific tolerance will be scheduled on master node. 
-    - `--disable servicelb` to disable default service load balancer installed by K3S (Klipper Load Balancer)
-    - `--disable traefik` to disable default ingress controller installed by K3S (Traefik)
+    - `--disable servicelb` to disable default service load balancer installed by K3S (Klipper Load Balancer). Metallb will be used instead.
+    - `--disable local-storage` to disable local storage persistent volumes provider installed by K3S (local-path-provisioner). Longhorn will be used instead
+    - `--disable traefik` to disable default ingress controller installed by K3S (Traefik). Traefik will be installed from helm chart.
     - `--kube-controller-manager.arg`, `--kube-scheduler-arg` and `--kube-proxy-arg` to bind those components not only to 127.0.0.1 and enable metrics scraping from a external node.
     - `--kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'` provides kubelet configuraion parameters. See [Kubernetes Doc: Kubelet Config File](https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/)
     - `--kube-controller-manager-arg 'terminated-pod-gc-threshold=10'`. Setting limit to 10  terminated pods that can exist before the terminated pod garbage collector starts deleting terminated pods. See [Kubernetes Doc: Pod Garbage collection](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-garbage-collection)
