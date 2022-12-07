@@ -1,7 +1,8 @@
+{{- range $index, $stack := .Values.stacks }}
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: picluster-appset
+  name: {{ $stack.name }}
   namespace: {{ $.Release.Namespace }}
 spec:
   generators:
@@ -9,16 +10,16 @@ spec:
         repoURL: {{ $.Values.gitops.repo }}
         revision: {{ $.Values.gitops.revision }}
         directories:
-          - path: argocd/apps/*
+          - path: argocd/{{ $stack.name }}/*
   template:
     metadata:
       name: '{{ `{{path.basename}}` }}'
       annotations:
-        argocd.argoproj.io/sync-wave: "1"
+        argocd.argoproj.io/sync-wave: {{ $stack.wave }}
     spec:
       destination:
         name: in-cluster
-        namespace: '{{ `{{path.basename}}` }}'
+        namespace: '{{ default `{{path.basename}}` $stack.namespace }}'
       project: default
       source:
         repoURL: {{ $.Values.gitops.repo }}
@@ -54,3 +55,4 @@ spec:
           name: networkauthentications.policy.linkerd.io
           jsonPointers:
           - /spec/names/shortNames
+{{- end }}

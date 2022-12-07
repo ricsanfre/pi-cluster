@@ -1,3 +1,0 @@
-gitops:
-  repo: https://github.com/ricsanfre/pi-cluster
-  revision: argocd

@@ -1,0 +1,13 @@
+gitops:
+  repo: https://github.com/ricsanfre/pi-cluster
+  revision: argocd
+stacks:
+  - name: bootstrap
+    namespace: argocd  # Override default value
+    wave: "1"
+  - name: system
+    wave: "2"
+  - name: platform
+    wave: "3"
+  - name: apps
+    wave: "4"
