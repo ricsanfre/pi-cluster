@@ -1,5 +1,5 @@
 # Traefik helm chart values
-traefik
+traefik:
   # Configure access log
   logs:
     access:
