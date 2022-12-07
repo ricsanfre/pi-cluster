@@ -1,6 +1,6 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: kube-system
 resources:
-  - https://github.com/kubernetes-csi/external-snapshotter/tree/release-4.0/client/config/crd
-  - https://github.com/kubernetes-csi/external-snapshotter/tree/release-4.0/deploy/kubernetes/snapshot-controller
+  - ./crd 
+  - ./snapshot-controller
