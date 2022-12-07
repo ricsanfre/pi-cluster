@@ -11,6 +11,14 @@
     # The location of the kubeconfig file on the master.
     K8S_AUTH_KUBECONFIG: ~/.kube/config
 
+  vars_prompt:
+    - name: ionos_public_prefix
+      prompt: Enter ionos public prefix
+      private: true
+    - name: ionos_secret
+      prompt: Enter ionos secret
+      private: true
+
   pre_tasks:
     # Install kubernetes core collection dependencies (kubernetes python package) using PIP.
     - name: Ensure PIP is installed.
@@ -36,28 +44,46 @@
         state: present
       tags: ['always']
 
-  tasks:
-    - name: Create argo-cd namespace.
-      kubernetes.core.k8s:
-        name: "argocd"
-        api_version: v1
-        kind: Namespace
-        state: present
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+      tags: ["always"]
 
-    - name: Create bootstrap namespace.
+  tasks:
+    - name: Create namespaces.
       kubernetes.core.k8s:
-        name: "bootstrap"
+        name: "{{ item }}"
         api_version: v1
         kind: Namespace
         state: present
+      with_items:
+        - "argocd"
+        - "cert-manager"
+        - "longhorn-system"
+        - "velero"
+
+    - name: Configure secrets
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'argocd/external/templates/' + item ) }}"
+        state: present
+      with_items:
+        - ionos_secret.yml.j2
+        - longhorn_minio_secret.yml.j2
+        - velero_secret.yml.j2
 
     - name: Copy argocd and root chart files
       ansible.builtin.copy:
         src: "argocd/{{ item }}"
         dest: /tmp/charts
       with_items:
-        - "apps/argocd"
-        - "bootstrap"
+        - "bootstrap/argocd"
+        - "bootstrap/root"
+
+    - name: Update argo-cd helm dependency.
+      ansible.builtin.command:
+        cmd: "helm dependency update /tmp/charts/argocd"
 
     - name: Deploy Argo CD Helm chart.
       shell: |
@@ -77,18 +103,18 @@
       register: linkerd_pods_ready
       changed_when: false
 
-    - name: Deploy bootstrap Helm chart.
+    - name: Deploy root Helm chart.
       shell: |
         set -o pipefail
         helm template \
         --dependency-update \
         --include-crds \
         --namespace argocd \
-        bootstrap /tmp/charts/bootstrap \
+        bootstrap /tmp/charts/root \
         | kubectl apply -n argocd -f -
       args:
         executable: /bin/bash
-
+    
     - name: Recursively remove tmp directory
       ansible.builtin.file:
         path: /tmp/charts
