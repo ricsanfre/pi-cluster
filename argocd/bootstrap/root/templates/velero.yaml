@@ -4,7 +4,7 @@ metadata:
   name: velero
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "8"
 spec:
   destination:
     namespace: velero

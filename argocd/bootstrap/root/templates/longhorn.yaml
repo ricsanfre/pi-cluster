@@ -4,7 +4,7 @@ metadata:
   name: longhorn
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-wave: "7"
 spec:
   destination:
     namespace: longhorn-system
