@@ -1,13 +1,33 @@
 gitops:
   repo: https://github.com/ricsanfre/pi-cluster
   revision: argocd
-stacks:
-  - name: bootstrap
-    namespace: argocd  # Override default value
-    wave: "1"
-  - name: system
-    wave: "2"
-  - name: platform
-    wave: "3"
-  - name: apps
-    wave: "4"
+
+# Ordered list of application corresponding to different sync waves
+apps:
+  - name: argocd
+    namespace: argocd
+    path: bootstrap/argocd
+  - name: root
+    namespace: argocd
+    path: bootstrap/root
+  - name: metallb
+    namespace: metallb
+    path: system/metallb
+  - name: cert-manager
+    namespace: cert-manager
+    path: system/cert-manager
+  - name: linkerd
+    namespace: linkerd
+    path: system/linkerd
+  - name: traefik
+    namespace: traefik
+    path: system/traefik
+  - name: csi-external-snapshotter
+    namespace: kube-system
+    path: system/csi-external-snapshotter
+  - name: longhorn
+    namespace: longhorn-system
+    path: system/longhorn-system
+  - name: velero
+    namespace: system/velero
+    path: system/velero

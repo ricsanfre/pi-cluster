@@ -1,17 +1,19 @@
+{{- range $index, $app := .Values.apps }}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn
-  namespace: argocd
+  name: {{ $app.name }}
+  namespace: {{ $.Release.Namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "7"
+    argocd.argoproj.io/sync-wave: '{{ $index }}'
 spec:
   destination:
-    namespace: longhorn-system
+    namespace: {{ $app.namespace }}
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: argocd/system/longhorn-system
+    path: {{ $app.path }}
     repoURL: {{ $.Values.gitops.repo }}
     targetRevision: {{ $.Values.gitops.revision }}
   syncPolicy:
@@ -26,3 +28,4 @@ spec:
         factor: 2
     syncOptions:
     - CreateNamespace=true
+{{- end }}
