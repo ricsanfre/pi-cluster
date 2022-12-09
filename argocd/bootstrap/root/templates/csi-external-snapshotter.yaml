@@ -1,0 +1,27 @@
+kind: Application
+metadata:
+  name: csi-external-snapshotter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  destination:
+    namespace: kube-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: argocd/system/csi-external-snapshotter
+    repoURL: {{ $.Values.gitops.repo }}
+    targetRevision: {{ $.Values.gitops.revision }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 1m
+        maxDuration: 16m
+        factor: 2
+    syncOptions:
+    - CreateNamespace=true
