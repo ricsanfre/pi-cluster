@@ -79,7 +79,7 @@
         dest: /tmp/charts
       with_items:
         - "bootstrap/argocd"
-        - "bootstrap/root"
+        # - "bootstrap/root"
 
     - name: Update argo-cd helm dependency.
       ansible.builtin.command:
@@ -100,20 +100,26 @@
     - name: Wait for CRDs to be ready
       command:
         cmd: "kubectl wait --for condition=Established crd/applications.argoproj.io crd/applicationsets.argoproj.io --timeout=600s"
-      register: linkerd_pods_ready
       changed_when: false
 
-    - name: Deploy root Helm chart.
-      shell: |
-        set -o pipefail
-        helm template \
-        --dependency-update \
-        --include-crds \
-        --namespace argocd \
-        bootstrap /tmp/charts/root \
-        | kubectl apply -n argocd -f -
-      args:
-        executable: /bin/bash
+    - name: Deploy root application
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'argocd/external/templates/' + item ) }}"
+        state: present
+      with_items:
+        - argocd_root_app.yml.j2
+
+    # - name: Deploy root Helm chart.
+    #   shell: |
+    #     set -o pipefail
+    #     helm template \
+    #     --dependency-update \
+    #     --include-crds \
+    #     --namespace argocd \
+    #     bootstrap /tmp/charts/root \
+    #     | kubectl apply -n argocd -f -
+    #   args:
+    #     executable: /bin/bash
     
     - name: Recursively remove tmp directory
       ansible.builtin.file:
