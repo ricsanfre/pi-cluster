@@ -1,0 +1,13 @@
+apiVersion: v2
+name: logging
+version: 0.0.0
+dependencies:
+  - name: eck-operator
+    version: 2.4.0
+    repository: https://helm.elastic.co
+  - name: fluentd
+    version: 0.3.9
+    repository: https://fluent.github.io/helm-charts
+  - name: loki
+    version: 3.3.0
+    repository: https://grafana.github.io/helm-charts

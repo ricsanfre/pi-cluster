@@ -63,6 +63,7 @@
         - "cert-manager"
         - "longhorn-system"
         - "velero"
+        - "logging"
 
     - name: Configure secrets
       kubernetes.core.k8s:
@@ -72,6 +73,7 @@
         - ionos_secret.yml.j2
         - longhorn_minio_secret.yml.j2
         - velero_secret.yml.j2
+        - fluent_secret.yml.j2
 
     - name: Copy argocd and root chart files
       ansible.builtin.copy:

@@ -1,0 +1,597 @@
+
+# Elasticsearch configuration
+eck:
+  # elasticsearch cluster name
+  clusterName: efk
+
+elasticsearch:
+  # elastic search version
+  version: 8.1.2
+  # Number of Elastic Search nodes
+  clusterNodes: 1
+  # Enable/Disable memory map
+  enableMmap: false
+  # Storage Settings
+  storage:
+    size: "5Gi"
+    class: "longhorn"
+  # Limiting resources of elasticsearch pod
+  podSpecResources:
+    request:
+      memory: "1Gi"
+    limits:
+      memory: "1Gi"
+
+  # Ingress configuration
+  ingress:
+    host: elasticsearch.picluster.ricsanfre.com
+    # configure cert-manager issuer
+    certmanager:
+      tlsIssuer: letsencrypt
+
+# Kibana configuration
+kibana:
+  # Limiting resources of kibana pod
+  podSpecResources:
+    request:
+      memory: "512Mi"
+    limits:
+      memory: "512Mi"
+  # Ingress configuration
+  ingress:
+    host: kibana.picluster.ricsanfre.com
+    # configure cert-manager issuer
+    certmanager:
+      tlsIssuer: letsencrypt
+
+
+#######################
+# Loki  configuration
+#######################
+
+loki:
+  loki:
+    # Disable multi-tenant support
+    auth_enabled: false
+
+    # S3 backend storage configuration
+    storage:
+      bucketNames:
+        chunks: k3s-loki
+        ruler: k3s-loki
+      type: s3
+      s3:
+        endpoint: s3.picluster.ricsanfre.com:9091
+        region: eu-west-1
+        secretAccessKey: supers1cret0
+        accessKeyId: loki
+        s3ForcePathStyle: true
+        insecure: false
+        http_config:
+          idle_conn_timeout: 90s
+          response_header_timeout: 0s
+          insecure_skip_verify: false
+
+  # Configuration for the write
+  write:
+    # Number of replicas for the write
+    replicas: 2
+    persistence:
+      # -- Size of persistent disk
+      size: 10Gi
+      # -- Storage class to be used.
+      storageClass: longhorn
+
+  # Configuration for the read
+  read:
+    # Number of replicas for the read
+    replicas: 2
+    persistence:
+      # -- Size of persistent disk
+      size: 10Gi
+      # -- Storage class to be used.
+      storageClass: longhorn
+
+  # Configuration for the gateway
+  gateway:
+    # -- Specifies whether the gateway should be enabled
+    enabled: true
+    # -- Number of replicas for the gateway
+    replicas: 1
+
+  # Disable mino installation
+  minio:
+    enabled: false
+
+  # Disable self-monitoring
+  monitoring:
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+      lokiCanary:
+          enabled: false
+
+  # Disable helm-test
+  test:
+    enabled: false
+
+#########################
+# Fluentd  configuration
+#########################
+
+fluentd:
+  # Fluentd image
+  image:
+    repository: "ricsanfre/fluentd-aggregator"
+    pullPolicy: "IfNotPresent"
+    tag: "v1.15.2-debian-1.0"
+
+  # Deploy fluentd as deployment
+  kind: "Deployment"
+  # Number of replicas
+  replicaCount: 1
+  # Enabling HPA
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
+  # Do not create serviceAccount and RBAC. Fluentd does not need to get access to kubernetes API.
+  serviceAccount:
+    create: false
+  rbac:
+    create: false
+
+  ## Additional environment variables to set for fluentd pods
+  env:
+    # Path to fluentd conf file
+    - name: "FLUENTD_CONF"
+      value: "../../../etc/fluent/fluent.conf"
+    # Elastic operator creates elastic service name with format cluster_name-es-http
+    - name:  FLUENT_ELASTICSEARCH_HOST
+      value: efk-es-http
+      # Default elasticsearch default port
+    - name:  FLUENT_ELASTICSEARCH_PORT
+      value: "9200"
+    # Elasticsearch user
+    - name: FLUENT_ELASTICSEARCH_USER
+      value: "elastic"
+    # Elastic operator stores elastic user password in a secret
+    - name: FLUENT_ELASTICSEARCH_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "efk-es-elastic-user"
+          key: elastic
+    # Setting a index-prefix for fluentd. By default index is logstash
+    - name: FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
+      value: fluentd
+    - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
+      value: "true"
+    # Fluentd forward security
+    - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluentd-shared-key
+          key: fluentd-shared-key
+    # Loki url
+    - name: LOKI_URL
+      value: "http://loki-gateway"
+    # Loki username
+    - name: LOKI_USERNAME
+      value: ""
+    # Loki password
+    - name: LOKI_PASSWORD
+      value: ""
+
+  # Volumes and VolumeMounts (only configuration files and certificates)
+  volumes:
+    - name: etcfluentd-main
+      configMap:
+        name: fluentd-main
+        defaultMode: 0777
+    - name: etcfluentd-config
+      configMap:
+        name: fluentd-config
+        defaultMode: 0777
+    - name: fluentd-tls
+      secret:
+        secretName: fluentd-tls
+
+  volumeMounts:
+    - name: etcfluentd-main
+      mountPath: /etc/fluent
+    - name: etcfluentd-config
+      mountPath: /etc/fluent/config.d/
+    - mountPath: /etc/fluent/certs
+      name: fluentd-tls
+      readOnly: true
+
+  # Service. Exporting forwarder port (Metric already exposed by chart)
+  service:
+    type: "ClusterIP"
+    annotations: {}
+    ports:
+    - name: forwarder
+      protocol: TCP
+      containerPort: 24224
+
+  ## Fluentd list of plugins to install
+  ##
+  plugins: []
+  # - fluent-plugin-out-http
+
+  ## Do not create additional config maps
+  ##
+  configMapConfigs: []
+
+  ## Fluentd configurations:
+  ##
+  fileConfigs:
+    01_sources.conf: |-
+      ## logs from fluentbit forwarders
+      <source>
+        @type forward
+        @label @FORWARD
+        bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
+        port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+        # Enabling TLS
+        <transport tls>
+            cert_path /etc/fluent/certs/tls.crt
+            private_key_path /etc/fluent/certs/tls.key
+        </transport>
+        # Enabling access security
+        <security>
+          self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+          shared_key "#{ENV['FLUENTD_FORWARD_SEC_SHARED_KEY'] || 'sharedkey'}"
+        </security>
+      </source>
+      ## Enable Prometheus end point
+      <source>
+        @type prometheus
+        @id in_prometheus
+        bind "0.0.0.0"
+        port 24231
+        metrics_path "/metrics"
+      </source>
+      <source>
+        @type prometheus_monitor
+        @id in_prometheus_monitor
+      </source>
+      <source>
+        @type prometheus_output_monitor
+        @id in_prometheus_output_monitor
+      </source>
+    02_filters.conf: |-
+      <label @FORWARD>
+        # Re-route fluentd logs
+        <match kube.var.log.containers.fluentd**>
+          @type relabel
+          @label @FLUENT_LOG
+        </match>
+        ## Get kubernetes fields
+        <filter kube.**>
+          @type record_modifier
+          remove_keys kubernetes, __dummy__, __dummy2__
+          <record>
+            __dummy__   ${ p = record["kubernetes"]["labels"]["app"]; p.nil? ? p : record['app'] = p; }
+            __dummy2__   ${ p = record["kubernetes"]["labels"]["app.kubernetes.io/name"]; p.nil? ? p : record['app'] = p; }
+            namespace ${ record.dig("kubernetes","namespace_name") }
+            pod ${ record.dig("kubernetes", "pod_name") }
+            container ${ record.dig("kubernetes", "container_name") }
+            host ${ record.dig("kubernetes", "host")}
+          </record>
+        </filter>
+        <match **>
+          @type relabel
+          @label @DISPATCH
+        </match>
+      </label>
+    03_dispatch.conf: |-
+      <label @DISPATCH>
+        # Calculate prometheus metrics
+        <filter **>
+          @type prometheus
+          <metric>
+            name fluentd_input_status_num_records_total
+            type counter
+            desc The total number of incoming records
+            <labels>
+              tag ${tag}
+              hostname ${host}
+            </labels>
+          </metric>
+        </filter>
+        # Copy log stream to different outputs
+        <match **>
+          @type copy
+          <store>
+            @type relabel
+            @label @OUTPUT_ES
+          </store>
+          <store>
+            @type relabel
+            @label @OUTPUT_LOKI
+          </store>  
+        </match>
+      </label>
+    04_outputs.conf: |-
+      <label @OUTPUT_ES>
+        ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+        <filter kube.**>
+          @type record_transformer
+          enable_ruby true
+          remove_keys log_processed
+          <record>
+            message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+          </record>
+        </filter>
+        # Send received logs to elasticsearch
+        <match **>
+          @type elasticsearch
+          @id out_es
+          @log_level info
+          include_tag_key true
+          host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+          port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+          path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
+          scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
+          ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
+          ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+          user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
+          password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
+          reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
+          reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
+          reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
+          log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
+          logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
+          logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
+          logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
+          index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
+          target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
+          type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
+          include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
+          template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
+          template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
+          template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
+          sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
+          request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
+          application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
+          suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
+          enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
+          ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
+          ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
+          ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
+          <buffer>
+            flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
+            flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
+            chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
+            queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+            retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
+            retry_forever true
+          </buffer>
+        </match>
+      </label>
+      <label @OUTPUT_LOKI>
+        # Rename log_proccessed to message
+        <filter kube.**>
+          @type record_modifier
+          remove_keys __dummy__, log_processed
+          <record>
+            __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
+          </record>
+        </filter>
+        <match **>
+          @type loki
+          @id out_loki_kube
+          @log_level info
+          url "#{ENV['LOKI_URL']}"
+          username "#{ENV['LOKI_USERNAME'] || use_default}"
+          password "#{ENV['LOKI_PASSWORDD'] || use_default}"
+          extra_labels {"job": "fluentd"}
+          line_format json
+          <label>
+             app
+             container
+             pod
+             namespace
+             host
+             filename
+          </label>
+          <buffer>
+            flush_thread_count 8
+            flush_interval 5s
+            chunk_limit_size 2M
+            queue_limit_length 32
+            retry_max_interval 30
+            retry_forever true
+          </buffer>
+        </match>
+      </label>
+
+#########################
+# Fluent-bit  configuration
+#########################
+
+fluent-bit:
+
+  #fluentbit-container environment variables:
+  env:
+    # Fluentd deployment service
+    - name: FLUENT_AGGREGATOR_HOST
+      value: "fluentd"
+    # Default fluentd forward port
+    - name: FLUENT_AGGREGATOR_PORT
+      value: "24224"
+    - name: FLUENT_AGGREGATOR_SHARED_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluentd-shared-key
+          key: fluentd-shared-key
+    - name: FLUENT_SELFHOSTNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    # Specify TZ
+    - name: TZ
+      value: "Europe/Madrid"
+  # Fluentbit config
+  config:
+    # Helm chart combines service, inputs, outputs, custom_parsers and filters section
+    # fluent-bit.config SERVICE
+    service: |
+
+      [SERVICE]
+          Daemon Off
+          Flush 1
+          Log_Level info
+          Parsers_File parsers.conf
+          Parsers_File custom_parsers.conf
+          HTTP_Server On
+          HTTP_Listen 0.0.0.0
+          HTTP_Port 2020
+          Health_Check On
+          storage.path /var/log/fluentbit/storage
+          storage.sync normal
+          storage.checksum off
+          storage.backlog.mem_limit 5M
+          storage.metrics on
+
+    # fluent-bit.config INPUT:
+    inputs: |
+
+      [INPUT]
+          Name tail
+          Alias input.kube
+          Path /var/log/containers/*.log
+          Path_Key filename
+          multiline.parser docker, cri
+          DB /var/log/fluentbit/flb_kube.db
+          Tag kube.*
+          Mem_Buf_Limit 5MB
+          storage.type filesystem
+          Skip_Long_Lines On
+
+      [INPUT]
+          Name tail
+          Alias input.host
+          Tag host.*
+          DB /var/log/fluentbit/flb_host.db
+          Path /var/log/auth.log,/var/log/syslog
+          Path_Key filename
+          Mem_Buf_Limit 5MB
+          storage.type filesystem
+          Parser syslog-rfc3164-nopri
+
+    # fluent-bit.config OUTPUT
+    outputs: |
+
+      [OUTPUT]
+          Name forward
+          Alias output.aggregator
+          match *
+          Host ${FLUENT_AGGREGATOR_HOST}
+          Port ${FLUENT_AGGREGATOR_PORT}
+          Self_Hostname ${FLUENT_SELFHOSTNAME}
+          Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
+          tls On
+          tls.verify Off
+
+    # fluent-bit.config PARSERS:
+    customParsers: |
+
+      [PARSER]
+          Name syslog-rfc3164-nopri
+          Format regex
+          Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+          Time_Key time
+          Time_Format %b %d %H:%M:%S
+          Time_Keep Off
+
+    # fluent-bit.config FILTERS:
+    filters: |
+      [FILTER]
+          name                  multiline
+          match                 *
+          multiline.key_content log
+          multiline.parser      java,python,go
+
+      [FILTER]
+          Name kubernetes
+          Match kube.*
+          Buffer_Size 512k
+          Kube_Tag_Prefix kube.var.log.containers.
+          Merge_Log On
+          Merge_Log_Trim Off
+          Merge_Log_Key log_processed
+          Keep_Log Off
+          K8S-Logging.Parser On
+          K8S-Logging.Exclude On
+          Annotations Off
+          Labels On
+
+      [FILTER]
+          Name modify
+          Match kube.*
+          Remove _p
+          Rename log message
+
+      [FILTER]
+          Name lua
+          Match host.*
+          script /fluent-bit/scripts/adjust_ts.lua
+          call local_timestamp_to_UTC
+    # json-exporter config
+    extraFiles:
+      json-exporter-config.yml: |
+        modules:
+          default:
+            metrics:
+              - name: fluenbit_storage_layer
+                type: object
+                path: '{.storage_layer}'
+                help: The total number of chunks in the fs storage
+                values:
+                  fs_chunks_up: '{.chunks.fs_chunks_up}'
+                  fs_chunks_down: '{.chunks.fs_chunks_down}'
+  
+  # Fluentbit config Lua Scripts.
+  luaScripts:
+    adjust_ts.lua: |
+      function local_timestamp_to_UTC(tag, timestamp, record)
+          local utcdate   = os.date("!*t", ts)
+          local localdate = os.date("*t", ts)
+          localdate.isdst = false -- this is the trick
+          utc_time_diff = os.difftime(os.time(localdate), os.time(utcdate))
+          return 1, timestamp - utc_time_diff, record
+      end
+
+  # Enable fluentbit instalaltion on master node.
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+
+  # Init container. Create directory for fluentbit
+  initContainers:
+    - name: init-fluentbit-directory
+      image: busybox
+      command: ['/bin/sh', '-c', 'if [ ! -d /var/log/fluentbit ]; then mkdir -p /var/log/fluentbit; fi ; if [ ! -d /var/log/fluentbit/tail-db ]; then mkdir -p /var/log/fluentbit/tail-db; fi ; if [ ! -d /var/log/fluentbit/storage ]; then mkdir -p /var/log/fluentbit/storage; fi']
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+  # Sidecar container to export storage metrics
+  extraContainers:
+    - name: json-exporter
+      image: quay.io/prometheuscommunity/json-exporter
+      command: ['/bin/json_exporter']
+      args: ['--config.file=/json-exporter-config.yml']
+      ports:
+        - containerPort: 7979
+          name: http
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /json-exporter-config.yml
+          name: config
+          subPath: json-exporter-config.yml
