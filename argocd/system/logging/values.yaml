@@ -128,6 +128,8 @@ loki:
 
 fluentd:
 
+  # Override automatic name using chart name + fluentd
+  nameOverride: fluentd
 
   # Fluentd image
   image:
