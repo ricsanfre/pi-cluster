@@ -130,6 +130,7 @@ fluentd:
 
   # Override automatic name using chart name + fluentd
   nameOverride: fluentd
+  fullnameOverride: fluentd
 
   # Fluentd image
   image:
