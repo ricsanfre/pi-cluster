@@ -27,6 +27,7 @@ metadata:
     # Linkerd header
     traefik.ingress.kubernetes.io/router.middlewares:
       {{ .Release.Namespace }}-l5d-header-middleware-kibana@kubernetescrd
+spec:
   tls:
     - hosts:
         - {{ .Values.kibana.ingress.host }}
