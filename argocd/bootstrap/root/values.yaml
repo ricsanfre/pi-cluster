@@ -29,7 +29,7 @@ apps:
     namespace: longhorn-system
     path: argocd/system/longhorn-system
   - name: velero
-    namespace: system/velero
+    namespace: velero
     path: argocd/system/velero
   - name: logging
     namespade: logging
