@@ -17,7 +17,7 @@ elasticsearch:
     class: "longhorn"
   # Limiting resources of elasticsearch pod
   podSpecResources:
-    request:
+    requests:
       memory: "1Gi"
     limits:
       memory: "1Gi"
@@ -33,7 +33,7 @@ elasticsearch:
 kibana:
   # Limiting resources of kibana pod
   podSpecResources:
-    request:
+    requests:
       memory: "512Mi"
     limits:
       memory: "512Mi"
