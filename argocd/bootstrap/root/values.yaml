@@ -6,28 +6,31 @@ gitops:
 apps:
   - name: argocd
     namespace: argocd
-    path: bootstrap/argocd
+    path: argocd/bootstrap/argocd
   - name: root
     namespace: argocd
-    path: bootstrap/root
+    path: argocd/bootstrap/root
   - name: metallb
     namespace: metallb
-    path: system/metallb
+    path: argocd/system/metallb
   - name: cert-manager
     namespace: cert-manager
-    path: system/cert-manager
+    path: argocd/system/cert-manager
   - name: linkerd
     namespace: linkerd
-    path: system/linkerd
+    path: argocd/system/linkerd
   - name: traefik
     namespace: traefik
-    path: system/traefik
+    path: argocd/system/traefik
   - name: csi-external-snapshotter
     namespace: kube-system
-    path: system/csi-external-snapshotter
+    path: argocd/system/csi-external-snapshotter
   - name: longhorn
     namespace: longhorn-system
-    path: system/longhorn-system
+    path: argocd/system/longhorn-system
   - name: velero
     namespace: system/velero
-    path: system/velero
+    path: argocd/system/velero
+  - name: logging
+    namespade: logging
+    path: argocd/system/logging
