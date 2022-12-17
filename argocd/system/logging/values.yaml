@@ -44,10 +44,16 @@ kibana:
     certmanager:
       tlsIssuer: letsencrypt
 
+# LoadBalancer and DNS config
+external:
+  fluentd:
+    loadBalancerIp: 10.0.0.101
+    dns: fluentd.picluster.ricsanfre.com
 
-#######################
-# Loki  configuration
-#######################
+
+##################
+# Loki  subchart
+##################
 
 loki:
   loki:
@@ -117,10 +123,12 @@ loki:
     enabled: false
 
 #########################
-# Fluentd  configuration
+# Fluentd Subchart
 #########################
 
 fluentd:
+
+
   # Fluentd image
   image:
     repository: "ricsanfre/fluentd-aggregator"
