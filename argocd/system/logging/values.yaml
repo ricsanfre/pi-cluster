@@ -32,11 +32,11 @@ elasticsearch:
 # Kibana configuration
 kibana:
   # Limiting resources of kibana pod
-  podSpecResources:
-    requests:
-      memory: "512Mi"
-    limits:
-      memory: "512Mi"
+  # podSpecResources:
+  #   requests:
+  #     memory: "512Mi"
+  #   limits:
+  #     memory: "512Mi"
   # Ingress configuration
   ingress:
     host: kibana.picluster.ricsanfre.com
