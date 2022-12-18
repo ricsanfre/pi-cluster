@@ -1,4 +1,4 @@
-{{- if and ($.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") .enabled }}
+{{- if (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
 ---
 # Elasticsearch ServiceMonitor
 apiVersion: monitoring.coreos.com/v1
