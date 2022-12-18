@@ -34,3 +34,6 @@ apps:
   - name: logging
     namespace: logging
     path: argocd/system/logging
+  - name: monitoring
+    namespace: monitoring
+    path: argocd/system/monitoring
