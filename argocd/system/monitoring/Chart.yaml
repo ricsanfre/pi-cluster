@@ -1,5 +1,5 @@
 apiVersion: v2
-name: kube-prometheus-stack
+name: monitoring
 version: 0.0.0
 dependencies:
   - name: kube-prometheus-stack
