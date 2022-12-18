@@ -91,8 +91,8 @@ loki:
     # Enable environment variables in config file
     # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
     extraArgs:
-      config.expand-env: true
-    env:
+      - '-config.expand-env=true'
+    extraEnv:
       - name: MINIO_ACCESS_KEY
         valueFrom:
           secretKeyRef:
@@ -117,8 +117,8 @@ loki:
     # Enable environment variables in config file
     # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
     extraArgs:
-      config.expand-env: true
-    env:
+      - '-config.expand-env=true'
+    extraEnv:
       - name: MINIO_ACCESS_KEY
         valueFrom:
           secretKeyRef:
@@ -459,6 +459,10 @@ fluentd:
 
 fluent-bit:
 
+  # Override automatic name using chart name + fluentd
+  nameOverride: fluent-bit
+  fullnameOverride: fluent-bit
+
   #fluentbit-container environment variables:
   env:
     # Fluentd deployment service
@@ -638,3 +642,23 @@ fluent-bit:
         - mountPath: /json-exporter-config.yml
           name: config
           subPath: json-exporter-config.yml
+
+
+#########################
+# prometheus-elasticsearch-exporter subchart
+#########################
+
+prometheus-elasticsearch-exporter:
+  # Elastic search user
+  env:
+    ES_USERNAME: elastic
+
+  # Elastic search passord from secret
+  extraEnvSecrets:
+    ES_PASSWORD:
+      secret: efk-es-elastic-user
+      key: elastic
+
+  # Elastic search URI
+  es:
+    uri: http://efk-es-http:9200
