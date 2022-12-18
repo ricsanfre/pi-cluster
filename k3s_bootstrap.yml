@@ -11,13 +11,13 @@
     # The location of the kubeconfig file on the master.
     K8S_AUTH_KUBECONFIG: ~/.kube/config
 
-  vars_prompt:
-    - name: ionos_public_prefix
-      prompt: Enter ionos public prefix
-      private: true
-    - name: ionos_secret
-      prompt: Enter ionos secret
-      private: true
+  # vars_prompt:
+  #   - name: ionos_public_prefix
+  #     prompt: Enter ionos public prefix
+  #     private: true
+  #   - name: ionos_secret
+  #     prompt: Enter ionos secret
+  #     private: true
 
   pre_tasks:
     # Install kubernetes core collection dependencies (kubernetes python package) using PIP.
@@ -74,6 +74,7 @@
         - longhorn_minio_secret.yml.j2
         - velero_secret.yml.j2
         - fluent_secret.yml.j2
+        - loki_minio_secret.yml.j2
 
     - name: Copy argocd and root chart files
       ansible.builtin.copy:

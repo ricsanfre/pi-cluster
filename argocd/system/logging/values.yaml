@@ -69,8 +69,8 @@ loki:
       s3:
         endpoint: s3.picluster.ricsanfre.com:9091
         region: eu-west-1
-        secretAccessKey: supers1cret0
-        accessKeyId: loki
+        secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
+        accessKeyId: ${MINIO_ACCESS_KEY_ID}
         s3ForcePathStyle: true
         insecure: false
         http_config:
@@ -88,6 +88,22 @@ loki:
       # -- Storage class to be used.
       storageClass: longhorn
 
+    # Enable environment variables in config file
+    # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
+    extraArgs:
+      config.expand-env: true
+    env:
+      - name: MINIO_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: loki-minio-secret
+            key: MINIO_ACCESS_KEY_ID
+      - name: MINIO_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: loki-minio-secret
+            key: MINIO_SECRET_ACCESS_KEY
+
   # Configuration for the read
   read:
     # Number of replicas for the read
@@ -97,6 +113,22 @@ loki:
       size: 10Gi
       # -- Storage class to be used.
       storageClass: longhorn
+
+    # Enable environment variables in config file
+    # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
+    extraArgs:
+      config.expand-env: true
+    env:
+      - name: MINIO_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: loki-minio-secret
+            key: MINIO_ACCESS_KEY_ID
+      - name: MINIO_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: loki-minio-secret
+            key: MINIO_SECRET_ACCESS_KEY
 
   # Configuration for the gateway
   gateway:
