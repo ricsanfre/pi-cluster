@@ -8,6 +8,9 @@ dependencies:
   - name: fluentd
     version: 0.3.9
     repository: https://fluent.github.io/helm-charts
+  - name: fluent-bit
+    version: 0.21.0
+    repository: https://fluent.github.io/helm-charts
   - name: loki
     version: 3.8.0
     repository: https://grafana.github.io/helm-charts
