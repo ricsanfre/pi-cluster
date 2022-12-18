@@ -11,6 +11,7 @@ monitoring:
 
 kube-prometheus-stack:
   prometheusOperator:
+    nameOverride: monitoring
     # Disable linkerd injection for admission webhooks jobs
     admissionWebhooks:
       patch:
