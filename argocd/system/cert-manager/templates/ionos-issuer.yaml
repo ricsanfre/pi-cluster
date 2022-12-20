@@ -1,3 +1,5 @@
+{{- if index .Values "cert-manager-webhook-ionos" -}}
+    {{- $webhook:= index .Values "cert-manager-webhook-ionos" }}
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -16,7 +18,7 @@ spec:
     solvers:
       - dns01:
           webhook:
-            groupName: {{ .Values.webhook_groupName }}
+            groupName: {{ $webhook.groupName }}
             solverName: ionos
             config:
               apiUrl: https://api.hosting.ionos.com/dns/v1
@@ -26,3 +28,4 @@ spec:
               secretKeySecretRef:
                 key: IONOS_SECRET
                 name: ionos-secret
+{{- end -}}
