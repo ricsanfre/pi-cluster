@@ -1,16 +1,18 @@
-{{- $files := .Files.Glob "../rules/*.rule" }}
+{{- $files := .Files.Glob "rules/*.rule" }}
 {{- if $files }}
+{{- $release:= include "monitoring-stack.name" . }}
 {{- range $path, $fileContents := $files }}
 {{- $ruleName := regexReplaceAll "(^.*/)(.*)\\.rule$" $path "${2}" }}
+---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
-    release: kube-prometheus-stack
+    release: {{ $release }}
   name: {{ $ruleName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ $.Release.Namespace }}
 spec:
-{{ $.Files.Glob $path | toYaml | nindent 2 }}
+{{- $.Files.Get $path | toYaml | nindent 2 }}
 
 {{- end }}
 {{- end }}
