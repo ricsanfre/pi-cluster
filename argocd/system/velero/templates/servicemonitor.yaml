@@ -5,7 +5,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: velero
-    release: { .Values.serviceMonitor.release }}
+    release: {{ .Values.serviceMonitor.release }}
   name: velero-prometheus-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:

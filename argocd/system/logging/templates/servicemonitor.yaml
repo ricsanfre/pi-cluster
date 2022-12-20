@@ -40,7 +40,7 @@ spec:
       - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      app.kubernetes.io/instance: fluentd
+      app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/name: fluentd
 
 ---
@@ -68,7 +68,7 @@ spec:
       - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      app.kubernetes.io/instance: fluent-bit
+      app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/name: fluent-bit
 
 {{- end }}

@@ -18,7 +18,6 @@ spec:
       - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      app.kubernetes.io/instance: traefik
       app.kubernetes.io/name: traefik
-      app.kubernetes.io/component: traefik-metrics
+      app.kubernetes.io/component: metrics
 {{- end -}}
