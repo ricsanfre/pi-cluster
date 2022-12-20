@@ -1,0 +1,16 @@
+{{- $files := .Files.Glob "../rules/*.rule" }}
+{{- if $files }}
+{{- range $path, $fileContents := $files }}
+{{- $ruleName := regexReplaceAll "(^.*/)(.*)\\.rule$" $path "${2}" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: kube-prometheus-stack
+  name: {{ $ruleName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+{{ $.Files.Glob $path | toYaml | nindent 2 }}
+
+{{- end }}
+{{- end }}
