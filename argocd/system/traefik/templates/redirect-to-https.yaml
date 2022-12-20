@@ -2,7 +2,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: http-to-https-redirect
-  namespace: traefik
+  namespace: {{ .Release.Namespace }}
 spec:
   entryPoints:
     - web
@@ -20,7 +20,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: redirect-to-https
-  namespace: traefik
+  namespace: {{ .Release.Namespace }}
 spec:
   redirectScheme:
     scheme: https

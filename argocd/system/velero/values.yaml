@@ -42,3 +42,9 @@ velero:
   # Enable linkerd
   podAnnotations:
     linkerd.io/inject: enabled
+
+
+# Prometheus servicemonitor configuration
+serviceMonitor:
+  enable: true
+  release: monitoring

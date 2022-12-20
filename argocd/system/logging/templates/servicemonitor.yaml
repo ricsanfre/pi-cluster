@@ -1,4 +1,4 @@
-{{- if (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
+{{- if and .Values.serviceMonitor.enable (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
 ---
 # Elasticsearch ServiceMonitor
 apiVersion: monitoring.coreos.com/v1
@@ -6,7 +6,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: prometheus-elasticsearch-exporter
-    release: kube-prometheus-stack
+    release: {{ .Values.serviceMonitor.release }}
   name: elasticsearch-prometheus-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:
@@ -27,7 +27,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: fluentd
-    release: kube-prometheus-stack
+    release: {{ .Values.serviceMonitor.release }}
   name: fluentd-prometheus-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:
@@ -50,7 +50,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: fluent-bit
-    release: kube-prometheus-stack
+    release: {{ .Values.serviceMonitor.release }}
   name: fluentbit-prometheus-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:

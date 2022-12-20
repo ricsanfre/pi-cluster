@@ -4,19 +4,20 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app: longhorn
-    release: {{ .Values.serviceMonitor.release }}
-  name: longhorn-prometheus-servicemonitor
+    app: velero
+    release: { .Values.serviceMonitor.release }}
+  name: velero-prometheus-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:
   jobLabel: app.kubernetes.io/name
-  selector:
-    matchLabels:
-      app: longhorn-manager
+  endpoints:
+    - port: http-monitoring
+      path: /metrics
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
-  endpoints:
-    - port: manager
-
-{{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: velero
+      app.kubernetes.io/name: velero
+{{- end -}}

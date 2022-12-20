@@ -1,3 +1,8 @@
+# Prometheus servicemonitor configuration
+serviceMonitor:
+  enable: true
+  release: monitoring
+
 # Traefik helm chart values
 traefik:
   # Configure access log

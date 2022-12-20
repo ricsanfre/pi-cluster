@@ -51,6 +51,11 @@ external:
     dns: fluentd.picluster.ricsanfre.com
 
 
+serviceMonitor:
+  enable: true
+  release: monitoring
+
+
 ##################
 # Loki  subchart
 ##################

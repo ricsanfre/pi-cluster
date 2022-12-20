@@ -4,19 +4,21 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app: longhorn
+    app: traefik
     release: {{ .Values.serviceMonitor.release }}
-  name: longhorn-prometheus-servicemonitor
+  name: traefik-prometheus-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:
   jobLabel: app.kubernetes.io/name
-  selector:
-    matchLabels:
-      app: longhorn-manager
+  endpoints:
+    - port: metrics
+      path: /metrics
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
-  endpoints:
-    - port: manager
-
-{{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: traefik
+      app.kubernetes.io/name: traefik
+      app.kubernetes.io/component: traefik-metrics
+{{- end -}}
