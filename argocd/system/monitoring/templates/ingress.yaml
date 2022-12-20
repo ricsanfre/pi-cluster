@@ -8,7 +8,7 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      l5d-dst-override: "kube-prometheus-stack-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090"
+      l5d-dst-override: "{{ template "monitoring-stack.name" . }}-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090"
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
@@ -19,7 +19,7 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      l5d-dst-override: "kube-prometheus-stack-alertmanager.{{ .Release.Namespace }}.svc.cluster.local:9093"
+      l5d-dst-override: "{{ template "monitoring-stack.name" . }}-alertmanager.{{ .Release.Namespace }}.svc.cluster.local:9093"
 
 ---
 #Linkerd middleware
@@ -31,7 +31,7 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      l5d-dst-override: "kube-prometheus-stack-grafana.{{ .Release.Namespace }}}.svc.cluster.local:80"
+      l5d-dst-override: "{{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local:80"
 
 ---
 # Strip prefix middleware
@@ -92,7 +92,7 @@ spec:
   - kind: Rule
     match: Host(`{{ .Values.monitoring.ingress.host }}`) && PathPrefix(`/prometheus`)
     services:
-    - name: kube-prometheus-stack-prometheus
+    - name: {{ template "monitoring-stack.name" . }}-prometheus
       port: 9090
       namespace: {{ .Release.Namespace }}
     middlewares:
@@ -105,7 +105,7 @@ spec:
   - kind: Rule
     match: Host(`{{ .Values.monitoring.ingress.host }}`) && PathPrefix(`/alertmanager`)
     services:
-    - name: kube-prometheus-stack-alertmanager
+    - name: {{ template "monitoring-stack.name" . }}-alertmanager
       port: 9093
       namespace: {{ .Release.Namespace }}
     middlewares:
@@ -118,7 +118,7 @@ spec:
   - kind: Rule
     match: Host(`{{ .Values.monitoring.ingress.host }}`) && PathPrefix(`/grafana`)
     services:
-    - name: kube-prometheus-stack-grafana
+    - name: {{ .Release.Name }}-grafana
       port: 80
       namespace: {{ .Release.Namespace }}
     middlewares:
