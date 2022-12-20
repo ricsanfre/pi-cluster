@@ -1,0 +1,10 @@
+# Logging internal services endpoints
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logging-stack-cm
+  namespace: {{ .Release.Namespace }}
+data:
+  lokiURL: "http://loki-gateway"
+  elasticsearchHost: {{ .Values.eck.clusterName }}-es-http
+  fluentdHost: {{ .Release.Name }}-fluentd

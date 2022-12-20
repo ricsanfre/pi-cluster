@@ -160,10 +160,6 @@ loki:
 
 fluentd:
 
-  # Override automatic name using chart name + fluentd
-  nameOverride: fluentd
-  fullnameOverride: fluentd
-
   # Fluentd image
   image:
     repository: "ricsanfre/fluentd-aggregator"
@@ -194,7 +190,11 @@ fluentd:
       value: "../../../etc/fluent/fluent.conf"
     # Elastic operator creates elastic service name with format cluster_name-es-http
     - name:  FLUENT_ELASTICSEARCH_HOST
-      value: efk-es-http
+      valueFrom:
+        configMapKeyRef:
+          name: "logging-stack-cm"
+          key: elasticsearchHost
+      # value: efk-es-http
       # Default elasticsearch default port
     - name:  FLUENT_ELASTICSEARCH_PORT
       value: "9200"
@@ -220,7 +220,11 @@ fluentd:
           key: fluentd-shared-key
     # Loki url
     - name: LOKI_URL
-      value: "http://loki-gateway"
+      valueFrom:
+        configMapKeyRef:
+          name: "logging-stack-cm"
+          key: lokiURL
+      # value: "http://loki-gateway"
     # Loki username
     - name: LOKI_USERNAME
       value: ""
@@ -459,15 +463,15 @@ fluentd:
 
 fluent-bit:
 
-  # Override automatic name using chart name + fluentd
-  nameOverride: fluent-bit
-  fullnameOverride: fluent-bit
-
   #fluentbit-container environment variables:
   env:
     # Fluentd deployment service
     - name: FLUENT_AGGREGATOR_HOST
-      value: "fluentd"
+      #value: "fluentd"
+      valueFrom:
+        configMapKeyRef:
+          name: "logging-stack-cm"
+          key: fluentdHost
     # Default fluentd forward port
     - name: FLUENT_AGGREGATOR_PORT
       value: "24224"
