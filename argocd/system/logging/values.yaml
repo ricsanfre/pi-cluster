@@ -147,8 +147,8 @@ loki:
       enabled: false
       grafanaAgent:
         installOperator: false
-      lokiCanary:
-          enabled: false
+    lokiCanary:
+        enabled: false
 
   # Disable helm-test
   test:
