@@ -12,7 +12,7 @@ metadata:
   name: {{ $ruleName }}
   namespace: {{ $.Release.Namespace }}
 spec:
-{{- $.Files.Get $path | toYaml | nindent 2 }}
+{{- $.Files.Get $path | nindent 2 }}
 
 {{- end }}
 {{- end }}
