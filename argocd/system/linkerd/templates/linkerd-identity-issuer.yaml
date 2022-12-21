@@ -5,10 +5,10 @@ metadata:
   namespace: linkerd
 spec:
   secretName: linkerd-identity-issuer
-  duration: 48h0m0s
-  renewBefore: 25h0m0s
+  duration: {{ .Values.identityIssuer.certificate.duration }}
+  renewBefore: {{ .Values.identityIssuer.certificate.renewBefore }}
   issuerRef:
-    name: ca-issuer
+    name: {{ .Values.identityIssuer.certificate.issuer }}
     kind: ClusterIssuer
     group: cert-manager.io
   commonName: identity.linkerd.cluster.local

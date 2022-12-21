@@ -1,3 +1,6 @@
+# Cert-manager TrustBundle
+# Share CA root certificate as configMap in linkerd namespace
+
 apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle
 metadata:
@@ -10,3 +13,6 @@ spec:
   target:
     configMap:
       key: "ca-bundle.crt"
+    namespaceSelector:
+      matchNames:
+        - {{ .Release.Namespace }}
