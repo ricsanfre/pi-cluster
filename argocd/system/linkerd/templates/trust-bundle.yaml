@@ -14,5 +14,5 @@ spec:
     configMap:
       key: "ca-bundle.crt"
     namespaceSelector:
-      matchNames:
-        - {{ .Release.Namespace }}
+      matchLabels:
+        kubernetes.io/metadata.name: {{ .Release.Namespace }}
