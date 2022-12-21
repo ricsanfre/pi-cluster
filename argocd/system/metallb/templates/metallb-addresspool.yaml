@@ -1,3 +1,5 @@
+{{- if .Values.ipAddressPool.addresses }}
+
 # Metallb address pool
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -6,7 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   addresses:
-  - "10.0.0.100-10.0.0.200"
+{{ toYaml .Values.ipAddressPool.addresses | indent 4 }}
 
 ---
 # L2 configuration
@@ -18,3 +20,5 @@ metadata:
 spec:
   ipAddressPools:
   - picluster-pool
+
+{{- end }}
