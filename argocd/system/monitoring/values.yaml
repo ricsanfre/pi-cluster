@@ -4,6 +4,10 @@ monitoring:
     # configure cert-manager issuer
     certmanager:
       tlsIssuer: letsencrypt
+    basicAuth:
+      enable: true
+      middlewareName: basic-auth
+      middlewareNamespace: traefik
 
 ################################
 # kube-prometheus-stack subchart

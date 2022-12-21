@@ -50,17 +50,6 @@ spec:
     forceSlash: false
 
 ---
-# Basic-auth middleware
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: basic-auth
-  namespace: {{ .Release.Namespace }}
-spec:
-  basicAuth:
-    secret: basic-auth-secret
-
----
 # Create certificate
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -96,8 +85,10 @@ spec:
       port: 9090
       namespace: {{ .Release.Namespace }}
     middlewares:
-      - name: basic-auth
-        namespace: {{ .Release.Namespace }}
+{{- if .Values.monitoring.ingress.basicAuth.enable }}
+      - name: {{ .Values.monitoring.ingress.basicAuth.middlewareName }}
+        namespace: {{ .Values.monitoring.ingress.basicAuth.middlewareNamespace }}
+{{- end }}
       - name: stripprefix
         namespace: {{ .Release.Namespace }}
       - name: l5d-header-middleware-prometheus
@@ -109,8 +100,10 @@ spec:
       port: 9093
       namespace: {{ .Release.Namespace }}
     middlewares:
-      - name: basic-auth
-        namespace: {{ .Release.Namespace }}
+{{- if .Values.monitoring.ingress.basicAuth.enable }}
+      - name: {{ .Values.monitoring.ingress.basicAuth.middlewareName }}
+        namespace: {{ .Values.monitoring.ingress.basicAuth.middlewareNamespace }}
+{{- end }}
       - name: stripprefix
         namespace: {{ .Release.Namespace }}
       - name: l5d-header-middleware-alertmanager

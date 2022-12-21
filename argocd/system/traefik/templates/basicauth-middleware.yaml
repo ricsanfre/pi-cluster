@@ -1,0 +1,10 @@
+---
+# Basic-auth middleware
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth
+  namespace: {{ .Release.Namespace }}
+spec:
+  basicAuth:
+    secret: basic-auth-secret
