@@ -65,6 +65,9 @@
         - "velero"
         - "logging"
 
+    - name: Create Basic Auth credentials
+      include_tasks: tasks/create_basic_auth_credentials.yml
+
     - name: Configure secrets
       kubernetes.core.k8s:
         definition: "{{ lookup('template', 'argocd/external/templates/' + item ) }}"
@@ -123,7 +126,7 @@
     #     | kubectl apply -n argocd -f -
     #   args:
     #     executable: /bin/bash
-    
+
     - name: Recursively remove tmp directory
       ansible.builtin.file:
         path: /tmp/charts
