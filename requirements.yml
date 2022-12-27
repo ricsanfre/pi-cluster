@@ -22,6 +22,8 @@ roles:
     version: v1.0.9
   - name: ricsanfre.backup
     version: v1.1.2
+  - name: ricsanfre.vault
+    version: v1.0.2
 collections:
   - name: kubernetes.core
     version: 2.3.2

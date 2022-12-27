@@ -42,7 +42,7 @@
       tags: ["always"]
     # Include picluster variables
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      include_vars: "vars/picluster-no-gitops.yml"
       tags: ["always"]
 
   roles:
@@ -81,7 +81,7 @@
       tags: ["always"]
     # Include picluster variables
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      include_vars: "vars/picluster-no-gitops.yml"
       tags: ["always"]
   roles:
     - role: logging/external_node

@@ -7,7 +7,6 @@
       - python3-venv
     state: present
   become: true
-  tags: ['always']
   when: install_python_packages
 
 - name: Install certbot and ionos plugin in venvironment
@@ -18,7 +17,6 @@
     virtualenv: "{{ certbot_venv }}"
     virtualenv_command: "python3 -m venv"
     state: present
-  tags: ['always']
 
 - name: Create working directories
   file:
