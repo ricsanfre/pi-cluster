@@ -115,18 +115,18 @@ minio_buckets:
 
 # Minio users and ACLs
 minio_users:
-  - name: restic
-    password: "{{ vault.minio.restic_key }}"
+  - name: "{{ vault.minio.restic.user }}"
+    password: "{{ vault.minio.restic.key }}"
     buckets_acl:
       - name: restic
         policy: read-write
-  - name: longhorn
-    password: "{{ vault.minio.longhorn_key }}"
+  - name: "{{ vault.minio.longhorn.user }}"
+    password: "{{ vault.minio.longhorn.key }}"
     buckets_acl:
       - name: k3s-longhorn
         policy: read-write
-  - name: velero
-    password: "{{ vault.minio.velero_key }}"
+  - name: "{{ vault.minio.velero.user }}"
+    password: "{{ vault.minio.velero.key }}"
     buckets_acl:
       - name: k3s-velero
         policy: custom
@@ -152,14 +152,14 @@ minio_users:
                   "arn:aws:s3:::k3s-velero"
               ]
 
-  - name: loki
-    password: "{{ vault.minio.loki_key }}"
+  - name: "{{ vault.minio.loki.user }}"
+    password: "{{ vault.minio.loki.key }}"
     buckets_acl:
       - name: k3s-loki
         policy: read-write
 
-  - name: tempo
-    password: "{{ vault.minio.tempo_key }}"
+  - name: "{{ vault.minio.tempo.user }}"
+    password: "{{ vault.minio.tempo.key }}"
     buckets_acl:
       - name: k3s-tempo
         policy: custom
@@ -188,9 +188,9 @@ restic_repository: "s3:{{ minio_url }}/restic"
 restic_use_ca_cert: true
 restic_environment:
   - name: AWS_ACCESS_KEY_ID
-    value: "restic"
+    value: "{{ vault.minio.restic.user }}"
   - name: AWS_SECRET_ACCESS_KEY
-    value: "{{ vault.minio.restic_key }}"
+    value: "{{ vault.minio.restic.key }}"
 
 #######################
 # Vault configuration
@@ -211,8 +211,8 @@ tls_skip_verify: false
 ###################
 
 # Minio user, key and bucket
-minio_velero_user: velero
-minio_velero_key: "{{ vault.minio.velero_key }}"
+minio_velero_user: "{{ vault.minio.velero.user }}"
+minio_velero_key: "{{ vault.minio.velero.key }}"
 
 velero_secret_content: |
   [default]
@@ -223,30 +223,30 @@ velero_secret_content: |
 # Longhorn Secrets#
 ###################
 
-# Mini user, key and bucket
-minio_longhorn_user: longhorn
-minio_longhorn_key: "{{ vault.minio.longhorn_key }}"
+# Minio user, key and bucket
+minio_longhorn_user: "{{ vault.minio.longhorn.user }}"
+minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
 
 ###################
 # Logging Secrets #
 ###################
 
 # Fluentd-fluentbit shared key
-fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
+fluentd_shared_key: "{{ vault.fluentd.shared_key }}"
 
 # Elasticsearch 'elastic' user password
-efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin_password}}"
+efk_elasticsearch_passwd: "{{ vault.elasticsearch.password }}"
 
 # Loki minio user, key and bucket
-minio_loki_user: loki
-minio_loki_key: "{{ vault.minio.loki_key }}"
+minio_loki_user: "{{ vault.minio.loki.user }}"
+minio_loki_key: "{{ vault.minio.loki.key }}"
 
 ######################
 # Monitoring Secrets #
 ######################
 
 # Grafana admin user password
-prometheus_grafana_password: "{{ vault.grafana.admin_password}}"
+prometheus_grafana_password: "{{ vault.grafana.admin.password}}"
 
 
 #######################
@@ -254,6 +254,6 @@ prometheus_grafana_password: "{{ vault.grafana.admin_password}}"
 #######################
 
 # Tempo minio user, key and bucket
-minio_tempo_user: tempo
-minio_tempo_key: "{{ vault.minio.tempo_key }}"
+minio_tempo_user: "{{ vault.minio.tempo.user }}"
+minio_tempo_key: "{{ vault.minio.tempo.key }}"
 minio_tempo_bucket: k3s-tempo
