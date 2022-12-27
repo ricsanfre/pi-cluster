@@ -8,7 +8,7 @@
   --logs-dir {{certbot_venv}}/logs \
   --authenticator dns-ionos \
   --dns-ionos-credentials {{ certbot_venv }}/.secrets/ionos-credentials.ini \
-  --dns-ionos-propagation-seconds 900 \
+  --dns-ionos-propagation-seconds {{ propagation_seconds }} \
   --server https://acme-v02.api.letsencrypt.org/directory \
   --agree-tos \
   --non-interactive \

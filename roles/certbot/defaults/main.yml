@@ -12,3 +12,6 @@ dns_ionos_secret: ionos-secret
 dns_ionos_api_endpoint: https://api.hosting.ionos.com
 
 certbot_email: myemail@mydomain.es
+
+# dns propagation in seconds
+propagation_seconds: 300
