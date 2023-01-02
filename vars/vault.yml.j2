@@ -16,7 +16,7 @@ vault:
       passwd: {{ traefik_basic_auth_password }}
   # Minio S3 secrets
   minio:
-    root
+    root:
       user: root
       key: {{ minio_root_password }}
     restic:
@@ -44,7 +44,7 @@ vault:
     shared_key: {{ fluentd_shared_key }}
   # Grafana
   grafana:
-    admin
+    admin:
      user: admin
      password: {{ grafana_admin_password }}
 
