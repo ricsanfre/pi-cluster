@@ -140,7 +140,6 @@
     - name: Include picluster variables
       include_vars: "vars/picluster.yml"
 
-
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
         vault_key: "{{ lookup('file','certificates/' + server_hostname + '.key') }}"
@@ -178,7 +177,7 @@
     - role: ricsanfre.vault
 
   tasks:
-    # Configure ansible user profile
+    # Configure ansible user profile with VAULT environement variables
     - name: Insert http(s) export in dotfile
       become: true
       lineinfile:
@@ -198,3 +197,14 @@
         create: true
         mode: 0644
       when: custom_ca
+
+    - name: Insert VAULT_TOKEN in dotfile
+      become: true
+      lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: "^export VAULT_TOKEN="
+        line: "export VAULT_TOKEN=$(sudo jq -r '.root_token' /etc/vault/unseal.json)"
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: 0644
+

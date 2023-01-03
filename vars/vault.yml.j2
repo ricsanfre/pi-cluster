@@ -7,9 +7,10 @@ vault:
       node_pass: {{ san_iscsi_node_pass | default("") }}
       password_mutual: {{ san_iscsi_mutual_pass | default("") }}
   # K3s secrets
-  k3s:
-    k3s_token: {{ k3s_token }}
-  # traefik secrets
+  cluster:
+    k3s:
+     token: {{ k3s_token }}
+  # Traefik secrets
   traefik:
     basic_auth:
       user: admin
@@ -34,20 +35,18 @@ vault:
     tempo:
       user: tempo
       key: {{ minio_tempo_password }}
-  # elastic search
-  elasticsearch:
+  # elasticsearch and fluentd
+  logging:
     elastic:
       user: elastic
       password: {{ elasticsearch_admin_password }}
-  # Fluentd
-  fluentd:
-    shared_key: {{ fluentd_shared_key }}
+    fluentd:
+      shared_key: {{ fluentd_shared_key }}
   # Grafana
   grafana:
     admin:
      user: admin
      password: {{ grafana_admin_password }}
-
   # Certmanager
   certmanager:
     ionos:

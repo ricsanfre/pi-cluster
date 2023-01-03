@@ -12,7 +12,7 @@ k3s_version: v1.24.7+k3s1
 k3s_master_ip: 10.0.0.11
 
 # k3s shared token
-k3s_token: "{{ vault.k3s.k3s_token }}"
+k3s_token: "{{ vault.cluster.k3s.token }}"
 
 # k3s config directory
 k3s_config_directory: /etc/rancher/k3s
@@ -80,8 +80,8 @@ k3s_fluentd_external_ip: 10.0.0.101
 traefik_chart_version: 18.1.0
 
 # HTTP Basic auth credentials
-traefik_basic_auth_user: admin
-traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth_passwd }}"
+traefik_basic_auth_user: "{{ vault.traefik.basic_auth.user }}"
+traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth.password }}"
 
 # DNS cluster service end-points
 traefik_dashboard_dns: "traefik.{{ dns_domain }}"
@@ -196,14 +196,14 @@ prometheus_es_exporter_chart_version: 4.15.1
 enable_elastic_search: true
 
 # Fluentd-fluentbit shared key
-fluentd_shared_key: "{{ vault.fluentd.shared_key}}"
+fluentd_shared_key: "{{ vault.logging.fluentd.shared_key}}"
 
 # Helm chart version
 fluentd_chart_version: 0.3.9
 fluentbit_chart_version: 0.21.0
 
 # Elasticsearch 'elastic' user password
-efk_elasticsearch_passwd: "{{ vault.elasticsearch.admin.password}}"
+efk_elasticsearch_passwd: "{{ vault.logging.elasticsearch.admin.password}}"
 
 # Loki helm version
 loki_chart_version: 3.3.0

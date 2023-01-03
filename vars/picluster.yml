@@ -12,7 +12,7 @@ k3s_version: v1.24.7+k3s1
 k3s_master_ip: 10.0.0.11
 
 # k3s shared token
-k3s_token: "{{ vault.k3s.k3s_token }}"
+k3s_token: "{{ vault.cluster.k3s.token }}"
 
 # k3s config directory
 k3s_config_directory: /etc/rancher/k3s
@@ -49,8 +49,8 @@ k3s_worker_extra_args: >-
 ###########
 
 # HTTP Basic auth credentials
-traefik_basic_auth_user: admin
-traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth_passwd }}"
+traefik_basic_auth_user: "{{ vault.traefik.basic_auth.user }}"
+traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth.password }}"
 
 # DNS cluster service end-points
 traefik_dashboard_dns: "traefik.{{ dns_domain }}"
@@ -91,7 +91,7 @@ minio_server_datadirs:
 
 # Minio admin credentials
 minio_root_user: "minioadmin"
-minio_root_password: "{{ vault.minio.root_password }}"
+minio_root_password: "{{ vault.minio.root.key }}"
 
 # Minio site region configuration
 minio_site_region: "eu-west-1"
@@ -99,6 +99,9 @@ minio_site_region: "eu-west-1"
 # Enabling TLS
 minio_enable_tls: true
 minio_validate_certificate: false
+
+# Create Prometheus bearer token
+minio_prometheus_bearer_token: true
 
 # Minio Buckets
 minio_buckets:
@@ -206,6 +209,23 @@ vault_unseal: true
 vault_unseal_service: true
 tls_skip_verify: false
 
+# Configure KV
+vault_kv_secrets:
+  path: secret
+
+# Policies
+policies:
+  - name: write
+    hcl: |
+      path "secret/*" {
+        capabilities = [ "create", "read", "update", "delete", "list", "patch" ]
+      }
+  - name: read
+    hcl: |
+      path "secret/*" {
+        capabilities = [ "read" ]
+      }
+
 ###################
 # Velero  Secrets #
 ###################
@@ -232,10 +252,10 @@ minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
 ###################
 
 # Fluentd-fluentbit shared key
-fluentd_shared_key: "{{ vault.fluentd.shared_key }}"
+fluentd_shared_key: "{{ vault.logging.fluentd.shared_key }}"
 
 # Elasticsearch 'elastic' user password
-efk_elasticsearch_passwd: "{{ vault.elasticsearch.password }}"
+efk_elasticsearch_passwd: "{{ vault.logging.elasticsearch.password }}"
 
 # Loki minio user, key and bucket
 minio_loki_user: "{{ vault.minio.loki.user }}"
