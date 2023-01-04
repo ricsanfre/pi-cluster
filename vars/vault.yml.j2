@@ -12,9 +12,9 @@ vault:
      token: {{ k3s_token }}
   # Traefik secrets
   traefik:
-    basic_auth:
+    admin:
       user: admin
-      passwd: {{ traefik_basic_auth_password }}
+      password: {{ traefik_basic_auth_password }}
   # Minio S3 secrets
   minio:
     root:

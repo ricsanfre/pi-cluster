@@ -49,8 +49,8 @@ k3s_worker_extra_args: >-
 ###########
 
 # HTTP Basic auth credentials
-traefik_basic_auth_user: "{{ vault.traefik.basic_auth.user }}"
-traefik_basic_auth_passwd: "{{ vault.traefik.basic_auth.password }}"
+traefik_basic_auth_user: "{{ vault.traefik.admin.user }}"
+traefik_basic_auth_passwd: "{{ vault.traefik.admin.password }}"
 
 # DNS cluster service end-points
 traefik_dashboard_dns: "traefik.{{ dns_domain }}"
