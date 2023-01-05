@@ -498,7 +498,7 @@ Create vault policies to read and read/write KV secrets
   Add policy to vault
 
   ```shell
-  vault policy write secrets-write /etc/vault/policy/secrets-readwrite.hcl
+  vault policy write readwrite /etc/vault/policy/secrets-readwrite.hcl
   ```
 
 - Read-only policy
@@ -513,7 +513,7 @@ Create vault policies to read and read/write KV secrets
   Add policy to vault
 
   ```shell
-  vault policy write secrets-read /etc/vault/policy/secrets-read.hcl
+  vault policy write readonly /etc/vault/policy/secrets-read.hcl
   ```
 
 Testing policies:
@@ -521,8 +521,8 @@ Testing policies:
 - Generate tokens for read and write policies
 
   ```shell
-  READ_TOKEN=$(vault token create -policy="read" -field=token)
-  WRITE_TOKEN=$(vault token create -policy="write" -field=token)
+  READ_TOKEN=$(vault token create -policy="readonly" -field=token)
+  WRITE_TOKEN=$(vault token create -policy="readwrite" -field=token)
   ```
 
 - Try write a secret using read token
@@ -588,3 +588,195 @@ Testing policies:
   user        user1
   ```
 
+### Kubernetes Auth Method
+
+Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/docs/auth/kubernetes) to authenticate with Vault using a Kubernetes Service Account Token. This method of authentication makes it easy to introduce a Vault token into a Kubernetes Pod.
+
+
+
+- Step 1. Create `vault` namespace
+
+  ```shell
+  kubectl create namespace vault
+  ```
+
+- Step 2. Create service account `vault-auth` to be used by Vault kuberentes authentication
+ 
+  ```yml 
+  ---
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: vault-auth
+    namespace: vault
+  ```
+
+- Step 3. Add proper permissions to service account
+
+  Vault kubernetes authentication method accesses the Kubernetes TokenReview API to validate the provided JWT is still valid. Service Accounts used in this auth method will need to have access to the TokenReview API. If Kubernetes is configured to use RBAC roles, the Service Account should be granted permissions to access this API.
+  Check more details in [Vault - Kubernetes Auth Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes#configuring-kubernetes)
+
+  ```yml
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: role-tokenreview-binding
+    namespace: vault
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: system:auth-delegator
+  subjects:
+    - kind: ServiceAccount
+      name: vault-auth
+      namespace: vault
+  ```
+
+- Step 4. Create long-lived token for vault-auth service account.
+  From Kubernetes v1.24, secrets contained long-lived tokens associated to service accounts are not longer created.
+  See how to create it in [Kubernetes documentation](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#manually-create-a-long-lived-api-token-for-a-serviceaccount)
+
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  type: kubernetes.io/service-account-token
+  metadata:
+    name: vault-auth-secret
+    namespace: vault
+    annotations:
+      kubernetes.io/service-account.name: vault-auth
+  ```
+
+- Step 5. Get Service Account token
+  
+  ```shell
+  KUBERNETES_SA_SECRET_NAME=$(kubectl get secrets --output=json -n vault | jq -r '.items[].metadata | select(.name|startswith("vault-auth")).name')
+  TOKEN_REVIEW_JWT=$(kubectl get secret $KUBERNETES_SA_SECRET_NAME -n vault -o jsonpath='{.data.token}' | base64 --decode)
+  ```
+
+- Step 6. Get Kubernetes CA cert and API URL
+
+  ```shell
+  # Get Kubernetes CA
+kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode > k3s_ca.crt
+  # Get Kubernetes Url
+  KUBERNETES_HOST=$(kubectl config view -o jsonpath='{.clusters[].cluster.server}')
+  ```
+
+- Step 7. Enable Kubernetes auth method
+
+  ```shell
+  vault auth enable kubernetes
+  ```
+
+- Step 8. Configure Vault kubernetes auth method
+
+  ```shell
+  vault write auth/kubernetes/config  \
+    token_reviewer_jwt="${TOKEN_REVIEW_JWT}" \
+    kubernetes_host="${KUBERNETES_HOST}" \
+    kubernetes_ca_cert=@k3s_ca.crt
+    disable_iss_validation=true
+  ```
+
+## External Secrets Operator installation
+
+-  Step 1: Add External sercrets repository:
+  ```shell
+  helm repo add external-secrets https://charts.external-secrets.io
+  ```
+- Step 2: Fetch the latest charts from the repository:
+  ```shell
+  helm repo update
+  ```
+- Step 3: Create namespace
+  ```shell
+  kubectl create namespace external-secrets
+  ```
+- Step 4: Install helm chart
+  ```shell
+  helm install external-secrets \
+     external-secrets/external-secrets \
+      -n external-secrets \
+      --set installCRDs=true
+  ```
+- Step 5: Create external secrets vault role. Applying read policy
+
+  ```shell
+  vault write auth/kubernetes/role/external-secrets \
+    bound_service_account_names=external-secrets \
+    bound_service_account_namespaces=external-secrets \
+    policies=readonly \
+    ttl=24h
+  ```
+
+- Step 6: Create Cluster Secret Store
+
+  ```yml
+  apiVersion: external-secrets.io/v1beta1
+   kind: ClusterSecretStore
+   metadata:
+     name: vault-backend
+     namespace: external-secrets
+   spec:
+     provider:
+       vault:
+         server: "https://vault.vault:8200"
+         path: "secret"
+         version: "v2"
+         auth:
+           kubernetes:
+             mountPath: "kubernetes"
+             role: "external-secrets"
+  ```
+  
+  Check ClusterSecretStore status
+
+  ```shell
+  kubectl get clustersecretstore -n external-secrets
+  NAME            AGE   STATUS   CAPABILITIES   READY
+  vault-backend   10m   Valid    ReadWrite      True
+  ```
+
+- Step 7: Create External secret
+
+
+  ```yml
+  apiVersion: external-secrets.io/v1beta1
+  kind: ExternalSecret
+  metadata:
+   name: vault-example
+  spec:
+   secretStoreRef:
+     name: vault-backend
+     kind: ClusterSecretStore
+   target:
+     name: mysecret
+   data:
+   - secretKey: password
+     remoteRef:
+       key: secret1
+       property: password
+  ```
+
+  Check ExternalSecret status
+
+  ```shell
+  kubectl get externalsecret
+  NAME            STORE           REFRESH INTERVAL   STATUS         READY
+  vault-example   vault-backend   1h                 SecretSynced   True
+  ```
+
+  Check Secret created
+
+  ```shell
+  kubectl get secret mysecret -o yaml
+  ```
+
+## References
+
+- [Vault - Kubernetes Auth Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes)
+- [External Vault configuriation guide](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-external-vault)
+
+- [Tutorial: How to Set External-Secrets with Hashicorp Vault](https://blog.container-solutions.com/tutorialexternal-secrets-with-hashicorp-vault)
