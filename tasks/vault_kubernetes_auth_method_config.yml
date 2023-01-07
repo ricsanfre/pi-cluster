@@ -1,0 +1,83 @@
+---
+
+- name: Vault login
+  ansible.builtin.shell: bash -ilc 'vault login -format=json $VAULT_TOKEN'
+  # Interactive bash so .bashrc is loaded
+  # 'source ~/.bashrc && <command>' does not work because
+  # Ansible shell is not interactive and ~/.bashrc implementation by default ignores non interactive shell.
+  # See lines at beginning of bashrc:
+  #
+  # If not running interactively, don't do anything
+  # case $- in
+  #     *i*) ;;
+  #       *) return;;
+  # esac
+  # The best solution for executing commands as user after its ssh interactive login:
+  # bash -ilc '<command>'
+  # '-i' means interactive shell, so .bashrc won't be ignored '-l' means login shell which sources full user profile
+  become: false
+  register: vault_login
+  changed_when: false
+  delegate_to: gateway
+
+- name: 
+  set_fact:
+    vault_token: "{{ vault_login.stdout | from_json | community.hashi_vault.vault_login_token }}"
+
+- name: Get status of kubernetes auth method
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/sys/auth"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+  failed_when:
+    - no
+  register: vault_status_kubernetes_auth_method
+
+  # Enable kubernetes auth method
+  # vault auth enable kubernetes
+- name: Enable kubernetes auth method
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/sys/auth/kubernetes"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+    body:
+      type: "kubernetes"
+      description: "kubernetes auth"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  when:
+    - "'kubernetes/' not in vault_status_kubernetes_auth_method.json.data"
+
+- name: Configure kubernetes auth method
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/auth/kubernetes/config"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+    body:
+      kubernetes_host: "{{ kubernetes_host }}"
+      kubernetes_ca_cert: "{{ kubernetes_ca_cert }}"
+      token_reviewer_jwt: "{{ vault_reviewer_token }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: Create External Secrets role
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/auth/kubernetes/role/external-secrets"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+    body:
+      bound_service_account_names: external-secrets
+      bound_service_account_namespaces: external-secrets
+      policies: ["read"]
+    body_format: json
+    status_code:
+      - 200
+      - 204
