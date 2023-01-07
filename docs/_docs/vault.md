@@ -659,7 +659,8 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
 
   ```shell
   # Get Kubernetes CA
-kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode > k3s_ca.crt
+  kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode > k3s_ca.crt
+
   # Get Kubernetes Url
   KUBERNETES_HOST=$(kubectl config view -o jsonpath='{.clusters[].cluster.server}')
   ```
@@ -670,6 +671,14 @@ kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].clu
   vault auth enable kubernetes
   ```
 
+  Or using Vault API
+
+  ```shell
+  curl -k --header "X-Vault-Token:$VAULT_TOKEN" --request POST\
+    --data '{"type":"kubernetes","description":"kubernetes auth"}' \
+    https://vault.picluster.ricsanfre.com:8200/v1/sys/auth/kubernetes
+  ```
+
 - Step 8. Configure Vault kubernetes auth method
 
   ```shell
@@ -678,6 +687,14 @@ kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].clu
     kubernetes_host="${KUBERNETES_HOST}" \
     kubernetes_ca_cert=@k3s_ca.crt
     disable_iss_validation=true
+  ```
+
+  Or using Vault API:
+
+  ```shell
+  KUBERNETES_CA_CERT=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+
+  curl --cacert /etc/vault/tls/vault_ca.pem --header "X-Vault-Token:$VAULT_TOKEN" --request POST --data '{"kubernetes_host": "'"$KUBERNETES_HOST"'", "kubernetes_ca_cert":"'"$KUBERNETES_CA_CERT"'", "token_reviewer_jwt":"'"$TOKEN_REVIEW_JWT"'"}' https://vault.picluster.ricsanfre.com:8200/v1/auth/kubernetes/config
   ```
 
 ## External Secrets Operator installation
@@ -711,6 +728,15 @@ kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].clu
     ttl=24h
   ```
 
+  Or using the Vault API
+
+  ```shell
+  curl -k --header "X-Vault-Token:$VAULT_TOKEN" --request POST \
+    --data '{ "bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "policies": ["readonly"], "ttl" : "24h"}' \
+    https://vault.picluster.ricsanfre.com:8200/v1/auth/kubernetes/role/external-secrets
+  ```
+
+
 - Step 6: Create Cluster Secret Store
 
   ```yml
@@ -722,7 +748,12 @@ kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].clu
    spec:
      provider:
        vault:
-         server: "https://vault.vault:8200"
+         server: "https://vault.picluster.ricsanfre.com:8200"
+         # caBundle needed if vault TLS is signed using a custom CA.
+         # If Vault TLS is valid signed by Letsencrypt this is not needed?
+         # ca cert base64 encoded and remobed '\n' characteres"
+         # <vault-ca> =`cat vault-ca.pem | base64 | tr -d "\n"`
+         caBundle: <vault-ca>
          path: "secret"
          version: "v2"
          auth:
@@ -741,9 +772,7 @@ kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].clu
 
 - Step 7: Create External secret
 
-
   ```yml
-  apiVersion: external-secrets.io/v1beta1
   kind: ExternalSecret
   metadata:
    name: vault-example
@@ -758,6 +787,10 @@ kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].clu
      remoteRef:
        key: secret1
        property: password
+   - secretKey: user
+     remoteRef:
+       key: secret1
+       property: user
   ```
 
   Check ExternalSecret status
