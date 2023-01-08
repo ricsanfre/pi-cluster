@@ -1,3 +1,7 @@
+
+backup:
+  minioUrl: "https://s3.minio.picluster.ricsanfre.com:9091"
+
 # longhorn helm chart values
 longhorn:
   defaultSettings:
