@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "27-11-2022"
+last_modified_at: "09-01-2023"
 
 ---
 
@@ -222,6 +222,45 @@ Installation using `Helm` (Release 3):
     AiEAwlZ6RTYjoN4XHxQnz2yZhu7ACsjX5p3oSNnL2nOs+7k=
     -----END CERTIFICATE-----
   ```
+
+#### GitOps installation (ArgoCD)
+
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding CA certificate within Helm chart values, a external configMap can be created `linkerd-identity-trust-roots` containing the ca certificate (ca-bundle.crt key) and setting the helm value `identity.externalCA=true` during installation.
+Trust Manager, installed jointly with Cert-Manager, can be used to automate the generation of that configMap containing the information about the ca secret.
+See detailed procedure described in [linkerd issue #7345](https://github.com/linkerd/linkerd2/issues/7345#issuecomment-979207861)
+
+- Step 8: Create a Trust-Manager Bundle resource to distribute CA certificate in linkerd namespace as a configmap (source is taken from the namespace trust was installed in, i.e cert-manager)
+  Create Trust Manager bundle resource to share `ca.crt` stored in `root-secret` in a configMap (`linkerd-identity-trust-roots`) in linkerd namespace.
+
+  ```yml
+  apiVersion: trust.cert-manager.io/v1alpha1
+  kind: Bundle
+  metadata:
+    name: linkerd-identity-trust-roots
+  spec:
+    sources:
+    - secret:
+        name: "root-secret"
+        key: "ca.crt"
+    target:
+      configMap:
+        key: "ca-bundle.crt"
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: linkerd
+  ```
+
+- Step 9: Install Linkerd control Plane Helm
+
+  ```shell
+  helm install linkerd-control-plane \
+  --set identity.externalCA=true \
+  --set identity.issuer.scheme=kubernetes.io/tls \
+  --set installNamespace=false \
+  linkerd/linkerd-control-plane \
+  -n linkerd
+  ```
+
 
 ### Linkerd Viz extension installation
 
