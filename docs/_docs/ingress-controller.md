@@ -2,7 +2,7 @@
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
 description: How to configure Ingress Contoller based on Traefik in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "10-09-2022"
+last_modified_at: "09-01-2023"
 ---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
@@ -209,6 +209,21 @@ A Kuberentes Service must be created for enabling the access to Prometheus metri
   ```shell
   curl http://<traefik-dashboard-service>:9100/metrics
   ```
+{{site.data.alerts.note}}
+
+Latest versions of Traefik helm chart automatically create this metrics service. Tested with 20.6.0 version.
+The following additional values need to be provided:
+
+```yml
+# Enable prometheus metric service
+metrics:
+  prometheus:
+    service:
+      enabled: true
+```
+
+{{site.data.alerts.end}}
+
 
 ### Enabling access to Traefik-Dashboard
 
@@ -433,6 +448,29 @@ spec:
                 port:
                   number: 80
 ```
+
+A global Traefik ingress route can be created for redirecting all incoming HTTP traffic to HTTPS
+
+```yml
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: http-to-https-redirect
+  namespace: traefik
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      priority: 1
+      middlewares:
+        - name: redirect-to-https
+      services:
+        - kind: TraefikService
+          name: noop@internal
+```
+This route has priority 1 and it will be executed before any other routing rule.
 
 ### Providing HTTP basic authentication
 
