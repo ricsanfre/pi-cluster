@@ -531,6 +531,7 @@ Installation using `Helm` (Release 3):
   ```shell
   kubectl create namespace velero
   ```
+
 - Step 4: Create values.yml for Velero helm chart deployment
   
   ```yml
@@ -704,6 +705,35 @@ Installation using `Helm` (Release 3):
   {{site.data.alerts.note}}
    In case of using a self-signed certificate for Minio server, custom CA certificate must be passed as `configuration.backupStorageLocation.caCert` parameter (base64 encoded and removing any '\n' character)
   {{site.data.alerts.end}}
+
+#### GitOps installation (ArgoCD)
+
+As alternative, for GitOps deployment (ArgoCD), instead of putting minio credentiasl into helm values in plain text, a Secret can be used to store the credentials.
+
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: velero-secret
+  namespace: velero
+type: Opaque
+data:
+  cloud: <velero_secret_content | b64encode>
+```
+Where <velero_secret_content> is:
+
+```
+[default]
+aws_access_key_id: <minio_velero_user> # Not encoded
+aws_secret_access_key: <minio_velero_pass> # Not encoded
+```
+
+And the following helm values need to be provided, instead of `credentias.secretContent`
+
+```yml
+credentials:
+  existingSecret: velero-secret
+```
 
 ### Testing Velero installation
 
