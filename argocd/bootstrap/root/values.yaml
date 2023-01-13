@@ -10,6 +10,9 @@ apps:
   - name: root
     namespace: argocd
     path: argocd/bootstrap/root
+  - name: external-secrets
+    namespace: external-secrets
+    path: argocd/system/external-secrets
   - name: metallb
     namespace: metallb
     path: argocd/system/metallb
