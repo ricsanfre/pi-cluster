@@ -17,7 +17,7 @@ Vault could be installed as Kuberentes service, deploying it using an official H
 ## Vault installation
 
 
-VAult installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.vault**. This role, installs Vault Server, initialize it and install a systemd service to automatically unseal it whenever vault server is restarted.
+Vault installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.vault**. This role, installs Vault Server, initialize it and install a systemd service to automatically unseal it whenever vault server is restarted.
 
 ### Vault installation from binaries
 
@@ -699,6 +699,8 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
 
 ## External Secrets Operator installation
 
+External Secrets Operator is installed through its helm chart.
+
 -  Step 1: Add External sercrets repository:
   ```shell
   helm repo add external-secrets https://charts.external-secrets.io
@@ -773,6 +775,7 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
 - Step 7: Create External secret
 
   ```yml
+  apiVersion: external-secrets.io/v1beta1
   kind: ExternalSecret
   metadata:
    name: vault-example
