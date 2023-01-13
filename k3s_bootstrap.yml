@@ -11,14 +11,6 @@
     # The location of the kubeconfig file on the master.
     K8S_AUTH_KUBECONFIG: ~/.kube/config
 
-  # vars_prompt:
-  #   - name: ionos_public_prefix
-  #     prompt: Enter ionos public prefix
-  #     private: true
-  #   - name: ionos_secret
-  #     prompt: Enter ionos secret
-  #     private: true
-
   pre_tasks:
     # Install kubernetes core collection dependencies (kubernetes python package) using PIP.
     - name: Ensure PIP is installed.
@@ -28,28 +20,30 @@
           - python3-setuptools
         state: present
       become: true
-      tags: ['always']
 
     - name: Ensure kubernetes Python library is installed.
       pip:
         name: kubernetes
         state: present
       become: true
-      tags: ['always']
+
+    - name: Ensure hashicorp vault python library is installed.
+      pip:
+        name: hvac
+        state: present
+      become: true
 
     # Install Helm diff plugin to have a better idempotence check
     - name: Intall Helm Plugin
       kubernetes.core.helm_plugin:
         plugin_path: "https://github.com/databus23/helm-diff"
         state: present
-      tags: ['always']
 
     - name: Include vault variables
       include_vars: "vars/vault.yml"
-      tags: ["always"]
+
     - name: Include picluster variables
       include_vars: "vars/picluster.yml"
-      tags: ["always"]
 
   tasks:
     - name: Create namespaces.
@@ -60,24 +54,10 @@
         state: present
       with_items:
         - "argocd"
-        - "cert-manager"
-        - "longhorn-system"
-        - "velero"
-        - "logging"
+        - "vault"
 
-    - name: Create Basic Auth credentials
-      include_tasks: tasks/create_basic_auth_credentials.yml
-
-    - name: Configure secrets
-      kubernetes.core.k8s:
-        definition: "{{ lookup('template', 'argocd/external/templates/' + item ) }}"
-        state: present
-      with_items:
-        - ionos_secret.yml.j2
-        - longhorn_minio_secret.yml.j2
-        - velero_secret.yml.j2
-        - fluent_secret.yml.j2
-        - loki_minio_secret.yml.j2
+    - name: Configure Vault integration
+      include_tasks: tasks/configure_vault_integration.yml
 
     - name: Copy argocd and root chart files
       ansible.builtin.copy:
@@ -85,7 +65,6 @@
         dest: /tmp/charts
       with_items:
         - "bootstrap/argocd"
-        # - "bootstrap/root"
 
     - name: Update argo-cd helm dependency.
       ansible.builtin.command:
@@ -114,18 +93,6 @@
         state: present
       with_items:
         - argocd_root_app.yml.j2
-
-    # - name: Deploy root Helm chart.
-    #   shell: |
-    #     set -o pipefail
-    #     helm template \
-    #     --dependency-update \
-    #     --include-crds \
-    #     --namespace argocd \
-    #     bootstrap /tmp/charts/root \
-    #     | kubectl apply -n argocd -f -
-    #   args:
-    #     executable: /bin/bash
 
     - name: Recursively remove tmp directory
       ansible.builtin.file:
