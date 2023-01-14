@@ -1,4 +1,6 @@
 argo-cd:
+  apiVersionOverrides:
+    autoscaling: autoscaling/v2
   configs:
     cm:
       statusbadge.enabled: 'true'
