@@ -16,6 +16,10 @@ spec:
     path: {{ $app.path }}
     repoURL: {{ $.Values.gitops.repo }}
     targetRevision: {{ $.Values.gitops.revision }}
+{{- if $app.helm }}
+    helm:
+{{ toYaml $app.helm | indent 6  }}
+{{- end }}
   syncPolicy:
     automated:
       prune: true

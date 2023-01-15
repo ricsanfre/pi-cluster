@@ -10,6 +10,9 @@ apps:
   - name: root
     namespace: argocd
     path: argocd/bootstrap/root
+  - name: crds
+    namespace: default
+    path: argocd/bootstrap/crds
   - name: external-secrets
     namespace: external-secrets
     path: argocd/system/external-secrets
@@ -40,3 +43,5 @@ apps:
   - name: monitoring
     namespace: monitoring
     path: argocd/system/monitoring
+    helm:
+      skipCrds: true
