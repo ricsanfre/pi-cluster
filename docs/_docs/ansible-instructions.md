@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "02-10-2022"
+last_modified_at: "15-01-2023"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -130,6 +130,115 @@ ansible-playbook playbook.yml --ask-vault-pass
 ```
 {{site.data.alerts.end}}
 
+
+#### Automate Ansible Vault decryption
+
+Ansible vault password decryption can be automated using `--vault-password-file` option (can be added to ansible.cfg file) instead of manually providing the password with each execution (`--ask-vault-pass`).
+
+Ansible vault password file can contain the password in plain-text or can be a script which obtain the password.
+
+
+##### Encrypting the Ansible Vault passphrase using GPG
+
+Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-passwor-file script.
+
+
+###### GnuPG Installation and configuration
+
+In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
+
+GnuPG package has to be installed and a GPG key pair need to be created for encrytion/decryption 
+
+- Step 1. Install GnuPG packet
+
+  ```shell
+  sudo apt install gnupg 
+  ```
+
+  Check if it is installed
+  ```shell
+  gpg --help
+  ```
+
+- Step 2. Generating Your GPG Key Pair
+
+  GPG key-pair consist on a public and private key used for encrypt/decrypt
+
+  ```shell
+  gpg --gen-key
+  ```
+
+  The process requires to provide a name, email-address and user-id which identify the recipient
+
+  The output of the command is like this:
+
+    ```
+    gpg (GnuPG) 2.2.4; Copyright (C) 2017 Free Software Foundation, Inc.
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.
+
+    Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
+
+    GnuPG needs to construct a user ID to identify your key.
+
+    Real name: Ricardo
+    Email address: ricsanfre@gmail.com
+    You selected this USER-ID:
+        "Ricardo <ricsanfre@gmail.com>"
+
+    Change (N)ame, (E)mail, or (O)kay/(Q)uit? O
+    We need to generate a lot of random bytes. It is a good idea to perform
+    some other action (type on the keyboard, move the mouse, utilize the
+    disks) during the prime generation; this gives the random number
+    generator a better chance to gain enough entropy.
+    We need to generate a lot of random bytes. It is a good idea to perform
+    some other action (type on the keyboard, move the mouse, utilize the
+    disks) during the prime generation; this gives the random number
+    generator a better chance to gain enough entropy.
+    gpg: /home/ansible/.gnupg/trustdb.gpg: trustdb created
+    gpg: key D59E854B5DD93199 marked as ultimately trusted
+    gpg: directory '/home/ansible/.gnupg/openpgp-revocs.d' created
+    gpg: revocation certificate stored as '/home/ansible/.gnupg/openpgp-revocs.d/A4745167B84C8C9A227DC898D59E854B5DD93199.rev'
+    public and secret key created and signed.
+
+    pub   rsa3072 2021-08-13 [SC] [expires: 2023-08-13]
+          A4745167B84C8C9A227DC898D59E854B5DD93199
+    uid                      Ricardo <ricsanfre@gmail.com>
+    sub   rsa3072 2021-08-13 [E] [expires: 2023-08-13]
+
+    ```
+
+  During the generation process you will be prompted to provide a passphrase.
+
+  This passphrase is needed to decryp
+
+
+###### Generate Vault password and store it in GPG
+
+Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
+
+- Step 1: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
+
+  ```shell
+  mkdir -p $HOME/.vault
+  pwgen -n 71 -C | head -n1 | gpg --armor --recipient <recipient> -e -o $HOME/.vault/vault_passphrase.gpg
+  ```
+
+  where `<recipient>` must be the email address configured during GPG key creation. 
+
+- Step 2: Generate a script `vault_pass.sh`
+
+  ```shell
+  #!/bin/sh
+  gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
+  ```
+
+- Step 3: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
+
+  ```
+  [defaults]
+  vault_password_file=vault_pass.sh
+  ```
 
 #### Modify Ansible Playbook variables
 
