@@ -9,7 +9,6 @@ spec:
   duration: 2160h0m0s # 90d
   renewBefore: 360h0m0s # 15d
   commonName: {{ .Values.external.fluentd.dns }}
-  isCA: false
   privateKey:
     algorithm: ECDSA
     size: 256
