@@ -13,6 +13,8 @@ Vault could be installed as Kuberentes service, deploying it using an official H
 
 [External Secrets Operator](https://external-secrets.io/) will be used to automatically generate the Kubernetes Secrets from Vault data that is needed to deploy the different services using ArgoCD.
 
+![picluster-secretsmanagement-architecture](/assets/img/vault-externalsecrets.png)
+
 
 ## Vault installation
 
