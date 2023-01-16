@@ -2,11 +2,13 @@
 title: GitOps (ArgoCD)
 permalink: /docs/argocd/
 description: How to apply GitOps to Pi cluster configuration using ArgoCD.
-last_modified_at: "14-01-2023"
+last_modified_at: "16-01-2023"
 ---
 
 
 [Argo CD](https://argo-cd.readthedocs.io/) is a declarative, GitOps continuous delivery tool for Kubernetes.
+
+![picluster-argocd-architecture](/assets/img/argocd_architecture.png)
 
 Argo CD follows the GitOps pattern of using Git repositories as the source of truth for defining the desired application state, through a set of kubernetes manifests. Kubernetes manifests can be specified in several ways:
 
@@ -85,65 +87,89 @@ ArgoCD can be installed through helm chart
 
 ArgoCD applications to be deployed can be configured using ArgoCD UI or using ArgoCD specific CRDs (Application/ApplicationSet).
 
-Two type of ArgoCD applications will be needed for the Pi Cluster
+Different types of applications will be needed for the Pi Cluster
 
-### Directory Applications
+- Directory Applications
 
-A [directory-type application](https://argo-cd.readthedocs.io/en/stable/user-guide/directory/) loads plain manifest files from .yml, .yaml, and .json files from a specific directory in a git repository.
+  A [directory-type application](https://argo-cd.readthedocs.io/en/stable/user-guide/directory/) loads plain manifest files from .yml, .yaml, and .json files from a specific directory in a git repository.
 
-Using declarative Application CRD a directory application can be created applying the following manifest file
+  Using declarative Application CRD a directory application can be created applying the following manifest file
 
-```yml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: test-app
-spec:
-  destination:
-    namespace: <target-namespace>
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: test-app
-    repoURL: https://github.com/<user>/<repo>.git
-    targetRevision: HEAD
-```
+  ```yml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: test-app
+  spec:
+    destination:
+      namespace: <target-namespace>
+      server: https://kubernetes.default.svc
+    project: default
+    source:
+      # Enabling Recursive Resource Detection
+      directory:
+        recurse: true
+      # Repo path
+      path: test-app
+      # Repo URL
+      repoURL: https://github.com/<user>/<repo>.git
+      # Branch, tag tracking
+      targetRevision: HEAD
+  ```
 
-### Helm Chart Applications in ArgoCD 
+  Where:
+  - `destination.namespace`: namespace to deploy the application
+  - `destination.server`: cluster to deploy the application (`https://kuberentes.default.svc` indicates local cluster)
+  - `source.repoURL` is the URL of the Git Repository
+  - `sourcepath` is the path within the Git repository where the application is located
+  - `source.targetRevision` is the Git tag, branch or commit to track
 
-[Helm chart applications](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/) can be installed in a declarative GitOps way using ArgoCD's Application CRD.
+- Helm Chart Applications in ArgoCD 
 
-```yml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: cert-manager
-  namespace: argocd
-spec:
-  project: default
-  source:
-    chart: cert-manager
-    repoURL: https://charts.jetstack.io
-    targetRevision: v1.10.0
-    helm:
-      releaseName: cert-manager
-      parameters:
-        - name: installCRDs
-          value: "true"
-      # valueFiles:
-      #  - values.yaml
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: cert-manager
-```
+  [Helm chart applications](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/) can be installed in a declarative GitOps way using ArgoCD's Application CRD.
 
-Where:
-  `chart` is the name of the chart to deploy from the Helm Repository.
-  `repoURL` is the URL of the Helm Repository.
-  `targetRevision` is the version of the chart to deploy
-  `parameters` - Helm chart parameters (overrriding values in values.yaml file)
+  ```yml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: cert-manager
+    namespace: argocd
+  spec:
+    project: default
+    source:
+      chart: cert-manager
+      repoURL: https://charts.jetstack.io
+      targetRevision: v1.10.0
+      helm:
+        releaseName: cert-manager
+        parameters:
+          - name: installCRDs
+            value: "true"
+        # valueFiles:
+        #  - values.yaml
+    destination:
+      server: "https://kubernetes.default.svc"
+      namespace: cert-manager
+  ```
 
-Alternatively, to provide individual parameters, a values file can be specified (`.spec.source.helm.valueFiles`)
+  Where:
+  - `chart` is the name of the chart to deploy from the Helm Repository.
+  - `repoURL` is the URL of the Helm Repository.
+  - `releaseName` is the version of the chart to deploy
+  - `parameters` - Helm chart parameters (overrriding values in values.yaml file)
+
+  Alternatively, to provide individual parameters, a values file can be specified (`.spec.source.helm.valueFiles`).
+
+- Kustomize Application
+  
+  [Kustomize](https://kustomize.io/) traverses a Kubernetes manifest to add, remove or update configuration options without forking. It is available both as a standalone binary and as a native feature of kubectl
+  Kustomize can be used to over a set of plain yaml manifest files or a Chart.
+
+  Argo CD has native support for Kustomize and has the ability to read a kustomization.yaml file to enable deployment with Kustomize and allow ArgoCD to manage the state of the YAML files.
+  
+  A directory type application can be configured to apply kustomize to a set of directories just deploying in the directory a kustomize yaml file.
+
+### Helm Umbrella Charts 
 
 ArgoCD Helm application has the limitation that helm Values file must be in the same git repository as the Helm chart.
 
@@ -154,7 +180,8 @@ As conclusion, this type of ArgoCD application is useless when deploying charts 
 As an alternative a Helm Umbrella Chart pattern can be used. Helm Umbrella chart is sort of a "meta" (empty) Helm Chart that lists other Helm Charts as a dependency ([subcharts](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/)). 
 It consists of a empty helm chart in a repo directory containing only chart definition file (`Chart.yaml`), listing all subcharts, and its corresponding `values.yaml` file.
 
-- <repo-path>/Chart.yaml
+- `<repo-path>/Chart.yaml`
+
   ```yml
   apiVersion: v2
   name: certmanager
@@ -164,7 +191,8 @@ It consists of a empty helm chart in a repo directory containing only chart defi
       version: v1.10.0
       repository: https://charts.jetstack.io
   ```
-- <repo-path>/values.yaml
+- `<repo-path>/values.yaml`
+
   ```yml
   cert-manager:
     installCRDs: true
@@ -197,9 +225,11 @@ helm template \
         <app-name> <repo-path> \
         | kubectl apply -n <target-namespace> -f -
 ```
+{{site.data.alerts.note}}
 
+Umbrella helm charts will be created for most of the Pi cluster applications, including any additional manifest required to configure the application in its `template` directory.
 
-
+{{site.data.alerts.end}}
 
 ## Bootstrapig the cluster using App of Apps pattern
 
@@ -259,7 +289,6 @@ root
 - values.yaml
 
   ```yml
-
   # Repo details
   gitops:
     repo: https://github.com/ricsanfre/pi-cluster
@@ -286,7 +315,7 @@ root
   This will create a ArgoCD application for each item in the values file under `apps` dictionary. Each of the item defined contains information about the name of the application (`name`), the namespace to be used during deployment (`namespace`) and the path under `gitops.repo` where the application is located (`path`).
 
   The index of the dictionary will be used as `argocd.argoproj.io/sync-wave`, so each application belongs to a different wave and are deployed in order.
-
+  {% raw %}
   ```yml
   {{- range $index, $app := .Values.apps }}
   ---
@@ -322,6 +351,15 @@ root
       - ApplyOutOfSyncOnly=true
   {{- end }}
   ```
+  {% endraw %}
+- templates/namespaces.yml
+  
+  Create namespaces with linkerd annotation
+
+
+- templates/other-manifests.yaml
+
+  Other manifest files can be provided to bootstrap the cluster. 
 
 ## References
 

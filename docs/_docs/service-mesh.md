@@ -271,7 +271,7 @@ This extension installs the following components into a new namespace linkerd-vi
 - A Prometheus instance
 - metrics-api, tap, tap-injector, and web components
 
-Since we have already our [monitoring deployment](/docs/monitoring/), we will configure Viz extension to use the existing Prometheus and Grafana instance. See linkerd documentation ["Bringing your own Prometheus"](https://linkerd.io/2.12/tasks/external-prometheus/).
+Since we have already our [monitoring deployment](/docs/prometheus/), we will configure Viz extension to use the existing Prometheus and Grafana instance. See linkerd documentation ["Bringing your own Prometheus"](https://linkerd.io/2.12/tasks/external-prometheus/).
 
 Linkerd-viz dashboard (web component) will be exposed configuring a Ingress resource. 
 

@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "15-01-2023"
+last_modified_at: "16-01-2023"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
@@ -75,32 +75,31 @@ vault.yml sample file is like this:
 
 ```yml
 ---
-# Encrypted variables - Ansible Vault
 vault:
   # K3s secrets
   k3s:
     k3s_token: s1cret0
   # traefik secrets
   traefik:
-    basic_auth_passwd: s1cret0
+    basic_auth:
+      user: admin
+      passwd: s1cret0
   # Minio S3 secrets
   minio:
-    root_password: supers1cret0
-    longhorn_key: supers1cret0
-    velero_key: supers1cret0
-    restic_key: supers1cret0
-  # elastic search
+    root:
+      user: root
+      key: supers1cret0
+    restic:
+      user: restic
+      key: supers1cret0
 ....
 ```
-All needed password-type variables used by the Playbooks are in the sample file `var/picluster-vault.yml`. This file is not encrypted and must be used to start the ansible setup.
 
-The steps to configure passwords/keys used in all Playbooks is the following:
+The steps to encrypt passwords/keys used in all Playbooks is the following:
 
-1. Copy sample yaml `var/picluster-vault.yml` file and rename it as `var/vault.yml`
+1. Edit content `var/vault.yml` file specifying your own values for each of the key/password/secret specified.
 
-2. Edit content of the file specifying your own values for each of the key/password/secret specified.
-
-3. Encrypt file using ansible-vault
+2. Encrypt file using ansible-vault
 
    ```shell
    ansible-vault encrypt vault.yml
@@ -118,6 +117,11 @@ The steps to configure passwords/keys used in all Playbooks is the following:
    The password using during encryption need to be provided to decrypt the file
    After executing the command the file `vault.yml` is decrypted and show the content in plain text.
 
+   File can be viewed decrypted without modifiying the file using the command
+
+   ```shell
+   ansible-vault view vault.yaml 
+   ```
    {{site.data.alerts.end}}
 
 
@@ -131,114 +135,131 @@ ansible-playbook playbook.yml --ask-vault-pass
 {{site.data.alerts.end}}
 
 
-#### Automate Ansible Vault decryption
+##### Automate Ansible Vault decryption with GPG
 
-Ansible vault password decryption can be automated using `--vault-password-file` option (can be added to ansible.cfg file) instead of manually providing the password with each execution (`--ask-vault-pass`).
+Ansible vault password decryption can be automated using `--vault-password-file` parameter , instead of manually providing the password with each execution (`--ask-vault-pass`).
 
-Ansible vault password file can contain the password in plain-text or can be a script which obtain the password.
+Ansible vault password file can contain the password in plain-text or a script able to obtain the password.
 
+vault-password-file location can be added to ansible.cfg file, so it is not needed to pass as parameter each time ansible-playbook command is executed
 
-##### Encrypting the Ansible Vault passphrase using GPG
+Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-password-file script.
 
-Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-passwor-file script.
+- GnuPG Installation and configuration
 
+  In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
 
-###### GnuPG Installation and configuration
+  GnuPG package has to be installed and a GPG key pair need to be created for encrytion/decryption 
 
-In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
+  - Step 1. Install GnuPG packet
 
-GnuPG package has to be installed and a GPG key pair need to be created for encrytion/decryption 
-
-- Step 1. Install GnuPG packet
-
-  ```shell
-  sudo apt install gnupg 
-  ```
-
-  Check if it is installed
-  ```shell
-  gpg --help
-  ```
-
-- Step 2. Generating Your GPG Key Pair
-
-  GPG key-pair consist on a public and private key used for encrypt/decrypt
-
-  ```shell
-  gpg --gen-key
-  ```
-
-  The process requires to provide a name, email-address and user-id which identify the recipient
-
-  The output of the command is like this:
-
-    ```
-    gpg (GnuPG) 2.2.4; Copyright (C) 2017 Free Software Foundation, Inc.
-    This is free software: you are free to change and redistribute it.
-    There is NO WARRANTY, to the extent permitted by law.
-
-    Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
-
-    GnuPG needs to construct a user ID to identify your key.
-
-    Real name: Ricardo
-    Email address: ricsanfre@gmail.com
-    You selected this USER-ID:
-        "Ricardo <ricsanfre@gmail.com>"
-
-    Change (N)ame, (E)mail, or (O)kay/(Q)uit? O
-    We need to generate a lot of random bytes. It is a good idea to perform
-    some other action (type on the keyboard, move the mouse, utilize the
-    disks) during the prime generation; this gives the random number
-    generator a better chance to gain enough entropy.
-    We need to generate a lot of random bytes. It is a good idea to perform
-    some other action (type on the keyboard, move the mouse, utilize the
-    disks) during the prime generation; this gives the random number
-    generator a better chance to gain enough entropy.
-    gpg: /home/ansible/.gnupg/trustdb.gpg: trustdb created
-    gpg: key D59E854B5DD93199 marked as ultimately trusted
-    gpg: directory '/home/ansible/.gnupg/openpgp-revocs.d' created
-    gpg: revocation certificate stored as '/home/ansible/.gnupg/openpgp-revocs.d/A4745167B84C8C9A227DC898D59E854B5DD93199.rev'
-    public and secret key created and signed.
-
-    pub   rsa3072 2021-08-13 [SC] [expires: 2023-08-13]
-          A4745167B84C8C9A227DC898D59E854B5DD93199
-    uid                      Ricardo <ricsanfre@gmail.com>
-    sub   rsa3072 2021-08-13 [E] [expires: 2023-08-13]
-
+    ```shell
+    sudo apt install gnupg 
     ```
 
-  During the generation process you will be prompted to provide a passphrase.
+    Check if it is installed
+    ```shell
+    gpg --help
+    ```
 
-  This passphrase is needed to decryp
+  - Step 2. Generating Your GPG Key Pair
+
+    GPG key-pair consist on a public and private key used for encrypt/decrypt
+
+    ```shell
+    gpg --gen-key
+    ```
+
+    The process requires to provide a name, email-address and user-id which identify the recipient
+
+    The output of the command is like this:
+
+      ```
+      gpg (GnuPG) 2.2.4; Copyright (C) 2017 Free Software Foundation, Inc.
+      This is free software: you are free to change and redistribute it.
+      There is NO WARRANTY, to the extent permitted by law.
+
+      Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
+
+      GnuPG needs to construct a user ID to identify your key.
+
+      Real name: Ricardo
+      Email address: ricsanfre@gmail.com
+      You selected this USER-ID:
+          "Ricardo <ricsanfre@gmail.com>"
+
+      Change (N)ame, (E)mail, or (O)kay/(Q)uit? O
+      We need to generate a lot of random bytes. It is a good idea to perform
+      some other action (type on the keyboard, move the mouse, utilize the
+      disks) during the prime generation; this gives the random number
+      generator a better chance to gain enough entropy.
+      We need to generate a lot of random bytes. It is a good idea to perform
+      some other action (type on the keyboard, move the mouse, utilize the
+      disks) during the prime generation; this gives the random number
+      generator a better chance to gain enough entropy.
+      gpg: /home/ansible/.gnupg/trustdb.gpg: trustdb created
+      gpg: key D59E854B5DD93199 marked as ultimately trusted
+      gpg: directory '/home/ansible/.gnupg/openpgp-revocs.d' created
+      gpg: revocation certificate stored as '/home/ansible/.gnupg/openpgp-revocs.d/A4745167B84C8C9A227DC898D59E854B5DD93199.rev'
+      public and secret key created and signed.
+
+      pub   rsa3072 2021-08-13 [SC] [expires: 2023-08-13]
+            A4745167B84C8C9A227DC898D59E854B5DD93199
+      uid                      Ricardo <ricsanfre@gmail.com>
+      sub   rsa3072 2021-08-13 [E] [expires: 2023-08-13]
+
+      ```
+
+    During the generation process you will be prompted to provide a passphrase.
+
+    This passphrase is needed to decryp
 
 
-###### Generate Vault password and store it in GPG
+- Generate Vault password and store it in GPG
 
-Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
+  Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
 
-- Step 1: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
+  - Step 1: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
+
+    ```shell
+    mkdir -p $HOME/.vault
+    pwgen -n 71 -C | head -n1 | gpg --armor --recipient <recipient> -e -o $HOME/.vault/vault_passphrase.gpg
+    ```
+
+    where `<recipient>` must be the email address configured during GPG key creation. 
+
+  - Step 2: Generate a script `vault_pass.sh`
+
+    ```shell
+    #!/bin/sh
+    gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
+    ```
+  - Step 3: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
+
+    ```
+    [defaults]
+    vault_password_file=vault_pass.sh
+    ```
+  {{site.data.alerts.note}}
+   If this repository is clone steps 2 and 3 are not needed since the files are already there
+  {{site.data.alerts.end}}  
+  
+- Encrypt vautl.yaml file using ansible-vault and GPG password
 
   ```shell
-  mkdir -p $HOME/.vault
-  pwgen -n 71 -C | head -n1 | gpg --armor --recipient <recipient> -e -o $HOME/.vault/vault_passphrase.gpg
+  ansible-vault encrypt vault.yaml
   ```
+  This time only your GPG key passphrase will be asked to automatically encrypt/decrypt the file
 
-  where `<recipient>` must be the email address configured during GPG key creation. 
+##### Vault credentials generation 
 
-- Step 2: Generate a script `vault_pass.sh`
+Execute playbook to generate ansible vault variable file (`var/vault.yml`) containing all credentials/passwords. Random generated passwords will be generated for all cluster services.
 
-  ```shell
-  #!/bin/sh
-  gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
-  ```
-
-- Step 3: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
-
-  ```
-  [defaults]
-  vault_password_file=vault_pass.sh
-  ```
+Execute the following command:
+```shell
+ansible-playbook create_vault_credentials.yml
+```
+Credentials for external services (IONOS API credentials) will be asked during the execution of the script.
 
 #### Modify Ansible Playbook variables
 
@@ -260,11 +281,11 @@ The following table shows the variable files used for configuring the storage, b
 
 | Specific Variable File | Configuration |
 |----|----|
-| [`vars/picluster.yml`]({{ site.git_edit_address }}/vars/picluster.yml) | K3S cluster and services configuration variables |
+| [`vars/picluster.yml`]({{ site.git_edit_address }}/vars/picluster.yml) | K3S cluster and and external services configuration variables |
 | [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
 | [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
 | [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
-| [`vars/backup/s3_minio.yml`]({{ site.git_edit_address }}/vars/backup/s3_minio.yml) | Configuration S3 Minio server |
+
 {: .table }
 
 
@@ -333,7 +354,7 @@ Before applying the cloud-init files of the table above, remember to change the 
 For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), executes the playbook:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "gateway" [--ask-vault-pass]
+ansible-playbook setup_picluster.yml --tags "gateway"
 ```
 
 ### Install cluster nodes.
@@ -368,13 +389,27 @@ For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), executes 
 ansible-playbook setup_picluster.yml --tags "node"
 ```
 
-### Configuring backup server (S3) and OS level backup
+### Configuring external services (Minio and Hashicorp Vault)
 
-Configure backup server (Playbook assumes S3 server is installed in `node1`) and automated backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
+Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the playbook
+
+```shell
+ansible-playbook external_services.yml
+```
+Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gateway`.
+
+{{site.data.alerts.note}}
+All vault credentials are stored in Hashicorp Vault
+{{site.data.alerts.end}}
+
+### Configuring OS level backup (restic)
+
+Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
 
 ```shell
 ansible-playbook backup_configuration.yml
 ```
+Minio S3 server running in `node1` will be used as backup backend.
 
 {{site.data.alerts.note}}
 
@@ -394,34 +429,17 @@ To install K3S cluster execute the playbook:
 ansible-playbook k3s_install.yml
 ```
 
-### K3S basic services deployment
+### K3S Bootstrap
 
-To deploy and configure basic services (metallb, traefik, certmanager, linkerd, longhorn, EFK, Prometheus, Velero) run the playbook:
-
-```shell
-ansible-playbook k3s_deploy.yml
-```
-
-Different ansible tags can be used to select the componentes to deploy:
+To bootstrap the cluster, run the playbook:
 
 ```shell
-ansible-playbook k3s_deploy.yml --tags <ansible_tag>
+ansible-playbook k3s_bootstrap.yml
 ```
+Argo CD will be installed and it will automatically deploy all cluster applications automatically from git repo
 
-The following table shows the different components and their dependencies.
-
-| Ansible Tag | Component to configure/deploy | Dependencies
-|---|---|
-| `metallb` | Metal LB | - |
-| `certmanager` | Cert-manager | - |
-| `linkerd` | Linkerd | Cert-manager |
-| `traefik` | Traefik | Linkerd |
-| `longhorn` | Longhorn | Linkerd |
-| `monitoring` | Prometheus Stack | Longhorn, Linkerd |
-| `linkerd-viz` | Linkerd Viz | Prometheus Stack, Linkerd |
-| `logging` | EFK Stack | Longhorn, Linkerd |
-| `backup` | Velero | Linkerd |
-{: .table }
+- `argocd\bootstrap\root`: Containing root application (App of Apss ArgoCD pattern)
+- `argocd\system\<app>`: Containing manifest files for application <app>
 
 ### K3s Cluster reset
 
@@ -429,53 +447,6 @@ If you mess anything up in your Kubernetes cluster, and want to start fresh, the
 
 ```shell
 ansible-playbook k3s_reset.yml
-```
-
-### Updating K3S and cluster component releases
-
-Release version of each component to be installed is specified within variables in `var/pi_cluster.yml`
-
-```yml
-# k3s version
-k3s_version: v1.24.7+k3s1
-
-# Metallb helm chart version
-metallb_chart_version: 0.13.7
-
-# Traefik chart version
-traefik_chart_version: 18.1.0
-
-# Cert-manager chart version
-certmanager_chart_version: v1.10.0
-certmanager_ionos_chart_version: 1.0.1
-
-# Linkerd version
-linkerd_version: "stable-2.12.2"
-linkerd_chart_version: 1.9.4
-linkerd_viz_chart_version: 30.3.4
-
-# Velero version
-velero_chart_version: 2.32.1
-velero_version: v1.9.2
-
-# Longhorn chart version
-longhorn_chart_version: 1.3.2
-
-# ECK operator chart version
-eck_operator_chart_version: 2.4.0
-
-# Promethes-eslasticsearch-exporter helm chart
-prometheus_es_exporter_chart_version: 4.15.1
-
-# Fluentbit/Fluentd helm chart version
-fluentd_chart_version: 0.3.9
-fluentbit_chart_version: 0.20.9
-
-# Loki helm version
-loki_chart_version: 3.3.0
-
-# kube-prometheus-stack helm chart
-kube_prometheus_stack_chart_version: 41.6.1
 ```
 
 ## Shutting down the Raspberry Pi Cluster

@@ -41,6 +41,9 @@
 - title: Service Mesh
   docs:
   - service-mesh
+- title: GitOps
+  docs:
+  - argocd
 - title: Reference Docs
   docs:
   - k8s-networking
