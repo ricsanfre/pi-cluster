@@ -16,7 +16,7 @@ vault:
       passwd: s1cret0
   # Minio S3 secrets
   minio:
-    root
+    root:
       user: root
       key: supers1cret0
     restic:
