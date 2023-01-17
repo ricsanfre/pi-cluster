@@ -8,7 +8,9 @@ last_modified_at: "16-01-2023"
 
 [Argo CD](https://argo-cd.readthedocs.io/) is a declarative, GitOps continuous delivery tool for Kubernetes.
 
-![picluster-argocd-architecture](/assets/img/argocd_architecture.png)
+It can be integrated with Git repositories, and used jointly with CI tools, like [Jenkins](https://www.jenkins.io/) or [Github-actions](https://docs.github.com/en/actions) to define end-to-end CI/CD pipeline to automatically build and deploy applications in Kubernetes.
+
+![picluster-cicd-gitops-architecture](/assets/img/cicd-gitops-architecture.png)
 
 Argo CD follows the GitOps pattern of using Git repositories as the source of truth for defining the desired application state, through a set of kubernetes manifests. Kubernetes manifests can be specified in several ways:
 
