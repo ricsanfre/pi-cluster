@@ -394,7 +394,7 @@ data:
 type: kubernetes.io/tls
 ```
 
-This manual step can be avoided using Cert-manager and annotating the Ingress resource: `cert-manager.io/cluster-issuer: <issuer_name>`. See further details in [SSL certification management documentation](/docs/certmanager/).
+This manual step can be avoided using Cert-manager and annotating the Ingress resource: `cert-manager.io/cluster-issuer: <issuer_name>`. See further details in [TLS certification management documentation](/docs/certmanager/).
 
 #### Redirecting HTTP traffic to HTTPS
 

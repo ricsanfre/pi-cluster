@@ -1,5 +1,5 @@
 ---
-title: Distributed Storage (Longhorn)
+title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Raspberry Pi Kubernetes Cluster.
 last_modified_at: "11-10-2022"
@@ -284,7 +284,7 @@ local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsu
 longhorn (default)     driver.longhorn.io      Delete          Immediate              true                   3m27s
 ```
 
-Both Local-Path and longhor are defined as default storage classes:
+Both Local-Path and longhorn are defined as default storage classes:
 
 Remove Local path from default storage classes with the command:
 
