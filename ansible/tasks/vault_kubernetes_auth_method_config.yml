@@ -20,7 +20,7 @@
   changed_when: false
   delegate_to: gateway
 
-- name: 
+- name: Get vault token
   set_fact:
     vault_token: "{{ vault_login.stdout | from_json | community.hashi_vault.vault_login_token }}"
 
@@ -31,7 +31,7 @@
     headers:
       X-Vault-Token: "{{ vault_token }}"
   failed_when:
-    - no
+    - false
   register: vault_status_kubernetes_auth_method
 
   # Enable kubernetes auth method

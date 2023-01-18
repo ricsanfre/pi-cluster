@@ -4,8 +4,8 @@ vault:
   # SAN
   san:
     iscsi:
-      node_pass: s1cret0 
-      password_mutual: 0tr0s1cret0 
+      node_pass: s1cret0
+      password_mutual: 0tr0s1cret0
   # K3s secrets
   k3s:
     k3s_token: s1cret0
@@ -45,8 +45,8 @@ vault:
   # Grafana
   grafana:
     admin:
-     user: admin
-     password: s1cret0
+      user: admin
+      password: s1cret0
 
   # Certmanager
   certmanager:
