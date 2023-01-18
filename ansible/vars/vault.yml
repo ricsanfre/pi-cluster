@@ -44,7 +44,7 @@ vault:
     shared_key: s1cret0
   # Grafana
   grafana:
-    admin
+    admin:
      user: admin
      password: s1cret0
 
