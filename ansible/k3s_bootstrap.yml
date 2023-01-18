@@ -59,9 +59,9 @@
     - name: Configure Vault integration
       include_tasks: tasks/configure_vault_integration.yml
 
-    - name: Copy argocd and root chart files
+    - name: Copy argocd chart files
       ansible.builtin.copy:
-        src: "argocd/{{ item }}"
+        src: "../argocd/{{ item }}"
         dest: /tmp/charts
       with_items:
         - "bootstrap/argocd"
@@ -89,7 +89,7 @@
 
     - name: Deploy root application
       kubernetes.core.k8s:
-        definition: "{{ lookup('template', 'argocd/ansible/templates/' + item ) }}"
+        definition: "{{ lookup('template', 'templates/' + item ) }}"
         state: present
       with_items:
         - argocd_root_app.yml.j2
