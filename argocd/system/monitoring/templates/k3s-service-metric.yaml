@@ -1,3 +1,4 @@
+{{- if .Values.k3sMetrics.enabled }}
 ---
 # Headless service (no selector) for K3S metrics.
 # Only kubelet port (TCP: 10250) need to be scrapped
@@ -18,6 +19,7 @@ spec:
     targetPort: 10250
   type: ClusterIP
 
+{{- if .Values.k3sMetrics.servers }}
 ---
 # Endpoint for the headless service without selector
 apiVersion: v1
@@ -27,12 +29,11 @@ metadata:
   namespace: kube-system
 subsets:
 - addresses:
-  - ip: 10.0.0.11
-  - ip: 10.0.0.12
-  - ip: 10.0.0.13
-  - ip: 10.0.0.14
-  - ip: 10.0.0.15
+{{ toYaml .Values.k3sMetrics.servers | indent 2 }}
   ports:
   - name: https-metrics
     port: 10250
     protocol: TCP
+
+{{- end }}
+{{- end }}

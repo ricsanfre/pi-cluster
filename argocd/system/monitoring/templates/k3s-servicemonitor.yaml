@@ -1,4 +1,4 @@
----
+{{- if .Values.k3sMetrics.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -84,3 +84,4 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: kubelet
+{{- end }}

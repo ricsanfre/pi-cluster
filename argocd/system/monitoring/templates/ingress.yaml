@@ -59,11 +59,11 @@ metadata:
 spec:
   secretName: monitoring-secret
   issuerRef:
-    name: {{ .Values.monitoring.ingress.certmanager.tlsIssuer }}-issuer
+    name: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     kind: ClusterIssuer
-  commonName: {{ .Values.monitoring.ingress.host }}
+  commonName: {{ .Values.ingress.host }}
   dnsNames:
-  - {{ .Values.monitoring.ingress.host }}
+  - {{ .Values.ingress.host }}
   privateKey:
     algorithm: ECDSA
 
@@ -79,37 +79,37 @@ spec:
     - websecure
   routes:
   - kind: Rule
-    match: Host(`{{ .Values.monitoring.ingress.host }}`) && PathPrefix(`/prometheus`)
+    match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/prometheus`)
     services:
     - name: {{ template "monitoring-stack.name" . }}-prometheus
       port: 9090
       namespace: {{ .Release.Namespace }}
     middlewares:
-{{- if .Values.monitoring.ingress.basicAuth.enable }}
-      - name: {{ .Values.monitoring.ingress.basicAuth.middlewareName }}
-        namespace: {{ .Values.monitoring.ingress.basicAuth.middlewareNamespace }}
+{{- if .Values.ingress.basicAuth.enable }}
+      - name: {{ .Values.ingress.basicAuth.middlewareName }}
+        namespace: {{ .Values.ingress.basicAuth.middlewareNamespace }}
 {{- end }}
       - name: stripprefix
         namespace: {{ .Release.Namespace }}
       - name: l5d-header-middleware-prometheus
         namespace: {{ .Release.Namespace }}
   - kind: Rule
-    match: Host(`{{ .Values.monitoring.ingress.host }}`) && PathPrefix(`/alertmanager`)
+    match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/alertmanager`)
     services:
     - name: {{ template "monitoring-stack.name" . }}-alertmanager
       port: 9093
       namespace: {{ .Release.Namespace }}
     middlewares:
-{{- if .Values.monitoring.ingress.basicAuth.enable }}
-      - name: {{ .Values.monitoring.ingress.basicAuth.middlewareName }}
-        namespace: {{ .Values.monitoring.ingress.basicAuth.middlewareNamespace }}
+{{- if .Values.ingress.basicAuth.enable }}
+      - name: {{ .Values.ingress.basicAuth.middlewareName }}
+        namespace: {{ .Values.ingress.basicAuth.middlewareNamespace }}
 {{- end }}
       - name: stripprefix
         namespace: {{ .Release.Namespace }}
       - name: l5d-header-middleware-alertmanager
         namespace: {{ .Release.Namespace }}
   - kind: Rule
-    match: Host(`{{ .Values.monitoring.ingress.host }}`) && PathPrefix(`/grafana`)
+    match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/grafana`)
     services:
     - name: {{ .Release.Name }}-grafana
       port: 80

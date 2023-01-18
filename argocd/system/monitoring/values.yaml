@@ -1,13 +1,37 @@
-monitoring:
-  ingress:
-    host: monitoring.picluster.ricsanfre.com
-    # configure cert-manager issuer
-    certmanager:
-      tlsIssuer: letsencrypt
-    basicAuth:
-      enable: true
-      middlewareName: basic-auth
-      middlewareNamespace: traefik
+
+# Ingress configuration
+ingress:
+  host: monitoring.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    tlsIssuer: letsencrypt
+  basicAuth:
+    enable: true
+    middlewareName: basic-auth
+    middlewareNamespace: traefik
+
+# Enable K3s metrics
+k3sMetrics:
+  enabled: true
+  servers:
+    - ip: 10.0.0.11
+    - ip: 10.0.0.12
+    - ip: 10.0.0.13
+    - ip: 10.0.0.14
+    - ip: 10.0.0.15
+
+# Enable monitoring of external services
+externalServices:
+  # External Minio service
+  minioMetrics:
+    enabled: true
+    servers:
+      - ip: 10.0.0.11
+  # External node (gateway)
+  nodeMetrics:
+    enabled: true
+    servers:
+      - ip: 10.0.0.1
 
 ################################
 # kube-prometheus-stack subchart
