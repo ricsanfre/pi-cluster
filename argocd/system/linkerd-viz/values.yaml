@@ -1,0 +1,30 @@
+
+# Prometheus monitoring
+serviceMonitor:
+  enable: true
+  release: monitoring
+
+# Ingress configuration
+ingress:
+  host: linkerd.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    tlsIssuer: letsencrypt
+  basicAuth:
+    enable: true
+    middlewareName: basic-auth
+    middlewareNamespace: traefik
+
+linkerd-viz:
+  # Skip namespace creation
+  installNamespace: false
+  # External Prometheus
+  prometheusUrl: http://monitoring-prometheus.monitoring.svc.cluster.local:9090
+  prometheus:
+    enabled: false
+  # External Grafana
+  grafana:
+    url: monitoring-grafana.monitoring.svc.cluster.local
+  # Disabling DNS rebinding protection
+  dashboard:
+    enforcedHostRegexp: .*
