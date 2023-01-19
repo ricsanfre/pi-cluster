@@ -221,7 +221,8 @@ Installation from helm chart. There are two alternatives:
 
 ### GitOps installation (ArgoCD)
 
-As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding minio credentials within Helm chart values, a external secret can be used using the capability to use environment variables in [Loki's config file](https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration).
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Loki's capability of using environment variables in config file](https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration).
+
 
 The following secret need to be created:
 ```yml

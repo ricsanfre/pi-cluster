@@ -187,6 +187,117 @@ Where `user_policy.json`, contains the following AWS access policies definition:
   ```shell
   kubectl get pods -l app.kubernetes.io/name=loki -n logging
   ```
+
+### GitOps installation (ArgoCD)
+
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Tempo's capability of using environment variables in config file](https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration)
+
+The following secret need to be created:
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tempo-minio-secret
+  namespace: tracing
+type: Opaque
+data:
+  MINIO_ACCESS_KEY_ID: < minio_tempo_user | b64encode >
+  MINIO_SECRET_ACCESS_KEY: < minio_tempo_key | b64encode >
+```
+
+And the following Helm values has to be provided:
+
+```yml
+# Enable trace ingestion
+traces:
+  otlp:
+    grpc:
+      enabled: true
+    http:
+      enabled: true
+  zipkin:
+    enabled: true
+  jaeger:
+    thriftCompact:
+      enabled: true
+    thriftHttp:
+      enabled: true
+  opencensus:
+    enabled: true
+
+# Configure S3 backend
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: k3s-tempo
+      endpoint: s3.picluster.ricsanfre.com:9091
+      region: eu-west-1
+      access_key: ${MINIO_ACCESS_KEY_ID}
+      secret_key: ${MINIO_SECRET_ACCESS_KEY}
+      insecure: false
+
+# Configure distributor
+distributor:
+  config:
+    log_received_spans:
+      enabled: true
+
+# Configure ingester
+ingester:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+# Configure compactor
+compactor:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+# Configure querier
+querier:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+# Disable Minio server installation
+minio:
+  enabled: false
+```
   
 ## Linkerd traces integration
 

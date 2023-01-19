@@ -1,0 +1,95 @@
+
+
+#############################
+# tempo-distributed subchart
+#############################
+tempo-distributed:
+  # Enable trace ingestion
+  traces:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+    zipkin:
+      enabled: true
+    jaeger:
+      thriftCompact:
+        enabled: true
+      thriftHttp:
+        enabled: true
+    opencensus:
+      enabled: true
+
+  # Configure S3 backend
+  storage:
+    trace:
+      backend: s3
+      s3:
+        bucket: k3s-tempo
+        endpoint: s3.picluster.ricsanfre.com:9091
+        region: eu-west-1
+        access_key: ${MINIO_ACCESS_KEY_ID}
+        secret_key: ${MINIO_SECRET_ACCESS_KEY}
+        insecure: false
+
+  # Configure distributor
+  distributor:
+    config:
+      log_received_spans:
+        enabled: true
+
+  # Configure ingester
+  ingester:
+    # Enable environment variables in config file
+    # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+    extraArgs:
+      - '-config.expand-env=true'
+    extraEnv:
+      - name: MINIO_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: tempo-minio-secret
+            key: MINIO_ACCESS_KEY_ID
+      - name: MINIO_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: tempo-minio-secret
+            key: MINIO_SECRET_ACCESS_KEY
+  # Configure compactor
+  compactor:
+    # Enable environment variables in config file
+    # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+    extraArgs:
+      - '-config.expand-env=true'
+    extraEnv:
+      - name: MINIO_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: tempo-minio-secret
+            key: MINIO_ACCESS_KEY_ID
+      - name: MINIO_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: tempo-minio-secret
+            key: MINIO_SECRET_ACCESS_KEY
+  # Configure querier
+  querier:
+    # Enable environment variables in config file
+    # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+    extraArgs:
+      - '-config.expand-env=true'
+    extraEnv:
+      - name: MINIO_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: tempo-minio-secret
+            key: MINIO_ACCESS_KEY_ID
+      - name: MINIO_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: tempo-minio-secret
+            key: MINIO_SECRET_ACCESS_KEY
+  # Disable Minio server installation
+  minio:
+    enabled: false
