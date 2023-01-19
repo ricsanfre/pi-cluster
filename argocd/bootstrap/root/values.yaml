@@ -4,44 +4,61 @@ gitops:
 
 # Ordered list of application corresponding to different sync waves
 apps:
+    # Argo CD App
   - name: argocd
     namespace: argocd
     path: argocd/bootstrap/argocd
+    # Root App (ArgoCD App of Apps)
   - name: root
     namespace: argocd
     path: argocd/bootstrap/root
+    # CDRs App
   - name: crds
     namespace: default
     path: argocd/bootstrap/crds
+    # External Secrets Operator
   - name: external-secrets
     namespace: external-secrets
     path: argocd/system/external-secrets
+    # Metal LB
   - name: metallb
     namespace: metallb
     path: argocd/system/metallb
+    # Cert-Manager and Trust Manager
   - name: cert-manager
     namespace: cert-manager
     path: argocd/system/cert-manager
+    # Linkerd service mesh
   - name: linkerd
     namespace: linkerd
     path: argocd/system/linkerd
+    # Traefik Ingress Controller
   - name: traefik
     namespace: traefik
     path: argocd/system/traefik
+    helm:
+      # skip installation traefik CDRs
+      skipCrds: true
+    # CSI External Snapshotter
   - name: csi-external-snapshotter
     namespace: kube-system
     path: argocd/system/csi-external-snapshotter
+    # Longhorn Distributed Block Storage
   - name: longhorn
     namespace: longhorn-system
     path: argocd/system/longhorn-system
+    # Velero Backup
   - name: velero
     namespace: velero
     path: argocd/system/velero
+    # Logging: Loki and EFK stack
   - name: logging
     namespace: logging
     path: argocd/system/logging
+    # Kube-prometheus-stack
   - name: monitoring
     namespace: monitoring
     path: argocd/system/monitoring
     helm:
+      # skip installation kube-prometheus-stack CDRs
       skipCrds: true

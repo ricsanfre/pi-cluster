@@ -22,6 +22,10 @@ vault:
       mountPath: "kubernetes"
       role: "external-secrets"
 
-# External-secrets subchart
+############################
+# external-secrets subchart
+############################
+
+# CDRs installed as part of CDR application
 external-secrets:
-  installCRDs: true
+  installCRDs: false

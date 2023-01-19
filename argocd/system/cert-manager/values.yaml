@@ -1,6 +1,16 @@
+acme_issuer_email: admin@ricsanfre.com
+
+########################
+# cert-manager  subchart
+########################
+
+# CDRs installed as part of CDR application
 cert-manager:
-  installCRDs: true
+  installCRDs: false
+
+#####################################
+# cert-manager-webhook-ionos subchart
+#####################################
 cert-manager-webhook-ionos:
   groupName: acme.ricsanfre.com
 
-acme_issuer_email: admin@ricsanfre.com

@@ -1,7 +1,0 @@
-###################################
-# prometheus-operator-crds subchart
-###################################
-
-prometheus-operator-crds:
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
