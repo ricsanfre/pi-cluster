@@ -5,7 +5,7 @@
   gather_facts: true
   tags: [certificates]
   vars:
-    certbot_venv: "{{ playbook_dir }}/certificates"
+    certbot_venv: "{{ playbook_dir }}/../certificates"
     certbot_email: "{{ acme_issuer_email }}"
     dns_ionos_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
     dns_ionos_secret: "{{ vault.certmanager.ionos.secret }}"
@@ -70,7 +70,7 @@
     country_name: ES
     email_address: admin@ricsanfre.com
     organization_name: Ricsanfre
-    certbot_venv: "{{ playbook_dir }}/certificates"
+    certbot_venv: "{{ playbook_dir }}/../certificates"
 
   pre_tasks:
 
@@ -129,7 +129,7 @@
     country_name: ES
     email_address: admin@ricsanfre.com
     organization_name: Ricsanfre
-    certbot_venv: "{{ playbook_dir }}/certificates"
+    certbot_venv: "{{ playbook_dir }}/../certificates"
 
   pre_tasks:
     # Include vault variables
