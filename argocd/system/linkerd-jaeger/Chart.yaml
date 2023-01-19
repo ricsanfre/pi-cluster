@@ -1,0 +1,7 @@
+apiVersion: v2
+name: linkerd-jaeger
+version: 0.0.0
+dependencies:
+  - name: linkerd-jaeger
+    version: 30.4.4
+    repository: https://helm.linkerd.io/stable
