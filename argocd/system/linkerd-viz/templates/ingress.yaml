@@ -33,7 +33,7 @@ metadata:
 spec:
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}}
+        - {{ .Values.ingress.host }}
       secretName: linkerd-viz-tls
   rules:
     - host: {{ .Values.ingress.host }}
