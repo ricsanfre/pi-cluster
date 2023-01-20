@@ -25,4 +25,5 @@ jobs:
         run: pip3 install yamllint
 
       - name: Lint all the YAMLs.
+        working-directory: ./ansible
         run: yamllint .
