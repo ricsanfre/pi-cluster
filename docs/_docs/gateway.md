@@ -377,7 +377,7 @@ Rules are stored in the following location:
 
 ### Configuring Ansible Role
 
-nftables default rules establish by the role can be updated by changing roles variables for `gateway` host (see `gateway` host variables in [`host_vars\gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) file)
+nftables default rules establish by the role can be updated by changing roles variables for `gateway` host (see `gateway` host variables in [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) file)
 
 The rules configured for `gateway` allow incoming traffic (icmp, http, https, iscsi, ssh, dns, dhcp, ntp and snmp) and forward http, https, ssh, dns and ntp traffic.
 
@@ -526,7 +526,7 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
 
 ### Configuring Ansible Role
 
-DHCP static IP leases and DNS records are taken automatically from ansible inventory file for those hosts with `ip`, `hostname` and `mac` variables are defined. See [`inventory.yml`]({{ site.git_edit_address }}/inventory.yml) file.
+DHCP static IP leases and DNS records are taken automatically from ansible inventory file for those hosts with `ip`, `hostname` and `mac` variables are defined. See [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.yml) file.
 
 ```yml
 ...
@@ -547,7 +547,7 @@ DHCP static IP leases and DNS records are taken automatically from ansible inven
 
 Additional DHCP static IP leases and DNS records can be added using `dnsmasq_additional_dhcp_hosts` and `dnsmasq_additional_dns_hosts` role variables.
 
-DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`host_vars\gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) file.
+DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) file.
 
 ### Useful Commands
 
@@ -699,7 +699,7 @@ Check time synchronization with Chronyc
 
 iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
 
-Specific `gateway` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml)
+Specific `gateway` ansible variables to be used by these roles are stored in [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml)
 
 Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
 

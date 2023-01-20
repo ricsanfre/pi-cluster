@@ -37,7 +37,7 @@ Step-by-step manual process is also described in this documentation.
 
 ### Inventory file
 
-Adjust [`inventory.yml`]({{ site.git_edit_address }}/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
+Adjust [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
 
 {{site.data.alerts.tip}}
 
@@ -51,17 +51,14 @@ This information can be taken when Raspberry PI is booted for first time during 
 
 The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH key file location need to be specified
 
-- Set in [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) file the UNIX user to be used by Ansible in the remote connection (default value `ansible`)
+- Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) to set the UNIX user to be used by Ansible in the remote connection (default value `ansible`)
 
-- Modify [`ansible.cfg`]({{ site.git_edit_address }}/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private-file-key` variable)
+- Modify [`ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private-file-key` variable)
 
   ```
   # SSH key
   private_key_file = $HOME/ansible-ssh-key.pem
   ```
-
-- Modify [`all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) file to include your ansible remote UNIX user (`ansible_user` variable) and 
-  
 
 ### Configuring Ansible Playbooks
 
@@ -269,11 +266,11 @@ The following table shows the variable files defined at ansible's group and host
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
-| [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
-| [`group_vars/control.yml`]({{ site.git_edit_address }}/group_vars/control.yml) | control group: gateway node + pimaster |
-| [`group_vars/k3s_cluster.yml`]({{ site.git_edit_address }}/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
-| [`group_vars/k3s_master.yml`]({{ site.git_edit_address }}/group_vars/k3s_master.yml) | K3s master nodes |
-| [`host_vars/gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) | gateway node specific variables|
+| [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
+| [`ansible/group_vars/control.yml`]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: gateway node + pimaster |
+| [`ansible/group_vars/k3s_cluster.yml`]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
+| [`ansible/group_vars/k3s_master.yml`]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
+| [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) | gateway node specific variables|
 {: .table }
 
 
@@ -281,17 +278,16 @@ The following table shows the variable files used for configuring the storage, b
 
 | Specific Variable File | Configuration |
 |----|----|
-| [`vars/picluster.yml`]({{ site.git_edit_address }}/vars/picluster.yml) | K3S cluster and and external services configuration variables |
-| [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
-| [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
-| [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
-
+| [`ansible/vars/picluster.yml`]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and and external services configuration variables |
+| [`ansible/vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
+| [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
+| [`ansible/vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
 {: .table }
 
 
 {{site.data.alerts.important}}: **About storage configuration**
 
-Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
+Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
 
 - **Centralized SAN** setup assumes `gateway` node has a SSD disk attached (`/dev/sda`) that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
 
