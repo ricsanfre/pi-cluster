@@ -2,7 +2,7 @@
 
 - name: Configure vault service account and create token
   kubernetes.core.k8s:
-    definition: "{{ lookup('ansible.builtin.file', 'argocd/bootstrap/vault/' + item ) }}"
+    definition: "{{ lookup('ansible.builtin.file', '../argocd/bootstrap/vault/' + item ) }}"
     state: present
   with_items:
     - vault-auth-serviceaccount.yaml
