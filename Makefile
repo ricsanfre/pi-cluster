@@ -44,6 +44,10 @@ k3s-install:
 k3s-bootstrap:
 	cd ansible && ansible-playbook k3s_bootstrap.yml
 
-.PHONY: clean
-clean:
+.PHONY: k3s-reset
+k3s-reset:
 	cd ansible && ansible-playbook k3s_reset.yml
+
+.PHONY: external-services-reset
+external-services-reset:
+	cd ansible && ansible-playbook reset_external_services.yml

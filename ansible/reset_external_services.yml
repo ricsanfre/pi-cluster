@@ -27,12 +27,12 @@
         daemon_reload: true
 
 - name: Clean Vault Installation
-  hosts: node1
+  hosts: gateway
   become: true
   gather_facts: false
   tags: [vault]
   tasks:
-    - name: Stop and disable Minio Server
+    - name: Stop and disable Vault Server
       systemd:
         name: "{{ item }}"
         state: stopped
@@ -58,7 +58,7 @@
         daemon_reload: true
 
 - name: Clean Restic Installation
-  hosts: node1
+  hosts: raspberrypi
   become: true
   gather_facts: false
   tags: [restic]
