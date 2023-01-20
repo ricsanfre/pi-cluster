@@ -51,6 +51,6 @@
     mode: 0755
   with_items:
     - template: certbot.sh.j2
-      dest: "{{ certbot_venv }}/certbot-create-cert.sh"
+      dest: "{{ certbot_venv }}/bin/certbot-create-cert.sh"
     - template: certbot-wrapper.sh.j2
-      dest: "{{ certbot_venv }}/certbot-wrapper.sh"
+      dest: "{{ certbot_venv }}/bin/certbot-wrapper.sh"

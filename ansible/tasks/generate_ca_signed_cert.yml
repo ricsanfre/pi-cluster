@@ -1,15 +1,15 @@
 ---
 - name: Create private key
   openssl_privatekey:
-    path: "certificates/{{ server_hostname }}.key"
+    path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.key"
     size: "{{ ssl_key_size | int }}"
     type: "{{ key_type }}"
     mode: 0644
 
 - name: Create CSR
   openssl_csr:
-    path: "certificates/{{ server_hostname }}.csr"
-    privatekey_path: "certificates/{{ server_hostname }}.key"
+    path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.csr"
+    privatekey_path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.key"
     country_name: "{{ country_name }}"
     organization_name: "{{ organization_name }}"
     email_address: "{{ email_address }}"
@@ -18,8 +18,8 @@
 
 - name: CA signed CSR
   openssl_certificate:
-    csr_path: "certificates/{{ server_hostname }}.csr"
-    path: "certificates/{{ server_hostname }}.pem"
+    csr_path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.csr"
+    path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.pem"
     provider: ownca
-    ownca_path: certificates/CA.pem
-    ownca_privatekey_path: certificates/CA.key
+    ownca_path: "{{ selfsigned_certificates_path }}/CA.pem"
+    ownca_privatekey_path: "{{ selfsigned_certificates_path }}/CA.key"

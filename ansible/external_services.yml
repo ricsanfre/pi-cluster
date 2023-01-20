@@ -1,14 +1,16 @@
 ---
-
+## Generate TLS certificates for external services
+## Generated using certbot (letsencrypt) or selfsigned certificates
 - name: Generate external services certificates
   hosts: localhost
   gather_facts: true
   tags: [certificates]
   vars:
-    certbot_venv: "{{ playbook_dir }}/../certificates"
+    certbot_venv: "{{ playbook_dir }}/../certbot"
     certbot_email: "{{ acme_issuer_email }}"
     dns_ionos_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
     dns_ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+    selfsigned_certificates_path: "../certificates"
   pre_tasks:
     # Include vault variables
     - name: Include vault variables
@@ -24,7 +26,7 @@
 
   tasks:
     - name: Create Letsencrytp certificate for external services
-      command: "{{ certbot_venv }}/certbot-create-cert.sh {{ item }}"
+      command: "{{ certbot_venv }}/bin/certbot-create-cert.sh {{ item }}"
       register: certbot_create
       changed_when:
         - certbot_create.rc==0
@@ -37,6 +39,15 @@
     - name: Create customCA-signed TLS certificate for minio
       when: not enable_letsencrypt
       block:
+        # Generate self-signed certificates directory
+        - name: Create certificates directory
+          file:
+            path: "{{ selfsigned_certificates_path }}"
+            state: directory
+            mode: 0750
+        # Include selfsigned certificates variables
+        - name: Include selfsigned certificates variables
+          include_vars: "vars/selfsigned-certificates.yml"
         # Generate custom CA
         - name: Generate custom CA
           include_tasks: tasks/generate_custom_ca.yml
@@ -57,6 +68,8 @@
           loop_control:
             loop_var: server_hostname
 
+## Install Minio S3 Storage Server
+
 - name: Install Minio S3 Storage Server
   hosts: node1
   gather_facts: true
@@ -64,16 +77,9 @@
   become: true
   vars:
     server_hostname: "{{ minio_hostname }}"
-    ssl_key_size: 4096
-    ssl_certificate_provider: selfsigned
-    key_type: RSA
-    country_name: ES
-    email_address: admin@ricsanfre.com
-    organization_name: Ricsanfre
-    certbot_venv: "{{ playbook_dir }}/../certificates"
-
+    certbot_venv: "{{ playbook_dir }}/../certbot"
+    selfsigned_certificates_path: "../certificates"
   pre_tasks:
-
     # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
@@ -83,14 +89,14 @@
 
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
-        minio_key: "{{ lookup('file','certificates/' + server_hostname + '.key') }}"
-        minio_cert: "{{ lookup('file','certificates/' + server_hostname + '.pem') }}"
+        minio_key: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        minio_cert: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
       when: not enable_letsencrypt
 
     - name: Get letsencrypt TLS certificate for minio
       block:
         - name: check TLS certificate for minio exits
-          command: "{{ certbot_venv }}/certbot-wrapper.sh certificates -d {{ minio_hostname }}"
+          command: "{{ certbot_venv }}/bin/certbot-wrapper.sh certificates -d {{ minio_hostname }}"
           register: certbot_certificates
           delegate_to: localhost
           become: false
@@ -116,6 +122,8 @@
   roles:
     - role: ricsanfre.minio
 
+## Install Hashicorp Vault Server
+
 - name: Install Vault Server
   hosts: gateway
   gather_facts: true
@@ -123,13 +131,8 @@
   become: true
   vars:
     server_hostname: "{{ vault_hostname }}"
-    ssl_key_size: 4096
-    ssl_certificate_provider: selfsigned
-    key_type: RSA
-    country_name: ES
-    email_address: admin@ricsanfre.com
-    organization_name: Ricsanfre
-    certbot_venv: "{{ playbook_dir }}/../certificates"
+    certbot_venv: "{{ playbook_dir }}/../certbot"
+    selfsigned_certificates_path: "../certificates"
 
   pre_tasks:
     # Include vault variables
@@ -142,15 +145,15 @@
 
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
-        vault_key: "{{ lookup('file','certificates/' + server_hostname + '.key') }}"
-        vault_cert: "{{ lookup('file','certificates/' + server_hostname + '.pem') }}"
-        vault_ca: "{{ lookup('file','certificates/CA.pem') }}"
+        vault_key: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        vault_cert: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+        vault_ca: "{{ lookup('file',selfsigned_certificates_path + '/CA.pem') }}"
       when: not enable_letsencrypt
 
     - name: Get letsencrypt TLS certificate for vault
       block:
         - name: check TLS certificate for vault exits
-          command: "{{ certbot_venv }}/certbot-wrapper.sh certificates -d {{ vault_hostname }}"
+          command: "{{ certbot_venv }}/bin/certbot-wrapper.sh certificates -d {{ vault_hostname }}"
           register: certbot_certificates
           delegate_to: localhost
           become: false
@@ -208,6 +211,7 @@
         create: true
         mode: 0644
 
+## Load all credentials into Hashicorp Vault Server
 - name: Load Vault Credentials
   hosts: gateway
   gather_facts: true
@@ -264,7 +268,7 @@
         policies: ["write"]
       register: token_data
       become: false
-
+    # Load ansible vault variables into Hashicorp Vault Server
     - name: Load vault credentials
       include_tasks:
         file: tasks/load_vault_credentials.yml

@@ -1,13 +1,16 @@
 #!/bin/bash
 
 # Executing certbot within virtualenv
+# Need to be copied to venv_cerbot/bin
 
-{{certbot_venv}}/bin/certbot certonly \
-  --config-dir {{certbot_venv}}/config \
-  --work-dir {{certbot_venv}} \
-  --logs-dir {{certbot_venv}}/logs \
+BASEDIR=$(dirname "$0")
+
+$BASEDIR/certbot certonly \
+  --config-dir $BASEDIR/../config \
+  --work-dir $BASEDIR/.. \
+  --logs-dir $BASEDIR/../logs \
   --authenticator dns-ionos \
-  --dns-ionos-credentials {{ certbot_venv }}/.secrets/ionos-credentials.ini \
+  --dns-ionos-credentials $BASEDIR/../.secrets/ionos-credentials.ini \
   --dns-ionos-propagation-seconds {{ propagation_seconds }} \
   --server https://acme-v02.api.letsencrypt.org/directory \
   --agree-tos \

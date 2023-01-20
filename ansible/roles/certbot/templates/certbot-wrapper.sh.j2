@@ -1,9 +1,12 @@
 #!/bin/bash
 
-#certbot-wrapper script
+# certbot-wrapper script
+# Need to be copied to venv_cerbot/bin
 
-{{certbot_venv}}/bin/certbot  \
-  --config-dir {{certbot_venv}}/config \
-  --work-dir {{certbot_venv}} \
-  --logs-dir {{certbot_venv}}/logs \
+BASEDIR=$(dirname "$0")
+
+$BASEDIR/certbot  \
+  --config-dir $BASEDIR/../config \
+  --work-dir $BASEDIR/.. \
+  --logs-dir $BASEDIR/../logs \
   $@

@@ -1,14 +1,14 @@
 ---
 - name: Create CA key
   openssl_privatekey:
-    path: certificates/CA.key
+    path: "{{ selfsigned_certificates_path }}/CA.key"
     size: "{{ ssl_key_size | int }}"
     mode: 0644
   register: ca_key
 
 - name: create the CA CSR
   openssl_csr:
-    privatekey_path: certificates/CA.key
+    privatekey_path: "{{ selfsigned_certificates_path }}/CA.key"
     common_name: Ricsanfre CA
     use_common_name_for_san: false  # since we do not specify SANs, don't use CN as a SAN
     basic_constraints:
@@ -17,13 +17,13 @@
     key_usage:
       - keyCertSign
     key_usage_critical: true
-    path: certificates/CA.csr
+    path: "{{ selfsigned_certificates_path }}/CA.csr"
   register: ca_csr
 
 - name: sign the CA CSR
   openssl_certificate:
-    path: certificates/CA.pem
-    csr_path: certificates/CA.csr
-    privatekey_path: certificates/CA.key
+    path: "{{ selfsigned_certificates_path }}/CA.pem"
+    csr_path: "{{ selfsigned_certificates_path }}/CA.csr"
+    privatekey_path: "{{ selfsigned_certificates_path }}/CA.key"
     provider: selfsigned
   register: ca_crt
