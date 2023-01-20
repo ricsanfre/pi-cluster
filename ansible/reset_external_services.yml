@@ -1,0 +1,109 @@
+---
+- name: Clean Minio Installation
+  hosts: node1
+  become: true
+  gather_facts: false
+  tags: [s3]
+  tasks:
+    - name: Stop and disable Minio Server
+      systemd:
+        name: minio
+        state: stopped
+        enabled: false
+      become: true
+    - name: Delete directories and files
+      become: true
+      file:
+        state: absent
+        path: "{{ item }}"
+      with_items:
+        - /storage/minio/
+        - /etc/minio/
+        - /usr/local/bin/minio
+        - /usr/local/bin/mc
+        - /etc/systemd/system/minio.service
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: true
+
+- name: Clean Vault Installation
+  hosts: node1
+  become: true
+  gather_facts: false
+  tags: [vault]
+  tasks:
+    - name: Stop and disable Minio Server
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      become: true
+      with_items:
+        - vault
+        - vault-unseal
+    - name: Delete directories and files
+      become: true
+      file:
+        state: absent
+        path: "{{ item }}"
+      with_items:
+        - /var/lib/vault/
+        - /etc/vault/
+        - /var/log/vault/
+        - /usr/local/bin/vault
+        - /etc/systemd/system/vault.service
+        - /etc/systemd/system/vault-unseal.service
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: true
+
+- name: Clean Restic Installation
+  hosts: node1
+  become: true
+  gather_facts: false
+  tags: [restic]
+  tasks:
+    - name: Stop and disable restic backup service
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      become: true
+      with_items:
+        - restic-backup.timer
+
+    - name: Stop and disable restic clean service
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      become: true
+      when: restic_clean_service
+      with_items:
+        - restic-clean.timer
+
+    - name: Delete directories and files
+      become: true
+      file:
+        state: absent
+        path: "{{ item }}"
+      with_items:
+        - /etc/restic/
+        - /var/log/restic.log
+        - /usr/local/bin/restic
+        - /etc/systemd/system/restic-backup.service
+        - /etc/systemd/system/restic-backup.timer
+
+    - name: Delete clean service file
+      become: true
+      file:
+        state: absent
+        path: "{{ item }}"
+      with_items:
+        - /etc/systemd/system/restic-clean.timer
+        - /etc/systemd/system/restic-clean.service
+      when: restic_clean_service
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: true
