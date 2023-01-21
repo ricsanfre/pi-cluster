@@ -1,8 +1,29 @@
 
+# Ingress configuration
+ingress:
+  host: longhorn.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    tlsIssuer: letsencrypt
+  # Enabling basic-auth
+  basicAuth:
+    enable: true
+    middlewareName: basic-auth
+    middlewareNamespace: traefik
+
+# Backup S3 backend URL
 backup:
   minioUrl: "https://s3.minio.picluster.ricsanfre.com:9091"
 
-# longhorn helm chart values
+# Prometheus servicemonitor configuration
+serviceMonitor:
+  enable: true
+  release: monitoring
+
+#####################
+# longhorn subchart
+#####################
+
 longhorn:
   defaultSettings:
     defaultDataPath: "/storage"
@@ -10,7 +31,3 @@ longhorn:
     backupTarget: "s3://k3s-longhorn@eu-west-1/"
     backupTargetCredentialSecret: longhorn-minio-secret
 
-# Prometheus servicemonitor configuration
-serviceMonitor:
-  enable: true
-  release: monitoring
