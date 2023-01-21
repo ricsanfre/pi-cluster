@@ -2,40 +2,38 @@ gitops:
   repo: https://github.com/ricsanfre/pi-cluster
   revision: argocd
 
-# Ordered list of application corresponding to different sync waves
+# List of application corresponding to different sync waves
 apps:
-    # Argo CD App
-  - name: argocd
-    namespace: argocd
-    path: argocd/bootstrap/argocd
-    # Root App (ArgoCD App of Apps)
-  - name: root
-    namespace: argocd
-    path: argocd/bootstrap/root
     # CDRs App
   - name: crds
     namespace: default
     path: argocd/bootstrap/crds
+    syncWave: 0
     # External Secrets Operator
   - name: external-secrets
     namespace: external-secrets
     path: argocd/system/external-secrets
+    syncWave: 1
     # Metal LB
   - name: metallb
     namespace: metallb
     path: argocd/system/metallb
+    syncWave: 1
     # Cert-Manager and Trust Manager
   - name: cert-manager
     namespace: cert-manager
     path: argocd/system/cert-manager
+    syncWave: 2
     # Linkerd service mesh
   - name: linkerd
     namespace: linkerd
     path: argocd/system/linkerd
+    syncWave: 3
     # Traefik Ingress Controller
   - name: traefik
     namespace: traefik
     path: argocd/system/traefik
+    syncWave: 4
     helm:
       # skip installation traefik CDRs
       skipCrds: true
@@ -43,22 +41,27 @@ apps:
   - name: csi-external-snapshotter
     namespace: kube-system
     path: argocd/system/csi-external-snapshotter
+    syncWave: 4
     # Longhorn Distributed Block Storage
   - name: longhorn
     namespace: longhorn-system
     path: argocd/system/longhorn-system
+    syncWave: 5
     # Velero Backup
   - name: velero
     namespace: velero
     path: argocd/system/velero
+    syncWave: 5
     # Logging: Loki and EFK stack
   - name: logging
     namespace: logging
     path: argocd/system/logging
+    syncWave: 6
     # Kube-prometheus-stack
   - name: monitoring
     namespace: monitoring
     path: argocd/system/monitoring
+    syncWave: 6
     helm:
       # skip installation kube-prometheus-stack CDRs
       skipCrds: true
@@ -66,11 +69,24 @@ apps:
   - name: linkerd-viz
     namespace: linkerd-viz
     path: argocd/system/linkerd-viz
+    syncWave: 6
     # Tracing: Tempo
   - name: tracing
     namespace: tracing
     path: argocd/system/tracing
+    syncWave: 6
     # Linkerd-jaeger
   - name: linkerd-jaeger
     namespace: linkerd-jaeger
     path: argocd/system/linkerd-jaeger
+    syncWave: 6
+    # Argo CD App
+  - name: argocd
+    namespace: argocd
+    path: argocd/bootstrap/argocd
+    syncWave: 7
+    # Root App (ArgoCD App of Apps)
+  - name: root
+    namespace: argocd
+    path: argocd/bootstrap/root
+    syncWave: 7

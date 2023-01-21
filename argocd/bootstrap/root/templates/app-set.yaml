@@ -6,7 +6,7 @@ metadata:
   name: {{ $app.name }}
   namespace: {{ $.Release.Namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: '{{ $index }}'
+    argocd.argoproj.io/sync-wave: '{{ default 0 $app.syncWave }}'
 spec:
   destination:
     namespace: {{ $app.namespace }}
