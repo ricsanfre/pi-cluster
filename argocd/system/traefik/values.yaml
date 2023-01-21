@@ -51,12 +51,22 @@ traefik:
   service:
     spec:
       loadBalancerIP: 10.0.0.100
-  # Enable cross namespace references
+
   providers:
     kubernetesCRD:
       enabled: true
+      # Enable cross namespace references
       allowCrossNamespace: true
-  
+    # traefik by default does not update status.loadbalancer field
+    # In argo-cd, this field is used to obtaing the ingress object health status
+    # ingress resource are not getting health status and so application gets stucked
+    # See issue https://github.com/argoproj/argo-cd/issues/968
+    # Traefik need to be confgured enabling published service
+    # https://doc.traefik.io/traefik/providers/kubernetes-ingress/#publishedservice
+    kubernetesIngress:
+      publishedService:
+        enabled: true
+
   # Enable prometheus metric service
   metrics:
     prometheus:
@@ -70,13 +80,5 @@ traefik:
       sameSpan: true
       id128Bit: true
       sampleRate: 1.0
-  # traefik by default does not update status.loadbalancer field
-  # In argo-cd, this field is used to obtaing the ingress object health status
-  # ingress resource are not getting health status and so application gets stucked
-  # See issue https://github.com/argoproj/argo-cd/issues/968
-  # Traefik need to be confgured enabling published service
-  # https://doc.traefik.io/traefik/providers/kubernetes-ingress/#publishedservice
-  providers:
-    kubernetesIngress:
-      publishedService:
-        enabled: true
+
+
