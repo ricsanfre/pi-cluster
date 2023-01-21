@@ -1,5 +1,17 @@
+
+# Ingress configuration
+ingress:
+  host: argocd.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    tlsIssuer: letsencrypt
+
 argo-cd:
   configs:
+    params:
+      # Run server without TLS
+      # Traefik finishes TLS connections
+      server.insecure: true
     cm:
       statusbadge.enabled: 'true'
       resource.customizations.health.argoproj.io_Application: |
