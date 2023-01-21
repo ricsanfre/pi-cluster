@@ -56,7 +56,8 @@ ntp_allow_hosts: [10.0.0.0/24]
 #########################
 
 # tcp 8200, 8201 Vault server
-in_tcp_port: '{ ssh, https, http, iscsi-target, 8200, 8201 }'
+# tcp 9100 Prometheus (fluent-bit)
+in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201 }'
 in_udp_port: '{ snmp, domain, ntp, bootps }'
 forward_tcp_port: '{ http, https, ssh }'
 forward_udp_port: '{ domain, ntp }'
