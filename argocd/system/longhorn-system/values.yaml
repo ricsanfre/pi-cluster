@@ -13,7 +13,7 @@ ingress:
 
 # Backup S3 backend URL
 backup:
-  minioUrl: "https://s3.minio.picluster.ricsanfre.com:9091"
+  minioUrl: "https://s3.picluster.ricsanfre.com:9091"
 
 # Prometheus servicemonitor configuration
 serviceMonitor:
