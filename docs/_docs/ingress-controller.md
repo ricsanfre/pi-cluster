@@ -75,11 +75,16 @@ Installation using `Helm` (Release 3):
     spec:
       # Set load balancer external IP
       loadBalancerIP: 10.0.0.100
-  # Enable cross namespace references
+
   providers:
+    # Enable cross namespace references
     kubernetesCRD:
       enabled: true
-      allowCrossNamespace: true  
+      allowCrossNamespace: true
+    # Enable published service
+    kubernetesIngress:
+      publishedService:
+        enabled: true
   ```
 
 - Step 5: Install Traefik
@@ -161,8 +166,8 @@ This configuration enables Traefik access log writing to `/data/acess.log` file 
 
 As alternative to standard `Ingress` kuberentes resources, Traefik's specific CRD, `IngressRoute` can be used to define access to cluster services. This CRD allows advanced routing configurations not possible to do with `Ingress` available Traefik's annotations.
 
-`IngressRoute` resources only can reference other Traefik's resources, i.e: `Middleware` located in the same namespace.
-To change this, and allow IngresRoute access resources defined in other namespaces, [`allowCrossNamespace`](https://doc.traefik.io/traefik/providers/kubernetes-crd/#allowcrossnamespace) Traefik helm chart value must be set to true.
+`IngressRoute` and `Ingress` resources only can reference other Traefik's resources, i.e: `Middleware` located in the same namespace.
+To change this, and allow `Ingress/IngressRoute` resources to access other resources defined in other namespaces, [`allowCrossNamespace`](https://doc.traefik.io/traefik/providers/kubernetes-crd/#allowcrossnamespace) Traefik helm chart value must be set to true.
 
 
 The following values need to be specified within helm chart configuration.
@@ -173,6 +178,26 @@ providers:
   kubernetesCRD:
     enabled: true
     allowCrossNamespace: true 
+```
+
+#### Enabling Published service
+
+Traefik by default, when using an external load balancer (Metal LB) does not update `status.loadbalancer` field in ingress resources. See [Traefik issue #3377](https://github.com/traefik/traefik/issues/3377).
+
+In argo-cd, this field is used to obtaing the ingress object health status ingress resource are not getting health status and so application gets stucked.
+
+Traefik need to be confgured [enabling published service](https://doc.traefik.io/traefik/providers/kubernetes-ingress/#publishedservice), and thus Traefik will copy Traefik's service loadbalancer.status (containing the service's external IPs, allocated by Metal-LB) to the ingresses.
+
+See more details in [Argo CD issue #968](https://github.com/argoproj/argo-cd/issues/968)
+
+The following values need to be specified within helm chart configuration.
+
+```yml
+providers:
+  # Enable published service
+  kubernetesIngress:
+    publishedService:
+      enabled: true
 ```
 
 ### Creating Traefik-metric Service

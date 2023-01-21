@@ -242,7 +242,21 @@ distributor:
   config:
     log_received_spans:
       enabled: true
-
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
 # Configure ingester
 ingester:
   # Enable environment variables in config file
@@ -279,6 +293,23 @@ compactor:
           key: MINIO_SECRET_ACCESS_KEY
 # Configure querier
 querier:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+# Configure query-frontend
+queryFrontend:
   # Enable environment variables in config file
   # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
