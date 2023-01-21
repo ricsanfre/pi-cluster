@@ -84,9 +84,4 @@ apps:
   - name: argocd
     namespace: argocd
     path: argocd/bootstrap/argocd
-    syncWave: 7
-    # Root App (ArgoCD App of Apps)
-  - name: root
-    namespace: argocd
-    path: argocd/bootstrap/root
-    syncWave: 7
+    syncWave: 6
