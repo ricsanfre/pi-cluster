@@ -3024,7 +3024,7 @@
     ]
   },
   "timezone": "",
-  "title": "Logging Dashboard",
+  "title": "Fluentbit/Fluentd Dashboard",
   "uid": "bNn5LUtiz",
   "version": 1
 }
