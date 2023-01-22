@@ -71,3 +71,11 @@ k3s-reset:
 .PHONY: external-services-reset
 external-services-reset:
 	cd ansible && ansible-playbook reset_external_services.yml
+
+.PHONY: shutdown-k3s-worker
+shutdown-k3s-worker:
+	cd ansible && ansible -b -m shell -a "shutdown -h 1 min" k3s_worker
+
+.PHONY: shutdown-k3s-master
+shutdown-k3s-master:
+	cd ansible && ansible -b -m shell -a "shutdown -h 1 min" k3s_master
