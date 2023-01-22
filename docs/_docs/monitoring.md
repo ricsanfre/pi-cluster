@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "01-11-2022"
+last_modified_at: "22-01-2023"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -158,6 +158,13 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     - name: Loki
       type: loki
       url: http://loki-gateway.logging.svc.cluster.local
+
+    # Additional configuration to grafana dashboards sidecar
+    # Search in all namespaces for configMaps containing label `grafana_dashboard`
+    sidecar:
+      dashboards:
+        searchNamespace: ALL
+
   # Disabling monitoring of K8s services.
   # Monitoring of K3S components will be configured out of kube-prometheus-stack
   kubelet:
@@ -693,7 +700,7 @@ Check out ["Grafana chart documentation: Sidecar for Dashboards"](https://github
 
 `kube-prometheus-stack` configure by default grafana provisioning sidecar to check only for new ConfigMaps containing label `grafana_dashboard`
 
-This are the default helm chart values configuring the sidecar:
+kube-prometheus-stack default helm chart values is the following
 
 ```yml
 grafana:
@@ -722,6 +729,15 @@ data:
   dashboard.json: |-
   [json_file_content]
 
+```
+
+Additional helm chart configuration is required for enabling the search for ConfigMaps in all namespaces (by default search is limited to grafana's namespace).
+
+```yaml
+grafana:
+  sidecar:
+    dashboards:
+      searchNamespace: ALL
 ```
 
 Following this procedure kube-prometheus-stack helm chart automatically deploy a set of Dashboards for monitoring metrics coming from Kubernetes processes and from Node Exporter. The list of [kube-prometheus-stack grafana dashboards](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/grafana/dashboards-1.14)

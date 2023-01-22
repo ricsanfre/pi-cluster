@@ -156,6 +156,12 @@ kube-prometheus-stack:
       access: proxy
       url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
 
+    # Additional configuration to grafana dashboards sidecar
+    # Search in all namespaces for configMaps containing label `grafana_dashboard`
+    sidecar:
+      dashboards:
+        searchNamespace: ALL
+
   # Disabling monitoring of K8s services.
   # Monitoring of K3S components will be configured out of kube-prometheus-stack
   kubelet:
