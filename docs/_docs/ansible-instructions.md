@@ -1,15 +1,18 @@
 ---
 title: Quick Start Instructions
 permalink: /docs/ansible/
-description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "16-01-2023"
+description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
+last_modified_at: "23-01-2023"
 ---
 
-This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
+This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
+- [cloud-init](https://cloudinit.readthedocs.io/en/latest/): to automate initial OS installation/configuration on each node of the cluster
+- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes,  install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vautl) install K3S, and bootstraping cluster through installation and configuration of ArgoCD
+- [Argo CD](https://argo-cd.readthedocs.io/en/stable/): to automatically deploy Applications to Kuberenetes cluster from manifest files in Git repository.
 
 {{site.data.alerts.note}}
 
-Step-by-step manual process is also described in this documentation.
+Step-by-step manual process to deploy and configure each component is also described in this documentation.
 
 {{site.data.alerts.end}}
 
@@ -30,7 +33,7 @@ Step-by-step manual process is also described in this documentation.
   Developed Ansible playbooks depend on external roles that need to be installed.
 
   ```shell
-  ansible-galaxy install -r requirements.yml
+  cd ansible && ansible-galaxy install -r requirements.yml
   ```
 
 ## Ansible playbooks configuration
@@ -60,9 +63,7 @@ The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH
   private_key_file = $HOME/ansible-ssh-key.pem
   ```
 
-### Configuring Ansible Playbooks
-
-#### Encrypting secrets/key variables
+### Encrypting secrets/key variables
 
 All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
 
@@ -132,7 +133,7 @@ ansible-playbook playbook.yml --ask-vault-pass
 {{site.data.alerts.end}}
 
 
-##### Automate Ansible Vault decryption with GPG
+#### Automate Ansible Vault decryption with GPG
 
 Ansible vault password decryption can be automated using `--vault-password-file` parameter , instead of manually providing the password with each execution (`--ask-vault-pass`).
 
@@ -248,7 +249,7 @@ Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obt
   ```
   This time only your GPG key passphrase will be asked to automatically encrypt/decrypt the file
 
-##### Vault credentials generation 
+#### Vault credentials generation 
 
 Execute playbook to generate ansible vault variable file (`var/vault.yml`) containing all credentials/passwords. Random generated passwords will be generated for all cluster services.
 
@@ -258,7 +259,7 @@ ansible-playbook create_vault_credentials.yml
 ```
 Credentials for external services (IONOS API credentials) will be asked during the execution of the script.
 
-#### Modify Ansible Playbook variables
+### Modify Ansible Playbook variables
 
 Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars` directories to meet your specific configuration.
 
@@ -385,7 +386,7 @@ For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), executes 
 ansible-playbook setup_picluster.yml --tags "node"
 ```
 
-### Configuring external services (Minio and Hashicorp Vault)
+## Configuring external services (Minio and Hashicorp Vault)
 
 Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the playbook
 
@@ -398,7 +399,7 @@ Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gatew
 All vault credentials are stored in Hashicorp Vault
 {{site.data.alerts.end}}
 
-### Configuring OS level backup (restic)
+## Configuring OS level backup (restic)
 
 Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
 
@@ -414,6 +415,25 @@ List of directories to be backed up by restic in each node can be found in varia
 Variable `restic_clean_service` which configure and schedule restic's purging activities need to be set to "true" only in one of the nodes. Defaul configuration set `gateway` as the node for executing these tasks.
 
 {{site.data.alerts.end}}
+
+## Kubernetes Applications (GitOps)
+
+ArgoCD is used to deploy automatically packaged applications contained in the repository. These applications are located in [`/argocd`]({{site.git_address}}/tree/master/argocd) directory.
+
+- Modify Root application (App of Apps pattern) to point to your own repository
+
+  Edit file [`/argocd/bootstrap/root/values.yaml`]({{ site.git_edit_address }}/argocd/bootstrap/root/values.yaml).
+ 
+  `gitops.repo` should point to your own cloned repository.
+  
+  ```yml
+  gitops:
+    repo: https://github.com/<your-user>/pi-cluster 
+  ```
+
+- Tune parameters of the different packaged Applications to meet your specific configuration
+
+  Edit `values.yaml` file of the different applications located in [`/argocd/system`]({{site.git_address}}/tree/master/argocd/system) directory.
 
 ## K3S
 

@@ -2,22 +2,29 @@
 title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
-description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to use Ansible and ArgoCD to automate the deployment and configuration. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
+description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
 last_modified_at: "17-01-2023"
 ---
 
 
 ## Scope
-The scope of this project is to create a kubernetes cluster at home using **Raspberry Pis** and to automate its deployment and configuration using **infrastructure as a code** (Ansible) and **GitOps**(ArgoCD).
+The scope of this project is to create a kubernetes cluster at home using **Raspberry Pis** and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Argo CD](https://argo-cd.readthedocs.io/en/stable/).
 
-This is an educational project to explore kubernetes cluster configurations using an ARM architecture and its automation using tools like [Ansible](https://docs.ansible.com/) and [Argo CD](https://argo-cd.readthedocs.io/en/stable/).
-
-As part of the project the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), 3) service mesh architecture, [Linkerd](https://linkerd.io/), and 4) observability platform based on metrics monitoring solution, [Prometheus](https://prometheus.io/), logging and analytics solution, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), and distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
+As part of the project, the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), 3) service mesh architecture, [Linkerd](https://linkerd.io/), and 4) observability platform based on metrics monitoring solution, [Prometheus](https://prometheus.io/), logging and analytics solution, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), and distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
 
 
 The following picture shows the set of opensource solutions used for building this cluster:
 
 ![Cluster-Icons](/assets/img/pi-cluster-icons.png)
+
+| Logo | Name | Description |
+| ---| --- | --- |
+| <img width="32" src="https://simpleicons.org/icons/ansible.svg"> | [Ansible](https://docs.ansible.com/) | Automate OS configuration, external services installation and k3s installation and bootstrapping |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/argo/icon/color/argo-icon-color.svg"> | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) | GitOps tool built to deploy applications to Kubernetes |
+| <img width="32" src="https://cloudinit.readthedocs.io/en/latest/_static/logo.png"> | [Cloud-init](https://cloudinit.readthedocs.io/en/latest/) | Automate installation OS |
+| <img width="32" src="https://assets.ubuntu.com/v1/ce518a18-CoF-2022_solid+O.svg"> | [Ubuntu](https://ubuntu.com/) | OS for cluster nodes |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/k3s/icon/color/k3s-icon-color.svg"> | [K3S](https://k3s.io/) | Lightweight distribution of Kubernetes |
+{: .table }
 
 
 ## Design Principles
@@ -27,9 +34,9 @@ The following picture shows the set of opensource solutions used for building th
 - Use of distributed storage block technology, instead of centralized NFS system, for pod persistent storage.  Kubernetes block distributed storage solutions, like Rook/Ceph or Longhorn, in their latest versions have included ARM 64 bits support.
 - Use of opensource projects under the [CNCF: Cloud Native Computing Foundation](https://www.cncf.io/) umbrella
 - Use latest versions of each opensource project to be able to test the latest Kubernetes capabilities.
-- Use of [cloud-init](https://cloudinit.readthedocs.io/en/latest/) to automate the initial installation of the Raspberry Pis.
-- Use of [Ansible](https://docs.ansible.com/) for automating the configuration of the cluster nodes, installation of kubernetes, external services and triggering cluster bootstrap (ArgoCD bootstrap).
-- Use of [Argo CD](https://argo-cd.readthedocs.io/en/stable/) to automatically provision Kubernetes applications from git repository
+- Use of [cloud-init](https://cloudinit.readthedocs.io/en/latest/) to automate the initial OS installation.
+- Use of [Ansible](https://docs.ansible.com/) for automating the configuration of the cluster nodes, installation of kubernetes and external services, and triggering cluster bootstrap (ArgoCD bootstrap).
+- Use of [Argo CD](https://argo-cd.readthedocs.io/en/stable/) to automatically provision Kubernetes applications from git repository.
 
 ## What I have built so far
 
@@ -44,23 +51,27 @@ From hardware perspective I built two different versions of the cluster
 ![!Cluster-2.0](/assets/img/pi-cluster-2.0.png)
 
 
-
 ## What I have developed so far
 
-From software perspective I have develop the following: Ansible playbooks and roles
+From software perspective I have develop, cloud-init templates, Ansible code and packaged Kubernetes applications to be deployed with ArgoCD.
 
-1. `cloud-init` config files and Ansible playbooks/roles for automatizing the installation and deployment of Pi-Cluster. 
-
-
-   All source code can be found in the following github repository
+All source code can be found in the following github repository
 
    | Repo | Description | Github |
    | ---| --- | --- | 
    |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.git_address}})|
-   {: .table } 
-   
+   {: .table }
 
-2. Aditionally several ansible roles have been developed to automate different configuration tasks on Ubuntu-based servers that can be reused in other projects. These roles are used by Pi-Cluster Ansible Playbooks
+1. **Cloud-init** template files for initial OS installation
+
+   Source code can be found in Pi Cluster Git repository under [`/cloud-init`]({{site.git_address}}/tree/master/cloud-init) directory.
+
+
+2. **Ansible** playbook and roles for configuring cluster nodes and installating and bootstraping K3S cluster  
+   
+   Source code can be found in Pi Cluster Git repository under [`/ansible`]({{site.git_address}}/tree/master/ansible) directory.
+
+   Aditionally several ansible roles have been developed to automate different configuration tasks on Ubuntu-based servers that can be reused in other projects. These roles are used by Pi-Cluster Ansible Playbooks
 
    Each ansible role source code can be found in its dedicated Github repository and is published in Ansible-Galaxy to facilitate its installation with `ansible-galaxy` command.
 
@@ -80,12 +91,15 @@ From software perspective I have develop the following: Ansible playbooks and ro
    | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
    {: .table } 
 
+3. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using ArgoCD
 
-3. This documentation website [picluster.ricsanfre.com](https://picluster.ricsanfre.com), hosted in Github pages.
+   Source code can be found in Pi Cluster Git repository under [`/argocd`]({{site.git_address}}/tree/master/argocd) directory.
+
+4. This **documentation website** [picluster.ricsanfre.com](https://picluster.ricsanfre.com), hosted in Github pages.
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 
-   Source code can be found in the Pi-cluster repository under [`docs` directory]({{site.git_address}}/tree/master/docs)
+   Source code can be found in the Pi-cluster repository under [`/docs`]({{site.git_address}}/tree/master/docs) directory.
 
 
 ## Software used and latest version tested

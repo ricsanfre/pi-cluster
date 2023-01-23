@@ -2,7 +2,7 @@
 title: GitOps (ArgoCD)
 permalink: /docs/argocd/
 description: How to apply GitOps to Pi cluster configuration using ArgoCD.
-last_modified_at: "16-01-2023"
+last_modified_at: "23-01-2023"
 ---
 
 
@@ -24,6 +24,7 @@ ArgoCD will be used in Pi Cluster to automatically deploy the different applicat
 
 ## ArgoCD installation
 
+### Helm Chart installation
 ArgoCD can be installed through helm chart
 
 -  Step 1: Add ArgoCD helm repository:
@@ -42,8 +43,13 @@ ArgoCD can be installed through helm chart
 
   ```yml
   configs:
+    params:
+      # Run server without TLS
+      # Traefik finishes TLS connections
+      server.insecure: true
     cm:
       statusbadge.enabled: 'true'
+      # Adding Applications health check
       resource.customizations.health.argoproj.io_Application: |
         hs = {}
         hs.status = "Progressing"
@@ -84,8 +90,61 @@ ArgoCD can be installed through helm chart
   http://<server-port-forwarding>:8080
   ```
 
-## ArgoCD Applications
+### Configuring Ingress
 
+Traefik will be used as ingress controller, terminating TLS traffic, so ArgoCD does not need to expose its API using HTTPS.
+
+- Configure ArgoCD to run its API server with TLS disabled
+   
+  The following helm chart values need to be provided:
+  ```yml
+  configs:
+    params:
+      # Run server without TLS
+      # Traefik finishes TLS connections
+      server.insecure: true
+  ```
+
+- Create Ingress resource yaml file
+
+  ```yml
+  # HTTPS Ingress
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: argocd-ingress
+    namespace: argocd
+    annotations:
+      # HTTPS as entry point
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Enable TLS
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: argocd.picluster.ricsanfre.com
+  spec:
+    tls:
+      - hosts:
+          - argocd.picluster.ricsanfre.com
+        secretName: argocd-tls
+    rules:
+      - host: argocd.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: argocd-server
+                  port:
+                    number: 80  
+
+  ```
+
+See more details in [Argo-CD Ingress configuration doc](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/)
+
+
+## ArgoCD Applications
 
 ArgoCD applications to be deployed can be configured using ArgoCD UI or using ArgoCD specific CRDs (Application/ApplicationSet).
 
@@ -117,6 +176,11 @@ Different types of applications will be needed for the Pi Cluster
       repoURL: https://github.com/<user>/<repo>.git
       # Branch, tag tracking
       targetRevision: HEAD
+    syncPolicy:
+      # Automatic sync options
+      automated:
+        prune: true
+        selfHeal: true
   ```
 
   Where:
@@ -125,6 +189,7 @@ Different types of applications will be needed for the Pi Cluster
   - `source.repoURL` is the URL of the Git Repository
   - `sourcepath` is the path within the Git repository where the application is located
   - `source.targetRevision` is the Git tag, branch or commit to track
+  - `syncPolicy.automated` are [ArgoCD auto-sync policies](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/), to automatically keep in synch application manifest files in the cluster, delete old resources (`prune` option) and launch sych when changes are made to the cluster (`selfHeal` option)
 
 - Helm Chart Applications in ArgoCD 
 
@@ -175,9 +240,7 @@ Different types of applications will be needed for the Pi Cluster
 
 ArgoCD Helm application has the limitation that helm Values file must be in the same git repository as the Helm chart.
 
-Since all charts we want to deploy in the cluster belongs to third party repositories we could not use the values file option (values file will be in our repository and not in the 3rd party repository), and the parameters option will be not manageable since some of the charts contain lots of parameters.
-
-As conclusion, this type of ArgoCD application is useless when deploying charts from third party repositories.
+Since all charts we want to deploy in the cluster belongs to third party repositories, we could not use the values file option (values file will be in our repository and not in the 3rd party repository) and specifying all chart parameters within the Application definition is not manageable since some of the charts contain lots of parameters.
 
 As an alternative a Helm Umbrella Chart pattern can be used. Helm Umbrella chart is sort of a "meta" (empty) Helm Chart that lists other Helm Charts as a dependency ([subcharts](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/)). 
 It consists of a empty helm chart in a repo directory containing only chart definition file (`Chart.yaml`), listing all subcharts, and its corresponding `values.yaml` file.
@@ -216,6 +279,12 @@ spec:
     path: <repo-path>
     repoURL: https://github.com/<user>/<repo>.git
     targetRevision: HEAD
+  helm:
+    <additional helm options>
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
 ```
 
 Argo CD looks for a Chart.yaml file under <repo-path>. If present, it will check the apiVersion inside it and for v2 it uses Helm 3 to render the chart. Actually, ArgoCD will not use `helm install` to install charts. It will render the chart with `helm template` command and then apply the output with kubectl.
@@ -227,9 +296,17 @@ helm template \
         <app-name> <repo-path> \
         | kubectl apply -n <target-namespace> -f -
 ```
+
+Additional options can be passed to helm command using `.spec.helm` parametes in Application resource.
+
+- `helm.valueFiles`: To specify the name of the values file (default values.yaml)
+- `helm.skipCRDs`: To skip installation of CDRs defined in the helm chart
+
 {{site.data.alerts.note}}
 
-Umbrella helm charts will be created for most of the Pi cluster applications, including any additional manifest required to configure the application in its `template` directory.
+Packaged helm applications, using umbrella helm chart pattern, and kustomize applications have been created to deploy all Kuberentes services in the Pi Cluster.
+
+When using umbrella helm charts, empty chart pattern has not always been used. `template` directory, containing additional manifest files required to configure the application, has been added whenever neccesary.
 
 {{site.data.alerts.end}}
 
@@ -291,32 +368,33 @@ root
 - values.yaml
 
   ```yml
-  # Repo details
   gitops:
     repo: https://github.com/ricsanfre/pi-cluster
-    revision: HEAD
+    revision: master
 
-  # Ordered list of application corresponding to different sync waves
+  # List of application corresponding to different sync waves
   apps:
-    - name: argocd
-      namespace: argocd
-      path: argocd/bootstrap/argocd
-    - name: root
-      namespace: argocd
-      path: argocd/bootstrap/root
+      # CDRs App
+    - name: crds
+      namespace: default
+      path: argocd/bootstrap/crds
+      syncWave: 0
+      # External Secrets Operator
     - name: external-secrets
       namespace: external-secrets
       path: argocd/system/external-secrets
+      syncWave: 1
+      # Metal LB
     - name: metallb
       namespace: metallb
       path: argocd/system/metallb
+      syncWave: 1
   ```
 
 - templates/app-set.yaml
 
-  This will create a ArgoCD application for each item in the values file under `apps` dictionary. Each of the item defined contains information about the name of the application (`name`), the namespace to be used during deployment (`namespace`) and the path under `gitops.repo` where the application is located (`path`).
-
-  The index of the dictionary will be used as `argocd.argoproj.io/sync-wave`, so each application belongs to a different wave and are deployed in order.
+  This will create a ArgoCD application for each item in the values file under `apps` dictionary. Each of the item defined contains information about the name of the application (`name`), the namespace to be used during deployment (`namespace`), the sync-wave to be used (`syncWave`), and the path under `gitops.repo` where the application is located (`path`).
+ 
   {% raw %}
   ```yml
   {{- range $index, $app := .Values.apps }}
@@ -327,7 +405,7 @@ root
     name: {{ $app.name }}
     namespace: {{ $.Release.Namespace }}
     annotations:
-      argocd.argoproj.io/sync-wave: '{{ $index }}'
+      argocd.argoproj.io/sync-wave: '{{ default 0 $app.syncWave }}'
   spec:
     destination:
       namespace: {{ $app.namespace }}
@@ -337,6 +415,10 @@ root
       path: {{ $app.path }}
       repoURL: {{ $.Values.gitops.repo }}
       targetRevision: {{ $.Values.gitops.revision }}
+  {{- if $app.helm }}
+      helm:
+  {{ toYaml $app.helm | indent 6  }}
+  {{- end }}
     syncPolicy:
       automated:
         prune: true
@@ -358,13 +440,56 @@ root
   
   Create namespaces with linkerd annotation
 
-
 - templates/other-manifests.yaml
 
   Other manifest files can be provided to bootstrap the cluster. 
 
-## References
+{{site.data.alerts.note}}
 
+Root application created for Pi-Cluster can be found in [/argocd/bootstrap/root]({{ site.git_address }}/tree/master/argocd/bootstrap/root)
+
+{{site.data.alerts.end}}
+
+#### Deploying Root application
+
+Root application can be deployed declarative applying the following manifest file:
+
+```yml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: argocd/bootstrap/root
+    repoURL: https://github.com/ricsanfre/pi-cluster
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 1m
+        maxDuration: 16m
+        factor: 2
+    syncOptions:
+    - CreateNamespace=true
+```
+
+### CRDs Application
+
+Application containing all CRDs could be created and deployed in the first sync-wave. So all other applications making use of CRDs can be deployed with success even when the corresponding Controller services are not yet deployed. For example: Deploying Prometheus Operator CRDs as part of a CRDs Application, allows to deploy prometheus monitoring objects (ServiceMonitor, PodMonitor, etc) for applications that are deployed before kube-prometheus-stack application.
+
+For an example of such CRDs application, check repository [/argocd/bootstrap/crds]({{ site.git_address }}/tree/master/argocd/bootstrap/crds).
+
+## References
 
 - [Argo CD Working With Helm](https://kubebyexample.com/learning-paths/argo-cd/argo-cd-working-helm)
 
