@@ -33,10 +33,16 @@ Step-by-step manual process to deploy and configure each component is also descr
   Developed Ansible playbooks depend on external roles that need to be installed.
 
   ```shell
-  cd ansible && ansible-galaxy install -r requirements.yml
+  ansible-galaxy install -r requirements.yml
   ```
 
-## Ansible playbooks configuration
+{{site.data.alerts.important}}
+
+All ansible commands (`ansible`, `ansible-galaxy`, `ansible-playbook`, `ansible-vault`) need to be executed within [`/ansible`] directory, so the configuration file [`/ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) can be used. Playbooks are configured to be launched from this directory.
+
+{{site.data.alerts.end}}
+
+## Ansible configuration
 
 ### Inventory file
 
@@ -44,7 +50,7 @@ Adjust [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.y
 
 {{site.data.alerts.tip}}
 
-If you maintain the private network assigned to the cluster (10.0.0.0/24) and the hostnames and IP addresses. The only field that you must change in `inventory.yml` file is the field `mac` containing the node's mac address. This information will be used to configure automatically DHCP server and assign the proper IP to each node.
+If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, field `mac` (node's mac address) is the only field that you need to change in `inventory.yml` file. MAC addresses will be used to configure automatically DHCP server and assign the proper IP to each node.
 
 This information can be taken when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
 
@@ -56,7 +62,7 @@ The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH
 
 - Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) to set the UNIX user to be used by Ansible in the remote connection (default value `ansible`)
 
-- Modify [`ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private-file-key` variable)
+- Modify [`ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private_key_file` variable)
 
   ```
   # SSH key
@@ -93,7 +99,7 @@ vault:
 ....
 ```
 
-The steps to encrypt passwords/keys used in all Playbooks is the following:
+The manual steps to encrypt passwords/keys used in all Playbooks is the following:
 
 1. Edit content `var/vault.yml` file specifying your own values for each of the key/password/secret specified.
 
@@ -122,18 +128,19 @@ The steps to encrypt passwords/keys used in all Playbooks is the following:
    ```
    {{site.data.alerts.end}}
 
-
 {{site.data.alerts.important}}
+
+You do not need to modify and ecrypt manually `vault.yml` file. The file is generated automatically and  encrypted executing an Ansible playbook, see instructions below.
+
+{{site.data.alerts.end}}
+
+#### Automate Ansible Vault decryption with GPG
 
 When using encrypted vault.yaml file all playbooks executed with `ansible-playbook` command need the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
 
 ```shell
 ansible-playbook playbook.yml --ask-vault-pass
 ```
-{{site.data.alerts.end}}
-
-
-#### Automate Ansible Vault decryption with GPG
 
 Ansible vault password decryption can be automated using `--vault-password-file` parameter , instead of manually providing the password with each execution (`--ask-vault-pass`).
 
@@ -143,7 +150,7 @@ vault-password-file location can be added to ansible.cfg file, so it is not need
 
 Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-password-file script.
 
-- GnuPG Installation and configuration
+- [GnuPG](https://gnupg.org/) Installation and configuration
 
   In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
 
@@ -217,7 +224,13 @@ Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obt
 
   Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
 
-  - Step 1: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
+  - Step 1. Install pwgen packet
+
+      ```shell
+      sudo apt install pwgen 
+      ```
+
+  - Step 2: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
 
     ```shell
     mkdir -p $HOME/.vault
@@ -226,20 +239,21 @@ Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obt
 
     where `<recipient>` must be the email address configured during GPG key creation. 
 
-  - Step 2: Generate a script `vault_pass.sh`
+  - Step 3: Generate a script `vault_pass.sh`
 
     ```shell
     #!/bin/sh
     gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
     ```
-  - Step 3: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
+  - Step 4: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
 
     ```
     [defaults]
     vault_password_file=vault_pass.sh
     ```
+  
   {{site.data.alerts.note}}
-   If this repository is clone steps 2 and 3 are not needed since the files are already there
+  If this repository is clone steps 3 and 4 are not needed since the files are already there.
   {{site.data.alerts.end}}  
   
 - Encrypt vautl.yaml file using ansible-vault and GPG password
@@ -257,7 +271,7 @@ Execute the following command:
 ```shell
 ansible-playbook create_vault_credentials.yml
 ```
-Credentials for external services (IONOS API credentials) will be asked during the execution of the script.
+Credentials for external cloud services (IONOS DNS API credentials) will be asked during the execution of the script.
 
 ### Modify Ansible Playbook variables
 
@@ -267,30 +281,30 @@ The following table shows the variable files defined at ansible's group and host
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
-| [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
-| [`ansible/group_vars/control.yml`]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: gateway node + pimaster |
-| [`ansible/group_vars/k3s_cluster.yml`]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
-| [`ansible/group_vars/k3s_master.yml`]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
-| [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) | gateway node specific variables|
-{: .table }
+| [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml){: .link-dark } | all nodes of cluster + gateway node + pimaster |
+| [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml){: .link-dark } | control group: gateway node + pimaster |
+| [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml){: .link-dark } | all nodes of the k3s cluster |
+| [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml){: .link-dark } | K3s master nodes |
+| [ansible/host_vars/gateway.yml]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml){: .link-dark } | gateway node specific variables|
+{: .table .table-secondary .border-dark }
 
 
 The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
 
 | Specific Variable File | Configuration |
 |----|----|
-| [`ansible/vars/picluster.yml`]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and and external services configuration variables |
-| [`ansible/vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
-| [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
-| [`ansible/vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
-{: .table }
+| [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml){: .link-dark } | K3S cluster and external services configuration variables |
+| [ansible/vars/dedicated_disks/local_storage.yml]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml){: .link-dark } | Configuration nodes local storage: Dedicated disks setup|
+| [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml){: .link-dark } | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
+| [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml){: .link-dark } | Configuration iSCSI Initiator: Centralized SAN setup|
+{: .table .table-secondary .border-dark }
 
 
 {{site.data.alerts.important}}: **About storage configuration**
 
 Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
 
-- **Centralized SAN** setup assumes `gateway` node has a SSD disk attached (`/dev/sda`) that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
+- **Centralized SAN** setup assumes `gateway` node has a SSD disk attached (`/dev/sda`) that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
 
   Final `gateway` disk configuration is:
 
@@ -301,7 +315,7 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
   <br>
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/centralized_san/centralized_san_target.yml`: `storage_volumegroups` and `storage_volumes` variables. Sizes of the different LUNs can be tweaked to fit the size of the SSD Disk used. I used a 480GB disk so, I was able to create LUNs of 100GB for each of the nodes.
 
-- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
+- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
 
   Final `node1-5` disk configuration is:
 
@@ -313,6 +327,19 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/dedicated_disks/local_storage.yml`: `storage_volumegroups`, `storage_volumes`, `storage_filesystems` and `storage_mounts` variables. The default configuration assings all available space in sda3 to a new logical volume formatted with ext4 and mounted as `/storage`
 
 {{site.data.alerts.end}}
+
+{{site.data.alerts.important}}: **About TLS Certificates configuration**
+
+Default configuration, assumes the use of Letscrypt TLS certificates and IONOS DNS for DNS01 challenge.
+
+As an alternative, a custom CA can be created and use it to sign all certificates:
+The following changes need to be done:
+
+- Modify Ansible variable `enable_letsencrypt` to false in `/ansible/picluster.yml` file
+- Modify Kubernetes applications `ingress.tlsIssuer` (`/argocd/system/<app>/values.yaml`) to `ca` instead of `letsencrypt`.
+
+{{site.data.alerts.end}}
+
 
 ## Installing the nodes
 
@@ -328,9 +355,9 @@ The installation procedure followed is the described in ["Ubuntu OS Installation
 
 | Storage Configuration | User data    | Network configuration |
 |--------------------| ------------- |-------------|
-|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config)|
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config) |
-{: .table }
+|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data){: .link-dark } | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config){: .link-dark }|
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data){: .link-dark } | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config){: .link-dark } |
+{: .table .table-secondary .border-dark }
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -364,9 +391,9 @@ Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/
 
 | Storage Architeture | node1   | node2 | node3 | node4 | node5 |
 |-----------| ------- |-------|-------|--------|--------|
-| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data) |
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data) |
-{: .table }
+| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data){: .link-dark }| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data){: .link-dark } |
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data){: .link-dark }| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data){: .link-dark } |
+{: .table .table-secondary .border-dark }
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -396,7 +423,7 @@ ansible-playbook external_services.yml
 Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gateway`.
 
 {{site.data.alerts.note}}
-All vault credentials are stored in Hashicorp Vault
+All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
 {{site.data.alerts.end}}
 
 ## Configuring OS level backup (restic)
