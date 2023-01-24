@@ -1,3 +1,4 @@
+{{- if .Values.ca.enabled }}
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -7,3 +8,4 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   selfSigned: {}
+{{- end }}

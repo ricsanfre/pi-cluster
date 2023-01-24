@@ -1,3 +1,4 @@
+{{- if .Values.acme.dns01.ionos.enabled }}
 {{- if index .Values "cert-manager-webhook-ionos" -}}
     {{- $webhook:= index .Values "cert-manager-webhook-ionos" }}
 apiVersion: cert-manager.io/v1
@@ -10,7 +11,7 @@ spec:
     # The ACME server URL
     server: https://acme-v02.api.letsencrypt.org/directory
     # Email address used for ACME registration
-    email: {{ .Values.acme_issuer_email }}
+    email: {{ .Values.acme.acme_issuer_email }}
     # Name of a secret used to store the ACME account private key
     privateKeySecretRef:
       name: letsencrypt-ionos-prod
@@ -28,4 +29,5 @@ spec:
               secretKeySecretRef:
                 key: IONOS_SECRET
                 name: ionos-secret
+{{- end -}}
 {{- end -}}

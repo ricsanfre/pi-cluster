@@ -11,3 +11,4 @@ dependencies:
   - name: cert-manager-webhook-ionos
     version: 1.0.2
     repository: https://fabmade.github.io/cert-manager-webhook-ionos
+    condition: acme.dns01.ionos.enabled

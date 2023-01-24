@@ -1,4 +1,18 @@
-acme_issuer_email: admin@ricsanfre.com
+# Custom CA issuer configuration
+# Enable private PKI using a custom CA
+# It creates a ClusterIssuer resource `ca-issuer`
+ca:
+  enabled: true
+
+# ACME (Letsencrypt) issuer configuration
+# https://cert-manager.io/docs/configuration/acme/
+acme:
+  dns01:
+    # Enable ionos dns01 solver
+    # It creates ClusterIssuer resource `letsencrypt-issuer`
+    ionos:
+      enabled: true
+  acme_issuer_email: admin@ricsanfre.com
 
 ########################
 # cert-manager  subchart

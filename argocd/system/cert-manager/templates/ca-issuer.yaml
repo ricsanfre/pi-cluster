@@ -1,3 +1,4 @@
+{{- if .Values.ca.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -24,3 +25,4 @@ metadata:
 spec:
   ca:
     secretName: root-secret
+{{- end }}
