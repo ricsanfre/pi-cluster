@@ -1,4 +1,13 @@
-# velero helm chart values
+
+# Prometheus servicemonitor configuration
+serviceMonitor:
+  enable: true
+  release: monitoring
+
+###################
+# velero subchart
+###################
+
 velero:
   # AWS backend and CSI plugins configuration
   initContainers:
@@ -43,8 +52,3 @@ velero:
   podAnnotations:
     linkerd.io/inject: enabled
 
-
-# Prometheus servicemonitor configuration
-serviceMonitor:
-  enable: true
-  release: monitoring

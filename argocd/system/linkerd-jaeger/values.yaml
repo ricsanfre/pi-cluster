@@ -1,3 +1,7 @@
+###########################
+# linkerd-jaeger subchart
+###########################
+
 linkerd-jaeger:
   # Disable OTel collector installation
   collector:

@@ -27,6 +27,8 @@ elasticsearch:
     host: elasticsearch.picluster.ricsanfre.com
     # configure cert-manager issuer
     certmanager:
+      # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
+      # tlsIssuer=ca to generate a CA-signed certificate (not valid)
       tlsIssuer: letsencrypt
 
 # Kibana configuration
@@ -37,11 +39,14 @@ kibana:
   #     memory: "512Mi"
   #   limits:
   #     memory: "512Mi"
+
   # Ingress configuration
   ingress:
     host: kibana.picluster.ricsanfre.com
     # configure cert-manager issuer
     certmanager:
+      # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
+      # tlsIssuer=ca to generate a CA-signed certificate (not valid)
       tlsIssuer: letsencrypt
 
 # LoadBalancer and DNS config
@@ -50,7 +55,7 @@ external:
     loadBalancerIp: 10.0.0.101
     dns: fluentd.picluster.ricsanfre.com
 
-
+# Prometheus monitoring
 serviceMonitor:
   enable: true
   release: monitoring

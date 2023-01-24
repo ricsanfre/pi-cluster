@@ -4,6 +4,8 @@ ingress:
   host: longhorn.picluster.ricsanfre.com
   # configure cert-manager issuer
   certmanager:
+    # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
+    # tlsIssuer=ca to generate a CA-signed certificate (not valid)
     tlsIssuer: letsencrypt
   # Enabling basic-auth
   basicAuth:
