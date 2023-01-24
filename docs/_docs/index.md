@@ -13,20 +13,6 @@ The scope of this project is to create a kubernetes cluster at home using **Rasp
 As part of the project, the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), 3) service mesh architecture, [Linkerd](https://linkerd.io/), and 4) observability platform based on metrics monitoring solution, [Prometheus](https://prometheus.io/), logging and analytics solution, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), and distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
 
 
-The following picture shows the set of opensource solutions used for building this cluster:
-
-![Cluster-Icons](/assets/img/pi-cluster-icons.png)
-
-| Logo | Name | Description |
-| ---| --- | --- |
-| <img width="32" src="https://simpleicons.org/icons/ansible.svg"> | [Ansible](https://docs.ansible.com/) | Automate OS configuration, external services installation and k3s installation and bootstrapping |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/argo/icon/color/argo-icon-color.svg"> | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) | GitOps tool built to deploy applications to Kubernetes |
-| <img width="32" src="https://cloudinit.readthedocs.io/en/latest/_static/logo.png"> | [Cloud-init](https://cloudinit.readthedocs.io/en/latest/) | Automate installation OS |
-| <img width="32" src="https://assets.ubuntu.com/v1/ce518a18-CoF-2022_solid+O.svg"> | [Ubuntu](https://ubuntu.com/) | OS for cluster nodes |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/k3s/icon/color/k3s-icon-color.svg"> | [K3S](https://k3s.io/) | Lightweight distribution of Kubernetes |
-{: .table }
-
-
 ## Design Principles
 
 - Use ARM 64 bits operating system enabling the possibility of using Raspberry PI B nodes with 8GB RAM. Currently only Ubuntu supports 64 bits ARM distribution for Raspberry Pi.
@@ -37,6 +23,76 @@ The following picture shows the set of opensource solutions used for building th
 - Use of [cloud-init](https://cloudinit.readthedocs.io/en/latest/) to automate the initial OS installation.
 - Use of [Ansible](https://docs.ansible.com/) for automating the configuration of the cluster nodes, installation of kubernetes and external services, and triggering cluster bootstrap (ArgoCD bootstrap).
 - Use of [Argo CD](https://argo-cd.readthedocs.io/en/stable/) to automatically provision Kubernetes applications from git repository.
+
+
+## Technology Stack
+
+The following picture shows the set of opensource solutions used for building this cluster:
+
+![Cluster-Icons](/assets/img/pi-cluster-icons.png)
+
+| Logo | Name | Description |
+| ---| --- | --- |
+| <img width="32" src="https://simpleicons.org/icons/ansible.svg"> | [Ansible](https://docs.ansible.com/){: .link-dark }| Automate OS configuration, external services installation and k3s installation and bootstrapping |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/argo/icon/color/argo-icon-color.svg"> | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/){: .link-dark } | GitOps tool built to deploy applications to Kubernetes |
+| <img width="32" src="https://assets.ubuntu.com/v1/15971bf5-cloud-init-primary.svg"> | [Cloud-init](https://cloudinit.readthedocs.io/en/latest/){: .link-dark } | Automate installation OS |
+| <img width="32" src="https://assets.ubuntu.com/v1/ce518a18-CoF-2022_solid+O.svg"> | [Ubuntu](https://ubuntu.com/){: .link-dark } | OS for cluster nodes |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/k3s/icon/color/k3s-icon-color.svg"> | [K3S](https://k3s.io/){: .link-dark } | Lightweight distribution of Kubernetes |
+| <img width="32" src="https://metallb.universe.tf/images/logo/metallb-blue.png"> | [Metal LB](https://metallb.universe.tf/){: .link-dark } | Cluster Load Balancer |
+| <img width="32" src="https://raw.githubusercontent.com/traefik/traefik/master/docs/content/assets/img/traefik.logo.png"> | [Traefik](https://traefik.io/){: .link-dark } | Kubernetes Ingress Controller |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/longhorn/icon/color/longhorn-icon-color.png"> | [Longhorn](https://longhorn.io/){: .link-dark } | Kubernetes distributed block storage |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/linkerd/icon/color/linkerd-icon-color.png"> | [Linkerd](https://linkerd.io/){: .link-dark } | Service Mesh |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/fluentd/icon/color/fluentd-icon-color.png"> | [Fluentd](https://www.fluentd.org/){: .link-dark } | Logs forwarding and distribution |
+| <img width="32" src="https://fluentbit.io/images/logo.svg"> | [Fluentbit](https://fluentbit.io){: .link-dark } | Logs collection |
+| <img width="32" src="https://cncf-branding.netlify.app/img/projects/prometheus/icon/color/prometheus-icon-color.png"> | [Prometheus](https://prometheus.io/){: .link-dark } | Metrics monitoring and alerting |
+| <img width="32" src="https://github.com/grafana/loki/blob/main/docs/sources/logo.png?raw=true"> | [Loki](https://grafana.com/oss/loki/){: .link-dark } | Logs aggregation |
+| <img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt36f2da8d650732a0/5d0823c3d8ff351753cbc99f/logo-elasticsearch-32-color.svg"> | [Elasticsearch](https://www.elastic.co/elasticsearch/){: .link-dark } | Logs analytics |
+| <img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt4466841eed0bf232/5d082a5e97f2babb5af907ee/logo-kibana-32-color.svg"> | [Kibana](https://www.elastic.co/kibana/){: .link-dark } | Logs analytics Dashboards |
+| <img width="32" src="https://grafana.com/static/assets/img/logos/grafana-tempo.svg"> | [Tempo](https://grafana.com/oss/tempo/){: .link-dark } | Distributed tracing monitoring |
+| <img width="32" src="https://grafana.com/static/img/menu/grafana2.svg"> | [Grafana](https://grafana.com/oss/grafana/){: .link-dark } | Monitoring Dashboards |
+| <img width="32" src="https://simpleicons.org/icons/vault.svg"> | [Hashicorp Vault](https://www.vaultproject.io/){: .link-dark } | Secrets Management solution |
+| <img width="32" src="https://min.io/resources/img/logo.svg"> | [Minio](https://min.io/){: .link-dark } | S3 Object Storage solution |
+{: .table .table-responsive .table-secondary .table-borderer .border-dark }
+
+
+## External Resources and Services
+
+I try to keep the amount of external resources to the minimum, there's still need for a few of them. Below is a list of external resources/services and why we need them.
+
+### Cloud external services
+
+{{site.data.alerts.note}}
+ These resources are optional, the homelab still works without them but it won't have trusted certificates.
+{{site.data.alerts.end}}
+
+| Provider | Resource | Purpose |
+| ---| --- | --- |
+| [Letsencrypt](https://letsencrypt.org/){: .link-dark } | TLS CA Authority | Signed valid TLS certificates |
+| [IONOS](https://www.ionos.es/){: .link-dark } | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge){: .link-dark } for certificates |
+{: .table .table-secondary .border-dark }
+
+**Alternatives:**
+
+1. Use a private PKI (custom CA to sign certificates).
+
+   Currently supported. Only minor changes are required. See details in [Doc: Quick Start instructions](/docs/ansible).
+
+2. Use other DNS provider.
+
+   Cert-manager / Certbot used to automatically obtain certificates from Let's Encrypt can be used with other DNS providers. This will need further modifications in the way cert-manager application is deployed (new providers and/or webhooks/plugins might be required).
+
+   Currently only acme issuer (letsencytp) using IONOS as dns-01 challenge provider is configured. Check list of [supported dns01 providers](https://cert-manager.io/docs/configuration/acme/dns01/#supported-dns01-providers).
+
+### Self-hosted external Services 
+
+There is another list of services that I have decided to run outside the kuberentes cluster but not using any cloud service. These services currently are running on the same cluster nodes (gateway and node1), but as baremetal service.
+
+| External Service | Resource | Purpose |
+| ---| --- | --- |
+| [Minio](https://mini.io){: .link-dark } | S3 Object Store | Backup  |
+| [Hashicorp Vault](https://www.vaultproject.io/){: .link-dark } | Secrets Management | Cluster secrets management |
+{: .table .table-secondary .border-dark }
+
 
 ## What I have built so far
 
@@ -59,8 +115,8 @@ All source code can be found in the following github repository
 
    | Repo | Description | Github |
    | ---| --- | --- | 
-   |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.git_address}})|
-   {: .table }
+   |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.git_address}}){: .link-dark }|
+   {: .table .table-secondary .border-dark }
 
 1. **Cloud-init** template files for initial OS installation
 
@@ -77,19 +133,19 @@ All source code can be found in the following github repository
 
    | Ansible role | Description | Github |
    | ---| --- | --- | 
-   |  [ricsanfre.security](https://galaxy.ansible.com/ricsanfre/security) | Automate SSH hardening configuration tasks  | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-security)|
-   | [ricsanfre.ntp](https://galaxy.ansible.com/ricsanfre/ntp)  | Chrony NTP service configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-ntp) |
-   | [ricsanfre.firewall](https://galaxy.ansible.com/ricsanfre/firewall) | NFtables firewall configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-firewall) |
-   | [ricsanfre.dnsmasq](https://galaxy.ansible.com/ricsanfre/dnsmasq) | Dnsmasq configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-dnsmasq) |
-   | [ricsanfre.storage](https://galaxy.ansible.com/ricsanfre/storage)| Configure LVM | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-storage) |
-   | [ricsanfre.iscsi_target](https://galaxy.ansible.com/ricsanfre/iscsi_target)| Configure iSCSI Target| [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_target) |
-   | [ricsanfre.iscsi_initiator](https://galaxy.ansible.com/ricsanfre/iscsi_initiator)| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator) |
-   | [ricsanfre.k8s_cli](https://galaxy.ansible.com/ricsanfre/k8s_cli)| Install kubectl and Helm utilities | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-k8s_cli) |
-   | [ricsanfre.fluentbit](https://galaxy.ansible.com/ricsanfre/fluentbit)| Configure fluentbit | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-fluentbit) |
-   | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio)| Configure Minio S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
-   | [ricsanfre.backup](https://galaxy.ansible.com/ricsanfre/backup)| Configure Restic | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-backup) |
-   | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
-   {: .table } 
+   |  [ricsanfre.security](https://galaxy.ansible.com/ricsanfre/security){: .link-dark } | Automate SSH hardening configuration tasks  | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-security){: .link-dark }|
+   | [ricsanfre.ntp](https://galaxy.ansible.com/ricsanfre/ntp){: .link-dark }  | Chrony NTP service configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-ntp){: .link-dark } |
+   | [ricsanfre.firewall](https://galaxy.ansible.com/ricsanfre/firewall){: .link-dark } | NFtables firewall configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-firewall){: .link-dark } |
+   | [ricsanfre.dnsmasq](https://galaxy.ansible.com/ricsanfre/dnsmasq){: .link-dark } | Dnsmasq configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-dnsmasq){: .link-dark } |
+   | [ricsanfre.storage](https://galaxy.ansible.com/ricsanfre/storage){: .link-dark }| Configure LVM | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-storage){: .link-dark } |
+   | [ricsanfre.iscsi_target](https://galaxy.ansible.com/ricsanfre/iscsi_target){: .link-dark }| Configure iSCSI Target| [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_target){: .link-dark } |
+   | [ricsanfre.iscsi_initiator](https://galaxy.ansible.com/ricsanfre/iscsi_initiator){: .link-dark }| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator){: .link-dark } |
+   | [ricsanfre.k8s_cli](https://galaxy.ansible.com/ricsanfre/k8s_cli){: .link-dark }| Install kubectl and Helm utilities | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-k8s_cli){: .link-dark } |
+   | [ricsanfre.fluentbit](https://galaxy.ansible.com/ricsanfre/fluentbit){: .link-dark }| Configure fluentbit | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-fluentbit){: .link-dark } |
+   | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio){: .link-dark }| Configure Minio S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio){: .link-dark } |
+   | [ricsanfre.backup](https://galaxy.ansible.com/ricsanfre/backup){: .link-dark }| Configure Restic | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-backup){: .link-dark } |
+   | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault){: .link-dark }| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault){: .link-dark } |
+   {: .table .table-secondary .border-dark } 
 
 3. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using ArgoCD
 
@@ -126,7 +182,7 @@ The software used and the latest version tested of each component
 | Logging | Elastic Search | 8.1.2 | Deployed with ECK Operator |
 | Logging | Kibana | 8.1.2 | Deployed with ECK Operator |
 | Logging | Fluentbit | 2.0.4 | Helm chart version: 0.21.0 |
-| Logging | Fluentd | 1.15.2 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.2|
+| Logging | Fluentd | 1.15.2 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator){: .link-dark } from official v1.15.2|
 | Logging | Loki | 2.6.1 | Helm chart grafana/loki version: 3.3.0 |
 | Monitoring | Kube Prometheus Stack | 0.61.1 | Helm chart version: 43.3.1 |
 | Monitoring | Prometheus Operator | 0.61.1 | Installed by Kube Prometheus Stack. Helm chart version: 43.3.1   |
@@ -141,4 +197,4 @@ The software used and the latest version tested of each component
 | Secrets | Hashicorp Vault | 1.12.2 | |
 | Secrets| External Secret Operator | 0.7.1 | Helm chart version: 0.7.1 |
 | GitOps | Argo CD | v2.5.6 | Helm chart version: 5.17.1 |
-{: .table }
+{: .table .table-secondary .border-dark }
