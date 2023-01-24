@@ -207,7 +207,7 @@ The folling directories are backed-up from the cluster nodes
 | /home/oss | .cache |
 | /root | .cache |
 | /home/ansible | .cache .ansible |
-{: .table }
+{: .table .table-secondary .border-dark }
 
 Backup policies scheduling
 
