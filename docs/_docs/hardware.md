@@ -121,7 +121,7 @@ Average-metrics obtained during the tests removing the worst and the best result
 | FlashDisk | 55.39            | 50.51                  | 21.30             | 3168.40               | 12675.00              | 2700.20                | 10802.40               | 14842.20       | 11561.80        | 11429.60              | 10780.60               | 2413.60 |
 | SSD       | 335.10           | 304.67                 | 125.67            | 22025.67              | 88103.33              | 18731.33               | 74927.00               | 31834.33       | 26213.33        | 17064.33              | 29884.00               | 8295.67 |
 | iSCSI     | 70.99            | 71.46                  | 54.07             | 5104.00               | 20417.00              | 5349.67                | 21400.00               | 7954.33        | 7421.33         | 6177.00               | 7788.33                | 2473.00 |
-{: .table .table-responsive .table-secondary .table-borderer .border-dark }
+{: .table .table-responsive .table-white .table-borderer .border-dark }
 
 - Sequential I/O
 

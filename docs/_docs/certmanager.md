@@ -499,7 +499,7 @@ Enable port forwarding for TCP ports 80/443 to `gateway` node.
 |----------|--------|----------|
 | 80 | `gateway` | 8080 |
 | 443 | `gateway`| 4430 |
-{: .table .table-secondary .border-dark }
+{: .table .table-white .border-dark }
 
 #### Configure Pi cluster Gateway
 

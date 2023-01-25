@@ -277,3 +277,15 @@ html {
     background-color: $gray-600;
   }  
 }
+
+.table-white {
+  --bs-table-bg: white;
+  --bs-table-striped-bg: #cec8c8;
+  --bs-table-striped-color: #555555;
+  --bs-table-active-bg: #666666;
+  --bs-table-active-color: #fff;
+  --bs-table-hover-bg: #626262;
+  --bs-table-hover-color: #fff;
+  color: #555555;
+  border-color: #666666;
+}

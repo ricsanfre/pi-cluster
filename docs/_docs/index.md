@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "17-01-2023"
+last_modified_at: "25-01-2023"
 ---
 
 
@@ -31,33 +31,150 @@ The following picture shows the set of opensource solutions used for building th
 
 ![Cluster-Icons](/assets/img/pi-cluster-icons.png)
 
-| Logo | Name | Description |
-| ---| --- | --- |
-| <img width="32" src="https://simpleicons.org/icons/ansible.svg"> | [Ansible](https://docs.ansible.com/){: .link-dark }| Automate OS configuration, external services installation and k3s installation and bootstrapping |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/argo/icon/color/argo-icon-color.svg"> | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/){: .link-dark } | GitOps tool built to deploy applications to Kubernetes |
-| <img width="32" src="https://assets.ubuntu.com/v1/15971bf5-cloud-init-primary.svg"> | [Cloud-init](https://cloudinit.readthedocs.io/en/latest/){: .link-dark } | Automate installation OS |
-| <img width="32" src="https://assets.ubuntu.com/v1/ce518a18-CoF-2022_solid+O.svg"> | [Ubuntu](https://ubuntu.com/){: .link-dark } | OS for cluster nodes |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/k3s/icon/color/k3s-icon-color.svg"> | [K3S](https://k3s.io/){: .link-dark } | Lightweight distribution of Kubernetes |
-| <img width="32" src="https://metallb.universe.tf/images/logo/metallb-blue.png"> | [Metal LB](https://metallb.universe.tf/){: .link-dark } | Cluster Load Balancer |
-| <img width="32" src="https://raw.githubusercontent.com/traefik/traefik/master/docs/content/assets/img/traefik.logo.png"> | [Traefik](https://traefik.io/){: .link-dark } | Kubernetes Ingress Controller |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/longhorn/icon/color/longhorn-icon-color.png"> | [Longhorn](https://longhorn.io/){: .link-dark } | Kubernetes distributed block storage |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/linkerd/icon/color/linkerd-icon-color.png"> | [Linkerd](https://linkerd.io/){: .link-dark } | Service Mesh |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/fluentd/icon/color/fluentd-icon-color.png"> | [Fluentd](https://www.fluentd.org/){: .link-dark } | Logs forwarding and distribution |
-| <img width="32" src="https://fluentbit.io/images/logo.svg"> | [Fluentbit](https://fluentbit.io){: .link-dark } | Logs collection |
-| <img width="32" src="https://cncf-branding.netlify.app/img/projects/prometheus/icon/color/prometheus-icon-color.png"> | [Prometheus](https://prometheus.io/){: .link-dark } | Metrics monitoring and alerting |
-| <img width="32" src="https://github.com/grafana/loki/blob/main/docs/sources/logo.png?raw=true"> | [Loki](https://grafana.com/oss/loki/){: .link-dark } | Logs aggregation |
-| <img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt36f2da8d650732a0/5d0823c3d8ff351753cbc99f/logo-elasticsearch-32-color.svg"> | [Elasticsearch](https://www.elastic.co/elasticsearch/){: .link-dark } | Logs analytics |
-| <img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt4466841eed0bf232/5d082a5e97f2babb5af907ee/logo-kibana-32-color.svg"> | [Kibana](https://www.elastic.co/kibana/){: .link-dark } | Logs analytics Dashboards |
-| <img width="32" src="https://grafana.com/static/assets/img/logos/grafana-tempo.svg"> | [Tempo](https://grafana.com/oss/tempo/){: .link-dark } | Distributed tracing monitoring |
-| <img width="32" src="https://grafana.com/static/img/menu/grafana2.svg"> | [Grafana](https://grafana.com/oss/grafana/){: .link-dark } | Monitoring Dashboards |
-| <img width="32" src="https://simpleicons.org/icons/vault.svg"> | [Hashicorp Vault](https://www.vaultproject.io/){: .link-dark } | Secrets Management solution |
-| <img width="32" src="https://min.io/resources/img/logo.svg"> | [Minio](https://min.io/){: .link-dark } | S3 Object Storage solution |
-{: .table .table-responsive .table-secondary .table-borderer .border-dark }
+<div class="d-flex">
+<table class="table table-white table-borderer border-dark w-auto align-middle">
+    <tr>
+        <th>Logo</th>
+        <th>Name</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://simpleicons.org/icons/ansible.svg"></td>
+        <td><a href="https://www.ansible.com">Ansible</a></td>
+        <td>Automate OS configuration, external services installation and k3s installation and bootstrapping</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/argo/icon/color/argo-icon-color.svg"></td>
+        <td><a href="https://argoproj.github.io/cd">ArgoCD</a></td>
+        <td>GitOps tool for deploying applications to Kubernetes</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cloud-init.github.io/images/cloud-init-orange.svg"></td>
+        <td><a href="https://cloudinit.readthedocs.io/en/latest/">Cloud-init</a></td>
+        <td>Automate OS initial installation</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://assets.ubuntu.com/v1/ce518a18-CoF-2022_solid+O.svg"></td>
+        <td><a href="https://ubuntu.com/">Ubuntu</a></td>
+        <td>Cluster nodes OS</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/k3s/icon/color/k3s-icon-color.svg"></td>
+        <td><a href="https://k3s.io/">K3S</a></td>
+        <td>Lightweight distribution of Kubernetes</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/containerd/icon/color/containerd-icon-color.svg"></td>
+        <td><a href="https://containerd.io/">containerd</a></td>
+        <td>Container runtime integrated with K3S</td>
+    </tr>
+    <tr>
+        <td><img width="20" src="https://raw.githubusercontent.com/flannel-io/flannel/master/logos/flannel-glyph-color.svg"></td>
+        <td><a href="https://github.com/flannel-io/flannel">Flannel</a></td>
+        <td>Kubernetes Networking (CNI) integrated with K3S</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/coredns/icon/color/coredns-icon-color.svg"></td>
+        <td><a href="https://coredns.io/">CoreDNS</a></td>
+        <td>Kubernetes DNS</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://metallb.universe.tf/images/logo/metallb-blue.png"></td>
+        <td><a href="https://metallb.universe.tf/">Metal LB</a></td>
+        <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://landscape.cncf.io/logos/traefik.svg"></td>
+        <td><a href="https://traefik.io/">Traefik</a></td>
+        <td>Kubernetes Ingress Controller</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/linkerd/icon/color/linkerd-icon-color.svg"></td>
+        <td><a href="https://linkerd.io/">Linkerd</a></td>
+        <td>Kubernetes Service Mesh</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/longhorn/icon/color/longhorn-icon-color.svg"></td>
+        <td><a href="https://longhorn.io/">Longhorn</a></td>
+        <td>Kubernetes distributed block storage</td>
+    </tr>
+    <tr>
+        <td><img width="60" src="https://min.io/resources/img/logo.svg"></td>
+        <td><a href="https://min.io/">Minio</a></td>
+        <td>S3 Object Storage solution</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://landscape.cncf.io/logos/cert-manager.svg"></td>
+        <td><a href="https://cert-manager.io">Cert-manager</a></td>
+        <td>TLS Certificates management</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://simpleicons.org/icons/vault.svg"></td>
+        <td><a href="https://www.vaultproject.io/">Hashicorp Vault</a></td>
+        <td>Secrets Management solution</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://landscape.cncf.io/logos/external-secrets.svg"></td>
+        <td><a href="https://external-secrets.io/">External Secrets Operator</a></td>
+        <td>Sync Kubernetes Secrets from Hashicorp Vault</td>
+    </tr>
+    <tr>
+        <td><img width="60" src="https://velero.io/img/Velero.svg"></td>
+        <td><a href="https://velero.io/">Velero</a></td>
+        <td>Kubernetes Backup and Restore solution</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://github.com/restic/restic/raw/master/doc/logo/logo.png"></td>
+        <td><a href="https://restic.net/">Restic</a></td>
+        <td>OS Backup and Restore solution</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/prometheus/icon/color/prometheus-icon-color.png"></td>
+        <td><a href="https://prometheus.io/">Prometheus</a></td>
+        <td>Metrics monitoring and alerting</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/fluentd/icon/color/fluentd-icon-color.png"></td>
+        <td><a href="https://www.fluentd.org/">Fluentd</a></td>
+        <td>Logs forwarding and distribution</td>
+    </tr>
+    <tr>
+        <td><img width="60" src="https://fluentbit.io/images/logo.svg"></td>
+        <td><a href="https://fluentbit.io/">Fluentbit</a></td>
+        <td>Logs collection</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://github.com/grafana/loki/blob/main/docs/sources/logo.png?raw=true"></td>
+        <td><a href="https://grafana.com/oss/loki/">Loki</a></td>
+        <td>Logs aggregation</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt36f2da8d650732a0/5d0823c3d8ff351753cbc99f/logo-elasticsearch-32-color.svg"></td>
+        <td><a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a></td>
+        <td>Logs analytics</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt4466841eed0bf232/5d082a5e97f2babb5af907ee/logo-kibana-32-color.svg"></td>
+        <td><a href="https://www.elastic.co/kibana/">Kibana</a></td>
+        <td>Logs analytics Dashboards</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://grafana.com/static/assets/img/logos/grafana-tempo.svg"></td>
+        <td><a href="https://grafana.com/oss/tempo/">Tempo</a></td>
+        <td>Distributed tracing monitoring</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://grafana.com/static/img/menu/grafana2.svg"></td>
+        <td><a href="https://grafana.com/oss/grafana/">Grafana</a></td>
+        <td>Monitoring Dashboards</td>
+    </tr>
+</table>
+</div>
 
 
 ## External Resources and Services
 
-I try to keep the amount of external resources to the minimum, there's still need for a few of them. Below is a list of external resources/services and why we need them.
+Even whe the premise is to deploy all services in the kubernetes cluster, there is still a need for a few external services/resources. Below is a list of external resources/services and why we need them.
 
 ### Cloud external services
 
@@ -67,9 +184,9 @@ I try to keep the amount of external resources to the minimum, there's still nee
 
 | Provider | Resource | Purpose |
 | ---| --- | --- |
-| [Letsencrypt](https://letsencrypt.org/){: .link-dark } | TLS CA Authority | Signed valid TLS certificates |
-| [IONOS](https://www.ionos.es/){: .link-dark } | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge){: .link-dark } for certificates |
-{: .table .table-secondary .border-dark }
+| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
+| [IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
+{: .table .table-white .border-dark }
 
 **Alternatives:**
 
@@ -83,15 +200,15 @@ I try to keep the amount of external resources to the minimum, there's still nee
 
    Currently only acme issuer (letsencytp) using IONOS as dns-01 challenge provider is configured. Check list of [supported dns01 providers](https://cert-manager.io/docs/configuration/acme/dns01/#supported-dns01-providers).
 
-### Self-hosted external Services 
+### Self-hosted external services 
 
-There is another list of services that I have decided to run outside the kuberentes cluster but not using any cloud service. These services currently are running on the same cluster nodes (gateway and node1), but as baremetal service.
+There is another list of services that I have decided to run outside the kuberentes cluster but not using any public cloud service. These services currently are running on the same cluster nodes (gateway and node1), but as baremetal service.
 
 | External Service | Resource | Purpose |
 | ---| --- | --- |
-| [Minio](https://mini.io){: .link-dark } | S3 Object Store | Backup  |
-| [Hashicorp Vault](https://www.vaultproject.io/){: .link-dark } | Secrets Management | Cluster secrets management |
-{: .table .table-secondary .border-dark }
+| [Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
+| [Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
+{: .table .table-white .border-dark }
 
 
 ## What I have built so far
@@ -115,8 +232,8 @@ All source code can be found in the following github repository
 
    | Repo | Description | Github |
    | ---| --- | --- | 
-   |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.git_address}}){: .link-dark }|
-   {: .table .table-secondary .border-dark }
+   |  pi-cluster | PI Cluster Ansible  | [{{site.data.icons.github}}]({{site.git_address}})|
+   {: .table .table-white .border-dark }
 
 1. **Cloud-init** template files for initial OS installation
 

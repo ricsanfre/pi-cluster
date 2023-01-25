@@ -29,7 +29,7 @@ k3s server installation options can be provided in order to configure Network CI
 | `--cluster-cidr` | "10.42.0.0/16" | Network CIDR to use for pod IPs
 | `--service-cidr` | "10.43.0.0/16" | Network CIDR to use for services IPs
 | `--flannel-backend` | "vxlan" | "none" to disable or "vxlan", "ipsec", "host-gw", or "wireguard"
-{: .table .table-secondary .border-dark }
+{: .table .table-white .border-dark }
 
 By default, flannel will have a 10.42.X.0/24 subnet allocated to each node (X=0, 1, 2, 3, etc.), K3S Pod will use IP address from subnet's address space.
 
@@ -71,7 +71,7 @@ k3s server installation options can be provided in order to configure coreDNS
 | ----- | ---- |---- |
 | `--cluster-dns` | "10.43.0.10"	| Cluster IP for coredns service. Should be in your service-cidr range
 | `--cluster-domain` | "cluster.local" | Cluster Domain
-{: .table .table-secondary .border-dark }
+{: .table .table-white .border-dark }
 
 ## Traefik as Ingress Controller
 

@@ -58,9 +58,9 @@ Follow the procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) usin
 
 | Storage Architeture | node1   | node2 | node3 | node 4 |
 |-----------| ------- |-------|-------|--------|
-| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data){: .link-dark }| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data){: .link-dark } |
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data){: .link-dark }| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data){: .link-dark } |
-{: .table .table-secondary .border-dark }
+| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) |
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) |
+{: .table .table-white .border-dark }
 
 ## Ubuntu OS Initital Configuration
 

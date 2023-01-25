@@ -281,23 +281,23 @@ The following table shows the variable files defined at ansible's group and host
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
-| [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml){: .link-dark } | all nodes of cluster + gateway node + pimaster |
-| [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml){: .link-dark } | control group: gateway node + pimaster |
-| [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml){: .link-dark } | all nodes of the k3s cluster |
-| [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml){: .link-dark } | K3s master nodes |
-| [ansible/host_vars/gateway.yml]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml){: .link-dark } | gateway node specific variables|
-{: .table .table-secondary .border-dark }
+| [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
+| [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: gateway node + pimaster |
+| [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
+| [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
+| [ansible/host_vars/gateway.yml]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) | gateway node specific variables|
+{: .table .table-white .border-dark }
 
 
 The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
 
 | Specific Variable File | Configuration |
 |----|----|
-| [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml){: .link-dark } | K3S cluster and external services configuration variables |
-| [ansible/vars/dedicated_disks/local_storage.yml]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml){: .link-dark } | Configuration nodes local storage: Dedicated disks setup|
-| [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml){: .link-dark } | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
-| [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml){: .link-dark } | Configuration iSCSI Initiator: Centralized SAN setup|
-{: .table .table-secondary .border-dark }
+| [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables |
+| [ansible/vars/dedicated_disks/local_storage.yml]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
+| [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
+| [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
+{: .table .table-white .border-dark }
 
 
 {{site.data.alerts.important}}: **About storage configuration**
@@ -355,9 +355,9 @@ The installation procedure followed is the described in ["Ubuntu OS Installation
 
 | Storage Configuration | User data    | Network configuration |
 |--------------------| ------------- |-------------|
-|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data){: .link-dark } | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config){: .link-dark }|
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data){: .link-dark } | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config){: .link-dark } |
-{: .table .table-secondary .border-dark }
+|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config)|
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config) |
+{: .table .table-white .border-dark }
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -391,9 +391,9 @@ Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/
 
 | Storage Architeture | node1   | node2 | node3 | node4 | node5 |
 |-----------| ------- |-------|-------|--------|--------|
-| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data){: .link-dark }| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data){: .link-dark } |
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data){: .link-dark }| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data){: .link-dark } | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data){: .link-dark } |
-{: .table .table-secondary .border-dark }
+| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data) |
+| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data) |
+{: .table .table-white .border-dark }
 
 {{site.data.alerts.warning}}**About SSH keys**
 
