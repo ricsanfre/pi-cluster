@@ -52,6 +52,10 @@ external-services:
 configure-os-backup:
 	cd ansible && ansible-playbook backup_configuration.yml
 
+.PHONY: configure-monitoring-gateway
+configure-monitoring-gateway:
+	cd ansible && ansible-playbook deploy_monitoring_agent.yml
+
 .PHONY: os-backup
 os-backup:
 	cd ansible && ansible -b -m shell -a 'systemctl start restic-backup' raspberrypi
