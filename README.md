@@ -9,7 +9,7 @@
   </tr>
 </table>
 
-## **K3S Kubernetes Cluster using bare metal ARM-based nodes (Raspberry-PIs) automated with Ansible and ArgoCD**
+**K3S Kubernetes Cluster using bare metal ARM-based nodes (Raspberry-PIs) automated with Ansible and ArgoCD**
 
 This is an educational project to explore kubernetes cluster configurations using an ARM architecture and apply IaC (Infrastructure as Code) and GitOps methodologies to automate its provisioning and management.
 
@@ -21,9 +21,11 @@ Since its deployment is completely automated, the cluster can be re-deployed in 
 
 ## Scope
 
-Automatically deploy and configure a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), 3) service mesh architecture, [Linkerd](https://linkerd.io/), and 4) observability platform based on metrics monitoring solution, [Prometheus](https://prometheus.io/), logging and analytics solution, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), and distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
+The scope of this project is to create a kubernetes cluster at home using **Raspberry Pis** and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Argo CD](https://argo-cd.readthedocs.io/en/stable/).
 
-### Technology Stack
+As part of the project, the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as: 1) distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/), 2) backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/), 3) service mesh architecture, [Linkerd](https://linkerd.io/), and 4) observability platform based on metrics monitoring solution, [Prometheus](https://prometheus.io/), logging and analytics solution, EFḰ+LG stack ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/)), and distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
+
+## Technology Stack
 
 The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible/ArgoCD:
 
@@ -34,7 +36,7 @@ The following picture shows the set of opensource solutions used so far in the c
 <div class="d-flex">
 <table class="table table-white table-borderer border-dark w-auto align-middle">
     <tr>
-        <th>Logo</th>
+        <th></th>
         <th>Name</th>
         <th>Description</th>
     </tr>
@@ -171,17 +173,17 @@ The following picture shows the set of opensource solutions used so far in the c
 </table>
 </div>
 
-### External Resources and Services
+## External Resources and Services
 
 Even whe the premise is to deploy all services in the kubernetes cluster, there is still a need for a few external services/resources. Below is a list of external resources/services and why we need them.
 
-#### Cloud external services
+### Cloud external services
 
 
-| Provider | Resource | Purpose |
-| ---| --- | --- |
-| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
-| [IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
+|  |Provider | Resource | Purpose |
+| --- | --- | --- | --- |
+| <img width="60" src="https://letsencrypt.org/images/letsencrypt-logo-horizontal.svg" >| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
+| <img width="60" src="https://www.ionos.de/newsroom/wp-content/uploads/2022/03/LOGO_IONOS_Blue_RGB-1.png"> |[IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
 
 > **NOTE:** These resources are optional, the homelab still works without them but it won't have trusted certificates
 
@@ -197,14 +199,14 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
    Currently only acme issuer (letsencytp) using IONOS as dns-01 challenge provider is configured. Check list of [supported dns01 providers](https://cert-manager.io/docs/configuration/acme/dns01/#supported-dns01-providers).
 
-#### Self-hosted external services 
+### Self-hosted external services 
 
 There is another list of services that I have decided to run outside the kuberentes cluster but not using any cloud service. These services currently are running on the same cluster nodes (gateway and node1), but as baremetal service.
 
-| External Service | Resource | Purpose |
-| ---| --- | --- |
-| [Minio](https://mini.io) | S3 Object Store | Backup  |
-| [Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
+|  |External Service | Resource | Purpose |
+| --- | --- | --- | --- |
+| <img width="60" src="https://min.io/resources/img/logo.svg"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
+| <img width="32" src="https://simpleicons.org/icons/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 
 
 ## Cluster architecture and hardware
