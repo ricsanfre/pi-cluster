@@ -6,41 +6,5 @@
     apply:
       become: true
 
-- name: Create velero namespace.
-  kubernetes.core.k8s:
-    name: "{{ k3s_velero_namespace }}"
-    api_version: v1
-    kind: Namespace
-    state: present
-
 - name: Configure velero CLI
   include_tasks: configure_velero_cli.yml
-
-- name: Add vmware-tanzu chart repo.
-  kubernetes.core.helm_repository:
-    name: vmware-tanzu
-    repo_url: "https://vmware-tanzu.github.io/helm-charts"
-
-- name: Deploy Velero with Minio storage provider
-  kubernetes.core.helm:
-    name: velero
-    chart_ref: vmware-tanzu/velero
-    chart_version: "{{ velero_chart_version }}"
-    update_repo_cache: true
-    release_namespace: "{{ k3s_velero_namespace }}"
-    state: present
-    values: "{{ lookup('template', 'templates/velero_helm_values.yml.j2') | from_yaml }}"
-
-- name: Wait for pods to be ready
-  command:
-    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_velero_namespace }} --all --timeout=600s"
-  register: velero_pods_ready
-  changed_when: false
-
-- name: Create Longhorn volume snapshot class and full backup Schedule policy
-  kubernetes.core.k8s:
-    definition: "{{ lookup('template', 'templates/' + item ) }}"
-    state: present
-  with_items:
-    - velero_volume_snapshot_class.yml.j2
-    - velero_full_schedule.yml.j2

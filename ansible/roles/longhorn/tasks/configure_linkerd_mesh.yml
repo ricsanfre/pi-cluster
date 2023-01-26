@@ -1,6 +1,11 @@
 ---
-# Make longhorn-manager container listen on localhost
+# Check longhorn is running
+- name: Check longhorn status. Wait for all components to start
+  command:
+    cmd: "/usr/local/bin/check_lh.sh"
+  changed_when: false
 
+# Make longhorn-manager container listen on localhost
 - name: Change longhorn-manager POD_IP env variable
   command:
     cmd: "kubectl set env daemonset/longhorn-manager -n {{ k3s_longhorn_namespace }} POD_IP=0.0.0.0"
@@ -21,7 +26,6 @@
             annotations:
               linkerd.io/inject: enabled
     state: patched
-
 
 - name: Annotate longhorn-ui
   kubernetes.core.k8s:

@@ -1,7 +1,3 @@
 ---
 velero_version: v1.9.2
-velero_helm_version: 2.32.1
 velero_arch: arm64
-
-# Enable service mesh
-enable_linkerd: true

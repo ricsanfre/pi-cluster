@@ -1,9 +1,0 @@
----
-# Namespace for metallb
-k3s_metallb_namespace: metallb
-
-# Metallb helm chart version
-metallb_chart_version: 0.13.7
-
-# k3s external ip range: Metal LB pool configuration
-k3s_external_ip_range:

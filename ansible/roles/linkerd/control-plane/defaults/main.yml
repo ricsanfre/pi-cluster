@@ -1,8 +1,6 @@
 ---
-
 # Version
 linkerd_version: "stable-2.12.2"
-linkerd_chart_version: 1.9.4
 
 # Architecture
 linkerd_arch: "arm64"
@@ -15,7 +13,3 @@ linkerd_checksum: "sha256:{{ linkerd_package_url }}.sha256"
 # linkerd install location
 linkerd_install_dir: "/usr/local/bin"
 linkerd_bin: "{{ linkerd_install_dir }}/linkerd"
-
-# linkerd identity issuer certificate
-issuer_certificate_duration: "48h"
-issuer_certificate_renewbefore: "23h"

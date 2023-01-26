@@ -1,9 +1,0 @@
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  labels:
-    release: kube-prometheus-stack
-  name: {{ rule_name }}
-  namespace: {{ k3s_monitoring_namespace }}
-spec:
-{{ rule_content | to_yaml | indent(2, true) }}
