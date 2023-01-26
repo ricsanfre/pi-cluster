@@ -9,15 +9,15 @@ last_modified_at: "27-12-2022"
 
 Vault will be deployed as a external service, not running as a Kuberentes service, so it can be used by GitOps solution, ArgoCD, to deploy automatically all cluster services.
 
-Vault could be installed as Kuberentes service, deploying it using an official Helm Chart or a community operator like [Banzai Bank-Vault](https://banzaicloud.com/products/bank-vaults/), but it would make impossible to use Secrets from Vault for installing K3S cluster itself or other external services like Minio S3 Server.
+Vault could be installed as Kuberentes service, deploying it using an official Helm Chart or a community operator like [Banzai Bank-Vault](https://banzaicloud.com/products/bank-vaults/).
+
+Installing Vault as Kubernetes service will drive us to a chicken/egg situation if we want to use Vault as only source of secrets/credentials for all Kuberentes services deployed. Vault requires to have Block storage solution (Longhorn) deployed first since its POD needs Perstistent Volumes, and to install Longhorn, a few secrets need to be provided to configure its backup (Minio credentials).
 
 [External Secrets Operator](https://external-secrets.io/) will be used to automatically generate the Kubernetes Secrets from Vault data that is needed to deploy the different services using ArgoCD.
 
 ![picluster-secretsmanagement-architecture](/assets/img/vault-externalsecrets.png)
 
-
 ## Vault installation
-
 
 Vault installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.vault**. This role, installs Vault Server, initialize it and install a systemd service to automatically unseal it whenever vault server is restarted.
 

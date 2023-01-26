@@ -202,7 +202,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 ### Self-hosted external services 
 
-There is another list of services that I have decided to run outside the kuberentes cluster but not using any public cloud service. These services currently are running on the same cluster nodes (gateway and node1), but as baremetal service.
+There is another list of services that I have decided to run outside the kuberentes cluster but not using any public cloud service.
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
