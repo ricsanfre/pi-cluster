@@ -202,7 +202,7 @@ Functionality for automatically provision Grafana Dashboards, json files, locate
 | Backup | Minio | RELEASE.2022-09-22T18-57-27Z | |
 | Backup | Restic | 0.12.1 | |
 | Backup | Velero | 1.9.2 | Helm chart version: velero-2.31.9 |
-{: .table }
+{: .table .table-white .border-dark }
 
 
 ## Release v1.5.0 Notes

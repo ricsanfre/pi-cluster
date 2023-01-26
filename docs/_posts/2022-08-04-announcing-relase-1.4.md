@@ -81,7 +81,7 @@ Since the feature has been applied, pods are gracefully shutdown and cluster rem
 | Backup | Minio | RELEASE.2022-05-04T07-45-27Z | |
 | Backup | Restic | 0.12.1 | |
 | Backup | Velero | 1.9.0 | Helm chart version: velero-2.30.1 |
-{: .table }
+{: .table .table-white .border-dark }
 
 
 ## Release v1.4.0 Notes
