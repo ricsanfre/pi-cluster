@@ -3,7 +3,7 @@
   hosts: localhost
 
   tasks:
-  - name: Configure Grafana Dashboards
+  - name: Patch Grafana Dashboards
     include_tasks: tasks/patch_grafana_dashboard.yml
     loop_control:
       loop_var: dashboard_file
