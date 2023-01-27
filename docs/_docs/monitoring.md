@@ -219,6 +219,8 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 
     {{site.data.alerts.end}}
 
+  - Configure Grafana to discover ConfigMaps containing dashobards definitions in all namespaces (`grafana.sidecar.dashboards.searchNamespaces`)
+
   - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd.enabled`.
     
     Monitoring of K3s components will be configured outside kube-prometheus-stack. See explanation in section [K3S components monitoring](#k3s-components-monitoring) below.
@@ -640,6 +642,7 @@ The following chart configuration is provided:
 - Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
 - Loki data source is added (`grafana.additionalDataSource`)
 - Grafana ServiceMonitor label and job label is configured (`serviceMonitor`)
+- Grafana sidecar dashboard provisioner, additional configuration (on top of the one added by kube-prometheus-stack, to search in all namespaces (`sidecar.dashboards.searchNamespace`) 
 
 ```yml
 grafana:
@@ -670,6 +673,45 @@ grafana:
   - name: Loki
     type: loki
     url: http://loki-gateway.logging.svc.cluster.local
+  # Additional configuration to grafana dashboards sidecar
+  # Search in all namespaces for configMaps containing label `grafana_dashboard`
+  sidecar:
+    dashboards:
+      searchNamespace: ALL
+```
+
+#### GitOps installation (ArgoCD)
+
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding Grafana's admin password within Helm chart values, admin credentials can be in stored in an existing Secret.
+
+The following secret need to be created:
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana
+  namespace: grafana
+type: Opaque
+data:
+  admin-user: < grafana_admin_user | b64encode>
+  admin-password: < grafana_admin_password | b64encode>
+```
+For encoding the admin and passord execute the following commands:
+```shell
+echo -n "<grafana_admin_user>" | base64
+echo -n "<grafana_admin_password>" | base64
+```
+And the following Helm values has to be provided:
+
+```yml
+grafana:
+  # Use an existing secret for the admin user.
+  adminUser: ""
+  adminPassword: ""
+  admin:
+    existingSecret: grafana
+    userKey: admin-user
+    passwordKey: admin-password
 ```
 
 #### Provisioning Dashboards automatically

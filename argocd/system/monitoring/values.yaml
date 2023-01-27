@@ -118,6 +118,13 @@ kube-prometheus-stack:
           targetLabel: job
           replacement: prometheus
   grafana:
+    # Use an existing secret for the admin user.
+    adminUser: ""
+    adminPassword: ""
+    admin:
+      existingSecret: grafana
+      userKey: admin-user
+      passwordKey: admin-password
     # Configuring /grafana subpath
     grafana.ini:
       server:
