@@ -176,3 +176,42 @@ Based on procedure described [in this post](https://alysivji.github.io/helm-post
   Ansible does not support yet --post-rendering option to helm module. There is [open issue in kubernetes core asible collection](https://github.com/ansible-collections/kubernetes.core/issues/30) for providing this functionallity.
 
   {{site.data.alerts.end}}
+
+
+## Move pods from one node to another
+
+In case one pods need to be executed in other node, maybe because it is pushig the node to its limits in terms of resources and there is another node less used.
+
+The procedure is the following:
+
+- Step 1: Get information about the node where the pod is running
+  
+  ```shell
+  kubectl get pod <pod-name> -n <namespace> -o wide
+  ```
+
+- Step 2: Cordon the node where the pod is currently running, so Kubernetes scheduler cannot use it to schedule new PODs 
+
+  ```shell
+  kubectl cordon <node>
+  ```
+  
+  {{site.data.alerts.note}}
+
+  Kubernetes cordon is an operation that marks or taints a node in your existing node pool as unschedulable. By using it on a node, you can be sure that no new pods will be scheduled for this node. The command prevents the Kubernetes scheduler from placing new pods onto that node, but it doesn’t affect existing pods on that node.
+  
+  {{site.data.alerts.end}}
+
+- Step 3: Delete POD. It is assumed that POD is controlled by a replica set or statefulset so after deleting it, Kubernetes will reschedule it automatically in any node which is not cordoned
+
+  ```shell
+  kubectl delete pod <pod> -n <namespace>
+  ```
+
+- Step 4: Check the POD is started in another node
+
+- Step 5: Uncordon the node, so it can be used again to schedule pods.
+  
+  ```shell
+  kubectl uncordon <node>
+  ```
