@@ -10,7 +10,7 @@ prepare-ansible: install-ansible-requirements gpg-init ~/.vault/vault_passphrase
 clean: k3s-reset external-services-reset
 
 .PHONY: init
-init: os-upgrade gateway-setup nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap
+init: os-upgrade gateway-setup nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap configure-monitoring-gateway
 
 .PHONY: install-ansible-requirements
 install-ansible-requirements: # install Ansible requirements
