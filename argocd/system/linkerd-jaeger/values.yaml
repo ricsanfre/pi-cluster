@@ -12,4 +12,4 @@ linkerd-jaeger:
   # Configure jaeger-injector to use tempo embedded OTel collector
   webhook:
     collectorSvcAddr: tracing-tempo-distributor.tracing:55678
-    collectorSvcAccount: tempo
+    collectorSvcAccount: tracing-tempo

@@ -97,7 +97,7 @@ traefik:
   # Configuring tracing backend
   tracing:
     zipkin:
-      httpEndpoint: http://tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
+      httpEndpoint: http://tracing-tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
       sameSpan: true
       id128Bit: true
       sampleRate: 1.0
