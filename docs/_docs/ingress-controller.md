@@ -347,6 +347,53 @@ A Kuberentes Service must be created for enabling the access to UI Dashboard
 
 - Acces UI through configured dns: `https://traefik.picluster.ricsanfre.com/dashboard/`
 
+{{site.data.alerts.note}}
+
+Instead of defining a Service and Ingress resource, Traefik's IngressRoute object can be created to access to Traefik internal service. It is not needed to expose traefik dashboard as a service
+
+```yml
+# IngressRoute https
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`{{ traefik.picluster.ricsanfre.com }}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    services:
+    - kind: TraefikService
+      name: api@internal
+  tls:
+    secretName: traefik-secret
+```
+
+For generating the TLS secret, `traefik-secret` containing the certificate, cert-manager can be used:
+
+```yml
+# Create certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-cert
+  namespace: traefik
+spec:
+  secretName: traefik-secret
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+  commonName: traefik.picluster.ricsanfre.com
+  dnsNames:
+  - traefik.picluster.ricsanfre.com
+  privateKey:
+    algorithm: ECDSA
+```
+
+{{site.data.alerts.end}}
+
 
 ## Configuring access to cluster services with Traefik
 
