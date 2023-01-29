@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  Kubernetes Pi Cluster relase v1.6
-date:   2023-01-26
+date:   2023-01-29
 author: ricsanfre
 ---
 
