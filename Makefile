@@ -86,3 +86,7 @@ shutdown-k3s-worker:
 .PHONY: shutdown-k3s-master
 shutdown-k3s-master:
 	cd ansible && ansible -b -m shell -a "shutdown -h 1 min" k3s_master
+
+.PHONY: shutdown-gateway
+shutdown-gateway:
+	cd ansible && ansible -b -m shell -a "shutdown -h 1 min" gateway
