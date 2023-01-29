@@ -1,4 +1,7 @@
-GPG_RECIPIENT=vault@ansible
+.EXPORT_ALL_VARIABLES:
+
+GPG_EMAIL=ricsanfre@gmail.com
+GPG_NAME=Ricardo Sanchez
 
 .PHONY: default
 default: clean
@@ -22,11 +25,11 @@ install-ansible-requirements-force: # install Ansible requirements
 
 .PHONY: gpg-init
 gpg-init:
-	gpg --quick-generate-key ${GPG_RECIPIENT}
+	scripts/generate_gpg_key.sh
 
 ~/.vault/vault_passphrase.gpg: # Ansible vault gpg password
 	mkdir -p ~/.vault
-	pwgen -n 71 -C | head -n1 | gpg --armor --recipient ${GPG_RECIPIENT} -e -o ~/.vault/vault_passphrase.gpg
+	pwgen -n 71 -C | head -n1 | gpg --armor --recipient ${GPG_EMAIL} -e -o ~/.vault/vault_passphrase.gpg
 
 .PHONY: ansible-credentials
 ansible-credentials: ~/.vault/vault_passphrase.gpg install-ansible-requirements
