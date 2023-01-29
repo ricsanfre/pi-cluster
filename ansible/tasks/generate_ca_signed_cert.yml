@@ -1,0 +1,25 @@
+---
+- name: Create private key
+  openssl_privatekey:
+    path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.key"
+    size: "{{ ssl_key_size | int }}"
+    type: "{{ key_type }}"
+    mode: 0644
+
+- name: Create CSR
+  openssl_csr:
+    path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.csr"
+    privatekey_path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.key"
+    country_name: "{{ country_name }}"
+    organization_name: "{{ organization_name }}"
+    email_address: "{{ email_address }}"
+    common_name: "{{ server_hostname }}"
+    subject_alt_name: "DNS:{{ server_hostname }},IP:{{ ansible_default_ipv4.address }}"
+
+- name: CA signed CSR
+  openssl_certificate:
+    csr_path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.csr"
+    path: "{{ selfsigned_certificates_path }}/{{ server_hostname }}.pem"
+    provider: ownca
+    ownca_path: "{{ selfsigned_certificates_path }}/CA.pem"
+    ownca_privatekey_path: "{{ selfsigned_certificates_path }}/CA.key"

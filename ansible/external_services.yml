@@ -1,0 +1,290 @@
+---
+## Generate TLS certificates for external services
+## Generated using certbot (letsencrypt) or selfsigned certificates
+- name: Generate external services certificates
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates]
+  vars:
+    certbot_venv: "{{ playbook_dir }}/../certbot"
+    certbot_email: "{{ acme_issuer_email }}"
+    dns_ionos_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
+    dns_ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+    selfsigned_certificates_path: "../certificates"
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+  roles:
+    - role: certbot
+      vars:
+        - install_python_packages: false
+      when: enable_letsencrypt
+
+  tasks:
+    - name: Create Letsencrytp certificate for external services
+      command: "{{ certbot_venv }}/bin/certbot-create-cert.sh {{ item }}"
+      register: certbot_create
+      changed_when:
+        - certbot_create.rc==0
+        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
+      when: enable_letsencrypt
+      with_items:
+        - "{{ minio_hostname }}"
+        - "{{ vault_hostname }}"
+
+    - name: Create customCA-signed TLS certificate for minio
+      when: not enable_letsencrypt
+      block:
+        # Generate self-signed certificates directory
+        - name: Create certificates directory
+          file:
+            path: "{{ selfsigned_certificates_path }}"
+            state: directory
+            mode: 0750
+        # Include selfsigned certificates variables
+        - name: Include selfsigned certificates variables
+          include_vars: "vars/selfsigned-certificates.yml"
+        # Generate custom CA
+        - name: Generate custom CA
+          include_tasks: tasks/generate_custom_ca.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+        # Generate selfsigned TLS certificate
+        - name: Generate customCA-signed SSL certificates
+          include_tasks: tasks/generate_ca_signed_cert.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+          loop:
+            - "{{ minio_hostname }}"
+            - "{{ vault_hostname }}"
+          loop_control:
+            loop_var: server_hostname
+
+## Install Minio S3 Storage Server
+
+- name: Install Minio S3 Storage Server
+  hosts: node1
+  gather_facts: true
+  tags: [s3]
+  become: true
+  vars:
+    server_hostname: "{{ minio_hostname }}"
+    certbot_venv: "{{ playbook_dir }}/../certbot"
+    selfsigned_certificates_path: "../certificates"
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+
+    - name: Load customCA-signed TLS certificate for minio
+      set_fact:
+        minio_key: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        minio_cert: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for minio
+      block:
+        - name: check TLS certificate for minio exits
+          command: "{{ certbot_venv }}/bin/certbot-wrapper.sh certificates -d {{ minio_hostname }}"
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + minio_hostname not in certbot_certificates.stdout'
+        - name: Get certificate and key paths for minio
+          set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1,'\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2,'\\1') }}"
+          vars:
+            regexp1: 'Certificate Path: (\S+)'
+            regexp2: 'Private Key Path: (\S+)'
+          when:
+            - certbot_certificates.rc==0
+            - '"Certificate Name: " + minio_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          set_fact:
+            minio_key: "{{ lookup('file', cert_key_path[0] ) }}"
+            minio_cert: "{{ lookup('file', cert_path[0] ) }}"
+      when: enable_letsencrypt
+  roles:
+    - role: ricsanfre.minio
+
+## Install Hashicorp Vault Server
+
+- name: Install Vault Server
+  hosts: gateway
+  gather_facts: true
+  tags: [vault]
+  become: true
+  vars:
+    server_hostname: "{{ vault_hostname }}"
+    certbot_venv: "{{ playbook_dir }}/../certbot"
+    selfsigned_certificates_path: "../certificates"
+
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+
+    - name: Load customCA-signed TLS certificate for minio
+      set_fact:
+        vault_key: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        vault_cert: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+        vault_ca: "{{ lookup('file',selfsigned_certificates_path + '/CA.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for vault
+      block:
+        - name: check TLS certificate for vault exits
+          command: "{{ certbot_venv }}/bin/certbot-wrapper.sh certificates -d {{ vault_hostname }}"
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + vault_hostname not in certbot_certificates.stdout'
+        - name: Get certificate and key paths for minio
+          set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1,'\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2,'\\1') }}"
+          vars:
+            regexp1: 'Certificate Path: (\S+)'
+            regexp2: 'Private Key Path: (\S+)'
+          when:
+            - certbot_certificates.rc==0
+            - '"Certificate Name: " + vault_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          set_fact:
+            vault_key: "{{ lookup('file', cert_key_path[0] ) }}"
+            vault_cert: "{{ lookup('file', cert_path[0] ) }}"
+      when: enable_letsencrypt
+  roles:
+    - role: ricsanfre.vault
+
+  tasks:
+    # Configure ansible user profile with VAULT environement variables
+    - name: Insert http(s) export in dotfile
+      become: true
+      lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: "^export VAULT_ADDR="
+        line: "export VAULT_ADDR='https://{{ vault_hostname }}:8200'"
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: 0644
+    - name: Insert CA cert export in dotfile
+      become: true
+      lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: "^export VAULT_CACERT="
+        line: "export VAULT_CACERT=/etc/vault/tls/vault-ca.crt"
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: 0644
+      when: custom_ca
+
+    - name: Insert VAULT_TOKEN in dotfile
+      become: true
+      lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: "^export VAULT_TOKEN="
+        line: "export VAULT_TOKEN=$(sudo jq -r '.root_token' /etc/vault/unseal.json)"
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: 0644
+
+## Load all credentials into Hashicorp Vault Server
+- name: Load Vault Credentials
+  hosts: gateway
+  gather_facts: true
+  tags: [vault, credentials]
+  become: false
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+
+    # Install hashicorp vault collection dependencies (hvac python package) using PIP.
+    - name: Ensure PIP is installed.
+      package:
+        name:
+          - python3-pip
+          - python3-setuptools
+        state: present
+      become: true
+    - name: Ensure hvac Python library is installed.
+      pip:
+        name: hvac
+        state: present
+      become: true
+  tasks:
+
+    # Vault Login using ansible environement variables for creating token file
+    # token file will be usd in next commands
+    - name: Vault login
+      ansible.builtin.shell: bash -ilc 'vault login $VAULT_TOKEN'
+      # Interactive bash so .bashrc is loaded
+      # 'source ~/.bashrc && <command>' does not work because
+      # Ansible shell is not interactive and ~/.bashrc implementation by default ignores non interactive shell.
+      # See lines at beginning of bashrc:
+      #
+      # If not running interactively, don't do anything
+      # case $- in
+      #     *i*) ;;
+      #       *) return;;
+      # esac
+      # The best solution for executing commands as user after its ssh interactive login:
+      # bash -ilc '<command>'
+      # '-i' means interactive shell, so .bashrc won't be ignored '-l' means login shell which sources full user profile
+      become: false
+      register: vault_login
+
+    # Create write token
+    - name: Create KV write token
+      community.hashi_vault.vault_token_create:
+        url: "https://{{ vault_dns }}:8200"
+        policies: ["write"]
+      register: token_data
+      become: false
+    # Load ansible vault variables into Hashicorp Vault Server
+    - name: Load vault credentials
+      include_tasks:
+        file: tasks/load_vault_credentials.yml
+      loop: "{{ vault | dict2items }}"
+      loop_control:
+        loop_var: secret_group
+      when:
+        - vault is defined
+      no_log: true
+
+    - name: Load http auth_basic credentials
+      include_tasks:
+        file: tasks/create_basic_auth_credentials.yml
+      no_log: true
+
+    - name: Load minio prometheus bearer credentials
+      include_tasks:
+        file: tasks/create_minio_bearer_token.yml
+      no_log: true

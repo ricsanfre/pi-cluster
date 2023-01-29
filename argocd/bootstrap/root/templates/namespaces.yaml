@@ -1,0 +1,39 @@
+# Create annotated namespaces
+# Adding Linkerd annotations
+
+# linkerd namespace
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: linkerd
+  annotations:
+    linkerd.io/inject: disabled
+  labels:
+    linkerd.io/is-control-plane: "true"
+    config.linkerd.io/admission-webhooks: disabled
+    linkerd.io/control-plane-ns: linkerd
+---
+
+# logging namespace
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: logging
+  annotations:
+    linkerd.io/inject: enabled
+---
+# monitoring
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: monitoring
+  annotations:
+    linkerd.io/inject: enabled
+---
+# tracing
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: tracing
+  annotations:
+    linkerd.io/inject: enabled

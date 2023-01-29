@@ -1,0 +1,24 @@
+---
+
+- name: Configure Pi-cluster nodes backup
+  hosts: raspberrypi
+  gather_facts: true
+  tags: [backup]
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+    # Include picluster variables
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+    - name: Load CA certificate for restic
+      set_fact:
+        restic_ca_cert: "{{ lookup('file','certificates/CA.pem') }}"
+      when: not enable_letsencrypt
+    - name: Do not use CA certificate
+      set_fact:
+        restic_use_ca_cert: false
+      when: enable_letsencrypt
+  roles:
+    - role: ricsanfre.backup
+      tags: [backup]

@@ -1,0 +1,45 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-elasticsearch
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: {{ .Values.eck.clusterName }}-es-http.{{ .Release.Namespace }}.svc.cluster.local:9200
+
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elasticsearch-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: {{ .Values.elasticsearch.ingress.certmanager.tlsIssuer }}-issuer
+    cert-manager.io/common-name: {{ .Values.elasticsearch.ingress.host }}
+    # Linkerd header
+    traefik.ingress.kubernetes.io/router.middlewares:
+      {{ .Release.Namespace }}-l5d-header-middleware-elasticsearch@kubernetescrd
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.elasticsearch.ingress.host }}
+      secretName: elasticsearch-tls
+  rules:
+    - host: {{ .Values.elasticsearch.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.eck.clusterName }}-es-http
+                port:
+                  number: 9200

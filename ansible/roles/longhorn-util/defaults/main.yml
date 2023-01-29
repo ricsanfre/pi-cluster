@@ -1,0 +1,6 @@
+---
+# Namespace for Longhorn
+k3s_longhorn_namespace: longhorn-system
+
+# Enable service mesh
+enable_linkerd: false

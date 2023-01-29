@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Executing certbot within virtualenv
+# Need to be copied to venv_cerbot/bin
+
+BASEDIR=$(dirname "$0")
+
+$BASEDIR/certbot certonly \
+  --config-dir $BASEDIR/../config \
+  --work-dir $BASEDIR/.. \
+  --logs-dir $BASEDIR/../logs \
+  --authenticator dns-ionos \
+  --dns-ionos-credentials $BASEDIR/../.secrets/ionos-credentials.ini \
+  --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+  --server https://acme-v02.api.letsencrypt.org/directory \
+  --agree-tos \
+  --non-interactive \
+  --rsa-key-size 4096 \
+  -m {{ certbot_email }} \
+  -d $1

@@ -4,7 +4,7 @@ layout: default
 
 <div class="fluid-container">
     <div class="row">
-        <div class="post-nav col-2 collapse d-lg-block">
+        <div class="post-nav col-3 collapse d-lg-block">
             <div class="flex-shrink-0 p-3">
                 <span class="docs-nav-title fs-5 fw-semibold pb-3 mb-3 text-decoration-none border-bottom">Recent News</span>
                 <li class="mb-1">
@@ -23,16 +23,16 @@ layout: default
             <p>{{ page.date | date: "%b %-d, %Y" }}{% if page.author %} • {{ page.author }}{% endif %}{% if page.meta %} • {{ page.meta }}{% endif %}</p>
             <div  id="markdown-content-container">{{ content }}</div>
             <hr>
-            <ul class="pager">
+            <ul class="pagination justify-content-center">
                 {% if page.previous %}
-                <li class="previous">
-                    <a href="{{ page.previous.url | relative_url }}">
+                <li class="page-item previous">
+                    <a class="page-link" href="{{ page.previous.url | relative_url }}">
                         <span aria-hidden="true">&larr;</span> Older
                     </a>
                 </li>
                 {% endif %} {% if page.next %}
-                <li class="next">
-                    <a href="{{ page.next.url | relative_url }}">
+                <li class="page-item next">
+                    <a class="page-link" href="{{ page.next.url | relative_url }}">
                       Newer <span aria-hidden="true">&rarr;</span>
                     </a>
                 </li>

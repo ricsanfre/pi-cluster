@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "01-11-2022"
+last_modified_at: "22-01-2023"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -158,6 +158,13 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     - name: Loki
       type: loki
       url: http://loki-gateway.logging.svc.cluster.local
+
+    # Additional configuration to grafana dashboards sidecar
+    # Search in all namespaces for configMaps containing label `grafana_dashboard`
+    sidecar:
+      dashboards:
+        searchNamespace: ALL
+
   # Disabling monitoring of K8s services.
   # Monitoring of K3S components will be configured out of kube-prometheus-stack
   kubelet:
@@ -211,6 +218,8 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     Linkerd-viz dashboard integration with Grafana, only works if Grafana runs behind /grafana subpath, so this configuration makes that integration work.
 
     {{site.data.alerts.end}}
+
+  - Configure Grafana to discover ConfigMaps containing dashobards definitions in all namespaces (`grafana.sidecar.dashboards.searchNamespaces`)
 
   - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd.enabled`.
     
@@ -633,6 +642,7 @@ The following chart configuration is provided:
 - Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
 - Loki data source is added (`grafana.additionalDataSource`)
 - Grafana ServiceMonitor label and job label is configured (`serviceMonitor`)
+- Grafana sidecar dashboard provisioner, additional configuration (on top of the one added by kube-prometheus-stack, to search in all namespaces (`sidecar.dashboards.searchNamespace`) 
 
 ```yml
 grafana:
@@ -663,6 +673,45 @@ grafana:
   - name: Loki
     type: loki
     url: http://loki-gateway.logging.svc.cluster.local
+  # Additional configuration to grafana dashboards sidecar
+  # Search in all namespaces for configMaps containing label `grafana_dashboard`
+  sidecar:
+    dashboards:
+      searchNamespace: ALL
+```
+
+#### GitOps installation (ArgoCD)
+
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding Grafana's admin password within Helm chart values, admin credentials can be in stored in an existing Secret.
+
+The following secret need to be created:
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana
+  namespace: grafana
+type: Opaque
+data:
+  admin-user: < grafana_admin_user | b64encode>
+  admin-password: < grafana_admin_password | b64encode>
+```
+For encoding the admin and passord execute the following commands:
+```shell
+echo -n "<grafana_admin_user>" | base64
+echo -n "<grafana_admin_password>" | base64
+```
+And the following Helm values has to be provided:
+
+```yml
+grafana:
+  # Use an existing secret for the admin user.
+  adminUser: ""
+  adminPassword: ""
+  admin:
+    existingSecret: grafana
+    userKey: admin-user
+    passwordKey: admin-password
 ```
 
 #### Provisioning Dashboards automatically
@@ -693,7 +742,7 @@ Check out ["Grafana chart documentation: Sidecar for Dashboards"](https://github
 
 `kube-prometheus-stack` configure by default grafana provisioning sidecar to check only for new ConfigMaps containing label `grafana_dashboard`
 
-This are the default helm chart values configuring the sidecar:
+kube-prometheus-stack default helm chart values is the following
 
 ```yml
 grafana:
@@ -722,6 +771,15 @@ data:
   dashboard.json: |-
   [json_file_content]
 
+```
+
+Additional helm chart configuration is required for enabling the search for ConfigMaps in all namespaces (by default search is limited to grafana's namespace).
+
+```yaml
+grafana:
+  sidecar:
+    dashboards:
+      searchNamespace: ALL
 ```
 
 Following this procedure kube-prometheus-stack helm chart automatically deploy a set of Dashboards for monitoring metrics coming from Kubernetes processes and from Node Exporter. The list of [kube-prometheus-stack grafana dashboards](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/grafana/dashboards-1.14)

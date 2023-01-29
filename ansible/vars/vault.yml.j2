@@ -1,0 +1,54 @@
+---
+# Encrypted variables - Ansible Vault
+vault:
+  # SAN
+  san:
+    iscsi:
+      node_pass: {{ san_iscsi_node_pass | default("") }}
+      password_mutual: {{ san_iscsi_mutual_pass | default("") }}
+  # K3s secrets
+  cluster:
+    k3s:
+     token: {{ k3s_token }}
+  # Traefik secrets
+  traefik:
+    admin:
+      user: admin
+      password: {{ traefik_basic_auth_password }}
+  # Minio S3 secrets
+  minio:
+    root:
+      user: root
+      key: {{ minio_root_password }}
+    restic:
+      user: restic
+      key: {{ minio_restic_password }}
+    longhorn:
+      user: longhorn
+      key: {{ minio_longhorn_password }}
+    velero:
+      user: velero
+      key: {{ minio_velero_password }}
+    loki:
+      user: loki
+      key: {{ minio_loki_password }}
+    tempo:
+      user: tempo
+      key: {{ minio_tempo_password }}
+  # elasticsearch and fluentd
+  logging:
+    elastic:
+      user: elastic
+      password: {{ elasticsearch_admin_password }}
+    fluentd:
+      shared_key: {{ fluentd_shared_key }}
+  # Grafana
+  grafana:
+    admin:
+     user: admin
+     password: {{ grafana_admin_password }}
+  # Certmanager
+  certmanager:
+    ionos:
+      public_prefix: {{ ionos_public_prefix }}
+      secret: {{ ionos_secret }}

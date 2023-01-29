@@ -1,0 +1,15 @@
+---
+- name: Copy longhorn health check script
+  copy:
+    src: "files/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+  become: true
+  with_items:
+    - check_lh.sh
+
+- name: Enable linkerd integration
+  include_tasks: configure_linkerd_mesh.yml
+  when: enable_linkerd

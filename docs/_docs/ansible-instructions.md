@@ -1,15 +1,18 @@
 ---
 title: Quick Start Instructions
 permalink: /docs/ansible/
-description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init and ansible playbooks.
-last_modified_at: "02-10-2022"
+description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
+last_modified_at: "23-01-2023"
 ---
 
-This are the instructions to quickly deploy Kuberentes Pi-cluster using cloud-init and Ansible Playbooks
+This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
+- [cloud-init](https://cloudinit.readthedocs.io/en/latest/): to automate initial OS installation/configuration on each node of the cluster
+- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes,  install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vautl) install K3S, and bootstraping cluster through installation and configuration of ArgoCD
+- [Argo CD](https://argo-cd.readthedocs.io/en/stable/): to automatically deploy Applications to Kuberenetes cluster from manifest files in Git repository.
 
 {{site.data.alerts.note}}
 
-Step-by-step manual process is also described in this documentation.
+Step-by-step manual process to deploy and configure each component is also described in this documentation.
 
 {{site.data.alerts.end}}
 
@@ -25,23 +28,30 @@ Step-by-step manual process is also described in this documentation.
   git clone https://github.com/ricsanfre/pi-cluster.git
   ```
 
-- Install Ansible requirements:
+- Edit GPG_NAME and GPG_EMAIL variables in `Makefile`
 
-  Developed Ansible playbooks depend on external roles that need to be installed.
+- Prepare Ansible execution environment:
 
   ```shell
-  ansible-galaxy install -r requirements.yml
+  make prepare-ansible
   ```
+  Ansible playbooks depend on external roles that need to be installed, command `ansible-galaxy install -r requirements.yml` is executed, GPG key for encrypting passwords created, ansible vault automatic encrytpion configured, and pi-cluster credentials file (`vault.yml`) created and encrypted.
 
-## Ansible playbooks configuration
+{{site.data.alerts.important}}
+
+All ansible commands (`ansible`, `ansible-galaxy`, `ansible-playbook`, `ansible-vault`) need to be executed within [`/ansible`] directory, so the configuration file [`/ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) can be used. Playbooks are configured to be launched from this directory.
+
+{{site.data.alerts.end}}
+
+## Ansible configuration
 
 ### Inventory file
 
-Adjust [`inventory.yml`]({{ site.git_edit_address }}/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
+Adjust [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
 
 {{site.data.alerts.tip}}
 
-If you maintain the private network assigned to the cluster (10.0.0.0/24) and the hostnames and IP addresses. The only field that you must change in `inventory.yml` file is the field `mac` containing the node's mac address. This information will be used to configure automatically DHCP server and assign the proper IP to each node.
+If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, field `mac` (node's mac address) is the only field that you need to change in `inventory.yml` file. MAC addresses will be used to configure automatically DHCP server and assign the proper IP to each node.
 
 This information can be taken when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
 
@@ -51,21 +61,25 @@ This information can be taken when Raspberry PI is booted for first time during 
 
 The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH key file location need to be specified
 
-- Set in [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) file the UNIX user to be used by Ansible in the remote connection (default value `ansible`)
+- Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) to set the UNIX user to be used by Ansible in the remote connection (default value `ansible`)
 
-- Modify [`ansible.cfg`]({{ site.git_edit_address }}/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private-file-key` variable)
+- Modify [`ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private_key_file` variable)
 
   ```
   # SSH key
   private_key_file = $HOME/ansible-ssh-key.pem
   ```
 
-- Modify [`all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) file to include your ansible remote UNIX user (`ansible_user` variable) and 
-  
+### Encrypting secrets/key variables
 
-### Configuring Ansible Playbooks
+{{site.data.alerts.important}}
 
-#### Encrypting secrets/key variables
+All tasks in this section are automated as part of the execution of preperation command `make prepare-ansible`
+
+This command will initialize GPG encryption key, configure ansible vault encryption, and generate `vault.yml` automatically with random passwords.
+
+{{site.data.alerts.end}}
+
 
 All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
 
@@ -75,32 +89,31 @@ vault.yml sample file is like this:
 
 ```yml
 ---
-# Encrypted variables - Ansible Vault
 vault:
   # K3s secrets
   k3s:
     k3s_token: s1cret0
   # traefik secrets
   traefik:
-    basic_auth_passwd: s1cret0
+    basic_auth:
+      user: admin
+      passwd: s1cret0
   # Minio S3 secrets
   minio:
-    root_password: supers1cret0
-    longhorn_key: supers1cret0
-    velero_key: supers1cret0
-    restic_key: supers1cret0
-  # elastic search
+    root:
+      user: root
+      key: supers1cret0
+    restic:
+      user: restic
+      key: supers1cret0
 ....
 ```
-All needed password-type variables used by the Playbooks are in the sample file `var/picluster-vault.yml`. This file is not encrypted and must be used to start the ansible setup.
 
-The steps to configure passwords/keys used in all Playbooks is the following:
+The manual steps to encrypt passwords/keys used in all Playbooks is the following:
 
-1. Copy sample yaml `var/picluster-vault.yml` file and rename it as `var/vault.yml`
+1. Edit content `var/vault.yml` file specifying your own values for each of the key/password/secret specified.
 
-2. Edit content of the file specifying your own values for each of the key/password/secret specified.
-
-3. Encrypt file using ansible-vault
+2. Encrypt file using ansible-vault
 
    ```shell
    ansible-vault encrypt vault.yml
@@ -118,20 +131,159 @@ The steps to configure passwords/keys used in all Playbooks is the following:
    The password using during encryption need to be provided to decrypt the file
    After executing the command the file `vault.yml` is decrypted and show the content in plain text.
 
+   File can be viewed decrypted without modifiying the file using the command
+
+   ```shell
+   ansible-vault view vault.yaml 
+   ```
    {{site.data.alerts.end}}
 
-
 {{site.data.alerts.important}}
+
+You do not need to modify and ecrypt manually `vault.yml` file. The file is generated automatically and  encrypted executing an Ansible playbook, see instructions below.
+
+{{site.data.alerts.end}}
+
+#### Automate Ansible Vault decryption with GPG
 
 When using encrypted vault.yaml file all playbooks executed with `ansible-playbook` command need the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
 
 ```shell
 ansible-playbook playbook.yml --ask-vault-pass
 ```
-{{site.data.alerts.end}}
+
+Ansible vault password decryption can be automated using `--vault-password-file` parameter , instead of manually providing the password with each execution (`--ask-vault-pass`).
+
+Ansible vault password file can contain the password in plain-text or a script able to obtain the password.
+
+vault-password-file location can be added to ansible.cfg file, so it is not needed to pass as parameter each time ansible-playbook command is executed
+
+Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-password-file script.
+
+- [GnuPG](https://gnupg.org/) Installation and configuration
+
+  In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
+
+  GnuPG package has to be installed and a GPG key pair need to be created for encrytion/decryption 
+
+  - Step 1. Install GnuPG packet
+
+    ```shell
+    sudo apt install gnupg 
+    ```
+
+    Check if it is installed
+    ```shell
+    gpg --help
+    ```
+
+  - Step 2. Generating Your GPG Key Pair
+
+    GPG key-pair consist on a public and private key used for encrypt/decrypt
+
+    ```shell
+    gpg --gen-key
+    ```
+
+    The process requires to provide a name, email-address and user-id which identify the recipient
+
+    The output of the command is like this:
+
+      ```
+      gpg (GnuPG) 2.2.4; Copyright (C) 2017 Free Software Foundation, Inc.
+      This is free software: you are free to change and redistribute it.
+      There is NO WARRANTY, to the extent permitted by law.
+
+      Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
+
+      GnuPG needs to construct a user ID to identify your key.
+
+      Real name: Ricardo
+      Email address: ricsanfre@gmail.com
+      You selected this USER-ID:
+          "Ricardo <ricsanfre@gmail.com>"
+
+      Change (N)ame, (E)mail, or (O)kay/(Q)uit? O
+      We need to generate a lot of random bytes. It is a good idea to perform
+      some other action (type on the keyboard, move the mouse, utilize the
+      disks) during the prime generation; this gives the random number
+      generator a better chance to gain enough entropy.
+      We need to generate a lot of random bytes. It is a good idea to perform
+      some other action (type on the keyboard, move the mouse, utilize the
+      disks) during the prime generation; this gives the random number
+      generator a better chance to gain enough entropy.
+      gpg: /home/ansible/.gnupg/trustdb.gpg: trustdb created
+      gpg: key D59E854B5DD93199 marked as ultimately trusted
+      gpg: directory '/home/ansible/.gnupg/openpgp-revocs.d' created
+      gpg: revocation certificate stored as '/home/ansible/.gnupg/openpgp-revocs.d/A4745167B84C8C9A227DC898D59E854B5DD93199.rev'
+      public and secret key created and signed.
+
+      pub   rsa3072 2021-08-13 [SC] [expires: 2023-08-13]
+            A4745167B84C8C9A227DC898D59E854B5DD93199
+      uid                      Ricardo <ricsanfre@gmail.com>
+      sub   rsa3072 2021-08-13 [E] [expires: 2023-08-13]
+
+      ```
+
+    During the generation process you will be prompted to provide a passphrase.
+
+    This passphrase is needed to decryp
 
 
-#### Modify Ansible Playbook variables
+- Generate Vault password and store it in GPG
+
+  Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
+
+  - Step 1. Install pwgen packet
+
+      ```shell
+      sudo apt install pwgen 
+      ```
+
+  - Step 2: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
+
+    ```shell
+    mkdir -p $HOME/.vault
+    pwgen -n 71 -C | head -n1 | gpg --armor --recipient <recipient> -e -o $HOME/.vault/vault_passphrase.gpg
+    ```
+
+    where `<recipient>` must be the email address configured during GPG key creation. 
+
+  - Step 3: Generate a script `vault_pass.sh`
+
+    ```shell
+    #!/bin/sh
+    gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
+    ```
+  - Step 4: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
+
+    ```
+    [defaults]
+    vault_password_file=vault_pass.sh
+    ```
+  
+  {{site.data.alerts.note}}
+  If this repository is clone steps 3 and 4 are not needed since the files are already there.
+  {{site.data.alerts.end}}  
+  
+- Encrypt vautl.yaml file using ansible-vault and GPG password
+
+  ```shell
+  ansible-vault encrypt vault.yaml
+  ```
+  This time only your GPG key passphrase will be asked to automatically encrypt/decrypt the file
+
+#### Vault credentials generation 
+
+Execute playbook to generate ansible vault variable file (`var/vault.yml`) containing all credentials/passwords. Random generated passwords will be generated for all cluster services.
+
+Execute the following command:
+```shell
+ansible-playbook create_vault_credentials.yml
+```
+Credentials for external cloud services (IONOS DNS API credentials) will be asked during the execution of the script.
+
+### Modify Ansible Playbook variables
 
 Adjust ansible playbooks/roles variables defined within `group_vars`, `host_vars` and `vars` directories to meet your specific configuration.
 
@@ -139,31 +291,30 @@ The following table shows the variable files defined at ansible's group and host
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
-| [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
-| [`group_vars/control.yml`]({{ site.git_edit_address }}/group_vars/control.yml) | control group: gateway node + pimaster |
-| [`group_vars/k3s_cluster.yml`]({{ site.git_edit_address }}/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
-| [`group_vars/k3s_master.yml`]({{ site.git_edit_address }}/group_vars/k3s_master.yml) | K3s master nodes |
-| [`host_vars/gateway.yml`]({{ site.git_edit_address }}/host_vars/gateway.yml) | gateway node specific variables|
-{: .table }
+| [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
+| [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: gateway node + pimaster |
+| [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
+| [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
+| [ansible/host_vars/gateway.yml]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) | gateway node specific variables|
+{: .table .table-white .border-dark }
 
 
 The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
 
 | Specific Variable File | Configuration |
 |----|----|
-| [`vars/picluster.yml`]({{ site.git_edit_address }}/vars/picluster.yml) | K3S cluster and services configuration variables |
-| [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
-| [`vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
-| [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
-| [`vars/backup/s3_minio.yml`]({{ site.git_edit_address }}/vars/backup/s3_minio.yml) | Configuration S3 Minio server |
-{: .table }
+| [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables |
+| [ansible/vars/dedicated_disks/local_storage.yml]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
+| [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
+| [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
+{: .table .table-white .border-dark }
 
 
 {{site.data.alerts.important}}: **About storage configuration**
 
-Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`group_vars/all.yml`]({{ site.git_edit_address }}/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
+Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
 
-- **Centralized SAN** setup assumes `gateway` node has a SSD disk attached (`/dev/sda`) that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
+- **Centralized SAN** setup assumes `gateway` node has a SSD disk attached (`/dev/sda`) that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
 
   Final `gateway` disk configuration is:
 
@@ -174,7 +325,7 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
   <br>
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/centralized_san/centralized_san_target.yml`: `storage_volumegroups` and `storage_volumes` variables. Sizes of the different LUNs can be tweaked to fit the size of the SSD Disk used. I used a 480GB disk so, I was able to create LUNs of 100GB for each of the nodes.
 
-- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that it is partitioned the first time the server is booted (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
+- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
 
   Final `node1-5` disk configuration is:
 
@@ -186,6 +337,19 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/dedicated_disks/local_storage.yml`: `storage_volumegroups`, `storage_volumes`, `storage_filesystems` and `storage_mounts` variables. The default configuration assings all available space in sda3 to a new logical volume formatted with ext4 and mounted as `/storage`
 
 {{site.data.alerts.end}}
+
+{{site.data.alerts.important}}: **About TLS Certificates configuration**
+
+Default configuration, assumes the use of Letscrypt TLS certificates and IONOS DNS for DNS01 challenge.
+
+As an alternative, a custom CA can be created and use it to sign all certificates:
+The following changes need to be done:
+
+- Modify Ansible variable `enable_letsencrypt` to false in `/ansible/picluster.yml` file
+- Modify Kubernetes applications `ingress.tlsIssuer` (`/argocd/system/<app>/values.yaml`) to `ca` instead of `letsencrypt`.
+
+{{site.data.alerts.end}}
+
 
 ## Installing the nodes
 
@@ -203,7 +367,7 @@ The installation procedure followed is the described in ["Ubuntu OS Installation
 |--------------------| ------------- |-------------|
 |  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config)|
 | Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config) |
-{: .table }
+{: .table .table-white .border-dark }
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -221,10 +385,10 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 ### Configure gateway node
 
-For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), executes the playbook:
+For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), execute the command:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "gateway" [--ask-vault-pass]
+make gateway-setup
 ```
 
 ### Install cluster nodes.
@@ -239,7 +403,7 @@ Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/
 |-----------| ------- |-------|-------|--------|--------|
 | Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data) |
 | Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data) |
-{: .table }
+{: .table .table-white .border-dark }
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -253,19 +417,33 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 ### Configure cluster nodes
 
-For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), executes the playbook:
+For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), execute the command:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "node"
+make nodes-setup
 ```
 
-### Configuring backup server (S3) and OS level backup
+## Configuring external services (Minio and Hashicorp Vault)
 
-Configure backup server (Playbook assumes S3 server is installed in `node1`) and automated backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
+Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the command:
 
 ```shell
-ansible-playbook backup_configuration.yml
+make external-services
 ```
+Ansible Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gateway`.
+
+{{site.data.alerts.note}}
+All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
+{{site.data.alerts.end}}
+
+## Configuring OS level backup (restic)
+
+Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the command:
+
+```shell
+make configure-os-backup
+```
+Minio S3 server running in `node1` will be used as backup backend.
 
 {{site.data.alerts.note}}
 
@@ -275,98 +453,53 @@ Variable `restic_clean_service` which configure and schedule restic's purging ac
 
 {{site.data.alerts.end}}
 
+## Kubernetes Applications (GitOps)
+
+ArgoCD is used to deploy automatically packaged applications contained in the repository. These applications are located in [`/argocd`]({{site.git_address}}/tree/master/argocd) directory.
+
+- Modify Root application (App of Apps pattern) to point to your own repository
+
+  Edit file [`/argocd/bootstrap/root/values.yaml`]({{ site.git_edit_address }}/argocd/bootstrap/root/values.yaml).
+ 
+  `gitops.repo` should point to your own cloned repository.
+  
+  ```yml
+  gitops:
+    repo: https://github.com/<your-user>/pi-cluster 
+  ```
+
+- Tune parameters of the different packaged Applications to meet your specific configuration
+
+  Edit `values.yaml` file of the different applications located in [`/argocd/system`]({{site.git_address}}/tree/master/argocd/system) directory.
+
 ## K3S
 
 ### K3S Installation
 
-To install K3S cluster execute the playbook:
+To install K3S cluster, execute the command:
 
 ```shell
-ansible-playbook k3s_install.yml
+make k3s-install
 ```
 
-### K3S basic services deployment
+### K3S Bootstrap
 
-To deploy and configure basic services (metallb, traefik, certmanager, linkerd, longhorn, EFK, Prometheus, Velero) run the playbook:
+To bootstrap the cluster, run the command:
 
 ```shell
-ansible-playbook k3s_deploy.yml
+make k3s-bootstrap
 ```
+Argo CD will be installed and it will automatically deploy all cluster applications automatically from git repo
 
-Different ansible tags can be used to select the componentes to deploy:
-
-```shell
-ansible-playbook k3s_deploy.yml --tags <ansible_tag>
-```
-
-The following table shows the different components and their dependencies.
-
-| Ansible Tag | Component to configure/deploy | Dependencies
-|---|---|
-| `metallb` | Metal LB | - |
-| `certmanager` | Cert-manager | - |
-| `linkerd` | Linkerd | Cert-manager |
-| `traefik` | Traefik | Linkerd |
-| `longhorn` | Longhorn | Linkerd |
-| `monitoring` | Prometheus Stack | Longhorn, Linkerd |
-| `linkerd-viz` | Linkerd Viz | Prometheus Stack, Linkerd |
-| `logging` | EFK Stack | Longhorn, Linkerd |
-| `backup` | Velero | Linkerd |
-{: .table }
+- `argocd\bootstrap\root`: Containing root application (App of Apss ArgoCD pattern)
+- `argocd\system\<app>`: Containing manifest files for application <app>
 
 ### K3s Cluster reset
 
 If you mess anything up in your Kubernetes cluster, and want to start fresh, the K3s Ansible playbook includes a reset playbook, that you can use to remove the installation of K3S:
 
 ```shell
-ansible-playbook k3s_reset.yml
-```
-
-### Updating K3S and cluster component releases
-
-Release version of each component to be installed is specified within variables in `var/pi_cluster.yml`
-
-```yml
-# k3s version
-k3s_version: v1.24.7+k3s1
-
-# Metallb helm chart version
-metallb_chart_version: 0.13.7
-
-# Traefik chart version
-traefik_chart_version: 18.1.0
-
-# Cert-manager chart version
-certmanager_chart_version: v1.10.0
-certmanager_ionos_chart_version: 1.0.1
-
-# Linkerd version
-linkerd_version: "stable-2.12.2"
-linkerd_chart_version: 1.9.4
-linkerd_viz_chart_version: 30.3.4
-
-# Velero version
-velero_chart_version: 2.32.1
-velero_version: v1.9.2
-
-# Longhorn chart version
-longhorn_chart_version: 1.3.2
-
-# ECK operator chart version
-eck_operator_chart_version: 2.4.0
-
-# Promethes-eslasticsearch-exporter helm chart
-prometheus_es_exporter_chart_version: 4.15.1
-
-# Fluentbit/Fluentd helm chart version
-fluentd_chart_version: 0.3.9
-fluentbit_chart_version: 0.20.9
-
-# Loki helm version
-loki_chart_version: 3.3.0
-
-# kube-prometheus-stack helm chart
-kube_prometheus_stack_chart_version: 41.6.1
+make k3s-reset
 ```
 
 ## Shutting down the Raspberry Pi Cluster
@@ -380,32 +513,30 @@ For doing a controlled shutdown of the cluster execute the following commands
 - Step 1: Shutdown K3S workers nodes:
 
   ```shell
-  ansible-playbook shutdown.yml --limit k3s_worker
+  make shutdown-k3s-worker
   ```
-  Command `shutdown -h 1m` is sent to each k3s-worker. Wait for workers nodes to shutdown.
 
 - Step 2: Shutdown K3S master nodes:
 
   ```shell
-  ansible-playbook shutdown.yml --limit k3s_master
+  make shutdown-k3s-master
   ```
-  Command `shutdown -h 1m` is sent to each k3s-master. Wait for master nodes to shutdown.
 
 - Step 3: Shutdown gateway node:
   ```shell
-  ansible-playbook shutdown.yml --limit gateway
+  make shutdown-gateway
   ```
 
-`shutdown.yml` playbook connects to each Raspberry PI in the cluster and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
+`shutdown` commands connects to each Raspberry PI in the cluster and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
 
 After a few minutes, all raspberry pi will be shutdown. You can notice that when the Switch ethernet ports LEDs are off. Then it is safe to unplug the Raspberry PIs.
 
 ## Updating Ubuntu packages
 
-To automatically update Ubuntu OS packages run the following playbook:
+To automatically update Ubuntu OS packages, run the following command:
 
 ```shell
-ansible-playbook update.yml
+make os-upgrade
 ```
 
 This playbook automatically updates OS packages to the latest stable version and it performs a system reboot if needed.

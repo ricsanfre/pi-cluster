@@ -1,0 +1,31 @@
+
+# Vault secret store
+vault:
+  # Vault server URL
+  vaultUrl: "https://vault.picluster.ricsanfre.com:8200"
+
+  # Vault CA cert
+  # caBundle needed if vault TLS is signed using a custom CA.
+  # If Vault TLS is valid signed by Letsencrypt this is not needed?
+  # ca cert base64 encoded and remobed '\n' characteres"
+  # <vault-ca> =`cat vault-ca.pem | base64 | tr -d "\n"`
+  # caBundle:
+  
+  # KV path and version
+  kv:
+    path: secret
+    version: v2
+
+  # auth method used
+  auth:
+    kubernetes:
+      mountPath: "kubernetes"
+      role: "external-secrets"
+
+############################
+# external-secrets subchart
+############################
+
+# CDRs installed as part of CDR application
+external-secrets:
+  installCRDs: false

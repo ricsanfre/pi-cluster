@@ -1,0 +1,29 @@
+
+# Ingress configuration
+ingress:
+  host: argocd.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    tlsIssuer: letsencrypt
+
+argo-cd:
+  configs:
+    params:
+      # Run server without TLS
+      # Traefik finishes TLS connections
+      server.insecure: true
+    cm:
+      statusbadge.enabled: 'true'
+      resource.customizations.health.argoproj.io_Application: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil then
+          if obj.status.health ~= nil then
+            hs.status = obj.status.health.status
+            if obj.status.health.message ~= nil then
+              hs.message = obj.status.health.message
+            end
+          end
+        end
+        return hs

@@ -1,0 +1,279 @@
+---
+# Pi Cluster variables
+
+#######
+# K3S #
+#######
+
+# k3s version
+k3s_version: v1.24.7+k3s1
+
+# k3s master node IP
+k3s_master_ip: 10.0.0.11
+
+# k3s shared token
+k3s_token: "{{ vault.cluster.k3s.token }}"
+
+# k3s config directory
+k3s_config_directory: /etc/rancher/k3s
+
+# kubelet configuration
+k3s_kubelet_config: |
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+
+# Extra arguments for k3s server installation
+k3s_server_extra_args: >-
+  --write-kubeconfig-mode '0644'
+  --disable 'servicelb'
+  --disable 'traefik'
+  --disable 'local-storage'
+  --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
+  --kube-controller-manager-arg 'bind-address=0.0.0.0'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+  --kube-scheduler-arg 'bind-address=0.0.0.0'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+
+# Extra arguments for k3s agent installation
+k3s_worker_extra_args: >-
+  --node-label 'node_type=worker'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+
+
+###########
+# Traefik #
+###########
+
+# HTTP Basic auth credentials
+traefik_basic_auth_user: "{{ vault.traefik.admin.user }}"
+traefik_basic_auth_passwd: "{{ vault.traefik.admin.password }}"
+
+# DNS cluster service end-points
+traefik_dashboard_dns: "traefik.{{ dns_domain }}"
+longhorn_dashboard_dns: "storage.{{ dns_domain }}"
+kibana_dashboard_dns: "kibana.{{ dns_domain }}"
+elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
+fluentd_dns: "fluentd.{{ dns_domain }}"
+monitoring_dns: "monitoring.{{ dns_domain }}"
+linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
+
+#################################
+# TLS Certificates: LetsEncrypt #
+#################################
+
+# Enable letsencrypt certificates
+enable_letsencrypt: true
+
+# IONOS API credentials
+ionos_public_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
+ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+
+# issuer email
+acme_issuer_email: admin@ricsanfre.com
+
+##########################
+# Minio S3 configuration #
+##########################
+
+# Minio S3 Server
+minio_hostname: "s3.{{ dns_domain }}"
+minio_endpoint: "{{ minio_hostname }}:9091"
+minio_url: "https://{{ minio_hostname }}:9091"
+
+# Minio data dirs
+minio_server_make_datadirs: true
+minio_server_datadirs:
+  - /storage/minio
+
+# Minio admin credentials
+minio_root_user: "minioadmin"
+minio_root_password: "{{ vault.minio.root.key }}"
+
+# Minio site region configuration
+minio_site_region: "eu-west-1"
+
+# Enabling TLS
+minio_enable_tls: true
+minio_validate_certificate: false
+
+# Create Prometheus bearer token
+minio_prometheus_bearer_token: true
+
+# Minio Buckets
+minio_buckets:
+  - name: restic
+    policy: read-write
+  - name: k3s-longhorn
+    policy: read-write
+  - name: k3s-velero
+    policy: read-write
+  - name: k3s-loki
+    policy: read-write
+  - name: k3s-tempo
+    policy: read-write
+
+# Minio users and ACLs
+minio_users:
+  - name: "{{ vault.minio.restic.user }}"
+    password: "{{ vault.minio.restic.key }}"
+    buckets_acl:
+      - name: restic
+        policy: read-write
+  - name: "{{ vault.minio.longhorn.user }}"
+    password: "{{ vault.minio.longhorn.key }}"
+    buckets_acl:
+      - name: k3s-longhorn
+        policy: read-write
+  - name: "{{ vault.minio.velero.user }}"
+    password: "{{ vault.minio.velero.key }}"
+    buckets_acl:
+      - name: k3s-velero
+        policy: custom
+        custom:
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:GetObject",
+                  "s3:DeleteObject",
+                  "s3:PutObject",
+                  "s3:AbortMultipartUpload",
+                  "s3:ListMultipartUploadParts"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-velero/*"
+              ]
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:ListBucket"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-velero"
+              ]
+
+  - name: "{{ vault.minio.loki.user }}"
+    password: "{{ vault.minio.loki.key }}"
+    buckets_acl:
+      - name: k3s-loki
+        policy: read-write
+
+  - name: "{{ vault.minio.tempo.user }}"
+    password: "{{ vault.minio.tempo.key }}"
+    buckets_acl:
+      - name: k3s-tempo
+        policy: custom
+        custom:
+          - rule: |
+              "Effect": "Allow",
+              "Action": [
+                  "s3:PutObject",
+                  "s3:GetObject",
+                  "s3:ListBucket",
+                  "s3:DeleteObject",
+                  "s3:GetObjectTagging",
+                  "s3:PutObjectTagging"
+              ],
+              "Resource": [
+                  "arn:aws:s3:::k3s-tempo/*",
+                  "arn:aws:s3:::k3s-tempo"
+              ]
+
+########################
+# Restic configuration #
+########################
+
+# Restic S3 repository configuration
+restic_repository: "s3:{{ minio_url }}/restic"
+restic_use_ca_cert: true
+restic_environment:
+  - name: AWS_ACCESS_KEY_ID
+    value: "{{ vault.minio.restic.user }}"
+  - name: AWS_SECRET_ACCESS_KEY
+    value: "{{ vault.minio.restic.key }}"
+
+#######################
+# Vault configuration
+#######################
+
+vault_hostname: "vault.{{ dns_domain }}"
+vault_address: 10.0.0.1
+vault_dns: "{{ vault_hostname }}"
+vault_enable_tls: true
+custom_ca: false
+vault_init: true
+vault_unseal: true
+vault_unseal_service: true
+tls_skip_verify: false
+
+# Configure KV
+vault_kv_secrets:
+  path: secret
+
+# Policies
+policies:
+  - name: write
+    hcl: |
+      path "secret/*" {
+        capabilities = [ "create", "read", "update", "delete", "list", "patch" ]
+      }
+  - name: read
+    hcl: |
+      path "secret/*" {
+        capabilities = [ "read" ]
+      }
+
+###################
+# Velero  Secrets #
+###################
+
+# Minio user, key and bucket
+minio_velero_user: "{{ vault.minio.velero.user }}"
+minio_velero_key: "{{ vault.minio.velero.key }}"
+
+velero_secret_content: |
+  [default]
+  aws_access_key_id: "{{ minio_velero_user }}"
+  aws_secret_access_key: "{{ minio_velero_key }}"
+
+###################
+# Longhorn Secrets#
+###################
+
+# Minio user, key and bucket
+minio_longhorn_user: "{{ vault.minio.longhorn.user }}"
+minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
+
+###################
+# Logging Secrets #
+###################
+
+# Fluentd-fluentbit shared key
+fluentd_shared_key: "{{ vault.logging.fluentd.shared_key }}"
+
+# Elasticsearch 'elastic' user password
+efk_elasticsearch_passwd: "{{ vault.logging.elasticsearch.password }}"
+
+# Loki minio user, key and bucket
+minio_loki_user: "{{ vault.minio.loki.user }}"
+minio_loki_key: "{{ vault.minio.loki.key }}"
+
+######################
+# Monitoring Secrets #
+######################
+
+# Grafana admin user password
+prometheus_grafana_password: "{{ vault.grafana.admin.password}}"
+
+
+#######################
+# Tracing Secrets     #
+#######################
+
+# Tempo minio user, key and bucket
+minio_tempo_user: "{{ vault.minio.tempo.user }}"
+minio_tempo_key: "{{ vault.minio.tempo.key }}"
+minio_tempo_bucket: k3s-tempo

@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "27-11-2022"
+last_modified_at: "09-01-2023"
 
 ---
 
@@ -162,7 +162,7 @@ Installation using `Helm` (Release 3):
 
   Certificate is creates as CA (isCA:true) because it will be use by linkerd to issue mTLS certificates.
 
-- Step 5: Command certmanger to create the `Certificate` and the associated `Secret`.
+- Step 5: Command cert-manager to create the `Certificate` and the associated `Secret`.
 
   ```shell
   kubectl apply -f linkerd-identity-issuer.yml
@@ -222,6 +222,59 @@ Installation using `Helm` (Release 3):
     AiEAwlZ6RTYjoN4XHxQnz2yZhu7ACsjX5p3oSNnL2nOs+7k=
     -----END CERTIFICATE-----
   ```
+
+#### GitOps installation (ArgoCD)
+
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding CA certificate within Helm chart values, a external configMap can be created,`linkerd-identity-trust-roots`, containing the ca certificate (ca-bundle.crt key). If external configMap is provided, helm value `identity.externalCA=true` need to be provided during installation.
+
+[Trust Manager](https://cert-manager.io/docs/projects/trust-manager/), installed jointly with Cert-Manager, can be used to automate the generation of that configMap containing the information about the ca secret.
+See detailed procedure described in [linkerd issue #7345](https://github.com/linkerd/linkerd2/issues/7345#issuecomment-979207861).
+
+See Trust-Manager installation procedure in [TLS certification management documentation](/docs/certmanager/).
+
+In the previous installation procedure, step 6 and step 8 can be replaced by the following:
+
+- Step 6: Create a Trust-Manager `Bundle` resource to distribute CA certificate in linkerd namespace as a configmap (source is taken from the namespace trust was installed in, i.e cert-manager)
+
+  Create Trust Manager bundle resource to share `ca.crt` stored in `root-secret` within a configMap (`linkerd-identity-trust-roots`) in linkerd namespace.
+
+  ```yml
+  apiVersion: trust.cert-manager.io/v1alpha1
+  kind: Bundle
+  metadata:
+    name: linkerd-identity-trust-roots
+  spec:
+    sources:
+    - secret:
+        name: "root-secret"
+        key: "ca.crt"
+    target:
+      configMap:
+        key: "ca-bundle.crt"
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: linkerd
+  ```
+
+  Apply this resource using `kubectl apply -f` command
+
+  Check that config map is created and the content is the expected one
+
+  ```shell
+  kubectl get cm linkerd-identity-trust-roots -o jsonpath="{.data.ca-bundle\.crt}"  -n linkerd
+  ```
+
+- Step 8: Install Linkerd control Plane Helm (`identity.externalCA` need to be set to true)
+
+  ```shell
+  helm install linkerd-control-plane \
+  --set identity.externalCA=true \
+  --set identity.issuer.scheme=kubernetes.io/tls \
+  --set installNamespace=false \
+  linkerd/linkerd-control-plane \
+  -n linkerd
+  ```
+
 
 ### Linkerd Viz extension installation
 

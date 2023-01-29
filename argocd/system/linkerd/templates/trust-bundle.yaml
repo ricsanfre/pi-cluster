@@ -1,0 +1,18 @@
+# Cert-manager TrustBundle
+# Share CA root certificate as configMap in linkerd namespace
+
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: linkerd-identity-trust-roots
+spec:
+  sources:
+  - secret:
+      name: "root-secret"
+      key: "ca.crt"
+  target:
+    configMap:
+      key: "ca-bundle.crt"
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: {{ .Release.Namespace }}

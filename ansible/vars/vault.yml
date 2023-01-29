@@ -1,0 +1,55 @@
+---
+# Encrypted variables - Ansible Vault
+vault:
+  # SAN
+  san:
+    iscsi:
+      node_pass: s1cret0
+      password_mutual: 0tr0s1cret0
+  # K3s secrets
+  k3s:
+    k3s_token: s1cret0
+  # traefik secrets
+  traefik:
+    basic_auth:
+      user: admin
+      passwd: s1cret0
+  # Minio S3 secrets
+  minio:
+    root:
+      user: root
+      key: supers1cret0
+    restic:
+      user: restic
+      key: supers1cret0
+    longhorn:
+      user: longhorn
+      key: supers1cret0
+    velero:
+      user: velero
+      key: supers1cret0
+    loki:
+      user: loki
+      key: supers1cret0
+    tempo:
+      user: tempo
+      key: supers1cret0
+  # elastic search
+  elasticsearch:
+    elastic:
+      user: elastic
+      password: s1cret0
+  # Fluentd
+  fluentd:
+    shared_key: s1cret0
+  # Grafana
+  grafana:
+    admin:
+      user: admin
+      password: s1cret0
+
+  # Certmanager
+  certmanager:
+    ionos:
+      public_prefix: your-public-prefix
+      secret: your-key

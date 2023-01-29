@@ -1,19 +1,19 @@
 ---
-title: SSL Certificates (Cert-Manager)
+title: TLS Certificates (Cert-Manager)
 permalink: /docs/certmanager/
-description: How to deploy a centralized SSL certification management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "02-10-2022"
+description: How to deploy a centralized TLS certificates management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
+last_modified_at: "17-01-2023"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
 
-It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated SSL certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry. It also keep up to date the associated Kuberentes Secrets storing key pairs used by Ingress resources when securing the incoming communications.
+It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated TLS certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry. It also keep up to date the associated Kuberentes Secrets storing key pairs used by Ingress resources when securing the incoming communications.
 
 ![picluster-certmanager](/assets/img/cert-manager.png)
 
 ## Cert-Manager certificates issuers
 
-In cert-manager different kind of certificate issuer can be configured to generate signed SSL certificates
+In cert-manager different kind of certificate issuer can be configured to generate signed TLS certificates
 
 ### Self-signed Issuer
 
@@ -55,7 +55,7 @@ Cert-manager add a set of Kubernetes custom resource (CRD):
 
 - `Certificate`, resources that represent a human readable definition of a certificate request that need to be generated and keep up to date by an issuer.
 
-In order to generate new SSL certificates a `Certificate` resource can be created. 
+In order to generate new TLS certificates a `Certificate` resource can be created. 
 
 ```yml
 apiVersion: cert-manager.io/v1
@@ -214,9 +214,25 @@ Algorithm used for creating private keys is ECDSA P-256. The use of this algorit
 
 {{site.data.alerts.end}}
 
+## Trust Manager Installation
+
+[Trust-manager](https://cert-manager.io/docs/projects/trust-manager/) is an operator for distributing trust bundles across a Kubernetes cluster. trust-manager is designed to complement cert-manager by enabling services to trust X.509 certificates signed by Issuers, distributing data from trust namespace (cert-manager).
+
+trust ships with a single cluster scoped Bundle resource. A Bundle represents a set of data (configMap, secret) from the trust namespace that should be distributed and made available across the cluster.
+
+To install Trust-Manager, from Helm chart execute the following command:
+```shell
+helm install trust-manager jetstack/cert-manager --namespace certmanager
+```
+{{site.data.alerts.note}}
+
+Trust Manager can be used to automatically share CA certificate created by Cert-Manager during linkerd installation.
+
+{{site.data.alerts.end}}
+
 ## Lets Encrypt Certificates
 
-Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auto-signed SSL Certificates for the websites that are not automatic validated by HTTP browsers.
+Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auto-signed TLS Certificates for the websites that are not automatic validated by HTTP browsers.
 
 The process is the following, we issue a request for a certificate to Let's Encrypt for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME DNS or HTTP validation mechanism. If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
 
@@ -224,7 +240,7 @@ For details see cert-manager [ACME issuer type documentation](https://cert-manag
 
 ### Let's Encrypt DNS validation method
 
-DNS validation method requires to expose a "challenge DNS" record within the DNS domain associated to the SSL certificate.
+DNS validation method requires to expose a "challenge DNS" record within the DNS domain associated to the TLS certificate.
 This method do not require to expose to the Public Internet the web services hosted within my K3S cluster and so it would be the preferred method to use Let's Encrypt.
 
 1. Cert-manager issues a certifate request to Let's Encrypt
@@ -429,7 +445,7 @@ Execute all the following commands from $HOME directory.
 
 ### Lets Encrypt HTTP validation method
 
-HTTP validation method requires to actually expose a "challenge URL" in the Public Internet using the DNS domain associated to the SSL certificate.
+HTTP validation method requires to actually expose a "challenge URL" in the Public Internet using the DNS domain associated to the TLS certificate.
 
 HTTP validation method is as follows: 
 1. Cert-manager issues a certificate request to Let's Encrypt. 
@@ -483,7 +499,7 @@ Enable port forwarding for TCP ports 80/443 to `gateway` node.
 |----------|--------|----------|
 | 80 | `gateway` | 8080 |
 | 443 | `gateway`| 4430 |
-{: .table }
+{: .table .table-white .border-dark }
 
 #### Configure Pi cluster Gateway
 

@@ -43,7 +43,7 @@ For `node1-node5`, the new partition created in boot time, `/dev/sda2`, uses mos
 
 LVM partition and formatting tasks have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
 
-Specific `node1-node5` ansible variables to be used by this role are stored in [`vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/vars/dedicated_disks/local_storage.yml)
+Specific `node1-node5` ansible variables to be used by this role are stored in [`ansible/vars/dedicated_disks/local_storage.yml`]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml)
 
 ## Network Configuration
 
@@ -60,7 +60,7 @@ Follow the procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) usin
 |-----------| ------- |-------|-------|--------|
 | Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) |
 | Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) |
-{: .table }
+{: .table .table-white .border-dark }
 
 ## Ubuntu OS Initital Configuration
 
@@ -93,7 +93,7 @@ Further details about iSCSI configurations and step-by-step manual instructions 
 
 Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
 
-Specific `node1-node5` ansible variables to be used by these roles are stored in [`vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/vars/centralized_san/centralized_san_initiator.yml)
+Specific `node1-node5` ansible variables to be used by these roles are stored in [`ansible/vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml)
 
 {{site.data.alerts.important}}
 

@@ -114,7 +114,6 @@ Installation from helm chart. There are two alternatives:
 
   This is the helm chart we will use to deploy Loki in HA (simple scalable deployment mode).
 
-
 - Step 1: Add the Grafana repository:
   ```shell
   helm repo add grafana https://grafana.github.io/helm-charts
@@ -219,7 +218,127 @@ Installation from helm chart. There are two alternatives:
   ```shell
   kubectl get pods -l app.kubernetes.io/name=loki -n logging
   ```
-  
+
+### GitOps installation (ArgoCD)
+
+As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Loki's capability of using environment variables in config file](https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration).
+
+
+The following secret need to be created:
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: loki-minio-secret
+  namespace: logging
+type: Opaque
+data:
+  MINIO_ACCESS_KEY_ID: < minio_loki_user | b64encode >
+  MINIO_SECRET_ACCESS_KEY: < minio_loki_key | b64encode >
+```
+
+And the following Helm values has to be provided:
+
+```yml
+loki:
+  # Disable multi-tenant support
+  auth_enabled: false
+
+  # S3 backend storage configuration
+  storage:
+    bucketNames:
+      chunks: k3s-loki
+      ruler: k3s-loki
+    type: s3
+    s3:
+      endpoint: s3.picluster.ricsanfre.com:9091
+      region: eu-west-1
+      secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
+      accessKeyId: ${MINIO_ACCESS_KEY_ID}
+      s3ForcePathStyle: true
+      insecure: false
+      http_config:
+        idle_conn_timeout: 90s
+        response_header_timeout: 0s
+        insecure_skip_verify: false
+
+# Configuration for the write
+write:
+  # Number of replicas for the write
+  replicas: 2
+  persistence:
+    # -- Size of persistent disk
+    size: 10Gi
+    # -- Storage class to be used.
+    storageClass: longhorn
+
+  # Enable environment variables in config file
+  # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: loki-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: loki-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+
+# Configuration for the read
+read:
+  # Number of replicas for the read
+  replicas: 2
+  persistence:
+    # -- Size of persistent disk
+    size: 10Gi
+    # -- Storage class to be used.
+    storageClass: longhorn
+
+  # Enable environment variables in config file
+  # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: loki-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: loki-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+
+# Configuration for the gateway
+gateway:
+  # -- Specifies whether the gateway should be enabled
+  enabled: true
+  # -- Number of replicas for the gateway
+  replicas: 1
+
+# Disable mino installation
+minio:
+  enabled: false
+
+# Disable self-monitoring
+monitoring:
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+  lokiCanary:
+      enabled: false
+
+# Disable helm-test
+test:
+  enabled: false
+
+```
 
 ## Grafana Configuration
 

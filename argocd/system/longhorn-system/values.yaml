@@ -1,0 +1,35 @@
+
+# Ingress configuration
+ingress:
+  host: longhorn.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
+    # tlsIssuer=ca to generate a CA-signed certificate (not valid)
+    tlsIssuer: letsencrypt
+  # Enabling traefik basic authorization, reusing global middleware created for Traefik
+  basicAuth:
+    enable: true
+    middlewareName: basic-auth
+    middlewareNamespace: traefik
+
+# Backup S3 backend URL
+backup:
+  minioUrl: "https://s3.picluster.ricsanfre.com:9091"
+
+# Prometheus servicemonitor configuration
+serviceMonitor:
+  enable: true
+  release: monitoring
+
+#####################
+# longhorn subchart
+#####################
+
+longhorn:
+  defaultSettings:
+    defaultDataPath: "/storage"
+    # Backup S3 configuration
+    backupTarget: "s3://k3s-longhorn@eu-west-1/"
+    backupTargetCredentialSecret: longhorn-minio-secret
+

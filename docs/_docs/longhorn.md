@@ -1,5 +1,5 @@
 ---
-title: Distributed Storage (Longhorn)
+title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Raspberry Pi Kubernetes Cluster.
 last_modified_at: "11-10-2022"
@@ -259,6 +259,15 @@ Ansible playbook has been developed for automatically create this testing POD `r
 
 ## Setting Longhorn as default Kubernetes StorageClass
 
+
+{{site.data.alerts.note}}
+
+This step is not needed if K3s is installed disabling Local Path Provisioner (installation option: `--disable local-storage`).
+
+In case that this parameter is not configured the following procedure need to be applied.
+
+{{site.data.alerts.end}}
+
 By default K3S comes with Rancher’s Local Path Provisioner and this enables the ability to create persistent volume claims out of the box using local storage on the respective node.
 
 In order to use Longhorn as default storageClass whenever a new Helm is installed, Local Path Provisioner need to be removed from default storage class.
@@ -275,7 +284,7 @@ local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsu
 longhorn (default)     driver.longhorn.io      Delete          Immediate              true                   3m27s
 ```
 
-Both Local-Path and longhor are defined as default storage classes:
+Both Local-Path and longhorn are defined as default storage classes:
 
 Remove Local path from default storage classes with the command:
 
@@ -284,3 +293,5 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 ```
 
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
+
+

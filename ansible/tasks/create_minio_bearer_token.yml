@@ -1,0 +1,24 @@
+---
+# Minio prometheus bearer token was created and stored in filesystem
+- name: Load prometheus bearer token from file in node1
+  command: "jq -r '.bearerToken' /etc/minio/prometheus_bearer.json"
+  register: root_token
+  become: true
+  changed_when: false
+  when: minio_prom_bearer_token is not defined
+  delegate_to: node1
+
+- name: Get bearer token
+  set_fact:
+    minio_prom_bearer_token: "{{ root_token.stdout }}"
+
+- name: Create/update minio/prometheus credentials
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/secret/data/minio/prometheus"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ token_data | community.hashi_vault.vault_login_token }}"
+    body:
+      data:
+        bearer-token: "{{ minio_prom_bearer_token }}"
+    body_format: json

@@ -1,0 +1,30 @@
+---
+- name: Get CLI configured namespace
+  command:
+    cmd: "velero client config get namespace"
+  register: get_velero_namespace
+  changed_when: false
+  ignore_errors: true
+
+- name: Configure velero CLI namespace
+  command:
+    cmd: "velero client config set namespace={{ velero_namespace }}"
+  when:
+    - get_velero_namespace.rc==0
+    - '"namespace: <NOT SET>" in get_velero_namespace.stdout or "namespace: " + velero_namespace not in get_velero_namespace.stdout'
+  changed_when: true
+
+- name: Get CLI configured colored
+  command:
+    cmd: "velero client config get colored"
+  register: get_velero_colored
+  changed_when: false
+  ignore_errors: true
+
+- name: Configure velero CLI colored output
+  command:
+    cmd: "velero client config set colored=true"
+  when:
+    - get_velero_colored.rc==0
+    - '"colored: <NOT SET>" in get_velero_colored.stdout or "colored: true" not in get_velero_colored.stdout'
+  changed_when: true

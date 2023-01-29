@@ -1,0 +1,207 @@
+
+# Ingress configuration
+ingress:
+  host: monitoring.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
+    # tlsIssuer=ca to generate a CA-signed certificate (not valid)
+    tlsIssuer: letsencrypt
+  # Enabling traefik basic authorization, reusing global middleware created for Traefik
+  basicAuth:
+    enable: true
+    middlewareName: basic-auth
+    middlewareNamespace: traefik
+
+# Enable K3s metrics
+k3sMetrics:
+  enabled: true
+  servers:
+    - ip: 10.0.0.11
+    - ip: 10.0.0.12
+    - ip: 10.0.0.13
+    - ip: 10.0.0.14
+    - ip: 10.0.0.15
+
+# Enable monitoring of external services
+externalServices:
+  # External Minio service
+  minioMetrics:
+    enabled: true
+    servers:
+      - ip: 10.0.0.11
+  # External node (gateway)
+  nodeMetrics:
+    enabled: true
+    servers:
+      - ip: 10.0.0.1
+
+################################
+# kube-prometheus-stack subchart
+################################
+
+kube-prometheus-stack:
+  # Making full name stack: monitoring
+  fullnameOverride: monitoring
+  prometheusOperator:
+    # Disable linkerd injection for admission webhooks jobs
+    admissionWebhooks:
+      patch:
+        podAnnotations:
+          linkerd.io/inject: disabled
+    # Relabeling job name for operator metrics
+    serviceMonitor:
+      relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: prometheus-operator
+    # Disable creation of kubelet service
+    kubeletService:
+      enabled: false
+
+  # Enable serviceaccount automount
+  prometheus-node-exporter:
+    serviceAccount:
+      automountServiceAccountToken: true
+
+  alertmanager:
+    alertmanagerSpec:
+      # Subpath /alertmanager configuration
+      externalUrl: http://monitoring.picluster.ricsanfre.com/alertmanager/
+      routePrefix: /
+      # PVC config
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 5Gi
+    serviceMonitor:
+      relabelings:
+        # Replace job value
+        - sourceLabels:
+          - __address__
+          action: replace
+          targetLabel: job
+          replacement: alertmanager
+  prometheus:
+    prometheusSpec:
+      # Subpath /prometheus configuration
+      externalUrl: http://monitoring.picluster.ricsanfre.com/prometheus/
+      routePrefix: /
+      # Resources request and limits
+      resources:
+        requests:
+          memory: 1Gi
+        limits:
+          memory: 1Gi
+      # PVC configuration
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 5Gi
+    serviceMonitor:
+      relabelings:
+        # Replace job value
+        - sourceLabels:
+          - __address__
+          action: replace
+          targetLabel: job
+          replacement: prometheus
+  grafana:
+    # Use an existing secret for the admin user.
+    adminUser: ""
+    adminPassword: ""
+    admin:
+      existingSecret: grafana
+      userKey: admin-user
+      passwordKey: admin-password
+    # Configuring /grafana subpath
+    grafana.ini:
+      server:
+        domain: monitoring.picluster.ricsanfre.com
+        root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+        serve_from_sub_path: true
+    # Set admin password
+    # adminPassword: ""
+    # Install required plugins
+    plugins:
+      - grafana-piechart-panel
+    # Relabel job name of Grafana's metrics
+    serviceMonitor:
+      labels:
+        release: kube-prometheus-stack
+      relabelings:
+        # Replace job value
+        - sourceLabels:
+          - __address__
+          action: replace
+          targetLabel: job
+          replacement: grafana
+    # Additional data source
+    additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      access: proxy
+      url: http://loki-gateway.logging.svc.cluster.local
+      jsonData:
+        derivedFields:
+          - datasourceUid: tempo
+            matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+            name: TraceID
+            url: $${__value.raw}
+    - name: Tempo
+      uid: tempo
+      type: tempo
+      access: proxy
+      url: http://tracing-tempo-query-frontend.tracing.svc.cluster.local:3100
+
+    # Additional configuration to grafana dashboards sidecar
+    # Search in all namespaces for configMaps containing label `grafana_dashboard`
+    sidecar:
+      dashboards:
+        searchNamespace: ALL
+
+  # Disabling monitoring of K8s services.
+  # Monitoring of K3S components will be configured out of kube-prometheus-stack
+  kubelet:
+    enabled: false
+  kubeApiServer:
+    enabled: false
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  # Disable K8S Prometheus Rules
+  # Rules for K3S components will be configured out of kube-prometheus-stack
+  defaultRules:
+    create: true
+    rules:
+      etcd: false
+      k8s: false
+      kubeApiserverAvailability: false
+      kubeApiserverBurnrate: false
+      kubeApiserverHistogram: false
+      kubeApiserverSlos: false
+      kubeControllerManager: false
+      kubelet: false
+      kubeProxy: false
+      kubernetesApps: false
+      kubernetesResources: false
+      kubernetesStorage: false
+      kubernetesSystem: false
+      kubeScheduler: false

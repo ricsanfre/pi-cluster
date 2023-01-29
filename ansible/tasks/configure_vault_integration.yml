@@ -1,0 +1,39 @@
+---
+
+- name: Configure vault service account and create token
+  kubernetes.core.k8s:
+    definition: "{{ lookup('ansible.builtin.file', '../argocd/bootstrap/vault/' + item ) }}"
+    state: present
+  with_items:
+    - vault-auth-serviceaccount.yaml
+
+- name: Get Token review
+  shell: |
+    KUBERNETES_SA_SECRET_NAME=$(kubectl get secrets --output=json -n vault | jq -r '.items[].metadata | select(.name|startswith("vault-auth")).name')
+    TOKEN_REVIEW_JWT=$(kubectl get secret $KUBERNETES_SA_SECRET_NAME -n vault -o jsonpath='{.data.token}' | base64 --decode)
+    echo $TOKEN_REVIEW_JWT
+  register: get_reviewer_token
+  changed_when: false
+
+- name: Set reviewer token
+  set_fact:
+    vault_reviewer_token: "{{ get_reviewer_token.stdout }}"
+
+- name: Get Kubernetes CA cert
+  shell: |
+    KUBERNETES_CA_CERT=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' \
+      | base64 --decode | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+    echo $KUBERNETES_CA_CERT
+  register: get_kubernetes_ca
+  changed_when: false
+
+- name: Set CA cert
+  set_fact:
+    kubernetes_ca_cert: "{{ get_kubernetes_ca.stdout }}"
+
+- name: Set kubernetes_host
+  set_fact:
+    kubernetes_host: "https://{{ k3s_master_ip }}:6443"
+
+- name: Configure vault-kubernetes-auth
+  include_tasks: tasks/vault_kubernetes_auth_method_config.yml

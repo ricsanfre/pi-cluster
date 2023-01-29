@@ -1,0 +1,36 @@
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+{{- if .Values.ingress.basicAuth.enable }}
+    # Use Basic Auth Midleware configured
+    traefik.ingress.kubernetes.io/router.middlewares:
+      {{ .Values.ingress.basicAuth.middlewareNamespace }}-{{ .Values.ingress.basicAuth.middlewareName }}@kubernetescrd
+{{- end }}
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
+    cert-manager.io/common-name: {{ .Values.ingress.host }}
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: longhorn-tls
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: longhorn-frontend
+                port:
+                  number: 80

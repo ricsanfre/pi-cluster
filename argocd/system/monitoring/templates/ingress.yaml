@@ -1,0 +1,123 @@
+# Linkerd Middlewares
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-prometheus
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: "{{ template "monitoring-stack.name" . }}-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090"
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-alertmanager
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: "{{ template "monitoring-stack.name" . }}-alertmanager.{{ .Release.Namespace }}.svc.cluster.local:9093"
+
+---
+#Linkerd middleware
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-grafana
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: "{{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local:80"
+
+---
+# Strip prefix middleware
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix
+  namespace: {{ .Release.Namespace }}
+spec:
+  stripPrefix:
+    prefixes:
+      - "/prometheus"
+      - "/alertmanager"
+      - "/grafana"
+    forceSlash: false
+
+---
+# Create certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monitoring-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: monitoring-secret
+  issuerRef:
+    name: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
+    kind: ClusterIssuer
+  commonName: {{ .Values.ingress.host }}
+  dnsNames:
+  - {{ .Values.ingress.host }}
+  privateKey:
+    algorithm: ECDSA
+
+---
+# IngressRoute https
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: monitoring-https
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/prometheus`)
+    services:
+    - name: {{ template "monitoring-stack.name" . }}-prometheus
+      port: 9090
+      namespace: {{ .Release.Namespace }}
+    middlewares:
+{{- if .Values.ingress.basicAuth.enable }}
+      - name: {{ .Values.ingress.basicAuth.middlewareName }}
+        namespace: {{ .Values.ingress.basicAuth.middlewareNamespace }}
+{{- end }}
+      - name: stripprefix
+        namespace: {{ .Release.Namespace }}
+      - name: l5d-header-middleware-prometheus
+        namespace: {{ .Release.Namespace }}
+  - kind: Rule
+    match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/alertmanager`)
+    services:
+    - name: {{ template "monitoring-stack.name" . }}-alertmanager
+      port: 9093
+      namespace: {{ .Release.Namespace }}
+    middlewares:
+{{- if .Values.ingress.basicAuth.enable }}
+      - name: {{ .Values.ingress.basicAuth.middlewareName }}
+        namespace: {{ .Values.ingress.basicAuth.middlewareNamespace }}
+{{- end }}
+      - name: stripprefix
+        namespace: {{ .Release.Namespace }}
+      - name: l5d-header-middleware-alertmanager
+        namespace: {{ .Release.Namespace }}
+  - kind: Rule
+    match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/grafana`)
+    services:
+    - name: {{ .Release.Name }}-grafana
+      port: 80
+      namespace: {{ .Release.Namespace }}
+    middlewares:
+      - name: stripprefix
+        namespace: {{ .Release.Namespace }}
+      - name: l5d-header-middleware-grafana
+        namespace: {{ .Release.Namespace }}
+  tls:
+    secretName: monitoring-secret

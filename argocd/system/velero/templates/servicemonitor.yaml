@@ -1,0 +1,23 @@
+{{- if and .Values.serviceMonitor.enable (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: velero
+    release: {{ .Values.serviceMonitor.release }}
+  name: velero-prometheus-servicemonitor
+  namespace: {{ .Release.Namespace }}
+spec:
+  jobLabel: app.kubernetes.io/name
+  endpoints:
+    - port: http-monitoring
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: velero
+      app.kubernetes.io/name: velero
+{{- end -}}

@@ -15,12 +15,24 @@
   - san
   - gateway
   - node
+- title: External Services
+  docs:
+  - minio
+  - vault
 - title: K3S Installation
   docs:
   - k3s-installation
+- title: Networking
+  docs:
   - k3s-networking
+  - metallb
   - traefik
+  - service-mesh
+- title: Certificate Management
+  docs:
   - certmanager
+- title: Storage
+  docs:
   - longhorn
 - title: Monitoring
   docs:
@@ -34,9 +46,9 @@
 - title: Backup
   docs:
   - backup
-- title: Service Mesh
+- title: GitOps
   docs:
-  - service-mesh
+  - argocd
 - title: Reference Docs
   docs:
   - k8s-networking

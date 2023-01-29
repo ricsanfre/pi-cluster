@@ -1,0 +1,4 @@
+# Metal LB Ip address pool
+ipAddressPool:
+  addresses:
+  - "10.0.0.100-10.0.0.200"

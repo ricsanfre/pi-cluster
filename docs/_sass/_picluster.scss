@@ -182,24 +182,6 @@ html {
 .docs-content, .docs-nav , .docs-toc {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
-  // Syntax higlight
-  .highlight {
-    background: #222222;
-    pre {
-      padding: 12px 12px 12px 12px;
-    }
-  }
-  // Code
-  code {
-    background-color: #222222;
-    border-radius: 0.1rem;
-    color: white;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    font-size: .85em;
-    // padding: 0 0.2941176471em;
-    word-break: break-word;
-  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -276,4 +258,38 @@ html {
   .nav-pills .nav-link.active {
     background-color: $gray-600;
   }  
+}
+
+// Code highlight
+.docs-content, .post-content {
+  // Syntax higlight
+  .highlight {
+    background: #222222;
+    pre {
+      padding: 12px 12px 12px 12px;
+    }
+  }
+  // Code
+  code {
+    background-color: #222222;
+    border-radius: 0.1rem;
+    color: white;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    font-size: .85em;
+    // padding: 0 0.2941176471em;
+    word-break: break-word;
+  }
+}
+
+.table-white {
+  --bs-table-bg: white;
+  --bs-table-striped-bg: #cec8c8;
+  --bs-table-striped-color: #555555;
+  --bs-table-active-bg: #666666;
+  --bs-table-active-color: #fff;
+  --bs-table-hover-bg: #626262;
+  --bs-table-hover-color: #fff;
+  color: #555555;
+  border-color: #666666;
 }
