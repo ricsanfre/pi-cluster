@@ -1,3 +1,5 @@
 ---
 velero_version: v1.9.2
 velero_arch: arm64
+
+velero_namespace: velero

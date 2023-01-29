@@ -8,10 +8,10 @@
 
 - name: Configure velero CLI namespace
   command:
-    cmd: "velero client config set namespace={{ k3s_velero_namespace }}"
+    cmd: "velero client config set namespace={{ velero_namespace }}"
   when:
     - get_velero_namespace.rc==0
-    - '"namespace: <NOT SET>" in get_velero_namespace.stdout or "namespace: " + k3s_velero_namespace not in get_velero_namespace.stdout'
+    - '"namespace: <NOT SET>" in get_velero_namespace.stdout or "namespace: " + velero_namespace not in get_velero_namespace.stdout'
   changed_when: true
 
 - name: Get CLI configured colored

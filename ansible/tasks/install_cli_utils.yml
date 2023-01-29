@@ -2,8 +2,10 @@
 # Execute roles to install cli and utils
 - name: Use role in loop
   ansible.builtin.include_role:
-    name: '{{ item }}'
-  with_items:
+    name: '{{ role }}'
+  loop_control:
+    loop_var: role
+  loop:
     - longhorn-util
     - velero-cli
     - linkerd-cli
