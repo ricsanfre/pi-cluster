@@ -28,13 +28,14 @@ Step-by-step manual process to deploy and configure each component is also descr
   git clone https://github.com/ricsanfre/pi-cluster.git
   ```
 
-- Install Ansible requirements:
+- Edit GPG_NAME and GPG_EMAIL variables in `Makefile`
 
-  Developed Ansible playbooks depend on external roles that need to be installed.
+- Prepare Ansible execution environment:
 
   ```shell
-  ansible-galaxy install -r requirements.yml
+  make prepare-ansible
   ```
+  Ansible playbooks depend on external roles that need to be installed, command `ansible-galaxy install -r requirements.yml` is executed, GPG key for encrypting passwords created, ansible vault automatic encrytpion configured, and pi-cluster credentials file (`vault.yml`) created and encrypted.
 
 {{site.data.alerts.important}}
 
@@ -70,6 +71,15 @@ The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH
   ```
 
 ### Encrypting secrets/key variables
+
+{{site.data.alerts.important}}
+
+All tasks in this section are automated as part of the execution of preperation command `make prepare-ansible`
+
+This command will initialize GPG encryption key, configure ansible vault encryption, and generate `vault.yml` automatically with random passwords.
+
+{{site.data.alerts.end}}
+
 
 All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
 
@@ -375,10 +385,10 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 ### Configure gateway node
 
-For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), executes the playbook:
+For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), execute the command:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "gateway"
+make gateway-setup
 ```
 
 ### Install cluster nodes.
@@ -407,20 +417,20 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 ### Configure cluster nodes
 
-For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), executes the playbook:
+For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), execute the command:
 
 ```shell
-ansible-playbook setup_picluster.yml --tags "node"
+make nodes-setup
 ```
 
 ## Configuring external services (Minio and Hashicorp Vault)
 
-Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the playbook
+Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the command:
 
 ```shell
-ansible-playbook external_services.yml
+make external-services
 ```
-Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gateway`.
+Ansible Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gateway`.
 
 {{site.data.alerts.note}}
 All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
@@ -428,10 +438,10 @@ All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
 
 ## Configuring OS level backup (restic)
 
-Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the playbook:
+Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the command:
 
 ```shell
-ansible-playbook backup_configuration.yml
+make configure-os-backup
 ```
 Minio S3 server running in `node1` will be used as backup backend.
 
@@ -466,18 +476,18 @@ ArgoCD is used to deploy automatically packaged applications contained in the re
 
 ### K3S Installation
 
-To install K3S cluster execute the playbook:
+To install K3S cluster, execute the command:
 
 ```shell
-ansible-playbook k3s_install.yml
+make k3s-install
 ```
 
 ### K3S Bootstrap
 
-To bootstrap the cluster, run the playbook:
+To bootstrap the cluster, run the command:
 
 ```shell
-ansible-playbook k3s_bootstrap.yml
+make k3s-bootstrap
 ```
 Argo CD will be installed and it will automatically deploy all cluster applications automatically from git repo
 
@@ -489,7 +499,7 @@ Argo CD will be installed and it will automatically deploy all cluster applicati
 If you mess anything up in your Kubernetes cluster, and want to start fresh, the K3s Ansible playbook includes a reset playbook, that you can use to remove the installation of K3S:
 
 ```shell
-ansible-playbook k3s_reset.yml
+make k3s-reset
 ```
 
 ## Shutting down the Raspberry Pi Cluster
@@ -503,32 +513,30 @@ For doing a controlled shutdown of the cluster execute the following commands
 - Step 1: Shutdown K3S workers nodes:
 
   ```shell
-  ansible-playbook shutdown.yml --limit k3s_worker
+  make shutdown-k3s-worker
   ```
-  Command `shutdown -h 1m` is sent to each k3s-worker. Wait for workers nodes to shutdown.
 
 - Step 2: Shutdown K3S master nodes:
 
   ```shell
-  ansible-playbook shutdown.yml --limit k3s_master
+  make shutdown-k3s-master
   ```
-  Command `shutdown -h 1m` is sent to each k3s-master. Wait for master nodes to shutdown.
 
 - Step 3: Shutdown gateway node:
   ```shell
-  ansible-playbook shutdown.yml --limit gateway
+  make shutdown-gateway
   ```
 
-`shutdown.yml` playbook connects to each Raspberry PI in the cluster and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
+`shutdown` commands connects to each Raspberry PI in the cluster and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
 
 After a few minutes, all raspberry pi will be shutdown. You can notice that when the Switch ethernet ports LEDs are off. Then it is safe to unplug the Raspberry PIs.
 
 ## Updating Ubuntu packages
 
-To automatically update Ubuntu OS packages run the following playbook:
+To automatically update Ubuntu OS packages, run the following command:
 
 ```shell
-ansible-playbook update.yml
+make os-upgrade
 ```
 
 This playbook automatically updates OS packages to the latest stable version and it performs a system reboot if needed.

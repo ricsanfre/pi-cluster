@@ -283,3 +283,19 @@ We will create SSH keys for two different users:
   cat id_rsa.pub 
   ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
   ```
+
+## Install aditional packages
+
+The following packages are also needed:
+
+- Install Gnu GPG packet. Ansible files encryption
+
+  ```shell
+  sudo apt install gnupg
+  ```
+
+- Install pwgen to generate random passwords
+
+  ```shell
+  sudo apt install pwgen
+  ```
