@@ -19,6 +19,11 @@ apps:
     namespace: metallb
     path: argocd/system/metallb
     syncWave: 1
+    # K3S system-upgrade
+  - name: system-upgrade
+    namespace: system-ugrade
+    path: argocd/system/system-upgrade
+    syncWave: 1
     # Cert-Manager and Trust Manager
   - name: cert-manager
     namespace: cert-manager
