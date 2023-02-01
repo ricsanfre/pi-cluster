@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "01-11-2022"
+last_modified_at: "01-02-2023"
 ---
 
 
@@ -185,6 +185,80 @@ To enable remote access to the cluster using `kubectl` and `helm` applications f
 
 - Step 4: Enable HTTPS connectivity on port 6443 between the server and the k3s control node
 
+
+## K3S Automatic Upgrade
+
+K3s cluster upgrade can be automated using Rancher's system-upgrade-controller. This controller uses a custom resource definition (CRD), `Plan`, to schedule upgrades based on the configured plans
+
+See more details in [K3S Automated Upgrades documentation](https://docs.k3s.io/upgrades/automated)
+
+- Step 1. Install Rancher's system-upgrade-controller
+
+  ```shell
+  kubectl apply -f https://github.com/rancher/system-upgrade-controller/releases/latest/download/system-upgrade-controller.yaml
+  ```
+
+- Step 2. Configure upgrade plans
+
+  At least two upgrade plans need to be configured: a plan for upgrading server (master) nodes and a plan for upgrading agent (worker) nodes.
+
+  Plan for master: `k3s-master-upgrade.yml`
+
+  ```yml
+  apiVersion: upgrade.cattle.io/v1
+  kind: Plan
+  metadata:
+    name: k3s-server
+    namespace: system-upgrade
+    labels:
+      k3s-upgrade: server
+  spec:
+    nodeSelector:
+      matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+    serviceAccountName: system-upgrade
+    concurrency: 1
+    # Cordon node before upgrade it
+    cordon: true
+    upgrade:
+      image: rancher/k3s-upgrade
+    version: <new_version>
+  ```
+  Plan for worker: `k3s-agent-upgrade.yml`
+
+  ```yml
+  apiVersion: upgrade.cattle.io/v1
+  kind: Plan
+  metadata:
+    name: k3s-agent
+    namespace: system-upgrade
+    labels:
+      k3s-upgrade: agent
+  spec:
+    nodeSelector:
+      matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
+    serviceAccountName: system-upgrade
+    # Wait for k3s-server upgrade plan to complete before executing k3s-agent plan
+    prepare:
+      image: rancher/k3s-upgrade
+      args:
+        - prepare
+        - k3s-server
+    concurrency: 1
+    # Cordon node before upgrade it
+    cordon: true
+    upgrade:
+      image: rancher/k3s-upgrade
+    version: <new_version>
+  ```
+- Step 3. Execute upgrade plans
+
+  ```shell
+  kubectl apply -f k3s-server-upgrade.yml k3s-agent-upgrade.yml
+  ```
 
 ## Reset the cluster
 
