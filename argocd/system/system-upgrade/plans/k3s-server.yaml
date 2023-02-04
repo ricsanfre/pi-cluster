@@ -10,6 +10,11 @@ spec:
     matchExpressions:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
+  # Enable plan deployment on master node (noSchedulable by installation)
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
   serviceAccountName: system-upgrade
   concurrency: 1
   # Cordon node before upgrade it
