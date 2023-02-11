@@ -12,6 +12,10 @@ prepare-ansible: install-ansible-requirements gpg-init ~/.vault/vault_passphrase
 .PHONY: clean
 clean: k3s-reset external-services-reset
 
+.PHONY: ansible-runner-setup
+ansible-runner-setup:
+	make -C ansible-runner
+
 .PHONY: init
 init: os-upgrade gateway-setup nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap configure-monitoring-gateway
 
