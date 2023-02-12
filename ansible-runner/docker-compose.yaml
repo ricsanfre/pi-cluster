@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  # Ansible-runner
+  ansible-runner:
+    image: ansible-runner
+    build:
+      context: .
+    command: tail -f /dev/null
+    container_name: ansible-runner
+    restart: unless-stopped
+    volumes:
+      - ./../ansible:/runner/project
+      - ./runner/artifacts:/runner/artifacts
+      - ./runner/.gnupg:/home/runner/.gnupg
+      - ./runner/.vault:/home/runner/.vault
+      - ./runner/scripts:/home/runner/scripts
