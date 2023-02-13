@@ -1,5 +1,5 @@
 DOCKER_IMG=ansible-runner
+RUNNER_CONTAINER=ansible-runner
 BUILD_ARGS=
-GPG_EMAIL=ricsanfre@gmail.com
-GPG_NAME="Ricardo Sanchez"
-GPG_TTY=/dev/console
+GPG_EMAIL=vault-ansible@picluster
+GPG_NAME=Vault-Ansible
