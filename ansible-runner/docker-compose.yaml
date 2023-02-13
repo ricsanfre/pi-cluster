@@ -15,3 +15,5 @@ services:
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
       - ./runner/scripts:/home/runner/scripts
+    env_file:
+      - ./runner/env

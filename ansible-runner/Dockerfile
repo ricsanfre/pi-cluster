@@ -31,4 +31,7 @@ RUN /usr/sbin/groupadd $USER && \
 
 USER $USER
 
+RUN echo "export GPG_TTY=\$(tty)" >> /home/runner/.bashrc
+
+
 WORKDIR $FOLDER
