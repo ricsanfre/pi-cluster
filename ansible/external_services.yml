@@ -6,10 +6,7 @@
   gather_facts: true
   tags: [certificates]
   vars:
-    certbot_venv: "{{ playbook_dir }}/../certbot"
-    certbot_email: "{{ acme_issuer_email }}"
-    dns_ionos_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
-    dns_ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+    propagation_seconds: 300
     selfsigned_certificates_path: "../certificates"
   pre_tasks:
     # Include vault variables
@@ -18,15 +15,30 @@
     # Include picluster variables
     - name: Include picluster variables
       include_vars: "vars/picluster.yml"
-  roles:
-    - role: certbot
-      vars:
-        - install_python_packages: false
+
+    - name: Copy ionos secret file
+      template:
+        src: "{{ item.template }}"
+        dest: "{{ item.dest }}"
+        mode: 0600
+      with_items:
+        - template: ionos-credentials.ini.j2
+          dest: "~/.secrets/ionos-credentials.ini"
       when: enable_letsencrypt
 
   tasks:
     - name: Create Letsencrytp certificate for external services
-      command: "{{ certbot_venv }}/bin/certbot-create-cert.sh {{ item }}"
+      command: |
+        certbot certonly \
+        --authenticator dns-ionos \
+        --dns-ionos-credentials ~/.secrets/ionos-credentials.ini \
+        --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --agree-tos \
+        --non-interactive \
+        --rsa-key-size 4096 \
+        -m {{ acme_issuer_email }} \
+        -d {{ item }}
       register: certbot_create
       changed_when:
         - certbot_create.rc==0
@@ -77,7 +89,6 @@
   become: true
   vars:
     server_hostname: "{{ minio_hostname }}"
-    certbot_venv: "{{ playbook_dir }}/../certbot"
     selfsigned_certificates_path: "../certificates"
   pre_tasks:
     # Include vault variables
@@ -96,7 +107,7 @@
     - name: Get letsencrypt TLS certificate for minio
       block:
         - name: check TLS certificate for minio exits
-          command: "{{ certbot_venv }}/bin/certbot-wrapper.sh certificates -d {{ minio_hostname }}"
+          command: "certbot certificates -d {{ minio_hostname }}"
           register: certbot_certificates
           delegate_to: localhost
           become: false
@@ -131,7 +142,6 @@
   become: true
   vars:
     server_hostname: "{{ vault_hostname }}"
-    certbot_venv: "{{ playbook_dir }}/../certbot"
     selfsigned_certificates_path: "../certificates"
 
   pre_tasks:
@@ -153,7 +163,7 @@
     - name: Get letsencrypt TLS certificate for vault
       block:
         - name: check TLS certificate for vault exits
-          command: "{{ certbot_venv }}/bin/certbot-wrapper.sh certificates -d {{ vault_hostname }}"
+          command: "certbot certificates -d {{ vault_hostname }}"
           register: certbot_certificates
           delegate_to: localhost
           become: false
