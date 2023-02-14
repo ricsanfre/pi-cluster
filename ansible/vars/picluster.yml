@@ -71,6 +71,8 @@ enable_letsencrypt: true
 # IONOS API credentials
 ionos_public_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
 ionos_secret: "{{ vault.certmanager.ionos.secret }}"
+ionos_api_endpoint: https://api.hosting.ionos.com
+
 
 # issuer email
 acme_issuer_email: admin@ricsanfre.com

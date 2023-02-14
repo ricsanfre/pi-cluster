@@ -14,6 +14,7 @@ services:
       - ./runner/artifacts:/runner/artifacts
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
+      - ./runner/.secrets:/home/runner/.secrets
       - ./runner/scripts:/home/runner/scripts
       - ./runner/.ssh:/home/runner/.ssh
       - ./certbot/log:/var/log/letsencrypt
