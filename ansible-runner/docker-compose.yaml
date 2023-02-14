@@ -16,5 +16,8 @@ services:
       - ./runner/.vault:/home/runner/.vault
       - ./runner/scripts:/home/runner/scripts
       - ./runner/.ssh:/home/runner/.ssh
+      - ./certbot/log:/var/log/letsencrypt
+      - ./certbot/config:/etc/letsencrypt
+      - ./certbot/work:/var/lib/letsencrypt
     env_file:
       - ./runner/env
