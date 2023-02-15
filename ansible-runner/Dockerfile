@@ -31,14 +31,13 @@ RUN /usr/sbin/groupadd $USER && \
 
 RUN for dir in \
       /runner \
-      /runner/env \
-      /runner/inventory \
-      /runner/project \
-      /runner/artifacts ; \
+      /var/lib/letsencrypt \
+      /etc/letsencrypt \
+      /var/log/letsencrypt ; \
     do mkdir -p $dir ; chown $USER:$USER $dir; chmod 775 $dir ; done
 
 USER $USER
 
 RUN echo "export GPG_TTY=\$(tty)" >> /home/runner/.bashrc
 
-WORKDIR /runner/project
+WORKDIR /runner

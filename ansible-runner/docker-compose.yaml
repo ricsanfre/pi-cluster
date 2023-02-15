@@ -10,8 +10,7 @@ services:
     container_name: ansible-runner
     restart: unless-stopped
     volumes:
-      - ./../ansible:/runner/project
-      - ./runner/artifacts:/runner/artifacts
+      - ./../ansible:/runner
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
       - ./runner/.secrets:/home/runner/.secrets
