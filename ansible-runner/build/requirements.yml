@@ -25,9 +25,13 @@ roles:
   - name: ricsanfre.vault
     version: v1.0.4
 collections:
+  - name: community.general
+    version: 6.3.0
   - name: kubernetes.core
     version: 2.3.2
   - name: community.hashi_vault
     version: 4.1.0
   - name: community.sops
     version: 1.6.0
+  - name: ansible.posix
+    version: 1.5.1
