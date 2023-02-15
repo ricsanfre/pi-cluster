@@ -11,6 +11,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./../ansible:/runner
+      - ./../argocd:/argocd
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
       - ./runner/.secrets:/home/runner/.secrets
