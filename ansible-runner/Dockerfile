@@ -29,9 +29,16 @@ RUN /usr/sbin/groupadd $USER && \
     /usr/sbin/useradd $USER -m -d $FOLDER -g $USER -s /bin/bash && \
     echo $USER 'ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+RUN for dir in \
+      /runner \
+      /runner/env \
+      /runner/inventory \
+      /runner/project \
+      /runner/artifacts ; \
+    do mkdir -p $dir ; chown $USER:$USER $dir; chmod 775 $dir ; done
+
 USER $USER
 
 RUN echo "export GPG_TTY=\$(tty)" >> /home/runner/.bashrc
 
-
-WORKDIR $FOLDER
+WORKDIR /runner/project
