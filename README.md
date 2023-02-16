@@ -195,7 +195,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 2. Use other DNS provider.
 
-   Cert-manager / Certbot used to automatically obtain certificates from Let's Encrypt can be used with other DNS providers. This will need further modifications in the way cert-manager application is deployed (new providers and/or webhooks/plugins might be required).
+   Cert-manager / Certbot, which are the tools that automatically obtain certificates from Let's Encrypt, can be configured to use other DNS providers. It will need further modifications in the way cert-manager application is deployed (new providers and/or webhooks/plugins might be required).
 
    Currently only acme issuer (letsencytp) using IONOS as dns-01 challenge provider is configured. Check list of [supported dns01 providers](https://cert-manager.io/docs/configuration/acme/dns01/#supported-dns01-providers).
 

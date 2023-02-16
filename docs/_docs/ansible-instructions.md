@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
-last_modified_at: "23-01-2023"
+last_modified_at: "16-02-2023"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -16,11 +16,11 @@ Step-by-step manual process to deploy and configure each component is also descr
 
 {{site.data.alerts.end}}
 
-## Preparing the Ansible Control node
+## Ansible control node setup
 
-- Set-up a Ubuntu Server VM in your laptop to become ansible control node `pimaster`  and create the SSH public/private keys needed for connecting remotely to the servers
+- Use your own Linux-based PC or set-up a Ubuntu Server VM to become ansible control node (`pimaster`)
 
-  Follow instructions in ["Ansible Control Node"](/docs/pimaster/).
+  In case of building a VM check out tip for automating its creation in ["Ansible Control Node"](/docs/pimaster/).
 
 - Clone [Pi-Cluster Git repo](https://github.com/ricsanfre/pi-cluster) or download using the 'Download ZIP' link on GitHub.
 
@@ -28,22 +28,22 @@ Step-by-step manual process to deploy and configure each component is also descr
   git clone https://github.com/ricsanfre/pi-cluster.git
   ```
 
-- Edit GPG_NAME and GPG_EMAIL variables in `Makefile`
+- Install `docker` and `docker-compose`
 
-- Prepare Ansible execution environment:
+  Follow instructions in ["Ansible Control Node: Installing Ansible Runtime environment"](/docs/pimaster/#installing-ansible-runtime-environment).
+
+- Create and configure Ansible execution environment (`ansible-runner`):
 
   ```shell
-  make prepare-ansible
+  make ansible-runner-setup
   ```
-  Ansible playbooks depend on external roles that need to be installed, command `ansible-galaxy install -r requirements.yml` is executed, GPG key for encrypting passwords created, ansible vault automatic encrytpion configured, and pi-cluster credentials file (`vault.yml`) created and encrypted.
 
-{{site.data.alerts.important}}
+  This will automatically build and start `ansible-runner` docker container (including all packages and its dependencies), generate GPG key for encrypting with ansible-vault and create SSH key for remote connections.
 
-All ansible commands (`ansible`, `ansible-galaxy`, `ansible-playbook`, `ansible-vault`) need to be executed within [`/ansible`] directory, so the configuration file [`/ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) can be used. Playbooks are configured to be launched from this directory.
-
-{{site.data.alerts.end}}
 
 ## Ansible configuration
+
+Ansible configuration (variables and inventory files) might need to be adapted to your particular environment
 
 ### Inventory file
 
@@ -51,9 +51,9 @@ Adjust [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.y
 
 {{site.data.alerts.tip}}
 
-If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, field `mac` (node's mac address) is the only field that you need to change in `inventory.yml` file. MAC addresses will be used to configure automatically DHCP server and assign the proper IP to each node.
+If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, `mac` field (node's mac address) is the only that you need to change in `inventory.yml` file. MAC addresses are used by DHCP server to assign the proper IP to each node.
 
-This information can be taken when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
+MAC addresses can be obtained when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
 
 {{site.data.alerts.end}}
 
@@ -61,227 +61,18 @@ This information can be taken when Raspberry PI is booted for first time during 
 
 The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH key file location need to be specified
 
-- Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) to set the UNIX user to be used by Ansible in the remote connection (default value `ansible`)
+Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) to set the UNIX user to be used by Ansible in the remote connection, `ansible_user` (default value `ansible`) and its SSH private key, `ansible_ssh_private_key_file`
 
-- Modify [`ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) file to include the path to the SSH key of the `ansible` user used in remote connections (`private_key_file` variable)
+  ```yml
+  # Remote user name
+  ansible_user: ansible
 
+  # Ansible ssh private key
+  ansible_ssh_private_key_file: ~/.ssh/id_rsa
   ```
-  # SSH key
-  private_key_file = $HOME/ansible-ssh-key.pem
-  ```
 
-### Encrypting secrets/key variables
+By default it uses the ssh key automatically created when initializing ansible-runner (`make ansible-runner-setup`) located at `ansible-runner/runner/.ssh` directory.
 
-{{site.data.alerts.important}}
-
-All tasks in this section are automated as part of the execution of preperation command `make prepare-ansible`
-
-This command will initialize GPG encryption key, configure ansible vault encryption, and generate `vault.yml` automatically with random passwords.
-
-{{site.data.alerts.end}}
-
-
-All secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
-
-`vault.yml` file is a Ansible vars file containing just a unique yaml variable, `vault`: a yaml dictionary containing all keys/passwords used by the different cluster components.
-
-vault.yml sample file is like this:
-
-```yml
----
-vault:
-  # K3s secrets
-  k3s:
-    k3s_token: s1cret0
-  # traefik secrets
-  traefik:
-    basic_auth:
-      user: admin
-      passwd: s1cret0
-  # Minio S3 secrets
-  minio:
-    root:
-      user: root
-      key: supers1cret0
-    restic:
-      user: restic
-      key: supers1cret0
-....
-```
-
-The manual steps to encrypt passwords/keys used in all Playbooks is the following:
-
-1. Edit content `var/vault.yml` file specifying your own values for each of the key/password/secret specified.
-
-2. Encrypt file using ansible-vault
-
-   ```shell
-   ansible-vault encrypt vault.yml
-   ```
-   The command ask for a ansible vault password to encrypt the file.
-   After executing the command the file `vault.yml` is encrypted. Yaml content file is not readable.
-
-   {{site.data.alerts.note}}
-  
-   The file can be decrypted using the following command
-
-   ```shell
-   ansible-vault decrypt vault.yml
-   ```
-   The password using during encryption need to be provided to decrypt the file
-   After executing the command the file `vault.yml` is decrypted and show the content in plain text.
-
-   File can be viewed decrypted without modifiying the file using the command
-
-   ```shell
-   ansible-vault view vault.yaml 
-   ```
-   {{site.data.alerts.end}}
-
-{{site.data.alerts.important}}
-
-You do not need to modify and ecrypt manually `vault.yml` file. The file is generated automatically and  encrypted executing an Ansible playbook, see instructions below.
-
-{{site.data.alerts.end}}
-
-#### Automate Ansible Vault decryption with GPG
-
-When using encrypted vault.yaml file all playbooks executed with `ansible-playbook` command need the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
-
-```shell
-ansible-playbook playbook.yml --ask-vault-pass
-```
-
-Ansible vault password decryption can be automated using `--vault-password-file` parameter , instead of manually providing the password with each execution (`--ask-vault-pass`).
-
-Ansible vault password file can contain the password in plain-text or a script able to obtain the password.
-
-vault-password-file location can be added to ansible.cfg file, so it is not needed to pass as parameter each time ansible-playbook command is executed
-
-Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-password-file script.
-
-- [GnuPG](https://gnupg.org/) Installation and configuration
-
-  In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
-
-  GnuPG package has to be installed and a GPG key pair need to be created for encrytion/decryption 
-
-  - Step 1. Install GnuPG packet
-
-    ```shell
-    sudo apt install gnupg 
-    ```
-
-    Check if it is installed
-    ```shell
-    gpg --help
-    ```
-
-  - Step 2. Generating Your GPG Key Pair
-
-    GPG key-pair consist on a public and private key used for encrypt/decrypt
-
-    ```shell
-    gpg --gen-key
-    ```
-
-    The process requires to provide a name, email-address and user-id which identify the recipient
-
-    The output of the command is like this:
-
-      ```
-      gpg (GnuPG) 2.2.4; Copyright (C) 2017 Free Software Foundation, Inc.
-      This is free software: you are free to change and redistribute it.
-      There is NO WARRANTY, to the extent permitted by law.
-
-      Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
-
-      GnuPG needs to construct a user ID to identify your key.
-
-      Real name: Ricardo
-      Email address: ricsanfre@gmail.com
-      You selected this USER-ID:
-          "Ricardo <ricsanfre@gmail.com>"
-
-      Change (N)ame, (E)mail, or (O)kay/(Q)uit? O
-      We need to generate a lot of random bytes. It is a good idea to perform
-      some other action (type on the keyboard, move the mouse, utilize the
-      disks) during the prime generation; this gives the random number
-      generator a better chance to gain enough entropy.
-      We need to generate a lot of random bytes. It is a good idea to perform
-      some other action (type on the keyboard, move the mouse, utilize the
-      disks) during the prime generation; this gives the random number
-      generator a better chance to gain enough entropy.
-      gpg: /home/ansible/.gnupg/trustdb.gpg: trustdb created
-      gpg: key D59E854B5DD93199 marked as ultimately trusted
-      gpg: directory '/home/ansible/.gnupg/openpgp-revocs.d' created
-      gpg: revocation certificate stored as '/home/ansible/.gnupg/openpgp-revocs.d/A4745167B84C8C9A227DC898D59E854B5DD93199.rev'
-      public and secret key created and signed.
-
-      pub   rsa3072 2021-08-13 [SC] [expires: 2023-08-13]
-            A4745167B84C8C9A227DC898D59E854B5DD93199
-      uid                      Ricardo <ricsanfre@gmail.com>
-      sub   rsa3072 2021-08-13 [E] [expires: 2023-08-13]
-
-      ```
-
-    During the generation process you will be prompted to provide a passphrase.
-
-    This passphrase is needed to decryp
-
-
-- Generate Vault password and store it in GPG
-
-  Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
-
-  - Step 1. Install pwgen packet
-
-      ```shell
-      sudo apt install pwgen 
-      ```
-
-  - Step 2: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
-
-    ```shell
-    mkdir -p $HOME/.vault
-    pwgen -n 71 -C | head -n1 | gpg --armor --recipient <recipient> -e -o $HOME/.vault/vault_passphrase.gpg
-    ```
-
-    where `<recipient>` must be the email address configured during GPG key creation. 
-
-  - Step 3: Generate a script `vault_pass.sh`
-
-    ```shell
-    #!/bin/sh
-    gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
-    ```
-  - Step 4: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
-
-    ```
-    [defaults]
-    vault_password_file=vault_pass.sh
-    ```
-  
-  {{site.data.alerts.note}}
-  If this repository is clone steps 3 and 4 are not needed since the files are already there.
-  {{site.data.alerts.end}}  
-  
-- Encrypt vautl.yaml file using ansible-vault and GPG password
-
-  ```shell
-  ansible-vault encrypt vault.yaml
-  ```
-  This time only your GPG key passphrase will be asked to automatically encrypt/decrypt the file
-
-#### Vault credentials generation 
-
-Execute playbook to generate ansible vault variable file (`var/vault.yml`) containing all credentials/passwords. Random generated passwords will be generated for all cluster services.
-
-Execute the following command:
-```shell
-ansible-playbook create_vault_credentials.yml
-```
-Credentials for external cloud services (IONOS DNS API credentials) will be asked during the execution of the script.
 
 ### Modify Ansible Playbook variables
 
@@ -342,7 +133,7 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
 
 Default configuration, assumes the use of Letscrypt TLS certificates and IONOS DNS for DNS01 challenge.
 
-As an alternative, a custom CA can be created and use it to sign all certificates:
+As an alternative, a custom CA can be created and use it to sign all certificates.
 The following changes need to be done:
 
 - Modify Ansible variable `enable_letsencrypt` to false in `/ansible/picluster.yml` file
@@ -351,7 +142,18 @@ The following changes need to be done:
 {{site.data.alerts.end}}
 
 
-## Installing the nodes
+### Vault credentials generation 
+
+Generate ansible vault variable file (`var/vault.yml`) containing all credentials/passwords. Random generated passwords will be generated for all cluster services.
+
+Execute the following command:
+```shell
+make ansible-credentials
+```
+Credentials for external cloud services (IONOS DNS API credentials) are asked during the execution of the playbook.
+
+
+## Cluster nodes setup
 
 ### Update Raspberry Pi firmware
 
