@@ -41,7 +41,7 @@ velero:
       config:
         region: eu-west-1
         s3ForcePathStyle: true
-        s3Url: https://s3.picluster.ricsanfre.com:9091
+        s3Url: https://s3.ricsanfre.com:9091
         # insecureSkipTLSVerify: true
     # Enable CSI snapshot support
     features: EnableCSI

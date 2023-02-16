@@ -83,7 +83,7 @@
 ## Install Minio S3 Storage Server
 
 - name: Install Minio S3 Storage Server
-  hosts: node1
+  hosts: s3
   gather_facts: true
   tags: [s3]
   become: true
