@@ -14,6 +14,11 @@ all:
           ansible_connection: local
           ip: 10.0.0.10
           mac: 08:00:27:f3:6b:dd
+    external:
+      hosts:
+        s3:
+          hostname: s3
+          ansible_host: s3.ricsanfre.com
     picluster:
       hosts:
         node1:
