@@ -52,6 +52,11 @@ apps:
     namespace: longhorn-system
     path: argocd/system/longhorn-system
     syncWave: 5
+    # Minio Object Storage
+  - name: minio
+    namespace: minio
+    path: argocd/system/minio
+    syncWave: 5
     # Velero Backup
   - name: velero
     namespace: velero
