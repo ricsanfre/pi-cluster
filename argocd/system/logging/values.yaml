@@ -193,6 +193,10 @@ fluentd:
   rbac:
     create: false
 
+  # Do not create pod service policy (from removed kubernetes 1.25)
+  podSecurityPolicy:
+    enabled: false
+
   ## Additional environment variables to set for fluentd pods
   env:
     # Path to fluentd conf file
