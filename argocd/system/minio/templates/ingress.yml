@@ -1,0 +1,63 @@
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-console-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
+    cert-manager.io/common-name: {{ .Values.ingress.console }}
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.console }}
+      secretName: minio-tls
+  rules:
+    - host: {{ .Values.ingress.console }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-console
+                port:
+                  number: 9001
+
+---
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # HTTPS as entry point
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
+    cert-manager.io/common-name: {{ .Values.ingress.host }}
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: minio-tls
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio
+                port:
+                  number: 9000

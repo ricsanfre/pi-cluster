@@ -1,0 +1,32 @@
+# Ingress configuration
+ingress:
+  host: s3.picluster.ricsanfre.com
+  console: minio.picluster.ricsanfre.com
+  # configure cert-manager issuer
+  certmanager:
+    # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
+    # tlsIssuer=ca to generate a CA-signed certificate (not valid)
+    tlsIssuer: letsencrypt
+
+
+###################
+# minio subchart
+###################
+
+minio:
+  # Get root user/password from secret
+  existingSecret: minio-secret
+
+  # Number of drives attached to a node
+  drivesPerNode: 1
+  # Number of MinIO containers running
+  replicas: 3
+  # Number of expanded MinIO clusters
+  pools: 1
+
+  # Persistence
+  persistence:
+    enabled: true
+    storageClass: "longhorn"
+    accessMode: ReadWriteOnce
+    size: 10Gi
