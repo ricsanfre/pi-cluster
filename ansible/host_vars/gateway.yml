@@ -59,7 +59,8 @@ ntp_allow_hosts: [10.0.0.0/24]
 # tcp 9100 Prometheus (fluent-bit)
 in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201 }'
 in_udp_port: '{ snmp, domain, ntp, bootps }'
-forward_tcp_port: '{ http, https, ssh }'
+# tcp 9091 minio server
+forward_tcp_port: '{ http, https, ssh, 9091 }'
 forward_udp_port: '{ domain, ntp }'
 # Enabling forwarding and NAT
 firewall_forward_enabled: true
