@@ -39,9 +39,9 @@ minio:
   # Minio Buckets
   buckets:
     - name: k3s-loki
-      policy: read-write
+      policy: none
     - name: k3s-tempo
-      policy: read-write
+      policy: none
 
   # Minio Policies
   policies:
