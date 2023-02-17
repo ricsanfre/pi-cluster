@@ -30,3 +30,8 @@ minio:
     storageClass: "longhorn"
     accessMode: ReadWriteOnce
     size: 10Gi
+
+  # Resource request
+  resources:
+    requests:
+      memory: 1Gi
