@@ -25,11 +25,10 @@ tempo-distributed:
       backend: s3
       s3:
         bucket: k3s-tempo
-        endpoint: s3.picluster.ricsanfre.com:9091
-        region: eu-west-1
+        endpoint: minio.minio:9000
         access_key: ${MINIO_ACCESS_KEY_ID}
         secret_key: ${MINIO_SECRET_ACCESS_KEY}
-        insecure: false
+        insecure: true
 
   # Configure distributor
   distributor:
