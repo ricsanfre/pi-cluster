@@ -18,7 +18,7 @@
   become: false
   register: vault_login
   changed_when: false
-  delegate_to: gateway
+  delegate_to: vault
 
 - name: Get vault token
   set_fact:

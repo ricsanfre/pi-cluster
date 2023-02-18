@@ -1,12 +1,12 @@
 ---
 # Minio prometheus bearer token was created and stored in filesystem
-- name: Load prometheus bearer token from file in node1
+- name: Load prometheus bearer token from file in vault node
   command: "jq -r '.bearerToken' /etc/minio/prometheus_bearer.json"
   register: root_token
   become: true
   changed_when: false
   when: minio_prom_bearer_token is not defined
-  delegate_to: node1
+  delegate_to: vault
 
 - name: Get bearer token
   set_fact:
