@@ -17,7 +17,7 @@
   - node
 - title: External Services
   docs:
-  - minio
+  - s3-backup
   - vault
 - title: K3S Installation
   docs:
@@ -34,6 +34,7 @@
 - title: Storage
   docs:
   - longhorn
+  - minio
 - title: Monitoring
   docs:
   - observability

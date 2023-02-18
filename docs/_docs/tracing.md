@@ -53,9 +53,10 @@ Grafana Tempo needs to store two different types of data: chunks and indexes. Bo
 
 {{site.data.alerts.note}}
 
-As part of the backup infrastructure a bare-metal Minio S3 server has been configured in `node1`. See documentation: [Backup & Restore - Minio S3 Object Store Server](/docs/backup/#minio-s3-object-storage-server). So I will re-use it as Tempo backend.
+Tempo helm chart is able to install this Minio service as a subchart, but its installation will be disabled and Minio Storage Service already deployed in the cluster will be used as Tempo's backend. 
 
-As alternative a Minio server can be deployed as a another kubernetes service. Tempo distribubted helm chart is able to install this Minio service as a subchart.
+As part of Minio Storage Service installation, Tempo's S3 bucket, policy and user is already configured.
+See documentation: [Minio S3 Object Storage Service](/docs/minio).
 
 {{site.data.alerts.end}}
 

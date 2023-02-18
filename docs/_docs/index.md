@@ -202,7 +202,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 ### Self-hosted external services 
 
-There is another list of services that I have decided to run outside the kuberentes cluster but not using any public cloud service.
+There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them on VMs running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |

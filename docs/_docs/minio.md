@@ -1,281 +1,215 @@
 ---
 title: Minio S3 Object Storage Service
 permalink: /docs/minio/
-description: How to deploy a Minio S3 object storage server in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "27-12-2022"
+description: How to deploy a Minio S3 object storage service in our Raspberry Pi Kubernetes Cluster.
+last_modified_at: "17-02-2023"
 ---
 
-Minio can be deployed as a Kuberentes service or as stand-alone in bare-metal environment. Since I want to use Minio Server for backing-up/restoring the cluster itself, I will go with a bare-metal installation, considering Minio as an external service in Kubernetes.
+Minio will be deployed as a Kuberentes service providing Object Store S3-compatile backend for other Kubernetes Services (Loki, Tempo, Mimir, etc. )
 
-Official [documentation](https://docs.min.io/minio/baremetal/installation/deploy-minio-standalone.html) can be used for installing stand-alone Minio Server in bare-metal environment. 
+Official [Minio Kubernetes installation documentation](https://min.io/docs/minio/kubernetes/upstream/index.html) uses Minio Operator to deploy and configure a multi-tenant S3 cloud service.
 
-For a more secured and multi-user Minio installation the instructions of this [post](https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting) can be used.
+Instead of using Minio Operator, [Vanilla Minio helm chart](https://github.com/minio/minio/tree/master/helm/minio) will be used. Not need to support multi-tenant installations and Vanilla Minio helm chart supports also the automatic creation of buckets, policies and users. Minio Operator creation does not automate this process.
 
-For installing Minio S3 storage server, `node1` will be used. `node1` has attached a SSD Disk of 480 GB that is not being used by Longhorn Distributed Storage solution. Longhorn storage solution is not deployed in k3s master node and thus storage replicas are only using storage resources of `node2`, `node3` and `node4`.
 
-Minio installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.minio**. This role, installs Minio Server and Minio Client and automatically create S3 buckets, and configure users and ACLs for securing the access.
+## Minio installation
 
-## Minio installation (baremetal server)
 
-- Step 1. Create minio's UNIX user/group
+Installation using `Helm` (Release 3):
 
-  ```shell
-  sudo groupadd minio
-  sudo useradd minio -g minio
-  ```
-- Step 2. Create minio's S3 storage directory
+- Step 1: Add the Minio Helm repository:
 
   ```shell
-  sudo mkdir /storage/minio
-  chown -R minio:minio /storage/minio
-  chmod -R 750 /storage/minio
+  helm repo add minio https://charts.min.io/
   ```
-
-- Step 3. Create minio's config directories
+- Step2: Fetch the latest charts from the repository:
 
   ```shell
-  sudo mkdir -p /etc/minio
-  sudo mkdir -p /etc/minio/ssl
-  sudo mkdir -p /etc/minio/policy
-  chown -R minio:minio /etc/minio
-  chmod -R 750 /etc/minio
+  helm repo update
   ```
-
-- Step 4. Download server binary (`minio`) and minio client (`mc`) and copy them to `/usr/local/bin`
+- Step 3: Create namespace
 
   ```shell
-   wget https://dl.min.io/server/minio/release/linux-<arch>/minio
-   wget https://dl.minio.io/client/mc/release/linux-<arch>/mc
-   chmod +x minio
-   chmod +x mc
-   sudo mv minio /usr/local/bin/minio
-   sudo mv mc /usr/local/bin/mc
-  ```
-  where `<arch>` is amd64 or arm64.
-
-- Step 5: Create minio Config file `/etc/minio/minio.conf`
-
-  This file contains environment variables that will be used by minio server.
-  ```
-  # Minio local volumes.
-  MINIO_VOLUMES="/storage/minio"
-
-  # Minio cli options.
-  MINIO_OPTS="--address :9091 --console-address :9092 --certs-dir /etc/minio/ssl"
-
-  # Access Key of the server.
-  MINIO_ROOT_USER="<admin_user>"
-  # Secret key of the server.
-  MINIO_ROOT_PASSWORD="<admin_user_passwd>"
-  # Minio server region
-  MINIO_SITE_REGION="eu-west-1"
-  # Minio server URL
-  MINIO_SERVER_URL="https://s3.picluster.ricsanfre.com:9091"
+  kubectl create namespace minio
   ```
 
-  Minio is configured with the following parameters:
+- Step 3: Create Minio secret
 
-  - Minio Server API Port 9091 (`MINIO_OPTS`="--address :9091")
-  - Minio Console Port: 9092 (`MINIO_OPTS`="--console-address :9092")
-  - Minio Storage data dir (`MINIO_VOLUMES`): `/storage/minio`
-  - Minio Site Region (`MINIO_SITE_REGION`): `eu-west-1`
-  - SSL certificates stored in (`MINIO_OPTS`="--certs-dir /etc/minio/ssl"): `/etc/minio/ssl`.
-  - Minio server URL (`MINIO_SERVER_URL`): Url used to connecto to Minio Server API
 
-- Step 6. Create systemd minio service file `/etc/systemd/system/minio.service`
-
+  The following secret need to be created, containing Minio's root user and password, and keys from others users that are going to be provisioned automatically when installing the helm chart (loki, tempo):
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: minio-secret
+    namespace: minio
+  type: Opaque
+  data:
+    rootUser: < minio_root_user | b64encode >
+    rootPassword: < minio_root_key | b64encode >
+    lokiPassword: < minio_loki_key | b64encode >
+    tempoPassword: < minio_tempo_key | b64encode >
   ```
-  [Unit]
-  Description=MinIO
-  Documentation=https://docs.min.io
-  Wants=network-online.target
-  After=network-online.target
-  AssertFileIsExecutable=/usr/local/bin/minio
 
-  [Service]
-  WorkingDirectory=/usr/local/
 
-  User=minio
-  Group=minio
-  ProtectProc=invisible
+- Step 4: Create file `minio-values.yml`
 
-  EnvironmentFile=/etc/minio/minio.conf
-  ExecStartPre=/bin/bash -c "if [ -z \"${MINIO_VOLUMES}\" ]; then echo \"Variable MINIO_VOLUMES not set in /etc/minio/minio.conf\"; exit 1; fi"
+  ```yml
+  # Get root user/password from secret
+  existingSecret: minio-secret
 
-  ExecStart=/usr/local/bin/minio server $MINIO_OPTS $MINIO_VOLUMES
+  # Number of drives attached to a node
+  drivesPerNode: 1
+  # Number of MinIO containers running
+  replicas: 3
+  # Number of expanded MinIO clusters
+  pools: 1
+  # Persistence
+  persistence:
+    enabled: true
+    storageClass: "longhorn"
+    accessMode: ReadWriteOnce
+    size: 10Gi
 
-  # Let systemd restart this service always
-  Restart=always
+  # Resource request
+  resources:
+    requests:
+      memory: 1Gi
 
-  # Specifies the maximum file descriptor number that can be opened by this process
-  LimitNOFILE=65536
+  # Minio Buckets
+  buckets:
+    - name: k3s-loki
+      policy: none
+    - name: k3s-tempo
+      policy: none
 
-  # Specifies the maximum number of threads this process can create
-  TasksMax=infinity
-
-  # Disable timeout logic and wait until process is stopped
-  TimeoutStopSec=infinity
-  SendSIGKILL=no
-
-  [Install]
-  WantedBy=multi-user.target
+  # Minio Policies
+  policies:
+    - name: loki
+      statements:
+        - resources:
+            - 'arn:aws:s3:::k3s-loki'
+            - 'arn:aws:s3:::k3s-loki/*'
+          actions:
+            - "s3:DeleteObject"
+            - "s3:GetObject"
+            - "s3:ListBucket"
+            - "s3:PutObject"
+    - name: tempo
+      statements:
+        - resources:
+            - 'arn:aws:s3:::k3s-tempo'
+            - 'arn:aws:s3:::k3s-tempo/*'
+          actions:
+            - "s3:DeleteObject"
+            - "s3:GetObject"
+            - "s3:ListBucket"
+            - "s3:PutObject"
+            - "s3:GetObjectTagging"
+            - "s3:PutObjectTagging"
+  # Minio Users
+  users:
+    - accessKey: loki
+      existingSecret: minio-secret
+      existingSecretKey: lokiPassword
+      policy: loki
+    - accessKey: tempo
+      existingSecret: minio-secret
+      existingSecretKey: tempoPassword
+      policy: tempo
   ```
-  This service start minio server using minio UNIX group, loading environment variables located in `/etc/minio/minio.conf` and executing the following startup command:
 
+  With this configuration:
+
+  - Minio cluster of 3 nodes (`replicas`) is created with 1 drive per node (`drivesPerNode`) of 10Gb (`persistence`)
+
+  - Root user and passwork is obtained from the secret created in Step 3 (`existingSecret`).
+
+  - Memory resources for each replica is set to 1GB (`resources.requests.memory`). Default config is 16GB which is not possible in a Raspberry Pi.
+
+  - Buckets (`buckets`), users (`users`) and policies (`policies`) are created for Loki and Tempo
+
+- Step 5: Install Minio in `minio` namespace
   ```shell
-  /usr/local/minio server $MINIO_OPTS $MINIO_VOLUMES
+  helm install minio minio -f minio-values.yml --namespace minio
   ```
-
-- Step 7. Enable minio systemd service
-
+- Step 6: Check status of Loki pods
   ```shell
-  sudo systemctl enable minio.service
+  kubectl get pods -l app.kubernetes.io/name=minio -n minio
   ```
 
-- Step 8. Create Minio SSL certificate
 
-  In case you have your own domain, a valid SSL certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Minio server, using [Certbot](https://certbot.eff.org/).
+## Configuring Ingress
 
-  See certbot installation instructions in [CertManager - Letsencrypt Certificates Section](/docs/certmanager/#installing-certbot-ionos). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
+Create a Ingress rule to make Minio console and service API available through the Ingress Controller (Traefik) using a specific URLs (`minio.picluster.ricsanfre.com` and `s3.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
 
-  Letsencrypt using HTTP challenge is avoided for security reasons (cluster services are not exposed to public internet).
-
-  If generating valid SSL certificate is not possible, selfsigned certificates with a custom CA can be used instead.
-
-  {{site.data.alerts.important}}
-
-  `restic` backup to a S3 Object Storage backend using self-signed certificates does not work (See issue [#26](https://github.com/ricsanfre/pi-cluster/issues/26)). However, it works if SSL certificates are signed using a custom CA.
-
-  {{site.data.alerts.end}}
-
-  Follow this procedure for creating a self-signed certificate for Minio Server
-
-  1. Create a self-signed CA key and self-signed certificate
-
-     ```shell
-     openssl req -x509 \
-            -sha256 \
-            -nodes \
-            -newkey rsa:4096 \
-            -subj "/CN=Ricsanfre CA" \
-            -keyout rootCA.key -out rootCA.crt
-     ```
-  2. Create a SSL certificate for Minio server signed using the custom CA
-    
-     ```shell
-     openssl req -new -nodes -newkey rsa:4096 \
-                 -keyout minio.key \
-                 -out minio.csr \
-                 -batch \
-                 -subj "/C=ES/ST=Madrid/L=Madrid/O=Ricsanfre CA/OU=picluster/CN=s3.picluster.ricsanfre.com"
-
-      openssl x509 -req -days 365000 -set_serial 01 \
-            -extfile <(printf "subjectAltName=DNS:s3.picluster.ricsanfre.com") \
-            -in minio.csr \
-            -out minio.crt \
-            -CA rootCA.crt \
-            -CAkey rootCA.key
-     ```
-
-  Once the certificate is created, public certificate and private key need to be installed in Minio server following this procedure:
+Minio backend is deployed in insecure mode (TLS is not activated) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point). The following configuration assumes that, Traefik is already configured for redirecting all HTTP traffic to HTTPS.
 
 
-  1. Copy public certificate `minio.crt` as `/etc/minio/ssl/public.crt`
+- Step 1. Create a manifest file `minio_ingress.yml` for providing access to Minio API.
 
-     ```shell
-     sudo cp minio.crt /etc/minio/ssl/public.crt
-     sudo chown minio:minio /etc/minio/ssl/public.crt
-     ```
-  2. Copy private key `minio.key` as `/etc/minio/ssl/private.key`
-
-     ```shell
-     cp minio.key /etc/minio/ssl/private.key
-     sudo chown minio:minio /etc/minio/ssl/private.key
-     ```
-  3. Restart minio server.
-     
-     ```shell
-     sudo systemctl restart minio.service
-     ```
-
-  {{site.data.alerts.note}}
-
-  Certificate must be created for the DNS name associated to MINIO S3 service, i.e `s3.picluster.ricsanfre.com`.
-
-  `MINIO_SERVER_URL` environment variable need to be configured, to avoid issues with TLS certificates without IP Subject Alternative Names.
-
-  {{site.data.alerts.end}}
-
-  To connect to Minio console use the URL https://s3.picluster.ricsanfre.com:9091
-
-- Step 9. Configure minio client: `mc`
-
-  Configure connection alias to minio server.
-  
-  ```shell
-  mc alias set minio_alias <minio_url> <minio_root_user> <minio_root_password>
+  ```yml
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: minio-ingress
+    namespace: minio
+    annotations:
+      # HTTPS as entry point
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Enable TLS
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: s3.picluster.ricsanfre.com
+  spec:
+    tls:
+      - hosts:
+          - s3.picluster.ricsanfre.com
+        secretName: minio-tls
+    rules:
+      - host: s3.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: minio
+                  port:
+                    number: 9000
   ```
 
-## Minio Configuration
+- Step 2. Create a manifest file `minio_console_ingress.yml` for providing access to Minio Console.
 
-### Buckets
-
-The following buckets need to be created for backing-up different cluster components:
-
-- Longhorn Backup: `k3s-longhorn`
-- Velero Backup: `k3s-velero`
-- OS backup: `restic`
-
-Also as backend storage for Loki and Tempo, the following buckets need to be configured
-
-- Loki Storage: `k3s-loki`
-- Tempo Storage: `k3s-tempo`
-
-Buckets can be created using Minio's CLI (`mc`)
-
-```shell
-mc mb <minio_alias>/<bucket_name> 
+  ```yml
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: minio-console-ingress
+    namespace: minio
+    annotations:
+      # HTTPS as entry point
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Enable TLS
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: minio.picluster.ricsanfre.com
+  spec:
+    tls:
+      - hosts:
+          - minio.picluster.ricsanfre.com
+        secretName: minio-console-tls
+    rules:
+      - host: minio.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: minio-console
+                  port:
+                    number: 9001
 ```
-Where: `<minio_alias>` is the mc's alias connection to Minio Server using admin user credentials, created during Minio installation in step 9.
-
-### Users and ACLs
-
-Following users will be created to grant access to Minio S3 buckets:
-
-- `longhorn` with read-write access to `k3s-longhorn` bucket.
-- `velero` with read-write access to `k3s-velero` bucket. 
-- `restic` with read-write access to `restic` bucket
-- `loki` with read-write access to `k3s-loki` bucket
-  
-Users can be created usinng Minio's CLI
-```shell
-mc admin user add <minio_alias> <user_name> <user_password>
-```
-Access policies to the different buckets can be assigned to the different users using the command:
-
-```shell
-mc admin policy add <minio_alias> <user_name> user_policy.json
-```
-Where `user_policy.json`, contains AWS access policies definition like:
-
-```json
-{
-"Version": "2012-10-17",
-"Statement": [
-  {
-      "Effect": "Allow",
-      "Action": [
-          "s3:DeleteObject",
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:PutObject"
-      ],
-      "Resource": [
-          "arn:aws:s3:::bucket_name",
-          "arn:aws:s3:::bucket_name/*"
-      ]
-  }  
-]
-}
-``` 
-This policy grants read-write access to `bucket_name`. For each user a different json need to be created, granting access to dedicated bucket. Those json files can be stored in `/etc/minio/policy` directory.

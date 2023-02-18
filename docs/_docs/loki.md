@@ -44,9 +44,10 @@ Grafana Loki needs to store two different types of data: chunks and indexes. Bot
 
 {{site.data.alerts.note}}
 
-As part of the backup infrastructure a bare-metal Minio S3 server has been configured in `node1`. See documentation: [Backup & Restore - Minio S3 Object Store Server](/docs/backup/#minio-s3-object-storage-server). So I will re-use it as Loki backend.
+Loki helm chart is able to install this Minio service as a subchart, but its installation will be disabled and Minio Storage Service already deployed in the cluster will be used as Loki's backend. 
 
-As alternative a Minio server can be deployed as a another kubernetes service. Loki helm chart is able to install this Minio service as a subchart.
+As part of Minio Storage Service installation, loki's S3 bucket, policy and user is already configured.
+See documentation: [Minio S3 Object Storage Service](/docs/minio).
 
 {{site.data.alerts.end}}
 
@@ -210,11 +211,11 @@ Installation from helm chart. There are two alternatives:
 
   - Disable self-monitoring (`monitoring.selfmonitoring`) and helm-test validation (`test.enabled`)
 
-- Step 3: Install Loki in `logging` namespace
+- Step 5: Install Loki in `logging` namespace
   ```shell
   helm install loki grafana/loki -f loki-values.yml --namespace logging
   ```
-- Step 4: Check status of Loki pods
+- Step 6: Check status of Loki pods
   ```shell
   kubectl get pods -l app.kubernetes.io/name=loki -n logging
   ```
