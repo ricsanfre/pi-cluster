@@ -17,7 +17,7 @@ spec:
   tls:
     - hosts:
         - {{ .Values.ingress.console }}
-      secretName: minio-tls
+      secretName: minio-console-tls
   rules:
     - host: {{ .Values.ingress.console }}
       http:
