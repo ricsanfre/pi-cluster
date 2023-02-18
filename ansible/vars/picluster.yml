@@ -201,7 +201,7 @@ restic_environment:
 # Vault configuration
 #######################
 
-vault_hostname: "vault.ricsanfre.com"
+vault_hostname: "vault.picluster.ricsanfre.com"
 vault_dns: "{{ vault_hostname }}"
 vault_enable_tls: true
 custom_ca: false

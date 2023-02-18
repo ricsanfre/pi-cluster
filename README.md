@@ -201,13 +201,16 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 ### Self-hosted external services 
 
-There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them on VMs running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
+There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them..
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
 | <img width="60" src="https://min.io/resources/img/logo.svg"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
 | <img width="32" src="https://simpleicons.org/icons/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 
+Minio backup servive is hosted in a VM running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
+
+Vault service is running in `gateway` node, since Vault kubernetes authentication method need access to Kuberentes API, I won't host Vault service in Public Cloud.
 
 ## Cluster architecture and hardware
 
