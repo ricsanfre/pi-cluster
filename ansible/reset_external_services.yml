@@ -1,6 +1,6 @@
 ---
 - name: Clean Minio Installation
-  hosts: node1
+  hosts: s3
   become: true
   gather_facts: false
   tags: [s3]
@@ -27,7 +27,7 @@
         daemon_reload: true
 
 - name: Clean Vault Installation
-  hosts: gateway
+  hosts: vault
   become: true
   gather_facts: false
   tags: [vault]
