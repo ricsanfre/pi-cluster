@@ -19,9 +19,6 @@ all:
         s3:
           hostname: s3
           ansible_host: s3.ricsanfre.com
-        vault:
-          hostname: vault
-          ansible_host: vault.ricsanfre.com
     picluster:
       hosts:
         node1:

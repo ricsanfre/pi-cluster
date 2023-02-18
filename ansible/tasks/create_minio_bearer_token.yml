@@ -6,7 +6,7 @@
   become: true
   changed_when: false
   when: minio_prom_bearer_token is not defined
-  delegate_to: vault
+  delegate_to: s3
 
 - name: Get bearer token
   set_fact:

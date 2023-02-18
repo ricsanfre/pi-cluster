@@ -2,7 +2,7 @@
 # Vault secret store
 vault:
   # Vault server URL
-  vaultUrl: "https://vault.ricsanfre.com:8200"
+  vaultUrl: "https://vault.picluster.ricsanfre.com:8200"
 
   # Vault CA cert
   # caBundle needed if vault TLS is signed using a custom CA.
