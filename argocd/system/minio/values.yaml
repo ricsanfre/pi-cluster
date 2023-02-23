@@ -20,7 +20,7 @@ minio:
   # Number of drives attached to a node
   drivesPerNode: 1
   # Number of MinIO containers running
-  replicas: 3
+  replicas: 2
   # Number of expanded MinIO clusters
   pools: 1
 
@@ -34,7 +34,7 @@ minio:
   # Resource request
   resources:
     requests:
-      memory: 1Gi
+      memory: 512Mi
 
   # Minio Buckets
   buckets:
