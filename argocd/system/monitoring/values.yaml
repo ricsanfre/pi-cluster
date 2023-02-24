@@ -108,7 +108,9 @@ kube-prometheus-stack:
             accessModes: ["ReadWriteOnce"]
             resources:
               requests:
-                storage: 5Gi
+                storage: 20Gi
+      # Retention period
+      retention: 7d
     serviceMonitor:
       relabelings:
         # Replace job value

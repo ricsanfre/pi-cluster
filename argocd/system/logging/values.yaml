@@ -13,7 +13,7 @@ elasticsearch:
   enableMmap: false
   # Storage Settings
   storage:
-    size: "5Gi"
+    size: "20Gi"
     class: "longhorn"
   # Limiting resources of elasticsearch pod
   podSpecResources:
