@@ -17,6 +17,7 @@ services:
       - ./runner/.secrets:/home/runner/.secrets
       - ./runner/scripts:/home/runner/scripts
       - ./runner/.ssh:/home/runner/.ssh
+      - ./runner/.kube:/home/runner/.kube
       - ./certbot/log:/var/log/letsencrypt
       - ./certbot/config:/etc/letsencrypt
       - ./certbot/work:/var/lib/letsencrypt

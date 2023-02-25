@@ -3,6 +3,7 @@
 - name: Install K3S prerequisites
   hosts: k3s_cluster
   gather_facts: true
+  tags: [install]
   become: true
   pre_tasks:
     - name: Include vault variables
@@ -16,6 +17,7 @@
 
 - name: Install K3S master node
   hosts: k3s_master
+  tags: [install]
   become: true
   pre_tasks:
     - name: Include vault variables
@@ -30,6 +32,7 @@
 
 - name: Install K3S worker nodes
   hosts: k3s_worker
+  tags: [install]
   become: true
   pre_tasks:
     - name: Include vault variables
@@ -43,6 +46,7 @@
 
 - name: Label K3S worker nodes
   hosts: k3s_master
+  tags: [config]
   pre_tasks:
     - name: Include vault variables
       include_vars: "vars/vault.yml"
@@ -65,3 +69,21 @@
       command:
         cmd: "kubectl label nodes {{ item }} kubernetes.io/role=worker"
       with_items: "{{ groups['k3s_worker'] }}"
+
+- name: Get Kubernets config file
+  hosts: k3s_master
+  tags: [kube-config]
+  tasks:
+    - name: Get k3s config file
+      run_once: true
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_base64
+
+    - name: Write Kubernetes config file with the correct cluster address
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', hostvars[groups['k3s_master'][0]].ansible_host) }}"
+        dest: "~/.kube/config"
+        mode: 0600
+      delegate_to: localhost
+      run_once: true
