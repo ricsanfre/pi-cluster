@@ -144,7 +144,7 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
   For installing the master node execute the following command:
 
   ```shell
-  curl -sfL https://get.k3s.io | K3S_URL='https://<k3s_master_ip>:6443' K3S_TOKEN=<server_token> sh -s - --node-label 'node_type=worker --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-proxy-arg 'metrics-bind-address=0.0.0.0''
+  curl -sfL https://get.k3s.io | K3S_URL='https://<k3s_master_ip>:6443' K3S_TOKEN=<server_token> sh -s - --node-label 'node_type=worker' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
   ```
   Where:
   - `server_token` is shared secret within the cluster for allowing connection of worker nodes
