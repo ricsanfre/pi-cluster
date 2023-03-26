@@ -22,6 +22,10 @@ layout: default
             <h1>{{ page.title }}</h1>
             <p>{{ page.date | date: "%b %-d, %Y" }}{% if page.author %} • {{ page.author }}{% endif %}{% if page.meta %} • {{ page.meta }}{% endif %}</p>
             <div  id="markdown-content-container">{{ content }}</div>
+            <div class="mt-2">
+              <h3>Comments:</h3>
+            {% include giscus.html %}
+            </div>
             <hr>
             <ul class="pagination justify-content-center">
                 {% if page.previous %}

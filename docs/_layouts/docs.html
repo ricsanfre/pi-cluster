@@ -26,8 +26,8 @@ layout: default
             </div>
             {% if page.comments and jekyll.environment == 'production' %}
             <div class="mt-2">
-              <h2>Comments:</h2>
-              <div id="remark42"></div>
+              <h3>Comments:</h3>
+            {% include giscus.html %}
             </div>
             {% endif %}
             {% include section_nav.html %}

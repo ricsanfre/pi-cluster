@@ -27,4 +27,4 @@ Embedded jekyll theme developed using as a base [aksakalli/jekyll-doc-theme](htt
 - Off-canvas doc navigator menu/toc for small screens (tablet/mobile)
 - Search engine based on [lunr.js](https://lunrjs.com/)
 - Web analytics integration with selfhosted platform [Matomo](https://matomo.org/)
-- Docs comments integration with selfhosted platform [remark42](https://remark42.com/)
+- Docs comments integration with Github-discussion based comments platform,[giscus](https://giscus.app/)
