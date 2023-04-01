@@ -1,0 +1,52 @@
+# ES index template for fluentd logs
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-template
+  namespace: {{ .Release.Namespace }}
+data:
+  fluentd-es-template.json: |-
+    {
+      "index_patterns": ["fluentd-<<TAG>>-*"],
+      "template": {
+        "settings": {
+          "index": {
+            "lifecycle": {
+              "name": "fluentd-policy",
+              "rollover_alias": "fluentd-<<TAG>>"
+            },
+            "number_of_shards": "<<shard>>",
+            "number_of_replicas": "<<replica>>"
+          }
+        },
+        "mappings" : {
+          "dynamic_templates" : [ 
+            {
+              "message_field" : {
+                "path_match" : "message",
+                "match_mapping_type" : "string",
+                "mapping" : {
+                  "type" : "text",
+                  "norms" : false
+                }
+              }
+            }, 
+            {
+              "string_fields" : {
+                "match" : "*",
+                "match_mapping_type" : "string",
+                "mapping" : {
+                  "type" : "text", "norms" : false,
+                  "fields" : {
+                    "keyword" : { "type": "keyword", "ignore_above": 256 }
+                  }
+                }
+              }
+            } ],
+          "properties" : {
+            "@timestamp": { "type": "date" }
+          }
+        }
+      }
+    } 
+
