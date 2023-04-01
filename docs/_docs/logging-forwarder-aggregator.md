@@ -3,7 +3,7 @@ title: Logging - Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
-last_modified_at: "30-10-2022"
+last_modified_at: "24-03-2023"
 
 ---
 
@@ -51,7 +51,8 @@ As base image, the [official fluentd docker image](https://github.com/fluent/flu
 
 In our case, the list of plugins that need to be added to the default fluentd image are:
 
-- `fluent-plugin-elasticsearch`: ES as backend for routing the logs
+- `fluent-plugin-elasticsearch`: ES as backend for routing the logs.
+  This plugin supports the creation of index templates and ILM policies associated to them during the process of creating a new index in ES. In order to enable ILM in fluend-elasticsearch-plugin, `elasticsearch-xpack` gem need to be installed.
 
 - `fluent-plugin-prometheus`: Enabling prometheus monitoring
 
@@ -97,6 +98,7 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
  && apt-get update \
  && apt-get install -y --no-install-recommends $buildDeps \
  && sudo gem install fluent-plugin-elasticsearch \
+ && sudo gem install elasticsearch-xpack \
  && sudo gem install fluent-plugin-prometheus \
  && sudo gem install fluent-plugin-record-modifier \
  && sudo gem install fluent-plugin-grafana-loki \
@@ -135,6 +137,90 @@ In previous versions, different tags where needed for different architectures
 
 {{site.data.alerts.end}}
 
+#### Enabling Elasticsearch ILM
+
+[Elastisearch Index Lifecycle Management (ILM)](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-lifecycle-management.html) can be used to automatically manage the lifecycle of the indices and set retention policies for the data.
+
+fluentd-elasticsearch-plugin is able to create ILM policies and apply them to the elasticsearch's indices it automatically creates when ingesting data.
+
+ILM policy fails to be created using latest version of fluent-plugin-elasticsearh. It seems that the current version of the plugin does not support properly ILM in ES 8.x, since it is using a deprecated gem (`elasticsearch-xpack`) instead of the new `elasticsearch-api`
+
+The following warning appears when building the Docker Image
+
+> WARNING: This library is deprecated
+> The API endpoints currently living in elasticsearch-xpack will be moved into elasticsearch-api in version 8.0.0 and forward. You should be able to keep using elasticsearch-xpack and the xpack namespace in 7.x. We're running the same tests in elasticsearch-xpack, but if you encounter any problems, please let us know in this issue: https://github.com/elastic/elasticsearch-ruby/issues/1274
+
+Currently the fluentd plugin does not support `elasticsearch-api` and `elasticsearh-xpack` need to be used. See https://github.com/uken/fluent-plugin-elasticsearch/issues/937.
+
+On the other hand, `fluentd-kubernetes-daemonset` (https://github.com/fluent/fluentd-kubernetes-daemonset) docker image, which is the one installed by default by fluentd helm chart, does not have yet a version for 8.x. Docker images available are just tagged as 7.0, and it seems that this docker images built initially for ES 7.x are working without issues with ES 8.x. See https://github.com/fluent/fluentd-kubernetes-daemonset/issues/1373
+
+Latest docker image available, containing elasticsearch plugins (v1.15/debian-elasticsearch7) uses a previous version of fluentd-elasticsearch-plugin and its dependencies). See [Gemfile](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.15/debian-elasticsearch7/Gemfile) used in Dockerfile to install all plugins and its dependencies:
+```gem
+gem "fluentd", "1.15.3"
+...
+gem "elasticsearch", "~> 7.0"
+gem "fluent-plugin-elasticsearch", "~> 5.1.1"
+gem "elasticsearch-xpack", "~> 7.0"
+```
+The docker image is installing the following gems:
+- fluentd 1.15.3 
+- fluent-plugin-elasticsearch 5.1.1
+- elasticsearch -> 7.0
+- elasticsearch-xpack -> 7.0
+
+Modifiying fluentd-aggregator docker image to use release 5.1.1 of gem fluent-plugin-elasticsearch and its ES's dependencies (ES 7.0 version), solves the ILM creation issue.
+
+New Dockerfile:
+
+```dockerfile
+ARG BASE_IMAGE=fluent/fluentd:v1.15.3-debian-1.2
+
+
+FROM $BASE_IMAGE
+
+# UPDATE BASE IMAGE WITH PLUGINS
+
+# Use root account to use apk
+USER root
+
+RUN buildDeps="sudo make gcc g++ libc-dev" \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends $buildDeps \
+ && sudo gem install elasticsearch -v '~> 7.0' \
+ && sudo gem install fluent-plugin-elasticsearch -v '~> 5.1.1' \
+ && sudo gem install elasticsearch-xpack -v '~> 7.0' \
+ && sudo gem install fluent-plugin-prometheus \
+ && sudo gem install fluent-plugin-record-modifier \
+ && sudo gem install fluent-plugin-grafana-loki \
+ && sudo gem sources --clear-all \
+ && SUDO_FORCE_REMOVE=yes \
+    apt-get purge -y --auto-remove \
+                  -o APT::AutoRemove::RecommendsImportant=false \
+                  $buildDeps \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.ge
+
+
+# COPY AGGREGATOR CONF FILES
+COPY ./conf/fluent.conf /fluentd/etc/
+COPY ./conf/forwarder.conf /fluentd/etc/
+COPY ./conf/prometheus.conf /fluentd/etc/
+
+# COPY entry
+COPY entrypoint.sh /fluentd/entrypoint.sh
+
+# Environment variables
+ENV FLUENTD_OPT=""
+
+# Run as fluent user. Do not need to have privileges to access /var/log directory
+USER fluent
+ENTRYPOINT ["tini",  "--", "/fluentd/entrypoint.sh"]
+CMD ["fluentd"]
+```
+
+See further details in [issue #107](https://github.com/ricsanfre/pi-cluster/issues/107)
+
+
 ### Deploying fluentd in K3S
 
 Fluentd will not be deployed as privileged daemonset, since it does not need to access to kubernetes logs/APIs. It will be deployed using the following Kubernetes resources:
@@ -147,7 +233,7 @@ Fluentd will not be deployed as privileged daemonset, since it does not need to 
 
 - Kubernetes Service resource, Cluster IP type, exposing fluentd endpoints to other PODs/processes: Fluentbit forwarders, Prometheus, etc.
 
-- Kubernetes ConfigMap resources containing fluentd config files.
+- Kubernetes ConfigMap resources containing fluentd config files and ES index templates definitions.
 
 {{site.data.alerts.note}}
 
@@ -232,15 +318,73 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
     fluentd-shared-key: <base64 encoded password>
   ```
 
-- Step 3. Add fluentbit helm repo
+- Step 3. Create ConfigMap containing ES index templates definitions
+
+  ```yml
+  # ES index template for fluentd logs
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: fluentd-template
+    namespace: logging
+  data:
+    fluentd-es-template.json: |-
+      {
+        "index_patterns": ["fluentd-<<TAG>>-*"],
+        "template": {
+          "settings": {
+            "index": {
+              "lifecycle": {
+                "name": "fluentd-policy",
+                "rollover_alias": "fluentd-<<TAG>>"
+              },
+              "number_of_shards": "<<shard>>",
+              "number_of_replicas": "<<replica>>"
+            }
+          },
+          "mappings" : {
+            "dynamic_templates" : [ 
+              {
+                "message_field" : {
+                  "path_match" : "message",
+                  "match_mapping_type" : "string",
+                  "mapping" : {
+                    "type" : "text",
+                    "norms" : false
+                  }
+                }
+              }, 
+              {
+                "string_fields" : {
+                  "match" : "*",
+                  "match_mapping_type" : "string",
+                  "mapping" : {
+                    "type" : "text", "norms" : false,
+                    "fields" : {
+                      "keyword" : { "type": "keyword", "ignore_above": 256 }
+                    }
+                  }
+                }
+              } ],
+            "properties" : {
+              "@timestamp": { "type": "date" }
+            }
+          }
+        }
+      } 
+  ```
+
+  The config map contains dynamic index templates that will be used by fluentd-elasticsearch-plugin configuration.
+
+- Step 4. Add fluentbit helm repo
   ```shell
   helm repo add fluent https://fluent.github.io/helm-charts
   ```
-- Step 4. Update helm repo
+- Step 5. Update helm repo
   ```shell
   helm repo update
   ```
-- Step 5. Create `values.yml` for tuning helm chart deployment.
+- Step 6. Create `values.yml` for tuning helm chart deployment.
   
   fluentd configuration can be provided to the helm. See [`values.yml`](https://github.com/fluent/helm-charts/blob/main/charts/fluentd/values.yaml)
   
@@ -292,12 +436,6 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
         secretKeyRef:
           name: "efk-es-elastic-user"
           key: elastic
-    # Setting a index-prefix for fluentd. By default index is logstash
-    - name: FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
-      value: fluentd
-    - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
-      value: "true"
-    # Fluentd forward security
     - name: FLUENTD_FORWARD_SEC_SHARED_KEY
       valueFrom:
         secretKeyRef:
@@ -326,12 +464,19 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
     - name: fluentd-tls
       secret:
         secretName: fluentd-tls
+        - name: etcfluentd-template
+    - name: etcfluentd-template
+      configMap:
+        name: fluentd-template
+        defaultMode: 0777
 
   volumeMounts:
     - name: etcfluentd-main
       mountPath: /etc/fluent
     - name: etcfluentd-config
       mountPath: /etc/fluent/config.d/
+    - name: etcfluentd-template
+      mountPath: /etc/fluent/template
     - mountPath: /etc/fluent/certs
       name: fluentd-tls
       readOnly: true
@@ -446,13 +591,19 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
       </label>
     04_outputs.conf: |-
       <label @OUTPUT_ES>
-        ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+        # Setup index name index based on namespace and container
         <filter kube.**>
           @type record_transformer
-          enable_ruby true
-          remove_keys log_processed
+          enable_ruby
           <record>
-            json_message.${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+            index_app_name ${record['namespace'] + '.' + record['container']}
+          </record>
+        </filter>
+        <filter host.**>
+          @type record_transformer
+          enable_ruby
+          <record>
+            index_app_name "host"
           </record>
         </filter>
         # Send received logs to elasticsearch
@@ -463,35 +614,58 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
           include_tag_key true
           host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
           port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-          path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
-          scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
-          ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
-          ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+          scheme http
           user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
           password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
-          reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
-          reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
-          reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
-          log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
-          logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
-          logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
-          logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
-          index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
-          target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
-          type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
-          include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
-          template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
-          template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
-          template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
-          sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
-          request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
-          application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
-          suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
-          enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
-          ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
-          ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
-          ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
-          <buffer>
+
+          # Reload and reconnect options
+          reconnect_on_error true
+          reload_on_failure true
+          reload_connections false
+
+          # HTTP request timeout
+          request_timeout 15s
+           
+          # Log ES HTTP API errors
+          log_es_400_reason true
+
+          # avoid 7.x errors
+          suppress_type_name true
+
+          # setting sniffer class
+          sniffer_class_name Fluent::Plugin::ElasticsearchSimpleSniffer
+    
+          # Do not use logstash format
+          logstash_format false
+
+          # Setting index_name
+          index_name fluentd-${index_app_name}
+
+          # specifying time key
+          time_key time
+
+          # including @timestamp field
+          include_timestamp true
+
+          # ILM Settings - WITH ROLLOVER support
+          # https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#enable-index-lifecycle-management
+          # application_name ${index_app_name}
+          index_date_pattern ""
+          enable_ilm true
+          ilm_policy_id fluentd-policy
+          ilm_policy {"policy":{"phases":{"hot":{"min_age":"0ms","actions":{"rollover":{"max_size":"10gb","max_age":"7d"}}},"warm":{"min_age":"2d","actions":{"shrink":{"number_of_shards":1},"forcemerge":{"max_num_segments":1}}},"delete":{"min_age":"7d","actions":{"delete":{"delete_searchable_snapshot":true}}}}}}
+          ilm_policy_overwrite true
+          
+          # index template
+          use_legacy_template false
+          template_overwrite true
+          template_name fluentd-${index_app_name}
+          template_file "/etc/fluent/template/fluentd-es-template.json"
+          customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
+          
+          remove_keys idex_app_name
+
+          <buffer tag, index_app_name>
             flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
             flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
             chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
@@ -645,11 +819,6 @@ env:
       secretKeyRef:
         name: "efk-es-elastic-user"
         key: elastic
-  # Setting a index-prefix for fluentd. By default index is logstash
-  - name: FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
-    value: fluentd
-  - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
-    value: "true"
   # Fluentd forward security
   - name: FLUENTD_FORWARD_SEC_SHARED_KEY
     valueFrom:
@@ -683,9 +852,6 @@ fluentd docker image and configuration files use the following environment varia
 
   - ES access credentials (`FLUENT_ELASTICSEARCH_USER` and `FLUENT_ELASTICSEARCH_PASSWORD`): elastic user password obtained from the corresponding Secret (`efk-es-elastic-user` created during ES installation)
 
-  - additional plugin parameters: setting index prefix (`FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX`) and enabling debug messages when receiving errors from Elasticsearch API (`FLUENT_ELASTICSEARCH_LOG_ES_400_REASON`)
-
-  - rest of parameters of the plugin with default values defined in the configuration.
 
 - Loki output plugin configuration
 
@@ -711,6 +877,10 @@ volumes:
     configMap:
       name: fluentd-config
       defaultMode: 0777
+  - name: etcfluentd-template
+    configMap:
+      name: fluentd-template
+      defaultMode: 0777
   - name: fluentd-tls
     secret:
       secretName: fluentd-tls
@@ -720,6 +890,8 @@ volumeMounts:
     mountPath: /etc/fluent
   - name: etcfluentd-config
     mountPath: /etc/fluent/config.d/
+  - name: etcfluentd-template
+    mountPath: /etc/fluent/template
   - mountPath: /etc/fluent/certs
     name: fluentd-tls
     readOnly: true
@@ -731,10 +903,13 @@ ConfigMaps created by the helm chart are mounted in the fluentd container:
 
 - ConfigMap `fluentd-config`, containing fluentd config files included by main config file is mounted as `/etc/fluent/config.d`
 
+- ConfigMap `fluentd-template`, containing ES index templates used by fluentd-elasticsearch-plugin, mounted as `/etc/fluent/template`. This configMap is generated in step 3 of the installation procedure.
+
 Additional Secret, contining fluentd TLS certificate and key is also mounted:
 
 - Secret `fluentd-tls`, generated in step 1 of the installation procedure, containing fluentd certificate and key
   TLS Secret containing fluentd's certificate and private key, is mounted as `/etc/fluent/certs`.
+
 
 #### Fluentd Service and other configurations
 
@@ -929,15 +1104,21 @@ It is not needed to change the default content of the `fluent.conf` created by H
 
   ```xml
   <label @OUTPUT_ES>
-    ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+    # Setup index name index based on namespace and container
     <filter kube.**>
       @type record_transformer
-      enable_ruby true
-      remove_keys log_processed
+      enable_ruby
       <record>
-        message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+        index_app_name ${record['namespace'] + '.' + record['container']}
       </record>
-    </filter>    
+    </filter>
+    <filter host.**>
+      @type record_transformer
+      enable_ruby
+      <record>
+        index_app_name "host"
+      </record>
+    </filter>
     # Send received logs to elasticsearch
     <match **>
       @type elasticsearch
@@ -946,35 +1127,58 @@ It is not needed to change the default content of the `fluent.conf` created by H
       include_tag_key true
       host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
       port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-      path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
-      scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
-      ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
-      ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+      scheme http
       user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
       password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
-      reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
-      reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
-      reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
-      log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
-      logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
-      logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
-      logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
-      index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
-      target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
-      type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
-      include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
-      template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
-      template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
-      template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
-      sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
-      request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
-      application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
-      suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
-      enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
-      ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
-      ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
-      ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
-      <buffer>
+
+      # Reload and reconnect options
+      reconnect_on_error true
+      reload_on_failure true
+      reload_connections false
+
+      # HTTP request timeout
+      request_timeout 15s
+       
+      # Log ES HTTP API errors
+      log_es_400_reason true
+
+      # avoid 7.x errors
+      suppress_type_name true
+
+      # setting sniffer class
+      sniffer_class_name Fluent::Plugin::ElasticsearchSimpleSniffer
+
+      # Do not use logstash format
+      logstash_format false
+
+      # Setting index_name
+      index_name fluentd-${index_app_name}
+
+      # specifying time key
+      time_key time
+
+      # including @timestamp field
+      include_timestamp true
+
+      # ILM Settings - WITH ROLLOVER support
+      # https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#enable-index-lifecycle-management
+      # application_name ${index_app_name}
+      index_date_pattern ""
+      enable_ilm true
+      ilm_policy_id fluentd-policy
+      ilm_policy {"policy":{"phases":{"hot":{"min_age":"0ms","actions":{"rollover":{"max_size":"10gb","max_age":"7d"}}},"warm":{"min_age":"2d","actions":{"shrink":{"number_of_shards":1},"forcemerge":{"max_num_segments":1}}},"delete":{"min_age":"7d","actions":{"delete":{"delete_searchable_snapshot":true}}}}}}
+      ilm_policy_overwrite true
+      
+      # index template
+      use_legacy_template false
+      template_overwrite true
+      template_name fluentd-${index_app_name}
+      template_file "/etc/fluent/template/fluentd-es-template.json"
+      customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
+      
+      remove_keys idex_app_name
+
+      <buffer tag, index_app_name>
         flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
         flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
         chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
@@ -993,15 +1197,15 @@ It is not needed to change the default content of the `fluent.conf` created by H
         __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
       </record>
     </filter>
-    # Send received logs to Loki
     <match **>
       @type loki
-      @id out_loki
+      @id out_loki_kube
       @log_level info
       url "#{ENV['LOKI_URL']}"
       username "#{ENV['LOKI_USERNAME'] || use_default}"
       password "#{ENV['LOKI_PASSWORDD'] || use_default}"
       extra_labels {"job": "fluentd"}
+      line_format json
       <label>
          app
          container
@@ -1019,19 +1223,120 @@ It is not needed to change the default content of the `fluent.conf` created by H
         retry_forever true
       </buffer>
     </match>
-  </label>  
+  </label>
   ```
   
   With this configuration fluentd:
 
   - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch).
-    Before routing them it applies the following filter
-    - remove `log_processed` field, and creates a new field `message_<container-name>` containing original `log_processed` field but copied to a unique map using container name `container`. This way we assure that all log fields are unique avoiding errors during the ingestion into ES.
 
   - routes all logs to Loki configuring [loki output plugin](https://grafana.com/docs/loki/latest/clients/fluentd/). It adds the following labels to each log stream: app, pod, container, namespace, node_name and job.
     Before routing them it applies the following filter
     - rename `log_processed` field to `message` field.
 
+##### ElasticSearch specific configuration
+
+fluentd-elasticsearch plugin supports the creation of index templates and ILM policies associated to them during the process of creating a new index in ES.
+
+[Index Templates](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-templates.html) can be used for controlling the way ES automatically maps/discover log's field data types and the way ES indexes these fields.
+
+[ES Index Lifecycle Management (ILM)](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-lifecycle-management.html) is used for automating the management of indices, and setting data retention policies.
+
+Additionally separate ES indexes can be created for storing logs from different containers/app. Each index might have their own index template containing specific mapping configuration (schema definition) and its own ILM policy (different retention policies per log type). This separation of logs in different indexes is an alternative solution to [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58) , https://github.com/ricsanfre/pi-cluster/issues/58) avoiding mismatch-data-type ingestion errors that might occur when enabling Merge_Log option in fluentbit's kubernetes filter configuration.
+
+[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) are is configured so a separate index will be generated for each container (index name: fluendt-namespace.container), using a common ILM policy and setting automatic rollover.
+
+- ILM policy
+
+  ILM policy configured (`ilm_policy` field in fluent-plugin-elascticsearch) for all fluentd logs is the following:
+
+  ```json
+  {
+    "policy":
+    {
+        "phases":
+        {
+          "hot":
+          {
+            "min_age":"0ms",
+            "actions":
+            {
+              "rollover":
+              {
+                "max_age":"3d",
+                "max_size":"20gb"
+              },
+              "set_priority":
+              {
+                "priority":100
+              }
+            }
+          },
+          "warm":
+          {
+            "actions":
+            {
+              "allocate":
+              {
+                "include":{},
+                "exclude":{},
+                "require":
+                {
+                  "data":"warm"
+                }
+              },
+              "set_priority":
+              {
+                "priority":50
+              }
+            }
+          },
+          "delete":
+          {
+            "min_age":"90d",
+            "actions":
+            {
+              "delete":{}
+            }
+          }
+        }
+    }
+  }
+  ```
+
+- Dynamic index template
+
+  A index template will be generated per index (container). The index template applied to each index created is the following
+
+  ```json
+  {
+    "index_patterns": ["fluentd-<<TAG>>-*"],
+    "template": {
+      "settings": {
+        "index": {
+          "lifecycle": {
+            "name": "fluentd-policy",
+            "rollover_alias": "fluentd-<<TAG>>"
+          },
+          "number_of_shards": "<<shard>>",
+          "number_of_replicas": "<<replica>>"
+        }
+      },
+      "mappings" : {
+        "dynamic_templates" : [ 
+          {
+            ...
+          }
+          ]
+        }
+      }
+    }
+  ```
+  fluentd-elasticsearch-plugin dynamically replaces <<TAG>>, <<shard>> and <<replica>> parameters with the values stored in `template_customize` field.
+
+  ```
+  customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
+  ```
 
 ## Fluentbit Forwarder installation
 

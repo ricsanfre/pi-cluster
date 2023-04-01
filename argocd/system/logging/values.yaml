@@ -173,7 +173,7 @@ fluentd:
   image:
     repository: "ricsanfre/fluentd-aggregator"
     pullPolicy: "IfNotPresent"
-    tag: "v1.15.2-debian-1.0"
+    tag: "v1.15.3-debian-1.2"
 
   # Deploy fluentd as deployment
   kind: "Deployment"
@@ -220,11 +220,6 @@ fluentd:
         secretKeyRef:
           name: "efk-es-elastic-user"
           key: elastic
-    # Setting a index-prefix for fluentd. By default index is logstash
-    - name: FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX
-      value: fluentd
-    - name: FLUENT_ELASTICSEARCH_LOG_ES_400_REASON
-      value: "true"
     # Fluentd forward security
     - name: FLUENTD_FORWARD_SEC_SHARED_KEY
       valueFrom:
@@ -258,12 +253,18 @@ fluentd:
     - name: fluentd-tls
       secret:
         secretName: fluentd-tls
+    - name: etcfluentd-template
+      configMap:
+        name: fluentd-template
+        defaultMode: 0777
 
   volumeMounts:
     - name: etcfluentd-main
       mountPath: /etc/fluent
     - name: etcfluentd-config
       mountPath: /etc/fluent/config.d/
+    - name: etcfluentd-template
+      mountPath: /etc/fluent/template
     - mountPath: /etc/fluent/certs
       name: fluentd-tls
       readOnly: true
@@ -378,13 +379,19 @@ fluentd:
       </label>
     04_outputs.conf: |-
       <label @OUTPUT_ES>
-        ## Avoid ES rejection due to conflicting field types when using fluentbit merge_log
+        # Setup index name index based on namespace and container
         <filter kube.**>
           @type record_transformer
-          enable_ruby true
-          remove_keys log_processed
+          enable_ruby
           <record>
-            message_${record["container"]} ${(record.has_key?('log_processed'))? record['log_processed'] : nil}
+            index_app_name ${record['namespace'] + '.' + record['container']}
+          </record>
+        </filter>
+        <filter host.**>
+          @type record_transformer
+          enable_ruby
+          <record>
+            index_app_name "host"
           </record>
         </filter>
         # Send received logs to elasticsearch
@@ -395,35 +402,58 @@ fluentd:
           include_tag_key true
           host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
           port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-          path "#{ENV['FLUENT_ELASTICSEARCH_PATH']}"
-          scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
-          ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
-          ssl_version "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERSION'] || 'TLSv1_2'}"
+          scheme http
           user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
           password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
-          reload_connections "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_CONNECTIONS'] || 'false'}"
-          reconnect_on_error "#{ENV['FLUENT_ELASTICSEARCH_RECONNECT_ON_ERROR'] || 'true'}"
-          reload_on_failure "#{ENV['FLUENT_ELASTICSEARCH_RELOAD_ON_FAILURE'] || 'true'}"
-          log_es_400_reason "#{ENV['FLUENT_ELASTICSEARCH_LOG_ES_400_REASON'] || 'false'}"
-          logstash_prefix "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_PREFIX'] || 'logstash'}"
-          logstash_dateformat "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_DATEFORMAT'] || '%Y.%m.%d'}"
-          logstash_format "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_FORMAT'] || 'true'}"
-          index_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_INDEX_NAME'] || 'logstash'}"
-          target_index_key "#{ENV['FLUENT_ELASTICSEARCH_TARGET_INDEX_KEY'] || use_nil}"
-          type_name "#{ENV['FLUENT_ELASTICSEARCH_LOGSTASH_TYPE_NAME'] || 'fluentd'}"
-          include_timestamp "#{ENV['FLUENT_ELASTICSEARCH_INCLUDE_TIMESTAMP'] || 'false'}"
-          template_name "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_NAME'] || use_nil}"
-          template_file "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_FILE'] || use_nil}"
-          template_overwrite "#{ENV['FLUENT_ELASTICSEARCH_TEMPLATE_OVERWRITE'] || use_default}"
-          sniffer_class_name "#{ENV['FLUENT_SNIFFER_CLASS_NAME'] || 'Fluent::Plugin::ElasticsearchSimpleSniffer'}"
-          request_timeout "#{ENV['FLUENT_ELASTICSEARCH_REQUEST_TIMEOUT'] || '5s'}"
-          application_name "#{ENV['FLUENT_ELASTICSEARCH_APPLICATION_NAME'] || use_default}"
-          suppress_type_name "#{ENV['FLUENT_ELASTICSEARCH_SUPPRESS_TYPE_NAME'] || 'true'}"
-          enable_ilm "#{ENV['FLUENT_ELASTICSEARCH_ENABLE_ILM'] || 'false'}"
-          ilm_policy_id "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_ID'] || use_default}"
-          ilm_policy "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY'] || use_default}"
-          ilm_policy_overwrite "#{ENV['FLUENT_ELASTICSEARCH_ILM_POLICY_OVERWRITE'] || 'false'}"
-          <buffer>
+
+          # Reload and reconnect options
+          reconnect_on_error true
+          reload_on_failure true
+          reload_connections false
+
+          # HTTP request timeout
+          request_timeout 15s
+           
+          # Log ES HTTP API errors
+          log_es_400_reason true
+
+          # avoid 7.x errors
+          suppress_type_name true
+
+          # setting sniffer class
+          sniffer_class_name Fluent::Plugin::ElasticsearchSimpleSniffer
+    
+          # Do not use logstash format
+          logstash_format false
+
+          # Setting index_name
+          index_name fluentd-${index_app_name}
+
+          # specifying time key
+          time_key time
+
+          # including @timestamp field
+          include_timestamp true
+
+          # ILM Settings - WITH ROLLOVER support
+          # https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#enable-index-lifecycle-management
+          # application_name ${index_app_name}
+          index_date_pattern ""
+          enable_ilm true
+          ilm_policy_id fluentd-policy
+          ilm_policy {"policy":{"phases":{"hot":{"min_age":"0ms","actions":{"rollover":{"max_size":"10gb","max_age":"7d"}}},"warm":{"min_age":"2d","actions":{"shrink":{"number_of_shards":1},"forcemerge":{"max_num_segments":1}}},"delete":{"min_age":"7d","actions":{"delete":{"delete_searchable_snapshot":true}}}}}}
+          ilm_policy_overwrite true
+          
+          # index template
+          use_legacy_template false
+          template_overwrite true
+          template_name fluentd-${index_app_name}
+          template_file "/etc/fluent/template/fluentd-es-template.json"
+          customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
+          
+          remove_keys idex_app_name
+
+          <buffer tag, index_app_name>
             flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
             flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
             chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
