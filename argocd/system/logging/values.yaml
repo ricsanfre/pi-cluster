@@ -619,7 +619,7 @@ fluent-bit:
           Merge_Log On
           Merge_Log_Trim Off
           Merge_Log_Key log_processed
-          Keep_Log Off
+          Keep_Log On
           K8S-Logging.Parser On
           K8S-Logging.Exclude On
           Annotations Off
