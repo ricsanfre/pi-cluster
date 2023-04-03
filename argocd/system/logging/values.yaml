@@ -379,12 +379,13 @@ fluentd:
       </label>
     04_outputs.conf: |-
       <label @OUTPUT_ES>
-        # Setup index name index based on namespace and container
+        # Setup index name. Index per namespace or per container
         <filter kube.**>
           @type record_transformer
           enable_ruby
           <record>
-            index_app_name ${record['namespace'] + '.' + record['container']}
+            # index_app_name ${record['namespace'] + '.' + record['container']}
+            index_app_name ${record['namespace']
           </record>
         </filter>
         <filter host.**>
@@ -616,7 +617,7 @@ fluent-bit:
           Match kube.*
           Buffer_Size 512k
           Kube_Tag_Prefix kube.var.log.containers.
-          Merge_Log On
+          Merge_Log Off
           Merge_Log_Trim Off
           Merge_Log_Key log_processed
           Keep_Log On
