@@ -1104,12 +1104,13 @@ It is not needed to change the default content of the `fluent.conf` created by H
 
   ```xml
   <label @OUTPUT_ES>
-    # Setup index name index based on namespace and container
+    # Setup index name. Index per namespace or per container
     <filter kube.**>
       @type record_transformer
       enable_ruby
       <record>
-        index_app_name ${record['namespace'] + '.' + record['container']}
+        # index_app_name ${record['namespace'] + '.' + record['container']}
+        index_app_name ${record['namespace']}
       </record>
     </filter>
     <filter host.**>
@@ -1244,7 +1245,7 @@ fluentd-elasticsearch plugin supports the creation of index templates and ILM po
 
 Additionally separate ES indexes can be created for storing logs from different containers/app. Each index might have their own index template containing specific mapping configuration (schema definition) and its own ILM policy (different retention policies per log type). This separation of logs in different indexes is an alternative solution to [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58) , https://github.com/ricsanfre/pi-cluster/issues/58) avoiding mismatch-data-type ingestion errors that might occur when enabling Merge_Log option in fluentbit's kubernetes filter configuration.
 
-[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) are is configured so a separate index will be generated for each container (index name: fluendt-namespace.container), using a common ILM policy and setting automatic rollover.
+[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) is configured so a separate index will be generated for each namespace (index name: fluendt-namespace), using a common ILM policy and setting automatic rollover.
 
 - ILM policy
 
@@ -1253,51 +1254,45 @@ Additionally separate ES indexes can be created for storing logs from different 
   ```json
   {
     "policy":
-    {
-        "phases":
-        {
-          "hot":
-          {
+     {
+      "phases":
+       {
+         "hot":
+         {
             "min_age":"0ms",
             "actions":
             {
               "rollover":
-              {
-                "max_age":"3d",
-                "max_size":"20gb"
-              },
-              "set_priority":
-              {
-                "priority":100
-              }
-            }
+               {
+                 "max_size":"10gb",
+                 "max_age":"7d"
+               }
+             }
           },
           "warm":
           {
-            "actions":
-            {
-              "allocate":
-              {
-                "include":{},
-                "exclude":{},
-                "require":
+             "min_age":"2d",
+             "actions":
+             {
+                "shrink":
                 {
-                  "data":"warm"
+                  "number_of_shards":1
+                },
+                "forcemerge":
+                {
+                  "max_num_segments":1}
                 }
               },
-              "set_priority":
-              {
-                "priority":50
-              }
-            }
-          },
           "delete":
           {
-            "min_age":"90d",
-            "actions":
-            {
-              "delete":{}
-            }
+             "min_age":"7d",
+             "actions":
+              {
+                "delete":
+                {
+                  "delete_searchable_snapshot":true
+                }
+              }
           }
         }
     }
