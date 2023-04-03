@@ -385,7 +385,7 @@ fluentd:
           enable_ruby
           <record>
             # index_app_name ${record['namespace'] + '.' + record['container']}
-            index_app_name ${record['namespace']
+            index_app_name ${record['namespace']}
           </record>
         </filter>
         <filter host.**>
