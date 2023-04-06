@@ -3,7 +3,7 @@ title: Logging - Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
-last_modified_at: "24-03-2023"
+last_modified_at: "06-04-2023"
 
 ---
 
@@ -145,30 +145,33 @@ fluentd-elasticsearch-plugin is able to create ILM policies and apply them to th
 
 ILM policy fails to be created using latest version of fluent-plugin-elasticsearh. It seems that the current version of the plugin does not support properly ILM in ES 8.x, since it is using a deprecated gem (`elasticsearch-xpack`) instead of the new `elasticsearch-api`
 
-The following warning appears when building the Docker Image
+The following warning appears when building the Docker Image:
+```
+WARNING: This library is deprecated
+The API endpoints currently living in elasticsearch-xpack will be moved into elasticsearch-api in version 8.0.0 and forward. You should be able to keep using elasticsearch-xpack and the xpack namespace in 7.x. We're running the same tests in elasticsearch-xpack, but if you encounter any problems, please let us know in this issue: https://github.com/elastic/elasticsearch-ruby/issues/1274
+```
 
-> WARNING: This library is deprecated
-> The API endpoints currently living in elasticsearch-xpack will be moved into elasticsearch-api in version 8.0.0 and forward. You should be able to keep using elasticsearch-xpack and the xpack namespace in 7.x. We're running the same tests in elasticsearch-xpack, but if you encounter any problems, please let us know in this issue: https://github.com/elastic/elasticsearch-ruby/issues/1274
+Currently the fluentd plugin does not support `elasticsearch-api` and `elasticsearh-xpack` need to be used. See [fluent-plugin-elasticsearch issue #937](https://github.com/uken/fluent-plugin-elasticsearch/issues/937).
 
-Currently the fluentd plugin does not support `elasticsearch-api` and `elasticsearh-xpack` need to be used. See https://github.com/uken/fluent-plugin-elasticsearch/issues/937.
+On the other hand, [`fluentd-kubernetes-daemonset`](https://github.com/fluent/fluentd-kubernetes-daemonset) docker image, which is the one installed by default by fluentd helm chart, does not have yet a version for 8.x. Docker images available are just tagged as 7.0, and it seems that this docker images built initially for ES 7.x are working without issues with ES 8.x. See [fluentd-kubernetes-daemonset issue #1373](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/1373)
 
-On the other hand, `fluentd-kubernetes-daemonset` (https://github.com/fluent/fluentd-kubernetes-daemonset) docker image, which is the one installed by default by fluentd helm chart, does not have yet a version for 8.x. Docker images available are just tagged as 7.0, and it seems that this docker images built initially for ES 7.x are working without issues with ES 8.x. See https://github.com/fluent/fluentd-kubernetes-daemonset/issues/1373
+Latest docker image available, containing elasticsearch plugins (v1.15/debian-elasticsearch7) uses a previous version of fluentd-elasticsearch-plugin and its dependencies). See [debian-elasticsearch7/Gemfile](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.15/debian-elasticsearch7/Gemfile) used in Dockerfile to install all plugins and its dependencies:
 
-Latest docker image available, containing elasticsearch plugins (v1.15/debian-elasticsearch7) uses a previous version of fluentd-elasticsearch-plugin and its dependencies). See [Gemfile](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.15/debian-elasticsearch7/Gemfile) used in Dockerfile to install all plugins and its dependencies:
-```gem
+```
 gem "fluentd", "1.15.3"
 ...
 gem "elasticsearch", "~> 7.0"
 gem "fluent-plugin-elasticsearch", "~> 5.1.1"
 gem "elasticsearch-xpack", "~> 7.0"
 ```
+
 The docker image is installing the following gems:
 - fluentd 1.15.3 
 - fluent-plugin-elasticsearch 5.1.1
 - elasticsearch -> 7.0
 - elasticsearch-xpack -> 7.0
 
-Modifiying fluentd-aggregator docker image to use release 5.1.1 of gem fluent-plugin-elasticsearch and its ES's dependencies (ES 7.0 version), solves the ILM creation issue.
+Modifiying fluentd-aggregator docker image, using release 5.1.1 of gem fluent-plugin-elasticsearch and its ES's dependencies (ES 7.0 version), solves the ILM creation issue.
 
 New Dockerfile:
 
@@ -1229,7 +1232,7 @@ It is not needed to change the default content of the `fluent.conf` created by H
   
   With this configuration fluentd:
 
-  - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch reporitory](https://github.com/uken/fluent-plugin-elasticsearch).
+  - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch repository](https://github.com/uken/fluent-plugin-elasticsearch).
 
   - routes all logs to Loki configuring [loki output plugin](https://grafana.com/docs/loki/latest/clients/fluentd/). It adds the following labels to each log stream: app, pod, container, namespace, node_name and job.
     Before routing them it applies the following filter
@@ -1237,15 +1240,14 @@ It is not needed to change the default content of the `fluent.conf` created by H
 
 ##### ElasticSearch specific configuration
 
-fluentd-elasticsearch plugin supports the creation of index templates and ILM policies associated to them during the process of creating a new index in ES.
+fluentd-elasticsearch plugin supports the creation of index templates and ILM policies associated to each new index it creates in ES.
 
-[Index Templates](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-templates.html) can be used for controlling the way ES automatically maps/discover log's field data types and the way ES indexes these fields.
+[Index Templates](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-templates.html) is used for controlling the way ES automatically maps/discover log's field data types and the way ES indexes these fields. [ES Index Lifecycle Management (ILM)](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-lifecycle-management.html) is used for automating the management of indices, and setting data retention policies.
 
-[ES Index Lifecycle Management (ILM)](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-lifecycle-management.html) is used for automating the management of indices, and setting data retention policies.
+Additionally, separate ES indexes can be created for storing logs from different containers/app. Each index might has its own index template containing specific mapping configuration (schema definition) and its own ILM policy (different retention policies per log type). 
+Storing logs from different applications in different indexes is an alternative solution to [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58), avoiding mismatch-data-type ingestion errors that might occur when Merge_Log, option in fluentbit's kubernetes filter configuration, is enabled.
 
-Additionally separate ES indexes can be created for storing logs from different containers/app. Each index might have their own index template containing specific mapping configuration (schema definition) and its own ILM policy (different retention policies per log type). This separation of logs in different indexes is an alternative solution to [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58) , https://github.com/ricsanfre/pi-cluster/issues/58) avoiding mismatch-data-type ingestion errors that might occur when enabling Merge_Log option in fluentbit's kubernetes filter configuration.
-
-[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) is configured so a separate index will be generated for each namespace (index name: fluendt-namespace), using a common ILM policy and setting automatic rollover.
+[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) is configured, so a separate index will be generated for each namespace (index name: fluentd-namespace) with a common ILM policy.
 
 - ILM policy
 
@@ -1327,11 +1329,13 @@ Additionally separate ES indexes can be created for storing logs from different 
       }
     }
   ```
+
   fluentd-elasticsearch-plugin dynamically replaces <<TAG>>, <<shard>> and <<replica>> parameters with the values stored in `template_customize` field.
 
   ```
   customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
   ```
+
 
 ## Fluentbit Forwarder installation
 
