@@ -7,6 +7,7 @@
 ##################################
 
 install_helm: true
+helm_version: 'v3.9.4'
 install_kubectl: false
 
 # OS and hardware architectire
