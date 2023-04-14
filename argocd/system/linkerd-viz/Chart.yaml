@@ -3,5 +3,5 @@ name: linkerd-viz
 version: 0.0.0
 dependencies:
   - name: linkerd-viz
-    version: 30.3.4
+    version: 30.8.0
     repository: https://helm.linkerd.io/stable
