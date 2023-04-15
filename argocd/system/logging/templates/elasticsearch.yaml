@@ -9,6 +9,9 @@ spec:
     tls:
       selfSignedCertificate:
         disabled: true
+  auth:
+    fileRealm:
+    - secretName: es-admin-user-file-realm
   nodeSets:
     - name: default
       count: {{ .Values.elasticsearch.clusterNodes }}
