@@ -12,6 +12,20 @@ metadata:
     linkerd.io/is-control-plane: "true"
     config.linkerd.io/admission-webhooks: disabled
     linkerd.io/control-plane-ns: linkerd
+
+---
+
+#linkerd-viz namespace
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: linkerd-viz
+  annotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-await: "enabled"
+  labels:
+    linkerd.io/extension: viz
+
 ---
 
 # logging namespace
