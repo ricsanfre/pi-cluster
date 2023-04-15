@@ -14,10 +14,12 @@
   include_tasks: remove_snap.yaml
   when: "'snapd' in ansible_facts.packages"
 
-
 - name: Execute RaspberryPi specific setup tasks
   include_tasks: raspberrypi_tasks.yml
   when: "'raspberrypi' in group_names"
+
+- name: Disable swap memory
+  include_tasks: disable_swap.yml
 
 - name: Blacklist storage devices in multipath configuration
   include_tasks: multipath_blacklist.yml

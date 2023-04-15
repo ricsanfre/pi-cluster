@@ -1,0 +1,11 @@
+---
+
+- name: System Configuration (2) | Disable swap at runtime
+  ansible.builtin.command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+- name: System Configuration (2) | Disable swap at boot
+  ansible.posix.mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  loop: ["none", "swap"]
