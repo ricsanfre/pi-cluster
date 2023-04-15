@@ -27,6 +27,9 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares:
       {{ .Values.ingress.basicAuth.middlewareNamespace }}-{{ .Values.ingress.basicAuth.middlewareName }}@kubernetescrd
 {{- end }}
+    # Linkerd header
+    traefik.ingress.kubernetes.io/router.middlewares:
+      {{ .Release.Namespace }}-l5d-header-middleware-linkerd-viz@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.ingress.host }}
