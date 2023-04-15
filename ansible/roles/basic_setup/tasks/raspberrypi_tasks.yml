@@ -1,0 +1,26 @@
+---
+
+- name: Install common packages
+  apt:
+    name: "{{ basic_packages }}"
+    update_cache: true
+    state: present
+
+- name: Copy utility scripts
+  copy:
+    src: "scripts/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+  with_items:
+    - pi_temp
+    - pi_throttling
+
+- name: Set GPU memory split to 16 MB
+  lineinfile:
+    path: /boot/firmware/config.txt
+    line: "gpu_mem=16"
+    create: true
+    mode: 0755
+  notify: reboot
