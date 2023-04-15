@@ -1,5 +1,5 @@
 ---
-- hosts: raspberrypi
+- hosts: all
   become: true
   gather_facts: false
 
