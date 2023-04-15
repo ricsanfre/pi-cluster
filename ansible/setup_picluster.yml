@@ -113,5 +113,6 @@
         - name: Configure Local Storage
           include_role:
             name: ricsanfre.storage
+          when: "'raspberrypi' in group_names"
       when: not centralized_san
       tags: [storage]
