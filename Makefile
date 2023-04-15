@@ -1,10 +1,7 @@
 .EXPORT_ALL_VARIABLES:
 
-GPG_EMAIL=ricsanfre@gmail.com
-GPG_NAME=Ricardo Sanchez
-
 RUNNER=ansible-runner/ansible-runner.sh
-
+KUBECONFIG = $(shell pwd)/ansible-runner/runner/.kube/config
 
 .PHONY: default
 default: clean
@@ -41,7 +38,7 @@ gateway-setup:
 
 .PHONY: nodes-setup
 nodes-setup:
-	${RUNNER} ansible-playbook setup_picluster.yml --tags "nodes"
+	${RUNNER} ansible-playbook setup_picluster.yml --tags "node"
 
 .PHONY: external-services
 external-services:
@@ -86,3 +83,11 @@ shutdown-k3s-master:
 .PHONY: shutdown-gateway
 shutdown-gateway:
 	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" gateway
+
+.PHONY: get-argocd-passwd
+get-argocd-passwd:
+	kubectl get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' -n argocd | base64 -d;echo
+
+.PHONY: get-elastic-passwd
+get-elastic-passwd:
+	kubectl get secret efk-es-elastic-user -o jsonpath='{.data.elastic}' -n logging | base64 -d;echo
