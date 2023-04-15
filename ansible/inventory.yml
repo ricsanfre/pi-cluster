@@ -12,8 +12,6 @@ all:
           hostname: pimaster
           ansible_host: localhost
           ansible_connection: local
-          ip: 10.0.0.10
-          mac: 08:00:27:f3:6b:dd
     external:
       hosts:
         s3:
@@ -46,6 +44,11 @@ all:
           ansible_host: 10.0.0.15
           ip: 10.0.0.15
           mac: e4:5f:01:d9:ec:5c
+        khazad-dum:
+          hostname: khazad-dum
+          ansible-host: 10.0.0.20
+          ip: 10.0.0.20
+          mac: 18:60:24:21:1c:d4
     raspberrypi:
       hosts:
         node[1:5]:
@@ -58,3 +61,4 @@ all:
         k3s_worker:
           hosts:
             node[2:5]:
+            khazad-dum:
