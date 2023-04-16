@@ -432,13 +432,16 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
       value: "9200"
     # Elasticsearch user
     - name: FLUENT_ELASTICSEARCH_USER
-      value: "elastic"
+      valueFrom:
+        secretKeyRef:
+          name: "es-fluentd-user-file-realm"
+          key: username
     # Elastic operator stores elastic user password in a secret
     - name: FLUENT_ELASTICSEARCH_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: "efk-es-elastic-user"
-          key: elastic
+          name: "es-fluentd-user-file-realm"
+          key: password
     - name: FLUENTD_FORWARD_SEC_SHARED_KEY
       valueFrom:
         secretKeyRef:
