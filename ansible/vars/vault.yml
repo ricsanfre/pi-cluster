@@ -37,7 +37,7 @@ vault:
   # elastic search
   elasticsearch:
     elastic:
-      user: elastic
+      user: admin
       password: s1cret0
   # Fluentd
   fluentd:
