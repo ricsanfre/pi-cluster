@@ -190,23 +190,98 @@ Password is stored in a kubernetes secret (`<efk_cluster_name>-es-elastic-user`)
 kubectl get secret -n logging efk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
 ```
 
-Setting the password to a well known value is not an officially supported feature by ECK but a workaround exists by creating the {clusterName}-es-elastic-user Secret before the Elasticsearch resource (ECK operator).
+Recently ECK has added support toe define users by file realm as well as adding custom roles to the cluster.
 
-Generate base64 encoded password 
-```shell
-echo -n 'supersecret' | base64
-```
+See [Users and roles](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-users-and-roles.html) from elastic cloud-on-k8s documentation.
+
+To allow fluentd and prometheus exporter to access our elasticsearch cluster, we can define two role that grants the necessary permission for the two users we will be creating (**fluentd, prometheus**).
 
 ```yml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: es-fluentd-roles-secret
+stringData:
+  roles.yml: |-
+    fluentd_role:
+      cluster: ['manage_index_templates', 'monitor', 'manage_ilm']
+      indices:
+      - names: [ '*' ]
+        privileges: [
+          'indices:admin/create',
+          'write',
+          'create',
+          'delete',
+          'create_index',
+          'manage',
+          'manage_ilm'
+        ]
+```
+```yml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: es-prometheus-roles-secret
+stringData:
+  roles.yml: |-
+    prometheus_role:
+      cluster: [
+        'cluster:monitor/health',
+        'cluster:monitor/nodes/stats',
+        'cluster:monitor/state',
+        'cluster:monitor/nodes/info',
+        'cluster:monitor/prometheus/metrics'
+      ] 
+      indices:
+      - names: [ '*' ]
+        privileges: [ 'indices:admin/aliases/get', 'indices:admin/mappings/get', 'indices:monitor/stats', 'indices:data/read/search' ]
+```
+
+The creating the user for fluentd and prometheus
+
+```yml
+{{- $passwordValue := (randAlphaNum 16) | b64enc | quote }}
 apiVersion: v1
 kind: Secret
-metadata: 
-  name: efk-es-elastic-user
-  namespace: logging
-type: Opaque
+metadata:
+  name: es-fluentd-user-file-realm
+type: kubernetes.io/basic-auth
 data:
-  elastic: <base64 encoded efk_elasticsearch_password>
+  username: {{ "fluentd" | b64enc }}
+  password: {{ $passwordValue }}
+  roles: {{ "fluentd_role" | b64enc }}
+---
+{{- $passwordValue := (randAlphaNum 16) | b64enc | quote }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: es-prometheus-user-file-realm
+type: kubernetes.io/basic-auth
+data:
+  username: {{ "prometheus" | b64enc }}
+  password: {{ $passwordValue }}
+  roles: {{ "prometheus_role" | b64enc }}
 ```
+
+We need to add these to the elasticsearch manifest we have defined above
+
+```yml
+# spec:
+#   version: {{ .Values.elasticsearch.version }}
+#   http:
+#     tls:
+#       selfSignedCertificate:
+#         disabled: true
+  auth:
+    roles:
+    - secretName: es-fluentd-roles-secret
+    - secretName: es-prometheus-roles-secret
+    fileRealm:
+    - secretName: es-fluentd-user-file-realm
+    - secretName: es-prometheus-user-file-realm
+```
+
+In addition to the `elastic` user we can also create an super user account for us to login, we can create the account just like how we created the `elastic` user, but instead with the role set to `superuser`.
 
 ### Accesing Elasticsearch from outside the cluster
 
@@ -463,22 +538,22 @@ For doing the installation [prometheus-elasticsearch-exporter official helm](htt
 
   ```yml
   ---
-  # Elastic search user
-  env:
-    ES_USERNAME: elastic
-
-  # Elastic search passord from secret
+  # Elastic search password from secret
   extraEnvSecrets:
+    ES_USERNAME:
+      secret: es-prometheus-user-file-realm
+      key: username
     ES_PASSWORD:
-      secret: efk-es-elastic-user
-      key: elastic
+      secret: es-prometheus-user-file-realm
+      key: password
+
 
   # Elastic search URI
   es:
     uri: http://efk-es-http:9200
   ```
   
-  This config passes ElasticSearch API endpoint (`uri`) and the needed credentials through environement variables(`ES_USERNAME` and `ES_PASSWORD`). 
+  This config passes ElasticSearch API endpoint (`uri`) and the needed credentials through environement variables(`ES_USERNAME` and `ES_PASSWORD`). The `es-prometheus-user-file-realm` secret was created above when in [Elasticsearch authentication](#elasticsearch-authentication)
 
 - Step 3: Install prometheus-elasticsearh-exporter in the logging namespace with the overriden values
 
