@@ -1,0 +1,19 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: es-fluentd-roles-secret
+stringData:
+  roles.yml: |-
+    fluentd_role:
+      cluster: ['manage_index_templates', 'monitor', 'manage_ilm']
+      indices:
+      - names: [ '*' ]
+        privileges: [
+          'indices:admin/create',
+          'write',
+          'create',
+          'delete',
+          'create_index',
+          'manage',
+          'manage_ilm'
+        ]
