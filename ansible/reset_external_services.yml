@@ -58,7 +58,7 @@
         daemon_reload: true
 
 - name: Clean Restic Installation
-  hosts: raspberrypi
+  hosts: picluster:gateway
   become: true
   gather_facts: false
   tags: [restic]
