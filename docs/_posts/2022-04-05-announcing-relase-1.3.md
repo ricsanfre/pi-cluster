@@ -3,6 +3,7 @@ layout: post
 title:  Kubernetes Pi Cluster relase v1.3
 date:   2022-04-5
 author: ricsanfre
+description: PiCluster News - announcing release v1.3
 ---
 
 Today I am very happy to announce the third release of Kubernetes Pi Cluster project (v1.3). 

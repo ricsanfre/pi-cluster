@@ -3,6 +3,7 @@ layout: post
 title:  Pi Cluster Project Website is now live
 date:   2022-01-31
 author: ricsanfre
+description: PiCluster News - Welcome to Pi Cluster Project
 ---
 
 Welcome to Raspberry PI Kubernetes Cluster Educational Project website
