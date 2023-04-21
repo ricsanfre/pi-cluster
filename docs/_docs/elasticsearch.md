@@ -2,7 +2,7 @@
 title: Logging - Log Analytics (Elasticsearch and Kibana)
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "15-08-2022"
+last_modified_at: "21-04-2023"
 
 ---
 
@@ -190,98 +190,117 @@ Password is stored in a kubernetes secret (`<efk_cluster_name>-es-elastic-user`)
 kubectl get secret -n logging efk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
 ```
 
-Recently ECK has added support toe define users by file realm as well as adding custom roles to the cluster.
+Recently ECK has added support to define additional custom users and roles. Custom users are added [ES File-based Authentication](https://www.elastic.co/guide/en/elasticsearch/reference/current/file-realm.html).
 
 See [Users and roles](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-users-and-roles.html) from elastic cloud-on-k8s documentation.
 
 To allow fluentd and prometheus exporter to access our elasticsearch cluster, we can define two role that grants the necessary permission for the two users we will be creating (**fluentd, prometheus**).
 
-```yml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: es-fluentd-roles-secret
-stringData:
-  roles.yml: |-
-    fluentd_role:
-      cluster: ['manage_index_templates', 'monitor', 'manage_ilm']
-      indices:
-      - names: [ '*' ]
-        privileges: [
-          'indices:admin/create',
-          'write',
-          'create',
-          'delete',
-          'create_index',
-          'manage',
-          'manage_ilm'
-        ]
-```
-```yml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: es-prometheus-roles-secret
-stringData:
-  roles.yml: |-
-    prometheus_role:
-      cluster: [
-        'cluster:monitor/health',
-        'cluster:monitor/nodes/stats',
-        'cluster:monitor/state',
-        'cluster:monitor/nodes/info',
-        'cluster:monitor/prometheus/metrics'
-      ] 
-      indices:
-      - names: [ '*' ]
-        privileges: [ 'indices:admin/aliases/get', 'indices:admin/mappings/get', 'indices:monitor/stats', 'indices:data/read/search' ]
-```
+- Step 1: Create Secrets containing roles definitions
 
-The creating the user for fluentd and prometheus
+  Fluentd user role:
 
-```yml
-{{- $passwordValue := (randAlphaNum 16) | b64enc | quote }}
-apiVersion: v1
-kind: Secret
-metadata:
-  name: es-fluentd-user-file-realm
-type: kubernetes.io/basic-auth
-data:
-  username: {{ "fluentd" | b64enc }}
-  password: {{ $passwordValue }}
-  roles: {{ "fluentd_role" | b64enc }}
----
-{{- $passwordValue := (randAlphaNum 16) | b64enc | quote }}
-apiVersion: v1
-kind: Secret
-metadata:
-  name: es-prometheus-user-file-realm
-type: kubernetes.io/basic-auth
-data:
-  username: {{ "prometheus" | b64enc }}
-  password: {{ $passwordValue }}
-  roles: {{ "prometheus_role" | b64enc }}
-```
+  ```yml
+  kind: Secret
+  apiVersion: v1
+  metadata:
+    name: es-fluentd-roles-secret
+    namespace: logging
+  stringData:
+    roles.yml: |-
+      fluentd_role:
+        cluster: ['manage_index_templates', 'monitor', 'manage_ilm']
+        indices:
+        - names: [ '*' ]
+          privileges: [
+            'indices:admin/create',
+            'write',
+            'create',
+            'delete',
+            'create_index',
+            'manage',
+            'manage_ilm'
+          ]
+  ```
 
-We need to add these to the elasticsearch manifest we have defined above
+  Prometheus Exporter user role:
 
-```yml
-# spec:
-#   version: {{ .Values.elasticsearch.version }}
-#   http:
-#     tls:
-#       selfSignedCertificate:
-#         disabled: true
-  auth:
-    roles:
-    - secretName: es-fluentd-roles-secret
-    - secretName: es-prometheus-roles-secret
-    fileRealm:
-    - secretName: es-fluentd-user-file-realm
-    - secretName: es-prometheus-user-file-realm
-```
+  ```yml
+  kind: Secret
+  apiVersion: v1
+  metadata:
+    name: es-prometheus-roles-secret
+    namespace: logging
+  stringData:
+    roles.yml: |-
+      prometheus_role:
+        cluster: [
+          'cluster:monitor/health',
+          'cluster:monitor/nodes/stats',
+          'cluster:monitor/state',
+          'cluster:monitor/nodes/info',
+          'cluster:monitor/prometheus/metrics'
+        ] 
+        indices:
+        - names: [ '*' ]
+          privileges: [ 'indices:admin/aliases/get', 'indices:admin/mappings/get', 'indices:monitor/stats', 'indices:data/read/search' ]
+  ```
 
-In addition to the `elastic` user we can also create an super user account for us to login, we can create the account just like how we created the `elastic` user, but instead with the role set to `superuser`.
+- Step 2. Create the Secrets containing user name, password and mapped role
+
+  Fluentd user:
+
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: es-fluentd-user-file-realm
+    namespace: logging
+  type: kubernetes.io/basic-auth
+  data:
+    username: <`echo -n 'fluentd' | base64`>
+    password: <`echo -n 'supersecret' | base64`>
+    roles: <`echo -n 'fluentd_role' | base64`>
+  ```
+
+  Prometheus exporter user:
+
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: es-prometheus-user-file-realm
+    namespace: logging
+  type: kubernetes.io/basic-auth
+  data:
+    username: <`echo -n 'prometheus' | base64`>
+    password: <`echo -n 'supersecret' | base64`>
+    roles: <`echo -n 'prometheus_role' | base64`>
+  ```
+
+
+- Step 3: Modify Elasticsearch yaml file created in step 1 of ES installation.
+
+  Add the following lines to ElasticSearch manifest file:
+
+  ```yml
+  apiVersion: elasticsearch.k8s.elastic.co/v1
+  kind: Elasticsearch
+  metadata:
+    name: efk
+    namespace: logging
+  spec:
+    auth:
+      roles:
+      - secretName: es-fluentd-roles-secret
+      - secretName: es-prometheus-roles-secret
+      fileRealm:
+      - secretName: es-fluentd-user-file-realm
+      - secretName: es-prometheus-user-file-realm
+  ...
+  ```
+
+In addition to the `elastic` user we can also create an super user account for us to login, we can create the account just like how we created the `fluentd` or `prometheus` user, but instead with the role set to `superuser`.
 
 ### Accesing Elasticsearch from outside the cluster
 
