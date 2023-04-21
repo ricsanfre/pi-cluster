@@ -37,9 +37,15 @@ vault:
       key: {{ minio_tempo_password }}
   # elasticsearch and fluentd
   logging:
-    elastic:
+    es-admin:
       user: admin
       password: {{ elasticsearch_admin_password }}
+    es-fluentd:
+      user: fluentd
+      password: {{ elasticsearch_fluentd_password }}
+    es-prometheus:
+      user: prometheus
+      password: {{ elasticsearch_prometheus_password }}
     fluentd:
       shared_key: {{ fluentd_shared_key }}
   # Grafana

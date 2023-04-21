@@ -36,8 +36,14 @@ vault:
       key: supers1cret0
   # elastic search
   elasticsearch:
-    elastic:
+    es-admin:
       user: admin
+      password: s1cret0
+    es-fluentd:
+      user: fluentd
+      password: s1cret0
+    es-prometheus:
+      user: prometheus
       password: s1cret0
   # Fluentd
   fluentd:
