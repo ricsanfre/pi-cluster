@@ -2,6 +2,7 @@ kind: Secret
 apiVersion: v1
 metadata:
   name: es-prometheus-roles-secret
+  namespace: {{ .Release.Namespace }}
 stringData:
   roles.yml: |-
     prometheus_role:
