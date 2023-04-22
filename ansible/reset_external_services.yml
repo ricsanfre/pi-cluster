@@ -22,6 +22,7 @@
         - /usr/local/bin/minio
         - /usr/local/bin/mc
         - /etc/systemd/system/minio.service
+        - ~/.mc
     - name: Reload systemd daemon
       systemd:
         daemon_reload: true
