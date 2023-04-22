@@ -54,7 +54,7 @@ configure-monitoring-gateway:
 
 .PHONY: os-backup
 os-backup:
-	${RUNNER} ansible -b -m shell -a 'systemctl start restic-backup' raspberrypi
+	${RUNNER} ansible -b -m shell -a 'systemctl start restic-backup' picluster:gateway
 
 .PHONY: k3s-install
 k3s-install:
