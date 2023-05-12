@@ -1,4 +1,16 @@
 ---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware-longhorn
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+      l5d-dst-override: "longhorn-frontend.{{ .Release.Namespace }}.svc.cluster.local:80"
+
+---
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -18,6 +30,9 @@ metadata:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.ingress.host }}
+    # Linkerd header
+    traefik.ingress.kubernetes.io/router.middlewares:
+      {{ .Release.Namespace }}-l5d-header-middleware-longhorn@kubernetescrd
 spec:
   tls:
     - hosts:
