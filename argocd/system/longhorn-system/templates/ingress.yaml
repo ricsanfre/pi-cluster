@@ -22,17 +22,16 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Enable TLS
     traefik.ingress.kubernetes.io/router.tls: "true"
-{{- if .Values.ingress.basicAuth.enable }}
-    # Use Basic Auth Midleware configured
+    # Use Basic Auth Midleware configured and Linkerd header
     traefik.ingress.kubernetes.io/router.middlewares:
-      {{ .Values.ingress.basicAuth.middlewareNamespace }}-{{ .Values.ingress.basicAuth.middlewareName }}@kubernetescrd
+{{- if .Values.ingress.basicAuth.enable }}
+      {{ .Values.ingress.basicAuth.middlewareNamespace }}-{{ .Values.ingress.basicAuth.middlewareName }}@kubernetescrd,
 {{- end }}
+      {{ .Release.Namespace }}-l5d-header-middleware-longhorn@kubernetescrd
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.ingress.host }}
-    # Linkerd header
-    traefik.ingress.kubernetes.io/router.middlewares:
-      {{ .Release.Namespace }}-l5d-header-middleware-longhorn@kubernetescrd
+    
 spec:
   tls:
     - hosts:
