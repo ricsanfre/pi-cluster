@@ -59,12 +59,17 @@
     - name: Configure Vault integration
       include_tasks: tasks/configure_vault_integration.yml
 
-    - name: Copy argocd chart files
+    - name: Copy argocd chart and crds
       ansible.builtin.copy:
         src: "../argocd/{{ item }}"
         dest: /tmp/charts
       with_items:
+        - "bootstrap/crds"
         - "bootstrap/argocd"
+
+    - name: Install CRDs
+      ansible.builtin.command:
+        cmd: kubectl apply --server-side --kustomize  /tmp/charts/crds
 
     - name: Update argo-cd helm dependency.
       ansible.builtin.command:
