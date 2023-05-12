@@ -288,23 +288,24 @@ The software used and the latest version tested of each component
 | OS | Ubuntu | 20.04.3 | OS need to be tweaked for Raspberry PI when booting from external USB  |
 | Control | Ansible | 2.12.1  | |
 | Control | cloud-init | 21.4 | version pre-integrated into Ubuntu 20.04 |
-| Kubernetes | K3S | v1.24.7 | K3S version|
-| Kubernetes | Helm | v3.6.3 ||
-| Metrics | Kubernetes Metrics Server | v0.6.1 | version pre-integrated into K3S |
-| Computing | containerd | v1.6.8-k3s1 | version pre-integrated into K3S |
-| Networking | Flannel | v0.19.2 | version pre-integrated into K3S |
-| Networking | CoreDNS | v1.9.1 | version pre-integrated into K3S |
-| Networking | Metal LB | v0.13.7 | Helm chart version:  0.13.7 |
-| Service Mesh | Linkerd | v2.12.2 | Helm chart version: linkerd-control-plane-1.9.4 |
-| Service Proxy | Traefik | v2.9.1 | Helm chart version: 18.1.0  |
-| Storage | Longhorn | v1.3.2 | Helm chart version: 1.3.2 |
-| TLS Certificates | Certmanager | v1.10.0 | Helm chart version: v1.10.0  |
-| Logging | ECK Operator |  2.4.0 | Helm chart version: 2.4.0 |
-| Logging | Elastic Search | 8.1.2 | Deployed with ECK Operator |
-| Logging | Kibana | 8.1.2 | Deployed with ECK Operator |
-| Logging | Fluentbit | 2.0.4 | Helm chart version: 0.21.0 |
+| Kubernetes | K3S | v1.26.3 | K3S version|
+| Kubernetes | Helm | v3.9.4 ||
+| Metrics | Kubernetes Metrics Server | v0.6.2 | version pre-integrated into K3S |
+| Computing | containerd | v1.6.19-k3s1 | version pre-integrated into K3S |
+| Networking | Flannel | v0.21.4 | version pre-integrated into K3S |
+| Networking | CoreDNS | v1.9.4 | version pre-integrated into K3S |
+| Networking | Metal LB | v0.13.9 | Helm chart version:  0.13.9 |
+| Service Mesh | Linkerd | v2.13.3 | Helm chart version: linkerd-control-plane-1.12.3 |
+| Service Proxy | Traefik | v2.9.10 | Helm chart version: 22.1.0  |
+| Storage | Longhorn | v1.4.1 | Helm chart version: 1.4.1 |
+| Storage | Minio | RELEASE.2023-04-28T18-11-17Z | Helm chart version: 5.0.9 |
+| TLS Certificates | Certmanager | v1.11.1| Helm chart version: v1.11.1  |
+| Logging | ECK Operator |  2.7.0 | Helm chart version: 2.7.0 |
+| Logging | Elastic Search | 8.6.0 | Deployed with ECK Operator |
+| Logging | Kibana | 8.6.0 | Deployed with ECK Operator |
+| Logging | Fluentbit | 2.0.10 | Helm chart version: 0.25.0 |
 | Logging | Fluentd | 1.15.2 | Helm chart version: 0.3.9. [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.2|
-| Logging | Loki | 2.6.1 | Helm chart grafana/loki version: 3.3.0 |
+| Logging | Loki | 2.8.2 | Helm chart grafana/loki version: 5.5.1 |
 | Monitoring | Kube Prometheus Stack | 0.61.1 | Helm chart version: 43.3.1 |
 | Monitoring | Prometheus Operator | 0.61.1 | Installed by Kube Prometheus Stack. Helm chart version: 43.3.1   |
 | Monitoring | Prometheus | 2.40.5 | Installed by Kube Prometheus Stack. Helm chart version: 43.3.1 |
@@ -312,10 +313,11 @@ The software used and the latest version tested of each component
 | Monitoring | Grafana | 9.3.1 | Helm chart version grafana-6.48.2. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 43.3.1 |
 | Monitoring | Prometheus Node Exporter | 1.5.0 | Helm chart version: prometheus-node-exporter-4.8.2. Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 43.3.1 |
 | Monitoring | Prometheus Elasticsearch Exporter | 1.5.0 | Helm chart version: prometheus-elasticsearch-exporter-4.15.1 |
-| Backup | Minio | RELEASE.2022-09-22T18-57-27Z | |
-| Backup | Restic | 0.12.1 | |
+| Tracing | Grafana Tempo | 2.1.1 | Helm chart: tempo-distributed (1.4.0) |
+| Backup | Minio External (self-hosted) | RELEASE.2023-04-20T17:56:55Z| |
+| Backup | Restic | 0.13.1 | |
 | Backup | Velero | 1.9.3 | Helm chart version: 2.32.1 |
 | Secrets | Hashicorp Vault | 1.12.2 | |
-| Secrets| External Secret Operator | 0.7.1 | Helm chart version: 0.7.1 |
-| GitOps | Argo CD | v2.5.6 | Helm chart version: 5.17.1 |
+| Secrets| External Secret Operator | 0.8.1 | Helm chart version: 0.8.1 |
+| GitOps | Argo CD | v2.7.2 | Helm chart version: 5.33.2 |
 {: .table .table-white .border-dark }
