@@ -3,5 +3,5 @@ name: minio
 version: 0.0.0
 dependencies:
   - name: minio
-    version: 5.0.7
+    version: 5.0.9
     repository: https://charts.min.io/
