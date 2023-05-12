@@ -49,6 +49,11 @@ all:
           ansible-host: 10.0.0.20
           ip: 10.0.0.20
           mac: 18:60:24:21:1c:d4
+        kheled-zaram:
+          hostname: kheled-zaram
+          ansible-host: 10.0.0.21
+          ip: 10.0.0.21
+          mac: 10:e7:c6:16:54:10
     raspberrypi:
       hosts:
         node[1:5]:
@@ -62,3 +67,4 @@ all:
           hosts:
             node[2:5]:
             khazad-dum:
+            kheled-zaram:
