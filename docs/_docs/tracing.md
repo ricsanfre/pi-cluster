@@ -2,7 +2,7 @@
 title: Distributed Tracing (Tempo)
 permalink: /docs/tracing/
 description: How to deploy a distributed tracing solution based on Grafana Tempo.
-last_modified_at: "19-11-2022"
+last_modified_at: "13-05-2023"
 ---
 
 
@@ -41,7 +41,7 @@ All Tempo components are included within a single binary (docker image) that  su
   In microservices mode, components are deployed in distinct processes. Scaling and HA is specified by microservice.
 
 
-Further details in Tempo architecture documentation: [Tempo Architecture](https://grafana.com/docs/tempo/latest/operations/architecture/) and [Tempo deployment](https://grafana.com/docs/tempo/latest/operations/deployment/)
+Further details in Tempo architecture documentation: [Tempo Architecture](https://grafana.com/docs/tempo/latest/operations/architecture/) and [Tempo deployment](https://grafana.com/docs/tempo/latest/setup/deployment/)
 
 Tempo will be installed using microservices mode configuring S3 Object Storage Server (Minio) as backend.
 
