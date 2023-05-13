@@ -36,6 +36,9 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
 
+- name: Disable swap memory
+  include_tasks: disable_swap.yml
+
 # Enable cgroups RaspberryPi
 - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
   lineinfile:
