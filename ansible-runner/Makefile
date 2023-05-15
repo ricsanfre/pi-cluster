@@ -17,5 +17,5 @@ runner/.ssh/id_rsa:
 	${RUNNER} ssh-keygen -t rsa -P '' -f /home/runner/.ssh/id_rsa
 
 runner/.vault/vault_passphrase.gpg:
-	${RUNNER} scripts/generate_gpg_key.sh
-	${RUNNER} scripts/generate_vault_password.sh
+	${RUNNER} /home/runner/scripts/generate_gpg_key.sh
+	${RUNNER} /home/runner/scripts/generate_vault_password.sh
