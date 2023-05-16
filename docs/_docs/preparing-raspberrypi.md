@@ -2,7 +2,7 @@
 title: Raspberry PI firmware update
 permalink: /docs/firmware/
 description: How to update firmware of our Raspberry Pi cluster nodes. Neeeded for enabling boot from USB and keep it updated.
-last_modified_at: "25-02-2022"
+last_modified_at: "16-05-2023"
 ---
 
 Raspberry Pi Firmware update procedure and preparing Raspberry Pis for booting from USB
@@ -10,71 +10,99 @@ Raspberry Pi Firmware update procedure and preparing Raspberry Pis for booting f
 ## About USB Booting support (Raspberry Pi 4 and Ubuntu)
 
 Raspberry Pi’s bootloader has a 2020/09/03 version that just started supporting booting from USB.
-Ubuntu 20.04.02 LTS (Long Time Support) does not support "out-of-the-box" booting from USB and it is needed to make changes into boot folder kernel files. It can be done following this [guide](https://jamesachambers.com/raspberry-pi-4-ubuntu-20-04-usb-mass-storage-boot-guide/).
-
-Ubuntu 20.10 and 21.04 (not LTS) already support booting from USB “out-of-the-box”.
-Since 20.10 and 21.04 are development releases and not LTS releases, are less stable and to avoid issues Ubuntu 20.04 will be used within the cluster.
-
 First step is to prepare Raspberry Pis to update its Firmware and enable boot from USB stick. 
 Firmware update and bootloader configuration is fully supported only using Raspberry Pi OS.
+
+Ubuntu 22.04 LTS for RaspberryPi also supports “out-of-the-box” booting from USB. This version is will be used within the cluster.
+
+{{site.data.alerts.note}}
+
+Ubuntu 20.04.02 was used in previous releases of Pi-cluster. Ubuntu 20.04.02 LTS (Long Time Support) does not support "out-of-the-box" booting from USB and it is needed to make changes into boot folder kernel files. It can be done following this [guide](https://jamesachambers.com/raspberry-pi-4-ubuntu-20-04-usb-mass-storage-boot-guide/).
+
+{{site.data.alerts.end}}
 
 ## Configure headless Raspberry OS
 
 Prepare Raspberry PI OS for a headless start-up (without keyboard and monitor) enabling remote ssh connection and wifi access to home network.
 
-- Step 1. Download Raspberry Pi OS  lite
-  These instructions are for a Raspberry Pi OS Lite, image that can be downloaded from here:
+[Raspberry PI Imager](https://www.raspberrypi.com/software/) will be used to burn Raspberry PI OS into a SD Card and configure it in headless mode.
 
-  https://www.raspberrypi.org/software/operating-systems/
-
-  I’m using the lite image (no desktop) kernel version 5.10 from May 7th, 2021.
-
-- Step 2. Burn the Raspberry Pi OS image to the SD card
+- Step 1. Download Raspberry Pi Imager and install it
   
-  Burn the latest Raspberry Pi OS image to SD-Card using Etcher
+  Installer can be downloaded from URL: https://www.raspberrypi.com/software/
 
-  Browse to https://www.balena.io/etcher/
-  Download the version for your operating system
-  Run the installer
-  To run Etcher is pretty straight forward.
+  In Ubuntu it can be installed using snap package manager:
 
-  Put a blank mini SD card and adapter into your machine. No need to format it. You can use a new SD card right out of the package.
-
-  1 - Click **Flash from file** - browse to the zip file you downloaded for Raspberry Pi OS.<br>
-  2 - Click **Select target** - it may find the SDHC Card automatically, if not select it.<br>
-  3 - Click **Flash!** - you may be prompted for your password
-
-  After you flash (burn) the image,  File Explorer (Windows) may have trouble seeing it. A simple fix is to pull the SD card out then plug it back in. On Windows it should appear in File Explorer with the name boot followed by a drive letter.
-
-- Step 3. Enable ssh to allow remote login
-
-  For security reasons, ssh is no longer enabled by default. To enable it you need to place an empty file named ssh (no extension) in the root of the boot disk.Enable ssh to do remote login: <br> Create a empty file named `ssh` within `boot` directory
-
-- Step 4. Enable wifi connection
-
-  Create a file `boot/wpa_supplicant.conf` with the following content, including wifi SSID name and password: 
   ```
-  country=ES
-  ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-  update_config=1
-
-  network={
-      ssid="NETWORK-NAME"
-      psk="NETWORK-PASSWORD"
-  }
+  snap install rpi-imager
   ```
 
-- Step 5. Eject the micro SD card
+- Step 2:  Put a blank mini SD card and adapter. No need to format it. You can use a new SD card right out of the package.
+
+- Step 3. Start rpi-imager
+
+  In Ubuntu execute command:
+
+  ```
+  rpi-imager
+  ```
+  
+- Step 4. Choose OS image to burn.
+
+  Click on "Choose OS"
+
+  ![rpi-imager-1](/assets/img/rpi-imager-1.png)
+
+  Select "Raspberry PI OS Other"
+
+  ![rpi-imager-2](/assets/img/rpi-imager-2.png)
+
+  Select "Raspberry PI OS Lite (64 bits)"
+
+  ![rpi-imager-3](/assets/img/rpi-imager-3.png)
+
+- Step 5. Choose Storage output
+  
+  Click on "Choose Storage"
+
+  ![rpi-imager-4](/assets/img/rpi-imager-4.png)
+
+  Select the SD card storage
+
+  ![rpi-imager-5](/assets/img/rpi-imager-5.png)
+
+
+- Step 6. Select Advanced Options
+  
+  ![rpi-imager-6](/assets/img/rpi-imager-6.png)
+  
+
+- Step 8: Enable SSH and configure pi user and password
+
+  ![rpi-imager-7](/assets/img/rpi-imager-7.png)
+
+
+- Step 9: Configure pi user and passwork and Wireless LAN network
+
+  ![rpi-imager-8](/assets/img/rpi-imager-8.png)
+
+
+- Step 10: Click on Write
+
+  ![rpi-imager-9](/assets/img/rpi-imager-9.png)
+
+
+- Step 11. Eject the micro SD card
 
   Right-click on boot (on your desktop or File Explorer) and select the Eject option
 
-- Step 6. Boot the Raspberry Pi from the micro SD card
+- Step 12. Boot the Raspberry Pi from the micro SD card
 
   Remove the mini-SD card from the adapter and plug it into the Raspberry Pi. Plug a USB-C power supply cable into the power port
 
-- Step 7. Connect through SSH to the Raspberry Pi
+- Step 13. Connect through SSH to the Raspberry Pi
 
-  Connect through SSH to the Raspberry PI using default user and password (pi/raspberry)
+  Connect through SSH to the Raspberry PI using default user and password (pi/raspberry) or the one specified in Advance settings
 
 ## Get latest updates of the OS and the firmware
 
