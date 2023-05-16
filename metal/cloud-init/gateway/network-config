@@ -1,0 +1,18 @@
+# Cloud-init net configuration 
+
+version: 2
+ethernets:
+  eth0:
+    dhcp4: false
+    addresses: [10.0.0.1/24]
+wifis:
+  wlan0:
+    dhcp4: false
+    optional: true
+    access-points:
+      "<SSID_NAME>":
+        password: "<SSID_PASSWD>"
+    addresses: [192.168.1.11/24]
+    gateway4: 192.168.1.1
+    nameservers:
+      addresses: [80.58.61.250,80.58.61.254]
