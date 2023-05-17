@@ -98,10 +98,6 @@
       # Local Storage configuration
     - name: Dedicated Disks
       block:
-        # Include centralized san variables
-        - name: Include node storage variables
-          include_vars:
-            file: vars/dedicated_disks/local_storage.yml
         # iSCSI client (initiator) configuration
         # iSCSI initiator needs to be configured for Longhorn
         - name: Configure iSCSI Initiator
@@ -109,10 +105,5 @@
             name: ricsanfre.iscsi_initiator
           vars:
             - open_iscsi_automatic_startup: true
-        # Configure local storage
-        - name: Configure Local Storage
-          include_role:
-            name: ricsanfre.storage
-          when: "'raspberrypi' in group_names"
       when: not centralized_san
       tags: [storage]
