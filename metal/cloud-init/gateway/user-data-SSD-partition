@@ -28,20 +28,14 @@ power_state:
   mode: reboot
 
 bootcmd:
-  # Create second Linux partition. Leaving 30GB for root partition
-  # sgdisk /dev/sda -g -e -n=0:30G:0 -t 0:8300
+  # Create second LVM partition. Leaving 30GB for root partition
+  # sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
   # First convert MBR partition to GPT (-g option)
   # Second moves the GPT backup block to the end of the disk where it belongs (-e option)
   # Then creates a new partition starting 10GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
-  # And labels it as a Linux partition (-t option)
-  - [cloud-init-per, once, addpartition, sgdisk, /dev/sda, "-g", "-e", "-n=0:30G:0", -t, "0:8300"]
+  # And labels it as an LVM partition (-t option)
+  - [cloud-init-per, once, addpartition, sgdisk, /dev/sda, "-g", "-e", "-n=0:30G:0", -t, "0:8e00"]
 
 runcmd:
   # reload partition table
   - "sudo partprobe /dev/sda"
-  # configure new partition
-  - "mkfs.ext4 /dev/sda3"
-  - "e2label /dev/sda3 DATA"
-  - "mkdir -p /storage"
-  - "mount -t ext4 /dev/sda3 /storage"
-  - "echo LABEL=DATA /storage ext4 defaults 0 0 | sudo tee -a /etc/fstab"
