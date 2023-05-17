@@ -2,5 +2,6 @@
 
 basic_packages:
   - libraspberrypi-bin
+  - linux-modules-extra-raspi
   - fake-hwclock
   - bridge-utils
