@@ -2,7 +2,7 @@
 title: Ubuntu OS initial configurations
 permalink: /docs/os-basic/
 description: Basic Ubuntu OS configurations of our Raspberry Pi cluster nodes.
-last_modified_at: "25-02-2022"
+last_modified_at: "17-05-2023"
 ---
 
 ## Removing snap package
@@ -98,3 +98,15 @@ Since the Raspberry PIs in the cluster are configured as a headless server, with
   ```shell
   sudo reboot
   ```
+
+
+### Enabling VXLAN module (Ubuntu 22.04)
+
+
+VXLAN support is not present in kernel since Ubuntu 21.04. It makes K3S fail to run. See more details in [K3S issue](https://github.com/k3s-io/k3s/issues/4234)
+
+Starting with Ubuntu 21.10, vxlan support on Raspberry Pi has been moved into a separate kernel module, that need to be manually installed. See specific [Raspberry PI K3S specific installation requirements](https://docs.k3s.io/advanced#raspberry-pi). Further details [here](https://bugs.launchpad.net/ubuntu/+source/linux-raspi/+bug/1947628)
+
+```shell
+sudo apt install linux-modules-extra-raspi & reboot
+```
