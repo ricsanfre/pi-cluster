@@ -1,4 +1,3 @@
-RUNNER=./ansible-runner.sh
 IMG=ubuntu-22.04.2-preinstalled-server-arm64+raspi.img.xz
 URL_IMG=https://cdimage.ubuntu.com/releases/22.04/release/${IMG}
 # REPLACE WITH YOUR USB (`lsblk`)
