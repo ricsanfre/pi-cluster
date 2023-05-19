@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "25-01-2023"
+last_modified_at: "17-05-2023"
 ---
 
 
@@ -239,9 +239,9 @@ All source code can be found in the project's github repository [{{site.data.ico
 
 From software perspective, I have developed the following:
 
-1. **Cloud-init** template files for initial OS installation
+1. **Cloud-init** template files for initial OS installation in Raspberry PI nodes
 
-   Source code can be found in Pi Cluster Git repository under [`/cloud-init`]({{site.git_address}}/tree/master/cloud-init) directory.
+   Source code can be found in Pi Cluster Git repository under [`metal/rpi/cloud-init`]({{site.git_address}}/tree/master/metal/rpi/cloud-init) directory.
 
 
 2. **Ansible** playbook and roles for configuring cluster nodes and installating and bootstraping K3S cluster  
@@ -285,9 +285,9 @@ The software used and the latest version tested of each component
 
 | Type | Software | Latest Version tested | Notes |
 |-----------| ------- |-------|----|
-| OS | Ubuntu | 20.04.3 | OS need to be tweaked for Raspberry PI when booting from external USB  |
+| OS | Ubuntu | 22.04.2 | |
 | Control | Ansible | 2.12.1  | |
-| Control | cloud-init | 21.4 | version pre-integrated into Ubuntu 20.04 |
+| Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 22.04.2 |
 | Kubernetes | K3S | v1.26.3 | K3S version|
 | Kubernetes | Helm | v3.9.4 ||
 | Metrics | Kubernetes Metrics Server | v0.6.2 | version pre-integrated into K3S |

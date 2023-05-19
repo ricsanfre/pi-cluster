@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
-last_modified_at: "16-02-2023"
+last_modified_at: "15-05-2023"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -59,13 +59,13 @@ MAC addresses can be obtained when Raspberry PI is booted for first time during 
 
 ### Configuring ansible remote access 
 
-The UNIX user to be used in remote connection (i.e.: `ansible`) user and its SSH key file location need to be specified
+The UNIX user to be used in remote connections (i.e.: `ricsanfre`) and its SSH key file location need to be specified.
 
 Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml) to set the UNIX user to be used by Ansible in the remote connection, `ansible_user` (default value `ansible`) and its SSH private key, `ansible_ssh_private_key_file`
 
   ```yml
   # Remote user name
-  ansible_user: ansible
+  ansible_user: ricsanfre
 
   # Ansible ssh private key
   ansible_ssh_private_key_file: ~/.ssh/id_rsa
@@ -95,7 +95,6 @@ The following table shows the variable files used for configuring the storage, b
 | Specific Variable File | Configuration |
 |----|----|
 | [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables |
-| [ansible/vars/dedicated_disks/local_storage.yml]({{ site.git_edit_address }}/ansible/vars/dedicated_disks/local_storage.yml) | Configuration nodes local storage: Dedicated disks setup|
 | [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
 | [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
 {: .table .table-white .border-dark }
@@ -111,21 +110,21 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
 
   - /dev/sda1: Boot partition
   - /dev/sda2: Root Filesystem
-  - /dev/sda3: For being used for creating LUNS using LVM.
+  - /dev/sda3: For being used for creating LUNS (LVM partition)
   
   <br>
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/centralized_san/centralized_san_target.yml`: `storage_volumegroups` and `storage_volumes` variables. Sizes of the different LUNs can be tweaked to fit the size of the SSD Disk used. I used a 480GB disk so, I was able to create LUNs of 100GB for each of the nodes.
 
-- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a logical volume (LVM) mounted as `/storage`
+- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`
 
   Final `node1-5` disk configuration is:
 
   - /dev/sda1: Boot partition
   - /dev/sda2: Root filesystem
-  - /dev/sda3: /storage partition
+  - /dev/sda3: /storage (linux partition)
   
   <br>
-  LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/dedicated_disks/local_storage.yml`: `storage_volumegroups`, `storage_volumes`, `storage_filesystems` and `storage_mounts` variables. The default configuration assings all available space in sda3 to a new logical volume formatted with ext4 and mounted as `/storage`
+  /dev/sda3 partition is created during first boot, formatted (ext4) and mounted as '/storage'. cloud-init configuration.
 
 {{site.data.alerts.end}}
 
@@ -163,20 +162,31 @@ Update firmware in all Raspberry-PIs following the procedure described in ["Rasp
 
 Install `gateway` Operating System on Rapberry PI.
    
-The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage setup selected:
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
 
-| Storage Configuration | User data    | Network configuration |
-|--------------------| ------------- |-------------|
-|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config)|
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config) |
+`user-data` depends on the storage architectural option selected::
+
+| Dedicated Disks | Centralized SAN    |
+|--------------------| ------------- |
+|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data-centralizedSAN) |
 {: .table .table-white .border-dark }
+
+`network-config` is the same in both architectures:
+
+
+| Network configuration |
+|---------------------- |
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/network-config) |
+{: .table .table-white .border-dark }
+
 
 {{site.data.alerts.warning}}**About SSH keys**
 
 Before applying the cloud-init files of the table above, remember to change the following
 
-- `user-data` file: 
-  - `ssh_authorized_keys` fields for both users (`ansible` and `oss`). Your own ssh public keys, created during `pimaster` control node preparation, must be included.
+- `user-data` file:
+  - UNIX privileged user, `ricsanfre`, can be changed. 
+  - `ssh_authorized_keys` field for defaul user (`ricsanfre`). Your own ssh public keys, created during `pimaster` control node preparation, must be included.
   - `timezone` and `locale` can be changed as well to fit your environment.
 
 - `network-config` file: to fit yor home wifi network
@@ -201,18 +211,23 @@ Install `node1-5` Operating System on Raspberry Pi
 
 Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
 
-| Storage Architeture | node1   | node2 | node3 | node4 | node5 |
-|-----------| ------- |-------|-------|--------|--------|
-| Dedicated Disks | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/node5/user-data) |
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node1/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node2/user-data)| [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node3/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node4/user-data) | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/node5/user-data) |
+
+| Dedicated Disks | Centralized SAN  |
+|-----------------| ---------------- |
+| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data)| 
 {: .table .table-white .border-dark }
+
+
+In above user-data files, `hostname` field need to be changed for each node (node1-node5).
+
 
 {{site.data.alerts.warning}}**About SSH keys**
 
 Before applying the cloud-init files of the table above, remember to change the following
 
-- `user-data` file: 
-  - `ssh_authorized_keys` fields for both users (`ansible` and `oss`). Your own ssh public keys, created during `pimaster` control node preparation, must be included.
+- `user-data` file:
+  - UNIX privileged user, `ricsanfre`, can be changed.
+  - `ssh_authorized_keys` field for default user (`ricsanfre`). Your own ssh public keys, created during `pimaster` control node preparation, must be included.
   - `timezone` and `locale` can be changed as well to fit your environment.
 
 {{site.data.alerts.end}}
