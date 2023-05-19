@@ -12,21 +12,22 @@
     K8S_AUTH_KUBECONFIG: ~/.kube/config
 
   pre_tasks:
-    # Install kubernetes core collection dependencies (kubernetes python package) using PIP.
-    - name: Ensure PIP is installed.
+    # Install Python PIP and jq utility packages
+    - name: Ensure required packages are installed.
       package:
         name:
           - python3-pip
           - python3-setuptools
+          - jq
         state: present
       become: true
-
+    # Install kubernetes python packages (Ansible kubernetes collection dependency)
     - name: Ensure kubernetes Python library is installed.
       pip:
         name: kubernetes
         state: present
       become: true
-
+    # Install Hashicorp python packages (Ansible hashi module dependency)
     - name: Ensure hashicorp vault python library is installed.
       pip:
         name: hvac
