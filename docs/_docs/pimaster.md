@@ -2,7 +2,7 @@
 title: Ansible Control Node
 permalink: /docs/pimaster/
 description: How to configure an Ansible Control node for our Raspberry Pi Kubernetes Cluster. Control node will be used for automating configuration tasks of the cluster using Ansible. How to create this control node using a docker container running on a Linux server or a VM.
-last_modified_at: "16-02-2023"
+last_modified_at: "17-05-2023"
 ---
 
 My laptop running Ubuntu desktop will be used as Ansible Control Node.
@@ -285,39 +285,6 @@ A shell session can be opened using the same container with:
 docker exec -it ansible-runner /bin/bash
 ```
 
-### SSH keys
-
-Authentication using SSH keys will be the only mechanism available to login to any server in the Pi Cluster.
-
-SSH keys for two different users can be created:
-
-- `oss` user, used to connect to the servers from my home laptop
-
-- `ansible` user, used to automate configuration activities with Ansible
- 
-
-For generating SSH private/public key in Windows, Putty Key Generator can be used:
-
-![ubuntu-SSH-key-generation](/assets/img/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
-
-Public-key string will be used as `ssh_authorized_keys` of the default user (ubuntu) in cloud-init `user-data`
-
-For generating ansible SSH keys in Linux server execute command:
-
-```shell
-ssh-keygen
-```
-
-In directory `$HOME/.ssh/` public and private key files can be found for the user
-
-`id_rsa` contains the private key and `id_rsa.pub` contains the public key.
-
-Content of the id_rsa.pub file has to be used as `ssh_authorized_keys` of `ansible` user in cloud-init `user-data`
-
-```shell
-cat id_rsa.pub 
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
-```
 
 ## Ansible Configuration
 
@@ -703,13 +670,38 @@ Installation of the whole Ansible environment can be done using a python virtual
   pip3 install molecule-vagrant python-vagrant
   ```
 
-## Create public/private SSH key for remote connection users
+## Create public/private SSH key for remote connection
 
-`ansible` unix user will be created in all servers with root privileges (sudo permissions) so Ansible can automate the configuration process (use as `ansible_remote_user` when connecting).
+Authentication using SSH keys will be the only mechanism available to login to any server in the Pi Cluster.
 
-For connecting to the servers from my Windows laptop using SSH client (Putty), `oss`, UNIX user (with sudo privileges) will be used. In order to improve security, default `ubuntu` UNIX user created by cloud images will be disabled.
+In order to improve security, default UNIX user, `ubuntu`, created by cloud images will be disabled. A new unix user, `ricsanfre`, will be created in all servers with root privileges (sudo permissions). This user will be used to connect to the servers from my home laptop and to automate configuration activities using Ansible (used as `ansible_remote_user` when connecting).
 
-ssh private/public keys for both users need to be generated once, and public ssh key can be copied automatically on all servers of the cluster to enable passwordless SSH connection.
-Those users and its public keys will be added to cloud-init configuration (`user-data`), when installing Ubuntu OS.
+ssh private/public keys will be created for the different purposes (admin SSH connection and Ansible connection). Public ssh keys can be added to the UNIX user created in all servers as ssh-authorized-keys to enable passwordless SSH connection.
+
+Default user in cluster nodes and its authorized SSH public keys will be added to cloud-init configuration (`user-data`), when installing Ubuntu OS.
 
 
+### SSH keys generation
+
+For generating SSH private/public key in Windows, Putty Key Generator can be used:
+
+![ubuntu-SSH-key-generation](/assets/img/ubuntu-user-SSH-key-generation.png "SSH Key Generation")
+
+Public-key string will be used as `ssh_authorized_keys` of the privileged user (i.e.: ricsanfre) in cloud-init `user-data`
+
+For generating ansible SSH keys in Linux server execute command:
+
+```shell
+ssh-keygen
+```
+
+In directory `$HOME/.ssh/` public and private key files can be found for the user
+
+`id_rsa` contains the private key and `id_rsa.pub` contains the public key.
+
+Content of the id_rsa.pub file has to be used as `ssh_authorized_keys` of UNIX user created in cloud-init `user-data`
+
+```shell
+cat id_rsa.pub 
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
+```

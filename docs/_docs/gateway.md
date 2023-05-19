@@ -2,7 +2,7 @@
 title: Gateway installation
 permalink: /docs/gateway/
 description: How to configure a Raspberry Pi as router/firewall of our Raspberry Pi Kubernetes Cluster providing connectivity and basic services (DNS, DHCP, NTP, SAN).
-last_modified_at: "10-09-2022"
+last_modified_at: "17-05-2023"
 ---
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
@@ -10,7 +10,7 @@ It will also provide DNS, NTP and DHCP services to my lab network. In case of de
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
-In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node5**): Ubuntu 20.04.3 64 bits.
+In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node5**): Ubuntu 22.04 64 bits.
 
 
 ## Hardware
@@ -18,7 +18,7 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 `gateway` node is based on a Raspberry Pi 4B 2GB booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
 
 - Dedicated disks storage architecture: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
-- Centralized SAN architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway`. SSD disk for hosting OS and iSCSI LUNs
+- Centralized SAN architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway`. SSD disk for hosting OS and iSCSI LUNs.
 
 ## Network Configuration
 
@@ -47,7 +47,7 @@ wifis:
 ```
 ## Storage configuration. Centralized SAN
 
-SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating a logical volumes (LVM) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kuberentes distributed storage solution and by backup solution.
+In case of centralized SAN, gateway's SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating logical volumes (LVM), SAN LUNs to be mounted using iSCSI by the other nodes.
 
 cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
 
@@ -67,15 +67,29 @@ This command:
   - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
   - And labels it as an LVM partition (-t option)
 
+LVM logical volumes creation using the new partition,`/dev/sda3`, (LUNs) have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
+
+Specific ansible variables to be used by this role are stored in [`ansible/vars/centralized_san_target/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san_target/centralized_san_target.yml)
+
 ## Unbuntu boot from USB
 
-The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`, depending on the storage architectural option selected:
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
 
-| Storage Architeture| User data    | Network configuration |
-|--------------------| ------------- |-------------|
-|  Dedicated Disks |[user-data]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/dedicated_disks/gateway/network-config)|
-| Centralized SAN | [user-data]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/user-data) | [network-config]({{ site.git_edit_address }}/cloud-init/centralized_san/gateway/network-config) |
+`user-data` depends on the storage architectural option selected::
+
+| Dedicated Disks | Centralized SAN    |
+|--------------------| ------------- |
+|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data-centralizedSAN) |
 {: .table .table-white .border-dark }
+
+`network-config` is the same in both architectures:
+
+
+| Network configuration |
+|---------------------- |
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/network-config) |
+{: .table .table-white .border-dark }
+
 
 ## Ubuntu OS Initital Configuration
 

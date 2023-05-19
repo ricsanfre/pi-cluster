@@ -1,50 +1,35 @@
 ---
 title: Ubuntu OS Installation
 permalink: /docs/ubuntu/
-description: How to install ARM-64 based Ubuntu 20.04 OS in of our Raspberry Pi cluster nodes. How to configure boot from USB.
-last_modified_at: "25-02-2022"
+description: How to install ARM-64 based Ubuntu OS in of our Raspberry Pi cluster nodes. How to configure boot from USB.
+last_modified_at: "17-05-2023"
 ---
 
 Ubuntu Server 64 bits installation on Raspberry Pi is supported since release 20.04.
 Ubuntu images for Raspberry Pi can be downloaded from [Ubuntu's download page](https://ubuntu.com/download/raspberry-pi).
 
-Ubuntu Server 20.04.3 LTS for ARM64 image will be used.
+Ubuntu Server 22.04.2 LTS for ARM64 image will be used.
 
 
 ## Headless installation
 
-Fast deployment of a headless Ubuntu 64 bits OS in Raspberry Pi 4 configuring **cloud-init**.
+Fast deployment of a headless Ubuntu 64 bits OS in Raspberry Pi 4 using **cloud-init**.
+
 Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/boot/network-config`) will be modified before the first startup.
 
-- Step 1. Download Ubuntu 20.04 OS for Raspberry PI
 
-  Ubuntu 20.04 LTS image that can be downloaded from here:
+- Step 1. Burn the Ubuntu OS image to a SD-card or USB flash drive
 
-  https://ubuntu.com/download/raspberry-pi
+  SDCard or USB 3.0 Flass Drive (or SSD disk connected through a USB3.0 to SATA adapter) can be used to hosts the OS.
+
+  [Raspberry PI Imager](https://www.raspberrypi.com/software/) can be used to burn Ubuntu 22.04 Server (64 bits) OS into a SD Card/USB Flash disk.
 
 
-- Step 2. Burn the Ubuntu OS image to the SD card
-
-  Burn the latest Raspberry Pi OS image to SD-Card using Etcher
-
-  Browse to https://www.balena.io/etcher/
-  Download the version for your operating system
-  Run the installer
-  To run Etcher is pretty straight forward.
-
-  Put a blank mini SD card and adapter into your machine. No need to format it. You can use a new SD card right out of the package.
-
-  1 - Click **Flash from file** - browse to the zip file you downloaded for Raspberry Pi OS.<br>
-  2 - Click **Select target** - it may find the SDHC Card automatically, if not select it.<br>
-  3 - Click **Flash!** - you may be prompted for your password
-
-  After you flash (burn) the image,  File Explorer (Windows) may have trouble seeing it. A simple fix is to pull the SD card out then plug it back in. On Windows it should appear in File Explorer with the name boot followed by a drive letter.
-
-- Step 3: Mofify user-data network-config within /boot directory in the SDCard
+- Step 3: Mofify user-data network-config within /boot directory in the SDCard or USB Flash drive/SSD
 
   - Modify file `/boot/user-data`
 
-    As an example this cloud-init `user-data` file, set hostname, locale and timezone and specify a couple of users, `oss` and `ansible` (removing default `ubuntu` user) with its ssh public keys
+    As an example this cloud-init `user-data` file, set hostname, locale and timezone and specify a new user, `ricsanfre` (removing default `ubuntu` user) with its ssh public keys
     
     ```yml
     #cloud-config
@@ -61,7 +46,7 @@ Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/
 
     users:
       # not using default ubuntu user
-      - name: oss
+      - name: ricsanfre
         primary_group: users
         groups: [adm, admin]
         shell: /bin/bash
@@ -69,15 +54,6 @@ Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/
         lock_passwd: true
         ssh_authorized_keys:
           - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAusTXKfFoy6p3G4QAHvqoBK+9Vn2+cx2G5AY89WmjMikmeTG9KUseOCIAx22BCrFTNryMZ0oLx4u3M+Ibm1nX76R3Gs4b+gBsgf0TFENzztST++n9/bHYWeMVXddeV9RFbvPnQZv/TfLfPUejIMjFt26JCfhZdw3Ukpx9FKYhFDxr2jG9hXzCY9Ja2IkVwHuBcO4gvWV5xtI1nS/LvMw44Okmlpqos/ETjkd12PLCxZU6GQDslUgGZGuWsvOKbf51sR+cvBppEAG3ujIDySZkVhXqH1SSaGQbxF0pO6N5d4PWus0xsafy5z1AJdTeXZdBXPVvUSNVOUw8lbL+RTWI2Q== ubuntu@mi_pc
-      # Ansible user
-      - name: ansible
-        primary_group: users
-        shell: /bin/bash
-        sudo: ALL=(ALL) NOPASSWD:ALL
-        lock_passwd: true
-        ssh_authorized_keys:
-          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsVSvxBitgaOiqeX4foCfhIe4yZj+OOaWP+wFuoUOBCZMWQ3cW188nSyXhXKfwYK50oo44O6UVEb2GZiU9bLOoy1fjfiGMOnmp3AUVG+e6Vh5aXOeLCEKKxV3I8LjMXr4ack6vtOqOVFBGFSN0ThaRTZwKpoxQ+pEzh+Q4cMJTXBHXYH0eP7WEuQlPIM/hmhGa4kIw/A92Rm0ZlF2H6L2QzxdLV/2LmnLAkt9C+6tH62hepcMCIQFPvHVUqj93hpmNm9MQI4hM7uK5qyH8wGi3nmPuX311km3hkd5O6XT5KNZq9Nk1HTC2GHqYzwha/cAka5pRUfZmWkJrEuV3sNAl ansible@pimaster
-
     ## Reboot to enable Wifi configuration (more details in network-config file)
     power_state:
       mode: reboot
@@ -86,13 +62,13 @@ Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/
 
     {{site.data.alerts.important}}
 
-    Before applying the provided cloud-init files remember to change `ssh_authorized_keys` fields for both users (`ansible` and the non-default `ubuntu`). Your own ssh public keys must be included.
+    Before applying the provided cloud-init files remember to change user name (`ricsanfre`) and `ssh_authorized_keys` field. Your own user_name and ssh public keys must be included.
 
     `timezone` and `locale` can be changed as well to fit your environment. 
 
     {{site.data.alerts.end}}
 
-  - Modify `/boot/network-config` file within the SDCard
+  - Modify `/boot/network-config` file within the SDCard/Fash drive
 
     ```yml
     version: 2
@@ -114,11 +90,71 @@ Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/
 
     {{site.data.alerts.end}}
 
-## (Optional) USB Booting
 
-As alternative to using a SDCard a USB 3.0 Flass Drive (or SSD disk connected through a USB3.0 to SATA adapter) can be used to hosts the OS.
+## Automating Image creation (USB Booting)
 
-Latest version of LTS 20.04.2 does not allow to boot from USB directy and some additional steps are required. 
+Using a Linux desktop, creation of booting USB SSD disk for different cluster nodes can be automated.
+
+- Step 1. Download Ubuntu 22.04 Raspberry PI 64 bits image
+
+  https://cdimage.ubuntu.com/releases/22.04/release/ 
+
+  ```shell
+  IMG=ubuntu-22.04.2-preinstalled-server-arm64+raspi.img.xz
+  URL_IMG=https://cdimage.ubuntu.com/releases/22.04/release/${IMG}
+  mkdif img
+  # Download Image
+  wget ${URL_IMG} -O img/${IMG}
+  ```
+
+- Step 2. Insert USB SSD disk
+
+  Get device associated with USB disk (i.e: /dev/sdb) executing command `lsblk`
+
+  ```shell
+  USB=/dev/sdb
+  ```
+
+- Step 3: Optional (Wipe USB disk partition table)
+
+  This remove current partition tables defined in the USB disk.
+
+  ```shell
+  sudo wipefs -a -f ${USB}
+  ```
+
+- Step 4: burn image into USB disk
+
+  ```shell
+  # `-d` decompress `<` redirect $FILE contents to expand `|` sending the output to `dd` to copy directly to $USB
+  xz -d < img/${IMG} - | sudo dd bs=100M of=${USB}
+  ```
+
+- Step 5: Mount system-boot in the burned image
+
+  ```shell
+  SYSTEM_BOOT_MOUNT=/tmp/pi-disk
+  sudo mkdir ${SYSTEM_BOOT_MOUNT}
+  # Mount first partition of device /dev/sdb1 corresponding with system-boot partion
+  sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
+  ```
+
+- Step 6: Copy cloud-init configuration files
+
+  ```shell
+  sudo cp user-data ${SYSTEM_BOOT_MOUNT}
+  sudo cp network-config ${SYSTEM_BOOT_MOUNT}
+  ```
+
+- Step 7: Unmount system-boot partition
+
+  ```shell
+  sudo umount ${SYSTEM_BOOT_MOUNT}
+  ```
+
+## Ubuntu 20.04 USB Booting
+
+Ubuntu LTS 22.04 supports out-of-the-box booting from USB Flash Drive/SSD. In case of using Ubuntu LTS 20.04 release additional steps are required to enable USB booting
 
 You can follow the instructions of this [post](https://jamesachambers.com/raspberry-pi-4-ubuntu-20-04-usb-mass-storage-boot-guide/).
 
@@ -238,3 +274,4 @@ You can follow the instructions of this [post](https://jamesachambers.com/raspbe
 
 - Step 6. Shutdown Raspberry Pi, remove SDCard and boot again from USB
   RaspberryPI is  now able to boot from USB without needing a SDCard
+
