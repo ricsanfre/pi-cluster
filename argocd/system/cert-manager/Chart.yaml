@@ -3,10 +3,10 @@ name: certmanager
 version: 0.0.0
 dependencies:
   - name: cert-manager
-    version: v1.11.1
+    version: v1.12.0
     repository: https://charts.jetstack.io
   - name: trust-manager
-    version: v0.4.0
+    version: v0.5.0
     repository: https://charts.jetstack.io
   - name: cert-manager-webhook-ionos
     version: 1.0.2
