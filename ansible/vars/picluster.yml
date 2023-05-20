@@ -6,7 +6,7 @@
 #######
 
 # k3s version
-k3s_version: v1.26.3+k3s1
+k3s_version: v1.27.1+k3s1
 
 # k3s master node IP
 k3s_master_ip: 10.0.0.11
