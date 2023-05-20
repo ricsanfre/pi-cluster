@@ -97,9 +97,9 @@ kube-prometheus-stack:
       # Resources request and limits
       resources:
         requests:
-          memory: 1Gi
+          memory: 2Gi
         limits:
-          memory: 1Gi
+          memory: 2Gi
       # PVC configuration
       storageSpec:
         volumeClaimTemplate:
