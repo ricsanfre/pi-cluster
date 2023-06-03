@@ -26,36 +26,36 @@ mount-system-boot:
 .PHONY: prepare-gateway
 prepare-gateway:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT} 
-	sudo cp rpi/cloud-init/gateway/user-data ${SYSTEM_BOOT_MOUNT}
-	sudo cp rpi/cloud-init/gateway/network-config ${SYSTEM_BOOT_MOUNT}
+	sudo cp cloud-init/gateway/user-data ${SYSTEM_BOOT_MOUNT}
+	sudo cp cloud-init/gateway/network-config ${SYSTEM_BOOT_MOUNT}
 	sudo umount ${SYSTEM_BOOT_MOUNT}
 
 .PHONY: prepare-node1
 prepare-node1:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
-	sed 's/nodeX/node1/g' rpi/cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
+	sed 's/nodeX/node1/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
 	sudo umount ${SYSTEM_BOOT_MOUNT}
 
 .PHONY: prepare-node2
 prepare-node2:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
-	sed 's/nodeX/node2/g' rpi/cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
+	sed 's/nodeX/node2/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
 	sudo umount ${SYSTEM_BOOT_MOUNT}
 
 .PHONY: prepare-node3
 prepare-node3:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
-	sed 's/nodeX/node3/g' rpi/cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
+	sed 's/nodeX/node3/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
 	sudo umount ${SYSTEM_BOOT_MOUNT}
 
 .PHONY: prepare-node4
 prepare-node4:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
-	sed 's/nodeX/node4/g' rpi/cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
+	sed 's/nodeX/node4/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
 	sudo umount ${SYSTEM_BOOT_MOUNT}
 
 .PHONY: prepare-node5
 prepare-node5:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
-	sed 's/nodeX/node5/g' rpi/cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
+	sed 's/nodeX/node5/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
 	sudo umount ${SYSTEM_BOOT_MOUNT}
