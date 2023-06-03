@@ -661,7 +661,7 @@ Installation of the whole Ansible environment can be done using a python virtual
 - Step 7. Install Docker python driver and molecule packages:
 
   ```shell
-  pip3 install molecule[docker]
+  pip3 install molecule molecule-plugins[docker] docker
   ```
 
 - Step 8. Install molecule vagrant driver
