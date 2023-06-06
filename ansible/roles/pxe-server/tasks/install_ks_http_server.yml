@@ -1,0 +1,44 @@
+---
+
+- name: Ensure apache2 package is installed
+  package:
+    name: '{{ apache_package_list | list }}'
+    state: 'present'
+    update_cache: true
+  register: pkg_install_result
+  until: pkg_install_result is success
+
+- name: Create kickstart document structure
+  file:
+    path: "/var/www/html/{{ item }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  with_items:
+    - ks
+    - images
+
+- name: Set up kick-start virtualHost
+  template:
+    src: "templates/ks-server.conf.j2"
+    dest: "/etc/apache2/sites-available/{{ ks_http_conf }}"
+
+- name: Enable site
+  command: a2ensite {{ ks_http_conf }}
+  notify: restart-apache
+
+
+- name: Create autoinstall cloud-inits files per device
+  include_tasks:
+    file: create_auto_install_files.yml
+  loop: "{{ groups['x86'] }}"
+  loop_control:
+    loop_var: x86_host
+  when:
+    - groups['x86'] is defined
+
+- name: Copy ISO img
+  copy:
+    src: ../metal/x86/pxe-files/img/
+    dest: /var/www/html/images/

@@ -1,0 +1,9 @@
+---
+# ISO file
+ubuntu_live_server_iso_file: jammy-live-server-amd64.iso
+
+# Kick-start server (http server)
+apache_package_list:
+  - apache2
+kick_start_server: 10.0.0.1
+ks_http_conf: ks-server.conf

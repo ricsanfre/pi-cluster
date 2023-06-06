@@ -1,0 +1,34 @@
+set default="0"
+set timeout=5
+
+if loadfont unicode ; then
+  set gfxmode=auto
+  set locale_dir=$prefix/locale
+  set lang=en_US
+fi
+terminal_output gfxterm
+
+set menu_color_normal=white/black
+set menu_color_highlight=black/light-gray
+if background_color 44,0,30; then
+  clear
+fi
+
+function gfxmode {
+        set gfxpayload="${1}"
+        if [ "${1}" = "keep" ]; then
+                set vt_handoff=vt.handoff=7
+        else
+                set vt_handoff=
+        fi
+}
+
+set linux_gfx_mode=keep
+
+export linux_gfx_mode
+
+menuentry 'Install Ubuntu 22.04' {
+        gfxmode $linux_gfx_mode
+        linux vmlinuz ip=dhcp url=http://{{ kick_start_server }}/images/{{ ubuntu_live_server_iso_file }} autoinstall ds=nocloud-net\;s=http://{{ kick_start_server }}/ks/${net_default_mac}/ cloud-config-url=/dev/null
+        initrd initrd
+}

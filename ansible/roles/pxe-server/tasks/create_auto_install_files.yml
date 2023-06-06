@@ -1,0 +1,37 @@
+---
+
+- name: Create autoinstall per device
+  debug:
+    var: x86_host
+
+- name: Print mac address for {{ x86_host }}
+  debug:
+    var: hostvars[x86_host].mac
+  when: hostvars[x86_host].mac is defined
+
+- name: Create Autoinstall directory for {{ x86_host }}
+  file:
+    path: "/var/www/html/ks/{{ hostvars[x86_host].mac }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  when: hostvars[x86_host].mac is defined
+
+- name: Create meta-data file for {{ x86_host }}
+  template:
+    src: "templates/cloud-init-metadata.yml.j2"
+    dest: "/var/www/html/ks/{{ hostvars[x86_host].mac }}/meta-data"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  when: hostvars[x86_host].mac is defined
+
+- name: Create user-data file for {{ x86_host }}
+  template:
+    src: "templates/cloud-init-autoinstall.yml.j2"
+    dest: "/var/www/html/ks/{{ hostvars[x86_host].mac }}/user-data"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  when: hostvars[x86_host].mac is defined

@@ -45,6 +45,12 @@ dnsmasq_additional_dns_hosts:
     desc: "Vault server"
     hostname: vault
     ip: 10.0.0.1
+dnsmasq_enable_tftp: true
+dnsmasq_tftp_root: /srv/tftp
+dnsmasq_additional_conf: |-
+  # Enabling Netboot x86 servers - UEFI boot
+  dhcp-match=set:efi-x86_64,option:client-arch,7
+  dhcp-boot=tag:efi-x86_64,bootx64.efi
 
 ####################
 # ntp role variables
@@ -57,8 +63,9 @@ ntp_allow_hosts: [10.0.0.0/24]
 
 # tcp 9100 Prometheus (fluent-bit)
 # tcp 8200, 8201 Vault server
+# udp 69, TFTP server
 in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201 }'
-in_udp_port: '{ snmp, domain, ntp, bootps }'
+in_udp_port: '{ snmp, domain, ntp, bootps, 69 }'
 # tcp 9091 minio server
 forward_tcp_port: '{ http, https, ssh, 9091 }'
 forward_udp_port: '{ domain, ntp }'
