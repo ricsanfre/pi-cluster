@@ -35,6 +35,10 @@
     - role: ricsanfre.ntp
       tags: [ntp]
 
+    # PXE server
+    - role: pxe-server
+      tags: [pxe]
+
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)
     - name: Centralized SAN

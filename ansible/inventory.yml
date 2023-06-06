@@ -58,6 +58,10 @@ all:
       hosts:
         node[1:5]:
         gateway:
+    x86:
+      hosts:
+        khazad-dum:
+        kheled-zaram:
     k3s_cluster:
       children:
         k3s_master:

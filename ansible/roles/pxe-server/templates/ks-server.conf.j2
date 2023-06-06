@@ -1,0 +1,17 @@
+<VirtualHost *:80>
+    ServerAdmin root@server1.example.com
+    DocumentRoot /var/www/html
+    ServerName server.example.com
+    ErrorLog ${APACHE_LOG_DIR}/ks-server.example.com-error_log
+    CustomLog ${APACHE_LOG_DIR}/ks-server.example.com-access_log common
+    <Directory /ks>
+        Options Indexes MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+    <Directory /images>
+        Options Indexes MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
