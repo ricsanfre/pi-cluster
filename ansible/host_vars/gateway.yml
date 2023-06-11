@@ -48,7 +48,15 @@ dnsmasq_additional_dns_hosts:
 dnsmasq_enable_tftp: true
 dnsmasq_tftp_root: /srv/tftp
 dnsmasq_additional_conf: |-
-  # Enabling Netboot x86 servers - UEFI boot
+  # Enabling logs
+  log-queries
+  log-dhcp
+  log-facility=/var/log/dnsmasq.log
+
+  # Enabling PXE boot x86 servers
+  # Legacy BIOS boot
+  dhcp-boot=pxelinux.0
+  # UEFI boot
   dhcp-match=set:efi-x86_64,option:client-arch,7
   dhcp-boot=tag:efi-x86_64,bootx64.efi
 
