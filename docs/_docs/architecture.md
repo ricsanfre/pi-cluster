@@ -41,7 +41,7 @@ A K3S cluster composed of:
 - Six worker nodes:
   - `node2`, `node3` , `node4` running on Raspberry Pi 4B (4GB)
   - `node5` running on Raspberry Pi 4B (8GB)
-  - `khazad-dum` and `kheled-zaram` running on HP Elitedesk 800 G3 (16GB)
+  - `node-hp-1` and `node-hp-2` running on HP Elitedesk 800 G3 (16GB)
  
 ### Firewall
 

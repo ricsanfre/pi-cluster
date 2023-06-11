@@ -44,14 +44,14 @@ all:
           ansible_host: 10.0.0.15
           ip: 10.0.0.15
           mac: e4:5f:01:d9:ec:5c
-        khazad-dum:
-          hostname: khazad-dum
-          ansible-host: 10.0.0.20
+        node-hp-1:
+          hostname: node-hp-1
+          ansible-host: 10.0.0.21
           ip: 10.0.0.20
           mac: 18:60:24:21:1c:d4
-        kheled-zaram:
-          hostname: kheled-zaram
-          ansible-host: 10.0.0.21
+        node-hp-2:
+          hostname: node-hp-2
+          ansible-host: 10.0.0.22
           ip: 10.0.0.21
           mac: 10:e7:c6:16:54:10
     raspberrypi:
@@ -60,8 +60,7 @@ all:
         gateway:
     x86:
       hosts:
-        khazad-dum:
-        kheled-zaram:
+        node-hp-[1:2]:
     k3s_cluster:
       children:
         k3s_master:
@@ -70,5 +69,4 @@ all:
         k3s_worker:
           hosts:
             node[2:5]:
-            khazad-dum:
-            kheled-zaram:
+            node-hp-[1:2]:
