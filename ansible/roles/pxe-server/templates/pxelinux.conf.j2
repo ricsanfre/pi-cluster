@@ -1,0 +1,11 @@
+default menu.c32
+menu title Ubuntu installer
+
+label jammy
+        menu label Install Ubuntu J^ammy (22.04)
+        menu default
+        kernel vmlinuz
+        initrd initrd
+        append ip=dhcp url=http://{{ kick_start_server }}/images/{{ ubuntu_live_server_iso_file }} autoinstall ds=nocloud-net;s=http://{{ kick_start_server }}/ks/{{ hostvars[x86_host].mac }}/ cloud-config-url=/dev/null
+prompt 0
+timeout 300

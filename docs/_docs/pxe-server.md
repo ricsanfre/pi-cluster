@@ -139,6 +139,7 @@ autoinstall:
   ```shell
   sudo mkdir /srv/tftp
   sudo mkdir /srv/tftp/grub
+  sudo mkdir /srv/tftp/pxelinux.cfg
   ```
 
 - Step 3. Configure dnsmasq
@@ -222,7 +223,7 @@ tftp-root=/srv/tftp
   cp /mnt/casper/{vmlinuz,initrd} /srv/tftp/
   ```
 
-#### Copying UEFI boot files
+#### Copying files for UEFI boot
 
 - Step 1. Copy the signed shim binary into place:
  
@@ -283,7 +284,47 @@ menuentry 'Install Ubuntu 22.04' {
 }
   ```
 
-As alternative is different cloud-init autoinstall files are spe
+This configuration launch autoinstall using cloud-init files per mac address (`${net_default_mac}`)
+
+#### Copying files for legacy boot
+
+- Step 1. Copy the pxelinux.0 binary:
+ 
+  ```shell
+  apt download pxelinux
+  dpkg-deb --fsys-tarfile pxelinux*deb | tar x ./usr/lib/PXELINUX/pxelinux.0 -O > /srv/tftp/pxelinux.0
+  ```
+
+- Step 2. Copy syslinux-common packages:
+
+  ```shell
+  apt download syslinux-common
+  dpkg-deb --fsys-tarfile pxelinux*deb | tar x ./usr/lib/PXELINUX/pxelinux.0 -O > /srv/tftp/pxelinux.0
+  dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/ldlinux.c32 -O > /srv/tftp/ldlinux.c32
+  dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/menu.c32 -O > /build/menu.c32
+  dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/libutil.c32 -O > /srv/tftp/libutil.c32 
+  ```
+
+- Step 4. Prepare pxe.conf file and copy to /srv/tftp/pxelinux.cfg
+
+  PXE looks for a file containing in the name the MAC address, using as separator '-'
+
+  01-<mac-address>, ie: 01-10-e7-c6-16-54-10 for MAC address 10:e7:c6:16:54:10
+
+  ```shell
+  default menu.c32
+  menu title Ubuntu installer
+
+  label jammy
+          menu label Install Ubuntu J^ammy (22.04)
+          menu default
+          kernel vmlinuz
+          initrd initrd
+          append ip=dhcp url=http://10.0.0.1/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.1/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
+  prompt 0
+  timeout 300
+  ```
+  
 
 ### Alternative booting contents of the ISO via nfsroot.
 
