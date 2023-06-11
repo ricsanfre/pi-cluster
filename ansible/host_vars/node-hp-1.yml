@@ -1,0 +1,98 @@
+---
+autoinstall:
+  storage:
+    config:
+      - ptable: gpt
+        path: /dev/sda
+        wipe: superblock-recursive
+        preserve: false
+        name: ''
+        grub_device: false
+        type: disk
+        id: disk-sda
+      - device: disk-sda
+        size: 1075M
+        wipe: superblock
+        flag: boot
+        number: 1
+        preserve: false
+        grub_device: true
+        path: /dev/sda1
+        type: partition
+        id: partition-0
+      - fstype: fat32
+        volume: partition-0
+        preserve: false
+        type: format
+        id: format-0
+      - device: disk-sda
+        size: 2G
+        wipe: superblock
+        number: 2
+        preserve: false
+        grub_device: false
+        path: /dev/sda2
+        type: partition
+        id: partition-1
+      - fstype: ext4
+        volume: partition-1
+        preserve: false
+        type: format
+        id: format-1
+      - device: disk-sda
+        size: -1
+        wipe: superblock
+        number: 3
+        preserve: false
+        grub_device: false
+        path: /dev/sda3
+        type: partition
+        id: partition-2
+      - name: ubuntu-vg
+        devices:
+          - partition-2
+        preserve: false
+        type: lvm_volgroup
+        id: lvm_volgroup-0
+      - name: ubuntu-lv
+        volgroup: lvm_volgroup-0
+        size: 30G
+        wipe: superblock
+        preserve: false
+        path: /dev/ubuntu-vg/ubuntu-lv
+        type: lvm_partition
+        id: lvm_partition-0
+      - fstype: ext4
+        volume: lvm_partition-0
+        preserve: false
+        type: format
+        id: format-3
+      - path: /
+        device: format-3
+        type: mount
+        id: mount-3
+      - name: lv-data
+        volgroup: lvm_volgroup-0
+        size: -1
+        wipe: superblock
+        preserve: false
+        path: /dev/ubuntu-vg/lv-data
+        type: lvm_partition
+        id: lvm_partition-1
+      - fstype: ext4
+        volume: lvm_partition-1
+        preserve: false
+        type: format
+        id: format-4
+      - path: /storage
+        device: format-4
+        type: mount
+        id: mount-4
+      - path: /boot
+        device: format-1
+        type: mount
+        id: mount-1
+      - path: /boot/efi
+        device: format-0
+        type: mount
+        id: mount-0
