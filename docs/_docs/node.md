@@ -1,5 +1,5 @@
 ---
-title: Cluster Node configuration
+title: Cluster Nodes
 permalink: /docs/node/
 description: How to configure a Raspberry Pi nodes of our Raspberry Pi Kubernetes Cluster. Ubuntu cloud-init configuration files, and basic OS configuration.
 last_modified_at: "17-05-2023"

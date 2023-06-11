@@ -1,5 +1,5 @@
 ---
-title: Ubuntu OS initial configurations
+title: OS initial setup
 permalink: /docs/os-basic/
 description: Basic Ubuntu OS configurations of our Raspberry Pi cluster nodes.
 last_modified_at: "17-05-2023"
