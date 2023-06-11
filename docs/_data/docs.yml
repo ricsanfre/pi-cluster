@@ -7,14 +7,17 @@
 - title: Control Node
   docs:
   - pimaster
-- title: Cluster Nodes
+- title: Cluster Setup
   docs:
-  - firmware
-  - ubuntu
-  - os-basic
-  - san
   - gateway
   - node
+  - san
+- title: Nodes OS Setup
+  docs:
+  - firmware
+  - ubuntu/rpi
+  - ubuntu/x86
+  - os-basic
 - title: External Services
   docs:
   - s3-backup

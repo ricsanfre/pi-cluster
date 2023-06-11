@@ -1,9 +1,8 @@
 # Site settings
-title: Raspberry Pi Kubernetes Cluster
+title: Pi Kubernetes Cluster
 email: admin@ricsanfre.com
 description: >
-  How to build a Kubernetes home lab with Raspberry-Pi nodes and automate its deployment with Ansible
-
+  How to build a hybrid x86/ARM Kubernetes cluster at home, using Raspberry Pi and refurbished mini PCs, and automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and Argo CD.
 lang: en-US
 
 author:

@@ -1,8 +1,8 @@
 ---
 title: Lab Architecture
 permalink: /docs/architecture/
-description: Homelab architecture of our Raspberry Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "10-09-2022"
+description: Homelab architecture of our Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
+last_modified_at: "10-06-2023"
 ---
 
 
@@ -13,15 +13,39 @@ The home lab I am building is shown in the following picture
 
 ## Cluster Nodes
 
-For building the K3S cluster, using bare metal servers instead of virtual machines, ARM-based low cost SBC (Single Board Computer), like Raspeberry Pi-4 are used. Raspberry PI 4 is used for each node of the K3S cluster and for building a cluster firewall. 
+For building the K3S cluster, using bare metal servers instead of virtual machines, low cost servers are being used:
+- ARM-based SBC (Single Board Computer): 
+  - [Raspberry Pi 4B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)
+    CPU: ARM Cortex-A72. Quadcore 1.5GHz
+    RAM: 2GB/4GB/8GB
+- x86-based old refurbished mini PC
+  - [HP Elitedesk 800 G3 Desktop mini PC](https://support.hp.com/us-en/product/hp-elitedesk-800-65w-g3-desktop-mini-pc/15497277/manuals)
+    CPU: Intel i5 6500T. Quadcore 2.5 GHz
+    RAM: 16 GB
+
+{{site.data.alerts.note}}
+
+This project initilly was built using only Raspberry PI nodes, but due to Raspberry shortage during last 2 years which makes impossible to buy them at reasonable prices, I decided to look for alternatives to be able to scale up my cluster.
+
+Old x86 refurbished mini PCs, with Intel i5 processors was the answer. These mini PCs provide similar performance to RaspberryPi's ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
+
+The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power supply, ([aprox 130 €](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8/)) is cheaper than the overal cost of building a cluster node using a Rasbperry PI: cost of Raspberry PI 8GB (100€) + Power Adapter (aprox 10 €) + SSD Disk ([aprox 20 €](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N5IB20Q)) + USB3.0 to SATA converter ([aprox 20€](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84))
+
+{{site.data.alerts.end}}
+ 
 
 ### K3S Nodes
 
-A K3S cluster composed of one master node (`node1`) and four worker nodes (`node2`, `node3` , `node4` and `node5`). `node1-node4` running on Raspberry Pi 4B-4GB and `node5` on Raspberry Pi 4B-8GB.
+A K3S cluster composed of:
+- One master node (`node1`), running on Raspberry Pi 4B (4GB)
+- Six worker nodes:
+  - `node2`, `node3` , `node4` running on Raspberry Pi 4B (4GB)
+  - `node5` running on Raspberry Pi 4B (8GB)
+  - `khazad-dum` and `kheled-zaram` running on HP Elitedesk 800 G3 (16GB)
  
 ### Firewall
 
-A Raspberry PI 4B-2GB, `gateway`, will be used as Router/Firewall to isolate lab network from my home network,. It will also provide networking services to my lab network: Internet Access, DNS, NTP and DHCP services.
+A Raspberry PI 4B-2GB, `gateway`, is used as Router/Firewall to isolate lab network from my home network. It also provides networking services to my lab network: Internet Access, DNS, NTP and DHCP services.
 
 ### Control Node
 
@@ -29,23 +53,23 @@ As Ansible control node, `pimaster`, a VM running on my laptop will be used. Its
 
 ## Networking
 
-A 8 GE ports LAN switch, NetGear GS108-300PES, supporting VLAN configuration and remote management, is used to provide connectivity to all Raspberry Pis (`gateway` and `node1-node5`), using Raspberry PI Gigabit Ethernet port.
+A 8 GE ports LAN switch, NetGear GS108-300PES, supporting VLAN configuration and remote management, is used to provide connectivity to all nodes (Raspberry Pis and x86 mini PCs). All nodes are connected to the switch with Cat6 eth cables using their Gigabit Ethernet port.
 
-`gateway` will be also connected to my home network using its WIFI interface in order to route and filter traffic comming in/out the cluster.
+`gateway`, cluster firewall/router, is also connected to my home network using its WIFI interface in order to route and filter traffic comming in/out the cluster.
 
-## Cluster Storage
+## Raspberry PI Storage
 
-Two different storage alternatives can be appied:
+x86 mini PCs has their own integrated disk (SSD disk or NVME). For Raspberry PIs different storage alternatives can be applied:
 
-- Dedicated Disks: SSD disks for each cluster node. 4 SSD disk, and their SATA to USB adpaters, are required
-- Centralized SAN: SAN Storage configuration using only one SSD disk is required
+- Dedicated Disks: Each node has its SSD disks attached to one of its USB 3.0 ports. SSD disk + SATA to USB 3.0 adapter is needed for each node.
+- Centralized SAN: Each node has Flash Disk (USB3.0) for running OS and additional storage capacity is provide via iSCSI from a SAN (Storage Area Network). One of the cluster nodes, gateway, is configured as SAN server, and it needs to have SSD disk attached to its USB3.0 port.
 
 ![cluster-HW-storage](/assets/img/RaspberryPiCluster_HW_storage.png)
 
 
 ### Dedicated Disks
 
-`gateway` uses local storage attached directly to USB 3.0 port (Fash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
+`gateway` uses local storage attached directly to USB 3.0 port (Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
 
 For having better cluster performance `node1-node5` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
 

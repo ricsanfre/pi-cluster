@@ -1,8 +1,8 @@
 ---
 title: Hardware
 permalink: /docs/hardware/
-description: Hardware components used to build our Raspberry Pi Kuberentes cluster. Raspberry Pi differetn storage options benchmarking.
-last_modified_at: "10-09-2022"
+description: Hardware components used to build our Pi Kuberentes cluster. Raspberry Pi different storage options benchmarking.
+last_modified_at: "10-06-2023"
 
 ---
 
@@ -12,6 +12,8 @@ This is the hardware I'm using to create the cluster:
 
 - [4 x Raspberry Pi 4 - Model B (4 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1100-raspberry-pi-4-modelo-b-4gb-765756931182.html) and [1 x Raspberry Pi 4 - Model B (8 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1231-raspberry-pi-4-modelo-b-8gb-765756931199.html) for the kubernetes cluster (1 master node and 5 worker nodes).
 - [1 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) for creating a router for the lab environment connected via wifi to my home network and securing the access to my lab network.
+- [2 x HP EliteDesk 800 G3 i5 6500T 2,5 GHz, 8 GB de RAM, SSD de 256 GB](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8) for additional cluser nodes
+- [2 x Crucial RAM 8GB DDR4 2400MHz CL17 Memoria](https://www.amazon.es/dp/B01BIWKP58) as RAM expansion for mini PCs. Total memmory 16 GB 
 - [4 x SanDisk Ultra 32 GB microSDHC Memory Cards](https://www.amazon.es/SanDisk-SDSQUA4-064G-GN6MA-microSDXC-Adaptador-Rendimiento-dp-B08GY9NYRM/dp/B08GY9NYRM) (Class 10) for installing Raspberry Pi OS for enabling booting from USB (update Raspberry PI firmware and modify USB partition)
 - [4 x Samsung USB 3.1 32 GB Fit Plus Flash Disk](https://www.amazon.es/Samsung-FIT-Plus-Memoria-MUF-32AB/dp/B07HPWKS3C) 
 - [1 x Kingston A400 SSD Disk 480GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N0TQPQB)
@@ -26,7 +28,7 @@ This is the hardware I'm using to create the cluster:
 - [6 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html).
 
 
-## Storage benchmarking
+## Raspberry PI Storage benchmarking
 
 Different Raspberry PI storage configurations have been tested:
 

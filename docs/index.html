@@ -1,15 +1,15 @@
 ---
 layout: default
-title: Homelab automated with Ansible
-description: "This is an educational project to build a Kubernetes cluster using Raspberry Pi nodes kubernetes cluster configurations using an ARM architecture and its automation using Ansible.
-How to automatically configure the cluster nodes and deploy K3s kubernetes cluster, Longhorn as distributed block storage for PODs' persisten volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture."
-last_modified_at: "17-01-2023"
+title: Homelab automated with Ansible and ArgoCD
+description: "This is an educational project to build a hybrid x86/ARM Kubernetes cluster, using Raspberry Pi and refurbished mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and Argo CD.
+How to automatically configure the cluster nodes and deploy K3s kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture."
+last_modified_at: "09-06-2023"
 ---
 
 <div class="header-container p-5 mb-4 rounded-3">
     <div class="container-fluid py-5">
-        <h1>Raspberry Pi Kubernetes Cluster Project Website</h1>
-        <p>K3S Kubernetes cluster using ARM architecture automated with Ansible and ArgoCD.</p>
+        <h1>Pi Kubernetes Cluster Project Website</h1>
+        <p>K3S Kubernetes cluster using bare metal nodes automated with Ansible and ArgoCD.</p>
         <p>
             <a class="btn btn-primary btn-lg" href="{{ "/docs/home/" | relative_url }}" type="button">Documentation</a>
             <a class="btn btn-primary btn-lg" href="{{ site.git_address | relative_url }}" type="button">Get Code <i class="fab fa-github"></i> </a>
@@ -22,8 +22,7 @@ last_modified_at: "17-01-2023"
         <h4 class="header-light">Project Goals & Scope</h4>
         <div class="col-md-6">
               <p class="lead">
-              This is an educational project to explore kubernetes cluster configurations using an ARM architecture and 
-              to automate its deployment and configuration applying <b>IaC (infrastructure as a code)</b> and <b>GitOps</b>
+              This is an educational project to build a hybrid x86/ARM Kubernetes cluster at home, using Raspberry Pi and refurbished x86 mini PCs, learn to deploy basic kubernetes services and automate its deployment and configuration applying <b>IaC (infrastructure as a code)</b> and <b>GitOps</b>
               methodologies with tools like <a href="https://docs.ansible.com/">Ansible</a> and <a href="https://argo-cd.readthedocs.io/en/stable/">Argo CD</a>. <br>
               The entire process for creating this cluster at home, from cluster design and architecture to step-by-step manual configuration guides, has been documented.
               You can find all this information in the <a href="{{ "/docs/home/" | relative_url }}">docs section</a>, so you can build your own home cluster.
@@ -46,14 +45,13 @@ last_modified_at: "17-01-2023"
         <div class="col-sm-4">
             <h2 class="text-center"><i class="fas fa-graduation-cap" aria-hidden="true"></i></h2>
             <h5 class="text-center">Perfect for educational purpuses</h5>
-            <p>Ideal to know the state of the art of Kubernetes ARM-based clusters and to play with different
-            cluster services and applications using low-performance bare metal servers instead of x8086-based virtual machines.</p>
+            <p>Ideal to know the state of the art of hybrid ARM-x86 Kubernetes clusters and to play with different
+            cluster services and applications using low-performance bare metal servers instead of virtual machines.</p>
         </div>
         <div class="col-sm-4">
             <h2 class="text-center"><i class="fas fa-dollar-sign" aria-hidden="true"></i></h2>
             <h5 class="text-center">Low cost Kubernetes cluster</h5>
-            <p>All it is needed is a bunch of Raspberry PIs, (4 Model-B with 4GB) USB sticks, a power hub, and a Ethernet Switch. <br>
-               Anyway you can drive yourself mad, like I did, and buy more staff like dedicated SSDs disks to improve cluster performance.</p>         
+            <p>All it is needed is a bunch of Raspberry PIs, (4 Model-B with 4GB) USB sticks, a power hub, and a Ethernet Switch. <br> Anyway you can drive yourself mad, like I did, and buy more staff like dedicated SSDs disks to improve cluster performance. Or scale it up adding more powerfull x86 mini PCs</p>
         </div>
         <div class="col-sm-4">
             <h2 class="text-center"><i class="fas fa-cogs" aria-hidden="true"></i></h2>
