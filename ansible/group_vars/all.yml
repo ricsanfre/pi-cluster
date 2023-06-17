@@ -28,10 +28,7 @@ restic_backups_dirs:
   - path: '/root'
     exclude:
       - pattern: '.cache'
-  - path: '/home/ansible'
+  - path: '/home/{{ ansible_user }}'
     exclude:
       - pattern: '.cache'
       - pattern: '.ansible'
-  - path: '/home/oss'
-    exclude:
-      - pattern: '.cache'
