@@ -46,12 +46,12 @@ all:
           mac: e4:5f:01:d9:ec:5c
         node-hp-1:
           hostname: node-hp-1
-          ansible-host: 10.0.0.21
+          ansible-host: 10.0.0.20
           ip: 10.0.0.20
           mac: 18:60:24:21:1c:d4
         node-hp-2:
           hostname: node-hp-2
-          ansible-host: 10.0.0.22
+          ansible-host: 10.0.0.21
           ip: 10.0.0.21
           mac: 10:e7:c6:16:54:10
     raspberrypi:
