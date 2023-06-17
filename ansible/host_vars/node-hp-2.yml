@@ -1,6 +1,8 @@
 ---
 autoinstall:
   storage:
+    grub:
+      reorder_uefi: false
     config:
       - ptable: gpt
         path: /dev/nvme0n1
