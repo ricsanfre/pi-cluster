@@ -14,7 +14,7 @@
 - name: Copy grub config file
   template:
     src: "templates/grub.conf.j2"
-    dest: "/srv/tftp/grub/grub.conf"
+    dest: "/srv/tftp/grub/grub.cfg"
 
 - name: Copy boot files
   copy:
