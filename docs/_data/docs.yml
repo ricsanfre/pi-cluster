@@ -2,16 +2,14 @@
   docs:
   - home
   - architecture
-  - hardware
   - ansible
-- title: Control Node
-  docs:
-  - pimaster
 - title: Cluster Setup
   docs:
+  - pimaster
   - gateway
   - node
   - san
+  - pxe-server
 - title: Nodes OS Setup
   docs:
   - firmware
