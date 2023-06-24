@@ -1,8 +1,8 @@
 ---
-title: Cluster Firewall
+title: Cluster Gateway
 permalink: /docs/gateway/
 description: How to configure a Raspberry Pi as router/firewall of our Kubernetes Cluster providing connectivity and basic services (DNS, DHCP, NTP, SAN).
-last_modified_at: "09-06-2023"
+last_modified_at: "18-06-2023"
 ---
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
@@ -13,19 +13,96 @@ This Raspberry Pi (gateway), is connected to my home network using its WIFI inte
 In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node5**): Ubuntu 22.04 64 bits.
 
 
-## Hardware
+## Storage Configuration
 
 `gateway` node is based on a Raspberry Pi 4B 2GB booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
 
 - Dedicated disks storage architecture: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
 - Centralized SAN architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway`. SSD disk for hosting OS and iSCSI LUNs.
 
+
 ## Network Configuration
 
 The WIFI interface (wlan0) will be used to be connected to my home network using static IP address (192.168.1.11/24), while ethernet interface (eth0) will be connected to the lan switch, lab network, using static IP address (10.0.0.1/24)
 Static IP addres in home network, will enable the configuration of static routes in my labtop and VM running on it (`pimaster`) to access the cluster nodes without fisically connect the laptop to the lan switch with an ethernet cable. 
 
-Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is like:
+
+## Unbuntu OS instalation
+
+Ubuntu can be installed on Raspbery PI using a preconfigurad cloud image that need to be copied to SDCard or USB Flashdisk/SSD.
+
+Raspberry Pis will be configured to boot Ubuntu OS from USB conected disk (Flash Disk or SSD disk). The initial Ubuntu 22.04 LTS configuration on a Raspberry Pi 4 will be automated using cloud-init.
+
+In order to enable boot from USB, Raspberry PI firmware might need to be updated. Follow the producedure indicated in ["Raspberry PI - Firmware Update"](/docs/firmware/).
+
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
+
+`user-data` depends on the storage architectural option selected::
+
+| Dedicated Disks | Centralized SAN    |
+|--------------------| ------------- |
+|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data-centralizedSAN) |
+{: .table .table-white .border-dark }
+
+`network-config` is the same in both architectures:
+
+
+| Network configuration |
+|---------------------- |
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/network-config) |
+{: .table .table-white .border-dark }
+
+### cloud-init partitioning configuration (Centralized SAN)
+
+By default, during first boot, cloud image partitions grow to fill the whole capacity of the SDCard/USB Flash Disk or SSD disk). So root partition (/) will grow to fill the full capacity of the disk.
+
+{{ site.data.alerts.note }}
+
+As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/).
+
+{{ site.data.alerts.end }}
+
+
+In case of centralized SAN, gateway's SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating logical volumes (LVM), SAN LUNs to be mounted using iSCSI by the other nodes.
+
+cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
+
+```yml
+bootcmd:
+  # Create second LVM partition. Leaving 30GB for root partition
+  # sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
+  # First convert MBR partition to GPT (-g option)
+  # Second moves the GPT backup block to the end of the disk where it belongs (-e option)
+  # Then creates a new partition starting 10GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
+  # And labels it as an LVM partition (-t option)
+  - [cloud-init-per, once, addpartition, sgdisk, /dev/sda, "-g", "-e", "-n=0:30G:0", -t, "0:8e00"]
+
+runcmd:
+  # reload partition table
+  - "sudo partprobe /dev/sda"
+```
+
+Command executed in boot time is
+
+```shell
+sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
+```
+
+This command:
+  - First convert MBR partition to GPT (-g option)
+  - Second moves the GPT backup block to the end of the disk  (-e option)
+  - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
+  - And labels it as an LVM partition (-t option)
+
+LVM logical volumes creation using the new partition,`/dev/sda3`, (LUNs) have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
+
+Specific ansible variables to be used by this role are stored in [`ansible/vars/centralized_san_target/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san_target/centralized_san_target.yml)
+
+
+### cloud-init: network configuration
+
+
+Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is the following:
 
 ```yml
 version: 2
@@ -45,51 +122,8 @@ wifis:
     nameservers:
       addresses: [80.58.61.250,80.58.61.254]
 ```
-## Storage configuration. Centralized SAN
 
-In case of centralized SAN, gateway's SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating logical volumes (LVM), SAN LUNs to be mounted using iSCSI by the other nodes.
-
-cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
-
-{{site.data.alerts.note}}
-As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/)
-{{site.data.alerts.end}}
-
-Command executed in boot time is
-
-```shell
-sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
-```
-
-This command:
-  - First convert MBR partition to GPT (-g option)
-  - Second moves the GPT backup block to the end of the disk  (-e option)
-  - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
-  - And labels it as an LVM partition (-t option)
-
-LVM logical volumes creation using the new partition,`/dev/sda3`, (LUNs) have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
-
-Specific ansible variables to be used by this role are stored in [`ansible/vars/centralized_san_target/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san_target/centralized_san_target.yml)
-
-## Unbuntu boot from USB
-
-The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
-
-`user-data` depends on the storage architectural option selected::
-
-| Dedicated Disks | Centralized SAN    |
-|--------------------| ------------- |
-|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data-centralizedSAN) |
-{: .table .table-white .border-dark }
-
-`network-config` is the same in both architectures:
-
-
-| Network configuration |
-|---------------------- |
-| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/network-config) |
-{: .table .table-white .border-dark }
-
+It assigns static IP address 10.0.0.1 to eth0 port and configures wifi interface (wlan0) to have static IP address in home network (192.168.1.1). DNS servers of my ISP are also configured.
 
 ## Ubuntu OS Initital Configuration
 
