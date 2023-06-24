@@ -86,7 +86,7 @@ For building the cluster, using bare metal servers instead of virtual machines, 
 
 Initially the intent of this project was to build a kuberentes cluster using only Raspberry PI nodes. Due to Raspberry shortage during last 2 years, which makes impossible to buy them at reasonable prices, I have decided to look for alternatives to be able to scale up my cluster.
 
-Old x86 refurbished mini PCs, with Intel i5 processors has been the solution. These mini PCs provide similar performance to RaspberryPi's Quadcore ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
+Use old x86 refurbished mini PCs, with Intel i5 processors, has been the solution. These mini PCs provide similar performance to RaspberryPi's Quadcore ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
 
 The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power supply, ([aprox 130 €](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8/)) is cheaper than the overal cost of building a cluster node using a Rasbperry PI: cost of Raspberry PI 8GB (100€) + Power Adapter (aprox 10 €) + SSD Disk ([aprox 20 €](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N5IB20Q)) + USB3.0 to SATA converter ([aprox 20€](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84))
 

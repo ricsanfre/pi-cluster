@@ -151,6 +151,16 @@ make ansible-credentials
 ```
 Credentials for external cloud services (IONOS DNS API credentials) are asked during the execution of the playbook.
 
+### Prepare PXE server
+
+Get PXE boot files and ISO image to automate x86 nodes installation.
+
+```shell
+cd metal/x86
+make get-kernel-files
+make get-uefi-files
+```
+
 
 ## Cluster nodes setup
 

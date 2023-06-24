@@ -11,20 +11,16 @@ See details in Ubuntu's documentation: ["Ubuntu Advance Installation - Netbootin
 
 A PXE server will be deployed in the Cluster for automatically autoinstall Ubuntu 22.04 in x86 nodes. This PXE server will be deployed in `gateway` node, leveraging DHCP and TFTP server `dnsmasq` can provide, and adding a Kick-start web service for serving cloud-init files and ISO live image.
 
-
-TBD: Include diagram netboot installation
-
-
 Install process is like this
 1. The to-be-installed machine boots, and is directed to network boot.
-2. The DHCP/BOOTP server tells the machine its network configuration and where to get the bootloader.
+2. The DHCP server tells the machine its network configuration and where to get the bootloader.
 3. The machine’s firmware downloads the bootloader over TFTP and executes it.
-4. The bootloader downloads configuration, also over TFTP, telling it where to download the kernel, RAM Disk and kernel command line to use.
+4. The bootloader downloads configuration, also over TFTP, telling it where to download the kernel (vmlinuz), RAM Disk (initrd) and kernel command line to use (grub.cfg or pxelinux.cfg).
 5. The RAM Disk looks at the kernel command line to learn how to configure the network and where to download the server ISO from.
 6. The RAM Disk downloads the ISO and mounts it as a loop device.
 7. From this point on the install follows the same path as if the ISO was on a local block device
 
-
+![pxe-flow](/assets/img/pxe-boot-flow.png)
 
 ## PXE server installation
 
