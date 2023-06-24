@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
-last_modified_at: "15-05-2023"
+last_modified_at: "24-06-2023"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -49,11 +49,11 @@ Ansible configuration (variables and inventory files) might need to be adapted t
 
 Adjust [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.yml) inventory file to meet your cluster configuration: IPs, hostnames, number of nodes, etc.
 
+Add Raspberry PI nodes to the `rpi` group and x86 nodes to `x86` nodes.
+
 {{site.data.alerts.tip}}
 
 If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, `mac` field (node's mac address) is the only that you need to change in `inventory.yml` file. MAC addresses are used by DHCP server to assign the proper IP to each node.
-
-MAC addresses can be obtained when Raspberry PI is booted for first time during the firmware update step: see [Raspberry PI Firmware Update](/docs/firmware).
 
 {{site.data.alerts.end}}
 
@@ -100,7 +100,7 @@ The following table shows the variable files used for configuring the storage, b
 {: .table .table-white .border-dark }
 
 
-{{site.data.alerts.important}}: **About storage configuration**
+{{site.data.alerts.important}}: **About Raspberry PI storage configuration**
 
 Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
 
@@ -162,7 +162,7 @@ Update firmware in all Raspberry-PIs following the procedure described in ["Rasp
 
 Install `gateway` Operating System on Rapberry PI.
    
-The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
 
 `user-data` depends on the storage architectural option selected::
 
@@ -207,9 +207,11 @@ make gateway-setup
 
 Once `gateway` is up and running the rest of the nodes can be installed and connected to the LAN switch, so they can obtain automatic network configuration via DHCP.
 
-Install `node1-5` Operating System on Raspberry Pi
+#### Install Raspberry PI nodes
 
-Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
+Install Operating System on Raspberry Pi nodes `node1-5`
+
+Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
 
 
 | Dedicated Disks | Centralized SAN  |
@@ -232,6 +234,24 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 {{site.data.alerts.end}}
 
+#### Install x86 nodes
+
+Install Operating System on x86 nodes (`node-hp-1-2`). P
+
+Follow the installation procedure indicated in ["OS Installation - X86 (PXE)"](/docs/ubuntu/x86/) and adapt the cloud-init files to your environment.
+
+{{site.data.alerts.warning}}
+
+PXE server is automatically configured in `gateway` node and cloud-init files are automatically created from [autoinstall jinja template]({{ site.git_edit_address }}/ansible/roles/pxe-server/templates/cloud-init-autoinstall.yml.j2).
+
+This file and the corresponding host-variables files containing storage configuration, can be tweak to be adpated to your needs.
+
+[autoinstall storage config node-hp-1]({{ site.git_edit_address }}/ansible/host_vars/node-hp-1.yml)
+
+If the template or the storage config files are changed, in order to deploy the changes in the PXE server, `make gateway-setup` need to be executed.
+
+{{site.data.alerts.end}}
+
 ### Configure cluster nodes
 
 For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), execute the command:
@@ -247,7 +267,7 @@ Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp V
 ```shell
 make external-services
 ```
-Ansible Playbook assumes S3 server is installed in `node1` and Hashicorp Vault in `gateway`.
+Ansible Playbook assumes S3 server is installed in a external node `s3` and Hashicorp Vault in `gateway`.
 
 {{site.data.alerts.note}}
 All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
