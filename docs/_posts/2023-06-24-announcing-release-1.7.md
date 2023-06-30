@@ -34,14 +34,14 @@ Ansible automation code has been update to be able to configure both type of nod
 
 Process of burning Raspberry Pi's ubuntu cloud image to USB Flash Disk/SSD and copying the initial cloud-init configuration has been automated using a Linux based PC.
 
-See ["Automating Image creation (USB Booting)"](docs/ubuntu/rpi/#automating-image-creation-usb-booting)
+See ["Automating Image creation (USB Booting)"](/docs/ubuntu/rpi/#automating-image-creation-usb-booting)
 
 
 ### Ubuntu autoinstall over PXE (x86 nodes)
 
 Ubuntu OS installation on x86 nodes has been automated using PXE. PXE server has been added to the cluster, and installation process can be launched from network.
 
-See ["OS Installation - x86 (PXE sever)"](docs/ubuntu/x86) and ["PXE Server"](/docs/pxe-server).
+See ["OS Installation - x86 (PXE sever)"](/docs/ubuntu/x86) and ["PXE Server"](/docs/pxe-server).
 
 
 ## Ubuntu OS upgrade from 20.04 to 22.04
