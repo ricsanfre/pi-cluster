@@ -1,0 +1,4 @@
+server: https://{{ k3s_api_vip }}:6443
+
+token: {{ k3s_token }}
+{{ k3s_agent_config | to_nice_yaml }}

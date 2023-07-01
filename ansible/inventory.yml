@@ -70,8 +70,8 @@ all:
       children:
         k3s_master:
           hosts:
-            node1:
+            node[1:3]:
         k3s_worker:
           hosts:
-            node[2:5]:
+            node[4:5]:
             node-hp-[1:3]:

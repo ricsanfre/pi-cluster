@@ -2,10 +2,15 @@
 
 # k3s master server connection
 k3s_token: s1cret0
-k3s_master_ip: 10.0.0.1
+k3s_api_vip: 10.0.0.1
 
-# Extra afrguments for installation script
-k3s_worker_extra_args: "--node-label 'node_type=worker'"
+# k3s config directory
+k3s_config_directory: /etc/rancher/k3s
+# k3s config file
+k3s_config_file: "{{ k3s_config_directory }}/config.yaml"
+
+# k3s agent config
+k3s_agent_config: ""
 
 # Setting K3s version
 k3s_version: v1.24.7+k3s1

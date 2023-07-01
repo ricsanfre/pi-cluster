@@ -1,0 +1,9 @@
+{% if inventory_hostname == groups['k3s_master'][0] %}
+cluster-init: true
+{% else %}
+server: https://{{ hostvars[groups['k3s_master'][0]].ansible_host }}:6443
+{% endif %}
+token: {{ k3s_token }}
+{% if 'k3s_master' in group_names %}
+{{ k3s_server_config | to_nice_yaml }}
+{% endif %}

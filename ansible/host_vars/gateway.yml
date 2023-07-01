@@ -72,7 +72,8 @@ ntp_allow_hosts: [10.0.0.0/24]
 # tcp 9100 Prometheus (fluent-bit)
 # tcp 8200, 8201 Vault server
 # udp 69, TFTP server
-in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201 }'
+# TCP 6443 load balancer K3S API
+in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201, 6443 }'
 in_udp_port: '{ snmp, domain, ntp, bootps, 69 }'
 # tcp 9091 minio server
 forward_tcp_port: '{ http, https, ssh, 9091 }'
@@ -132,8 +133,6 @@ nft_forward_host_rules:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
   230 http from wan:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
-  240 kube-api from wan:
-    - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport 6443 ct state new accept
   250 port-forwarding from wan:
     - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport 8080 ct state new accept
 # NAT Post-routing

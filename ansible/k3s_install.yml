@@ -1,5 +1,13 @@
 ---
 
+- name: Install load balancer
+  hosts: gateway
+  gather_facts: true
+  tags: [install]
+  become: true
+  roles:
+    - role: haproxy
+
 - name: Install K3S prerequisites
   hosts: k3s_cluster
   gather_facts: true
@@ -82,7 +90,7 @@
 
     - name: Write Kubernetes config file with the correct cluster address
       ansible.builtin.copy:
-        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', hostvars[groups['k3s_master'][0]].ansible_host) }}"
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', k3s_api_vip ) }}"
         dest: "~/.kube/config"
         mode: 0600
       delegate_to: localhost

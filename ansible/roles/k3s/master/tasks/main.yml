@@ -9,6 +9,12 @@
     dest: "{{ k3s_config_directory }}/kubelet.config"
     content: "{{ k3s_kubelet_config }}"
 
+- name: Copy k3s configuration file
+  ansible.builtin.template:
+    src: "templates/config.yml.j2"
+    dest: "{{ k3s_config_file }}"
+    mode: 0644
+
 - name: Get K3s installation script
   get_url:
     url: https://get.k3s.io
@@ -16,7 +22,7 @@
     mode: '0766'
 
 - name: Install K3s
-  command: "/tmp/k3s_install.sh server {{ k3s_server_extra_args }}"
+  command: "/tmp/k3s_install.sh server"
   environment:
     K3S_TOKEN: "{{ k3s_token }}"
     INSTALL_K3S_VERSION: "{{ k3s_version }}"

@@ -1,0 +1,20 @@
+---
+- name: Ensure haproxy package is installed
+  package:
+    name: 'haproxy'
+    state: 'present'
+    update_cache: true
+
+- name: Copy haproxy config
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+    validate: haproxy -f %s -c -q
+  notify: restart haproxy
+
+- name: Ensure haproxy is running and enabled
+  service:
+    name: "haproxy"
+    state: started
+    enabled: true

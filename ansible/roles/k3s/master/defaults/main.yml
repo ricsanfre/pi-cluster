@@ -3,7 +3,17 @@
 # Setting token
 k3s_token: s1cret0
 
-k3s_server_extra_args: "--write-kubeconfig-mode '0644' --node-taint 'k3s-controlplane=true:NoExecute'"
-
 # Setting K3s version
 k3s_version: v1.24.7+k3s1
+
+# k3s config directory
+k3s_config_directory: /etc/rancher/k3s
+
+# k3s config file
+k3s_config_file: /etc/rancher/k3s/config.yaml
+
+# k3s kubelet config content
+k3s_kubelet_config: ""
+
+# k3s server-config
+k3s_server_config: ""
