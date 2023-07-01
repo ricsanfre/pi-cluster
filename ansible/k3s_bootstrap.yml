@@ -1,7 +1,7 @@
 ---
 
 - name: Bootstrap Cluster
-  hosts: k3s_master
+  hosts: node1
   gather_facts: false
 
   collections:
