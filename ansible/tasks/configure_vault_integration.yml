@@ -33,7 +33,7 @@
 
 - name: Set kubernetes_host
   set_fact:
-    kubernetes_host: "https://{{ k3s_master_ip }}:6443"
+    kubernetes_host: "https://{{ k3s_api_vip }}:6443"
 
 - name: Configure vault-kubernetes-auth
   include_tasks: tasks/vault_kubernetes_auth_method_config.yml

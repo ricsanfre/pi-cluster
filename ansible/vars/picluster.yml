@@ -8,8 +8,8 @@
 # k3s version
 k3s_version: v1.27.1+k3s1
 
-# k3s master node IP
-k3s_master_ip: 10.0.0.11
+# k3s master node VIP (loadbalancer)
+k3s_api_vip: 10.0.0.1
 
 # k3s shared token
 k3s_token: "{{ vault.cluster.k3s.token }}"
@@ -24,24 +24,50 @@ k3s_kubelet_config: |
   shutdownGracePeriod: 30s
   shutdownGracePeriodCriticalPods: 10s
 
-# Extra arguments for k3s server installation
-k3s_server_extra_args: >-
-  --write-kubeconfig-mode '0644'
-  --disable 'servicelb'
-  --disable 'traefik'
-  --disable 'local-storage'
-  --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
-  --kube-controller-manager-arg 'bind-address=0.0.0.0'
-  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
-  --kube-scheduler-arg 'bind-address=0.0.0.0'
-  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
-  --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
 
-# Extra arguments for k3s agent installation
-k3s_worker_extra_args: >-
-  --node-label 'node_type=worker'
-  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
-  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+# k3s server-config
+# Equivalent to start master installer with the following options
+# --write-kubeconfig-mode '0644'
+# --disable 'servicelb'
+# --disable 'traefik'
+# --disable 'local-storage'
+# --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
+# --kube-controller-manager-arg 'bind-address=0.0.0.0'
+# --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+# --kube-scheduler-arg 'bind-address=0.0.0.0'
+# --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+# --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+
+k3s_server_config:
+  disable:
+    - local-storage
+    - servicelb
+    - traefik
+  write-kubeconfig-mode: 644
+  node-taint:
+    - 'node-role.kubernetes.io/master=true:NoSchedule'
+  kubelet-arg:
+    - 'config=/etc/rancher/k3s/kubelet.config'
+  kube-proxy-arg:
+    - 'metrics-bind-address=0.0.0.0'
+  kube-controller-manager-arg:
+    - 'bind-address=0.0.0.0'
+    - 'terminated-pod-gc-threshold=10'
+  kube-scheduler-arg:
+    - 'bind-address=0.0.0.0'
+
+# k3s agent-config
+# Equivalent to start agent installer with the following options
+#  --node-label 'node_type=worker'
+#  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+#  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+k3s_agent_config:
+  node_label:
+    - 'node_type=worker'
+  kubelet-arg:
+    - 'config=/etc/rancher/k3s/kubelet.config'
+  kube-proxy-arg:
+    - 'metrics-bind-address=0.0.0.0'
 
 
 ###########
