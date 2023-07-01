@@ -1,0 +1,44 @@
+---
+
+- name: Detect if multiple masters are defined
+  ansible.builtin.set_fact:
+    k3s_build_cluster: true
+  when:
+    - groups['k3s_master'] is defined
+    - groups['k3s_master'] | length > 1
+
+- name: Ensure a primary k3s control node is defined if multiple masters are found
+  ansible.builtin.set_fact:
+    k3s_primary_control_node: true
+  when:
+    - groups['k3s_master'] | length > 1
+    - inventory_hostname == groups['k3s_master'][0]
+
+- name: Ensure registration ip is defined
+  ansible.builtin.set_fact:
+    k3s_registration_ip: "{{ hostvars[groups['k3s_master'][0]].ansible_host }}"
+
+- name: Create K3S configuration directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /etc/rancher/k3s
+    - /etc/rancher/node
+
+- name: Generate k3s token file on all nodes
+  ansible.builtin.copy:
+    content: "{{ k3s_token }}"
+    dest: "{{ k3s_token_file }}"
+    mode: 0600
+
+- name: Copy kubelet configuration file
+  copy:
+    dest: "{{ k3s_config_directory }}/kubelet.config"
+    content: "{{ k3s_kubelet_config }}"
+
+- name: Copy k3s configuration file
+  ansible.builtin.template:
+    src: "templates/config.yml.j2"
+    dest: "{{ k3s_config_file }}"
+    mode: 0644

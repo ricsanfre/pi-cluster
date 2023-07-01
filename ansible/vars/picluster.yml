@@ -39,6 +39,8 @@ k3s_kubelet_config: |
 # --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
 
 k3s_server_config:
+  tls-san:
+    - "{{ k3s_api_vip }}" # IP to HAProxy
   disable:
     - local-storage
     - servicelb
@@ -46,6 +48,7 @@ k3s_server_config:
   write-kubeconfig-mode: 644
   node-taint:
     - 'node-role.kubernetes.io/master=true:NoSchedule'
+  etcd-expose-metrics: true
   kubelet-arg:
     - 'config=/etc/rancher/k3s/kubelet.config'
   kube-proxy-arg:
@@ -62,7 +65,7 @@ k3s_server_config:
 #  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
 #  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
 k3s_agent_config:
-  node_label:
+  node-label:
     - 'node_type=worker'
   kubelet-arg:
     - 'config=/etc/rancher/k3s/kubelet.config'

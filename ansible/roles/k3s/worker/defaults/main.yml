@@ -2,10 +2,13 @@
 
 # k3s master server connection
 k3s_token: s1cret0
-k3s_api_vip: 10.0.0.1
 
 # k3s config directory
 k3s_config_directory: /etc/rancher/k3s
+
+# token file
+k3s_token_file: /etc/rancher/node/password
+
 # k3s config file
 k3s_config_file: "{{ k3s_config_directory }}/config.yaml"
 
