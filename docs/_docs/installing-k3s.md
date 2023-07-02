@@ -190,7 +190,7 @@ An embedded etcd datastore (as opposed to the embedded SQLite datastore used in 
 A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/) , will be used.
 
 
-![K3S Architecture](/assets/img/k3s-ha-configuration.png)
+![K3S Architecture](/assets/img/k3s-HA-configuration.png)
 
 {{site.data.alerts.note}}
 
