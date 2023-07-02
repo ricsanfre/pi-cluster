@@ -2,24 +2,24 @@
 title: Lab Architecture
 permalink: /docs/architecture/
 description: Homelab architecture of our Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "18-06-2023"
+last_modified_at: "02-07-2023"
 ---
 
 
 The home lab I am building is shown in the following picture
 
-![Cluster-lab](/assets/img/RaspberryPiCluster_architecture.png)
+![Cluster-lab](/assets/img/picluster-architecture.png)
 
 
 A K3S cluster is composed of the following **cluster nodes**:
-- One master node (`node1`), running on Raspberry Pi 4B (4GB)
-- Six worker nodes:
-  - `node2`, `node3` , `node4` running on Raspberry Pi 4B (4GB)
+- 3 master nodes (`node1`, `node2` and `node3`), running on Raspberry Pi 4B (4GB)
+- 5 worker nodes:
+  - `node4` running on Raspberry Pi 4B (4GB)
   - `node5` running on Raspberry Pi 4B (8GB)
-  - `node-hp-1` and `node-hp-2` running on HP Elitedesk 800 G3 (16GB)
+  - `node-hp-1`, `node-hp-2` and `node-hp-3` running on HP Elitedesk 800 G3 (16GB)
  
 
-A **LAN switch** (8 Gigabit ports) is used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running on Raspberry Pi 4B (2GB). 
+ A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running on Raspberry Pi 4B (2GB). 
 
 `gateway`, **cluster firewall/router**, is connected to LAN Switch using its Gigabit Ethernet port. It is also connected to my home network using its WIFI interface, so it can route and filter traffic comming in/out the cluster. With this architecture my lab network can be isolated from my home network.
 
@@ -28,6 +28,8 @@ A **LAN switch** (8 Gigabit ports) is used to provide L2 connectivity to the clu
  - DNS
  - NTP
  - DHCP
+
+A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `gateway` server.
 
 For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `gateway` node.
 
@@ -78,9 +80,9 @@ For building the cluster, using bare metal servers instead of virtual machines, 
 
   I have used the following hardware components
 
-    - [2 x HP EliteDesk 800 G3 i5 6500T 2,5 GHz, 8 GB de RAM, SSD de 256 GB](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8) as x86 cluster nodes.
+    - [3 x HP EliteDesk 800 G3 i5 6500T 2,5 GHz, 8 GB de RAM, SSD de 256 GB](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8) as x86 cluster nodes.
       One of the nodes `node-hp-2` has a SSD M.2 NVMe 256 GB. The other, `node-hp-1` has a SATA SSD Kingston 240 GB
-    - [2 x Crucial RAM 8GB DDR4 2400MHz CL17 Memoria](https://www.amazon.es/dp/B01BIWKP58) as RAM expansion for mini PCs. Total memmory 16 GB 
+    - [3 x Crucial RAM 8GB DDR4 2400MHz CL17 Memoria](https://www.amazon.es/dp/B01BIWKP58) as RAM expansion for mini PCs. Total memmory 16 GB 
 
 {{site.data.alerts.note}}
 
@@ -95,17 +97,21 @@ The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power su
 
 ### Networking
 
-A 8 GE ports LAN switch, [NetGear GS108S](https://www.netgear.com/business/wired/switches/plus/gs108e/), supporting VLAN configuration and remote management, is used to provide connectivity to all cluster nodes (Raspberry Pis and x86 mini PCs). 
+A 8 GE ports LAN switch, [NetGear GS108S](https://www.netgear.com/business/wired/switches/plus/gs108e/), and 5 GE ports LAN switch, [NetGear GS105E](https://www.netgear.es/support/product/gs105e), supporting VLAN configuration and remote management, are used to provide connectivity to all cluster nodes (Raspberry Pis and x86 mini PCs).
 
 All nodes are connected to the switch with Cat6 eth cables, using their Gigabit Ethernet port.
 
 ![netgear-gs108s](/assets/img/netgear-gs108e.jpg)
 
 
+![netgear-gs105e](/assets/img/netgear-gs105E.png)
+
 For networking, I have used the following hardware components:
 
-- [1 x Negear GS108-300PES](https://www.amazon.es/Netgear-GS108E-300PES-conmutador-gestionable-met%C3%A1lica/dp/B00MYYTP3S). 8 ports GE ethernet manageable switch (QoS and VLAN support)
-- [8 x Ethernet Cable](https://www.aliexpress.com/item/32821735352.html). Flat Cat 6,  15 cm length
+- [1 x Netgear GS108-300PES](https://www.amazon.es/Netgear-GS108E-300PES-conmutador-gestionable-met%C3%A1lica/dp/B00MYYTP3S). 8 ports GE ethernet managed switch (QoS and VLAN support)
+
+- [1 x Netgear GS105E](https://www.amazon.es/Netgear-GS105E-200PES-gestionable-puertos-Gigabit/dp/B00GWKN1Q2), 5 ports GE ehternet managed switch
+- [10 x Ethernet Cable](https://www.aliexpress.com/item/32821735352.html). Flat Cat 6,  15 cm length
 
 ## Raspberry PI Storage
 

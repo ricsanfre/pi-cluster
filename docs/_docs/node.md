@@ -6,11 +6,11 @@ last_modified_at: "24-06-2023"
 ---
 
 A K3S cluster is composed of:
-- One **master node** (`node1`), running on Raspberry Pi 4B (4GB)
-- Six **worker nodes**:
-  - `node2`, `node3` , `node4` running on Raspberry Pi 4B (4GB)
+- 2 **master nodes** (`node1`, `node2`, `node3`), running on Raspberry Pi 4B (4GB)
+- 5 **worker nodes**:
+  - `node4` running on Raspberry Pi 4B (4GB)
   - `node5` running on Raspberry Pi 4B (8GB)
-  - `node-hp-1` and `node-hp-2` running on HP Elitedesk 800 G3 (16GB)
+  - `node-hp-1`,`node-hp-2` and `node-hp-3` running on HP Elitedesk 800 G3 (16GB)
 
 
 ## Raspberry PI nodes
@@ -113,7 +113,7 @@ Then cloud-init executes the commands (cloud-init's runcmd section) to format (`
 
 ### Storage Configuration
 
-`hp-node1-2` are based on HP EliteDesk 800 G3 mini PCs. This model, is able to have two types of integrated disk:
+`hp-node1-3` are based on HP EliteDesk 800 G3 mini PCs. This model, is able to have two types of integrated disk:
 
 - 2.5 SSD SATA disk
 - NvME disk via M2.PCIe interface
@@ -129,7 +129,7 @@ For nodes having only SATA disk (hp-node-1)
 | /dev/sda3 | LVM Volume Group: ubuntu-vg| | Rest of space available |
 {: .table .table-white .border-dark }
 
-For nodes having NvME disks (hp-node-2)
+For nodes having NvME disks (hp-node-2 and hp-node-3)
 
 | Partition | Description  | Mount Point | Format | Size |
 |---| --- | --- | --- | --- |
