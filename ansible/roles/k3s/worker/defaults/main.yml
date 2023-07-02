@@ -3,17 +3,14 @@
 # k3s master server connection
 k3s_token: s1cret0
 
-# k3s config directory
-k3s_config_directory: /etc/rancher/k3s
-
-# token file
-k3s_token_file: /etc/rancher/node/password
-
 # k3s config file
-k3s_config_file: "{{ k3s_config_directory }}/config.yaml"
+k3s_config_file: /etc/rancher/k3s/config.yaml
 
 # k3s agent config
 k3s_agent_config: ""
+
+# k3s kubelet config content
+k3s_kubelet_config: ""
 
 # Setting K3s version
 k3s_version: v1.24.7+k3s1

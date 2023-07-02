@@ -12,6 +12,5 @@
 - name: Install K3s
   command: "/tmp/k3s_install.sh agent"
   environment:
-    K3S_TOKEN: "{{ k3s_token }}"
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
   changed_when: true
