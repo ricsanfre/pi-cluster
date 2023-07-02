@@ -40,7 +40,7 @@ k3s_kubelet_config: |
 
 k3s_server_config:
   tls-san:
-    - "{{ k3s_api_vip }}" # IP to HAProxy
+    - "{{ k3s_api_vip }}"  # IP to HAProxy
   disable:
     - local-storage
     - servicelb
