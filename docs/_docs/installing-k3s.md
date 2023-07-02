@@ -1,8 +1,8 @@
 ---
 title: K3S Installation
 permalink: /docs/k3s-installation/
-description: How to install K3s, a lightweight kubernetes distribution, in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "01-02-2023"
+description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
+last_modified_at: "02-07-2023"
 ---
 
 
@@ -19,17 +19,10 @@ Kubernetes cluster will be installed in node1-node5. `node1` will have control-p
 
 Control-plane node will be configured so no load is deployed in it.
 
-## Installation prerequisites for all nodes
+## Nodes preconfiguration
 
-Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Raspberry Pi
 
-- Step 1: Modify file `/boot/firmware/cmdline.txt` to include the line:
-
-    ```
-    cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
-    ```
-
-- Step 2: Enable iptables to see bridged traffic
+- Step 1: Enable iptables to see bridged traffic
 
     Load `br_netfilter` kernel module an modify settings to let `iptables` see bridged traffic
 
@@ -45,10 +38,36 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
 
     sudo sysctl --system
     ```
-- Step 3: Reboot the server
+
+- Step 2: Disable swap memory (only x86 nodes)
+
+  ```shell
+  sudo swapoff -a
+  ```
+
+  Modify /etc/fstab to make this change permanent, commenting line corresponding to swap.
+
+- Step 3: Enable `cgroup` on Raspberry PI nodes.
+
+  Modify file `/boot/firmware/cmdline.txt` to include the line:
+
+  ```
+  cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
+  ```
+
+- Step 4: Reboot the server
 
 
-## Master installation (node1)
+## Single-server Setup with an Embedded DB
+
+In this case a single node will be configured as master node. K3s embedded sqlite database is used in this case.
+
+In this configuration, each agent node is registered to the same server node. A K3s user can manipulate Kubernetes resources by calling the K3s API on the server node.
+
+![K3S Architecture](/assets/img/k3s-single-master.png)
+
+
+### Master node installation
 
 - Step 1: Prepare K3S kubelet configuration file
 
@@ -68,7 +87,7 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
 
   {{site.data.alerts.note}}
 
-  After installation, we will see that `kubelet` (k3s-server proccess) has taken [systemd's inhibitor lock](https://www.freedesktop.org/wiki/Software/systemd/inhibit/), which is the mechanism used by Kubernetes to implement the gracefully shutdown the pods.
+  After installation, we will see that `kubelet` (k3s-server process) has taken [systemd's inhibitor lock](https://www.freedesktop.org/wiki/Software/systemd/inhibit/), which is the mechanism used by Kubernetes to implement the gracefully shutdown the pods.
 
     ```shell  
     sudo systemd-inhibit --list
@@ -125,7 +144,7 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
    cp /etc/rancher/k3s/k3s.yaml $HOME/.kube/.
    ```
 
-## Workers installation (node2-node4)
+### Workers installation
 
 
 - Step 1: Prepare K3S kubelet configuration file
@@ -163,15 +182,276 @@ Enable `cgroup` via boot commandline, if not already enabled, for Ubuntu on a Ra
   kubectl label nodes <worker_node_name> kubernetes.io/role=worker
   ```
 
-## Configure master node to enable remote deployment of pods with Ansible
+## High-Availability K3s
 
-Ansible collection for managing kubernetes cluster is available: [kubernetes.core ansible collection](https://github.com/ansible-collections/kubernetes.core).
+Three or more server nodes that will serve the Kubernetes API and run other control plane services
+An embedded etcd datastore (as opposed to the embedded SQLite datastore used in single-server setups).
 
-For using this ansible collection from the `pimaster` node, python package `kubernetes` need to be installed on k3s master node
+A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/) , will be used.
 
-```shell
-pip3 install kubernetes
-```
+
+![K3S Architecture](/assets/img/k3s-ha-configuration.png)
+
+{{site.data.alerts.note}}
+
+For the HA installation, instead of providing arguments/environment variables to K3s' installation script, installation parameters will be provide through [config files](https://docs.k3s.io/installation/configuration#configuration-file).
+
+{{site.data.alerts.end}}
+
+
+### Load Balancer (HAProxy)
+
+[HAProxy](https://www.haproxy.org/) will be installed in `gateway` node. 
+
+{{site.data.alerts.note}}
+
+In this configuration we will have a single point of failure, HAProxy is not deployed in HA mode. HAProxy combined with [Keepalived](https://www.keepalived.org/) provide HA configuration for a software network load balancer.
+
+{{site.data.alerts.end}}
+
+To install and configure HAProxy:
+
+
+- Step 1. Install haproxy
+
+  ```shell
+  sudo apt install haproxy
+  ```
+
+- Step 2. Configure haproxy
+
+  Edit file `/etc/haproxy/haproxy.cfg`
+
+  ```
+  global
+    log /dev/log  local0
+    log /dev/log  local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+  defaults
+    log global
+    mode http
+    option httplog
+    option dontlognull
+    retries 3
+    timeout http-request 10s
+    timeout queue 20s
+    timeout connect 10s
+    timeout client 1h
+    timeout server 1h
+    timeout http-keep-alive 10s
+    timeout check 10s
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+
+
+  #---------------------------------------------------------------------
+  # apiserver frontend which proxys to the control plane nodes
+  #---------------------------------------------------------------------
+  frontend k8s_apiserver
+      bind *:6443
+      mode tcp
+      option tcplog
+      default_backend k8s_controlplane
+
+  #---------------------------------------------------------------------
+  # round robin balancing for apiserver
+  #---------------------------------------------------------------------
+  backend k8s_controlplane
+      option httpchk GET /healthz
+      http-check expect status 200
+      mode tcp
+      option ssl-hello-chk
+      balance     roundrobin
+        server node1 10.0.0.11:6443 check
+        server node2 10.0.0.12:6443 check
+        server node3 10.0.0.12:6443 check
+  ```
+
+  With this configuration haproxy will balance requests to API server (TCP port 6443), following a round-robin balancing method, between the 3 master nodes configured.
+
+  IP address to be used for kubernetes API, will be gateway's IP address. 
+
+- Step 3: Restart HAProxy
+
+  ```shell
+  sudo systemctl restart haproxy
+  ```
+
+- Step 4: Enable haproxy to boot
+
+  ```shell
+  systemctl enable haproxy
+  ```
+
+### Master nodes installation
+
+Embedded etcd data store will be used. Installation procedure is described in K3S documentation: [High Availability Embedded etcd](https://docs.k3s.io/datastore/ha-embedded).
+
+
+- Step 1: Create config directory
+
+  ```shell
+  sudo mkdir -p /etc/rancher/k3s
+  ``` 
+
+- Step 2: Create token file in all nodes
+
+  Create file `/etc/rancher/k3s/cluster-token` containing token value. K3s token is a shared secret among all nodes of the cluster (master and worker nodes)
+
+  Instead of using `K3S_TOKEN` environment variable during installation, `--token-file` argument will be used.
+
+  ```shell
+  echo "supersecrettoken" > /etc/rancher/k3s/cluster-token
+  ```
+
+- Step 3: Prepare K3S kubelet configuration file.
+
+  Create file `/etc/rancher/k3s/kubelet.config`
+
+  ```yml
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+  ```
+
+  This kubelet configuration enables new kubernetes feature [Graceful node shutdown](https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/). This has been explained in the previous section: single master node installation.
+
+
+- Step 4: Prepare K3s config file
+
+  Create file `/etc/rancher/k3s/config.yaml` containing all configuration options needed. They are equivalent to the K3s arguments 
+
+  ```yml
+  token-file: /etc/rancher/k3s/cluster-token
+  disable:
+  - local-storage
+  - servicelb
+  - traefik
+  etcd-expose-metrics: true
+  kube-controller-manager-arg:
+  - bind-address=0.0.0.0
+  - terminated-pod-gc-threshold=10
+  kube-proxy-arg:
+  - metrics-bind-address=0.0.0.0
+  kube-scheduler-arg:
+  - bind-address=0.0.0.0
+  kubelet-arg:
+  - config=/etc/rancher/k3s/kubelet.config
+  node-taint:
+  - node-role.kubernetes.io/master=true:NoSchedule
+  tls-san:
+  - 10.0.0.1
+  write-kubeconfig-mode: 644
+  ```
+
+  This configuration is equivalent to the following k3s arguments:
+
+  ```shell
+  --toke-file /etc/rancher/k3s/cluster-token
+  --write-kubeconfig-mode '0644'
+  --disable 'servicelb'
+  --disable 'traefik'
+  --disable 'local-storage'
+  --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
+  --etcd-expose-metrics
+  --tls-san 10.0.0.1
+  --kube-controller-manager-arg 'bind-address=0.0.0.0'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+  --kube-scheduler-arg 'bind-address=0.0.0.0'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+  ```
+
+  Parameters are the same which have been configured during installation in single master node deployment, adding the following:
+
+  - `token-file` parameter instead K3S_TOKEN environment variable
+  - `tls-san` parameter to add k3s api load balancer ip as Subject Alternative Names on TLS cert created by K3S.
+  - `etcd-expose-metrics` to expose etcd metrics
+
+
+- Step 5. Install primary master node
+
+  ```shell
+  curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+  ```
+
+- Step 6. Install secondary master nodes
+
+  ```shell
+  curl -sfL https://get.k3s.io | sh -s - server --server https://<ip or hostname of first master node>:6443
+  ```
+
+
+### Worker nodes installation
+
+
+- Step 1: Create config directory
+
+  ```shell
+  sudo mkdir -p /etc/rancher/k3s
+  ``` 
+
+- Step 2: Create token file in all nodes
+
+  Create file `/etc/rancher/k3s/cluster-token` containing token value. K3s token is a shared secret among all nodes of the cluster (master and worker nodes)
+
+  Instead of using `K3S_TOKEN` environment variable during installation, `--token-file` argument will be used.
+
+  ```shell
+  echo "supersecrettoken" > /etc/rancher/k3s/cluster-token
+  ```
+
+- Step 3: Prepare K3S kubelet configuration file.
+
+  Create file `/etc/rancher/k3s/kubelet.config`
+
+  ```yml
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+  ```
+
+- Step 4: Prepare K3s config file
+
+  Create file `/etc/rancher/k3s/config.yaml` containing all configuration options needed.
+
+  ```yml
+  token-file: /etc/rancher/k3s/cluster-token
+  node-label:
+    - 'node_type=worker'
+  kubelet-arg:
+    - 'config=/etc/rancher/k3s/kubelet.config'
+  kube-proxy-arg:
+    - 'metrics-bind-address=0.0.0.0'
+  ```
+
+  This configuration is equivalent to the following k3s arguments:
+
+  ```shell
+  --toke-file /etc/rancher/k3s/cluster-token
+  --node-label 'node_type=worker'
+  --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
+  --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
+  ```
+
+- Step 5. Install agent node
+
+  ```shell
+  curl -sfL https://get.k3s.io | sh -s - agent --server https://<k3s_api_loadbalancer_ip>:6443
+  ```
 
 ## Remote Access
 
@@ -184,6 +464,8 @@ To enable remote access to the cluster using `kubectl` and `helm` applications f
 - Step 3: Modify `k3s.yaml` configuration file for using the IP address instead of localhost
 
 - Step 4: Enable HTTPS connectivity on port 6443 between the server and the k3s control node
+
+In case of HA deployment, k3s api load balancer ip can be used instead of the IP of any of the single nodes.
 
 
 ## K3S Automatic Upgrade
@@ -264,12 +546,12 @@ See more details in [K3S Automated Upgrades documentation](https://docs.k3s.io/u
 
 To reset the cluster execute k3s uninstall script in master and worker nodes
 
-On each worker node (`node2-node4`) execute:
+On each worker node, execute:
 
 ```shell
 /usr/local/bin/k3s-agent-uninstall.sh
 ```
-On master node (node1) execute
+On each master node, execute
 
 ```shell
 /usr/local/bin/k3s-uninstall.sh
@@ -287,4 +569,14 @@ ansible-playbook k3s_install.yml
 For resetting the cluster execute:
 ```shell
 ansible-playbook k3s_reset.yml
+```
+
+### Configure master node to enable remote deployment of pods with Ansible
+
+Ansible collection for managing kubernetes cluster is available: [kubernetes.core ansible collection](https://github.com/ansible-collections/kubernetes.core).
+
+For using this ansible collection from the `pimaster` node, python package `kubernetes` need to be installed on k3s master node
+
+```shell
+pip3 install kubernetes
 ```

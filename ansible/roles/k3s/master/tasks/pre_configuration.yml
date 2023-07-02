@@ -24,7 +24,6 @@
     state: directory
   loop:
     - /etc/rancher/k3s
-    - /etc/rancher/node
 
 - name: Generate k3s token file on all nodes
   ansible.builtin.copy:
