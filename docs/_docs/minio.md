@@ -2,7 +2,7 @@
 title: Minio S3 Object Storage Service
 permalink: /docs/minio/
 description: How to deploy a Minio S3 object storage service in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "17-02-2023"
+last_modified_at: "03-07-2023"
 ---
 
 Minio will be deployed as a Kuberentes service providing Object Store S3-compatile backend for other Kubernetes Services (Loki, Tempo, Mimir, etc. )
@@ -64,6 +64,18 @@ Installation using `Helm` (Release 3):
   replicas: 3
   # Number of expanded MinIO clusters
   pools: 1
+
+  # Run minio server only on amd64 nodes
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
+
   # Persistence
   persistence:
     enabled: true
@@ -126,6 +138,8 @@ Installation using `Helm` (Release 3):
   - Root user and passwork is obtained from the secret created in Step 3 (`existingSecret`).
 
   - Memory resources for each replica is set to 1GB (`resources.requests.memory`). Default config is 16GB which is not possible in a Raspberry Pi.
+
+  - Minio PODs are deployed only on x86 nodes (`affinity`). Minio does not work properly when mixing nodes of different architectures. See [issue #137](https://github.com/ricsanfre/pi-cluster/issues/137)
 
   - Buckets (`buckets`), users (`users`) and policies (`policies`) are created for Loki and Tempo
 

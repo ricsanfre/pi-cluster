@@ -24,6 +24,17 @@ minio:
   # Number of expanded MinIO clusters
   pools: 1
 
+  # Run minio server only on amd64 nodes
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
+
   # Persistence
   persistence:
     enabled: true
@@ -78,5 +89,3 @@ minio:
       existingSecret: minio-secret
       existingSecretKey: tempoPassword
       policy: tempo
-
-
