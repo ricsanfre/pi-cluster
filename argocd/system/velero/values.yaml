@@ -24,13 +24,6 @@ velero:
         - mountPath: /target
           name: plugins
 
-  # Use a kubectl image supporting ARM64
-  # bitnami default is not suppporting it
-  kubectl:
-    image:
-      repository: ricsanfre/docker-kubectl-helm
-      tag: latest
-
   # Velero Configuration
   configuration:
     # Configure Minio as backup backend

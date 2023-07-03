@@ -527,12 +527,7 @@ Installation using `Helm` (Release 3):
       volumeMounts:
         - mountPath: /target
           name: plugins      
-  # Use a kubectl image supporting ARM64
-  # bitnami default is not suppporting it
-  kubectl:
-     image:
-       repository: ricsanfre/docker-kubectl-helm
-       tag: latest
+
   # Minio storage configuration
   configuration:
     # Cloud provider being used
@@ -628,22 +623,6 @@ Installation using `Helm` (Release 3):
 
   {{site.data.alerts.end}}
 
-
-- Upgrade CRDs procedure
-
-  Helm installation procedure, create a Kubernetes job for upgrading Velero CRDs (`upgradeCRDs: true`). Default values causes installation problems, since the job created for upgrading the CRDs uses kubectl docker image from bitnami (`bitnami/kubectl`). Bitnami is not supporting ARM64 docker images. See bitnami's repository open [issue](https://github.com/bitnami/bitnami-docker-kubectl/issues/22).
-
-  As alternative a ARM64 docker image containing kubectl binary need to be used. I have developed my own docker image for this purpose: [ricsanfre/docker-kubectl-helm](https://github.com/ricsanfre/docker-kubectl-helm)
-
-  ```yml
-  # Upgrading CRDs is causing issues with bitami docker images
-  # Use a kubectl image supporting ARM64
-  # bitnami default is not suppporting it
-  kubectl:
-     image:
-       repository: ricsanfre/docker-kubectl-helm
-       tag: latest
-  ```
 
 - Enable Velero CSI Snapshots
 
