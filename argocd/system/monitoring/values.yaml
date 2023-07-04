@@ -26,14 +26,13 @@ k3sMetrics:
     - ip: 10.0.0.21
     - ip: 10.0.0.22
 
-# Enable monitoring of external services
+# Monitoring of external services
 externalServices:
-  # External Minio service
+  # Disable monitoring of external Minio service
+  # Now running in Oracle Cloud
   minioMetrics:
-    enabled: true
-    servers:
-      - ip: s3.ricsanfre.com
-  # External node (gateway)
+    enabled: false
+  # Enable monitoring External node (gateway)
   nodeMetrics:
     enabled: true
     servers:
