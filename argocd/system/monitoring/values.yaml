@@ -22,6 +22,9 @@ k3sMetrics:
     - ip: 10.0.0.13
     - ip: 10.0.0.14
     - ip: 10.0.0.15
+    - ip: 10.0.0.20
+    - ip: 10.0.0.21
+    - ip: 10.0.0.22
 
 # Enable monitoring of external services
 externalServices:
@@ -111,6 +114,18 @@ kube-prometheus-stack:
                 storage: 20Gi
       # Retention period
       retention: 7d
+
+      # Removing default filter Prometheus selectors
+      # Default selector filters
+      # matchLabels:
+      #   release: {{ $.Release.Name | quote }}
+      # ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom helm release
+
+      ruleSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
+
     serviceMonitor:
       relabelings:
         # Replace job value
