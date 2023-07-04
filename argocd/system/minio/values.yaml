@@ -54,6 +54,12 @@ minio:
     - name: k3s-tempo
       policy: none
 
+  # Service Monitor
+  metrics:
+    serviceMonitor:
+      enabled: true
+      includeNode: true
+
   # Minio Policies
   policies:
     - name: loki
