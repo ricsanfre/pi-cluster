@@ -32,7 +32,7 @@ externalServices:
   minioMetrics:
     enabled: true
     servers:
-      - ip: 10.0.0.11
+      - ip: s3.ricsanfre.com
   # External node (gateway)
   nodeMetrics:
     enabled: true

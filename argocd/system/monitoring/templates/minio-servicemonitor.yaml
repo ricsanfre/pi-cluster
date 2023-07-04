@@ -5,7 +5,7 @@ metadata:
   labels:
     app: minio
     release: {{ .Release.Name | quote }}
-  name: minio-prometheus-servicemonitor
+  name: external-minio-servicemonitor
   namespace: {{ .Release.Namespace }}
 spec:
   jobLabel: app.kubernetes.io/name
