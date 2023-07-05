@@ -121,6 +121,20 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
             resources:
               requests:
                 storage: 50Gi
+      # Retention period
+      retention: 7d
+
+      # Removing default filter Prometheus selectors
+      # Default selector filters
+      # matchLabels:
+      #   release: {{ $.Release.Name | quote }}
+      # ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom helm release
+
+      ruleSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
+
     # ServiceMonitor job relabel
     serviceMonitor:
       relabelings:
@@ -208,6 +222,8 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   - Configure prometheus and alertmanager to run behind a proxy http under subpaths `/prometheus` and `/alertmanager` (`prometheus.prometheusSpec.externalUrl`/`alertmanager.alertManagerSpec.externalUrl`  and `prometheus.prometheusSpec.routePrefix`/`alertmanager.alertManagerSpec.routePrefix`)
   
   - Set memory resource limits for Prometheus POD `prometheus.prometheusSpec.resources`
+
+  - Set retention period for Prometheus data `prometheus.prometheusSpec.retention`
 
   - Sets Grafana's specific configuration (admin password `grafana.adminPassword` and list of plugins to be installed: `grafana.plugins`).
   
@@ -521,7 +537,24 @@ This `Prometheus` object specifies the following Prometheus configuration:
 - Persistent volume specification (`storage:
     volumeClaimTemplate:`) used by the Statefulset objects deployed. In my case volume claim from Longhorn.
 
-- Rules for filtering the Objects (`PodMonitor`, `ServiceMonitor`, `Probe` and `PrometheusRule`) that applies to this particular instance of Prometheus services:  `spec.podMonitorSelector`, `spec.serviceMonitorSelector`, `spec.probeSelector`, and `spec.rulesSelector` introduces a filtering rule (Objects must include a label `release: kube-prometheus-stack`).
+- Rules for filtering the Objects (`PodMonitor`, `ServiceMonitor`, `Probe` and `PrometheusRule`) that applies to this particular instance of Prometheus services:  `spec.podMonitorSelector`, `spec.serviceMonitorSelector`, `spec.probeSelector`, and `spec.rulesSelector` introduces a filtering rule. By default kube-prometheus-stack defines a default filter rule:
+  ```yml
+  matchLabels:
+    release: `kube-prometheus-stack`
+  ```
+  
+  All PodMonitor/ServiceMonitor/Probe/Prometheus rules  must have a label: `release: kube-prometheus-stack` for being managed
+
+  This default filtes can be removed providing the following values to helm chart:
+
+  ```yml
+  prometheusSpec:
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+  ```
+
 
   The following diagram, from official prometheus operator documentation, shows an example of how the filtering rules are applied. A Deployment and Service called my-app is being monitored by Prometheus based on a ServiceMonitor named my-service-monitor: 
 

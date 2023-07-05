@@ -88,6 +88,12 @@ Installation using `Helm` (Release 3):
     requests:
       memory: 1Gi
 
+  # Service Monitor
+  metrics:
+    serviceMonitor:
+      enabled: true
+      includeNode: true
+
   # Minio Buckets
   buckets:
     - name: k3s-loki
@@ -138,6 +144,8 @@ Installation using `Helm` (Release 3):
   - Root user and passwork is obtained from the secret created in Step 3 (`existingSecret`).
 
   - Memory resources for each replica is set to 1GB (`resources.requests.memory`). Default config is 16GB which is not possible in a Raspberry Pi.
+
+  - Enable creation of Prometheus ServiceMonitor object (`metrics.serviceMonitor`).
 
   - Minio PODs are deployed only on x86 nodes (`affinity`). Minio does not work properly when mixing nodes of different architectures. See [issue #137](https://github.com/ricsanfre/pi-cluster/issues/137)
 
