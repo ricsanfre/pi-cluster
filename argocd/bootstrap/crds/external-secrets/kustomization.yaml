@@ -2,6 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 # external-secrets https://github.com/external-secrets/external-secrets/tree/main/deploy/charts/external-secrets
-# helm chart version 0.8.1
+# helm chart version 0.9.0
 # external-secrets helm chart to be installed with value installCDRs=false
-- https://raw.githubusercontent.com/external-secrets/external-secrets/v0.8.1/deploy/crds/bundle.yaml
+- https://raw.githubusercontent.com/external-secrets/external-secrets/v0.9.0/deploy/crds/bundle.yaml
