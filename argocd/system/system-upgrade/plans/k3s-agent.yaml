@@ -22,4 +22,4 @@ spec:
   cordon: true
   upgrade:
     image: rancher/k3s-upgrade
-  version: v1.27.1+k3s1
+  version: v1.27.3+k3s1
