@@ -221,8 +221,9 @@ Home lab architecture, showed in the picture below, consist of a Kubernetes clus
 
 
 <p align="center">
-  <img src="docs/assets/img/RaspberryPiCluster_architecture.png" width="500"/>
+  <img src="docs/assets/img/picluster-architecture.png" width="500"/>
 </p>
+
 
 See further details about the architecture and hardware in the [documentation](https://picluster.ricsanfre.com/docs/home/)
 
