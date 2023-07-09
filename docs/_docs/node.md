@@ -37,7 +37,7 @@ Raspberry Pis will be configured to boot Ubuntu OS from USB conected disk (Flash
 
 In order to enable boot from USB, Raspberry PI firmware might need to be updated. Follow the producedure indicated in ["Raspberry PI - Firmware Update"](/docs/firmware/).
 
-Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/docs/rpi/ubuntu/) using cloud-init configuration files (`user-data` and `network-config`) described in the table below.
+Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) described in the table below.
 
 `user-data` file to be used depends on the storage architectural option selected. Since DHCP is used to configure network interfaces, it is not needed to change default `/boot/network-config` file.
 
