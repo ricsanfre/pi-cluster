@@ -127,7 +127,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
       # Removing default filter Prometheus selectors
       # Default selector filters
       # matchLabels:
-      #   release: {{ $.Release.Name | quote }}
+      #   release: <helm-release-name>
       # ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom helm release
 
       ruleSelectorNilUsesHelmValues: false
