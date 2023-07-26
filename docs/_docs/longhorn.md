@@ -1,8 +1,8 @@
 ---
 title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
-description: How to deploy distributed block storage solution based on Longhorn in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "11-10-2022"
+description: How to deploy distributed block storage solution based on Longhorn in our Pi Kubernetes Cluster.
+last_modified_at: "26-07-2023"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won't be able to access the data.
@@ -61,10 +61,57 @@ Installation using `Helm` (Release 3):
   ```shell
   kubectl create namespace longhorn-system
   ```
-- Step 3: Install Longhorn in the longhorn-system namespace, setting `/storage` as default path for storing replicas
+
+- Step 4: Prepare longhorn-values.yml file
+
+  ```yml
+  defaultSettings:
+    defaultDataPath: "/storage"
+
+  # Ingress Resource. Longhorn dashboard.
+  ingress:
+    ## Enable creation of ingress resource
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+
+    # ingress host
+    host: longhorn.picluster.ricsanfre.com
+
+    ## Set this to true in order to enable TLS on the ingress record
+    tls: true
+
+    ## TLS Secret Name
+    tlsSecret: longhorn-tls
+
+    ## Default ingress path
+    path: /
+
+    ## Ingress annotations
+    annotations:
+      # Enable basic auth
+      nginx.ingress.kubernetes.io/auth-type: basic
+      # Secret defined in nginx namespace
+      nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values: 
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: longhorn.picluster.ricsanfre.com
+  ```
+  With this configuration:
+
+  - Longhorn is configured to use `/storage` as default path for storing data (`defaultSettings.    defaultDataPath`)
+
+  - Ingress resource is created to make Longhorn front-end available through the URL `longhorn.picluster.ricsanfre.com`. Ingress resource for NGINX (`ingress`) is annotated so, basic authentication is used and a Valid TLS certificate is generated using Cert-Manager for `longhorn.picluster.ricsanfre.com` host
+
+- Step 5: Install Longhorn in the longhorn-system namespace, using Helm:
 
   ```shell
-  helm install longhorn longhorn/longhorn --namespace longhorn-system --set defaultSettings.defaultDataPath="/storage"
+  helm install longhorn longhorn/longhorn --namespace longhorn-system -f longhorn-values.yml
   ```
 
   {{site.data.alerts.note}}
@@ -73,15 +120,16 @@ Installation using `Helm` (Release 3):
 
   {{site.data.alerts.end}}
 
-- Step 4: Confirm that the deployment succeeded, run:
+- Step 6: Confirm that the deployment succeeded, run:
 
   ```shell
   kubectl -n longhorn-system get pod
   ```
 
-## Configuring acces to Longhorn UI
 
-Create a Ingress rule to make Longhorn front-end available through the Ingress Controller (Traefik) using a specific URL (`storage.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
+## Configuring acces to Longhorn UI (Only Traefik Ingress)
+
+Create a Ingress rule to make Longhorn front-end available through the Ingress Controller (Traefik) using a specific URL (`longhorn.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
 
 Longhorn backend is providing not secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
 Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured.
@@ -123,14 +171,14 @@ There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Lo
         longhorn-system-svc-longhorn-headers@kubernetescrd
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: storage.picluster.ricsanfre.com
+      cert-manager.io/common-name: longhorn.picluster.ricsanfre.com
   spec:
     tls:
     - hosts:
       - storage.picluster.ricsanfre.com
       secretName: storage-tls
     rules:
-    - host: storage.picluster.ricsanfre.com
+    - host: longhorn.picluster.ricsanfre.com
       http:
         paths:
         - path: /
@@ -154,7 +202,7 @@ There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Lo
       traefik.ingress.kubernetes.io/router.entrypoints: web
   spec:
     rules:
-      - host: storage.picluster.ricsanfre.com
+      - host: longhorn.picluster.ricsanfre.com
         http:
           paths:
           - path: /
