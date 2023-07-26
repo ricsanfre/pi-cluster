@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "09-01-2023"
+last_modified_at: "26-07-2023"
 
 ---
 
@@ -921,6 +921,35 @@ In order to integrate Traefik with Linkerd the following must be done:
 Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside the cluster) will pass through Linkerd as an opaque TCP stream and Linkerd will only be able to provide byte-level metrics for this side of the connection. The resulting HTTP or gRPC traffic to internal services, of course, will have the full set of metrics and mTLS support.
 
 {{site.data.alerts.end}}
+
+
+### Meshing Ingress NGINX
+
+Meshing Ingress NGINX is simpler. It can be meshed normally, it does not require the ingress mode annotation. 
+
+If using the ingress-nginx Helm chart, note that the namespace containing the ingress controller should NOT be annotated with `linkerd.io/inject: enabled`. Instead, only Deployment resource need to be annotated. The reason is because this Helm chart defines (among other things) other Kubernetes resources (short-lived pod) that cannot be meshed.
+
+The following values.yml file need to be provided to ingress-nginx helm chart, so ingress-nginx is meshed.
+
+```yml
+controller:
+  podAnnotations:
+    linkerd.io/inject: enabled
+```
+
+Also Ingress resources need to be annotated with `nginx.ingress.kubernetes.io/service-upstream: "true"`. By default the Ingress-Nginx Controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration. The nginx.ingress.kubernetes.io/service-upstream annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
+
+```yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  namespace: my-namespace
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+
+```
+
 
 ## References
 
