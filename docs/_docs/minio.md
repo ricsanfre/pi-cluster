@@ -135,6 +135,61 @@ Installation using `Helm` (Release 3):
       existingSecret: minio-secret
       existingSecretKey: tempoPassword
       policy: tempo
+
+  # Ingress resource (nginx)
+  ingress:
+    ## Enable creation of ingress resource
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+    # ingress host
+    hosts:
+      - s3.picluster.ricsanfre.com
+    ## TLS Secret Name
+    tls:
+      - secretName: minio-tls
+        hosts:
+          - s3.picluster.ricsanfre.com
+    ## Default ingress path
+    path: /
+    ## Ingress annotations
+    annotations:
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values:
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: s3.picluster.ricsanfre.com
+
+  # console Ingress (nginx)
+  consoleIngress:
+    ## Enable creation of ingress resource
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+    # ingress host
+    hosts:
+      - minio.picluster.ricsanfre.com
+    ## TLS Secret Name
+    tls:
+      - secretName: minio-console-tls
+        hosts:
+          - minio.picluster.ricsanfre.com
+    ## Default ingress path
+    path: /
+    ## Ingress annotations
+    annotations:
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values:
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: minio.picluster.ricsanfre.com
+
   ```
 
   With this configuration:
@@ -151,6 +206,11 @@ Installation using `Helm` (Release 3):
 
   - Buckets (`buckets`), users (`users`) and policies (`policies`) are created for Loki and Tempo
 
+  - Ingress resource (`ingress`) for s3 service API available at `s3.picluster.ricsanfre.com`. Annotated so Cert-Manager generate the TLS certificate automatically.
+
+  - Ingress resource (`ingressConsole`) for S3 console available at `minio.picluster.ricsanfre.com`.
+Annotated so Cert-Manager generate the TLS certificate automatically.
+
 - Step 5: Install Minio in `minio` namespace
   ```shell
   helm install minio minio -f minio-values.yml --namespace minio
@@ -159,79 +219,3 @@ Installation using `Helm` (Release 3):
   ```shell
   kubectl get pods -l app.kubernetes.io/name=minio -n minio
   ```
-
-
-## Configuring Ingress
-
-Create a Ingress rule to make Minio console and service API available through the Ingress Controller (Traefik) using a specific URLs (`minio.picluster.ricsanfre.com` and `s3.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
-
-Minio backend is deployed in insecure mode (TLS is not activated) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point). The following configuration assumes that, Traefik is already configured for redirecting all HTTP traffic to HTTPS.
-
-
-- Step 1. Create a manifest file `minio_ingress.yml` for providing access to Minio API.
-
-  ```yml
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: minio-ingress
-    namespace: minio
-    annotations:
-      # HTTPS as entry point
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      # Enable TLS
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: s3.picluster.ricsanfre.com
-  spec:
-    tls:
-      - hosts:
-          - s3.picluster.ricsanfre.com
-        secretName: minio-tls
-    rules:
-      - host: s3.picluster.ricsanfre.com
-        http:
-          paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: minio
-                  port:
-                    number: 9000
-  ```
-
-- Step 2. Create a manifest file `minio_console_ingress.yml` for providing access to Minio Console.
-
-  ```yml
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: minio-console-ingress
-    namespace: minio
-    annotations:
-      # HTTPS as entry point
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      # Enable TLS
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: minio.picluster.ricsanfre.com
-  spec:
-    tls:
-      - hosts:
-          - minio.picluster.ricsanfre.com
-        secretName: minio-console-tls
-    rules:
-      - host: minio.picluster.ricsanfre.com
-        http:
-          paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: minio-console
-                  port:
-                    number: 9001
-```
