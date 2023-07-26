@@ -1,16 +1,4 @@
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: l5d-header-middleware-longhorn
-  namespace: {{ .Release.Namespace }}
-spec:
-  headers:
-    customRequestHeaders:
-      X-Forwarded-Proto: "https"
-      l5d-dst-override: "longhorn-frontend.{{ .Release.Namespace }}.svc.cluster.local:80"
-
----
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -18,21 +6,18 @@ metadata:
   name: longhorn-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
-    # HTTPS as entry point
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # Enable TLS
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    # Use Basic Auth Midleware configured and Linkerd header
-    traefik.ingress.kubernetes.io/router.middlewares:
 {{- if .Values.ingress.basicAuth.enable }}
-      {{ .Values.ingress.basicAuth.middlewareNamespace }}-{{ .Values.ingress.basicAuth.middlewareName }}@kubernetescrd,
+    # Enable basic auth
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
 {{- end }}
-      {{ .Release.Namespace }}-l5d-header-middleware-longhorn@kubernetescrd
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.ingress.host }}
-    
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
