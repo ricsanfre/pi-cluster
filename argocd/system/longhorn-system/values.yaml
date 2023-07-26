@@ -1,18 +1,4 @@
 
-# Ingress configuration
-ingress:
-  host: longhorn.picluster.ricsanfre.com
-  # configure cert-manager issuer
-  certmanager:
-    # tlsIssuer=letsecrypt to generate valid TLS certficiate using IONOS API
-    # tlsIssuer=ca to generate a CA-signed certificate (not valid)
-    tlsIssuer: letsencrypt
-  # Enabling traefik basic authorization, reusing global middleware created for Traefik
-  basicAuth:
-    enable: true
-    middlewareName: basic-auth
-    middlewareNamespace: traefik
-
 # Backup S3 backend URL
 backup:
   minioUrl: "https://s3.ricsanfre.com:9091"
@@ -32,4 +18,36 @@ longhorn:
     # Backup S3 configuration
     backupTarget: "s3://k3s-longhorn@eu-west-1/"
     backupTargetCredentialSecret: longhorn-minio-secret
+  # Ingress Resource. Longhorn dashboard.
+  ingress:
+    ## Enable creation of ingress resource
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+   
+    # ingress host
+    host: longhorn.picluster.ricsanfre.com
 
+    ## Set this to true in order to enable TLS on the ingress record
+    tls: true
+
+    ## TLS Secret Name
+    tlsSecret: longhorn-tls
+
+    ## Default ingress path
+    path: /
+
+    ## Ingress annotations
+    annotations:
+      # Enable basic auth
+      nginx.ingress.kubernetes.io/auth-type: basic
+      # Secret defined in nginx namespace
+      nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values: 
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: longhorn.picluster.ricsanfre.com
