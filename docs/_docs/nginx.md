@@ -78,7 +78,12 @@ With this configuration ip 10.0.0.100 is assigned to Traefik proxy and so, for a
 
 #### Enabling Access log
 
-TBD
+Access logs are enabled by default for all Ingress resources.
+
+It can be disabled annotating Ingress resource with `nginx.ingress.kubernetes.io/enable-access-log: "false".
+
+
+See [Ingress Nginx Annotations documentation](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#enable-access-log)
 
 
 ## Configuring access to cluster services with Ingress NGINX
