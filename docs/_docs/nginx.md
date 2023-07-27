@@ -61,7 +61,16 @@ Installation using `Helm` (Release 3):
 
 #### Enabling Prometheus metrics
 
-TBD
+By default helm installation does not enable NGINX's metrics for Prometheus.
+
+To enable that the following configuration must be provided to Helm chart:
+
+```yml
+controller:
+  metrics:
+    enabled: true
+```
+This configuration makes NGINX pod to open its metric port at TCP port 10254
 
 
 #### Assign a static IP address from LoadBalancer pool to Ingress service
@@ -242,6 +251,10 @@ metadata:
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - foo'
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - whoami
+    secretName: whoami-tls
   rules:
     - host: whoami
       http:
