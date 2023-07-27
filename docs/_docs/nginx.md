@@ -112,6 +112,7 @@ kind: Ingress
 metadata:
   name: myingress
 spec:
+  ingressClassName: nginx
   tls:
   - hosts:
     - whoami
@@ -240,7 +241,7 @@ metadata:
     # message to display with an appropriate context why the authentication is required
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - foo'
 spec:
-  ingressClass: nginx
+  ingressClassName: nginx
   rules:
     - host: whoami
       http:

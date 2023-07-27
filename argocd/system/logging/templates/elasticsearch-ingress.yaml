@@ -9,8 +9,6 @@ metadata:
   annotations:
     # Linkerd configuration. Configure Service as Upstream
     nginx.ingress.kubernetes.io/service-upstream: "true"
-    # Enable TLS
-    traefik.ingress.kubernetes.io/router.tls: "true"
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.elasticsearch.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.elasticsearch.ingress.host }}
