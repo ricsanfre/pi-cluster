@@ -1417,6 +1417,54 @@ by:
 
 `job=\"kubelet\"`
 
+### Ingress NGINX Monitoring
+The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Ingress NGINX metrics endpoint as a Prometheus target.
+
+- Create a manifest file `nginx-servicemonitor.yml`
+
+```yml
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: nginx
+    release: kube-prometheus-stack
+  name: nginx
+  namespace: monitoring
+spec:
+  jobLabel: app.kubernetes.io/name
+  endpoints:
+    - port: traefik
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - nginx
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: nginx
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/component: controller
+``` 
+{{site.data.alerts.important}}
+Set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
+
+`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
+
+{{site.data.alerts.end}}
+
+- Apply manifest file
+  ```shell
+  kubectl apply -f nginx-servicemonitor.yml
+  ```
+
+- Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
+
+#### Ingress NGINX Grafana dashboard
+
+Ingress NGINX grafana dashboard in JSON format can be downloaded from [https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json)
+
+
 ### Traefik Monitoring
 
 The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Traefik metrics endpoint as a Prometheus target.
