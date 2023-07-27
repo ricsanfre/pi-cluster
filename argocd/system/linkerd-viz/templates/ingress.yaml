@@ -1,14 +1,3 @@
-# Linkerd Middlewares
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: l5d-header-middleware-linkerd-viz
-  namespace: {{ .Release.Namespace }}
-spec:
-  headers:
-    customRequestHeaders:
-      l5d-dst-override: "web.{{ .Release.Namespace }}.svc.cluster.local:8084"
 
 ---
 # HTTPS Ingress
@@ -18,22 +7,20 @@ metadata:
   name: linkerd-viz-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
-    # HTTPS as entry point
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # Enable TLS
-    traefik.ingress.kubernetes.io/router.tls: "true"
+
 {{- if .Values.ingress.basicAuth.enable }}
-    # Use Basic Auth Midleware configured
-    traefik.ingress.kubernetes.io/router.middlewares:
-      {{ .Values.ingress.basicAuth.middlewareNamespace }}-{{ .Values.ingress.basicAuth.middlewareName }}@kubernetescrd
+    # Enable basic auth
+    nginx.ingress.kubernetes.io/auth-type: basic
+    # Secret defined in nginx namespace
+    nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
 {{- end }}
-    # Linkerd header
-    traefik.ingress.kubernetes.io/router.middlewares:
-      {{ .Release.Namespace }}-l5d-header-middleware-linkerd-viz@kubernetescrd
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.ingress.host }}
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
         - {{ .Values.ingress.host }}

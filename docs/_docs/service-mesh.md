@@ -354,7 +354,46 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
 
   In case of Traefik, it is not needed to mesh Traefik deployment to grant access
 
-  Linkerd documentation contains information about how to configure [Traefik as Ingress Controller](https://linkerd.io/2.12/tasks/exposing-dashboard/#traefik). To enable mTLS in the communication from Ingress Controller, Traefik deployment need to be meshed using "ingress" proxy injection.
+  Linkerd documentation contains information about how to configure [NGINX as Ingress Controller](https://linkerd.io/2.13/tasks/exposing-dashboard/#nginx).
+
+  The following Ingress resource, exposes linkerd-viz at `linkerd.picluster.ricsanfre.com`, enabling HTTP basic auth:
+
+  ```yml
+  ---
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: linkerd-viz-ingress
+    namespace: linkerd-viz
+    annotations:
+      # Enable basic auth
+      nginx.ingress.kubernetes.io/auth-type: basic
+      # Secret defined in nginx namespace
+      nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/common-name: linkerd.picluster.ricsanfre.com
+  spec:
+    ingressClassName: nginx
+    tls:
+      - hosts:
+          - linkerd.picluster.ricsanfre.com
+        secretName: linkerd-viz-tls
+    rules:
+      - host: linkerd.picluster.ricsanfre.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: web
+                  port:
+                    number: 8084  
+
+  ```
 
 - Step 5: Configure Prometheus to scrape metrics from linkerd
   
