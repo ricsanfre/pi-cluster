@@ -3,6 +3,8 @@ kind: Kibana
 metadata:
   name: {{ .Values.eck.clusterName }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   version: {{ .Values.elasticsearch.version }}
   count: 1
