@@ -1,15 +1,4 @@
 ---
-# Traefik Middleware adding linkerd custom header
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: l5d-header-middleware-kibana
-  namespace: {{ .Release.Namespace }}
-spec:
-  headers:
-    customRequestHeaders:
-      l5d-dst-override: {{ .Values.eck.clusterName }}-kb-http.{{ .Release.Namespace }}.svc.cluster.local:5601
----
 # HTTPS Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -17,17 +6,13 @@ metadata:
   name: kibana-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
-    # HTTPS as entry point
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    # Enable TLS
-    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.kibana.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.kibana.ingress.host }}
-    # Linkerd header
-    traefik.ingress.kubernetes.io/router.middlewares:
-      {{ .Release.Namespace }}-l5d-header-middleware-kibana@kubernetescrd
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
         - {{ .Values.kibana.ingress.host }}
