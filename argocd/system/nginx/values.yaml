@@ -8,6 +8,12 @@ ingress-nginx:
   controller:
     podAnnotations:
       linkerd.io/inject: enabled
+    # Enabling Promethues metrics and Service Monitoring
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+
   # Set specific LoadBalancer IP address for Ingress service
   service:
     spec:
