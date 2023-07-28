@@ -1,10 +1,6 @@
-
-# Ingress configuration
-ingress:
-  host: argocd.picluster.ricsanfre.com
-  # configure cert-manager issuer
-  certmanager:
-    tlsIssuer: letsencrypt
+##################
+# argocd subchart
+##################
 
 argo-cd:
   configs:
@@ -27,3 +23,34 @@ argo-cd:
           end
         end
         return hs
+
+  server:
+    # Ingress Resource. LoSnghorn dashboard.
+    ingress:
+      ## Enable creation of ingress resource
+      enabled: true
+      ## Add ingressClassName to the Ingress
+      ingressClassName: nginx
+      # ingress host
+      hosts:
+        - argocd.picluster.ricsanfre.com
+      ## TLS Secret Name
+      tls:
+        - secretName: argocd-tls
+          hosts:
+            - argocd.picluster.ricsanfre.com
+      ## Default ingress path
+      paths:
+        - /
+
+      ## Ingress annotations
+      annotations:
+        # Linkerd configuration. Configure Service as Upstream
+        nginx.ingress.kubernetes.io/service-upstream: "true"
+        # Enable cert-manager to create automatically the SSL certificate and store in Secret
+        # Possible Cluster-Issuer values: 
+        #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
+        #   * 'ca-issuer' (CA-signed certificate, not valid)
+        cert-manager.io/cluster-issuer: letsencrypt-issuer
+        cert-manager.io/common-name: argocd.picluster.ricsanfre.com
+
