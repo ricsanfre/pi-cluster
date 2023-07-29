@@ -11,10 +11,6 @@ metadata:
     # Rewrite target
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$1
-    # Enable basic auth
-    nginx.ingress.kubernetes.io/auth-type: basic
-    # Secret defined in nginx namespace
-    nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certmanager.tlsIssuer }}-issuer
     cert-manager.io/common-name: {{ .Values.ingress.host }}
