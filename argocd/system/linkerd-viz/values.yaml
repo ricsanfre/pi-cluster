@@ -13,11 +13,9 @@ ingress:
     # tlsIssuer=ca to generate a CA-signed certificate (not valid)
     tlsIssuer: letsencrypt
     # tlsIssuer: ca
-  # Enabling traefik basic authorization, reusing global middleware created for Traefik
+  # Enabling nginx basic authorization, reusing global nginx basic auth secret
   basicAuth:
     enable: true
-    middlewareName: basic-auth
-    middlewareNamespace: traefik
 
 ########################
 # linkerd-viz subchart
@@ -33,6 +31,6 @@ linkerd-viz:
   # External Grafana
   grafana:
     url: monitoring-grafana.monitoring.svc.cluster.local
-  # Disabling DNS rebinding protection
-  dashboard:
-    enforcedHostRegexp: .*
+  # Disabling DNS rebinding protection. Only needed with Traefik Ingress
+  # dashboard:
+  #   enforcedHostRegexp: .*

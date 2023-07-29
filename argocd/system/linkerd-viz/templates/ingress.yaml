@@ -14,6 +14,13 @@ metadata:
     # Secret defined in nginx namespace
     nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
 {{- end }}
+    # Configuring Ingress for linkerd-viz DNS rebind protection
+    # https://linkerd.io/2.13/tasks/exposing-dashboard/#nginx
+    nginx.ingress.kubernetes.io/upstream-vhost: $service_name.$namespace.svc.cluster.local:8084
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Origin "";
+      proxy_hide_header l5d-remote-ip;
+      proxy_hide_header l5d-server-id;
     # Linkerd configuration. Configure Service as Upstream
     nginx.ingress.kubernetes.io/service-upstream: "true"
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
