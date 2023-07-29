@@ -8,7 +8,7 @@ last_modified_at: "26-07-2023"
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
 K3S default installation comes with Traefik HTTP reverse proxy which is a Kuberentes compliant Ingress Controller.
 
-Instead of using Traefik, [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/) can be deployed. Ingress nginx is an Ingress controller for Kubernetes using (NGINX)[https://nginx.org/] as a reverse proxy and load balancer.
+Instead of using Traefik, [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/) can be deployed. Ingress nginx is an Ingress controller for Kubernetes using [NGINX](https://nginx.org/) as a reverse proxy and load balancer.
 
 {{site.data.alerts.note}}
 
@@ -89,10 +89,49 @@ With this configuration ip 10.0.0.100 is assigned to Traefik proxy and so, for a
 
 Access logs are enabled by default for all Ingress resources.
 
-It can be disabled annotating Ingress resource with `nginx.ingress.kubernetes.io/enable-access-log: "false".
-
+It can be disabled annotating Ingress resource with `nginx.ingress.kubernetes.io/enable-access-log: "false"`.
 
 See [Ingress Nginx Annotations documentation](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#enable-access-log)
+
+NGINX writes the logs to `stdout` by default, mixing the access logs with NGINX-generated application logs.
+
+To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`controller.config.access-log-path`), adding to traekik deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
+
+Default access format need to be changed as well to use JSON format (`controlle.config.log-format-escape-json`). That way those logs will be parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
+
+Following Ingress NGINX helm chart values need to be provided:
+
+```yml
+controller:
+  config:
+    # Print access log to file instead of stdout
+    # Separating acces logs from the rest
+    access-log-path: "/data/access.log"
+    log-format-escape-json: "true"
+      # controller extra Volume
+  extraVolumeMounts:
+    - name: data
+      mountPath: /data
+  extraVolumes:
+    - name: data
+      emptyDir: {}
+  extraContainers:
+    - name: stream-accesslog
+      image: busybox
+      args:
+      - /bin/sh
+      - -c
+      - tail -n+1 -F /data/access.log
+      imagePullPolicy: Always
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+          name: data
+```
+
+This configuration enables NGINX access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
 
 
 ## Configuring access to cluster services with Ingress NGINX
