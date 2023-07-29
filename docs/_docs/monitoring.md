@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "22-01-2023"
+last_modified_at: "29-07-2023"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -246,6 +246,19 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 
     Relabeling the job name (`grafana.serviceMonitor.relabelings`, `prometheus.serviceMonitor.relabelings` and `prometheusOperator.serviceMonitor.relabelings`) and setting the proper label for Grafana's ServiceMonitor (`grafana.serviceMonitor.labels.release`) to match the selector of Prometheus Operator (otherwise Grafana is not monitored).
 
+    Removing default filter for selectors, in PrometheusOperator's Rules, ServiceMonitor, PodMonitor and Probe resources, so they do not need to have specific `release` label to be managed by Prometheus.
+
+    ```yml
+    # Default selector filters
+    # matchLabels:
+    #   release: <helm-release-name>
+    # ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom helm release
+
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    ```
 
 - Step 4: Install kube-Prometheus-stack in the monitoring namespace with the overriden values
 
@@ -273,7 +286,7 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
 
 
 - Step 1. Create Ingress resources manifest file `monitoring_ingress.yml`
-  
+
   ```yml
   ---
   # Ingress Grafana
@@ -288,14 +301,9 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
-      # Enable basic auth
-      nginx.ingress.kubernetes.io/auth-type: basic
-      # Secret defined in nginx namespace
-      nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
       cert-manager.io/common-name: monitoring.picluster.ricsanfre.com
-
   spec:
     ingressClassName: nginx
     tls:
@@ -313,14 +321,13 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
                   name: kube-prometheus-stack-grafana
                   port:
                     number: 80
-
   ---
   # Ingress Prometheus
   apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
     name: ingress-prometheus
-    namespace: {{ .Release.Namespace }}
+    namespace: monitoring
     annotations:
       # Linkerd configuration. Configure Service as Upstream
       nginx.ingress.kubernetes.io/service-upstream: "true"
@@ -351,15 +358,13 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
                   name: kube-prometheus-stack-prometheus
                   port:
                     number: 9090
-
-
   ---
   # Ingress AlertManager
   apiVersion: networking.k8s.io/v1
   kind: Ingress
   metadata:
     name: ingress-alertmanager
-    namespace: {{ .Release.Namespace }}
+    namespace: monitoring
     annotations:
       # Linkerd configuration. Configure Service as Upstream
       nginx.ingress.kubernetes.io/service-upstream: "true"
@@ -1447,7 +1452,6 @@ spec:
       app.kubernetes.io/component: controller
 ``` 
 {{site.data.alerts.important}}
-Set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
 
 `app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
 
@@ -1496,7 +1500,6 @@ spec:
       app.kubernetes.io/component: traefik-metrics
 ``` 
 {{site.data.alerts.important}}
-Set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
 
 `app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
 
@@ -1547,7 +1550,6 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
   ``` 
 
 {{site.data.alerts.important}}
-Set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
 
 `app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`).
 
@@ -1647,7 +1649,6 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
         app.kubernetes.io/name: velero
   ``` 
 {{site.data.alerts.important}}
-Set `label.release` to the value specified for the helm release during Prometheus operator installation (`kube-prometheus-stack`).
 
 `app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
 {{site.data.alerts.end}}
