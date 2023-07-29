@@ -172,8 +172,14 @@ kube-prometheus-stack:
       url: http://loki-gateway.logging.svc.cluster.local
       jsonData:
         derivedFields:
+            # Traefik traces integration
+            # - datasourceUid: tempo
+            #   matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+            #   name: TraceID
+            #   url: $${__value.raw}
+            # NGINX traces integration
           - datasourceUid: tempo
-            matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+            matcherRegex: '"trace_id": "(\w+)"'
             name: TraceID
             url: $${__value.raw}
     - name: Tempo

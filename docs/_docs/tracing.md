@@ -2,7 +2,7 @@
 title: Distributed Tracing (Tempo)
 permalink: /docs/tracing/
 description: How to deploy a distributed tracing solution based on Grafana Tempo.
-last_modified_at: "13-05-2023"
+last_modified_at: "29-07-2023"
 ---
 
 
@@ -393,6 +393,31 @@ tracing:
 
 In Traefik's access logs, a new field appear `request_X-B3-Traceid` containing trace id that can be used to extrac Tempo traces information.
 
+
+## Ingress NGINX traces integration
+
+Ingress Contoller is a key component for distributed tracing solution because it is reposible for creating the root span of each trace and for deciding if that trace should be sampled or not.
+
+Distributed tracing systems all rely on propagate the trace context throuhg the chain of involved services. This trace contex is encoding in HTTP request headers. Of the available propagation protocols, B3 is the only one supported by Linkerd, and so this is the one to be used in the whole system.
+
+Ingress Nginx uses OpenTrace to export traces to different backends. See details in [Ingress NGINX Open Tracing documentation](https://kubernetes.github.io/ingress-nginx/user-guide/third-party-addons/opentracing/).
+
+To activate tracing using B3 propagation protocol, the following options need to be provided following to helm values.yml:
+
+```yml
+controller:
+  config:
+    # Open Tracing
+    enable-opentracing: "true"
+    zipkin-collector-host: tracing-tempo-distributor.tracing.svc.cluster.local
+    zipkin-service-name: nginx-internal
+    log-format-escape-json: "true"
+    log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentracing_context_x_b3_traceid", "span_id": "$opentracing_context_x_b3_spanid"}'
+```
+
+In this case Zipkin is used, and Tempo OTEL collector is used as destination. Access logs format is also changed to include OpenTrace context. Opentrace context (x_b3_traceid and x_b3_spanId) appears as field in the logs: `trace_id` and `span_id` 
+
+
 ## Grafana Configuration
 
 Tempo need to be added to Grafana as DataSource
@@ -428,8 +453,14 @@ grafana
     url: http://loki-gateway.logging.svc.cluster.local
     jsonData:
       derivedFields:
+        # Traefik traces integration
+        # - datasourceUid: tempo
+        #   matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+        #   name: TraceID
+        #   url: $${__value.raw}
+          # NGINX traces integration
         - datasourceUid: tempo
-          matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+          matcherRegex: '"trace_id": "(\w+)"'
           name: TraceID
           url: $${__value.raw}
   - name: Tempo
@@ -439,7 +470,7 @@ grafana
     url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
 ```
 
-A derived field `TraceID` is added to logs whose message contains field `request_X-B3-Traceid` (Traefik access logs).
+A derived field `TraceID` is added to logs whose message contains field `request_X-B3-Traceid` (Traefik access logs) or containing `trace_id` (NGINX access logs)
 
 ## Testing with Emojivoto application
 
@@ -465,9 +496,11 @@ Linkerd's testing application emojivoto can be used to test the tracing solution
     name: emojivoto
     namespace: emojivoto
     annotations:
-      # HTTP as entrypoint
-      traefik.ingress.kubernetes.io/router.entrypoints: web
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      nginx.ingress.kubernetes.io/enable-opentracing: "true"
   spec:
+    ingressClassName: nginx
     rules:
       - host: emojivoto.picluster.ricsanfre.com
         http:
@@ -488,9 +521,11 @@ Linkerd's testing application emojivoto can be used to test the tracing solution
 - Step 5: Connect to Grafana, select Explorer and Loki data source
 
   Filter logs usin LQL: 
+  {% raw %}
   ```
-  {app="traefik"} | json | message_RequestHost="emojivoto.picluster.ricsanfre.com" |  message_RequestPath=~"/api/vote.+"
+  {app="ingress-nginx", container="stream-accesslog"} | json | line_format "{{.message}}" | json | request_host="emojivoto.picluster.ricsanfre.com" | uri =~ "/api/vote.+"
   ```
+  {% endraw %}
 
   Logs containing the votes made in step 5 are displayed.
 
