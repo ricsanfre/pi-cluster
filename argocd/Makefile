@@ -1,5 +1,5 @@
 
-CHARTS = external-secrets metallb cert-manager linkerd nginx longhorn-system
+CHARTS = external-secrets metallb cert-manager linkerd nginx longhorn-system minio velero logging monitoring linkerd-viz tracing linkerd-jaeger
 
 .PHONY: crds
 crds: 
@@ -14,3 +14,8 @@ $(CHARTS):
 .PHONY: csi-external-snapshotter
 csi-external-snapshotter:
 	kubectl apply -k system/csi-external-snapshotter
+
+.PHONY: argocd
+argocd:
+	helm dependency update bootstrap/$@
+	helm upgrade -i $@ bootstrap/$@ -f bootstrap/$@/values.yaml --namespace $@ --create-namespace
