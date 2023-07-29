@@ -28,6 +28,7 @@
   - k3s-networking
   - metallb
   - traefik
+  - nginx
   - service-mesh
 - title: Certificate Management
   docs:

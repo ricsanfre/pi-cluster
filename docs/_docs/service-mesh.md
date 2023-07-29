@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "26-07-2023"
+last_modified_at: "29-07-2023"
 
 ---
 
@@ -291,8 +291,15 @@ Linkerd-viz dashboard (web component) will be exposed configuring a Ingress reso
 
 Since Linkerd-viz release 2.12, Grafana component installation is not included. External Grafana need to be configured to enable drill-down from linkerd-viz's dashboards metrics to Grafana's dashboards.
 
-By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik does not support a mechanism for ovewritting Host header, Host validation regexp, used by dashboard server, need to be tweaked using Helm chart parameter `enforcedHostRegexp`. See document ["Exposing dashboard - DNS Rebinding Protection"](https://linkerd.io/2.12/tasks/exposing-dashboard/#dns-rebinding-protection) for more details.
+By default linkerd-viz dashboard has a DNS rebinding protection. The dashboard rejects any request whose Host header is not `localhost`, `127.0.0.1` or the service name `web.linkerd-viz.svc`. So different configuration need to be applied to Ingress resources depending on the Ingress Controller:
 
+- Traefik does not support a mechanism for ovewritting Host header, Host validation regexp, used by dashboard server, need to be tweaked using Helm chart parameter `enforcedHostRegexp`.
+
+- Ingress NGINX does not need to have `nginx.ingress.kubernetes.io/upstream-vhost` annotation to properly set the upstream Host header. 
+
+See document ["Exposing dashboard - DNS Rebinding Protection"](https://linkerd.io/2.13/tasks/exposing-dashboard/#dns-rebinding-protection) for more details.
+
+Installation procedure:
 
 - Step 1: Create namespace
 
@@ -335,9 +342,9 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
   # External Grafana
   grafana:
     url: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
-  # Disabling DNS rebinding protection
-  dahsboard:
-    enforcedHostRegexp: ".*"
+  # Disabling DNS rebinding protection (only Traefik)
+  # dahsboard:
+  #  enforcedHostRegexp: ".*"
   ```
 
 - Step 3: Install linkerd viz extension helm
@@ -351,8 +358,6 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
 - Step 4: Exposing Linkerd Viz dashboard
 
   Ingress controller rule can be defined to grant access to Viz dashboard. 
-
-  In case of Traefik, it is not needed to mesh Traefik deployment to grant access
 
   Linkerd documentation contains information about how to configure [NGINX as Ingress Controller](https://linkerd.io/2.13/tasks/exposing-dashboard/#nginx).
 
@@ -372,6 +377,13 @@ By default linkerd-viz dashboard has a DNS rebinding protection. Since Traefik d
       nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
       # Linkerd configuration. Configure Service as Upstream
       nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Configuring Ingress for linkerd-viz DNS rebind protection
+      # https://linkerd.io/2.13/tasks/exposing-dashboard/#nginx
+      nginx.ingress.kubernetes.io/upstream-vhost: $service_name.$namespace.svc.cluster.local:8084
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        proxy_set_header Origin "";
+        proxy_hide_header l5d-remote-ip;
+        proxy_hide_header l5d-server-id;
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
       cert-manager.io/common-name: linkerd.picluster.ricsanfre.com
@@ -837,11 +849,11 @@ Linkerd does not come with a Ingress Controller. Existing ingress controller can
   - Configuring Ingress Controller to support Linkerd.
   - Meshing Ingress Controller pods so that they have the Linkerd proxy installed.
 
-Linkerd can be used with any ingress controller. In order for Linkerd to properly apply features such as route-based metrics and traffic splitting, Linkerd needs the IP/port of the Kubernetes Service as the traffic destination. However, by default, many ingresses, like Traefik, do their own load balance and endpoint selection when forwarding HTTP traffic pass the IP/port of the destination Pod, rather than the Service as a whole.
+Linkerd can be used with any ingress controller. In order for Linkerd to properly apply features such as route-based metrics and traffic splitting, Linkerd needs the IP/port of the Kubernetes Service as the traffic destination. However, by default, many ingresses, like Traefik or NGINX, do their own load balance and endpoint selection when forwarding HTTP traffic pass the IP/port of the destination Pod, rather than the Service as a whole.
 
-In order to enable linkerd implementation of load balancing at HTTP request level, Traefik load balancing mechanism must be skipped.
+In order to enable linkerd implementation of load balancing at HTTP request level, Ingress Contoroller load balancing mechanism must be skipped.
 
-More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.12/tasks/using-ingress/).
+More details in linkerd documentation ["Ingress Traffic"](https://linkerd.io/2.13/tasks/using-ingress/).
 
 
 ### Meshing Traefik
@@ -858,7 +870,7 @@ In order to integrate Traefik with Linkerd the following must be done:
 
    {{site.data.alerts.important}}
 
-   In ingress mode only HTTP traffic is routed by linkerd-proxy. Traefik will stop routing any HTTPS traffic. In this mode we must be sure that Traefil will end all TLS communications coming from ourside de cluster and that it communicate with the internal services only using HTTP.
+   In ingress mode only HTTP traffic is routed by linkerd-proxy. Traefik will stop routing any HTTPS traffic. In this mode we must be sure that Traefik will end all TLS communications coming from ourside de cluster and that it communicate with the internal services only using HTTP.
 
    This is how we have configured all services within the cluster. Disabling TLS configurations of all internal HTTP services.
 
@@ -966,6 +978,10 @@ Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside th
 
 Meshing Ingress NGINX is simpler. It can be meshed normally, it does not require the ingress mode annotation. 
 
+In order to integrate NGIN with Linkerd the following must be done:
+
+1. Ingress NGINX must be meshed. Meshing Ingress NGINX is simpler than Traefik. It can be meshed normally using `linkerd.io/inject: enabled` annotation, it does not require the ingress mode annotation (`linkerd.io/inject: ingress`) like Traefik
+
 If using the ingress-nginx Helm chart, note that the namespace containing the ingress controller should NOT be annotated with `linkerd.io/inject: enabled`. Instead, only Deployment resource need to be annotated. The reason is because this Helm chart defines (among other things) other Kubernetes resources (short-lived pod) that cannot be meshed.
 
 The following values.yml file need to be provided to ingress-nginx helm chart, so ingress-nginx is meshed.
@@ -976,7 +992,9 @@ controller:
     linkerd.io/inject: enabled
 ```
 
-Also Ingress resources need to be annotated with `nginx.ingress.kubernetes.io/service-upstream: "true"`. By default the Ingress-Nginx Controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration. The nginx.ingress.kubernetes.io/service-upstream annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
+2. Replace NGINX routing and load-balancing mechanism by linkerd-proxy routing and load balancing mechanism.
+
+  Ingress resources need to be annotated with `nginx.ingress.kubernetes.io/service-upstream: "true"`. By default the Ingress-Nginx Controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration. The nginx.ingress.kubernetes.io/service-upstream annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 
 ```yml
 apiVersion: networking.k8s.io/v1
