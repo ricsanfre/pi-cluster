@@ -39,132 +39,142 @@ The following picture shows the set of opensource solutions used for building th
         <th>Description</th>
     </tr>
     <tr>
-        <td><img width="32" src="https://simpleicons.org/icons/ansible.svg"></td>
+        <td><img width="32" src="/assets/img/logos/ansible.svg"></td>
         <td><a href="https://www.ansible.com">Ansible</a></td>
         <td>Automate OS configuration, external services installation and k3s installation and bootstrapping</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/argo/icon/color/argo-icon-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/argocd.svg"></td>
         <td><a href="https://argoproj.github.io/cd">ArgoCD</a></td>
         <td>GitOps tool for deploying applications to Kubernetes</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cloud-init.github.io/images/cloud-init-orange.svg"></td>
+        <td><img width="32" src="/assets/img/logos/cloud-init.svg"></td>
         <td><a href="https://cloudinit.readthedocs.io/en/latest/">Cloud-init</a></td>
         <td>Automate OS initial installation</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://assets.ubuntu.com/v1/ce518a18-CoF-2022_solid+O.svg"></td>
+        <td><img width="32" src="/assets/img/logos/ubuntu.svg"></td>
         <td><a href="https://ubuntu.com/">Ubuntu</a></td>
         <td>Cluster nodes OS</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/k3s/icon/color/k3s-icon-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/k3s.svg"></td>
         <td><a href="https://k3s.io/">K3S</a></td>
         <td>Lightweight distribution of Kubernetes</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/containerd/icon/color/containerd-icon-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/containerd.svg"></td>
         <td><a href="https://containerd.io/">containerd</a></td>
         <td>Container runtime integrated with K3S</td>
     </tr>
     <tr>
-        <td><img width="20" src="https://raw.githubusercontent.com/flannel-io/flannel/master/logos/flannel-glyph-color.svg"></td>
+        <td><img width="20" src="/assets/img/logos/flannel.svg"></td>
         <td><a href="https://github.com/flannel-io/flannel">Flannel</a></td>
         <td>Kubernetes Networking (CNI) integrated with K3S</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/coredns/icon/color/coredns-icon-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/coredns.svg"></td>
         <td><a href="https://coredns.io/">CoreDNS</a></td>
         <td>Kubernetes DNS</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://metallb.universe.tf/images/logo/metallb-blue.png"></td>
+        <td><img width="32" src="/assets/img/logos/haproxy.svg"></td>
+        <td><a href="https://www.haproxy.org/">HA Proxy</a></td>
+        <td>Kubernetes API Load-balancer</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="/assets/img/logos/metallb.svg"></td>
         <td><a href="https://metallb.universe.tf/">Metal LB</a></td>
         <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://landscape.cncf.io/logos/traefik.svg"></td>
-        <td><a href="https://traefik.io/">Traefik</a></td>
+        <td><img width="32" src="/assets/img/logos/nginx.svg"></td>
+        <td><a href="https://kubernetes.github.io/ingress-nginx/">Ingress NGINX</a></td>
         <td>Kubernetes Ingress Controller</td>
-    </tr>
+    </tr> 
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/linkerd/icon/color/linkerd-icon-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/traefik.svg"></td>
+        <td><a href="https://traefik.io/">Traefik</a></td>
+        <td>Kubernetes Ingress Controller (alternative)</td>
+    </tr>   
+    <tr>
+        <td><img width="32" src="/assets/img/logos/linkerd.svg"></td>
         <td><a href="https://linkerd.io/">Linkerd</a></td>
         <td>Kubernetes Service Mesh</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/longhorn/icon/color/longhorn-icon-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/longhorn.svg"></td>
         <td><a href="https://longhorn.io/">Longhorn</a></td>
         <td>Kubernetes distributed block storage</td>
     </tr>
     <tr>
-        <td><img width="60" src="https://min.io/resources/img/logo.svg"></td>
+        <td><img width="60" src="/assets/img/logos/minio.svg"></td>
         <td><a href="https://min.io/">Minio</a></td>
         <td>S3 Object Storage solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://landscape.cncf.io/logos/cert-manager.svg"></td>
+        <td><img width="32" src="/assets/img/logos/cert-manager.svg"></td>
         <td><a href="https://cert-manager.io">Cert-manager</a></td>
         <td>TLS Certificates management</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://simpleicons.org/icons/vault.svg"></td>
+        <td><img width="32" src="/assets/img/logos/vault.svg"></td>
         <td><a href="https://www.vaultproject.io/">Hashicorp Vault</a></td>
         <td>Secrets Management solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://landscape.cncf.io/logos/external-secrets.svg"></td>
+        <td><img width="32" src="/assets/img/logos/external-secrets.svg"></td>
         <td><a href="https://external-secrets.io/">External Secrets Operator</a></td>
         <td>Sync Kubernetes Secrets from Hashicorp Vault</td>
     </tr>
     <tr>
-        <td><img width="60" src="https://velero.io/img/Velero.svg"></td>
+        <td><img width="32" src="/assets/img/logos/velero.svg"></td>
         <td><a href="https://velero.io/">Velero</a></td>
         <td>Kubernetes Backup and Restore solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://github.com/restic/restic/raw/master/doc/logo/logo.png"></td>
+        <td><img width="32" src="/assets/img/logos/restic.png"></td>
         <td><a href="https://restic.net/">Restic</a></td>
         <td>OS Backup and Restore solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/prometheus/icon/color/prometheus-icon-color.png"></td>
+        <td><img width="32" src="/assets/img/logos/prometheus.svg"></td>
         <td><a href="https://prometheus.io/">Prometheus</a></td>
         <td>Metrics monitoring and alerting</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cncf-branding.netlify.app/img/projects/fluentd/icon/color/fluentd-icon-color.png"></td>
+        <td><img width="32" src="/assets/img/logos/fluentd.svg"></td>
         <td><a href="https://www.fluentd.org/">Fluentd</a></td>
         <td>Logs forwarding and distribution</td>
     </tr>
     <tr>
-        <td><img width="60" src="https://fluentbit.io/images/logo.svg"></td>
+        <td><img width="60" src="/assets/img/logos/fluentbit.svg"></td>
         <td><a href="https://fluentbit.io/">Fluentbit</a></td>
         <td>Logs collection</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://github.com/grafana/loki/blob/main/docs/sources/logo.png?raw=true"></td>
+        <td><img width="32" src="/assets/img/logos/loki.png"></td>
         <td><a href="https://grafana.com/oss/loki/">Loki</a></td>
         <td>Logs aggregation</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt36f2da8d650732a0/5d0823c3d8ff351753cbc99f/logo-elasticsearch-32-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/elastic.svg"></td>
         <td><a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a></td>
         <td>Logs analytics</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://static-www.elastic.co/v3/assets/bltefdd0b53724fa2ce/blt4466841eed0bf232/5d082a5e97f2babb5af907ee/logo-kibana-32-color.svg"></td>
+        <td><img width="32" src="/assets/img/logos/kibana.svg"></td>
         <td><a href="https://www.elastic.co/kibana/">Kibana</a></td>
         <td>Logs analytics Dashboards</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://grafana.com/static/assets/img/logos/grafana-tempo.svg"></td>
+        <td><img width="32" src="/assets/img/logos/tempo.svg"></td>
         <td><a href="https://grafana.com/oss/tempo/">Tempo</a></td>
         <td>Distributed tracing monitoring</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://grafana.com/static/img/menu/grafana2.svg"></td>
+        <td><img width="32" src="/assets/img/logos/grafana.svg"></td>
         <td><a href="https://grafana.com/oss/grafana/">Grafana</a></td>
         <td>Monitoring Dashboards</td>
     </tr>
@@ -302,6 +312,7 @@ The software used and the latest version tested of each component
 | Networking | Metal LB | v0.13.10 | Helm chart version:  0.13.10 |
 | Service Mesh | Linkerd | v2.13.5 | Helm chart version: linkerd-control-plane-1.12.5 |
 | Service Proxy | Traefik | v2.10.1 | Helm chart version: 23.1.0  |
+| Service Proxy | Ingress NGINX | v1.8.1| Helm chart version: 4.7.1 |
 | Storage | Longhorn | v1.4.2 | Helm chart version: 1.4.2 |
 | Storage | Minio | RELEASE.2023-06-19T19-52-50Z | Helm chart version: 5.0.11 |
 | TLS Certificates | Certmanager | v1.12.2| Helm chart version: v1.12.2  |
