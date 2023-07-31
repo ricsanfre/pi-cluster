@@ -1440,7 +1440,7 @@ metadata:
 spec:
   jobLabel: app.kubernetes.io/name
   endpoints:
-    - port: traefik
+    - port: metrics
       path: /metrics
   namespaceSelector:
     matchNames:
