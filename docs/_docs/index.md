@@ -194,8 +194,8 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 |  |Provider | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="https://letsencrypt.org/images/letsencrypt-logo-horizontal.svg" >| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
-| <img width="60" src="https://www.ionos.de/newsroom/wp-content/uploads/2022/03/LOGO_IONOS_Blue_RGB-1.png"> |[IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
+| <img width="60" src="/assets/img/logos/letsencrypt.svg" >| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
+| <img width="60" src="/assets/img/logos/ionos.png"> |[IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
 {: .table .table-white .border-dark }
 
 **Alternatives:**
@@ -216,8 +216,8 @@ There is another list of services that I have decided to run outside the kuberen
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="https://min.io/resources/img/logo.svg"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
-| <img width="32" src="https://simpleicons.org/icons/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
+| <img width="60" src="/assets/img/logos/minio.svg"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
+| <img width="32" src="/assets/img/logos/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 {: .table .table-white .border-dark .align-middle }
 
 
