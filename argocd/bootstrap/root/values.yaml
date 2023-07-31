@@ -35,13 +35,17 @@ apps:
     path: argocd/system/linkerd
     syncWave: 5
     # Traefik Ingress Controller
-  - name: traefik
-    namespace: traefik
-    path: argocd/system/traefik
+    # - name: traefik
+    #   namespace: traefik
+    #   path: argocd/system/traefik
+    #   syncWave: 6
+    #   helm:
+    #     # skip installation traefik CDRs
+    #     skipCrds: true
+  - name: nginx
+    namespace: nginx
+    path: argocd/system/nginx
     syncWave: 6
-    helm:
-      # skip installation traefik CDRs
-      skipCrds: true
     # CSI External Snapshotter
   - name: csi-external-snapshotter
     namespace: kube-system
