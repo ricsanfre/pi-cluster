@@ -71,7 +71,7 @@ traefik:
   # Set specific LoadBalancer IP address for Ingress service
   service:
     spec:
-      loadBalancerIP: 10.0.0.100
+      loadBalancerIP: 10.0.0.111
 
   providers:
     kubernetesCRD:
