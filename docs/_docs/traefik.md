@@ -74,7 +74,7 @@ Installation using `Helm` (Release 3):
   service:
     spec:
       # Set load balancer external IP
-      loadBalancerIP: 10.0.0.100
+      loadBalancerIP: 10.0.0.111
 
   providers:
     # Enable cross namespace references
@@ -122,10 +122,10 @@ Traefik service of type LoadBalancer created by Helm Chart does not specify any 
 ```yml
 service:
   spec:
-    loadBalancerIP: 10.0.0.100
+    loadBalancerIP: 10.0.0.111
 ```
 
-With this configuration ip 10.0.0.100 is assigned to Traefik proxy and so, for all services exposed by the cluster.
+With this configuration ip 10.0.0.111 is assigned to Traefik proxy and so, for all services exposed by the cluster.
 
 #### Enabling Access log
 
@@ -133,7 +133,7 @@ Traefik access logs contains detailed information about every request it handles
 
 To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`--accesslog.filepath`), adding to traekik deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
 
-Default access format need to be changed as well to use JSON format (`--accesslog.format=json`). That way those logs will be parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
+Default access format need to be changed as well to use JSON format (`--accesslog.format=json`). That way those logs can be further parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
 
 Following Traefik helm chart values need to be provided:
 
