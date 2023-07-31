@@ -890,7 +890,7 @@ In order to integrate Traefik with Linkerd the following must be done:
 
    See [Linkerd discussion #7387](https://github.com/linkerd/linkerd2/discussions/7387) for further details about this issue.
 
-   Alternative the Traefik helm chart can be configured so the deployed pod contains the required linkerd annotations to enable the ingress mode and skip port 443. The following additional values must be provided
+   Alternative, Traefik helm chart can be configured so the deployed pod contains the required linkerd annotations to enable the ingress mode and skip port 443. The following additional values must be provided
 
    ```yml
    deployment:

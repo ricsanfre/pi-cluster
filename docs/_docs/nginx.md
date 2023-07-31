@@ -83,7 +83,7 @@ service:
     loadBalancerIP: 10.0.0.100
 ```
 
-With this configuration ip 10.0.0.100 is assigned to Traefik proxy and so, for all services exposed by the cluster.
+With this configuration ip 10.0.0.100 is assigned to NGINX proxy and so, for all services exposed by the cluster.
 
 #### Enabling Access log
 
@@ -95,9 +95,9 @@ See [Ingress Nginx Annotations documentation](https://kubernetes.github.io/ingre
 
 NGINX writes the logs to `stdout` by default, mixing the access logs with NGINX-generated application logs.
 
-To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`controller.config.access-log-path`), adding to traekik deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
+To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`controller.config.access-log-path`), adding to nginx deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
 
-Default access format need to be changed as well to use JSON format (`controlle.config.log-format-escape-json`). That way those logs will be parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
+Default access format need to be changed as well to use JSON format (`controlle.config.log-format-escape-json`). That way those logs can be further parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
 
 Following Ingress NGINX helm chart values need to be provided:
 
@@ -226,7 +226,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: basic-auth-secret
-  namespace: traefik
+  namespace: nginx
 data:
   auth: |2
     <base64 encoded username:password pair>

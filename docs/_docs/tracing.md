@@ -415,7 +415,7 @@ controller:
     log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentracing_context_x_b3_traceid", "span_id": "$opentracing_context_x_b3_spanid"}'
 ```
 
-In this case Zipkin is used, and Tempo OTEL collector is used as destination. Access logs format is also changed to include OpenTrace context. Opentrace context (x_b3_traceid and x_b3_spanId) appears as field in the logs: `trace_id` and `span_id` 
+In this case Zipkin is used, and embedded Tempo OTEL collector (distributor) is used as destination. Access logs format is also changed to include OpenTrace context. Opentrace context (x_b3_traceid and x_b3_spanId) appears as field in the logs: `trace_id` and `span_id` 
 
 
 ## Grafana Configuration

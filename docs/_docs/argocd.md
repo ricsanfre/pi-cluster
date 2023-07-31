@@ -45,7 +45,7 @@ ArgoCD can be installed through helm chart
   configs:
     params:
       # Run server without TLS
-      # Traefik finishes TLS connections
+      # Ingress NGINX finishes TLS connections
       server.insecure: true
     cm:
       statusbadge.enabled: 'true'
@@ -63,6 +63,35 @@ ArgoCD can be installed through helm chart
           end
         end
         return hs
+  server:
+    # Ingress Resource.
+    ingress:
+      ## Enable creation of ingress resource
+      enabled: true
+      ## Add ingressClassName to the Ingress
+      ingressClassName: nginx
+      # ingress host
+      hosts:
+        - argocd.picluster.ricsanfre.com
+      ## TLS Secret Name
+      tls:
+        - secretName: argocd-tls
+          hosts:
+            - argocd.picluster.ricsanfre.com
+      ## Default ingress path
+      paths:
+        - /
+
+      ## Ingress annotations
+      annotations:
+        # Linkerd configuration. Configure Service as Upstream
+        nginx.ingress.kubernetes.io/service-upstream: "true"
+        # Enable cert-manager to create automatically the SSL certificate and store in Secret
+        # Possible Cluster-Issuer values: 
+        #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
+        #   * 'ca-issuer' (CA-signed certificate, not valid)
+        cert-manager.io/cluster-issuer: letsencrypt-issuer
+        cert-manager.io/common-name: argocd.picluster.ricsanfre.com
   ```
 
   With this config, Application resource health check is included so App of Apps pattern can be used. See below.
@@ -90,9 +119,9 @@ ArgoCD can be installed through helm chart
   http://<server-port-forwarding>:8080
   ```
 
-### Configuring Ingress
+### Ingress Configuration
 
-Traefik will be used as ingress controller, terminating TLS traffic, so ArgoCD does not need to expose its API using HTTPS.
+Igress NGINX will be used as ingress controller, terminating TLS traffic, so ArgoCD does not need to expose its API using HTTPS.
 
 - Configure ArgoCD to run its API server with TLS disabled
    
@@ -101,44 +130,39 @@ Traefik will be used as ingress controller, terminating TLS traffic, so ArgoCD d
   configs:
     params:
       # Run server without TLS
-      # Traefik finishes TLS connections
+      # Nginx finishes TLS connections
       server.insecure: true
   ```
 
-- Create Ingress resource yaml file
+- For creating Ingress resource, add following lines to helm chart values:
 
   ```yml
-  # HTTPS Ingress
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: argocd-ingress
-    namespace: argocd
-    annotations:
-      # HTTPS as entry point
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      # Enable TLS
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: argocd.picluster.ricsanfre.com
-  spec:
+  # Ingress Resource.
+  ingress:
+    ## Enable creation of ingress resource
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+    # ingress host
+    hosts:
+      - argocd.picluster.ricsanfre.com
+    ## TLS Secret Name
     tls:
-      - hosts:
+      - secretName: argocd-tls
+        hosts:
           - argocd.picluster.ricsanfre.com
-        secretName: argocd-tls
-    rules:
-      - host: argocd.picluster.ricsanfre.com
-        http:
-          paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: argocd-server
-                  port:
-                    number: 80  
+    ## Default ingress path
+    paths:
+      - /
 
+    ## Ingress annotations
+    annotations:
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values: 
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: argocd.picluster.ricsanfre.com
   ```
 
 See more details in [Argo-CD Ingress configuration doc](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/)
