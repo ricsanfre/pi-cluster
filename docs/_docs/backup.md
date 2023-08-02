@@ -2,7 +2,7 @@
 title: Backup & Restore
 permalink: /docs/backup/
 description: How to deploy a backup solution based on Velero and Restic in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "27-12-2022"
+last_modified_at: "02-08-2023"
 ---
 
 ## Backup Architecture and Design
@@ -516,13 +516,13 @@ Installation using `Helm` (Release 3):
   # AWS backend and CSI plugins configuration
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.3.0
+      image: velero/velero-plugin-for-aws:v1.7.1
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
           name: plugins
     - name: velero-plugin-for-csi
-      image: ricsanfre/velero-plugin-for-csi:v0.3.1
+      image: velero/velero-plugin-for-csi:v0.5.1
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
@@ -530,17 +530,15 @@ Installation using `Helm` (Release 3):
 
   # Minio storage configuration
   configuration:
-    # Cloud provider being used
-    provider: aws
     backupStorageLocation:
-      provider: aws
-      bucket: <velero_bucket>
-      caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
-      config:
-        region: eu-west-1
-        s3ForcePathStyle: true
-        s3Url: https://minio.example.com:9091
-        insecureSkipTLSVerify: true
+      - provider: aws
+        bucket: <velero_bucket>
+        caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
+        config:
+          region: eu-west-1
+          s3ForcePathStyle: true
+          s3Url: https://minio.example.com:9091
+          insecureSkipTLSVerify: true
     # Enable CSI snapshot support
     features: EnableCSI
   credentials:
@@ -549,6 +547,21 @@ Installation using `Helm` (Release 3):
         [default]
         aws_access_key_id: <minio_velero_user> # Not encoded
         aws_secret_access_key: <minio_velero_pass> # Not encoded
+
+  # Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
+  snapshotsEnabled: false
+
+  # Run velero only on amd64 nodes
+  # velero-plugin-for-csi not officially available for ARM architecture
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
   ```
 
 - Step 5: Install Velero in the `velero` namespace with the overriden values
@@ -602,24 +615,37 @@ Installation using `Helm` (Release 3):
   # AWS backend and CSI plugins configuration
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.3.0
+      image: velero/velero-plugin-for-aws:v1.7.1
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
           name: plugins
     - name: velero-plugin-for-csi
-      image: ricsanfre/velero-plugin-for-csi:v0.3.1
+      image: velero/velero-plugin-for-csi:v0.5.1
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
           name: plugins 
   ```
 
+- Affinity configuration
+  
+  ```yml
+  # Run velero only on amd64 nodes
+  # velero-plugin-for-csi not available for ARM architecture
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
+  ```
   {{site.data.alerts.note}}
 
-  Official docker image `velero/velero-plugin-for-csi` does not support ARM64 architecture yet. See [velero open issue](https://github.com/vmware-tanzu/velero/issues/4303)
-
-  Meanwhile, from my own fork of the project I have created a docker image supporting multiarchitecture (ARM64 and AMD64): `ricsanfre/velero-plugin-for-csi`.
+  Official docker image `velero/velero-plugin-for-csi` recently is supporting ARM64 architecture but not for the official tagged images for each release.
 
   {{site.data.alerts.end}}
 
@@ -629,7 +655,10 @@ Installation using `Helm` (Release 3):
   ```yml
   configuration:
      # Enable CSI snapshot support
-    features: EnableCSI  
+    features: EnableCSI
+
+  # Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
+  snapshotsEnabled: false
   ```
   
 - Configure Minio S3 server as backup backend
@@ -703,85 +732,90 @@ credentials:
   apiVersion: v1
   kind: Namespace
   metadata:
-  name: nginx-example
-  labels:
+    name: nginx-example
+    labels:
       app: nginx
+
   ---
+
   kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
-  name: nginx-logs
-  namespace: nginx-example
-  labels:
+    name: nginx-logs
+    namespace: nginx-example
+    labels:
       app: nginx
   spec:
-  storageClassName: longhorn
-  accessModes:
+    storageClassName: longhorn
+    accessModes:
       - ReadWriteOnce
-  resources:
+    resources:
       requests:
-      storage: 50Mi
+        storage: 50Mi
   ---
+
   apiVersion: apps/v1
   kind: Deployment
   metadata:
-  name: nginx-deployment
-  namespace: nginx-example
+    name: nginx-deployment
+    namespace: nginx-example
   spec:
-  replicas: 1
-  selector:
+    replicas: 1
+    selector:
       matchLabels:
-      app: nginx
-  template:
+        app: nginx
+    template:
       metadata:
-      labels:
-          app: nginx
-      annotations:
-          pre.hook.backup.velero.io/container: fsfreeze
-          pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
-          post.hook.backup.velero.io/container: fsfreeze
-          post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
+        labels:
+            app: nginx
+        annotations:
+            pre.hook.backup.velero.io/container: fsfreeze
+            pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
+            post.hook.backup.velero.io/container: fsfreeze
+            post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
       spec:
-      volumes:
+        volumes:
           - name: nginx-logs
-          persistentVolumeClaim:
+            persistentVolumeClaim:
               claimName: nginx-logs
-      containers:
-        - image: nginx:1.17.6
-          name: nginx
-          ports:
+        containers:
+          - image: nginx:1.17.6
+            name: nginx
+            ports:
               - containerPort: 80
-          volumeMounts:
+            volumeMounts:
               - mountPath: "/var/log/nginx"
-              name: nginx-logs
-              readOnly: false
-        - image: ubuntu:bionic
-          name: fsfreeze
-          securityContext:
+                name: nginx-logs
+                readOnly: false
+          - image: ubuntu:bionic
+            name: fsfreeze
+            securityContext:
               privileged: true
-          volumeMounts:
+            volumeMounts:
               - mountPath: "/var/log/nginx"
-              name: nginx-logs
-              readOnly: false
-          command:
+                name: nginx-logs
+                readOnly: false
+            command:
               - "/bin/bash"
               - "-c"
               - "sleep infinity"
+
   ---
+
   apiVersion: v1
   kind: Service
   metadata:
-  labels:
-      app: nginx
-  name: my-nginx
-  namespace: nginx-example
+    labels:
+        app: nginx
+    name: my-nginx
+    namespace: nginx-example
   spec:
-  ports:
+    ports:
       - port: 80
-      targetPort: 80
-  selector:
+        targetPort: 80
+    selector:
       app: nginx
-  type: LoadBalancer
+    type: LoadBalancer
   ```
 
   {{site.data.alerts.note}}
