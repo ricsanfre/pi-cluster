@@ -1,6 +1,6 @@
 ---
 # Version
-linkerd_version: "stable-2.12.4"
+linkerd_version: "stable-2.13.5"
 
 # Architecture
 linkerd_arch: "arm64"
