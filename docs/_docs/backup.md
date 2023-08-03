@@ -727,6 +727,7 @@ credentials:
 
   1) Create manifest file: `nginx-example.yml`
 
+  
   ```yml
   ---
   apiVersion: v1
@@ -735,9 +736,7 @@ credentials:
     name: nginx-example
     labels:
       app: nginx
-
   ---
-
   kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
@@ -753,7 +752,6 @@ credentials:
       requests:
         storage: 50Mi
   ---
-
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -799,9 +797,7 @@ credentials:
               - "/bin/bash"
               - "-c"
               - "sleep infinity"
-
   ---
-
   apiVersion: v1
   kind: Service
   metadata:
