@@ -51,3 +51,12 @@ metadata:
   name: tracing
   annotations:
     linkerd.io/inject: enabled
+
+---
+# kafka namespace
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: kafka
+  annotations:
+    linkerd.io/inject: enabled
