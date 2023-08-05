@@ -15,3 +15,52 @@ kafka_storage_size: "5Gi"
 kafka_storage_class: "longhorn"
 kafka_zookeeper_storage_class: "longhorn"
 kafka_zookeeper_storage_size: "5Gi"
+
+
+###################
+# kafdrop subchart
+###################
+
+kafdrop:
+  # Kafka broker connection
+  kafka:
+    brokerConnect: my-cluster-kafka-bootstrap:9092
+  # JVM options
+  jvm:
+    opts: "-Xms32M -Xmx64M"
+  # Ingress resource
+  ingress:
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+    # ingress host
+    hosts:
+      - kafdrop.picluster.ricsanfre.com
+    ## TLS Secret Name
+    tls:
+      - secretName: kafdrop-tls
+        hosts:
+          - kafdrop.picluster.ricsanfre.com
+    ## Default ingress path
+    path: /
+    ## Ingress annotations
+    annotations:
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values:
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: kafdrop.picluster.ricsanfre.com
+
+  # Kafdrop docker images are not multi-arch. Only amd64 image is available
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64

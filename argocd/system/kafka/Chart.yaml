@@ -5,3 +5,6 @@ dependencies:
   - name: strimzi-kafka-operator
     version: 0.36.1
     repository: https://strimzi.io/charts/
+  - name: kafdrop
+    version: 0.1.0
+    repository: https://ricsanfre.github.io/helm-charts
