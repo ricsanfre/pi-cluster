@@ -1,5 +1,5 @@
 
-CHARTS = external-secrets metallb cert-manager linkerd nginx longhorn-system minio velero logging monitoring linkerd-viz tracing linkerd-jaeger
+CHARTS = external-secrets metallb cert-manager linkerd nginx longhorn-system minio velero logging monitoring linkerd-viz tracing linkerd-jaeger kafka
 
 .PHONY: crds
 crds: 
