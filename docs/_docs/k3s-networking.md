@@ -81,7 +81,7 @@ Traefik K3S add-on is disabled during K3s installation, so it can be installed m
 
 To disable embedded Traefik, install K3s with `--disable traefik` option.
 
-Further details about how to configure Traefik can be found in ["Ingress-Controller Traefik documentation"](/docs/traefik).
+Further details about how to configure Traefik can be found in ["Ingress-Controller Traefik documentation"](/docs/traefik/).
 
 ## Klipper-LB as Load Balancer
 
@@ -89,4 +89,4 @@ Further details about how to configure Traefik can be found in ["Ingress-Control
 In the cluster, Metal LB load balancer will be used so it is needed to disable Klipper-LB first.
 To disable the embedded LB, configure all servers in the cluster with the `--disable servicelb` option.
 
-Further details about how to install Metal LB can be found in ["Load Balancer (Metal LB) documentation"](/docs/traefik).
+Further details about how to install Metal LB can be found in ["Load Balancer (Metal LB) documentation"](/docs/metallb/).

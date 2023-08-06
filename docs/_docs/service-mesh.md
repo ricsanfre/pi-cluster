@@ -563,7 +563,7 @@ Installation procedure:
 
 Linkerd jaegger extension, by default, installs Jaeger, as traces backend, [OpenTelemetry collector](https://opentelemetry.io/docs/collector/), to collect and distribute traces to Jaeger backend and Jaegger-injector, responsible for configuring the Linkerd proxies to emit spans.
 
-As part of the [Pi Cluster - Observability platform](/docs/observability), Tempo is used as tracing backend, instead of Jaeger. See [Tempo installation documentation](/docs/tracing/).
+As part of the [Pi Cluster - Observability platform](/docs/observability/), Tempo is used as tracing backend, instead of Jaeger. See [Tempo installation documentation](/docs/tracing/).
 
 Tempo's distributor component has embedded an OpenTelemetry collector. So neither Jaeger nor the collector are needed, only jaeger-injector is going to be installed.
 

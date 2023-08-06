@@ -56,7 +56,7 @@ Grafana Tempo needs to store two different types of data: chunks and indexes. Bo
 Tempo helm chart is able to install this Minio service as a subchart, but its installation will be disabled and Minio Storage Service already deployed in the cluster will be used as Tempo's backend. 
 
 As part of Minio Storage Service installation, Tempo's S3 bucket, policy and user is already configured.
-See documentation: [Minio S3 Object Storage Service](/docs/minio).
+See documentation: [Minio S3 Object Storage Service](/docs/minio/).
 
 {{site.data.alerts.end}}
 

@@ -47,7 +47,7 @@ Grafana Loki needs to store two different types of data: chunks and indexes. Bot
 Loki helm chart is able to install this Minio service as a subchart, but its installation will be disabled and Minio Storage Service already deployed in the cluster will be used as Loki's backend. 
 
 As part of Minio Storage Service installation, loki's S3 bucket, policy and user is already configured.
-See documentation: [Minio S3 Object Storage Service](/docs/minio).
+See documentation: [Minio S3 Object Storage Service](/docs/minio/).
 
 {{site.data.alerts.end}}
 

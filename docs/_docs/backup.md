@@ -76,7 +76,7 @@ The backup architecture is the following:
 
 {{site.data.alerts.note}}
 
-Minio S3 server installed as stand-alone service and configured as described in [Pi Cluster S3 Object Storage Service](/docs/minio) will be used as backup backend.
+Minio S3 server installed as stand-alone service and configured as described in [Pi Cluster S3 Object Storage Service](/docs/minio/) will be used as backup backend.
 
 {{site.data.alerts.end}}
 

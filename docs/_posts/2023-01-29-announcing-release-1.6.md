@@ -23,7 +23,7 @@ The automation source code has been completely refactored:
 - Changes in Ansible automation code to automatically boot the cluster using ArgoCD
 - Remove old ansible code to deploy Kuberentes applications
 
-Check further details about [ArgoCD installation and configuration](/docs/argocd) in the documentation and the new [Quick Start Instructions](/docs/ansible/).
+Check further details about [ArgoCD installation and configuration](/docs/argocd/) in the documentation and the new [Quick Start Instructions](/docs/ansible/).
 
 ## New Secrets Management solution (Hashicorp Vault)
 
@@ -37,7 +37,7 @@ Vault is deployed as a external service, not runing as Kuberentes application. [
 
 Cluster bootstrap process, using Ansible, takes care of the installation and configuration of Hashicorp Vault and the initial load of secrets needed by the cluster applications.
 
-Check further details in [Vautl Installation doc](/docs/vault).
+Check further details in [Vautl Installation doc](/docs/vault/).
 
 ## From Monitoring to Observability platform
 

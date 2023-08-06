@@ -41,7 +41,7 @@ See ["Automating Image creation (USB Booting)"](/docs/ubuntu/rpi/#automating-ima
 
 Ubuntu OS installation on x86 nodes has been automated using PXE. PXE server has been added to the cluster, and installation process can be launched from network.
 
-See ["OS Installation - x86 (PXE sever)"](/docs/ubuntu/x86) and ["PXE Server"](/docs/pxe-server).
+See ["OS Installation - x86 (PXE sever)"](/docs/ubuntu/x86/) and ["PXE Server"](/docs/pxe-server/).
 
 
 ## Ubuntu OS upgrade from 20.04 to 22.04
