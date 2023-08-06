@@ -96,7 +96,7 @@ This command:
 
 LVM logical volumes creation using the new partition,`/dev/sda3`, (LUNs) have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
 
-Specific ansible variables to be used by this role are stored in [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san_target/centralized_san_target.yml)
+Specific ansible variables to be used by this role are stored in [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml)
 
 
 ### cloud-init: network configuration
