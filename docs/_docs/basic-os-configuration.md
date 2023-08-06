@@ -105,7 +105,7 @@ Since the Raspberry PIs in the cluster are configured as a headless server, with
 
 VXLAN support is not present in kernel since Ubuntu 21.04. It makes K3S fail to run. See more details in [K3S issue](https://github.com/k3s-io/k3s/issues/4234)
 
-Starting with Ubuntu 21.10, vxlan support on Raspberry Pi has been moved into a separate kernel module, that need to be manually installed. See specific [Raspberry PI K3S specific installation requirements](https://docs.k3s.io/advanced#raspberry-pi). Further details [here](https://bugs.launchpad.net/ubuntu/+source/linux-raspi/+bug/1947628)
+Starting with Ubuntu 21.10, vxlan support on Raspberry Pi has been moved into a separate kernel module, that need to be manually installed. See specific [Raspberry PI K3S specific installation requirements](https://docs.k3s.io/advanced#raspberry-pi). Further details in this [Ubuntu bug: "VXLAN support is not present in kernel - Ubuntu 21.10 on Raspberry Pi 4 (64bit)"](https://bugs.launchpad.net/ubuntu/+source/linux-raspi/+bug/1947628)
 
 ```shell
 sudo apt install linux-modules-extra-raspi & reboot

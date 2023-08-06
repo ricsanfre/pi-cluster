@@ -1466,7 +1466,7 @@ spec:
 
 #### Ingress NGINX Grafana dashboard
 
-Ingress NGINX grafana dashboard in JSON format can be downloaded from [https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json)
+Ingress NGINX grafana dashboard in JSON format can be found here: [Kubernetes Ingress-nginx Github repository: `nginx.json`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json).
 
 
 ### Traefik Monitoring
