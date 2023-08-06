@@ -39,142 +39,142 @@ The following picture shows the set of opensource solutions used for building th
         <th>Description</th>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/ansible.svg"></td>
+        <td><img width="32" src="/assets/img/logos/ansible.svg" alt="ansible logo"></td>
         <td><a href="https://www.ansible.com">Ansible</a></td>
         <td>Automate OS configuration, external services installation and k3s installation and bootstrapping</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/argocd.svg"></td>
+        <td><img width="32" src="/assets/img/logos/argocd.svg" alt="argocd logo"></td>
         <td><a href="https://argoproj.github.io/cd">ArgoCD</a></td>
         <td>GitOps tool for deploying applications to Kubernetes</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/cloud-init.svg"></td>
+        <td><img width="32" src="/assets/img/logos/cloud-init.svg" alt="cloud-init logo"></td>
         <td><a href="https://cloudinit.readthedocs.io/en/latest/">Cloud-init</a></td>
         <td>Automate OS initial installation</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/ubuntu.svg"></td>
+        <td><img width="32" src="/assets/img/logos/ubuntu.svg" alt="ubuntu logo"></td>
         <td><a href="https://ubuntu.com/">Ubuntu</a></td>
         <td>Cluster nodes OS</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/k3s.svg"></td>
+        <td><img width="32" src="/assets/img/logos/k3s.svg" alt="k3s logo"></td>
         <td><a href="https://k3s.io/">K3S</a></td>
         <td>Lightweight distribution of Kubernetes</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/containerd.svg"></td>
+        <td><img width="32" src="/assets/img/logos/containerd.svg" alt="containerd logo"></td>
         <td><a href="https://containerd.io/">containerd</a></td>
         <td>Container runtime integrated with K3S</td>
     </tr>
     <tr>
-        <td><img width="20" src="/assets/img/logos/flannel.svg"></td>
+        <td><img width="20" src="/assets/img/logos/flannel.svg" alt="flannel logo"></td>
         <td><a href="https://github.com/flannel-io/flannel">Flannel</a></td>
         <td>Kubernetes Networking (CNI) integrated with K3S</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/coredns.svg"></td>
+        <td><img width="32" src="/assets/img/logos/coredns.svg" alt="coredns logo"></td>
         <td><a href="https://coredns.io/">CoreDNS</a></td>
         <td>Kubernetes DNS</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/haproxy.svg"></td>
+        <td><img width="32" src="/assets/img/logos/haproxy.svg" alt="haproxy logo"></td>
         <td><a href="https://www.haproxy.org/">HA Proxy</a></td>
         <td>Kubernetes API Load-balancer</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/metallb.svg"></td>
+        <td><img width="32" src="/assets/img/logos/metallb.svg" alt="metallb logo"></td>
         <td><a href="https://metallb.universe.tf/">Metal LB</a></td>
         <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/nginx.svg"></td>
+        <td><img width="32" src="/assets/img/logos/nginx.svg" alt="nginx logo"></td>
         <td><a href="https://kubernetes.github.io/ingress-nginx/">Ingress NGINX</a></td>
         <td>Kubernetes Ingress Controller</td>
     </tr> 
     <tr>
-        <td><img width="32" src="/assets/img/logos/traefik.svg"></td>
+        <td><img width="32" src="/assets/img/logos/traefik.svg" alt="traefik logo"></td>
         <td><a href="https://traefik.io/">Traefik</a></td>
         <td>Kubernetes Ingress Controller (alternative)</td>
     </tr>   
     <tr>
-        <td><img width="32" src="/assets/img/logos/linkerd.svg"></td>
+        <td><img width="32" src="/assets/img/logos/linkerd.svg" alt="linkerd logo"></td>
         <td><a href="https://linkerd.io/">Linkerd</a></td>
         <td>Kubernetes Service Mesh</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/longhorn.svg"></td>
+        <td><img width="32" src="/assets/img/logos/longhorn.svg" alt="longhorn logo"></td>
         <td><a href="https://longhorn.io/">Longhorn</a></td>
         <td>Kubernetes distributed block storage</td>
     </tr>
     <tr>
-        <td><img width="60" src="/assets/img/logos/minio.svg"></td>
+        <td><img width="60" src="/assets/img/logos/minio.svg" alt="minio logo"></td>
         <td><a href="https://min.io/">Minio</a></td>
         <td>S3 Object Storage solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/cert-manager.svg"></td>
+        <td><img width="32" src="/assets/img/logos/cert-manager.svg" alt="cert-manager logo"></td>
         <td><a href="https://cert-manager.io">Cert-manager</a></td>
         <td>TLS Certificates management</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/vault.svg"></td>
+        <td><img width="32" src="/assets/img/logos/vault.svg" alt="vault logo"></td>
         <td><a href="https://www.vaultproject.io/">Hashicorp Vault</a></td>
         <td>Secrets Management solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/external-secrets.svg"></td>
+        <td><img width="32" src="/assets/img/logos/external-secrets.svg" alt="external-secrets logo"></td>
         <td><a href="https://external-secrets.io/">External Secrets Operator</a></td>
         <td>Sync Kubernetes Secrets from Hashicorp Vault</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/velero.svg"></td>
+        <td><img width="32" src="/assets/img/logos/velero.svg" alt="velero logo"></td>
         <td><a href="https://velero.io/">Velero</a></td>
         <td>Kubernetes Backup and Restore solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/restic.png"></td>
+        <td><img width="32" src="/assets/img/logos/restic.png" alt="restic logo"></td>
         <td><a href="https://restic.net/">Restic</a></td>
         <td>OS Backup and Restore solution</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/prometheus.svg"></td>
+        <td><img width="32" src="/assets/img/logos/prometheus.svg" alt="prometheus logo"></td>
         <td><a href="https://prometheus.io/">Prometheus</a></td>
         <td>Metrics monitoring and alerting</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/fluentd.svg"></td>
+        <td><img width="32" src="/assets/img/logos/fluentd.svg" alt="fluentd logo"></td>
         <td><a href="https://www.fluentd.org/">Fluentd</a></td>
         <td>Logs forwarding and distribution</td>
     </tr>
     <tr>
-        <td><img width="60" src="/assets/img/logos/fluentbit.svg"></td>
+        <td><img width="60" src="/assets/img/logos/fluentbit.svg" alt="fluentbit logo"></td>
         <td><a href="https://fluentbit.io/">Fluentbit</a></td>
         <td>Logs collection</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/loki.png"></td>
+        <td><img width="32" src="/assets/img/logos/loki.png" alt="loki logo"></td>
         <td><a href="https://grafana.com/oss/loki/">Loki</a></td>
         <td>Logs aggregation</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/elastic.svg"></td>
+        <td><img width="32" src="/assets/img/logos/elastic.svg" alt="elasticsearch logo"></td>
         <td><a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a></td>
         <td>Logs analytics</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/kibana.svg"></td>
+        <td><img width="32" src="/assets/img/logos/kibana.svg" alt="kibana logo"></td>
         <td><a href="https://www.elastic.co/kibana/">Kibana</a></td>
         <td>Logs analytics Dashboards</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/tempo.svg"></td>
+        <td><img width="32" src="/assets/img/logos/tempo.svg" alt="tempo logo"></td>
         <td><a href="https://grafana.com/oss/tempo/">Tempo</a></td>
         <td>Distributed tracing monitoring</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/grafana.svg"></td>
+        <td><img width="32" src="/assets/img/logos/grafana.svg" alt="grafana logo"></td>
         <td><a href="https://grafana.com/oss/grafana/">Grafana</a></td>
         <td>Monitoring Dashboards</td>
     </tr>
@@ -194,8 +194,8 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 |  |Provider | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="/assets/img/logos/letsencrypt.svg" >| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
-| <img width="60" src="/assets/img/logos/ionos.png"> |[IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
+| <img width="60" src="/assets/img/logos/letsencrypt.svg" alt="letsencrypt logo" >| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
+| <img width="60" src="/assets/img/logos/ionos.png" alt="ionos logo"> |[IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
 {: .table .table-white .border-dark }
 
 **Alternatives:**
@@ -216,8 +216,8 @@ There is another list of services that I have decided to run outside the kuberen
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="/assets/img/logos/minio.svg"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
-| <img width="32" src="/assets/img/logos/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
+| <img width="60" src="/assets/img/logos/minio.svg" alt="minio logo"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
+| <img width="32" src="/assets/img/logos/vault.svg" alt="vault logo"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 {: .table .table-white .border-dark .align-middle }
 
 
