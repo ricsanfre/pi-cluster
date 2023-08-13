@@ -288,7 +288,7 @@ vault operator init -key-shares=1 -key-threshold=1 -format=json > /etc/vault/uns
 ```
 where number of key shares (`-key-shares`) and threshold (`-key-threshold`) is set to 1. Only one key is needed to unseal vault.
 
-The vault init command output is redirected to a file (`/etc/vautl/unseal.json`) containing unseal keys values and root token needed to connect to vault.
+The vault init command output is redirected to a file (`/etc/vault/unseal.json`) containing unseal keys values and root token needed to connect to vault.
 
 ```json
 {
