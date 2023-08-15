@@ -22,13 +22,13 @@ spec:
       transaction.state.log.min.isr: 2
       default.replication.factor: 3
       min.insync.replicas: 2
-      inter.broker.protocol.version: "3.2"
+      inter.broker.protocol.version: "3.5"
     storage:
       type: jbod
-      class: {{ .Values.kafka_storage_class }}
       volumes:
       - id: 0
         type: persistent-claim
+        class: {{ .Values.kafka_storage_class }}
         size: {{ .Values.kafka_storage_size }}
         deleteClaim: false
 
