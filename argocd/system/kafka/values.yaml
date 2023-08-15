@@ -1,6 +1,9 @@
 # Kafka cluster name
 kafka_cluster_name: my-cluster
 
+# Kafka topic
+kafka_topic_name: my-topic
+
 # Kafka version
 kafka_version: 3.5.1
 
