@@ -52,6 +52,9 @@
 - title: GitOps
   docs:
   - argocd
+- title: Other services
+  docs:
+  - kafka
 - title: Reference Docs
   docs:
   - k8s-networking
