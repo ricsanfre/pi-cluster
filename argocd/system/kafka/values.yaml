@@ -19,6 +19,21 @@ kafka_storage_class: "longhorn"
 kafka_zookeeper_storage_class: "longhorn"
 kafka_zookeeper_storage_size: "5Gi"
 
+##########################
+# schema-registry subchart
+##########################
+
+schema-registry:
+  kafka:
+    enabled: false
+  auth:
+    protocol: {}
+  service:
+    ports:
+      client: {}
+  externalKafka:
+    brokers:
+      - PLAINTEXT://my-cluster-kafka-bootstrap:9092
 
 ###################
 # kafdrop subchart
