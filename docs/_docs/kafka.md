@@ -2,7 +2,7 @@
 title: Kafka
 permalink: /docs/kafka/
 description: How to deploy Kafka to our Kubernetes cluster. Using Strimzi Kafka Operator to streamline the deployment
-last_modified_at: "05-08-2023"
+last_modified_at: "16-09-2023"
 
 ---
 
@@ -166,82 +166,7 @@ Once the cluster is running, you can run a simple producer to send messages to a
   Messages will be outputed in consumer terminal.
 
 
-## Kafka UI (Kafdrop)
 
-[Kafdrop](https://github.com/obsidiandynamics/kafdrop) is a web UI for viewing Kafka topics and browsing consumer groups. The tool displays information such as brokers, topics, partitions, consumers, and lets you view messages.
-
-{{site.data.alerts.note}}
-
-Even when helm chart source code is available in the repository, this helm chart is not hosted in any official helm repository. I have decided to selfhost this helm chart within my own repository `https://ricsanfre.github.io/helm-charts/`
-
-{{site.data.alerts.end}}
-
-- Step 1: Add the Helm repository:
-
-  ```shell
-  helm repo add ricsanfre https://ricsanfre.github.io/helm-charts/
-  ```
-- Step 2: Fetch the latest charts from the repository:
-
-  ```shell
-  helm repo update
-  ```
-- Step 3: Prepare kafdrop-values.yml
-
-  ```yml
-  # Kafka broker connection
-  kafka:
-    brokerConnect: my-cluster-kafka-bootstrap:9092ç
-  # JVM options
-  jvm:
-    opts: "-Xms32M -Xmx64M"
-  # Ingress resource
-  ingress:
-    enabled: true
-    ## Add ingressClassName to the Ingress
-    ingressClassName: nginx
-    # ingress host
-    hosts:
-      - kafdrop.picluster.ricsanfre.com
-    ## TLS Secret Name
-    tls:
-      - secretName: kafdrop-tls
-        hosts:
-          - kafdrop.picluster.ricsanfre.com
-    ## Default ingress path
-    path: /
-    ## Ingress annotations
-    annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      # Possible Cluster-Issuer values:
-      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
-      #   * 'ca-issuer' (CA-signed certificate, not valid)
-      cert-manager.io/cluster-issuer: letsencrypt-issuer
-      cert-manager.io/common-name: kafdrop.picluster.ricsanfre.com
-
-  # Kafdrop docker images are not multi-arch. Only amd64 image is available
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kubernetes.io/arch
-            operator: In
-            values:
-            - amd64
-  ```
-
-- Step 4: Install Kafdrop helm chart
-
-  ```shell
-  helm upgrade -i kafdrop ricsanfre/kafdrop -f kafdrop-values.yml --namespace kafka
-  ```
-- Step 4: Confirm that the deployment succeeded, opening UI:
-
-  https://kafdrop.picluster.ricsanfre.com/
-  
 
 ## Schema Registry
 
@@ -308,6 +233,113 @@ Official confluent docker images for Schema Registry can be installed using [hel
   [2023-08-19 09:06:39,042] INFO Server started, listening for requests... (io.confluent.kafka.schemaregistry.rest.SchemaRegistryMain:49)
   ```
 
+### Testing Schema Registy
+
+Once the cluster is running, you can run a producer and a consumer using Avro messages stored in Schema Registry.
+
+{{site.data.alerts.note}}
+
+Kafka consumer and producers docker images used for testing ca be found in [kafka-python-client repository](https://github.com/ricsanfre/kafka-python-client). This docker image contain source code of one of the examples in [confluent-kafka-python repository]https://github.com/confluentinc/confluent-kafka-python/.
+
+
+{{site.data.alerts.end}}
+
+- Step 1: launch producer
+  ```shell
+  kubectl -n kafka run kafka-producer -ti --annotations="linkerd.io/inject=disabled" --image=ricsanfre/kafka-python-client:latest --rm=true --restart=Never -- python avro_producer.py -b my-cluster-kafka-bootstrap:9092 -s http://kafka-schema-registry:8081 -t my-avro-topic
+  ```
+  Enter required fields for building the message
+
+
+- Step 3: in a different terminal launch consumer
+  ```shell
+  kubectl -n kafka run kafka-consumer -ti --annotations="linkerd.io/inject=disabled" --image=ricsanfre/kafka-python-client:latest --rm=true --restart=Never -- python avro_consumer.py -b my-cluster-kafka-bootstrap:9092 -s http://kafka-schema-registry:8081 -t my-avro-topic
+  ```
+
+## Kafka UI (Kafdrop)
+
+[Kafdrop](https://github.com/obsidiandynamics/kafdrop) is a web UI for viewing Kafka topics and browsing consumer groups. The tool displays information such as brokers, topics, partitions, consumers, and lets you view messages.
+
+{{site.data.alerts.note}}
+
+Even when helm chart source code is available in the repository, this helm chart is not hosted in any official helm repository. I have decided to selfhost this helm chart within my own repository `https://ricsanfre.github.io/helm-charts/`
+
+{{site.data.alerts.end}}
+
+- Step 1: Add the Helm repository:
+
+  ```shell
+  helm repo add ricsanfre https://ricsanfre.github.io/helm-charts/
+  ```
+- Step 2: Fetch the latest charts from the repository:
+
+  ```shell
+  helm repo update
+  ```
+- Step 3: Prepare kafdrop-values.yml
+
+  ```yml
+  # Kafka broker connection
+  kafka:
+    brokerConnect: my-cluster-kafka-bootstrap:9092ç
+  # JVM options
+  jvm:
+    opts: "-Xms32M -Xmx64M"
+
+  # Adding connection to schema registry
+  cmdArgs: "--schemaregistry.connect=http://kafka-schema-registry:8081"
+
+  # Ingress resource
+  ingress:
+    enabled: true
+    ## Add ingressClassName to the Ingress
+    ingressClassName: nginx
+    # ingress host
+    hosts:
+      - kafdrop.picluster.ricsanfre.com
+    ## TLS Secret Name
+    tls:
+      - secretName: kafdrop-tls
+        hosts:
+          - kafdrop.picluster.ricsanfre.com
+    ## Default ingress path
+    path: /
+    ## Ingress annotations
+    annotations:
+      # Linkerd configuration. Configure Service as Upstream
+      nginx.ingress.kubernetes.io/service-upstream: "true"
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values:
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: kafdrop.picluster.ricsanfre.com
+
+  # Kafdrop docker images are not multi-arch. Only amd64 image is available
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
+  ```
+
+  Kafdrop is configured to use Schema Registry, so messages can be decoded when Schema Registry is used. See helm chart value `cmdArgs`:
+  -  `--schemaregistry.connect=http://kafka-schema-registry:8081`
+
+
+- Step 4: Install Kafdrop helm chart
+
+  ```shell
+  helm upgrade -i kafdrop ricsanfre/kafdrop -f kafdrop-values.yml --namespace kafka
+  ```
+- Step 4: Confirm that the deployment succeeded, opening UI:
+
+  https://kafdrop.picluster.ricsanfre.com/
+  
 
 ## References
 
