@@ -46,6 +46,10 @@ kafdrop:
   # JVM options
   jvm:
     opts: "-Xms32M -Xmx64M"
+
+  # Adding connection to schema registry
+  cmdArgs: "--schemaregistry.connect=http://kafka-schema-registry:8081"
+
   # Ingress resource
   ingress:
     enabled: true
