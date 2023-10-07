@@ -3,7 +3,7 @@ name: linkerd
 version: 0.0.0
 dependencies:
   - name: linkerd-crds
-    version: 1.6.1
+    version: 1.8.0
     repository: https://helm.linkerd.io/stable
   - name: linkerd-control-plane
     version: 1.12.5
