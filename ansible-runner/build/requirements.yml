@@ -28,7 +28,7 @@ collections:
   - name: community.general
     version: 6.3.0
   - name: kubernetes.core
-    version: 2.3.2
+    version: 2.4.0
   - name: community.hashi_vault
     version: 4.1.0
   - name: community.sops
