@@ -28,4 +28,4 @@ collections:
   - name: kubernetes.core
     version: 2.3.2
   - name: community.hashi_vault
-    version: 4.0.0
+    version: 4.2.1

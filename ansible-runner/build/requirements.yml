@@ -30,7 +30,7 @@ collections:
   - name: kubernetes.core
     version: 2.3.2
   - name: community.hashi_vault
-    version: 4.1.0
+    version: 4.2.1
   - name: community.sops
     version: 1.6.0
   - name: ansible.posix
