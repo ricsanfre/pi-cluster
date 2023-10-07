@@ -99,3 +99,8 @@ apps:
     namespace: argocd
     path: argocd/bootstrap/argocd
     syncWave: 16
+    # Kafka App
+  - name: kafka
+    namespace: kafka
+    path: argocd/system/kafka
+    syncWave: 17
