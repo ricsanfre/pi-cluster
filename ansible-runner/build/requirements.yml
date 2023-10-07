@@ -34,4 +34,4 @@ collections:
   - name: community.sops
     version: 1.6.0
   - name: ansible.posix
-    version: 1.5.1
+    version: 1.5.4
