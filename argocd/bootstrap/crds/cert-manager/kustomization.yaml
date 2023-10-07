@@ -4,4 +4,4 @@ resources:
 # Cert-manager helm installation https://cert-manager.io/docs/installation/helm/
 # CDRs can be installed manually.
 # cert-manager helm chart to be installed with value installCDRs=false
-- https://github.com/cert-manager/cert-manager/releases/download/v1.12.2/cert-manager.crds.yaml
+- https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.crds.yaml
