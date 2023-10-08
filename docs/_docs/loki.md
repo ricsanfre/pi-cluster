@@ -10,7 +10,7 @@ last_modified_at: "01-11-2022"
 
 Loki architecture is displayed in the following picture (source: [Grafana documentation](https://grafana.com/docs/loki/latest/fundamentals/architecture/components)):
 
-![LOKI-Architecture-Components](https://grafana.com/docs/loki/latest/fundamentals/architecture/components/loki_architecture_components.svg)
+![LOKI-Architecture-Components](/assets/img/loki_architecture_components.svg)
 
 All Loki components are included within a single binary (docker image) that  supports three different deployments modes where the above components can be started in different PODs 
 

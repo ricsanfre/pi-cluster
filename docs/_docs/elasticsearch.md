@@ -2,7 +2,7 @@
 title: Log Analytics (Elasticsearch and Kibana)
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Pi Kuberentes cluster.
-last_modified_at: "27-07-2023"
+last_modified_at: "08-10-2023"
 
 ---
 
@@ -390,7 +390,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
     version: 8.1.2
     count: 2 # Elastic Search statefulset deployment with two replicas
     elasticsearchRef:
-      name: "elasticsearch"
+      name: "efk"
     http:  # NOTE disabling kibana automatic TLS configuration
       tls:
         selfSignedCertificate:
