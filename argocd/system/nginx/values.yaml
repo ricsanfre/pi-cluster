@@ -19,6 +19,12 @@ ingress-nginx:
     #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
     #   containerSecurityContext:
     #   allowPrivilegeEscalation: false
+    
+    # Allow snpippet anotations
+    # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
+    # linkerd-viz ingress uses this annotations
+    allowSnippetAnnotations: true
+
     config:
       # Open Tracing
       enable-opentracing: "true"
