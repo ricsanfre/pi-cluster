@@ -2,14 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 # Kube-prometheus-stack cdrs.
-# https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-# Helm chart version 47.6.1
-# kube-prometheus-helm chart to be installed with helm param --skip-cdrs
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-alertmanagerconfigs.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-alertmanagers.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-podmonitors.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-probes.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-prometheuses.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-prometheusrules.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-servicemonitors.yaml
-- https://raw.githubusercontent.com/prometheus-community/helm-charts/kube-prometheus-stack-47.6.1/charts/kube-prometheus-stack/crds/crd-thanosrulers.yaml
+# Prometheus-operator CRDs v0.6.8
+helmCharts:
+- name: prometheus-operator-crds
+  repo: https://prometheus-community.github.io/helm-charts
+  version: "6.0.0"
