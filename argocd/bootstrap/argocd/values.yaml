@@ -23,6 +23,8 @@ argo-cd:
           end
         end
         return hs
+      # Enabling Helm chart rendering with Kustomize
+      kustomize.buildOptions: --enable-helm
 
   server:
     # Ingress Resource. LoSnghorn dashboard.
