@@ -2,7 +2,7 @@
 title: Ingress Controller (NGINX)
 permalink: /docs/nginx/
 description: How to configure Nginx Ingress Contoller in our Pi Kuberentes cluster.
-last_modified_at: "26-07-2023"
+last_modified_at: "09-10-2023"
 ---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
@@ -133,6 +133,19 @@ controller:
 
 This configuration enables NGINX access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
 
+#### Enabling Inress snippet annotations
+
+Since nginx-ingress 1.9, by default is not allowed to include in Ingress resources `nginx.ingress.kubernetes.io/configuration-snippet` annotation. It need to be enabled in the helm chart configuration
+
+```yml
+controller:
+  # Allow snpippet anotations
+  # From v1.9 default value has chaged to false.
+  # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
+  # linkerd-viz ingress uses this annotations
+  allowSnippetAnnotations: true
+
+```
 
 ## Configuring access to cluster services with Ingress NGINX
 

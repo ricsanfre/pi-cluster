@@ -3,7 +3,7 @@ title: Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
-last_modified_at: "06-04-2023"
+last_modified_at: "13-10-2023"
 
 ---
 
@@ -379,7 +379,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
 
   The config map contains dynamic index templates that will be used by fluentd-elasticsearch-plugin configuration.
 
-- Step 4. Add fluentbit helm repo
+- Step 4. Add fluent helm repo
   ```shell
   helm repo add fluent https://fluent.github.io/helm-charts
   ```
@@ -421,9 +421,6 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
 
   ## Additional environment variables to set for fluentd pods
   env:
-    # Path to fluentd conf file
-    - name: "FLUENTD_CONF"
-      value: "../../../etc/fluent/fluent.conf"
     # Elastic operator creates elastic service name with format cluster_name-es-http
     - name:  FLUENT_ELASTICSEARCH_HOST
       value: efk-es-http
@@ -457,16 +454,8 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
     - name: LOKI_PASSWORD
       value: ""
 
-  # Volumes and VolumeMounts (only configuration files and certificates)
+  # Volumes and VolumeMounts (only ES template files and certificates)
   volumes:
-    - name: etcfluentd-main
-      configMap:
-        name: fluentd-main
-        defaultMode: 0777
-    - name: etcfluentd-config
-      configMap:
-        name: fluentd-config
-        defaultMode: 0777
     - name: fluentd-tls
       secret:
         secretName: fluentd-tls
@@ -477,10 +466,6 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
         defaultMode: 0777
 
   volumeMounts:
-    - name: etcfluentd-main
-      mountPath: /etc/fluent
-    - name: etcfluentd-config
-      mountPath: /etc/fluent/config.d/
     - name: etcfluentd-template
       mountPath: /etc/fluent/template
     - mountPath: /etc/fluent/certs
@@ -807,9 +792,6 @@ HPA autoscaling is also configured (`autoscaling.enabling: true`).
 ```yml
 ## Additional environment variables to set for fluentd pods
 env:
-  # Path to fluentd conf file
-  - name: "FLUENTD_CONF"
-    value: "../../../etc/fluent/fluent.conf"
   # Elastic operator creates elastic service name with format cluster_name-es-http
   - name:  FLUENT_ELASTICSEARCH_HOST
     value: efk-es-http
@@ -870,19 +852,20 @@ fluentd docker image and configuration files use the following environment varia
 
 
 
-#### Fluentd POD volumes and volume mounts
+#### Fluentd POD additional volumes and volume mounts
+
+By default helm chart defines volume mounts needed for storing fluentd config files
+
+Additionally volumes for ES templates and TLS certificates need to be configure and container logs directories volumes should be not mounted (fluentd is not reading container logs files).
+
 
 ```yml
-# Volumes and VolumeMounts (only configuration files and certificates)
+# Do not mount logs directories
+mountVarLogDirectory: false
+mountDockerContainersDirectory: false
+
+# Volumes and VolumeMounts (only ES template files and TLS certificates)
 volumes:
-  - name: etcfluentd-main
-    configMap:
-      name: fluentd-main
-      defaultMode: 0777
-  - name: etcfluentd-config
-    configMap:
-      name: fluentd-config
-      defaultMode: 0777
   - name: etcfluentd-template
     configMap:
       name: fluentd-template
@@ -892,10 +875,6 @@ volumes:
       secretName: fluentd-tls
 
 volumeMounts:
-  - name: etcfluentd-main
-    mountPath: /etc/fluent
-  - name: etcfluentd-config
-    mountPath: /etc/fluent/config.d/
   - name: etcfluentd-template
     mountPath: /etc/fluent/template
   - mountPath: /etc/fluent/certs
@@ -905,9 +884,9 @@ volumeMounts:
 
 ConfigMaps created by the helm chart are mounted in the fluentd container:
 
-- ConfigMap `fluentd-main`, containing fluentd main config file (`fluent.conf`), is mounted as `/etc/fluent` volume.
+- ConfigMap `fluentd-main`, created by default by helm chart, containing fluentd main config file (`fluent.conf`), is mounted as `/etc/fluent` volume.
 
-- ConfigMap `fluentd-config`, containing fluentd config files included by main config file is mounted as `/etc/fluent/config.d`
+- ConfigMap `fluentd-config`, created by default by helm chart, containing fluentd config files included by main config file is mounted as `/etc/fluent/config.d`
 
 - ConfigMap `fluentd-template`, containing ES index templates used by fluentd-elasticsearch-plugin, mounted as `/etc/fluent/template`. This configMap is generated in step 3 of the installation procedure.
 

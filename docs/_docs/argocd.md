@@ -63,6 +63,9 @@ ArgoCD can be installed through helm chart
           end
         end
         return hs
+      # Enabling Helm chart rendering with Kustomize
+      kustomize.buildOptions: --enable-helm
+
   server:
     # Ingress Resource.
     ingress:
