@@ -243,16 +243,12 @@ fluentd:
     - name: LOKI_PASSWORD
       value: ""
 
-  # Volumes and VolumeMounts (only configuration files and certificates)
+  # Do not mount logs directories
+  mountVarLogDirectory: false
+  mountDockerContainersDirectory: false
+
+  # Volumes and VolumeMounts (only template and and certificates)
   volumes:
-    - name: etcfluentd-main
-      configMap:
-        name: fluentd-main
-        defaultMode: 0777
-    - name: etcfluentd-config
-      configMap:
-        name: fluentd-config
-        defaultMode: 0777
     - name: fluentd-tls
       secret:
         secretName: fluentd-tls
@@ -262,10 +258,6 @@ fluentd:
         defaultMode: 0777
 
   volumeMounts:
-    - name: etcfluentd-main
-      mountPath: /etc/fluent
-    - name: etcfluentd-config
-      mountPath: /etc/fluent/config.d/
     - name: etcfluentd-template
       mountPath: /etc/fluent/template
     - mountPath: /etc/fluent/certs
