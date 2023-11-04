@@ -2,7 +2,7 @@
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
 description: How to configure Ingress Contoller based on Traefik in our Pi Kuberentes cluster.
-last_modified_at: "15-04-2023"
+last_modified_at: "04-11-2023"
 ---
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
@@ -613,12 +613,12 @@ metadata:
 spec:
   basicAuth:
     secret: basic-auth-secret
-    removeHeaders: true
+    removeHeader: true
 ```
 
 {{site.data.alerts.note}}
 
-`removeHeaders` option to true removes the authorization header before forwarding the request to backend service.
+`removeHeader` option to true removes the authorization header before forwarding the request to backend service.
 
 In some cases, like linkerd-viz, where basic auth midleware is used. Integration with Grafana fails if this option is not set to true. Grafana does not try to authenticate the user by other means if basic auth headers are present and returns a 401 unauthorized error. See [issue #122](https://github.com/ricsanfre/pi-cluster/issues/122)
 
