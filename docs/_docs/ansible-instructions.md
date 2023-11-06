@@ -290,7 +290,7 @@ Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `g
 ```shell
 make configure-os-backup
 ```
-Minio S3 server running in `node1` will be used as backup backend.
+Minio S3 server VM, `s3`, hosted in Public Cloud (Oracle Cloud Infrastructure), will be used as backup backend.
 
 {{site.data.alerts.note}}
 
