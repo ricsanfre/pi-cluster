@@ -6,7 +6,7 @@ dependencies:
     version: v1.13.1
     repository: https://charts.jetstack.io
   - name: trust-manager
-    version: v0.6.0
+    version: v0.7.0
     repository: https://charts.jetstack.io
   - name: cert-manager-webhook-ionos
     version: 1.0.2
