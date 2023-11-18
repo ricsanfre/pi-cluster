@@ -13,19 +13,25 @@ roles:
   - name: ricsanfre.iscsi_target
     version: v1.0.0
   - name: ricsanfre.iscsi_initiator
-    version: v1.1.0
+    version: v1.1.1
   - name: ricsanfre.k8s_cli
     version: v1.0.0
   - name: ricsanfre.fluentbit
     version: v1.0.4
   - name: ricsanfre.minio
-    version: v1.1.3
+    version: v1.1.4
   - name: ricsanfre.backup
     version: v1.1.3
   - name: ricsanfre.vault
     version: v1.0.4
 collections:
+  - name: community.general
+    version: 8.0.1
   - name: kubernetes.core
-    version: 2.3.2
+    version: 2.4.0
   - name: community.hashi_vault
-    version: 4.0.0
+    version: 5.0.1
+  - name: community.sops
+    version: 1.6.0
+  - name: ansible.posix
+    version: 1.5.4
