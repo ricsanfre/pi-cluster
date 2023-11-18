@@ -9,7 +9,7 @@ dependencies:
     version: 0.4.4
     repository: https://fluent.github.io/helm-charts
   - name: fluent-bit
-    version: 0.39.0
+    version: 0.40.0
     repository: https://fluent.github.io/helm-charts
   - name: loki
     version: 5.29.0
