@@ -3,6 +3,7 @@
 - name: Bootstrap Cluster
   hosts: node1
   gather_facts: false
+  become: false
 
   collections:
     - kubernetes.core
@@ -35,10 +36,10 @@
       become: true
 
     # Install Helm diff plugin to have a better idempotence check
-    - name: Intall Helm Plugin
-      kubernetes.core.helm_plugin:
-        plugin_path: "https://github.com/databus23/helm-diff"
-        state: present
+    # - name: Intall Helm Plugin
+    #   kubernetes.core.helm_plugin:
+    #     plugin_path: "https://github.com/databus23/helm-diff"
+    #     state: present
 
     - name: Include vault variables
       include_vars: "vars/vault.yml"
@@ -69,8 +70,12 @@
         - "bootstrap/argocd"
 
     - name: Install CRDs
-      ansible.builtin.command:
-        cmd: kubectl apply --server-side --kustomize  /tmp/charts/crds
+      ansible.builtin.shell: |
+        set -o pipefail
+        kubectl kustomize /tmp/charts/crds --enable-helm \
+        | kubectl apply --server-side -f -
+      args:
+        executable: /bin/bash
 
     - name: Update argo-cd helm dependency.
       ansible.builtin.command:
