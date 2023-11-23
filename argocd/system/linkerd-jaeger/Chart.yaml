@@ -3,5 +3,5 @@ name: linkerd-jaeger
 version: 0.0.0
 dependencies:
   - name: linkerd-jaeger
-    version: 30.12.2
+    version: 30.12.6
     repository: https://helm.linkerd.io/stable
