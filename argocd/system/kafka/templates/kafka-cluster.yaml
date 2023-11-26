@@ -30,14 +30,14 @@ spec:
         type: persistent-claim
         class: {{ .Values.kafka_storage_class }}
         size: {{ .Values.kafka_storage_size }}
-        deleteClaim: false
+        deleteClaim: true
 
   zookeeper:
     replicas: {{ .Values.kafka_zookeeper_replicas }}
     storage:
       type: persistent-claim
       size: {{ .Values.kafka_zookeeper_storage_size }}
-      deleteClaim: false
+      deleteClaim: true
       class: {{ .Values.kafka_zookeeper_storage_class }}
   entityOperator:
     topicOperator: {}
