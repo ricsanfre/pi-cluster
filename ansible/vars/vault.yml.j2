@@ -15,6 +15,21 @@ vault:
     admin:
       user: admin
       password: {{ traefik_basic_auth_password }}
+  # Keycloak
+  keycloak:
+    admin:
+      user: admin
+      password: {{ keycloak_admin_password }}
+    picluster-admin:
+      user: piadmin
+      password: {{ keycloak_pi_password }}
+  # Oauth2-Proxy
+  oauth2-proxy:
+    oauth2:
+      client-id: oauth2-proxy
+      client-secret: {{ oauth2_proxy_client_secret }}
+    cookie:
+      cookie-secret: {{ oauth2_proxy_cookie }}
   # Minio S3 secrets
   minio:
     root:
@@ -53,6 +68,14 @@ vault:
     admin:
      user: admin
      password: {{ grafana_admin_password }}
+    oauth2:
+      client-id: grafana
+      client-secret: {{ grafana_client_secret }}
+  # Kibana
+  kibana:
+    oauth2:
+      client-id: kibana
+      client-secret: {{ kibana_client_secret }}
   # Certmanager
   certmanager:
     ionos:
