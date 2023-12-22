@@ -29,7 +29,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "proxy-oauth2",
+            "included.client.audience": "${PROXY_OAUTH_CLIENT_ID}",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
