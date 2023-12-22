@@ -1,6 +1,6 @@
 
 ########################
-# Keycloak  subchart
+# Keycloak  sub-chart
 ########################
 keycloak:
   global:
@@ -49,7 +49,4 @@ keycloak:
       nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
     hostname: sso.picluster.ricsanfre.com
-    tls:
-      - hosts:
-          - sso.picluster.ricsanfre.com
-        secretName: keycloak-tls
+    tls: true
