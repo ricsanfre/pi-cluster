@@ -1,0 +1,99 @@
+{
+  "realm": "picluster",
+  "accessTokenLifespan": 6000,
+  "enabled": true,
+  "rememberMe": true,
+  "resetPasswordAllowed": true,
+  "clients": [
+    {
+      "clientId": "${PROXY_OAUTH_CLIENT_ID}",
+      "name": "Proxy OAuth 2.0",
+      "description": "Proxy OAuth 2.0",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${PROXY_OAUTH_CLIENT_SECRET}",
+      "redirectUris": [
+        "https://oauth2-proxy.picluster.ricsanfre.com/oauth2/callback"
+      ],
+      "webOrigins": [
+        "https://oauth2-proxy.picluster.ricsanfre.com"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "aud-mapper-proxy-oauth2",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "proxy-oauth2",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "access": {
+        "view": true,
+        "configure": true,
+        "manage": true
+      }
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "composite": false
+      },
+      {
+        "name": "user",
+        "composite": false
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "${PI_ADMIN_USERNAME}",
+      "email": "${PI_ADMIN_PASSWORD}",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password"
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ],
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "create-client"
+        ]
+      }
+    }
+  ]
+}
