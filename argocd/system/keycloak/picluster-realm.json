@@ -70,13 +70,13 @@
   "users": [
     {
       "username": "${PI_ADMIN_USERNAME}",
-      "email": "${PI_ADMIN_PASSWORD}",
+      "email": "admin@picluster.ricsanfre.com",
       "enabled": true,
       "emailVerified": false,
       "credentials": [
         {
           "type": "password",
-          "value": "password"
+          "value": "${PI_ADMIN_PASSWORD}"
         }
       ],
       "realmRoles": [
