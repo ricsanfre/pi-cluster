@@ -33,6 +33,9 @@
 - title: Certificate Management
   docs:
   - certmanager
+- title: Single Sign-On
+  docs:
+  - sso
 - title: Storage
   docs:
   - longhorn
