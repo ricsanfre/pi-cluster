@@ -15,5 +15,5 @@ dependencies:
     version: 5.38.0
     repository: https://grafana.github.io/helm-charts
   - name: prometheus-elasticsearch-exporter
-    version: 5.3.1
+    version: 5.4.0
     repository: https://prometheus-community.github.io/helm-charts
