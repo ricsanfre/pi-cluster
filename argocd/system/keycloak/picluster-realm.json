@@ -53,6 +53,51 @@
         "configure": true,
         "manage": true
       }
+    },
+    {
+      "clientId": "${GRAFANA_OAUTH_CLIENT_ID}",
+      "name": "Grafana",
+      "description": "Grafana",
+      "rootUrl": "https://monitoring.picluster.ricsanfre.com/grafana",
+      "adminUrl": "https://monitoring.picluster.ricsanfre.com/grafana",
+      "baseUrl": "https://monitoring.picluster.ricsanfre.com/grafana",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${GRAFANA_OAUTH_CLIENT_SECRET}",
+      "redirectUris": [
+        "https://monitoring.picluster.ricsanfre.com/grafana/login/generic_oauth"
+      ],
+      "webOrigins": [
+        "https://monitoring.picluster.ricsanfre.com/grafana"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "frontchannelLogout": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "access": {
+        "view": true,
+        "configure": true,
+        "manage": true
+      }
     }
   ],
   "roles": {
@@ -72,7 +117,7 @@
       "username": "${PI_ADMIN_USERNAME}",
       "email": "admin@picluster.ricsanfre.com",
       "enabled": true,
-      "emailVerified": false,
+      "emailVerified": true,
       "credentials": [
         {
           "type": "password",
@@ -80,20 +125,9 @@
         }
       ],
       "realmRoles": [
-        "admin"
-      ],
-      "clientRoles": {
-        "account": [
-          "manage-account",
-          "view-profile"
-        ],
-        "realm-management": [
-          "manage-users",
-          "view-users",
-          "query-users",
-          "create-client"
-        ]
-      }
+        "admin",
+        "default-roles-picluster"
+      ]
     }
   ]
 }

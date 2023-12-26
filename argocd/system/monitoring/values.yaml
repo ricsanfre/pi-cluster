@@ -141,14 +141,31 @@ kube-prometheus-stack:
       existingSecret: grafana
       userKey: admin-user
       passwordKey: admin-password
-    # Configuring /grafana subpath
+    # Add grafana environment variables from secret
+    envFromSecret: grafana-env-secret
     grafana.ini:
       server:
+        # Configuring /grafana subpath
         domain: monitoring.picluster.ricsanfre.com
-        root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+        root_url: "https://%(domain)s/grafana/"
         # rewrite rules configured in nginx rules
         # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
         serve_from_sub_path: false
+      # SSO configuration
+      auth.generic_oauth:
+        enabled: true
+        name: Keycloak-OAuth
+        allow_sign_up: true
+        client_id: grafana
+        client_secret: supersecret
+        scopes: openid email profile offline_access roles
+        email_attribute_path: email
+        login_attribute_path: username
+        name_attribute_path: full_name
+        auth_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/auth
+        token_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/token
+        api_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/userinfo
+        role_attribute_path: contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
     # Set admin password
     # adminPassword: ""
     # Install required plugins
