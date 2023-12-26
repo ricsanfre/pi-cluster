@@ -15,7 +15,11 @@ ingress:
     # tlsIssuer: ca
   # Enabling nginx basic authorization, reusing global nginx basic auth secret
   basicAuth:
+    enable: false
+  # Enabling oauth2 through oauth2-proxy
+  oauth2:
     enable: true
+    proxy: https://oauth2-proxy.picluster.ricsanfre.com
 
 ########################
 # linkerd-viz subchart
