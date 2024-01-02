@@ -134,6 +134,16 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Sync Kubernetes Secrets from Hashicorp Vault</td>
     </tr>
     <tr>
+        <td><img width="32" src="/assets/img/logos/keycloak.svg" alt="keycloak logo"></td>
+        <td><a href="https://www.keycloak.org/">Keycloak</a></td>
+        <td>Identity Access Management</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="/assets/img/logos/OAuth2-proxy.svg" alt="oauth2-proxy logo"></td>
+        <td><a href="https://oauth2-proxy.github.io/oauth2-proxy/">OAuth2.0 Proxy</a></td>
+        <td>OAuth2.0 Proxy</td>
+    </tr>
+    <tr>
         <td><img width="32" src="docs/assets/img/logos/velero.svg"></td>
         <td><a href="https://velero.io/">Velero</a></td>
         <td>Kubernetes Backup and Restore solution</td>

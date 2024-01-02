@@ -2,27 +2,34 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "18-12-2023"
+last_modified_at: "31-12-2023"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
 Keycloak is an opensource Identity Access Management solution, providing centralized authentication and authorization 
 services based on standard protocols and provides support for OpenID Connect, OAuth 2.0, and SAML.
 
+![keycloak-sso](/assets/img/keycloak-sso.png)
+
+
 Some of the GUIs of the Pi Cluster, Grafana or Kibana, SSO can be configured, so authentication can be done
 using Keycloak instead of local accounts.
 
-For those applications not providing any authentication capability (i.e. Longhorn, Prometheus), Ingress controller-based  
-External Authentication can be configured.
+{{site.data.alerts.note}}
+
+Elasticsearch/Kibana SSO integration using OpenID Connect is not available in community edition.
+So, SSO won't be configured for this component.
+Grafana SSO capability is enabled configuring OAuth2.0/OpenID Connect authentication.
+Follow instructions in [Documentation: Monitoring (Prometheus)](/docs/prometheus/) on how to integrate Grafana with Keycloak.
+
+{{site.data.alerts.end}}
+
+For those applications not providing any authentication capability (i.e. Longhorn, Prometheus, Linkerd-viz), Ingress controller-based External Authentication can be configured.
 Ingress NGINX support OAuth2-based external authentication mechanism using [Oauth2-Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
 See [Ingress NGINX external Oauth authentication document](https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/)
 Oauth2-proxy can be integrated with OpenId-Connect IAM, such us Keycloak.
 
-
-{{site.data.alerts.note}}
-
-
-{{site.data.alerts.end}}
+![picluster-sso](/assets/img/picluster-sso.png)
 
 ## Keycloak Installation
 
@@ -204,9 +211,15 @@ Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](ht
     OAuth2 proxy can be set up to pass both the access and ID JWT tokens to your upstream services. 
   - Save the configuration.
 
+
+
+
 ### Automatic import of Realm configuration
 
 Realm configuration can be exported or imported to/from JSON files.
+
+Once realm and clients are configured manually configuration can be exported to JSON file.
+See [Keycloak export import configuration](https://www.keycloak.org/server/importExport).
 
 Realm configuration can be imported automatically from json file when deploying helm chart.
 See [Importing realm on start-up](https://www.keycloak.org/server/importExport#_importing_a_realm_during_startup)
@@ -224,9 +237,7 @@ New ConfigMap, containing the JSON files to be imported need to be mounted by ke
     namespace: keycloak
   data:
     picluster-realm.json: |  
-      {
-        // JSON file
-      }
+      # JSON file
   ```
 
 - Step 3: Apply configMap
@@ -382,3 +393,14 @@ OAuth credentials (clientID, client secret) and cookie secret can be provided fr
     # clientSecret: "supersecreto"
     # cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
   ```
+  
+## Configure Ingress external authentication
+
+Following annotations need to be added to any Ingress resource to use Oauth2-proxy authentication
+
+```yaml
+nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.picluster.ricsanfre.com/oauth2/start?rd=https://$host$request_uri
+nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+```
