@@ -43,6 +43,9 @@ oauth2-proxy:
   sessionStorage:
     # Can be one of the supported session storage cookie|redis
     type: redis
+    redis:
+      existingSecret: oauth2-proxy-secret
+      passwordKey: redis-password
   # Enabling redis backend installation
   redis:
     enabled: true
