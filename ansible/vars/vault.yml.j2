@@ -10,8 +10,8 @@ vault:
   cluster:
     k3s:
      token: {{ k3s_token }}
-  # Traefik secrets
-  traefik:
+  # Ingress secrets
+  ingress:
     admin:
       user: admin
       password: {{ traefik_basic_auth_password }}
