@@ -211,9 +211,6 @@ Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](ht
     OAuth2 proxy can be set up to pass both the access and ID JWT tokens to your upstream services. 
   - Save the configuration.
 
-
-
-
 ### Automatic import of Realm configuration
 
 Realm configuration can be exported or imported to/from JSON files.
@@ -364,7 +361,17 @@ New ConfigMap, containing the JSON files to be imported need to be mounted by ke
 
 ### Alternative installation using external secret (GitOps)
 
-OAuth credentials (clientID, client secret) and cookie secret can be provided from external secret
+OAuth credentials (clientID, client secret), cookie secret and redis password can be provided from external secret
+
+{{site.data.alerts.note}}
+
+Redis backend is installed using redis bitnami helm sub-chart. This helm chart creates a random credential for redis backend.
+When using ArgoCD, helm native commands, like `random` or `lookup`, used by the helm chart for generating this random secret are not supported and so oauth2-proxy fails to save any data to redis.
+See [issue bitnami@charts#18130](https://github.com/bitnami/charts/issues/18130) and [issue argocd@argocd#14944](https://github.com/argoproj/argo-cd/issues/14944)
+
+As workaround, the issue can be solved providing the credentials in a external secrets.
+
+{{site.data.alerts.end}}
 
 - Step 1: Create secret containing oauth2-proxy credentials:
 
@@ -378,7 +385,8 @@ OAuth credentials (clientID, client secret) and cookie secret can be provided fr
   data:
     client-id: <`echo -n 'oauth2-proxy' | base64`> 
     client-secret:  <`echo -n 'supersecret | base64`>
-    cookie-secret: <`openssl rand -base64 32 | head -c 32 | base64`> 
+    cookie-secret: <`openssl rand -base64 32 | head -c 32 | base64`>
+    redis-password: <`openssl rand -base64 32 | head -c 32 | base64`>
   ```
   
   client-secret value should be taken from Keycloak configuration
@@ -392,6 +400,21 @@ OAuth credentials (clientID, client secret) and cookie secret can be provided fr
     # clientID: "oauth2-proxy"
     # clientSecret: "supersecreto"
     # cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
+  
+  sessionStorage:
+    type: redis
+    redis:
+      existingSecret: oauth2-proxy-secret
+      passwordKey: redis-password
+  
+  redis:
+    enabled: true
+    # standalone redis. No cluster
+    architecture: standalone
+    # Get redis password from existing secret using key redis-password
+    auth:
+      existingSecret: oauth2-proxy-secret
+      existingSecretPasswordKey: redis-password
   ```
   
 ## Configure Ingress external authentication
