@@ -34,7 +34,7 @@ linkerd-viz:
     enabled: false
   # External Grafana
   grafana:
-    url: monitoring-grafana.monitoring.svc.cluster.local
+    externalUrl: https://monitoring.picluster.ricsanfre.com/grafana/
   # Disabling DNS rebinding protection. Only needed with Traefik Ingress
   # dashboard:
   #   enforcedHostRegexp: .*
