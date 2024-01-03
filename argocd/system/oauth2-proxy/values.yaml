@@ -48,6 +48,9 @@ oauth2-proxy:
     enabled: true
     # standalone redis. No cluster
     architecture: standalone
+    auth:
+      existingSecret: oauth2-proxy-secret
+      existingSecretPasswordKey: redis-password
 
   ingress:
     enabled: true
