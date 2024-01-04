@@ -1,6 +1,6 @@
 gitops:
   repo: https://github.com/ricsanfre/pi-cluster
-  revision: sso
+  revision: master
 
 # List of application corresponding to different sync waves
 apps:
