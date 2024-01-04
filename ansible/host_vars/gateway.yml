@@ -37,6 +37,14 @@ dnsmasq_additional_dns_hosts:
     desc: "Monitor server"
     hostname: monitoring
     ip: 10.0.0.100
+  key_cloak:
+    desc: "Keycloak server"
+    hostname: sso
+    ip: 10.0.0.100
+  oauth2_proxy:
+    desc: "Oauth2 Proxy"
+    hostname: oauth2-proxy
+    ip: 10.0.0.100
   fluentd:
     desc: "Fluentd server"
     hostname: fluentd

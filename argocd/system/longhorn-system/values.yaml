@@ -39,10 +39,13 @@ longhorn:
 
     ## Ingress annotations
     annotations:
-      # Enable basic auth
-      nginx.ingress.kubernetes.io/auth-type: basic
-      # Secret defined in nginx namespace
-      nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
+
+      # Enable external authentication using Oauth2-proxy
+      nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.picluster.ricsanfre.com/oauth2/start?rd=https://$host$request_uri
+      nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+
       # Linkerd configuration. Configure Service as Upstream
       nginx.ingress.kubernetes.io/service-upstream: "true"
       # Enable cert-manager to create automatically the SSL certificate and store in Secret

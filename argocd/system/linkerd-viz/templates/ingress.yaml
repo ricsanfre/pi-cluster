@@ -14,6 +14,13 @@ metadata:
     # Secret defined in nginx namespace
     nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
 {{- end }}
+{{- if .Values.ingress.oauth2.enable }}
+    # Enable external authentication using Oauth2-proxy
+    nginx.ingress.kubernetes.io/auth-signin: {{ .Values.ingress.oauth2.proxy }}/oauth2/start?rd=https://$host$request_uri
+    nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+{{- end }}
     # Configuring Ingress for linkerd-viz DNS rebind protection
     # https://linkerd.io/2.13/tasks/exposing-dashboard/#nginx
     nginx.ingress.kubernetes.io/upstream-vhost: $service_name.$namespace.svc.cluster.local:8084

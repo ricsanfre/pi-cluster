@@ -1,12 +1,12 @@
 ---
 title: Ingress Controller (NGINX)
 permalink: /docs/nginx/
-description: How to configure Nginx Ingress Contoller in our Pi Kuberentes cluster.
+description: How to configure Nginx Ingress Controller in our Pi Kubernetes cluster.
 last_modified_at: "09-10-2023"
 ---
 
-All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
-K3S default installation comes with Traefik HTTP reverse proxy which is a Kuberentes compliant Ingress Controller.
+All HTTP/HTTPS traffic coming to K3S exposed services should be handled by a Ingress Controller.
+K3S default installation comes with Traefik HTTP reverse proxy which is a Kubernetes compliant Ingress Controller.
 
 Instead of using Traefik, [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/) can be deployed. Ingress nginx is an Ingress controller for Kubernetes using [NGINX](https://nginx.org/) as a reverse proxy and load balancer.
 

@@ -56,26 +56,34 @@ apps:
     namespace: longhorn-system
     path: argocd/system/longhorn-system
     syncWave: 8
+  - name: keycloak
+    namespace: keycloak
+    path: argocd/system/keycloak
+    syncWave: 9
+  - name: oauth2-proxy
+    namespace: oauth2-proxy
+    path: argocd/system/oauth2-proxy
+    syncWave: 10
     # Minio Object Storage
   - name: minio
     namespace: minio
     path: argocd/system/minio
-    syncWave: 9
+    syncWave: 11
     # Velero Backup
   - name: velero
     namespace: velero
     path: argocd/system/velero
-    syncWave: 10
+    syncWave: 12
     # Logging: Loki and EFK stack
   - name: logging
     namespace: logging
     path: argocd/system/logging
-    syncWave: 11
+    syncWave: 13
     # Kube-prometheus-stack
   - name: monitoring
     namespace: monitoring
     path: argocd/system/monitoring
-    syncWave: 12
+    syncWave: 14
     helm:
       # skip installation kube-prometheus-stack CDRs
       skipCrds: true
@@ -83,24 +91,24 @@ apps:
   - name: linkerd-viz
     namespace: linkerd-viz
     path: argocd/system/linkerd-viz
-    syncWave: 13
+    syncWave: 15
     # Tracing: Tempo
   - name: tracing
     namespace: tracing
     path: argocd/system/tracing
-    syncWave: 14
+    syncWave: 16
     # Linkerd-jaeger
   - name: linkerd-jaeger
     namespace: linkerd-jaeger
     path: argocd/system/linkerd-jaeger
-    syncWave: 15
+    syncWave: 17
     # Argo CD App
   - name: argocd
     namespace: argocd
     path: argocd/bootstrap/argocd
-    syncWave: 16
+    syncWave: 18
     # Kafka App
   - name: kafka
     namespace: kafka
     path: argocd/system/kafka
-    syncWave: 17
+    syncWave: 19

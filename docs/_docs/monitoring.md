@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "09-10-2023"
+last_modified_at: "04-01-2024"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -697,40 +697,182 @@ grafana:
       searchNamespace: ALL
 ```
 
+#### Keycloak integration: Single sign-on configuration
+
+Grafana can be integrated with IAM solution, Keycloak, to enable SSO functionality.
+
+Keycloak need to be installed following procedure described here: [SSO with KeyCloak and Oauth2-Proxy](/docs/sso/)
+
+##### Keycloak configuration: Configure Grafana Client
+
+Grafana client application need to be configured within 'picluster' realm.
+
+Procedure in Keycloak documentation: [Keycloak: Creating an OpenID Connect client](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-oidc-client_server_administration_guide)
+
+Follow procedure in [Grafana documentation: Configure Keycloak OAuth2 authentication](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/keycloak/) to provide the proper configuration.
+
+- Step 1: Create realm roles corresponding with [Grafana's roles](https://grafana.com/docs/grafana/latest/administration/roles-and-permissions/): `editor`, `viewer` and `admin`
+- Step 2: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
+  Clients -> Create client
+
+  ![grafana-client-1](/assets/img/grafana-keycloak-1.png)
+
+  - Provide the following basic configuration:
+    - Client Type: 'OpenID Connect'
+    - Client ID: 'grafana'
+  - Click Next.
+
+  ![grafana-client-2](/assets/img/grafana-keycloak-2.png)
+
+  - Provide the following 'Capability config'
+    - Client authentication: 'On'
+    - Authentication flow
+      - Standard flow 'selected'
+      - Direct access grants 'selected'
+  - Click Next
+
+  ![grafana-client-3](/assets/img/grafana-keycloak-3.png)
+
+  - Provide the following 'Logging settings'
+    - Valid redirect URIs: https://monitoring.picluster.ricsanfre.com/grafana/login/generic_oauth
+    - Home URL: https://monitoring.picluster.ricsanfre.com/grafana
+    - Root URL: https://monitoring.picluster.ricsanfre.com/grafana
+    - Web Origins: https://monitoring.picluster.ricsanfre.com/grafana
+  - Save the configuration.
+
+- Step 3: Locate grafana client credentials
+
+  Under the Credentials tab you will now be able to locate grafana client's secret.
+
+  ![grafana-client-4](/assets/img/grafana-keycloak-4.png)
+
+- Step 4: Configure a dedicated role mapper for the client
+
+  - Navigate to Clients -> grafana client -> Client scopes.
+
+    ![grafana-client-5](/assets/img/grafana-client-5.png)
+
+  - Access the dedicated mappers pane by clicking 'grafana-dedicated', located under Assigned client scope.
+    (It should have a description of "Dedicated scope and mappers for this client")
+  - Click on 'Configure a new mapper' and select 'User Realm Role'
+
+    ![grafana-client-6](/assets/img/grafana-client-6.png)
+
+    ![grafana-client-7](/assets/img/grafana-client-7.png)
+
+    ![grafana-client-8](/assets/img/grafana-client-8.png)
+
+  - Provide following data:
+    - Name 'roles'
+    - Multivalued 'On'
+    - Token Claim Name: roles
+    - Add to ID token 'On'
+    - Add to access token 'On'
+    - Add to userinfo: 'On'
+  - Save the configuration.
+
+- Step 5: Create user and associate any of the roles created in Step 1
+  
+
+##### Grafana SSO configuration
+
+Add the following configuration to grafana helm chart
+
+```yaml
+  grafana:
+    grafana.ini:
+      server:
+        # Configuring /grafana subpath
+        domain: monitoring.picluster.ricsanfre.com
+        root_url: "https://%(domain)s/grafana/"
+        # rewrite rules configured in nginx rules
+        # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
+        serve_from_sub_path: false
+      # SSO configuration
+      auth.generic_oauth:
+        enabled: true
+        name: Keycloak-OAuth
+        allow_sign_up: true
+        client_id: grafana
+        client_secret: <supersecret>
+        scopes: openid email profile offline_access roles
+        email_attribute_path: email
+        login_attribute_path: username
+        name_attribute_path: full_name
+        auth_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/auth
+        token_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/token
+        api_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/userinfo
+        role_attribute_path: contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
+        signout_redirect_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.picluster.ricsanfre.com%2Fgrafana%2Flogin%2Fgeneric_oauth
+```
+
+Where `client_secret` is obtained from keycloak client configuration: step 3. 
+
+Single logout is configured: `signout_redirect_url`
+
+
 #### GitOps installation (ArgoCD)
 
-As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding Grafana's admin password within Helm chart values, admin credentials can be in stored in an existing Secret.
+As an alternative, for GitOps deployments (using ArgoCD), credentials should not be set in Helm chart values.yaml file
 
-The following secret need to be created:
-```yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: grafana
-  namespace: grafana
-type: Opaque
-data:
-  admin-user: < grafana_admin_user | b64encode>
-  admin-password: < grafana_admin_password | b64encode>
-```
-For encoding the admin and passord execute the following commands:
-```shell
-echo -n "<grafana_admin_user>" | base64
-echo -n "<grafana_admin_password>" | base64
-```
-And the following Helm values has to be provided:
+- Grafana's admin credentials can be in stored in an existing Secret.
 
-```yml
-grafana:
-  # Use an existing secret for the admin user.
-  adminUser: ""
-  adminPassword: ""
-  admin:
-    existingSecret: grafana
-    userKey: admin-user
-    passwordKey: admin-password
-```
+  Create the following secret:
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: grafana
+    namespace: grafana
+  type: Opaque
+  data:
+    admin-user: < grafana_admin_user | b64encode>
+    admin-password: < grafana_admin_password | b64encode>
+  ```
+  
+  For encoding the admin and password values execute the following commands:
+  
+  ```shell
+  echo -n "<grafana_admin_user>" | base64
+  echo -n "<grafana_admin_password>" | base64
+  ```
+  
+  Add the following configuration to Helm values.yaml:
+  
+  ```yml
+  grafana:
+    # Use an existing secret for the admin user.
+    adminUser: ""
+    adminPassword: ""
+    admin:
+      existingSecret: grafana
+      userKey: admin-user
+      passwordKey: admin-password
+  ```
+  
+- Keycloak's client secret can be stored also in a Secret.
+  [Grafana configuration parameters in .ini file can be overridden with environment variables](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#override-configuration-with-environment-variables)
 
+  Create a secret containing environment variable `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET`:
+
+  ```yml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: grafana-env-secret
+    namespace: grafana
+  type: Opaque
+  data:
+    GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: < grafana-client-secret | b64encode>
+  ```
+  Add the following Helm values configuration:
+
+  ```yml
+  grafana:
+    # Add grafana environment variables from secret
+    envFromSecret: grafana-env-secret
+  ```
+  
 #### Provisioning Dashboards automatically
 
 [Grafana dashboards](https://grafana.com/docs/grafana/latest/dashboards/) can be configured through provider definitions (yaml files) located in a provisioning directory (`/etc/grafana/provisioning/dashboards`). This yaml file contains the directory from where dashboards in json format can be loaded. See Grafana Tutorial: [Provision dashboards and data sources](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)

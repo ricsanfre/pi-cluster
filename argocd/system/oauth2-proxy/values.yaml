@@ -1,0 +1,76 @@
+########################
+# oauth2-proxy  sub-chart
+########################
+oauth2-proxy:
+  config:
+    # Add config annotations
+    annotations: {}
+    # OAuth client ID
+    # Follow instructions to configure Keycloak client
+    # https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider#keycloak-oidc-auth-provider
+
+    # clientID, clientSecret and cookieSecret stored in a Secret
+    existingSecret: oauth2-proxy-secret
+    #  clientID: "proxy-oauth2"
+    #  # OAuth client secret
+    #  clientSecret: "Au03YXpH2wVGexoEtkrNoYCPQDEEFATr"
+    #  # Create a new secret with the following command
+    #  # openssl rand -base64 32 | head -c 32 | base64
+    #  cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
+    # The name of the cookie that oauth2-proxy will create
+    # If left empty, it will default to the release name
+    cookieName: "oauth2-proxy"
+
+    # Config file
+    configFile: |-
+      # Provider config
+      provider="keycloak-oidc"
+      provider_display_name="Keycloak"
+      redirect_url="https://oauth2-proxy.picluster.ricsanfre.com/oauth2/callback"
+      oidc_issuer_url="https://sso.picluster.ricsanfre.com/realms/picluster"
+      code_challenge_method="S256"
+      ssl_insecure_skip_verify=true
+      # Upstream config
+      http_address="0.0.0.0:4180"
+      upstreams="file:///dev/null"
+      email_domains=["*"]
+      cookie_domains=["picluster.ricsanfre.com"]
+      cookie_secure=false
+      scope="openid"
+      whitelist_domains=[".picluster.ricsanfre.com"]
+      insecure_oidc_allow_unverified_email="true"
+
+  sessionStorage:
+    # Can be one of the supported session storage cookie|redis
+    type: redis
+    redis:
+      existingSecret: oauth2-proxy-secret
+      passwordKey: redis-password
+  # Enabling redis backend installation
+  redis:
+    enabled: true
+    # standalone redis. No cluster
+    architecture: standalone
+    auth:
+      existingSecret: oauth2-proxy-secret
+      existingSecretPasswordKey: redis-password
+
+  ingress:
+    enabled: true
+    className: "nginx"
+    pathType: Prefix
+    path: /oauth2
+    annotations:
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      # Possible Cluster-Issuer values:
+      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+      #   * 'ca-issuer' (CA-signed certificate, not valid)
+      cert-manager.io/cluster-issuer: letsencrypt-issuer
+      cert-manager.io/common-name: oauth2-proxy.picluster.ricsanfre.com
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    hosts:
+      - oauth2-proxy.picluster.ricsanfre.com
+    tls:
+      - hosts:
+          - oauth2-proxy.picluster.ricsanfre.com
+        secretName: oauth2-proxy-tls

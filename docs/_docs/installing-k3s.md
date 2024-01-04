@@ -187,7 +187,7 @@ In this configuration, each agent node is registered to the same server node. A 
 Three or more server nodes that will serve the Kubernetes API and run other control plane services
 An embedded etcd datastore (as opposed to the embedded SQLite datastore used in single-server setups).
 
-A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/) , will be used.
+A load balancer is needed for providing High availability to Kubernetes API. In this case, a network load balancer, [HAProxy](https://www.haproxy.org/) , will be used.
 
 
 ![K3S Architecture](/assets/img/k3s-HA-configuration.png)
