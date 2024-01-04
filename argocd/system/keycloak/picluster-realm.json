@@ -80,6 +80,22 @@
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
       "frontchannelLogout": true,
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
       "defaultClientScopes": [
         "web-origins",
         "acr",
@@ -104,6 +120,14 @@
     "realm": [
       {
         "name": "admin",
+        "composite": false
+      },
+      {
+        "name": "viewer",
+        "composite": false
+      },
+      {
+        "name": "editor",
         "composite": false
       },
       {
