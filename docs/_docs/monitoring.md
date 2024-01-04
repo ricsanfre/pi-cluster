@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "31-12-2023"
+last_modified_at: "04-01-2024"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -711,7 +711,8 @@ Procedure in Keycloak documentation: [Keycloak: Creating an OpenID Connect clien
 
 Follow procedure in [Grafana documentation: Configure Keycloak OAuth2 authentication](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/keycloak/) to provide the proper configuration.
 
-- Step 1: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
+- Step 1: Create realm roles corresponding with [Grafana's roles](https://grafana.com/docs/grafana/latest/administration/roles-and-permissions/): `editor`, `viewer` and `admin`
+- Step 2: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
   Clients -> Create client
 
   ![grafana-client-1](/assets/img/grafana-keycloak-1.png)
@@ -739,11 +740,39 @@ Follow procedure in [Grafana documentation: Configure Keycloak OAuth2 authentica
     - Web Origins: https://monitoring.picluster.ricsanfre.com/grafana
   - Save the configuration.
 
-- Step 2: Locate grafana client credentials
+- Step 3: Locate grafana client credentials
 
   Under the Credentials tab you will now be able to locate grafana client's secret.
 
   ![grafana-client-4](/assets/img/grafana-keycloak-4.png)
+
+- Step 4: Configure a dedicated role mapper for the client
+
+  - Navigate to Clients -> grafana client -> Client scopes.
+
+    ![grafana-client-5](/assets/img/grafana-client-5.png)
+
+  - Access the dedicated mappers pane by clicking 'grafana-dedicated', located under Assigned client scope.
+    (It should have a description of "Dedicated scope and mappers for this client")
+  - Click on 'Configure a new mapper' and select 'User Realm Role'
+
+    ![grafana-client-6](/assets/img/grafana-client-6.png)
+
+    ![grafana-client-7](/assets/img/grafana-client-7.png)
+
+    ![grafana-client-8](/assets/img/grafana-client-8.png)
+
+  - Provide following data:
+    - Name 'roles'
+    - Multivalued 'On'
+    - Token Claim Name: roles
+    - Add to ID token 'On'
+    - Add to access token 'On'
+    - Add to userinfo: 'On'
+  - Save the configuration.
+
+- Step 5: Create user and associate any of the roles created in Step 1
+  
 
 ##### Grafana SSO configuration
 
@@ -774,9 +803,12 @@ Add the following configuration to grafana helm chart
         token_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/token
         api_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/userinfo
         role_attribute_path: contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
+        signout_redirect_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.picluster.ricsanfre.com%2Fgrafana%2Flogin%2Fgeneric_oauth
 ```
 
-Where `client_secret` is obtained from keycloak client configuration: step 2. 
+Where `client_secret` is obtained from keycloak client configuration: step 3. 
+
+Single logout is configured: `signout_redirect_url`
 
 
 #### GitOps installation (ArgoCD)
