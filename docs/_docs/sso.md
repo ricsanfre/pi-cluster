@@ -25,7 +25,7 @@ Follow instructions in [Documentation: Monitoring (Prometheus)](/docs/prometheus
 {{site.data.alerts.end}}
 
 For those applications not providing any authentication capability (i.e. Longhorn, Prometheus, Linkerd-viz), Ingress controller-based External Authentication can be configured.
-Ingress NGINX support OAuth2-based external authentication mechanism using [Oauth2-Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
+Ingress NGINX supports OAuth2-based external authentication mechanism using [Oauth2-Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
 See [Ingress NGINX external Oauth authentication document](https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/)
 Oauth2-proxy can be integrated with OpenId-Connect IAM, such us Keycloak.
 

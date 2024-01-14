@@ -47,14 +47,20 @@ See ["Ingress Controller (NGINX)"](/docs/nginx/).
 ## Single Sign-on
 
 Deploy Single sign-on solution based on OAuth2.0/OpenId Connect standard, using [Keycloak](https://www.keycloak.org/)
-Keycloak is an opensource Identity Access Management solution, providing centralized authentication and authorization services based on standard protocols and provides support for OpenID Connect, OAuth 2.0, and SAML.
+Keycloak is an opensource Identity Access Management solution, providing centralized authentication and authorization services based on standard protocols: OpenID Connect, OAuth 2.0, and SAML.
+
+Keycloak is also a IdP (Identity Provider), a service able to authenticate the users.
+Keycloak can authenticate users defined locally or users defined on external LDAP/Active Directory services.
+It also can delegate the authentication two other IdPs, i.e.: Google, Github,  using OpenId Connect/SAML protocols
+
+For Pi cluster, Keycloak will act as standalone IAM/IdP, not integrated with any external LDAP/ActiveDirectory/IdP to authenticate users accessing to different GUIs.
 
 For those applications not providing any authentication capability (i.e. Longhorn, Prometheus, Linkerd-viz), current Ingress-controlled authentication based on HTTP basic auth is migrated to
 External Authentication, delegating authentication to a Oauth2 application, [OAuth2.0-Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
 
 ![picluster-sso](/assets/img/picluster-sso.png)
 
-Grafana SSO capability is configured to use Keycloak IdP (Identity Provider).
+Grafana SSO capability is configured to use Keycloak as authentication provider using OAuth2.0 protocol.
 
 See ["SSO with KeyCloak and Oauth2-Proxy"](/docs/sso/).
 
