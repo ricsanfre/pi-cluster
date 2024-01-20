@@ -23,6 +23,9 @@ vault:
     picluster-admin:
       user: piadmin
       password: {{ keycloak_pi_password }}
+    postgresql:
+      user: keycloak
+      password: {{ keycloak_postgresql_password }}
   # Oauth2-Proxy
   oauth2-proxy:
     oauth2:
@@ -73,13 +76,13 @@ vault:
     oauth2:
       client-id: grafana
       client-secret: {{ grafana_client_secret }}
-  # Kibana
-  kibana:
-    oauth2:
-      client-id: kibana
-      client-secret: {{ kibana_client_secret }}
   # Certmanager
   certmanager:
     ionos:
       public_prefix: {{ ionos_public_prefix }}
       secret: {{ ionos_secret }}
+  # PostgreSQL
+  postgresql:
+    admin:
+      user: admin
+      password: {{ postgresql_admin_password }}

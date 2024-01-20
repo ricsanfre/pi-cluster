@@ -18,6 +18,18 @@ keycloak:
     existingSecret: keycloak-secret
     adminUser: admin
 
+  # postgresSQL
+  postgresql:
+    enabled: true
+    auth:
+      username: keycloak
+      database: keycloak
+      existingSecret: keycloak-secret
+      secretKeys:
+        adminPasswordKey: postgresql-admin-password
+        userPasswordKey: password
+    architecture: standalone
+
   # Adding additional secrets for realm configuration as environment variables
   extraEnvVarsSecret: keycloak-env-secret
 

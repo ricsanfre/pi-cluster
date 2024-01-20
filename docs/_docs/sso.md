@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "31-12-2023"
+last_modified_at: "20-01-2024"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -67,6 +67,12 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
   # Admin user
   auth:
     adminUser: admin
+  # postgresSQL
+  postgresql:
+    enabled: true
+    auth:
+      username: keycloak
+      database: keycloak
   # Ingress config
   ingress:
     enabled: true
@@ -84,7 +90,14 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
   
   With this configuration:
   - Keycloak is deployed in 'production proxy-edge': running behind NGINX proxy terminating TLS connections.
+  - PostgreSQL is deployed in standalone mode.
   - Ingress resource is configured
+
+  {{site.data.alerts.note}}
+  With this configuration all passwords (Keycloak's admin password and postgreSQL passwords are generated randomly. 
+  If helm chart is upgraded, it might cause issues generating a new passwords if the existing ones are not provided when executing helm upgrade command.
+  See details in [bitnami's keycloak helm chart documentation: How to manage passwords](https://docs.bitnami.com/kubernetes/apps/keycloak/configuration/manage-passwords/)
+  {{site.data.alerts.end}}
   
 - Step 5: Install Keycloak in `keycloak` namespace
   ```shell
@@ -107,14 +120,12 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
 
   Log in using 'admin' user and password obtained in step 7.
 
-
-
 ### Alternative installation using external secret (GitOps)
 
-Admin password can be provided during helm installation in values.yaml file. 
-Alternatively, it can be provided in a external secret.
+Keycloak admin password and postgreSQL passwords can be provided during helm installation in values.yaml file. 
+Alternatively, it can be provided in an external secret.
 
-- Step 1: Create secret containing admin password:
+- Step 1: Create secret containing admin password and posgresql passwords:
 
   ```yaml
   apiVersion: v1
@@ -124,7 +135,9 @@ Alternatively, it can be provided in a external secret.
       namespace: keycloak
   type: kubernetes.io/basic-auth
   data:
-      admin-password: <`echo -n 'supersecret' | base64`>
+      admin-password: <`echo -n 'supersecret1' | base64`>
+      postgresql-admin-password: <`echo -n 'supersecret2' | base64`>
+      password: <`echo -n 'supersecret3' | base64`>
   ```
 
 - Step 2: Add externalSecret to keycloak-values.yaml
@@ -134,6 +147,18 @@ Alternatively, it can be provided in a external secret.
   auth:
       existingSecret: keycloak-secret
       adminUser: admin
+  
+  # postgresSQL
+  postgresql:
+    enabled: true
+    auth:
+      username: keycloak
+      database: keycloak
+      existingSecret: keycloak-secret
+      secretKeys:
+        adminPasswordKey: postgresql-admin-password
+        userPasswordKey: password
+    architecture: standalone
   ```
 
 ## Keycloak Configuration
