@@ -239,7 +239,7 @@ custom_ca: false
 vault_init: true
 vault_unseal: true
 vault_unseal_service: true
-tls_skip_verify: false
+tls_skip_verify: {{ not enable_letsencrypt }}
 
 # Configure KV
 vault_kv_secrets:
