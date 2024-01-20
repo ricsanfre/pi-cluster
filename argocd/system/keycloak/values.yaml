@@ -27,7 +27,7 @@ keycloak:
       existingSecret: keycloak-secret
       secretKeys:
         adminPasswordKey: postgresql-admin-password
-        userPasswordKey: postgresql-keycloak-password
+        userPasswordKey: password
     architecture: standalone
 
   # Adding additional secrets for realm configuration as environment variables
