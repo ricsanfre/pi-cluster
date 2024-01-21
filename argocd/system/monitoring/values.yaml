@@ -157,7 +157,7 @@ kube-prometheus-stack:
         name: Keycloak-OAuth
         allow_sign_up: true
         client_id: grafana
-        client_secret: supersecret
+        # client_secret: supersecret
         scopes: openid email profile offline_access roles
         email_attribute_path: email
         login_attribute_path: username
