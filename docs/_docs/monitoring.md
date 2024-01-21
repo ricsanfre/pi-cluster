@@ -806,7 +806,22 @@ Add the following configuration to grafana helm chart
         signout_redirect_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.picluster.ricsanfre.com%2Fgrafana%2Flogin%2Fgeneric_oauth
 ```
 
-Where `client_secret` is obtained from keycloak client configuration: step 3. 
+Where `client_secret` is obtained from keycloak client configuration: step 3.
+
+{{site.data.alerts.important}}
+
+In new versions of Grafana Helm Chart (Grafana 7.2x), it is not allowed to set sensitive keys within the values.yml.
+Whe trying to install Grafana subchart this message is obtained: 
+"Sensitive key 'auth.generic_oauth.client_secret' should not be defined explicitly in values. Use variable expansion instead."
+One of the alternatives is to define the sensitive keys [overriding Grafana's configuration with environment variables](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#override-configuration-with-environment-variables)
+
+So, to fix it auth.generic.oauth.client_secret need to be removed from values.yml file and Grafana's
+`GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` environment variable need to be provided to Grafana.
+
+See next section ("GitOps installation"), to see how to generate a secret containing that environment variable and how to pass that secret to Grafana
+
+{{site.data.alerts.end}}
+
 
 Single logout is configured: `signout_redirect_url`
 
