@@ -6,4 +6,4 @@ resources:
 helmCharts:
 - name: prometheus-operator-crds
   repo: https://prometheus-community.github.io/helm-charts
-  version: "8.0.1"
+  version: "9.0.0"
