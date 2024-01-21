@@ -6,7 +6,7 @@ dependencies:
     version: 0.39.0
     repository: https://strimzi.io/charts/
   - name: schema-registry
-    version: 16.2.3
+    version: 16.4.0
     repository: oci://registry-1.docker.io/bitnamicharts
   - name: kafdrop
     version: 0.1.0
