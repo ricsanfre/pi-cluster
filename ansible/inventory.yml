@@ -44,6 +44,11 @@ all:
           ansible_host: 10.0.0.15
           ip: 10.0.0.15
           mac: e4:5f:01:d9:ec:5c
+        node6:
+          hostname: node6
+          ansible_host: 10.0.0.16
+          ip: 10.0.0.16
+          mac: d8:3a:dd:0d:be:c8
         node-hp-1:
           hostname: node-hp-1
           ansible-host: 10.0.0.20
@@ -61,7 +66,7 @@ all:
           mac: 10:e7:c6:0a:de:8a
     raspberrypi:
       hosts:
-        node[1:5]:
+        node[1:6]:
         gateway:
     x86:
       hosts:
@@ -70,8 +75,18 @@ all:
       children:
         k3s_master:
           hosts:
-            node[1:3]:
+            node[2:4]:
         k3s_worker:
           hosts:
-            node[4:5]:
+            node[5:6]:
             node-hp-[1:3]:
+    bootstrap:
+      hosts:
+        node2:
+    vault:
+      hosts:
+        node1:
+    haproxy:
+      hosts:
+        node1:
+

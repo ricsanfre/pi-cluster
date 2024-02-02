@@ -1,7 +1,7 @@
 ---
 
 - name: Bootstrap Cluster
-  hosts: node1
+  hosts: bootstrap
   gather_facts: false
   become: false
 
