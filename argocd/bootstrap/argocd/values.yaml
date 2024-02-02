@@ -25,6 +25,17 @@ argo-cd:
         return hs
       # Enabling Helm chart rendering with Kustomize
       kustomize.buildOptions: --enable-helm
+      ## Ignore resources
+      # https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#resource-exclusioninclusion
+      # Ignore VolumeSnapshot and VolumeSnapshotContent: Created by backup processes.
+      resource.exclusions: |
+        - apiGroups:
+          - snapshot.storage.k8s.io
+          kinds:
+          - VolumeSnapshot
+          - VolumeSnapshotContent
+          clusters:
+          - "*"
 
   server:
     # Ingress Resource. LoSnghorn dashboard.
