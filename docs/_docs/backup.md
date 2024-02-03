@@ -465,7 +465,7 @@ Velero CLI need to be installed joinly with kubectl. `velero` uses kubectl confi
 {{site.data.alerts.important}} k3s config file is located in `/etc/rancher/k3s/k3s.yaml` and it need to be copied into `$HOME/kube/config` in the server where `kubectl` and `velero` is going to be executed.
 {{site.data.alerts.end}}
 
-This will be installed in `node1`
+This will be installed in `pimaster`
 
 - Step 1: Download latest stable velero release from https://github.com/vmware-tanzu/velero/releases
 
@@ -696,7 +696,7 @@ Installation using `Helm` (Release 3):
 
 #### GitOps installation (ArgoCD)
 
-As alternative, for GitOps deployment (ArgoCD), instead of putting minio credentiasl into helm values in plain text, a Secret can be used to store the credentials.
+As alternative, for GitOps deployment (ArgoCD), instead of putting minio credentials into helm values in plain text, a Secret can be used to store the credentials.
 
 ```yml
 apiVersion: v1

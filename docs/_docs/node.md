@@ -2,14 +2,15 @@
 title: Cluster Nodes
 permalink: /docs/node/
 description: How to configure the nodes of our Pi Kubernetes Cluster. Ubuntu cloud-init configuration files, and basic OS configuration.
-last_modified_at: "24-06-2023"
+last_modified_at: "03-02-2024"
 ---
 
 A K3S cluster is composed of:
-- 2 **master nodes** (`node1`, `node2`, `node3`), running on Raspberry Pi 4B (4GB)
+
+- 1 **external services node** (`node1`), running on Raspberry Pi 4B (4GB)
+- 3 **master nodes** (`node2`, `node3`, `node4`), running on Raspberry Pi 4B (4GB)
 - 5 **worker nodes**:
-  - `node4` running on Raspberry Pi 4B (4GB)
-  - `node5` running on Raspberry Pi 4B (8GB)
+  - `node5`and `node6` running on Raspberry Pi 4B (8GB)
   - `node-hp-1`,`node-hp-2` and `node-hp-3` running on HP Elitedesk 800 G3 (16GB)
 
 
@@ -17,9 +18,9 @@ A K3S cluster is composed of:
 
 ### Storage Configuration
 
-`node1-5` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+`node1-6` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
 
-- **Dedicated disks storage architecture**: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node5`.
+- **Dedicated disks storage architecture**: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node6`.
 
   SSD disk is partitioned to separate  root filesystem (mountpoit '/') from data storage destinated for Longhorn data (mountpoint '/storage')
 
@@ -49,7 +50,7 @@ Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/doc
 
 {{site.data.alerts.note}}
 
-In user-data file `hostname` field need to be changed for each node (node1-node5).
+In user-data file `hostname` field need to be changed for each node (node1-node6).
 
 {{site.data.alerts.end}}
 
@@ -103,7 +104,7 @@ This command:
   - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
   - And labels it as an Linux partition (-t option)
 
-For `node1-node5`, the new partition created in boot time, `/dev/sda3`, uses most of the disk space leaving just 30GB for the root filesystem, `/dev/sda2`.
+For `node1-node6`, the new partition created in boot time, `/dev/sda3`, uses most of the disk space leaving just 30GB for the root filesystem, `/dev/sda2`.
 
 Then cloud-init executes the commands (cloud-init's runcmd section) to format (`ext4`) and mounted the new partition as `/storage`.
 
@@ -352,15 +353,15 @@ iSCSI initiator configuration in cluster nodes has been automated with Ansible d
 
 #### Raspberry PI Centralized SAN
 
-In case of Raspberry PI nodes not using dedicated disks,`node1-node5` are configured as iSCSI Initiator to use iSCSI volumes exposed by `gateway`
+In case of Raspberry PI nodes not using dedicated disks,`node1-node6` are configured as iSCSI Initiator to use iSCSI volumes exposed by `gateway`
 
-iSCSI configuration in `node1-node5`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
+iSCSI configuration in `node1-node6`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
 
 Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
 
 Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
 
-Specific `node1-node5` ansible variables to be used by these roles are stored in [`ansible/vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml)
+Specific `node1-node6` ansible variables to be used by these roles are stored in [`ansible/vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml)
 
 {{site.data.alerts.important}}
 

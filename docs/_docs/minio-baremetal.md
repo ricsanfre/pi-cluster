@@ -11,7 +11,7 @@ Official [documentation](https://docs.min.io/minio/baremetal/installation/deploy
 
 For a more secured and multi-user Minio installation the instructions of this [post](https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting) can be used.
 
-For installing Minio S3 storage server, I am using a VM (Ubuntu OS) hosted in Public Cloud (Oracle Cloud Infrastructure), but any linux server/VM that is not not part of the cluster can be used.
+For installing Minio S3 storage server, a VM (Ubuntu OS) hosted in Public Cloud or any linux server/VM that is not not part of the cluster can be used.
 
 Minio installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.minio**. This role, installs Minio Server and Minio Client and automatically create S3 buckets, and configure users and ACLs for securing the access.
 

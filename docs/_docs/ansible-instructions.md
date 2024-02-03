@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
-last_modified_at: "24-06-2023"
+last_modified_at: "06-11-2023"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -115,9 +115,9 @@ Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml
   <br>
   LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/centralized_san/centralized_san_target.yml`: `storage_volumegroups` and `storage_volumes` variables. Sizes of the different LUNs can be tweaked to fit the size of the SSD Disk used. I used a 480GB disk so, I was able to create LUNs of 100GB for each of the nodes.
 
-- **Dedicated disks** setup assumes that all cluster nodes (`node1-5`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`
+- **Dedicated disks** setup assumes that all cluster nodes (`node1-6`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`
 
-  Final `node1-5` disk configuration is:
+  Final `node1-6` disk configuration is:
 
   - /dev/sda1: Boot partition
   - /dev/sda2: Root filesystem
@@ -219,7 +219,7 @@ Once `gateway` is up and running the rest of the nodes can be installed and conn
 
 #### Install Raspberry PI nodes
 
-Install Operating System on Raspberry Pi nodes `node1-5`
+Install Operating System on Raspberry Pi nodes `node1-6`
 
 Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
 
@@ -230,7 +230,7 @@ Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/
 {: .table .table-white .border-dark }
 
 
-In above user-data files, `hostname` field need to be changed for each node (node1-node5).
+In above user-data files, `hostname` field need to be changed for each node (node1-node6).
 
 
 {{site.data.alerts.warning}}**About SSH keys**
@@ -285,7 +285,7 @@ All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
 
 ## Configuring OS level backup (restic)
 
-Automate backup tasks at OS level with restic in all nodes (`node1-node5` and `gateway`) running the command:
+Automate backup tasks at OS level with restic in all nodes (`node1-node6` and `gateway`) running the command:
 
 ```shell
 make configure-os-backup

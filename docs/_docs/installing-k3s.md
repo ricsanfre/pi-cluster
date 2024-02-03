@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "02-07-2023"
+last_modified_at: "03-02-2024"
 ---
 
 
@@ -15,9 +15,7 @@ In K3S all kubernetes processes are consolidated within one single binary. The b
 - k3s-server: starts all kubernetes control plane processes (API, Scheduler and Controller) and worker proceses (Kubelet and kube-proxy), so master node can be used also as worker node.
 - k3s-agent: consolidating all kuberentes worker processes (Kubelet and kube-proxy).
 
-Kubernetes cluster will be installed in node1-node5. `node1` will have control-plane role while `node2-5` will be workers.
-
-Control-plane node will be configured so no load is deployed in it.
+Control-plane nodes will be configured so no load is deployed in it.
 
 ## Nodes preconfiguration
 
@@ -128,7 +126,7 @@ In this configuration, each agent node is registered to the same server node. A 
 
     K3S common services: core-dns, metric-service, service-lb are configured with tolerance to `node-role.kubernetes.io/master` taint, so they will be scheduled on master node.
 
-    Metal-lb, load balancer to be used within the cluster, uses this tolerance as well, so daemonset metallb-speaker can be deployed on `node1`. Other Daemonset pods, like fluentd, have to specify this specific tolerance to be able to get logs from master node.
+    Metal-lb, load balancer to be used within the cluster, uses this tolerance as well, so daemonset metallb-speaker can be deployed on master node. Other Daemonset pods, like fluentd, have to specify this specific tolerance to be able to get logs from master node.
     
     See this [K3S PR](https://github.com/k3s-io/k3s/pull/1275) where this feature was introduced.  
     {{site.data.alerts.end}}
@@ -176,7 +174,7 @@ In this configuration, each agent node is registered to the same server node. A 
  
 - Step 3: Specify role label for worker nodes
 
-  From master node (`node1`) assign a role label to worker nodes, so when executing `kubectl get nodes` command ROLE column show worker role for workers nodes.
+  From master node, assign a role label to worker nodes, so when executing `kubectl get nodes` command ROLE column show worker role for workers nodes.
 
   ```shell
   kubectl label nodes <worker_node_name> kubernetes.io/role=worker
@@ -201,11 +199,11 @@ For the HA installation, instead of providing arguments/environment variables to
 
 ### Load Balancer (HAProxy)
 
-[HAProxy](https://www.haproxy.org/) will be installed in `gateway` node. 
+[HAProxy](https://www.haproxy.org/) need to be installed in one node. If it is possible select a node which is not part of the K3s cluster. In my case I will install it on `node1`.
 
 {{site.data.alerts.note}}
 
-In this configuration we will have a single point of failure, HAProxy is not deployed in HA mode. HAProxy combined with [Keepalived](https://www.keepalived.org/) provide HA configuration for a software network load balancer.
+In this configuration we will have a single point of failure, HAProxy is not deployed in HA mode. HAProxy combined with [Keepalived](https://www.keepalived.org/) provide HA configuration for a software network load balancer. More than one node need to be configured to run Keepalived and HAProxy.
 
 {{site.data.alerts.end}}
 
@@ -273,9 +271,9 @@ To install and configure HAProxy:
       mode tcp
       option ssl-hello-chk
       balance     roundrobin
-        server node1 10.0.0.11:6443 check
         server node2 10.0.0.12:6443 check
-        server node3 10.0.0.12:6443 check
+        server node3 10.0.0.13:6443 check
+        server node4 10.0.0.14:6443 check
   ```
 
   With this configuration haproxy will balance requests to API server (TCP port 6443), following a round-robin balancing method, between the 3 master nodes configured.
@@ -352,7 +350,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   node-taint:
   - node-role.kubernetes.io/master=true:NoSchedule
   tls-san:
-  - 10.0.0.1
+  - 10.0.0.11
   write-kubeconfig-mode: 644
   ```
 
@@ -366,7 +364,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   --disable 'local-storage'
   --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
   --etcd-expose-metrics
-  --tls-san 10.0.0.1
+  --tls-san 10.0.0.11
   --kube-controller-manager-arg 'bind-address=0.0.0.0'
   --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
   --kube-scheduler-arg 'bind-address=0.0.0.0'

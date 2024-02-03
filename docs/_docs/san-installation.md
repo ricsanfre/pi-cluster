@@ -2,19 +2,19 @@
 title: Cluster SAN (optional)
 permalink: /docs/san/
 description: How to configure iSCSI storage for Raspberry PI cluster nodes deploying a SAN network using a Raspberry Pi node as storage server, iSCSI Target.
-last_modified_at: "25-02-2022"
+last_modified_at: "03-02-2024"
 ---
 
 The idea is to configure one of the Raspberry PIs as a SAN for the lab cluster, connecting some SSD Disk to it (through USB 3.0 ports) and providing LUNs to all the cluster nodes through iSCSI.
 
 A storage on a SAN network is called iSCSI Target, a Client which connects to iSCSI Target is called iSCSI Initiator.
 
-In my home lab, `gateway` will be the iSCSI Target and `node1-node5` will be the iSCSI Initiators.
+In my home lab, `gateway` will be the iSCSI Target and `node1-node6` will be the iSCSI Initiators.
 
 ```
 +----------------------+         |             +----------------------+
 | [   iSCSI Target   ] |10.0.0.1 | 10.0.0.11-14| [ iSCSI Initiator  ] |
-|        gateway       +---------+-------------+        node1-5       |
+|        gateway       +---------+-------------+        node1-6       |
 |                      |                       |                      |
 +----------------------+                       +----------------------+
 

@@ -2,7 +2,7 @@
 title: Lab Architecture
 permalink: /docs/architecture/
 description: Homelab architecture of our Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "02-07-2023"
+last_modified_at: "03-02-2024"
 ---
 
 
@@ -12,14 +12,12 @@ The home lab I am building is shown in the following picture
 
 
 A K3S cluster is composed of the following **cluster nodes**:
-- 3 master nodes (`node1`, `node2` and `node3`), running on Raspberry Pi 4B (4GB)
+- 3 master nodes (`node2`, `node3` and `node4`), running on Raspberry Pi 4B (4GB)
 - 5 worker nodes:
-  - `node4` running on Raspberry Pi 4B (4GB)
-  - `node5` running on Raspberry Pi 4B (8GB)
+  - `node5` and `node6`running on Raspberry Pi 4B (8GB)
   - `node-hp-1`, `node-hp-2` and `node-hp-3` running on HP Elitedesk 800 G3 (16GB)
- 
 
- A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running on Raspberry Pi 4B (2GB). 
+A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running on Raspberry Pi 4B (2GB). 
 
 `gateway`, **cluster firewall/router**, is connected to LAN Switch using its Gigabit Ethernet port. It is also connected to my home network using its WIFI interface, so it can route and filter traffic comming in/out the cluster. With this architecture my lab network can be isolated from my home network.
 
@@ -29,7 +27,12 @@ A K3S cluster is composed of the following **cluster nodes**:
  - NTP
  - DHCP
 
-A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `gateway` server.
+`node1`, running on Raspberry Pi 4B (4GB), for providing **kubernetes external services**:
+  - Secret Management (Vault)
+  - Kuberentes API Load Balancer
+  - Backup server
+
+A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `node1` server.
 
 For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `gateway` node.
 
@@ -56,17 +59,17 @@ For building the cluster, using bare metal servers instead of virtual machines, 
   I have used the following hardware components to assemble Raspberry PI components of the cluster.
 
   - [4 x Raspberry Pi 4 - Model B (4 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1100-raspberry-pi-4-modelo-b-4gb-765756931182.html) and [1 x Raspberry Pi 4 - Model B (8 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1231-raspberry-pi-4-modelo-b-8gb-765756931199.html) as ARM-based cluster nodes (1 master node and 5 worker nodes).
-  - [1 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) as router/firewall for the lab environment connected via wifi to my home network and securing the access to my lab network.
+  - [2 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) as router/firewall for the lab environment connected via wifi to my home network and securing the access to my lab network.
   - [4 x SanDisk Ultra 32 GB microSDHC Memory Cards](https://www.amazon.es/SanDisk-SDSQUA4-064G-GN6MA-microSDXC-Adaptador-Rendimiento-dp-B08GY9NYRM/dp/B08GY9NYRM) (Class 10) for installing Raspberry Pi OS for enabling booting from USB (update Raspberry PI firmware and modify USB partition)
   - [4 x Samsung USB 3.1 32 GB Fit Plus Flash Disk](https://www.amazon.es/Samsung-FIT-Plus-Memoria-MUF-32AB/dp/B07HPWKS3C) 
   - [1 x Kingston A400 SSD Disk 480GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N0TQPQB)
-  - [4 x Kingston A400 SSD Disk 240GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N5IB20Q)
-  - [5 x Startech USB 3.0 to SATA III Adapter](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84) for connecting SSD disk to USB 3.0 ports.
+  - [5 x Kingston A400 SSD Disk 240GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N5IB20Q)
+  - [6 x Startech USB 3.0 to SATA III Adapter](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84) for connecting SSD disk to USB 3.0 ports.
   - [1 x GeeekPi Pi Rack Case](https://www.amazon.es/GeeekPi-Raspberry-Ventilador-refrigeraci%C3%B3n-disipador/dp/B07Z4GRQGH/ref=sr_1_11). It comes with a stack for 4 x Raspberry Pi’s, plus heatsinks and fans)
   - [1 x SSD Rack Case](https://www.aliexpress.com/i/33008511822.html)
   - [1 x ANIDEES AI CHARGER 6+](https://www.tiendatec.es/raspberry-pi/raspberry-pi-alimentacion/796-anidees-ai-charger-6-cargador-usb-6-puertos-5v-60w-12a-raspberry-pi-4712909320214.html). 6 port USB power supply (60 W and max 12 A)
   - [1 x ANKER USB Charging Hub](https://www.amazon.es/Anker-Cargador-USB-6-Puertos/dp/B00PTLSH9G/). 6 port USB power supply (60 w and max 12 A)
-  - [6 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html).
+  - [7 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html).
 
 
 #### x86-based old refurbished mini PC
@@ -127,7 +130,7 @@ x86 mini PCs has their own integrated disk (SSD disk or NVME). For Raspberry PIs
 
 `gateway` uses local storage attached directly to USB 3.0 port (Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
 
-For having better cluster performance `node1-node5` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
+For having better cluster performance `node1-node6` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
 
 ![pi-cluster-HW-2.0](/assets/img/pi-cluster-2.0.png)
 
@@ -136,11 +139,11 @@ For having better cluster performance `node1-node5` will use SSDs attached to US
 
 A cheaper alternative architecture, instead of using dedicated SSD disks for each cluster node, one single SSD disk can be used for configuring a SAN service.
 
-Each cluster node `node1-node5` can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
+Each cluster node `node1-node6` can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
  
 As additional storage (required by distributed storage solution), iSCSI SAN can be deployed instead of attaching an additional USB Flash Disks to each of the nodes.
 
-A SAN (Storage Access Network) can be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node5`.
+A SAN (Storage Access Network) can be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node6`.
 
 As storage device, a SSD disk was attached to `gateway` node. This SSD disk was used as well to host the OS.
 
