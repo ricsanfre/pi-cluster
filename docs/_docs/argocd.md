@@ -2,7 +2,7 @@
 title: GitOps (ArgoCD)
 permalink: /docs/argocd/
 description: How to apply GitOps to Pi cluster configuration using ArgoCD.
-last_modified_at: "23-01-2023"
+last_modified_at: "03-02-2024"
 ---
 
 
@@ -169,6 +169,36 @@ Igress NGINX will be used as ingress controller, terminating TLS traffic, so Arg
   ```
 
 See more details in [Argo-CD Ingress configuration doc](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/)
+
+
+### Exclude synchronization of resources
+
+Using automatic synchornization and pruning of resources might cause side effects with some of the kubernetes resources that are not created by ArgoCD.
+
+See an example of this wrong behavior in [issue #273](https://github.com/ricsanfre/pi-cluster/issues/273). ArgoCD auto-synch policy is pruning VolumeSnapshot and VolumeSnapshotContent resources that are created automatically by backup process, making backup process to fail.
+
+The way to solve this issue is to make ArgoCD to ignore the VolumeSnapshot and VolumeSnapshotContent resources during the synchronization process.
+
+For doing that, ArgoCD need to be configured to exclude those resources from synchronization. See [ArgoCD resource Exclusion](https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#resource-exclusioninclusion) for more details.
+
+The following lines need to be added to helm chart:
+
+
+  ```yml
+  configs:
+    cm:
+      ## Ignore resources
+      # https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#resource-exclusioninclusion
+      # Ignore VolumeSnapshot and VolumeSnapshotContent: Created by backup processes.
+      resource.exclusions: |
+        - apiGroups:
+          - snapshot.storage.k8s.io
+          kinds:
+          - VolumeSnapshot
+          - VolumeSnapshotContent
+          clusters:
+          - "*"
+  ```
 
 
 ## ArgoCD Applications
