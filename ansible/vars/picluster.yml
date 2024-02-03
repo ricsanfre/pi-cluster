@@ -9,7 +9,7 @@
 k3s_version: v1.28.2+k3s1
 
 # k3s master node VIP (loadbalancer)
-k3s_api_vip: 10.0.0.1
+k3s_api_vip: 10.0.0.11
 
 # k3s shared token
 k3s_token: "{{ vault.cluster.k3s.token }}"

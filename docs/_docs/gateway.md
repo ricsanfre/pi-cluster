@@ -2,7 +2,7 @@
 title: Cluster Gateway
 permalink: /docs/gateway/
 description: How to configure a Raspberry Pi as router/firewall of our Kubernetes Cluster providing connectivity and basic services (DNS, DHCP, NTP, SAN).
-last_modified_at: "18-06-2023"
+last_modified_at: "03-02-2024"
 ---
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
@@ -10,7 +10,7 @@ It will also provide DNS, NTP and DHCP services to my lab network. In case of de
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
-In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster (**node1-node5**): Ubuntu 22.04 64 bits.
+In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster: Ubuntu 22.04 64 bits.
 
 
 ## Storage Configuration
@@ -529,6 +529,7 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   dhcp-host=e4:5f:01:2f:49:05,10.0.0.13
   dhcp-host=e4:5f:01:2f:54:82,10.0.0.14
   dhcp-host=e4:5f:01:d9:ec:5c,10.0.0.15
+  dhcp-host=d8:3a:dd:0d:be:c8,10.0.0.16
 
   # Adding additional DHCP hosts
   # Ethernet Switch
@@ -542,6 +543,7 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   host-record=node3.picluster.ricsanfre.com,10.0.0.13
   host-record=node4.picluster.ricsanfre.com,10.0.0.14
   host-record=node5.picluster.ricsanfre.com,10.0.0.15
+  host-record=node6.picluster.ricsanfre.com,10.0.0.16
 
   # Adding additional DNS
   # NTP Server
@@ -554,16 +556,19 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
 
   Additional DNS records can be added for the different services exposed by the cluster. For example:
 
-  - S3 service DNS name pointing to `node1`
+  - S3/Vault service DNS name pointing to `node1`
     ```
     # S3 Server
     host-record=s3.picluster.ricsanfre.com,10.0.0.11
+    # Vault server
+    host-record=vault.picluster.ricsanfre.com,10.0.0.11
     ```
   - Monitoring DNS service pointing to Ingress Controller IP address (from MetaLB pool)
     ```
     # Monitoring
     host-record=monitoring.picluster.ricsanfre.com,10.0.0.100
     ```
+
   {{site.data.alerts.end}}
 
 - Step 3. Restart dnsmasq service
@@ -743,7 +748,7 @@ Check time synchronization with Chronyc
 
 ## iSCSI configuration. Centralized SAN
 
-`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node5`
+`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node6`
 
 iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
 

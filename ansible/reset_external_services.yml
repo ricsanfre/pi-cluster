@@ -28,7 +28,7 @@
         daemon_reload: true
 
 - name: Clean Vault Installation
-  hosts: gateway
+  hosts: vault
   become: true
   gather_facts: false
   tags: [vault]

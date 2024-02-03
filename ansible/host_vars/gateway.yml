@@ -28,7 +28,7 @@ dnsmasq_additional_dns_hosts:
   s3_server:
     desc: "S3 Server"
     hostname: s3
-    ip: 10.0.0.11
+    ip: 10.0.0.100
   elasticsearch:
     desc: "Elasticsearch server"
     hostname: elasticsearch
@@ -52,7 +52,7 @@ dnsmasq_additional_dns_hosts:
   vault_server:
     desc: "Vault server"
     hostname: vault
-    ip: 10.0.0.1
+    ip: 10.0.0.11
 dnsmasq_enable_tftp: true
 dnsmasq_tftp_root: /srv/tftp
 dnsmasq_additional_conf: |-
@@ -78,10 +78,8 @@ ntp_allow_hosts: [10.0.0.0/24]
 #########################
 
 # tcp 9100 Prometheus (fluent-bit)
-# tcp 8200, 8201 Vault server
 # udp 69, TFTP server
-# TCP 6443 load balancer K3S API
-in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201, 6443 }'
+in_tcp_port: '{ ssh, https, http, iscsi-target, 9100 }'
 in_udp_port: '{ snmp, domain, ntp, bootps, 69 }'
 # tcp 9091 minio server
 forward_tcp_port: '{ http, https, ssh, 9091 }'
@@ -141,8 +139,10 @@ nft_forward_host_rules:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport ssh ct state new accept
   230 http from wan:
     - iifname $wan_interface oifname $lan_interface ip daddr $lan_network tcp dport {http, https} ct state new accept
+  240 haproxy from wan:
+    - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport 6443 ct state new accept
   250 port-forwarding from wan:
-    - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.11 tcp dport 8080 ct state new accept
+    - iifname $wan_interface oifname $lan_interface ip daddr 10.0.0.12 tcp dport 8080 ct state new accept
 # NAT Post-routing
 nft_nat_host_postrouting_rules:
   005 masquerade lan to wan:

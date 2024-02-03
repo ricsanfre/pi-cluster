@@ -59,3 +59,9 @@ prepare-node5:
 	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
 	sed 's/nodeX/node5/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
 	sudo umount ${SYSTEM_BOOT_MOUNT}
+
+.PHONY: prepare-node6
+prepare-node6:
+	sudo mount ${USB}1 ${SYSTEM_BOOT_MOUNT}
+	sed 's/nodeX/node6/g' cloud-init/nodes/${USER_DATA_NODES} | sudo tee ${SYSTEM_BOOT_MOUNT}/user-data
+	sudo umount ${SYSTEM_BOOT_MOUNT}
