@@ -91,3 +91,7 @@ get-argocd-passwd:
 .PHONY: get-elastic-passwd
 get-elastic-passwd:
 	kubectl get secret efk-es-elastic-user -o jsonpath='{.data.elastic}' -n logging | base64 -d;echo
+
+.PHONY: kubernetes-vault-config
+kubernetes-vault-config:
+	${RUNNER} ansible-playbook kubernetes_vault_config.yml

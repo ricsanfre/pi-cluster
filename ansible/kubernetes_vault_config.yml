@@ -1,0 +1,60 @@
+---
+
+- name: Configure Vault
+  hosts: vault
+  gather_facts: false
+
+  collections:
+    - kubernetes.core
+
+  environment:
+    # The location of the kubeconfig file on the master.
+    K8S_AUTH_KUBECONFIG: ~/.kube/config
+
+  pre_tasks:
+    # Install Python PIP and jq utility packages
+    - name: Ensure required packages are installed.
+      package:
+        name:
+          - python3-pip
+          - python3-setuptools
+          - jq
+        state: present
+      become: true
+    # Install kubernetes python packages (Ansible kubernetes collection dependency)
+    - name: Ensure kubernetes Python library is installed.
+      pip:
+        name: kubernetes
+        state: present
+      become: true
+    # Install Hashicorp python packages (Ansible hashi module dependency)
+    - name: Ensure hashicorp vault python library is installed.
+      pip:
+        name: hvac
+        state: present
+      become: true
+
+    # Install Helm diff plugin to have a better idempotence check
+    - name: Intall Helm Plugin
+      kubernetes.core.helm_plugin:
+        plugin_path: "https://github.com/databus23/helm-diff"
+        state: present
+
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+
+    - name: Include picluster variables
+      include_vars: "vars/picluster.yml"
+
+  tasks:
+    - name: Create namespaces.
+      kubernetes.core.k8s:
+        name: "{{ item }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+      with_items:
+        - "vault"
+
+    - name: Configure Vault integration
+      include_tasks: tasks/configure_vault_integration.yml
