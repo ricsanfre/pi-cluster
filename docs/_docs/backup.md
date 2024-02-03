@@ -219,11 +219,11 @@ Backup policies scheduling
 
 K3S distribution currently does not come with a preintegrated Snapshot Controller that is needed to enable CSI Snapshot feature. An external snapshot controller need to be deployed. K3S can be configured to use [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter).
 
-To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/1.5.1/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
+To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/1.6.0/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
 
 {{site.data.alerts.note}}
 
-Longhorn 1.5.1 CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release  v6.2.1. Do not install latest version available of External Snapshotter.
+Longhorn 1.6.0 CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release  v6.3.2. Do not install latest version available of External Snapshotter.
 
 {{site.data.alerts.end}}
 
@@ -236,8 +236,8 @@ Longhorn 1.5.1 CSI Snapshots support is compatible with [kubernetes-csi/external
   kind: Kustomization
   namespace: kube-system
   resources:
-  - https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v6.2.1
-  - https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v6.2.1
+  - https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v6.3.2
+  - https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v6.3.2
   ```
 
 - Step Deploy Snapshot-Controller
