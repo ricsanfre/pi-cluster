@@ -89,4 +89,3 @@ all:
     haproxy:
       hosts:
         node1:
-
