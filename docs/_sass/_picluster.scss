@@ -19,11 +19,15 @@ html {
 
 .header-container {
   background-color: black;
-  background: url('../img/bg.jpg') no-repeat 50% 0;
+  background: url('../img/bg.png') no-repeat 50% 0;
   color: #fff;
 
   h1 {
-    color: #fff;
+    color: #2a9fd6;
+  }
+
+  p {
+    color: #2a9fd6;
   }
   // background-attachment: fixed;
   background-size: cover;
