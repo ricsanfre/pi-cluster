@@ -328,7 +328,7 @@ The software used and the latest version tested of each component
 | Type | Software | Latest Version tested | Notes |
 |-----------| ------- |-------|----|
 | OS | Ubuntu | 22.04.2 | |
-| Control | Ansible | 2.14.5  | |
+| Control | Ansible | 2.16.3  | |
 | Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 22.04.2 |
 | Kubernetes | K3S | v1.28.2 | K3S version|
 | Kubernetes | Helm | v3.12 ||
