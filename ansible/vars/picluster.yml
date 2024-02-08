@@ -6,7 +6,7 @@
 #######
 
 # k3s version
-k3s_version: v1.28.2+k3s1
+k3s_version: v1.29.1+k3s2
 
 # k3s master node VIP (loadbalancer)
 k3s_api_vip: 10.0.0.11
