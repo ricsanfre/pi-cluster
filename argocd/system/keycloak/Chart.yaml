@@ -3,5 +3,5 @@ name: keycloak
 version: 0.0.0
 dependencies:
   - name: keycloak
-    version: 18.3.4
+    version: 18.4.0
     repository: https://charts.bitnami.com/bitnami
