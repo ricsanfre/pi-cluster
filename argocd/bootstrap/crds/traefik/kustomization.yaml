@@ -1,9 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-# Traefik helm chart v23.1.0 CDRs.
+# Traefik helm chart CDRs.
 # Traefik provides CDRs upgrade process (https://github.com/traefik/traefik-helm-chart#upgrading-crds)
 # Issue #581(https://github.com/traefik/traefik-helm-chart/issues/581)
-# Within CDRs direcory in github repository there is a kustomization.yaml.
+# Within CDRs directory in github repository there is a kustomization.yaml.
 # Traefik helm chart to be installed with helm param --skip-cdrs
-- https://github.com/traefik/traefik-helm-chart/traefik/crds/?ref=v23.1.0
+- https://github.com/traefik/traefik-helm-chart/traefik/crds/?ref=v26.0.0
