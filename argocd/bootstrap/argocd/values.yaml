@@ -38,24 +38,19 @@ argo-cd:
           - "*"
 
   server:
-    # Ingress Resource. LoSnghorn dashboard.
+    # Ingress Resource.
     ingress:
       ## Enable creation of ingress resource
       enabled: true
       ## Add ingressClassName to the Ingress
       ingressClassName: nginx
       # ingress host
-      hosts:
-        - argocd.picluster.ricsanfre.com
-      ## TLS Secret Name
-      tls:
-        - secretName: argocd-tls
-          hosts:
-            - argocd.picluster.ricsanfre.com
+      hostname: argocd.picluster.ricsanfre.com
       ## Default ingress path
-      paths:
-        - /
-
+      path: /
+      pathType: Prefix
+      # Enable tls. argocd-server-tls secret is created automatically for hostname
+      tls: true
       ## Ingress annotations
       annotations:
         # Linkerd configuration. Configure Service as Upstream

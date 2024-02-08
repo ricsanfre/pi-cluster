@@ -2,7 +2,7 @@
 title: GitOps (ArgoCD)
 permalink: /docs/argocd/
 description: How to apply GitOps to Pi cluster configuration using ArgoCD.
-last_modified_at: "03-02-2024"
+last_modified_at: "08-02-2024"
 ---
 
 
@@ -74,16 +74,12 @@ ArgoCD can be installed through helm chart
       ## Add ingressClassName to the Ingress
       ingressClassName: nginx
       # ingress host
-      hosts:
-        - argocd.picluster.ricsanfre.com
-      ## TLS Secret Name
-      tls:
-        - secretName: argocd-tls
-          hosts:
-            - argocd.picluster.ricsanfre.com
+      hostname: argocd.picluster.ricsanfre.com
       ## Default ingress path
-      paths:
-        - /
+      path: /
+      pathType: Prefix
+      # Enable tls. argocd-server-tls secret is created automatically for hostname
+      tls: true
 
       ## Ingress annotations
       annotations:
