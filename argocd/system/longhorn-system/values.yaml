@@ -18,6 +18,10 @@ longhorn:
     # Backup S3 configuration
     backupTarget: "s3://k3s-longhorn@eu-west-1/"
     backupTargetCredentialSecret: longhorn-minio-secret
+  # Disable pre-upgrade checks job. It makes longhorn installation fails with ArgoCD
+  preUpgradeChecker:
+    jobEnabled: false
+
   # Ingress Resource. Longhorn dashboard.
   ingress:
     ## Enable creation of ingress resource
