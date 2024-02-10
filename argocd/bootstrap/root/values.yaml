@@ -8,6 +8,11 @@ apps:
   - name: crds
     namespace: default
     path: argocd/bootstrap/crds
+    ignoreDifferences:
+      - group: "*"
+        kind: "*"
+        managedFieldsManagers:
+          - external-secrets
     syncWave: 0
     # External Secrets Operator
   - name: external-secrets

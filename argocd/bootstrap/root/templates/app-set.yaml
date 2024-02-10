@@ -20,6 +20,10 @@ spec:
     helm:
 {{ toYaml $app.helm | indent 6  }}
 {{- end }}
+{{- if $app.ignoreDifferences }}
+  ignoreDifferences:
+{{ toYaml $app.ignoreDifferences | indent 4  }}
+{{- end }}
   syncPolicy:
     automated:
       prune: true
