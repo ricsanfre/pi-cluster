@@ -330,40 +330,40 @@ The software used and the latest version tested of each component
 | OS | Ubuntu | 22.04.2 | |
 | Control | Ansible | 2.16.3  | |
 | Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 22.04.2 |
-| Kubernetes | K3S | v1.28.2 | K3S version|
+| Kubernetes | K3S | v1.29.1 | K3S version|
 | Kubernetes | Helm | v3.12 ||
 | Metrics | Kubernetes Metrics Server | v0.6.3 | version pre-integrated into K3S |
 | Kubernetes | etcd | v3.5.9-k3s1 | version pre-integrated into K3S |
-| Computing | containerd | v1.7.6-k3s1 | version pre-integrated into K3S |
-| Networking | Flannel | v0.22.2 | version pre-integrated into K3S |
+| Computing | containerd | v1.7.11-k3s2 | version pre-integrated into K3S |
+| Networking | Flannel | v0.24.0 | version pre-integrated into K3S |
 | Networking | CoreDNS | v1.10.1 | version pre-integrated into K3S |
 | Networking | Metal LB | v0.14.3 | Helm chart version:  0.14.3 |
 | Service Mesh | Linkerd | v2.14.9 | Helm chart version: linkerd-control-plane-1.16.10 |
-| Service Proxy | Traefik | v2.10.1 | Helm chart version: 23.1.0  |
+| Service Proxy | Traefik | v2.10.6 | Helm chart version: 26.0.0  |
 | Service Proxy | Ingress NGINX | v1.9.6 | Helm chart version: 4.9.1 |
 | Storage | Longhorn | v1.5.3 | Helm chart version: 1.5.3 |
 | Storage | Minio | RELEASE.2024-01-11T07-46-16Z | Helm chart version: 5.0.15 |
-| TLS Certificates | Certmanager | v1.14.1| Helm chart version: v1.14.1  |
+| TLS Certificates | Certmanager | v1.14.2| Helm chart version: v1.14.2  |
 | Logging | ECK Operator |  2.11.1 | Helm chart version: 2.11.1 |
 | Logging | Elastic Search | 8.6.0 | Deployed with ECK Operator |
 | Logging | Kibana | 8.6.0 | Deployed with ECK Operator |
 | Logging | Fluentbit | 2.2.2 | Helm chart version: 0.43.0 |
 | Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.0 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.3|
 | Logging | Loki | 2.9.4 | Helm chart grafana/loki version: 5.42.2 |
-| Monitoring | Kube Prometheus Stack | v0.71.2 | Helm chart version: 56.6.1 |
-| Monitoring | Prometheus Operator | v0.71.2 | Installed by Kube Prometheus Stack. Helm chart version: 56.6.1  |
-| Monitoring | Prometheus | v2.49.1 | Installed by Kube Prometheus Stack. Helm chart version: 56.6.1 |
-| Monitoring | AlertManager | v0.26.0 | Installed by Kube Prometheus Stack. Helm chart version: 56.6.1 |
-| Monitoring | Grafana | 10.3.0 | Installed as dependency of Kube Prometheus Stack chart 56.6.1 |
-| Monitoring | Prometheus Node Exporter | v1.7.0 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 56.6.1 |
+| Monitoring | Kube Prometheus Stack | v0.71.2 | Helm chart version: 56.6.2 |
+| Monitoring | Prometheus Operator | v0.71.2 | Installed by Kube Prometheus Stack. Helm chart version: 56.6.2  |
+| Monitoring | Prometheus | v2.49.1 | Installed by Kube Prometheus Stack. Helm chart version: 56.6.2 |
+| Monitoring | AlertManager | v0.26.0 | Installed by Kube Prometheus Stack. Helm chart version: 56.6.2 |
+| Monitoring | Grafana | 10.3.0 | Installed as dependency of Kube Prometheus Stack chart 56.6.2 |
+| Monitoring | Prometheus Node Exporter | v1.7.0 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 56.6.2 |
 | Monitoring | Prometheus Elasticsearch Exporter | 1.7.0 | Helm chart version: prometheus-elasticsearch-exporter-5.4.0 |
-| Tracing | Grafana Tempo | 2.3.1 | Helm chart: tempo-distributed (1.8.2) |
+| Tracing | Grafana Tempo | 2.3.1 | Helm chart: tempo-distributed (1.8.3) |
 | Backup | Minio External (self-hosted) | RELEASE.2024-01-31T20:20:33Z | |
 | Backup | Restic | 0.13.1 | |
 | Backup | Velero | 1.13.0 | Helm chart version: 5.3.0 |
 | Secrets | Hashicorp Vault | 1.15.4 | |
 | Secrets| External Secret Operator | 0.9.11 | Helm chart version: 0.9.11 |
-| SSO | Keycloak | 23.0.6 | Bitnami Helm chart version: 18.3.4 |
+| SSO | Keycloak | 23.0.6 | Bitnami Helm chart version: 18.4.0 |
 | SSO| Oauth2.0 Proxy | 7.5.1 | Helm chart version: 6.23.1 |
-| GitOps | Argo CD | v2.9.6 | Helm chart version: 5.53.13 |
+| GitOps | Argo CD | v2.10.0 | Helm chart version: 6.0.5 |
 {: .table .table-white .border-dark }
