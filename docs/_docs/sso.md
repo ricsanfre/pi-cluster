@@ -96,7 +96,7 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
   {{site.data.alerts.note}}
   With this configuration all passwords (Keycloak's admin password and postgreSQL passwords are generated randomly. 
   If helm chart is upgraded, it might cause issues generating a new passwords if the existing ones are not provided when executing helm upgrade command.
-  See details in [bitnami's keycloak helm chart documentation: How to manage passwords](https://docs.bitnami.com/kubernetes/apps/keycloak/configuration/manage-passwords/)
+  See details in [bitnami's keycloak helm chart documentation: How to manage passwords](https://github.com/bitnami/charts/tree/main/bitnami/keycloak#manage-secrets-and-passwords)
   {{site.data.alerts.end}}
   
 - Step 5: Install Keycloak in `keycloak` namespace
@@ -179,7 +179,7 @@ OAuth2-Proxy client application need to be configured within 'picluster' realm.
 
 Procedure in Keycloak documentation: [Keycloak: Creating an OpenID Connect client](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-oidc-client_server_administration_guide)
 
-Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider/#keycloak-oidc-auth-provider) to provide the proper configuration.
+Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](https://oauth2-proxy.github.io/oauth2-proxy/configuration/oauth_provider/#keycloak-oidc-auth-provider) to provide the proper configuration.
 
 - Step 1: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
   Clients -> Create client
