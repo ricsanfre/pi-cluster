@@ -6,4 +6,4 @@ resources:
 # Issue #581(https://github.com/traefik/traefik-helm-chart/issues/581)
 # Within CDRs directory in github repository there is a kustomization.yaml.
 # Traefik helm chart to be installed with helm param --skip-cdrs
-- https://github.com/traefik/traefik-helm-chart/traefik/crds/?ref=v26.0.0
+- https://github.com/traefik/traefik-helm-chart/traefik/crds/?ref=v26.1.0
