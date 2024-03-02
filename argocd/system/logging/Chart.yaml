@@ -6,7 +6,7 @@ dependencies:
     version: 2.11.1
     repository: https://helm.elastic.co
   - name: fluentd
-    version: 0.5.0
+    version: 0.5.2
     repository: https://fluent.github.io/helm-charts
   - name: fluent-bit
     version: 0.43.0
