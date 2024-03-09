@@ -217,6 +217,8 @@ minio_users:
 # Restic configuration #
 ########################
 
+restic_version: 0.16.4
+
 # Restic S3 repository configuration
 restic_repository: "s3:{{ minio_url }}/restic"
 restic_use_ca_cert: true
@@ -231,7 +233,7 @@ restic_environment:
 #######################
 
 vault_hostname: "vault.picluster.ricsanfre.com"
-vault_version: 1.15.4
+vault_version: 1.15.6
 
 vault_dns: "{{ vault_hostname }}"
 vault_enable_tls: true
