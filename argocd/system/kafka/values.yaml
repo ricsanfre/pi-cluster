@@ -5,7 +5,7 @@ kafka_cluster_name: my-cluster
 kafka_topic_name: my-topic
 
 # Kafka version
-kafka_version: 3.5.1
+kafka_version: 3.7.0
 
 # Kafka replicas
 kafka_replicas: 3
