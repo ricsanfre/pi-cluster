@@ -30,7 +30,7 @@ collections:
   - name: kubernetes.core
     version: 3.0.0
   - name: community.hashi_vault
-    version: 6.1.0
+    version: 6.2.0
   - name: ansible.posix
     version: 1.5.4
   - name: community.crypto
