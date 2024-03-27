@@ -2,7 +2,7 @@
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "01-11-2022"
+last_modified_at: "27-03-2024"
 
 ---
 
@@ -293,6 +293,32 @@ write:
 read:
   # Number of replicas for the read
   replicas: 2
+  persistence:
+    # -- Size of persistent disk
+    size: 10Gi
+    # -- Storage class to be used.
+    storageClass: longhorn
+
+  # Enable environment variables in config file
+  # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: loki-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: loki-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+
+# Configuration for the backend
+backend:
+  # Number of replicas for the backend
+  replicas: 3
   persistence:
     # -- Size of persistent disk
     size: 10Gi

@@ -141,7 +141,7 @@ loki:
 
   # Configuration for the backend
   backend:
-    # Number of replicas for the read
+    # Number of replicas for the backend
     replicas: 3
     persistence:
       # -- Size of persistent disk
