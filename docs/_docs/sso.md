@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "20-01-2024"
+last_modified_at: "31-03-2024"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -172,6 +172,7 @@ Alternatively, it can be provided in an external secret.
 - Step 9: Create a new realm 'picluster'
   
   Follow procedure in Keycloak documentation:[Keycloak: Creating a Realm](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-a-realm_server_administration_guide)
+
 
 ### Configure Oauth2-Proxy Client
 
@@ -404,8 +405,8 @@ As workaround, the issue can be solved providing the credentials in a external s
   apiVersion: v1
   kind: Secret
   metadata:
-      name: keycloak-secret
-      namespace: keycloak
+      name: oauth2-proxy-secret
+      namespace: oauth2-proxy
   type: kubernetes.io/basic-auth
   data:
     client-id: <`echo -n 'oauth2-proxy' | base64`> 
@@ -414,14 +415,14 @@ As workaround, the issue can be solved providing the credentials in a external s
     redis-password: <`openssl rand -base64 32 | head -c 32 | base64`>
   ```
   
-  client-secret value should be taken from Keycloak configuration
+  client-secret value should be taken from Oauth2-proxy client configuration
 
-- Step 2: Add existingSecret to keycloak-values.yaml and install helm chart
+- Step 2: Add existingSecret to oauth2-proxy-values.yaml and install helm chart
 
   ```yaml
   # Admin user
   auth:
-    existingSecret: keycloak-secret
+    existingSecret: oauth2-proxy-secret
     # clientID: "oauth2-proxy"
     # clientSecret: "supersecreto"
     # cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
