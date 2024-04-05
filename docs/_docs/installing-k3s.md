@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "03-02-2024"
+last_modified_at: "05-04-2024"
 ---
 
 
@@ -102,12 +102,12 @@ In this configuration, each agent node is registered to the same server node. A 
     For installing the master node execute the following command:
 
     ```shell
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/master=true:NoSchedule' --disable 'servicelb' --disable 'traefik' --disable 'local-path' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/control-plane:NoSchedule' --disable 'servicelb' --disable 'traefik' --disable 'local-path' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
     ```
     Where:
     - `server_token` is shared secret within the cluster for allowing connection of worker nodes
     - `--write-kubeconfig-mode '0644'` gives read permissions to kubeconfig file located in `/etc/rancher/k3s/k3s.yaml`
-    - `--node-taint 'node-role.kubernetes.io/master=true:NoSchedule'` makes master node not schedulable to run any pod. Only pods marked with specific tolerance will be scheduled on master node. 
+    - `--node-taint 'node-role.kubernetes.io/control-plane:NoSchedule'` makes master node not schedulable to run any pod. Only pods marked with specific tolerance will be scheduled on master node.
     - `--disable servicelb` to disable default service load balancer installed by K3S (Klipper Load Balancer). Metallb will be used instead.
     - `--disable local-storage` to disable local storage persistent volumes provider installed by K3S (local-path-provisioner). Longhorn will be used instead
     - `--disable traefik` to disable default ingress controller installed by K3S (Traefik). Traefik will be installed from helm chart.
@@ -122,11 +122,13 @@ In this configuration, each agent node is registered to the same server node. A 
 
     Avoid the use of documented taint `k3s-controlplane=true:NoExecute` used to avoid deployment of pods on master node. We are interested on running certain pods on master node, like the ones needed to collect logs/metrics from the master node.
 
-    Instead, use the taint `node-role.kubernetes.io/master=true:NoSchedule`.
+    Instead, use the taint `node-role.kubernetes.io/control-plane:NoSchedule`.
 
-    K3S common services: core-dns, metric-service, service-lb are configured with tolerance to `node-role.kubernetes.io/master` taint, so they will be scheduled on master node.
+    K3S common services: core-dns, metric-service, service-lb are configured with tolerance to `node-role.kubernetes.io/control-plane` taint, so they will be scheduled on master node.
 
-    Metal-lb, load balancer to be used within the cluster, uses this tolerance as well, so daemonset metallb-speaker can be deployed on master node. Other Daemonset pods, like fluentd, have to specify this specific tolerance to be able to get logs from master node.
+    Metal-lb, load balancer to be used within the cluster, uses this tolerance as well, so daemonset metallb-speaker can be deployed on master node.
+
+    Other Daemonset pods, like fluent-bit, have to specify this specific tolerance to be able to get logs from master nodes.
     
     See this [K3S PR](https://github.com/k3s-io/k3s/pull/1275) where this feature was introduced.  
     {{site.data.alerts.end}}
