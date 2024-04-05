@@ -2,7 +2,7 @@
 title: Ingress Controller (NGINX)
 permalink: /docs/nginx/
 description: How to configure Nginx Ingress Controller in our Pi Kubernetes cluster.
-last_modified_at: "09-10-2023"
+last_modified_at: "05-04-2024"
 ---
 
 All HTTP/HTTPS traffic coming to K3S exposed services should be handled by a Ingress Controller.
@@ -128,7 +128,7 @@ controller:
       terminationMessagePolicy: File
       volumeMounts:
       - mountPath: /data
-          name: data
+        name: data
 ```
 
 This configuration enables NGINX access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
