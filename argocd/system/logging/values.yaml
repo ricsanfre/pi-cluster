@@ -682,7 +682,7 @@ fluent-bit:
 
   # Enable fluentbit instalaltion on master node.
   tolerations:
-    - key: node-role.kubernetes.io/master
+    - key: node-role.kubernetes.io/control-plane
       operator: Exists
       effect: NoSchedule
 

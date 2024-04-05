@@ -3,7 +3,7 @@ title: Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 
-last_modified_at: "29-03-2024"
+last_modified_at: "05-04-2024"
 
 ---
 
@@ -1494,7 +1494,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
 
   # Enable fluentbit instalaltion on master node.
   tolerations:
-    - key: node-role.kubernetes.io/master
+    - key: node-role.kubernetes.io/control-plane
       operator: Exists
       effect: NoSchedule
 
@@ -1855,7 +1855,7 @@ Fluentbit pod tolerations can be configured through helm chart value `toleration
 
 ```yml
   tolerations:
-    - key: node-role.kubernetes.io/master
+    - key: node-role.kubernetes.io/control-plane
       operator: Exists
       effect: NoSchedule
 ```
