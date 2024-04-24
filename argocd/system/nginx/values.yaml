@@ -27,15 +27,15 @@ ingress-nginx:
     allowSnippetAnnotations: true
 
     config:
-      # Open Tracing
-      enable-opentracing: "true"
-      zipkin-collector-host: tracing-tempo-distributor.tracing.svc.cluster.local
-      zipkin-service-name: nginx-internal
+      # Open Telemetry
+      enable-opentelemetry: "true"
+      otlp-collector-host: tracing-tempo-distributor.tracing.svc.cluster.local
+      otlp-service-name: nginx-internal
       # Print access log to file instead of stdout
       # Separating acces logs from the rest
       access-log-path: "/data/access.log"
       log-format-escape-json: "true"
-      log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "request_method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentracing_context_x_b3_traceid", "span_id": "$opentracing_context_x_b3_spanid"}'
+      log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "request_method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentelemetry_trace_id", "span_id": "$opentelemetry_span_id"}'
     # controller extra Volume
     extraVolumeMounts:
       - name: data
