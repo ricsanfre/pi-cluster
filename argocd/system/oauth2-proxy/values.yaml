@@ -7,7 +7,7 @@ oauth2-proxy:
     annotations: {}
     # OAuth client ID
     # Follow instructions to configure Keycloak client
-    # https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider#keycloak-oidc-auth-provider
+    # https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/keycloak_oidc
 
     # clientID, clientSecret and cookieSecret stored in a Secret
     existingSecret: oauth2-proxy-secret

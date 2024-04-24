@@ -180,7 +180,7 @@ OAuth2-Proxy client application need to be configured within 'picluster' realm.
 
 Procedure in Keycloak documentation: [Keycloak: Creating an OpenID Connect client](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-oidc-client_server_administration_guide)
 
-Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](https://oauth2-proxy.github.io/oauth2-proxy/configuration/oauth_provider/#keycloak-oidc-auth-provider) to provide the proper configuration.
+Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/keycloak_oidc) to provide the proper configuration.
 
 - Step 1: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
   Clients -> Create client
@@ -310,7 +310,7 @@ New ConfigMap, containing the JSON files to be imported need to be mounted by ke
     annotations: {}
     # OAuth client ID
     # Follow instructions to configure Keycloak client
-    # https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider#keycloak-oidc-auth-provider
+    # https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/keycloak_oidc
 
     # Oauth2 client configuration. From Keycloak configuration
     clientID: "oauth2-proxy"
