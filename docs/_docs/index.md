@@ -328,7 +328,7 @@ The software used and the latest version tested of each component
 | Type | Software | Latest Version tested | Notes |
 |-----------| ------- |-------|----|
 | OS | Ubuntu | 22.04.2 | |
-| Control | Ansible | 2.16.3  | |
+| Control | Ansible | 2.16.5  | |
 | Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 22.04.2 |
 | Kubernetes | K3S | v1.29.1 | K3S version|
 | Kubernetes | Helm | v3.12 ||
@@ -341,10 +341,10 @@ The software used and the latest version tested of each component
 | Service Mesh | Linkerd | v2.14.10 | Helm chart version: linkerd-control-plane-1.16.11 |
 | Service Proxy | Traefik | v2.10.6 | Helm chart version: 26.0.0  |
 | Service Proxy | Ingress NGINX | v1.9.6 | Helm chart version: 4.9.1 |
-| Storage | Longhorn | v1.5.3 | Helm chart version: 1.5.3 |
+| Storage | Longhorn | v1.6.1 | Helm chart version: 1.6.1 |
 | Storage | Minio | RELEASE.2024-03-03T17-50-39Z | Helm chart version: 5.1.0 |
 | TLS Certificates | Certmanager | v1.14.3| Helm chart version: v1.14.3  |
-| Logging | ECK Operator |  2.12.0 | Helm chart version: 2.11.1 |
+| Logging | ECK Operator |  2.12.1 | Helm chart version: 2.12.1 |
 | Logging | Elastic Search | 8.13.0 | Deployed with ECK Operator |
 | Logging | Kibana | 8.13.0 | Deployed with ECK Operator |
 | Logging | Fluentbit | 2.2.2 | Helm chart version: 0.44.0 |
@@ -356,14 +356,14 @@ The software used and the latest version tested of each component
 | Monitoring | AlertManager | v0.27.0 | Installed by Kube Prometheus Stack. Helm chart version: 57.1.1 |
 | Monitoring | Grafana | 10.4.0 | Installed as dependency of Kube Prometheus Stack chart 57.1.1 |
 | Monitoring | Prometheus Node Exporter | v1.7.0 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 57.1.1 |
-| Monitoring | Prometheus Elasticsearch Exporter | 1.7.0 | Helm chart version: prometheus-elasticsearch-exporter-5.6.0 |
+| Monitoring | Prometheus Elasticsearch Exporter | 1.7.0 | Helm chart version: prometheus-elasticsearch-exporter-5.7.0 |
 | Tracing | Grafana Tempo | 2.4.0 | Helm chart: tempo-distributed (1.9.0) |
 | Backup | Minio External (self-hosted) | RELEASE.2024-03-07T00:43:48Z | |
 | Backup | Restic | 0.16.4 | |
 | Backup | Velero | 1.13.0 | Helm chart version: 6.0.0 |
-| Secrets | Hashicorp Vault | 1.15.6 | |
+| Secrets | Hashicorp Vault | 1.16.1 | |
 | Secrets| External Secret Operator | 0.9.13 | Helm chart version: 0.9.13 |
-| SSO | Keycloak | 23.0.7 | Bitnami Helm chart version: 19.3.4 |
+| SSO | Keycloak | 23.0.7 | Bitnami Helm chart version: 19.4.1 |
 | SSO| Oauth2.0 Proxy | 7.6.0 | Helm chart version: 7.1.0 |
-| GitOps | Argo CD | v2.10.4 | Helm chart version: 6.7.3 |
+| GitOps | Argo CD | v2.10.6 | Helm chart version: 6.7.10 |
 {: .table .table-white .border-dark }
