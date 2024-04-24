@@ -12,7 +12,7 @@ dependencies:
     version: 0.44.0
     repository: https://fluent.github.io/helm-charts
   - name: loki
-    version: 5.47.1
+    version: 5.47.2
     repository: https://grafana.github.io/helm-charts
   - name: prometheus-elasticsearch-exporter
     version: 5.7.0
