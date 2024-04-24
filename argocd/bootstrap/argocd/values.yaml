@@ -9,7 +9,7 @@ argo-cd:
       # Traefik finishes TLS connections
       server.insecure: true
     cm:
-      statusbadge.enabled: 'true'
+      statusbadge.enabled: true
       resource.customizations.health.argoproj.io_Application: |
         hs = {}
         hs.status = "Progressing"

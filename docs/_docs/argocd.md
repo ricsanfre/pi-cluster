@@ -48,7 +48,7 @@ ArgoCD can be installed through helm chart
       # Ingress NGINX finishes TLS connections
       server.insecure: true
     cm:
-      statusbadge.enabled: 'true'
+      statusbadge.enabled: true
       # Adding Applications health check
       resource.customizations.health.argoproj.io_Application: |
         hs = {}
