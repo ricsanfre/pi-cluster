@@ -2,7 +2,7 @@
 title: Service Mesh (Linkerd)
 permalink: /docs/service-mesh/
 description: How to deploy service-mesh architecture based on Linkerd. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "29-07-2023"
+last_modified_at: "01-05-2024"
 
 ---
 
@@ -14,10 +14,37 @@ Introduce Service Mesh architecture to add observability, traffic management, an
 
 ## Why Linkerd and not Istio
 
+{{site.data.alerts.warning}} **Update May 2024**
+
+Main reasons for selecting Linkerd over Istio were:
+- ARM64 architecture support
+- Better performance and reduced memory/cpu footprint
+
+Since the initial evaluation was made:
+
+- In Aug 2022, Istio, introduced ARM64 support in release 1.15. See [istio 1.15 announcement](https://istio.io/latest/news/releases/1.15.x/announcing-1.15/)
+
+- In Feb 2024, Linkerd maintaner, Buyoyant, announced that it would no longer provide stable builds. See [Linkerd 2.15 release announcement](https://linkerd.io/2024/02/21/announcing-linkerd-2.15/#a-new-model-for-stable-releases). That decision prompted CNCF to open a health check on the project.
+
+- Istio is developing a sidecarless architecture, [Ambient mode](https://istio.io/latest/docs/ops/ambient/), which is expected to use a reduced footprint. In March 2024, Istio announced the beta relase of Ambient mode for upcoming 1.22 istio release: See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
+
+
+For those reasons, Service Mesh architecture will be migrate to Istio. See [issue #320](https://github.com/ricsanfre/pi-cluster/issues/320)
+
+{{site.data.alerts.end}}
+
+
+- **Open Source Community**
+
+  Istio and Linkerd both are CNCF graduated projects.
+
 - **ARM support**
 
-  Most known Service Mesh implementation, [Istio](https://istio.io), is not currently supporting ARM64 architecture.
-  [Linkerd](https://linkerd.io/), which is a CNCF graduated project, does support ARM64 architectures since release 2.9. See [linkerd 2.9 announcement](https://linkerd.io/2020/11/09/announcing-linkerd-2.9/).
+  At the time the initial evaluation was made to select the service mesh for the cluster, Istio did not support ARM64 architectures while Linkerd did support it.
+
+  [Istio](https://istio.io) added ARM64 architecture support in release 1.15. See [istio 1.15 announcement](https://istio.io/latest/news/releases/1.15.x/announcing-1.15/).
+
+  [Linkerd](https://linkerd.io/) supports ARM64 architectures since release 2.9. See [linkerd 2.9 announcement](https://linkerd.io/2020/11/09/announcing-linkerd-2.9/).
 
 - **Performance and reduced footprint**
 
