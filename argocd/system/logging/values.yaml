@@ -66,6 +66,10 @@ serviceMonitor:
 ##################
 
 loki:
+
+  # Setting simple scalable deployment mode
+  deploymentMode: SimpleScalable
+
   loki:
     # Disable multi-tenant support
     auth_enabled: false
@@ -86,6 +90,16 @@ loki:
           idle_conn_timeout: 90s
           response_header_timeout: 0s
           insecure_skip_verify: false
+    # Storage Schema
+    schemaConfig:
+      configs:
+      - from: 2024-04-01
+        store: tsdb
+        index:
+          prefix: loki_index_
+          period: 24h
+        object_store: s3
+        schema: v13
 
   # Configuration for the write
   write:
