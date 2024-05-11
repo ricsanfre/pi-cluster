@@ -2,7 +2,7 @@
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "27-03-2024"
+last_modified_at: "11-05-2024"
 
 ---
 
@@ -23,6 +23,7 @@ All Loki components are included within a single binary (docker image) that  sup
   In this deployment, Loki is deployed in HA, deploying replicas of write and read nodes (processes)
   - Write nodes: supporting write path. *Distributor* and *Ingestor* components, responsible to store logs and indexes in the back-end storage (Minio S3 storage)
   - Read nodes: supporting read path. *Ruler*, *Querier* and *Frontend Querier* components, responsible to answer to log queries.
+  - Backend nodes: loki backend services *Compactor*, *Index gateways* and *Query scheduler – Ruler*
   - Gateway node: a load balancer in front of Loki (nginx based), which directs `/loki/api/v1/push` traffic to the write nodes. All other requests go to the read nodes. Traffic should be sent in a round robin fashion.
 
 - Microservices
@@ -130,6 +131,9 @@ Installation from helm chart. There are two alternatives:
 - Step 4: Create file `loki-values.yml`
 
   ```yml
+  # Setting simple scalable deployment mode
+  deploymentMode: SimpleScalable
+
   loki:
     # Disable multi-tenant support
     auth_enabled: false
@@ -151,11 +155,21 @@ Installation from helm chart. There are two alternatives:
           idle_conn_timeout: 90s
           response_header_timeout: 0s
           insecure_skip_verify: false
+    # Storage Schema
+    schemaConfig:
+      configs:
+      - from: 2024-04-01
+        store: tsdb
+        index:
+          prefix: loki_index_
+          period: 24h
+        object_store: s3
+        schema: v13
 
   # Configuration for the write
   write:
     # Number of replicas for the write
-    replicas: 2
+    replicas: 3
     persistence:
       # -- Size of persistent disk
       size: 10Gi
@@ -165,7 +179,17 @@ Installation from helm chart. There are two alternatives:
   # Configuration for the read
   read:
     # Number of replicas for the read
-    replicas: 2
+    replicas: 3
+    persistence:
+      # -- Size of persistent disk
+      size: 10Gi
+      # -- Storage class to be used.
+      storageClass: longhorn
+
+  # Configuration for the backend
+  backend:
+    # Number of replicas for the backend
+    replicas: 3
     persistence:
       # -- Size of persistent disk
       size: 10Gi
@@ -199,11 +223,15 @@ Installation from helm chart. There are two alternatives:
 
   This configuration:
 
+  - Set simple scalable deployment mode (`deploymentMode: SimpleScalable`)
+
   - Disable multi-tenant support (`auth_enabled: false`) so it is not needed to provide org_id in HTTP headers.
 
-  - Enable S3 as storage backend, providing Minio credentials and bucket.
+  - Enable S3 as storage backend, providing Minio credentials and bucket. (`loki.storage`).
 
-  - Configure two replicas for write (`write`) and read (`read`) component and persistent volumes using Longhorn
+  - Configure TSDB as storage schema (`loki.schemaConfig`). See [Loki Storage Schema doc](https://grafana.com/docs/loki/latest/operations/storage/schema/) and [TSDB Storage](https://grafana.com/docs/loki/latest/operations/storage/tsdb/)
+
+  - Configure three replicas for write (`write`), read (`read`) and backend (`backend`)components and persistent volumes using Longhorn
 
   - Enable one replica for gateway component (`gateway`)
 
@@ -263,10 +291,21 @@ loki:
         response_header_timeout: 0s
         insecure_skip_verify: false
 
+    # Storage Schema
+    schemaConfig:
+      configs:
+      - from: 2024-04-01
+        store: tsdb
+        index:
+          prefix: loki_index_
+          period: 24h
+        object_store: s3
+        schema: v13
+
 # Configuration for the write
 write:
   # Number of replicas for the write
-  replicas: 2
+  replicas: 3
   persistence:
     # -- Size of persistent disk
     size: 10Gi
@@ -292,7 +331,7 @@ write:
 # Configuration for the read
 read:
   # Number of replicas for the read
-  replicas: 2
+  replicas: 3
   persistence:
     # -- Size of persistent disk
     size: 10Gi
