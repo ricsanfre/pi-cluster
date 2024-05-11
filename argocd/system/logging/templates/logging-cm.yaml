@@ -5,6 +5,6 @@ metadata:
   name: logging-stack-cm
   namespace: {{ .Release.Namespace }}
 data:
-  lokiURL: "http://loki-gateway"
+  lokiURL: "http://logging-loki-gateway"
   elasticsearchHost: {{ .Values.eck.clusterName }}-es-http
   fluentdHost: {{ .Release.Name }}-fluentd
