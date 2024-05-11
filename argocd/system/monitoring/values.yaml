@@ -189,7 +189,7 @@ kube-prometheus-stack:
       type: loki
       uid: loki
       access: proxy
-      url: http://loki-gateway.logging.svc.cluster.local
+      url: http://logging-loki-gateway.logging.svc.cluster.local
       jsonData:
         derivedFields:
             # Traefik traces integration
