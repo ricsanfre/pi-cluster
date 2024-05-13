@@ -2,7 +2,7 @@
 title: TLS Certificates (Cert-Manager)
 permalink: /docs/certmanager/
 description: How to deploy a centralized TLS certificates management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "17-01-2023"
+last_modified_at: "13-05-2024"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
@@ -194,14 +194,14 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
       algorithm: ECDSA
       size: 256
     issuerRef:
-      name: selfsigned-issuer
+      name: self-signed-issuer
       kind: ClusterIssuer
       group: cert-manager.io
   ---
   apiVersion: cert-manager.io/v1
   kind: ClusterIssuer
   metadata:
-    name: my-ca-issuer
+    name: ca-issuer
     namespace: certmanager
   spec:
     ca:
