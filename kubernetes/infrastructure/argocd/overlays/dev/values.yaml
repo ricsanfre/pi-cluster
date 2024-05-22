@@ -1,0 +1,5 @@
+server:
+  # Ingress Resource.
+  ingress:
+    ## Disable ingress resourece
+    enabled: false
