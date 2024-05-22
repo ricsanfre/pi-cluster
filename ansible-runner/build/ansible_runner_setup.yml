@@ -1,0 +1,17 @@
+---
+
+- name: Ansible runner setup
+  hosts: localhost
+  gather_facts: false
+  become: true
+  vars:
+    install_kubectl: true
+    install_helm: true
+    k8s_platform: linux
+    k8s_arch: amd64
+    kubectl_version: "1.29.4"
+    # SHA512 checksum of the binary (see https://dl.k8s.io/release/v1.29.4/bin/linux/amd64/kubectl.sha512)
+    kubectl_checksum_binary: "sha512:12781a4dfb55ad03bc35cdfec0054ff60747934cbc5075816fbdf2cefcdc7dc92ee318d136b485ea49d0e896fb1fa34361ac87b9ad425a1464c7855ebb8ade17"
+    helm_version: 'v3.15.0'
+  roles:
+    - role: ricsanfre.k8s_cli
