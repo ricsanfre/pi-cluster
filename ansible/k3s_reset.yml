@@ -3,6 +3,7 @@
   become: true
   gather_facts: false
   tasks:
+    - import_tasks: tasks/clean_cilium.ymml
     - name: Uninstall k3s
       command: /usr/local/bin/k3s-uninstall.sh
       changed_when: true
@@ -13,6 +14,7 @@
   become: true
   gather_facts: false
   tasks:
+    - import_tasks: tasks/clean_cilium.ymml
     - name: Uninstall k3s
       command: /usr/local/bin/k3s-agent-uninstall.sh
       changed_when: true

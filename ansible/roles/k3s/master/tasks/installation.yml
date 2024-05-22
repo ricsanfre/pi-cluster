@@ -9,8 +9,8 @@
       block:
         - name: install master
           include_tasks: k3s_install.yml
-        - name: wait for master to be ready
-          include_tasks: wait_for_master_node.yml
+        # - name: wait for master to be ready
+        #   include_tasks: wait_for_master_node.yml
     - name: Install secondary masters in case of HA mode
       # Secondary masters need to be added sequentially
       # otherwise, "ETCD join failed: etcdserver: too many learner members in cluster" appears.
