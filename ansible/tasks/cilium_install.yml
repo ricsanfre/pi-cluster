@@ -1,0 +1,28 @@
+---
+
+- name: Cilium installation
+  become: false
+  shell: |
+    set -o pipefail
+    kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+     ../kubernetes/infrastructure/cilium/overlays/prod | kubectl apply -f -
+  args:
+    executable: /bin/bash
+  register: output
+  changed_when: true
+
+- name: Wait for Cilium CRDs to be ready
+  command:
+    cmd: "kubectl wait --for condition=Established crd/ciliuml2announcementpolicies.cilium.io crd/ciliuml2announcementpolicies.cilium.io --timeout=600s"
+  changed_when: false
+
+- name: Cilium configuration
+  become: false
+  shell: |
+    set -o pipefail
+    kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+     ../kubernetes/infrastructure/cilium-config/overlays/prod | kubectl apply -f -
+  args:
+    executable: /bin/bash
+  register: output
+  changed_when: true

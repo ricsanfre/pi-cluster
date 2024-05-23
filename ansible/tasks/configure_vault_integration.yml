@@ -1,11 +1,15 @@
 ---
 
 - name: Configure vault service account and create token
-  kubernetes.core.k8s:
-    definition: "{{ lookup('ansible.builtin.file', '../argocd/bootstrap/vault/' + item ) }}"
-    state: present
-  with_items:
-    - vault-auth-serviceaccount.yaml
+  become: false
+  shell: |
+    set -o pipefail
+    kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+     ../kubernetes/bootstrap/vault/overlays/prod | kubectl apply -f -
+  args:
+    executable: /bin/bash
+  register: output
+  changed_when: true
 
 - name: Get Token review
   shell: |

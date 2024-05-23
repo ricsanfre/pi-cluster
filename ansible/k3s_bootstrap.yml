@@ -1,7 +1,7 @@
 ---
 
 - name: Bootstrap Cluster
-  hosts: bootstrap
+  hosts: localhost
   gather_facts: false
   become: false
 
@@ -13,6 +13,7 @@
     K8S_AUTH_KUBECONFIG: ~/.kube/config
 
   pre_tasks:
+
     # Install Python PIP and jq utility packages
     - name: Ensure required packages are installed.
       package:
@@ -48,67 +49,15 @@
       include_vars: "vars/picluster.yml"
 
   tasks:
-    - name: Create namespaces.
-      kubernetes.core.k8s:
-        name: "{{ item }}"
-        api_version: v1
-        kind: Namespace
-        state: present
-      with_items:
-        - "argocd"
-        - "vault"
+
+    - name: Install Cilium CNI
+      include_tasks: tasks/cilium_install.yml
 
     - name: Configure Vault integration
       include_tasks: tasks/configure_vault_integration.yml
 
-    - name: Copy argocd chart and crds
-      ansible.builtin.copy:
-        src: "../argocd/{{ item }}"
-        dest: /tmp/charts
-      with_items:
-        - "bootstrap/crds"
-        - "bootstrap/argocd"
-
-    - name: Install CRDs
-      ansible.builtin.shell: |
-        set -o pipefail
-        kubectl kustomize /tmp/charts/crds --enable-helm \
-        | kubectl apply --server-side -f -
-      args:
-        executable: /bin/bash
-
-    - name: Update argo-cd helm dependency.
-      ansible.builtin.command:
-        cmd: "helm dependency update /tmp/charts/argocd"
-
-    - name: Deploy Argo CD Helm chart.
-      shell: |
-        set -o pipefail
-        helm template \
-        --dependency-update \
-        --include-crds \
-        --namespace argocd \
-        argocd /tmp/charts/argocd \
-        | kubectl apply -n argocd -f -
-      args:
-        executable: /bin/bash
-
-    - name: Wait for CRDs to be ready
-      command:
-        cmd: "kubectl wait --for condition=Established crd/applications.argoproj.io crd/applicationsets.argoproj.io --timeout=600s"
-      changed_when: false
-
-    - name: Deploy root application
-      kubernetes.core.k8s:
-        definition: "{{ lookup('template', 'templates/' + item ) }}"
-        state: present
-      with_items:
-        - argocd_root_app.yml.j2
-
-    - name: Recursively remove tmp directory
-      ansible.builtin.file:
-        path: /tmp/charts
-        state: absent
+    - name: ArgoCD bootstrap
+      include_tasks: tasks/argocd_bootstrap.yml
 
     - name: Install cli utils.
       include_tasks: tasks/install_cli_utils.yml

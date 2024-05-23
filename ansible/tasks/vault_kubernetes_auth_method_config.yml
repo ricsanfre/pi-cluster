@@ -32,6 +32,7 @@
       X-Vault-Token: "{{ vault_token }}"
   failed_when:
     - false
+  delegate_to: node1
   register: vault_status_kubernetes_auth_method
 
   # Enable kubernetes auth method
@@ -51,6 +52,7 @@
       - 204
   when:
     - "'kubernetes/' not in vault_status_kubernetes_auth_method.json.data"
+  delegate_to: node1
 
 - name: Configure kubernetes auth method
   ansible.builtin.uri:
@@ -66,6 +68,7 @@
     status_code:
       - 200
       - 204
+  delegate_to: node1
 
 - name: Create External Secrets role
   ansible.builtin.uri:
@@ -81,3 +84,4 @@
     status_code:
       - 200
       - 204
+  delegate_to: node1
