@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: infra
+  namespace: argocd
 spec:
   generators:
   - list:
@@ -9,11 +10,11 @@ spec:
      - name: external-secrets
        namespace: external-secrets
        path: kubernetes/infrastructure/externals-secret/overlays/prod
-       syncWave: 0
+       syncWave: "'0'"
      - name: cert-manager
        namespace: cert-manager
        path: kubernetes/infrastructure/cert-manager/overlays/prod
-       syncWave: 1
+       syncWave: "'1'"
   template:
     metadata: 
       name: "{{name}}"
