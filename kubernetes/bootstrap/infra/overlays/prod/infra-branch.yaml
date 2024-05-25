@@ -3,6 +3,17 @@ kind: ApplicationSet
 metadata:
   name: infra
 spec:
+  generators:
+  - list:
+     elements:
+     - name: external-secrets
+       namespace: external-secrets
+       path: kubernetes/infrastructure/externals-secret/overlays/prod
+       syncWave: 0
+     - name: cert-manager
+       namespace: cert-manager
+       path: kubernetes/infrastructure/cert-manager/overlays/prod
+       syncWave: 1
   template:
     spec:
       destination:
