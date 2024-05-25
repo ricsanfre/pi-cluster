@@ -24,7 +24,7 @@ spec:
     spec:
       destination:
         namespace: "{{namespace}}"
-        server: in-cluster
+        name: in-cluster
       project: picluster
       source:
         path: "{{path}}"

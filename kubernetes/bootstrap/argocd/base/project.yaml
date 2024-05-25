@@ -7,7 +7,7 @@ spec:
   sourceRepos:
     - 'https://github.com/ricsanfre/*'
   destinations:
-    - namespace: 'argocd'
+    - namespace: '*'
       server: '*'
   clusterResourceWhitelist:
     - group: '*'
