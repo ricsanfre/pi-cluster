@@ -3,5 +3,6 @@ kind: Kustomization
 
 resources:
   - ns.yaml
+  - self-signed-issuer.yaml
   - ca-issuer.yaml
 
