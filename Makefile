@@ -64,6 +64,11 @@ k3s-install:
 k3s-bootstrap:
 	${RUNNER} ansible-playbook k3s_bootstrap.yml
 
+.PHONY: k3s-bootstrap-dev
+k3s-bootstrap-dev:
+	${RUNNER} ansible-playbook k3s_bootstrap.yml -e overlay=dev
+
+
 .PHONY: k3s-reset
 k3s-reset:
 	${RUNNER} ansible-playbook k3s_reset.yml

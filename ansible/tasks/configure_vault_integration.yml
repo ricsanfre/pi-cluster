@@ -5,7 +5,7 @@
   shell: |
     set -o pipefail
     kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
-     ../kubernetes/bootstrap/vault/overlays/prod | kubectl apply -f -
+     ../kubernetes/bootstrap/vault/overlays/"{{overlay}}" | kubectl apply -f -
   args:
     executable: /bin/bash
   register: output

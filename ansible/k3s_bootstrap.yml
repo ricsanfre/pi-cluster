@@ -50,6 +50,11 @@
 
   tasks:
 
+    - name: Set overlay to prod in case not defined by an input argument
+      set_fact:
+        overlay: "prod"
+      when: overlay is undefined
+
     - name: Install Cilium CNI
       include_tasks: tasks/cilium_install.yml
 
