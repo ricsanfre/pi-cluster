@@ -5,4 +5,6 @@ resources:
   - ns.yaml
   - self-signed-issuer.yaml
   - ca-issuer.yaml
+  - ionos-externalsecret.yaml
+  - ionos-issuer.yaml
 
