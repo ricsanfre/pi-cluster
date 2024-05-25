@@ -4,6 +4,6 @@ kind: Kustomization
 resources:
   - ../../base
 
-patchesStrategicMerge:
-- infra-branch.yaml
-- delete-app-set.yaml
+patches:
+- path: infra-branch.yaml
+- path: delete-app-set.yaml

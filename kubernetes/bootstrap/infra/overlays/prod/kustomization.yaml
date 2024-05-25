@@ -4,5 +4,5 @@ kind: Kustomization
 resources:
   - ../../base
 
-patchesStrategicMerge:
-- infra-branch.yaml
+patches:
+- path: infra-branch.yaml
