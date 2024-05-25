@@ -8,7 +8,7 @@ metadata:
 spec:
   project: picluster
   source:
-    path: kubernetes/bootstrap/infra
+    path: kubernetes/bootstrap/infra/overlays/prod
     repoURL: https://github.com/ricsanfre/pi-cluster
     targetRevision: master
   destination:
