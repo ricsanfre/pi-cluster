@@ -9,7 +9,7 @@ spec:
      elements:
      - name: external-secrets
        namespace: external-secrets
-       path: kubernetes/infrastructure/externals-secret/overlays/prod
+       path: kubernetes/infrastructure/external-secrets/overlays/prod
        syncWave: "'0'"
      - name: cert-manager
        namespace: cert-manager
