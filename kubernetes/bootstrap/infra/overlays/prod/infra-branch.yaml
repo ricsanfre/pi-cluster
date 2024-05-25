@@ -16,6 +16,5 @@ spec:
        syncWave: 1
   template:
     spec:
-      destination:
       source:
         targetRevision: master
