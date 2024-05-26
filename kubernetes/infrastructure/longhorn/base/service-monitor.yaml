@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: longhorn
+    release: longhorn
+  name: longhorn-prometheus-servicemonitor
+  namespace: longhorn-system
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  namespaceSelector:
+    matchNames:
+      - longhorn
+  endpoints:
+    - port: manager
