@@ -1,0 +1,54 @@
+# velero helm values (base)
+
+
+# AWS backend and CSI plugins configuration
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.9.2
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+  - name: velero-plugin-for-csi
+    image: velero/velero-plugin-for-csi:v0.7.1
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Velero Configuration
+configuration:
+  # Configure Minio as backup backend
+  backupStorageLocation:
+    - provider: aws
+      bucket: k3s-velero
+      config:
+        region: eu-west-1
+        s3ForcePathStyle: true
+        s3Url: https://s3.ricsanfre.com:9091
+      # insecureSkipTLSVerify: true
+  # Enable CSI snapshot support
+  features: EnableCSI
+credentials:
+  existingSecret: velero-secret
+
+# Enable linkerd
+podAnnotations:
+  linkerd.io/inject: enabled
+
+# Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
+snapshotsEnabled: false
+
+# Run velero only on amd64 nodes
+# velero-plugin-for-csi was not available for ARM architecture (version < 0.6.0)
+# Starting from plugin version 0.6.0 (Velero 1.12) ARM64 is available and so
+# This rule is not longer required
+# affinity:
+#   nodeAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/arch
+#           operator: In
+#           values:
+#           - amd64

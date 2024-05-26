@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: longhorn
-    release: longhorn
+    release: monitoring
   name: longhorn-prometheus-servicemonitor
   namespace: longhorn-system
 spec:
