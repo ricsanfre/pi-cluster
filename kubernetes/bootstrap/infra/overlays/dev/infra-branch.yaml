@@ -21,7 +21,7 @@ spec:
        syncWave: "'0'"
      - name: argo-cd
        namespace: argocd
-       path: kubernetes/infrastructure/arcocd/overlays/dev
+       path: kubernetes/infrastructure/argocd/overlays/dev
        syncWave: "'0'"
      - name: system-upgrade
        namespace: system-upgrade
