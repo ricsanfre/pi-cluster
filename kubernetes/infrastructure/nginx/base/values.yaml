@@ -1,8 +1,6 @@
 # nginx helm values (base)
 
 controller:
-  podAnnotations:
-    linkerd.io/inject: enabled
   # Enabling Promethues metrics and Service Monitoring
   metrics:
     enabled: true
