@@ -7,6 +7,10 @@ spec:
   generators:
   - list:
      elements:
+     - name: crds
+       namespace: default
+       path: kubernetes/infrastructure/crds/overlays/dev
+       syncWave: "'0'"
      - name: cilium
        namespace: kube-system
        path: kubernetes/infrastructure/cilium/overlays/dev
