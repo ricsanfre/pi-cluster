@@ -7,14 +7,26 @@ spec:
   generators:
   - list:
      elements:
+     - name: cilium
+       namespace: kube-system
+       path: kubernetes/infrastructure/cilium/overlays/dev
+       syncWave: "'0'"
+     - name: cilium-config
+       namespace: kube-system
+       path: kubernetes/infrastructure/cilium-config/overlays/dev
+       syncWave: "'0'"
+     - name: argo-cd
+       namespace: argocd
+       path: kubernetes/infrastructure/arcocd/overlays/dev
+       syncWave: "'0'"
      - name: external-secrets
        namespace: external-secrets
        path: kubernetes/infrastructure/external-secrets/overlays/dev
-       syncWave: "'0'"
+       syncWave: "'1'"
      - name: cert-manager
        namespace: cert-manager
        path: kubernetes/infrastructure/cert-manager/overlays/dev
-       syncWave: "'1'"
+       syncWave: "'2'"
   template:
     spec:
       source:
