@@ -2,7 +2,7 @@ apiVersion: velero.io/v1
 kind: Schedule
 metadata:
   name: full
-  namespace: {{ .Release.Namespace }}
+  namespace: velero
 spec:
   schedule: 0 4 * * *
   template:
