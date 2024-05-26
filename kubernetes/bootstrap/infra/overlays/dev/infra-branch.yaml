@@ -47,14 +47,18 @@ spec:
        namespace: longhorn-system
        path: kubernetes/infrastructure/longhorn/overlays/dev
        syncWave: "'6'"
+     - name: minio
+       namespace: minio
+       path: kubernetes/infrastructure/minio/overlays/dev
+       syncWave: "'7'"
      - name: keycloak
        namespace: keycloak
        path: kubernetes/infrastructure/keycloak/overlays/dev
-       syncWave: "'7'"
+       syncWave: "'8'"
      - name: oauth2-proxy
        namespace: oauth2-proxy
        path: kubernetes/infrastructure/oauth2-proxy/overlays/dev
-       syncWave: "'7'"
+       syncWave: "'9'"
 
 
   template:
