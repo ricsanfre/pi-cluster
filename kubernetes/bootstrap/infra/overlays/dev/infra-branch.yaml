@@ -47,6 +47,10 @@ spec:
        namespace: longhorn-system
        path: kubernetes/infrastructure/longhorn/overlays/dev
        syncWave: "'6'"
+     - name: keycloak
+       namespace: keycloak
+       path: kubernetes/infrastructure/keycloak/overlays/dev
+       syncWave: "'7'"
 
   template:
     spec:
