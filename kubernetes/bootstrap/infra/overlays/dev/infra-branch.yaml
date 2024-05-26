@@ -19,14 +19,18 @@ spec:
        namespace: argocd
        path: kubernetes/infrastructure/arcocd/overlays/dev
        syncWave: "'0'"
+     - name: system-upgrade
+       namespace: system-upgrade
+       path: kubernetes/infrastructure/system-upgrade/overlays/dev
+       syncWave: "'1'"
      - name: external-secrets
        namespace: external-secrets
        path: kubernetes/infrastructure/external-secrets/overlays/dev
-       syncWave: "'1'"
+       syncWave: "'2'"
      - name: cert-manager
        namespace: cert-manager
        path: kubernetes/infrastructure/cert-manager/overlays/dev
-       syncWave: "'2'"
+       syncWave: "'3'"
   template:
     spec:
       source:
