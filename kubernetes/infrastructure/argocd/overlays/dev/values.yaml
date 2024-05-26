@@ -1,5 +1,1 @@
-server:
-  # Ingress Resource.
-  ingress:
-    ## Disable ingress resourece
-    enabled: false
+# argocd helm values (dev patch)

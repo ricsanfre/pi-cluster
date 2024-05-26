@@ -27,10 +27,14 @@ spec:
        namespace: external-secrets
        path: kubernetes/infrastructure/external-secrets/overlays/dev
        syncWave: "'2'"
+     - name: nginx
+       namespace: nginx
+       path: kubernetes/infrastructure/nginx/overlays/dev
+       syncWave: "'3'"
      - name: cert-manager
        namespace: cert-manager
        path: kubernetes/infrastructure/cert-manager/overlays/dev
-       syncWave: "'3'"
+       syncWave: "'4'"
   template:
     spec:
       source:
