@@ -11,5 +11,6 @@ helmCharts:
     releaseName: "velero"
     namespace: velero
     valuesFile: ../../base/values.yaml
+    includeCRDs: true
     additionalValuesFiles:
       - values.yaml
