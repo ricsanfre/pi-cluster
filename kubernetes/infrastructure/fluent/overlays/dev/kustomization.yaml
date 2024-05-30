@@ -9,7 +9,7 @@ helmCharts:
     repo: https://fluent.github.io/helm-charts
     version: 0.46.5
     releaseName: "fluent-bit"
-    namespace: logging
+    namespace: fluent
     valuesFile: ../../base/fluent-bit-values.yaml
     additionalValuesFiles:
       - fluent-bit-values.yaml
@@ -17,7 +17,7 @@ helmCharts:
     repo: https://fluent.github.io/helm-charts
     version: 0.5.2
     releaseName: "fluentd"
-    namespace: logging
+    namespace: fluent
     valuesFile: ../../base/fluentd-values.yaml
     additionalValuesFiles:
       - fluentd-values.yaml
