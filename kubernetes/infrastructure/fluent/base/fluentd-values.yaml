@@ -33,7 +33,7 @@ env:
   - name:  FLUENT_ELASTICSEARCH_HOST
     valueFrom:
       configMapKeyRef:
-        name: "logging-stack-cm"
+        name: logging-stack-cm
         key: elasticsearchHost
     # value: efk-es-http
     # Default elasticsearch default port
@@ -43,13 +43,13 @@ env:
   - name: FLUENT_ELASTICSEARCH_USER
     valueFrom:
       secretKeyRef:
-        name: "fluentd-secrets"
+        name: fluentd-secrets
         key: es-username
   # Elastic operator stores elastic user password in a secret
   - name: FLUENT_ELASTICSEARCH_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: "fluentd-secrets"
+        name: fluentd-secrets
         key: es-password
   # Fluentd forward security
   - name: FLUENTD_FORWARD_SEC_SHARED_KEY
@@ -61,7 +61,7 @@ env:
   - name: LOKI_URL
     valueFrom:
       configMapKeyRef:
-        name: "logging-stack-cm"
+        name: logging-stack-cm
         key: lokiURL
     # value: "http://loki-gateway"
   # Loki username
