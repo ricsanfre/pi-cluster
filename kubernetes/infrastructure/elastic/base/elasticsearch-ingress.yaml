@@ -24,6 +24,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: efkS-es-http
+                name: efk-es-http
                 port:
                   number: 9200
