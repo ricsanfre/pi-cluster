@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - ns.yaml
-  - fluentd-certficate.yaml
+  - fluentd-certificate.yaml
   - fluentd-elastic-templates-cm.yaml
   - fluentd-externalsecret.yaml
   - fluentd-extservice.yaml
