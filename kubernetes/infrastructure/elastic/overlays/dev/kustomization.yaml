@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+helmCharts:
+  - name: eck-operator
+    repo: https://helm.elastic.co
+    version: 2.12.1
+    releaseName: "eck-operator"
+    namespace: logging
+    valuesFile: ../../base/eck-operator-values.yaml
+    additionalValuesFiles:
+      - eck-operator-values.yaml
+  - name: prometheus-elasticsearch-exporter
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 5.8.0
+    releaseName: "prometheus-elasticsearch-exporter"
+    namespace: logging
+    valuesFile: ../../base/prometheus-elasticsearch-exporter-values.yaml
+    additionalValuesFiles:
+      - prometheus-elasticsearch-exporter-values.yaml

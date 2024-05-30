@@ -63,6 +63,10 @@ spec:
        namespace: oauth2-proxy
        path: kubernetes/infrastructure/oauth2-proxy/overlays/dev
        syncWave: "'10'"
+     - name: elastic
+       namespace: logging
+       path: kubernetes/infrastructure/elastic/overlays/dev
+       syncWave: "'11'"
 
 
   template:

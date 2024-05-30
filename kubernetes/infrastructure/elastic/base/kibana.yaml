@@ -1,0 +1,25 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: efk
+  namespace: logging
+  # annotations:
+  #   "helm.sh/hook": post-install,post-upgrade
+spec:
+  version: 8.13.0
+  count: 1
+  elasticsearchRef:
+    name: efk
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  podTemplate:
+    spec:
+      # Enabling service account token. linkerd requirement
+      automountServiceAccountToken: true
+      # Limiting Resources consumption
+      # containers:
+      #- name: kibana
+
+

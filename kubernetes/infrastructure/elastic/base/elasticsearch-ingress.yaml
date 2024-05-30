@@ -1,0 +1,29 @@
+# HTTPS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elasticsearch-ingress
+  namespace: logging
+  annotations:
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: elasticsearch.picluster.ricsanfre.com
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - elasticsearch.picluster.ricsanfre.com
+      secretName: elasticsearch-tls
+  rules:
+    - host: elasticsearch.picluster.ricsanfre.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: efkS-es-http
+                port:
+                  number: 9200
