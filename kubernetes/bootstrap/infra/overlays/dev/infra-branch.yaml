@@ -67,7 +67,10 @@ spec:
        namespace: logging
        path: kubernetes/infrastructure/elastic/overlays/dev
        syncWave: "'11'"
-
+     - name: loki
+       namespace: logging
+       path: kubernetes/infrastructure/loki/overlays/dev
+       syncWave: "'12'"
 
   template:
     spec:
