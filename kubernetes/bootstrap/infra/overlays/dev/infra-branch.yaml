@@ -71,6 +71,10 @@ spec:
        namespace: loki
        path: kubernetes/infrastructure/loki/overlays/dev
        syncWave: "'12'"
+     - name: fluent
+       namespace: fluent
+       path: kubernetes/infrastructure/fluent/overlays/dev
+       syncWave: "'13'"
 
   template:
     spec:

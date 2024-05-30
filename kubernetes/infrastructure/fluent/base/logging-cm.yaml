@@ -1,0 +1,10 @@
+# Logging internal services endpoints
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logging-stack-cm
+  namespace: fluent
+data:
+  lokiURL: "http://loki.logging-loki-gateway"
+  elasticsearchHost: elastic.efk-es-http
+  fluentdHost: fluentd
