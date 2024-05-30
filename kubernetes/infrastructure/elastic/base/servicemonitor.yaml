@@ -6,14 +6,14 @@ metadata:
     app: prometheus-elasticsearch-exporter
     release: monitoring
   name: elasticsearch-prometheus-servicemonitor
-  namespace: logging
+  namespace: elastic
 spec:
   endpoints:
     - port: http
       path: /metrics
   namespaceSelector:
     matchNames:
-      - logging
+      - elastic
   selector:
     matchLabels:
       app: prometheus-elasticsearch-exporter

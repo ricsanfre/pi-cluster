@@ -2,7 +2,7 @@ apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
   name: efk
-  namespace: logging
+  namespace: elastic
   # annotations:
   #   "helm.sh/hook": post-install,post-upgrade
 spec:

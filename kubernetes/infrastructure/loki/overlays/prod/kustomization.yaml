@@ -9,7 +9,7 @@ helmCharts:
     repo: https://grafana.github.io/helm-charts
     version: 6.5.2
     releaseName: "loki"
-    namespace: logging
+    namespace: loki
     valuesFile: ../../base/values.yaml
     additionalValuesFiles:
       - values.yaml

@@ -64,11 +64,11 @@ spec:
        path: kubernetes/infrastructure/oauth2-proxy/overlays/dev
        syncWave: "'10'"
      - name: elastic
-       namespace: logging
+       namespace: elastic
        path: kubernetes/infrastructure/elastic/overlays/dev
        syncWave: "'11'"
      - name: loki
-       namespace: logging
+       namespace: loki
        path: kubernetes/infrastructure/loki/overlays/dev
        syncWave: "'12'"
 

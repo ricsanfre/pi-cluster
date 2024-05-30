@@ -2,7 +2,7 @@ kind: Secret
 apiVersion: v1
 metadata:
   name: es-fluentd-roles-secret
-  namespace: logging
+  namespace: elastic
 stringData:
   roles.yml: |-
     fluentd_role:

@@ -2,7 +2,7 @@ kind: Secret
 apiVersion: v1
 metadata:
   name: es-prometheus-roles-secret
-  namespace: logging
+  namespace: elastic
 stringData:
   roles.yml: |-
     prometheus_role:

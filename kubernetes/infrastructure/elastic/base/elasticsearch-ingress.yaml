@@ -3,7 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: elasticsearch-ingress
-  namespace: logging
+  namespace: elastic
   annotations:
     # Linkerd configuration. Configure Service as Upstream
     nginx.ingress.kubernetes.io/service-upstream: "true"
