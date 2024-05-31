@@ -22,4 +22,4 @@ spec:
     - monitoring
   selector:
     matchLabels:
-      app.kubernetes.io/name: minio
+      app.kubernetes.io/name: minio-ext
