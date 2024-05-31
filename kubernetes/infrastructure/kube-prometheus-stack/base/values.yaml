@@ -146,7 +146,7 @@ grafana:
     type: loki
     uid: loki
     access: proxy
-    url: http://loki-gateway.logging.svc.cluster.local
+    url: http://loki-gateway.loki.svc.cluster.local
     jsonData:
       derivedFields:
           # Traefik traces integration
