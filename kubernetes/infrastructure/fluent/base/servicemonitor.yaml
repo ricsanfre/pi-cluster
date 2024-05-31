@@ -6,7 +6,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: fluentd
-    release: monitoring
+    release: kube-prometheus-stack
   name: fluentd-prometheus-servicemonitor
   namespace: fluent
 spec:
@@ -29,7 +29,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: fluent-bit
-    release: monitoring
+    release: kube-prometheus-stack
   name: fluentbit-prometheus-servicemonitor
   namespace: fluent
 spec:

@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app: longhorn
-    release: monitoring
+    release: kube-prometheus-stack
   name: longhorn-prometheus-servicemonitor
   namespace: longhorn-system
 spec:

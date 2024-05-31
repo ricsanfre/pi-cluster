@@ -8,7 +8,7 @@ helmCharts:
   - name: kube-prometheus-stack
     repo: https://prometheus-community.github.io/helm-charts
     version: 58.5.0
-    releaseName: "monitoring"
+    releaseName: kube-prometheus-stack
     namespace: monitoring
     valuesFile: ../../base/values.yaml
     includeCRDs: false
