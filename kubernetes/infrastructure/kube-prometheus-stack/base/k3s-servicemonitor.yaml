@@ -79,7 +79,7 @@ spec:
   jobLabel: app.kubernetes.io/name
   namespaceSelector:
     matchNames:
-    - kube-system
+    - monitoring
   selector:
     matchLabels:
       app.kubernetes.io/name: kubelet
