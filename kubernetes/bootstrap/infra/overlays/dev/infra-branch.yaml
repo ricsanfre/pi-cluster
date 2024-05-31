@@ -78,7 +78,11 @@ spec:
      - name: kube-prometheus-stack
        namespace: monitoring
        path: kubernetes/infrastructure/kube-prometheus-stack/overlays/dev
-       syncWave: "'14'"  
+       syncWave: "'14'"
+     - name: tempo
+       namespace: tempo
+       path: kubernetes/infrastructure/tempo/overlays/dev
+       syncWave: "'15'"
 
   template:
     spec:

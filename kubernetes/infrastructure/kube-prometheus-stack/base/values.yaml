@@ -163,7 +163,7 @@ grafana:
     uid: tempo
     type: tempo
     access: proxy
-    url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
+    url: http://query-frontend.tempo.svc.cluster.local:3100
 
   # Additional configuration to grafana dashboards sidecar
   # Search in all namespaces for configMaps containing label `grafana_dashboard`
