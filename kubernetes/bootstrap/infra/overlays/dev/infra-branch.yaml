@@ -75,6 +75,10 @@ spec:
        namespace: fluent
        path: kubernetes/infrastructure/fluent/overlays/dev
        syncWave: "'13'"
+     - name: kube-prometheus-stack
+       namespace: monitoring
+       path: kubernetes/infrastructure/kube-prometheus-stack/overlays/dev
+       syncWave: "'14'"  
 
   template:
     spec:
