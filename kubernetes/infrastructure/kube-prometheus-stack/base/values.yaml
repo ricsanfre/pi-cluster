@@ -146,7 +146,7 @@ grafana:
     type: loki
     uid: loki
     access: proxy
-    url: http://logging-loki-gateway.logging.svc.cluster.local
+    url: http://loki-gateway.logging.svc.cluster.local
     jsonData:
       derivedFields:
           # Traefik traces integration
@@ -163,7 +163,7 @@ grafana:
     uid: tempo
     type: tempo
     access: proxy
-    url: http://tracing-tempo-query-frontend.tracing.svc.cluster.local:3100
+    url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
 
   # Additional configuration to grafana dashboards sidecar
   # Search in all namespaces for configMaps containing label `grafana_dashboard`
