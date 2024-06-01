@@ -10,6 +10,7 @@ helmCharts:
     version: 0.41.0
     releaseName: strimzi-kafka-operator
     namespace: kafka
+    includeCRDs: true
     valuesFile: ../../base/strimzi-kafka-operator-values.yaml
     additionalValuesFiles:
       - strimzi-kafka-operator-values.yaml
