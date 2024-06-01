@@ -3,6 +3,8 @@ kind: Service
 metadata:
   labels:
     app: fluentd
+  annotations:
+    io.cilium/lb-ipam-ips: 10.0.0.101
   name: fluentd-ext
   namespace: fluent
 spec:
@@ -16,4 +18,3 @@ spec:
     app.kubernetes.io/name: fluentd
   sessionAffinity: None
   type: LoadBalancer
-  loadBalancerIP: 10.0.0.101
