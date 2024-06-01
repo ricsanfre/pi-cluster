@@ -6,4 +6,3 @@ resources:
 
 patches:
 - path: infra-branch.yaml
-- path: delete-app-set.yaml

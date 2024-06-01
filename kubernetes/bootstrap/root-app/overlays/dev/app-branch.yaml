@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root
+  name: apps
   namespace: argocd
 spec:
   source:
-    path: kubernetes/bootstrap/root-app/overlays/dev
+    path: kubernetes/bootstrap/apps/overlays/dev
     repoURL: https://github.com/ricsanfre/pi-cluster
     targetRevision: cilium

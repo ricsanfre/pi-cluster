@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  generators:
+  - list:
+     elements:
+     - name: kafka
+       namespace: kafka
+       path: kubernetes/apps/kafka/overlays/prod
+       syncWave: "'0'"
+  template:
+    spec:
+      source:
+        targetRevision: master
