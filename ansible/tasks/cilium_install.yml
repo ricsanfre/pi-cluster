@@ -12,8 +12,15 @@
   changed_when: true
 
 - name: Wait for Cilium CRDs to be ready
-  command:
-    cmd: "kubectl wait --for condition=Established crd/ciliuml2announcementpolicies.cilium.io crd/ciliuml2announcementpolicies.cilium.io --timeout=600s"
+  become: false
+  shell: |
+    set -o pipefail
+    while ! kubectl wait --for condition=established --timeout=60s crd/ciliuml2announcementpolicies.cilium.io crd/ciliuml2announcementpolicies.cilium.io
+    do
+    sleep 10
+    done
+  args:
+    executable: /bin/bash
   changed_when: false
 
 - name: Cilium configuration
