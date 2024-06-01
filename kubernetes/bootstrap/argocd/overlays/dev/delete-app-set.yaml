@@ -1,6 +1,0 @@
-$patch: delete
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: apps
-  namespace: argocd
