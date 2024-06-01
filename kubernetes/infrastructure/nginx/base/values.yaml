@@ -7,12 +7,9 @@ controller:
     serviceMonitor:
       enabled: true
   # Enabling OTEL traces
-  # opentelemetry:
-  #   enabled: true
-  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
-  #   containerSecurityContext:
-  #   allowPrivilegeEscalation: false
-  
+  opentelemetry:
+   enabled: true
+
   # Allow snpippet anotations
   # From v1.9 default value has chaged to false.
   # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
