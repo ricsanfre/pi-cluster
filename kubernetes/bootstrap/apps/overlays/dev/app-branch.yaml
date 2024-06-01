@@ -10,7 +10,7 @@ spec:
      - name: kafka
        namespace: kafka
        path: kubernetes/apps/kafka/overlays/dev
-       syncWave: "'0'"
+       syncWave: '0'
   template:
     spec:
       source:

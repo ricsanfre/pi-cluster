@@ -10,11 +10,11 @@ spec:
      - name: external-secrets
        namespace: external-secrets
        path: kubernetes/infrastructure/external-secrets/overlays/prod
-       syncWave: "'0'"
+       syncWave: '0'
      - name: cert-manager
        namespace: cert-manager
        path: kubernetes/infrastructure/cert-manager/overlays/prod
-       syncWave: "'1'"
+       syncWave: '1'
   template:
     metadata: 
       name: "{{name}}"
