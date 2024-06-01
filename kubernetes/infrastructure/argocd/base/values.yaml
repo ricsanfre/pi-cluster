@@ -26,12 +26,20 @@ configs:
     ## Ignore resources
     # https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#resource-exclusioninclusion
     # Ignore VolumeSnapshot and VolumeSnapshotContent: Created by backup processes.
+    # Also ingore resources created by Cilium
+    # https://docs.cilium.io/en/stable/configuration/argocd-issues/#argo-cd-deletes-customresourcedefinitions
     resource.exclusions: |
       - apiGroups:
         - snapshot.storage.k8s.io
         kinds:
         - VolumeSnapshot
         - VolumeSnapshotContent
+        clusters:
+        - "*"
+      - apiGroups:
+        - cilium.io
+        kinds:
+        - CiliumIdentity
         clusters:
         - "*"
 
