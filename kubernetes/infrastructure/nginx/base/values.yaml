@@ -22,7 +22,7 @@ controller:
   config:
     # Open Telemetry
     enable-opentelemetry: "true"
-    otlp-collector-host: tracing-tempo-distributor.tracing.svc.cluster.local
+    otlp-collector-host: tempo-distributor.tempo.svc.cluster.local
     otlp-service-name: nginx-internal
     # Print access log to file instead of stdout
     # Separating acces logs from the rest
@@ -50,7 +50,8 @@ controller:
       volumeMounts:
       - mountPath: /data
         name: data
+
 # Set specific LoadBalancer IP address for Ingress service
 service:
-  spec:
-    loadBalancerIP: 10.0.0.100
+  annotations:
+    io.cilium/lb-ipam-ips: 10.0.0.100
