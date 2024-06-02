@@ -5,6 +5,13 @@ description: How to configure Metal LB as load balancer in our Raspberry Pi Kube
 last_modified_at: "17-01-2023"
 ---
 
+
+{{site.data.alerts.note}}
+
+Metal LB load balancer can be replaced by Cilium's LB-IPAM capability, if Cilium CNI is installed in the cluster. See [Cilium installation doc](/docs/cilium/)
+
+{{site.data.alerts.end}}
+
 Instead of using the embeded service load balancer that only comes with K3S, kippler-lb, a more generic kubernetes load balancer like [Metal LB](https://metallb.universe.tf/) will be used. This load balancer can be used with almost any distribution of kubernetes.
 
 In order to use Metal LB, K3S embedded Klipper Load Balancer must be disabled: K3s server installation  option `--disable servicelb`.
@@ -59,6 +66,24 @@ MetalLB consists of two different pods:
 ## Requesting Specific IPs
 
 MetalLB respects the Kubernetes service `spec.loadBalancerIP` parameter, so if a static IP address from the available pool need to be set up for a specific service, it can be requested by setting that parameter. If MetalLB does not own the requested address, or if the address is already in use by another service, assignment will fail and MetalLB will log a warning event visible in `kubectl describe service <service name>`.
+
+{{site.data.alerts.note}}
+Service's `.spec.loadBalancerIP` was the method used to specify the external IP, from load balancer Ip Pool, to be assigned to the service. It has been deprecated since [Kubernetes v1.24](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.24.md) and might be removed in a future release. It is recommended to use implementation-specific annotations when available
+
+In case of Metal LB the annotation that can be used is `metallb.universe.tf/loadBalancerIPs`
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.44
+
+```
+See details in [Metal-LB usage doc](https://metallb.universe.tf/usage/)
+
+
+{{site.data.alerts.end}}
 
 
 ## Install Metal Load Balancer
