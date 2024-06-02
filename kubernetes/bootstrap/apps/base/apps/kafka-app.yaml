@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: kafka
-  namespace: kafka
+  namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: '1010'
 spec:
