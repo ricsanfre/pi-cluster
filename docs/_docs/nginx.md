@@ -38,10 +38,58 @@ Installation using `Helm` (Release 3):
 - Step 4: Create helm values file `nginx-values.yml`
 
   ```yml
+  controller:
+  # Enabling Promethues metrics and Service Monitoring
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # Enabling OTEL traces
+  opentelemetry:
+   enabled: true
+
+  # Allow snpippet anotations
+  # From v1.9 default value has chaged to false.
+  # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
+  # linkerd-viz ingress uses this annotations
+  allowSnippetAnnotations: true
+
+  config:
+    # Open Telemetry
+    enable-opentelemetry: "true"
+    otlp-collector-host: tempo-distributor.tempo.svc.cluster.local
+    otlp-service-name: nginx-internal
+    # Print access log to file instead of stdout
+    # Separating acces logs from the rest
+    access-log-path: "/data/access.log"
+    log-format-escape-json: "true"
+    log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "request_method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentelemetry_trace_id", "span_id": "$opentelemetry_span_id"}'
+  # controller extra Volume
+  extraVolumeMounts:
+    - name: data
+      mountPath: /data
+  extraVolumes:
+    - name: data
+      emptyDir: {}
+  extraContainers:
+    - name: stream-accesslog
+      image: busybox
+      args:
+      - /bin/sh
+      - -c
+      - tail -n+1 -F /data/access.log
+      imagePullPolicy: Always
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+
   # Set specific LoadBalancer IP address for Ingress service
   service:
-    spec:
-      loadBalancerIP: 10.0.0.100
+    annotations:
+      io.cilium/lb-ipam-ips: 10.0.0.100
   ```
 
 - Step 5: Install Ingress Nginx
@@ -75,12 +123,26 @@ This configuration makes NGINX pod to open its metric port at TCP port 10254
 
 #### Assign a static IP address from LoadBalancer pool to Ingress service
 
-Ingress NGINX service of type LoadBalancer created by Helm Chart does not specify any static external IP address. To assign a static IP address belonging to Metal LB pool, helm chart parameters shoud be specified:
+Ingress NGINX service of type LoadBalancer created by Helm Chart does not specify any static external IP address. To assign a static IP address belonging to LB pool, helm chart parameters shoud be specified:
+
+In case of using Cilium LB-IPAM, the following need to be configured
 
 ```yml
-service:
-  spec:
-    loadBalancerIP: 10.0.0.100
+# Set specific LoadBalancer IP address for Ingress service
+controller:
+  service:
+    annotations:
+      io.cilium/lb-ipam-ips: 10.0.0.100
+```
+
+In case of using Metal LB, the following need to be configured:
+
+```yml
+# Set specific LoadBalancer IP address for Ingress service
+controller:
+  service:
+    annotations:
+      metallb.universe.tf/loadBalancerIPs: 10.0.0.100
 ```
 
 With this configuration ip 10.0.0.100 is assigned to NGINX proxy and so, for all services exposed by the cluster.
@@ -103,12 +165,14 @@ Following Ingress NGINX helm chart values need to be provided:
 
 ```yml
 controller:
+  
   config:
     # Print access log to file instead of stdout
     # Separating acces logs from the rest
     access-log-path: "/data/access.log"
     log-format-escape-json: "true"
-      # controller extra Volume
+    log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "request_method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr"}'
+  # controller extra Volume
   extraVolumeMounts:
     - name: data
       mountPath: /data
@@ -129,11 +193,16 @@ controller:
       volumeMounts:
       - mountPath: /data
         name: data
+
+  # Set specific LoadBalancer IP address for Ingress service
+  service:
+    annotations:
+      io.cilium/lb-ipam-ips: 10.0.0.100
 ```
 
 This configuration enables NGINX access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
 
-#### Enabling Inress snippet annotations
+#### Enabling Ingress snippet annotations
 
 Since nginx-ingress 1.9, by default is not allowed to include in Ingress resources `nginx.ingress.kubernetes.io/configuration-snippet` annotation. It need to be enabled in the helm chart configuration
 
@@ -146,6 +215,41 @@ controller:
   allowSnippetAnnotations: true
 
 ```
+
+#### Enabling Observability
+
+To enable Prometheus /metrics collection endpoint and create the corresponging ServiceMonitor configuration (Prometheus Operator), the following need to be added
+
+```yaml
+controller:
+  # Enabling Promethues metrics and Service Monitoring
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+```
+
+To enable OTel traces the following need to be added:
+
+
+```yaml
+controller:
+  # Enabling OTEL traces
+  opentelemetry:
+   enabled: true
+  config:
+    # Open Telemetry
+    enable-opentelemetry: "true"
+    otlp-collector-host: tempo-distributor.tempo.svc.cluster.local
+    otlp-service-name: nginx-internal
+    # Print access log to file instead of stdout
+    # Separating acces logs from the rest
+    access-log-path: "/data/access.log"
+    log-format-escape-json: "true"
+    log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "request_method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentelemetry_trace_id", "span_id": "$opentelemetry_span_id"}' 
+```
+
+OTEL collector need to be specified (`otlp-collector-host`) and the access log format can be configured to add trace_id and span_id configuration
 
 ## Configuring access to cluster services with Ingress NGINX
 
@@ -280,7 +384,7 @@ data:
 
 #### Configuring Ingress resource
 
-Following annotations need to be added to Ingress resourece:
+Following annotations need to be added to Ingress resource:
 
 - `nginx.ingress.kubernetes.io/auth-type: basic` : to set basic authentication
 - `nginx.ingress.kubernetes.io/auth-secret: basic-auth` : to specify the secret name
