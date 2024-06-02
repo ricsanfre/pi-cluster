@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crds
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/crds/overlays/dev
+    targetRevision: cilium

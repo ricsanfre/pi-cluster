@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oauth2-proxy
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/oauth2-proxy/overlays/dev
+    targetRevision: cilium

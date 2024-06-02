@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka
+  namespace: kafka
+spec:
+  source:
+    path: kubernetes/apps/kafka/overlays/dev
+    targetRevision: cilium

@@ -1,25 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: apps
+  name: keycloak
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: '70'
 spec:
+  destination:
+    namespace: keycloak
+    name: in-cluster
   project: picluster
   source:
-    path: kubernetes/bootstrap/apps/overlays/prod
+    path: kubernetes/infrastructure/keycloak/overlays/prod
     repoURL: https://github.com/ricsanfre/pi-cluster
     targetRevision: master
-  destination:
-    namespace: argocd
-    name: in-cluster
   syncPolicy:
     automated:
-      selfHeal: true
       prune: true
+      selfHeal: true
     retry:
       limit: 10
       backoff:
@@ -27,6 +25,6 @@ spec:
         maxDuration: 16m
         factor: 2
     syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true

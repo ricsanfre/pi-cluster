@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium-config
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/cilium-config/overlays/dev
+    targetRevision: cilium

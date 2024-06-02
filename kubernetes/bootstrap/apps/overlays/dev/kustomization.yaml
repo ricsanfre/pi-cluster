@@ -5,4 +5,4 @@ resources:
   - ../../base
 
 patches:
-- path: app-branch.yaml
+- path: apps/kafka-app.yaml

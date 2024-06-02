@@ -5,4 +5,23 @@ resources:
   - ../../base
 
 patches:
-- path: infra-branch.yaml
+- path: apps/crds-app.yaml
+- path: apps/cilium-app.yaml
+- path: apps/cilium-config-app.yaml
+- path: apps/argocd-app.yaml
+- path: apps/system-upgrade-app.yaml
+- path: apps/external-secrets-app.yaml
+- path: apps/nginx-app.yaml
+- path: apps/cert-manager-app.yaml
+- path: apps/csi-external-snapshotter-app.yaml
+- path: apps/longhorn-app.yaml
+- path: apps/minio-app.yaml
+- path: apps/velero-app.yaml
+- path: apps/keycloak-app.yaml
+- path: apps/oauth2-proxy-app.yaml
+- path: apps/elastic-app.yaml
+- path: apps/loki-app.yaml
+- path: apps/fluent-app.yaml
+- path: apps/tempo-app.yaml
+- path: apps/kube-prom-stack-app.yaml
+

@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: elastic
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/elastic/overlays/dev
+    targetRevision: cilium

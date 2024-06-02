@@ -3,6 +3,3 @@ kind: Kustomization
 
 resources:
   - ../../base
-
-patches:
-- path: app-branch.yaml

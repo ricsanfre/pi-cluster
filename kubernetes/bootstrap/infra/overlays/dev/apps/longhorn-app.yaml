@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/longhorn/overlays/dev
+    targetRevision: cilium

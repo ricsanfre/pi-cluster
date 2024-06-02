@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fluent
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/fluent/overlays/dev
+    targetRevision: cilium

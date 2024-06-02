@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: csi-external-snapshotter
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/csi-external-snapshotter/overlays/dev
+    targetRevision: cilium
