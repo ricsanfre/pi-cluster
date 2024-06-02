@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "05-04-2024"
+last_modified_at: "02-06-2024"
 ---
 
 
@@ -102,7 +102,7 @@ In this configuration, each agent node is registered to the same server node. A 
     For installing the master node execute the following command:
 
     ```shell
-    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/control-plane:NoSchedule' --disable 'servicelb' --disable 'traefik' --disable 'local-path' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+    curl -sfL https://get.k3s.io | K3S_TOKEN=<server_token> sh -s - server --write-kubeconfig-mode '0644' --node-taint 'node-role.kubernetes.io/control-plane:NoSchedule' --disable 'servicelb' --disable 'traefik' --disable 'local-storage' --kube-controller-manager-arg 'bind-address=0.0.0.0' --kube-proxy-arg 'metrics-bind-address=0.0.0.0' --kube-scheduler-arg 'bind-address=0.0.0.0' --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config' --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
     ```
     Where:
     - `server_token` is shared secret within the cluster for allowing connection of worker nodes
@@ -452,6 +452,17 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   ```shell
   curl -sfL https://get.k3s.io | sh -s - agent --server https://<k3s_api_loadbalancer_ip>:6443
   ```
+
+## Installing custom CNI
+
+By default K3S install Flannel as CNI. If other CNI is going to be used default Flannel CNI need to be disabled during installation.
+
+See details in [K3S Networking - Use custom CNI](https://docs.k3s.io/networking/basic-network-options#custom-cni)
+
+K3S master nodes need to be installed with the following additional options:
+
+- `--flannel-backend=none`: to disable Fannel instalation
+- `--disable-network-policy`: Most CNI plugins come with their own network policy engine, so it is recommended to set --disable-network-policy as well to avoid conflicts.
 
 ## Remote Access
 

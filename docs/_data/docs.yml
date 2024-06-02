@@ -26,6 +26,7 @@
 - title: Networking
   docs:
   - k3s-networking
+  - cilium
   - metallb
   - traefik
   - nginx
@@ -55,7 +56,7 @@
 - title: GitOps
   docs:
   - argocd
-- title: Other services
+- title: Microservices
   docs:
   - kafka
 - title: Reference Docs
