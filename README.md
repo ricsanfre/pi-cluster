@@ -74,9 +74,9 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Container runtime integrated with K3S</td>
     </tr>
     <tr>
-        <td><img width="20" src="docs/assets/img/logos/flannel.svg"></td>
-        <td><a href="https://github.com/flannel-io/flannel">Flannel</a></td>
-        <td>Kubernetes Networking (CNI) integrated with K3S</td>
+        <td><img width="60" src="docs/assets/img/logos/cilium.svg" alt="cilium logo"></td>
+        <td><a href="https://cilium.io">Cilium</a></td>
+        <td>Kubernetes Networking (CNI) and Load Balancer</td>
     </tr>
     <tr>
         <td><img width="32" src="docs/assets/img/logos/coredns.svg"></td>
@@ -91,7 +91,7 @@ The following picture shows the set of opensource solutions used so far in the c
     <tr>
         <td><img width="32" src="docs/assets/img/logos/metallb.svg"></td>
         <td><a href="https://metallb.universe.tf/">Metal LB</a></td>
-        <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
+        <td>Load-balancer implementation for bare metal Kubernetes clusters (Cilium LB alternative)</td>
     </tr>
     <tr>
         <td><img width="32" src="docs/assets/img/logos/nginx.svg"></td>
@@ -256,7 +256,7 @@ The content of this website and the source code to build it (Jekyll static based
 
 ## Usage 
 
-Check out the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder), Ansible playbooks (`/ansible` folder) and packaged Kubernetes applications ( `/argocd` folder) contained in this repository, so you can use in for your own homelab.
+Check out the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder), Ansible playbooks (`/ansible` folder) and packaged Kubernetes applications ( `/kubernetes` folder) contained in this repository, so you can use in for your own homelab.
 
 ## About the Project
 

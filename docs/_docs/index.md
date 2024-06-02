@@ -3,7 +3,7 @@ title: What is this project about?
 permalink: /docs/home/
 redirect_from: /docs/index.html
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "02-03-2024"
+last_modified_at: "02-06-2024"
 ---
 
 
@@ -87,9 +87,9 @@ The following picture shows the set of opensource solutions used for building th
         <td>Container runtime integrated with K3S</td>
     </tr>
     <tr>
-        <td><img width="20" src="/assets/img/logos/flannel.svg" alt="flannel logo"></td>
-        <td><a href="https://github.com/flannel-io/flannel">Flannel</a></td>
-        <td>Kubernetes Networking (CNI) integrated with K3S</td>
+        <td><img width="60" src="/assets/img/logos/cilium.svg" alt="cilium logo"></td>
+        <td><a href="https://cilium.io">Cilium</a></td>
+        <td>Kubernetes Networking (CNI) and Load Balancer</td>
     </tr>
     <tr>
         <td><img width="32" src="/assets/img/logos/coredns.svg" alt="coredns logo"></td>
@@ -104,7 +104,7 @@ The following picture shows the set of opensource solutions used for building th
     <tr>
         <td><img width="32" src="/assets/img/logos/metallb.svg" alt="metallb logo"></td>
         <td><a href="https://metallb.universe.tf/">Metal LB</a></td>
-        <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
+        <td>Load-balancer implementation for bare metal Kubernetes clusters (Cilium LB alternative)</td>
     </tr>
     <tr>
         <td><img width="32" src="/assets/img/logos/nginx.svg" alt="nginx logo"></td>
@@ -312,7 +312,7 @@ From software perspective, I have developed the following:
 
 3. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using ArgoCD
 
-   Source code can be found in Pi Cluster Git repository under [`/argocd`]({{site.git_address}}/tree/master/argocd) directory.
+   Source code can be found in Pi Cluster Git repository under [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
 4. This **documentation website** [picluster.ricsanfre.com](https://picluster.ricsanfre.com), hosted in Github pages.
 
@@ -335,11 +335,9 @@ The software used and the latest version tested of each component
 | Metrics | Kubernetes Metrics Server | v0.6.3 | version pre-integrated into K3S |
 | Kubernetes | etcd | v3.5.9-k3s1 | version pre-integrated into K3S |
 | Computing | containerd | v1.7.11-k3s2 | version pre-integrated into K3S |
-| Networking | Flannel | v0.24.0 | version pre-integrated into K3S |
+| Networking | Cilium | 1.15.5 | |
 | Networking | CoreDNS | v1.10.1 | version pre-integrated into K3S |
-| Networking | Metal LB | v0.14.5 | Helm chart version:  0.14.5 |
 | Service Mesh | Linkerd | v2.14.10 | Helm chart version: linkerd-control-plane-1.16.11 |
-| Service Proxy | Traefik | v2.10.6 | Helm chart version: 26.0.0  |
 | Service Proxy | Ingress NGINX | v1.10.1 | Helm chart version: 4.10.1 |
 | Storage | Longhorn | v1.6.1 | Helm chart version: 1.6.1 |
 | Storage | Minio | RELEASE.2024-04-18T19-09-19Z | Helm chart version: 5.2.0 |

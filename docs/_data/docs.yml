@@ -30,7 +30,6 @@
   - metallb
   - traefik
   - nginx
-  - service-mesh
 - title: Certificate Management
   docs:
   - certmanager
@@ -58,6 +57,7 @@
   - argocd
 - title: Microservices
   docs:
+  - service-mesh
   - kafka
 - title: Reference Docs
   docs:
