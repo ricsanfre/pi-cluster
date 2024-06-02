@@ -97,6 +97,10 @@ shutdown-picluster:
 get-argocd-passwd:
 	kubectl get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' -n argocd | base64 -d;echo
 
+.PHONY: argocd-port-forward
+argocd-port-forward:
+	kubectl port-forward svc/argocd-server 8080:80 -n argocd
+
 .PHONY: get-elastic-passwd
 get-elastic-passwd:
 	kubectl get secret efk-es-elastic-user -o jsonpath='{.data.elastic}' -n logging | base64 -d;echo
