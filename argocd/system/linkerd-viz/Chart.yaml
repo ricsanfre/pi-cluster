@@ -1,7 +1,0 @@
-apiVersion: v2
-name: linkerd-viz
-version: 0.0.0
-dependencies:
-  - name: linkerd-viz
-    version: 30.12.11
-    repository: https://helm.linkerd.io/stable

@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: keycloak-realm-configmap
-  namespace: {{ .Release.Namespace }}
-data:
-  picluster-realm.json: |
-{{ tpl (.Files.Get "picluster-realm.json") . | indent 4 }}
