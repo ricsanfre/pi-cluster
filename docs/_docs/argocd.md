@@ -2,7 +2,7 @@
 title: GitOps (ArgoCD)
 permalink: /docs/argocd/
 description: How to apply GitOps to Pi cluster configuration using ArgoCD.
-last_modified_at: "08-02-2024"
+last_modified_at: "03-06-2024"
 ---
 
 
@@ -63,8 +63,10 @@ ArgoCD can be installed through helm chart
           end
         end
         return hs
-      # Enabling Helm chart rendering with Kustomize
-      kustomize.buildOptions: --enable-helm
+      # Kustomize build options
+      # --enable-helm: Enabling Helm chart rendering with Kustomize
+      # --load-restrictor LoadRestrictionsNone: Local kustomizations may load files from outside their root
+      kustomize.buildOptions: --enable-helm --load-restrictor LoadRestrictionsNone
 
   server:
     # Ingress Resource.
@@ -281,19 +283,74 @@ Different types of applications will be needed for the Pi Cluster
   Alternatively, to provide individual parameters, a values file can be specified (`.spec.source.helm.valueFiles`).
 
 - Kustomize Application
-  
+
   [Kustomize](https://kustomize.io/) traverses a Kubernetes manifest to add, remove or update configuration options without forking. It is available both as a standalone binary and as a native feature of kubectl
   Kustomize can be used to over a set of plain yaml manifest files or a Chart.
 
   Argo CD has native support for Kustomize and has the ability to read a kustomization.yaml file to enable deployment with Kustomize and allow ArgoCD to manage the state of the YAML files.
+
+  A directory type application can be configured to apply kustomize to a set of directories just deploying in the directory (`source.path`) a `kustomize yaml` file.
+
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: test-app
+    namespace: argocd
+  spec:
+    destination:
+      namespace: argocd
+      name: in-cluster
+    source:
+      path: <path-to-kustomization.yaml-file>
+      repoURL: https://github.com/<user>/<repo>.git
+      targetRevision: master
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+  ```
+
+  To provide build options to kustomize, `kustomize.buildOptions` field of argocd-cm ConfigMap need to be configured.
+
+  The following kustomize build options have been added through helm chart values.yaml
+
+  - Using kustomize with helm chart inflation
+
+    Kustomize has support for helm chart inflation using `helm template` command.
+
+    {{site.data.alerts.note}}
+    Currently, not all `helm template` options are supported but there is a commitment to support it all.
+    See [kustomization helmChart documentation](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/helmcharts/).
+    {{site.data.alerts.end}}
+
+    kustomize `--enable-helm` build option need to be added to support helm chart inflation.
   
-  A directory type application can be configured to apply kustomize to a set of directories just deploying in the directory a kustomize yaml file.
+  - Enable local kustomizations to load files from outside their root folder.
+
+    Kustomize `--load-restrictor=LoadRestrictionsNone` build option need to be added to support it.
+
+    This build option is needed, when using helm chart inflation capability, to overwrite `values.yaml` file defined in `base` directory with contents of `value.yaml` file defined in the `overlays` folder.
+
+    Kustomize's `HelmChart.additionalFiles` field  can be used jointly with `HelmChart.valuesFile` for this purpose.
+  
+    See [kustomize's issue 4658 comment](https://github.com/kubernetes-sigs/kustomize/issues/4658#issuecomment-1815675157)
+
+  
+  Chek out further details in [Argo CD Kustomize applications documentation](https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/).
 
 ### Helm Umbrella Charts 
 
 ArgoCD Helm application has the limitation that helm Values file must be in the same git repository as the Helm chart.
 
 Since all charts we want to deploy in the cluster belongs to third party repositories, we could not use the values file option (values file will be in our repository and not in the 3rd party repository) and specifying all chart parameters within the Application definition is not manageable since some of the charts contain lots of parameters.
+
+{{site.data.alerts.note}}
+There is a new ArgoCd functionality, currently (release v2.11.2) in beta status, to support multiple source repos per Application, that will remove that limitation.
+See details in ["ArgoCD documentation: Multiple Sources for an Application"](
+https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/)
+{{site.data.alerts.end}}
+
 
 As an alternative a Helm Umbrella Chart pattern can be used. Helm Umbrella chart is sort of a "meta" (empty) Helm Chart that lists other Helm Charts as a dependency ([subcharts](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/)). 
 It consists of a empty helm chart in a repo directory containing only chart definition file (`Chart.yaml`), listing all subcharts, and its corresponding `values.yaml` file.
@@ -355,19 +412,91 @@ Additional options can be passed to helm command using `.spec.helm` parametes in
 - `helm.valueFiles`: To specify the name of the values file (default values.yaml)
 - `helm.skipCRDs`: To skip installation of CDRs defined in the helm chart
 
-{{site.data.alerts.note}}
 
-Packaged helm applications, using umbrella helm chart pattern, and kustomize applications have been created to deploy all Kuberentes services in the Pi Cluster.
+### Kustomized Application using Helm Chart Inflator
 
-When using umbrella helm charts, empty chart pattern has not always been used. `template` directory, containing additional manifest files required to configure the application, has been added whenever neccesary.
+As alternative to the use of Helm Umbrella charts, applications packaged with kustomized can be defined, using kustomized's Helm inflator functionality. Kustomized uses `helm template` command to generate manifest files from a helm chart.
 
+For using that functionality, helm chart details, can be specified within [`helmChart` field in `kustomized.yaml` file](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/chart.md).
+
+
+Using Argo-cd's kustomized applications with helm chart support has advantages over Argo-cd's helm chart applications like ability to apply kustomized's patches on the manifest files generated by the helm chart inflation process (execution of `helm template` command).
+
+Kustomize application can have the following structure, including `base` configuration and different `overlays` (i.e patches), so helm chart values.yaml defined in the base can be patched (overwritten) by values.yaml in the overlays.
+
+
+```shell
+└── app-test
+    ├── base
+    │   ├── kustomization.yaml
+    │   ├── ns.yaml
+    │   ├── values.yaml
+    └── overlays
+        ├── dev
+        │   ├── kustomization.yaml
+        │   ├── values.yaml
+        └── prod
+            ├── kustomization.yaml
+            └── values.yaml
+```
+
+`base/kustomize.yaml`
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ns.yaml # Name service definition manifest file or any other
+```
+
+`overlays/dev/kustomize.yaml` and `overlays/prod/kustomize`
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+helmCharts:
+  - name: <helm-chart-name>
+    repo: <helm-chart-repo>
+    version: <helm-chart-version>
+    releaseName: <release-name>
+    namespace: <namespace>
+    valuesFile: ../../base/values.yaml
+    includeCRDs: true
+    additionalValuesFiles:
+      - values.yaml
+```
+
+base helm values.yaml file (`base/values.yaml`) is used as main values file (helmCharts.valueFile). This values.yaml file is merged with values.yaml defined in the overlay directory (`overlay/x/values.yaml`) using (helmCharts.additionalValuesFiles)
+
+This helm chart could be installed executing the following command:
+
+```shell
+kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone app/overlay/dev | kubectl apply -f -
+```
+The previous command will apply the dev overlay to inflate helm chart, using `overlay` values.yaml to overwrite default values provided in `base` and patch them after the inflation.
+
+{{site.data.alerts.warning}}
+Using kustomize, manifest files are generated via `helm template` command. This is the same procedure used by ArgoCD when installing a HelmChart application, so the output should be the same.
+
+Applying kustomize manifest files directly could provoke undesired results, in case that inflated helm chart contains [helm hooks](https://helm.sh/docs/topics/charts_hooks/), only processed by `helm install` or `helm upgrade` commands but not by `kubectl kustomize <options> <path> | kubectl apply -f -` command.
+
+ArgoCD, is processing helm hooks annotated resources, and translate them into ArgoCD hooks, so the functionality provided by the helm hooks is not lost. See [ArgoCD helm hooks support](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks).
 {{site.data.alerts.end}}
 
-## Bootstrapig the cluster using App of Apps pattern
+
+{{site.data.alerts.note}}
+Packaged helm applications will be deployed using kustomize applications following the previous defined pattern. This pattern is the preferred solution over defining umbrella helm charts, because it is simpler and it can leverage all patching capabilities provided by kustomized.
+{{site.data.alerts.end}}
+
+
+## Bootstraping the cluster using App of Apps pattern
 
 For bootstraping the cluster [app of apps pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/) can be used. The App-of-Apps design is basically an Argo CD Application made up of other Argo CD Applications.
 
-Basically it will consist of a ArgoCD application, (root application) containing a set of Application manifest files.
+It consist of a ArgoCD application, (root application) containing a set of Application manifest files.
 
 Syncwaves can be used to specify the order in which each application need to be deployed.
 
@@ -399,83 +528,77 @@ resource.customizations.health.argoproj.io_Application: |
 
 ### Root App
 
-Root application will be specified as a helm chart, so Helm templating can be leveraged to automatically create and configure Application resources and initial resources needed.
+In ArgoCD, the following App of Apps will be defined
+
+```shell
+root-app
+├── infra
+│   ├── cert-manager
+│   └── external-secrets
+└── app
+    ├── app1
+    └── app2
+```
+
+- root-app: Root application: containing two other apps-of-apps:
+  - infra: Infrastructure related applications (i.e.: cert-manager, longhorn, minio, kube-prometheus-stack, etc.)
+  - apps: Microservice architecture support services (i.e.: kafka, databases, etc.) and self-develop applications.
+
+`root-app` application will be specified as a kustomized application containing manifest resources files corresponding to ArgoCD Application.
 
 Within git repo the following directory structure can be created
 
 ```shell
-root
-├── Chart.yaml
-├── templates
-│   ├── app-set.yaml
-│   └── namespaces.yaml
-└── values.yaml
+└── root-app
+    ├── base
+    │   ├── kustomization.yaml
+    │   ├── application.yaml
+    │   ├── infrastructure.yaml
+    └── overlays
+        ├── dev
+        │   ├── kustomization.yaml
+        │   ├── patches.yaml
+        └── prod
+            ├── kustomization.yaml
+            └── patches.yaml
 ```
 
-- Chart.yaml
-  ```yml
-  apiVersion: v2
-  name: bootstrap
-  version: 0.0.0
-  ```
-- values.yaml
+- base/kustomization.yaml
 
-  ```yml
-  gitops:
-    repo: https://github.com/ricsanfre/pi-cluster
-    revision: master
+  ```yaml
+  apiVersion: kustomize.config.k8s.io/v1beta1
+  kind: Kustomization
 
-  # List of application corresponding to different sync waves
-  apps:
-      # CDRs App
-    - name: crds
-      namespace: default
-      path: argocd/bootstrap/crds
-      syncWave: 0
-      # External Secrets Operator
-    - name: external-secrets
-      namespace: external-secrets
-      path: argocd/system/external-secrets
-      syncWave: 1
-      # Metal LB
-    - name: metallb
-      namespace: metallb
-      path: argocd/system/metallb
-      syncWave: 1
+  resources:
+  - infrastructure.yaml
+  - application.yaml
   ```
 
-- templates/app-set.yaml
+- base/infrastructure.yaml
 
-  This will create a ArgoCD application for each item in the values file under `apps` dictionary. Each of the item defined contains information about the name of the application (`name`), the namespace to be used during deployment (`namespace`), the sync-wave to be used (`syncWave`), and the path under `gitops.repo` where the application is located (`path`).
- 
-  {% raw %}
-  ```yml
-  {{- range $index, $app := .Values.apps }}
-  ---
+  ```yaml
   apiVersion: argoproj.io/v1alpha1
   kind: Application
   metadata:
-    name: {{ $app.name }}
-    namespace: {{ $.Release.Namespace }}
+    name: infrastructure
+    namespace: argocd
+    finalizers:
+      - resources-finalizer.argocd.argoproj.io
     annotations:
-      argocd.argoproj.io/sync-wave: '{{ default 0 $app.syncWave }}'
+      argocd.argoproj.io/sync-wave: "-2"
   spec:
-    destination:
-      namespace: {{ $app.namespace }}
-      server: https://kubernetes.default.svc
-    project: default
+    project: picluster
     source:
-      path: {{ $app.path }}
-      repoURL: {{ $.Values.gitops.repo }}
-      targetRevision: {{ $.Values.gitops.revision }}
-  {{- if $app.helm }}
-      helm:
-  {{ toYaml $app.helm | indent 6  }}
-  {{- end }}
+      path: kubernetes/bootstrap/infra/overlays/prod
+      repoURL: https://github.com/ricsanfre/pi-cluster
+      targetRevision: master
+    destination:
+      namespace: argocd
+      name: in-cluster
     syncPolicy:
       automated:
-        prune: true
         selfHeal: true
+        prune: true
       retry:
         limit: 10
         backoff:
@@ -483,23 +606,60 @@ root
           maxDuration: 16m
           factor: 2
       syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
-  {{- end }}
+        - CreateNamespace=true
+        - ServerSideApply=true
+        - ApplyOutOfSyncOnly=true
   ```
-  {% endraw %}
-- templates/namespaces.yml
-  
-  Create namespaces with linkerd annotation
 
-- templates/other-manifests.yaml
+- base/application.yaml
 
-  Other manifest files can be provided to bootstrap the cluster. 
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: apps
+    namespace: argocd
+    finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    annotations:
+      argocd.argoproj.io/sync-wave: "-1"
+  spec:
+    project: picluster
+    source:
+      path: kubernetes/bootstrap/apps/overlays/prod
+      repoURL: https://github.com/ricsanfre/pi-cluster
+      targetRevision: master
+    destination:
+      namespace: argocd
+      name: in-cluster
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+      retry:
+        limit: 10
+        backoff:
+          duration: 1m
+          maxDuration: 16m
+          factor: 2
+      syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
+        - ApplyOutOfSyncOnly=true
+  ```
+
+  Both applications are configured to be synchronized using different waves. So `infrastucture` app of apps will be deployed before `apps` app of apps.
+
+  `infrastructure` and `apps` applications point to a different repository path, containing another kustomized application following the app of apps pattern (manifest files are argoCD Application) and its folder structure is similar to the one used by `root-app`
+
 
 {{site.data.alerts.note}}
 
-Root application created for Pi-Cluster can be found in [/argocd/bootstrap/root]({{ site.git_address }}/tree/master/argocd/bootstrap/root)
+Root application created for Pi-Cluster can be found in [/kubernets/bootstrap/root-app]({{ site.git_address }}/tree/master/kubernetes/bootstrap/root-app).
+
+Infrastructure app of apps can be found in [/kubernets/bootstrap/infra]({{ site.git_address }}/tree/master/kubernetes/bootstrap/infra).
+
+Applications app of apps can be found in [/kubernets/bootstrap/apps]({{ site.git_address }}/tree/master/kubernetes/bootstrap/apps).
 
 {{site.data.alerts.end}}
 
@@ -513,19 +673,21 @@ kind: Application
 metadata:
   name: root
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
-  destination:
-    namespace: argocd
-    server: https://kubernetes.default.svc
-  project: default
+  project: picluster
   source:
-    path: argocd/bootstrap/root
+    path: kubernetes/bootstrap/root-app/overlays/prod
     repoURL: https://github.com/ricsanfre/pi-cluster
     targetRevision: master
+  destination:
+    namespace: argocd
+    name: in-cluster
   syncPolicy:
     automated:
-      prune: true
       selfHeal: true
+      prune: true
     retry:
       limit: 10
       backoff:
@@ -533,14 +695,39 @@ spec:
         maxDuration: 16m
         factor: 2
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
+```
+
+This can be done executing the following command from repo home directory
+
+```shell
+kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+      kubernetes/bootstrap/argocd/overlays/prod | kubectl apply -f -
 ```
 
 ### CRDs Application
 
 Application containing all CRDs could be created and deployed in the first sync-wave. So all other applications making use of CRDs can be deployed with success even when the corresponding Controller services are not yet deployed. For example: Deploying Prometheus Operator CRDs as part of a CRDs Application, allows to deploy prometheus monitoring objects (ServiceMonitor, PodMonitor, etc) for applications that are deployed before kube-prometheus-stack application.
 
-For an example of such CRDs application, check repository [/argocd/bootstrap/crds]({{ site.git_address }}/tree/master/argocd/bootstrap/crds).
+For an example of such CRDs application, check repository [/kubernetes/infraestructure/crds]({{ site.git_address }}/tree/master/kubernetes/infrastructure/crds).
+
+
+## Repo Structure
+
+The Git repo structure containing all application manifest files is the following
+
+```shell
+kubernetes
+├── apps # end user applications
+├── bootstrap # cluster bootstraping
+│   ├── apps # argo-cd end-user applications (end-user Application resources)
+│   ├── argocd #  argoc-cd bootstraping (root-app app of apps definition)
+│   ├── infra # argo-cd infraestructure apps (infrastructure Application resources).
+│   ├── root-app # argo-cd root application (infra and apps manifest files)
+│   └── vault # vault bootstraping manifest files
+└── infrastructure # infrastructure applications
+```
+
 
 ## References
 
