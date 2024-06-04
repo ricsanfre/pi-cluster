@@ -13,4 +13,4 @@ helmCharts:
     valuesFile: ../../base/values.yaml
     includeCRDs: false
     additionalValuesFiles:
-      - values.yam
+      - values.yaml
