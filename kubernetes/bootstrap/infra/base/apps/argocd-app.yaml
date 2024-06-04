@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '65'
+spec:
+  destination:
+    namespace: argocd
+    name: in-cluster
+  project: picluster
+  source:
+    path: kubernetes/infrastructure/argocd/overlays/prod
+    repoURL: https://github.com/ricsanfre/pi-cluster
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 1m
+        maxDuration: 16m
+        factor: 2
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true

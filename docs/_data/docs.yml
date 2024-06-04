@@ -26,10 +26,10 @@
 - title: Networking
   docs:
   - k3s-networking
+  - cilium
   - metallb
   - traefik
   - nginx
-  - service-mesh
 - title: Certificate Management
   docs:
   - certmanager
@@ -55,8 +55,9 @@
 - title: GitOps
   docs:
   - argocd
-- title: Other services
+- title: Microservices
   docs:
+  - service-mesh
   - kafka
 - title: Reference Docs
   docs:

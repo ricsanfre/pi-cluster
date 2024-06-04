@@ -1,0 +1,137 @@
+# minio helm values (base)
+
+# Get root user/password from secret
+existingSecret: minio-secret
+
+# Number of drives attached to a node
+drivesPerNode: 1
+# Number of MinIO containers running
+replicas: 3
+# Number of expanded MinIO clusters
+pools: 1
+
+# Run minio server only on amd64 nodes
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/arch
+          operator: In
+          values:
+          - amd64
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Resource request
+resources:
+  requests:
+    memory: 512Mi
+
+# Minio Buckets
+buckets:
+  - name: k3s-loki
+    policy: none
+  - name: k3s-tempo
+    policy: none
+
+# Service Monitor
+metrics:
+  serviceMonitor:
+    enabled: true
+    includeNode: true
+
+# Minio Policies
+policies:
+  - name: loki
+    statements:
+      - resources:
+          - 'arn:aws:s3:::k3s-loki'
+          - 'arn:aws:s3:::k3s-loki/*'
+        actions:
+          - "s3:DeleteObject"
+          - "s3:GetObject"
+          - "s3:ListBucket"
+          - "s3:PutObject"
+  - name: tempo
+    statements:
+      - resources:
+          - 'arn:aws:s3:::k3s-tempo'
+          - 'arn:aws:s3:::k3s-tempo/*'
+        actions:
+          - "s3:DeleteObject"
+          - "s3:GetObject"
+          - "s3:ListBucket"
+          - "s3:PutObject"
+          - "s3:GetObjectTagging"
+          - "s3:PutObjectTagging"
+
+# Minio Users
+users:
+  - accessKey: loki
+    existingSecret: minio-secret
+    existingSecretKey: lokiPassword
+    policy: loki
+  - accessKey: tempo
+    existingSecret: minio-secret
+    existingSecretKey: tempoPassword
+    policy: tempo
+
+# Ingress resource
+ingress:
+  ## Enable creation of ingress resource
+  enabled: true
+  ## Add ingressClassName to the Ingress
+  ingressClassName: nginx
+  # ingress host
+  hosts:
+    - s3.picluster.ricsanfre.com
+  ## TLS Secret Name
+  tls:
+    - secretName: minio-tls
+      hosts:
+        - s3.picluster.ricsanfre.com
+  ## Default ingress path
+  path: /
+  ## Ingress annotations
+  annotations:
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    # Possible Cluster-Issuer values:
+    #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+    #   * 'ca-issuer' (CA-signed certificate, not valid)
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: s3.picluster.ricsanfre.com
+
+# console Ingress
+consoleIngress:
+  ## Enable creation of ingress resource
+  enabled: true
+  ## Add ingressClassName to the Ingress
+  ingressClassName: nginx
+  # ingress host
+  hosts:
+    - minio.picluster.ricsanfre.com
+  ## TLS Secret Name
+  tls:
+    - secretName: minio-console-tls
+      hosts:
+        - minio.picluster.ricsanfre.com
+  ## Default ingress path
+  path: /
+  ## Ingress annotations
+  annotations:
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    # Possible Cluster-Issuer values:
+    #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+    #   * 'ca-issuer' (CA-signed certificate, not valid)
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: minio.picluster.ricsanfre.com

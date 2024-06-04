@@ -1,0 +1,36 @@
+# Increase the k8s api client rate limit to avoid being limited due to increased API usage 
+k8sClientRateLimit:
+  qps: 50
+  burst: 200
+
+
+# Avoid having to manually restart the Cilium pods on config changes 
+operator:
+# replicas: 1  # Uncomment this if you only have one node
+  rollOutPods: true
+  
+  # Install operator on master node
+  nodeSelector:
+    node-role.kubernetes.io/master: "true"
+
+rollOutCiliumPods: true
+
+# K8s API service
+k8sServiceHost: 10.0.0.11
+k8sServicePort: 6443
+
+# Replace Kube-proxy
+kubeProxyReplacement: true
+kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
+
+# -- Configure IP Address Management mode.
+# ref: https://docs.cilium.io/en/stable/network/concepts/ipam/
+ipam:
+  operator:
+    clusterPoolIPv4PodCIDRList: "10.42.0.0/16"
+
+l2announcements:
+  enabled: true
+
+externalIPs:
+  enabled: true

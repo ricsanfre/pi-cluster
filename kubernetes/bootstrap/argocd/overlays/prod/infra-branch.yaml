@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/bootstrap/root-app/overlays/prod
+    repoURL: https://github.com/ricsanfre/pi-cluster
+    targetRevision: master

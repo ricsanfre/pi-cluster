@@ -1,0 +1,4 @@
+# nginx helm values (dev patch)
+controler:
+  config:
+    enable-opentelemetry: "false"

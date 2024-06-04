@@ -64,6 +64,11 @@ k3s-install:
 k3s-bootstrap:
 	${RUNNER} ansible-playbook k3s_bootstrap.yml
 
+.PHONY: k3s-bootstrap-dev
+k3s-bootstrap-dev:
+	${RUNNER} ansible-playbook k3s_bootstrap.yml -e overlay=dev
+
+
 .PHONY: k3s-reset
 k3s-reset:
 	${RUNNER} ansible-playbook k3s_reset.yml
@@ -91,6 +96,10 @@ shutdown-picluster:
 .PHONY: get-argocd-passwd
 get-argocd-passwd:
 	kubectl get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' -n argocd | base64 -d;echo
+
+.PHONY: argocd-port-forward
+argocd-port-forward:
+	kubectl port-forward svc/argocd-server 8080:80 -n argocd
 
 .PHONY: get-elastic-passwd
 get-elastic-passwd:

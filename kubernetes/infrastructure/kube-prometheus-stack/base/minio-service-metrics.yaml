@@ -1,0 +1,16 @@
+# External service for Minio metrics from external Minio
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-minio-metrics-service
+  labels:
+    app.kubernetes.io/name: minio-ext
+  namespace: monitoring
+spec:
+  ports:
+  - name: http-metrics
+    port: 9091
+    protocol: TCP
+    targetPort: 9091
+  type: ExternalName
+  externalName: s3.ricsanfre.com

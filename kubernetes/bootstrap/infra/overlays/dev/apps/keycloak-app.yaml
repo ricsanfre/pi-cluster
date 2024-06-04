@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: argocd
+spec:
+  source:
+    path: kubernetes/infrastructure/keycloak/overlays/dev
+    targetRevision: master

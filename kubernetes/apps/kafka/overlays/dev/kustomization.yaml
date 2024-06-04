@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+helmCharts:
+  - name: strimzi-kafka-operator
+    repo: https://strimzi.io/charts/
+    version: 0.41.0
+    releaseName: strimzi-kafka-operator
+    namespace: kafka
+    includeCRDs: true
+    valuesFile: ../../base/strimzi-kafka-operator-values.yaml
+    additionalValuesFiles:
+      - strimzi-kafka-operator-values.yaml
+  - name: schema-registry
+    repo: oci://registry-1.docker.io/bitnamicharts
+    version: 18.0.4
+    releaseName: schema-registry
+    namespace: kafka
+    valuesFile: ../../base/schema-registry-values.yaml
+    additionalValuesFiles:
+      - schema-registry-values.yaml
+  - name: kafdrop
+    repo: https://ricsanfre.github.io/helm-charts
+    version: 0.1.0
+    releaseName: kafdrop
+    namespace: kafka
+    valuesFile: ../../base/kafdrop-values.yaml
+    additionalValuesFiles:
+      - kafdrop-values.yaml

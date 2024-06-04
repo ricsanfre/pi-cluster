@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+helmCharts:
+  - name: fluent-bit
+    repo: https://fluent.github.io/helm-charts
+    version: 0.46.5
+    releaseName: "fluent-bit"
+    namespace: fluent
+    valuesFile: ../../base/fluent-bit-values.yaml
+    additionalValuesFiles:
+      - fluent-bit-values.yaml
+  - name: fluentd
+    repo: https://fluent.github.io/helm-charts
+    version: 0.5.2
+    releaseName: "fluentd"
+    namespace: fluent
+    valuesFile: ../../base/fluentd-values.yaml
+    additionalValuesFiles:
+      - fluentd-values.yaml

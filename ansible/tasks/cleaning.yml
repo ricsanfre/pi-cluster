@@ -32,7 +32,7 @@
   changed_when: true
   when: "'k3s_worker' in group_names"
 
-- name: Clean container/pod logs and fluentbit db
+- name: Clean container/pod logs, cni config, and fluentbit db
   file:
     path: "{{ item }}"
     state: absent
@@ -40,6 +40,7 @@
     - "/var/log/pods"
     - "/var/log/containers"
     - "/var/log/fluentbit"
+    - "/etc/cni/net.d"
 
 - name: Clean fluentd pos files | get pos files
   find:

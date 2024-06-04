@@ -1,0 +1,61 @@
+# keycloak helm values (base)
+
+global:
+  storageClass: longhorn
+
+# Run in production mode behind NGINX proxy terminating TLS sessions
+# ref: https://www.keycloak.org/server/reverseproxy
+# edge proxy mode: Enables communication through HTTP between the proxy and Keycloak.
+# This mode is suitable for deployments with a highly secure internal network where the reverse proxy keeps a secure connection (HTTP over TLS) with clients while communicating with Keycloak using HTTP.
+production: true
+proxy: edge
+
+# Admin user
+auth:
+  existingSecret: keycloak-secret
+  adminUser: admin
+
+# postgresSQL
+postgresql:
+  enabled: true
+  auth:
+    username: keycloak
+    database: keycloak
+    existingSecret: keycloak-secret
+    secretKeys:
+      adminPasswordKey: postgresql-admin-password
+      userPasswordKey: password
+  architecture: standalone
+
+# Adding additional secrets for realm configuration as environment variables
+extraEnvVarsSecret: keycloak-env-secret
+
+# Importing realm on start-up
+# https://www.keycloak.org/server/importExport#_importing_a_realm_during_startup
+extraStartupArgs: "--import-realm"
+extraVolumes:
+  - name: realm-config
+    configMap:
+      name: keycloak-realm-configmap
+extraVolumeMounts:
+  - mountPath: /opt/bitnami/keycloak/data/import
+    name: realm-config
+
+# Ingress config
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  pathType: Prefix
+  annotations:
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    # Possible Cluster-Issuer values:
+    #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+    #   * 'ca-issuer' (CA-signed certificate, not valid)
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: sso.picluster.ricsanfre.com
+    # Increasing proxy buffer size to avoid
+    # https://stackoverflow.com/questions/57503590/upstream-sent-too-big-header-while-reading-response-header-from-upstream-in-keyc
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+  hostname: sso.picluster.ricsanfre.com
+  tls: true

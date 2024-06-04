@@ -63,15 +63,15 @@
       include_vars: "vars/picluster.yml"
       tags: ["always"]
   tasks:
-    - name: "Wait for worker nodes to be ready"
-      command:
-        cmd: "kubectl get nodes {{ item }}"
-      register: nodes
-      until:
-        - '" Ready "  in nodes.stdout'
-      retries: 10
-      delay: 5
-      with_items: "{{ groups['k3s_worker'] }}"
+    # - name: "Wait for worker nodes to be ready"
+    #   command:
+    #     cmd: "kubectl get nodes {{ item }}"
+    #   register: nodes
+    #   until:
+    #     - '" Ready "  in nodes.stdout'
+    #   retries: 10
+    #   delay: 5
+    #   with_items: "{{ groups['k3s_worker'] }}"
 
     - name: label k3s worker nodes
       command:

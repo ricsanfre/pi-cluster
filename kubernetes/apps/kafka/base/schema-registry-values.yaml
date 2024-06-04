@@ -1,0 +1,12 @@
+# schema-registry helm values (base)
+
+kafka:
+  enabled: false
+auth:
+  protocol: {}
+service:
+  ports:
+    client: {}
+externalKafka:
+  brokers:
+    - PLAINTEXT://my-cluster-kafka-bootstrap:9092

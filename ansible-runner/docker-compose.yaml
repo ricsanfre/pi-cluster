@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # Ansible-runner
   ansible-runner:
@@ -11,7 +9,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./../ansible:/runner
-      - ./../argocd:/argocd
+      - ./../kubernetes:/kubernetes
       - ./../metal/x86/pxe-files:/metal/x86/pxe-files
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
