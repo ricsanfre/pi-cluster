@@ -77,9 +77,8 @@ k3s_agent_config:
     - 'node_type=worker'
   kubelet-arg:
     - 'config=/etc/rancher/k3s/kubelet.config'
-  # kube-proxy-arg:
-  #  - 'metrics-bind-address=0.0.0.0'
-
+#  kube-proxy-arg:
+#    - 'metrics-bind-address=0.0.0.0'
 
 ###########
 # Ingress #
