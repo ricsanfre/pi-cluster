@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/longhorn/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

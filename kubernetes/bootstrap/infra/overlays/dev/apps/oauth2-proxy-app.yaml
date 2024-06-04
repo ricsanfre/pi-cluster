@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/oauth2-proxy/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

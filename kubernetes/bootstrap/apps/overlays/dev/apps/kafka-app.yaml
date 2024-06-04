@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/apps/kafka/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

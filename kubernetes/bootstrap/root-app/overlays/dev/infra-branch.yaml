@@ -7,4 +7,4 @@ spec:
   source:
     path: kubernetes/bootstrap/infra/overlays/dev
     repoURL: https://github.com/ricsanfre/pi-cluster
-    targetRevision: cilium
+    targetRevision: master

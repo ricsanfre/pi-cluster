@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/csi-external-snapshotter/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

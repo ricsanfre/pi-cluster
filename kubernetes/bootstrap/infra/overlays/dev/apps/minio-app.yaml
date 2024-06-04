@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/minio/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

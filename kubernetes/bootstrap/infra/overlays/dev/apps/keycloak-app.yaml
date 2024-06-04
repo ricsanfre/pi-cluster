@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/keycloak/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

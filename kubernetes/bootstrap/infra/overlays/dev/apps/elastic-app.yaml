@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/elastic/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

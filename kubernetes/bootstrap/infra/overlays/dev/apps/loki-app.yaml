@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/loki/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

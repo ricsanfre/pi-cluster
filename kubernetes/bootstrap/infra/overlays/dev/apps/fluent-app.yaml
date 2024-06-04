@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/fluent/overlays/dev
-    targetRevision: cilium
+    targetRevision: master

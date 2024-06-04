@@ -6,4 +6,4 @@ metadata:
 spec:
   source:
     path: kubernetes/infrastructure/velero/overlays/dev
-    targetRevision: cilium
+    targetRevision: master
