@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
-last_modified_at: "06-11-2023"
+last_modified_at: "04-06-2024"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -136,7 +136,8 @@ As an alternative, a custom CA can be created and use it to sign all certificate
 The following changes need to be done:
 
 - Modify Ansible variable `enable_letsencrypt` to false in `/ansible/picluster.yml` file
-- Modify Kubernetes applications `ingress.tlsIssuer` (`/argocd/system/<app>/values.yaml`) to `ca` instead of `letsencrypt`.
+- Modify Kubernetes ingress resources in all applications (`/kubernetes/infrastructure` and `/kubernetes/apps`) so `cert-manager.io/cluster-issuer` annotation points to `ca-issuer` instead of `letsencrypt-issuer`.
+
 
 {{site.data.alerts.end}}
 
@@ -302,22 +303,24 @@ Variable `restic_clean_service` which configure and schedule restic's purging ac
 
 ## Kubernetes Applications (GitOps)
 
-ArgoCD is used to deploy automatically packaged applications contained in the repository. These applications are located in [`/argocd`]({{site.git_address}}/tree/master/argocd) directory.
+ArgoCD is used to deploy automatically packaged applications contained in the repository. These applications are located in [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
 - Modify Root application (App of Apps pattern) to point to your own repository
 
-  Edit file [`/argocd/bootstrap/root/values.yaml`]({{ site.git_edit_address }}/argocd/bootstrap/root/values.yaml).
+  Edit all `*-app.yaml` manifest files in [`/kubernetes/bootstrap/`]({{ site.git_edit_address }}/kubernetes/bootstrap/).
  
-  `gitops.repo` should point to your own cloned repository.
+  `repoURL` should point to your own cloned repository.
   
   ```yml
-  gitops:
-    repo: https://github.com/<your-user>/pi-cluster 
+  apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  spec:
+    repoURL: https://github.com/<your-user>/pi-cluster
   ```
 
 - Tune parameters of the different packaged Applications to meet your specific configuration
 
-  Edit `values.yaml` file of the different applications located in [`/argocd/system`]({{site.git_address}}/tree/master/argocd/system) directory.
+  Edit helm chart `values.yaml` file and other kubernetes manifest files file of the different applications located in [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
 ## K3S
 
@@ -336,10 +339,8 @@ To bootstrap the cluster, run the command:
 ```shell
 make k3s-bootstrap
 ```
-Argo CD will be installed and it will automatically deploy all cluster applications automatically from git repo
+Argo CD will be installed and it will automatically deploy all cluster applications automatically from git repo.
 
-- `argocd\bootstrap\root`: Containing root application (App of Apss ArgoCD pattern)
-- `argocd\system\<app>`: Containing manifest files for application <app>
 
 ### K3s Cluster reset
 

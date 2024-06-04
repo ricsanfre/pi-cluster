@@ -176,12 +176,13 @@ Where:
 
 #### Ansible-runner docker image
 
-This docker image contains all packages needed for running ansible.
+This docker image contains all packages needed for running ansible and bootstraping the cluster.
 
 ```
 ├── build
 │   ├── requirements.txt
 │   └── requirements.yml
+│   └── ansible_runner_setup.yml
 ├── Dockerfile
 ```
 
@@ -209,6 +210,10 @@ RUN pip3 install -r requirements.txt
 RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r requirements.yml --roles-path "/usr/share/ansible/roles"
 RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r requirements.yml --collections-path "/usr/share/ansible/collections"
 
+# Configure ansible-runner
+RUN ansible-playbook ansible_runner_setup.yml
+
+
 ENV USER runner
 ENV FOLDER /home/runner
 RUN /usr/sbin/groupadd $USER && \
@@ -235,13 +240,13 @@ The image automatically installs:
 - Ansible requirements: ansible collections and roles in `build/requirements.yml`
 - Certbot PIP package: `certbot`
 - Additional PIP packages in `build/requirements.txt` (packages needed by Ansible modules or cerbot plugins)
+- `helm` and `kubectl` binaries installation using Ansible (`build/ansible_runner_config.yaml`)
 
 
 #### Docker-compose file
 
 `docker-compose.yml`
 ```yml
-version: "3.8"
 
 services:
   # Ansible-runner
@@ -254,7 +259,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./../ansible:/runner
-      - ./../argocd:/argocd
+      - ./../kubernetes:/kubernetes
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
       - ./runner/.secrets:/home/runner/.secrets
