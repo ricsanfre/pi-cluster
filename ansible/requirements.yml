@@ -34,4 +34,4 @@ collections:
   - name: ansible.posix
     version: 1.5.4
   - name: community.crypto
-    version: 2.19.1
+    version: 2.20.0
