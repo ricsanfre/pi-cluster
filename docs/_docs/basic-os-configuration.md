@@ -61,7 +61,7 @@ For solving this [`fake-hwclock`](http://manpages.ubuntu.com/manpages/focal/man8
 
 ### Installing Utility scripts
 
-Raspberry PI OS contains several specific utilities such as `vcgencmd` that are also available in Ubuntu 20.04 through the package [`libraspberrypi-bin`](https://packages.ubuntu.com/focal-updates/libraspberrypi-bin)
+Raspberry PI OS contains several specific utilities such as `vcgencmd` that are also available in Ubuntu 22.04 through the package [`libraspberrypi-bin`](https://packages.ubuntu.com/jammy/libraspberrypi-bin)
 
 ```shell
 sudo apt install libraspberrypi-bi
@@ -69,7 +69,7 @@ sudo apt install libraspberrypi-bi
 
 Two scripts, using `vcgencmd` command for checking temperature and throttling status of Raspberry Pi, can be deployed on each Raspberry Pi (in `/usr/local/bin` directory)
 
-`pi_temp` for getting Raspeberry Pi temperature
+`pi_temp` for getting Raspberry Pi temperature
 `pi_throttling` for getting the throttling status
 
 Boths scripts can be executed remotely with Ansible:
