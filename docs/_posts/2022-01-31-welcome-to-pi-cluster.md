@@ -15,6 +15,6 @@ All source code (ansible playbooks and cloud-init configuration files) can be fo
 File all bugs/feature requests at [Pi-Cluster’s GitHub issues section][pi-cluster-gh-issues].
 
 [pi-cluster-gh]:         https://github.com/ricsanfre/pi-cluster 
-[pi-cluster-docs]:       https://picluster.ricsanfre.com/docs/home/
+[pi-cluster-docs]:       /docs/home/
 [pi-cluster-gh-issues]:  https://github.com/ricsanfre/pi-cluster/issues
 
