@@ -28,7 +28,7 @@ collections:
   - name: community.general
     version: 8.6.0
   - name: kubernetes.core
-    version: 3.0.1
+    version: 3.1.0
   - name: community.hashi_vault
     version: 6.2.0
   - name: ansible.posix
