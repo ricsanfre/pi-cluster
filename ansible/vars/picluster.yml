@@ -6,7 +6,7 @@
 #######
 
 # k3s version
-k3s_version: v1.29.4+k3s1
+k3s_version: v1.29.5+k3s1
 
 # k3s master node VIP (loadbalancer)
 k3s_api_vip: 10.0.0.11
@@ -240,7 +240,7 @@ restic_environment:
 #######################
 
 vault_hostname: "vault.picluster.ricsanfre.com"
-vault_version: 1.16.1
+vault_version: 1.16.3
 
 vault_dns: "{{ vault_hostname }}"
 vault_enable_tls: true
