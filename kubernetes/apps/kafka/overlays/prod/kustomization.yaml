@@ -16,7 +16,7 @@ helmCharts:
       - strimzi-kafka-operator-values.yaml
   - name: schema-registry
     repo: oci://registry-1.docker.io/bitnamicharts
-    version: 18.0.4
+    version: 18.1.3
     releaseName: schema-registry
     namespace: kafka
     valuesFile: ../../base/schema-registry-values.yaml
