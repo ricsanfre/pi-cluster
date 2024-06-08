@@ -44,6 +44,22 @@ Jekyll 3.9 isn’t compatible with Ruby 3 so a patch need to be applied to pathu
 Follow [this procedure](https://stackoverflow.com/questions/66113639/jekyll-serve-throws-no-implicit-conversion-of-hash-into-integer-error/73909796#73909796) to fix it locally:
 
 
+## Update dependencies
+
+- Remove `Gemfile.lock` file
+
+  ```shell
+  rm Gemfile.lock
+
+  ```
+
+- Update dependencies
+
+  ```shell
+  bundle update
+  ```
+
+
 ## Jekyll Theme
 
 Embedded jekyll theme developed using as a base [aksakalli/jekyll-doc-theme](https://github.com/aksakalli/jekyll-doc-theme), and including a lot of enhancements:
