@@ -7,7 +7,7 @@ resources:
 helmCharts:
   - name: eck-operator
     repo: https://helm.elastic.co
-    version: 2.12.1
+    version: 2.13.0
     releaseName: "eck-operator"
     namespace: elastic
     valuesFile: ../../base/eck-operator-values.yaml
