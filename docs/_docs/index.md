@@ -10,8 +10,7 @@ last_modified_at: "02-06-2024"
 
 The main goal of  this project is to create a kubernetes cluster at home using ARM/x86 bare metal nodes (**Raspberry Pis** and low cost refurbished **mini PCs**) and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Argo CD](https://argo-cd.readthedocs.io/en/stable/).
 
-The project scope includes the automation of the deployment and configuration of a lightweight Kubernetes flavor based on [K3S](https://k3s.io/),
-and deploy cluster basic services such as:
+The project scope includes the automatic installation and configuration of a lightweight Kubernetes flavor based on [K3S](https://k3s.io/), and deployment of cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
 - S3 Object storage, [Minio](https://min.io/).
 - Backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/). 
@@ -23,10 +22,10 @@ and deploy cluster basic services such as:
    - Logging and analytics solution, combined EFK+LG stacks ([Elasticsearch](https://www.elastic.co/elasticsearch/)-[Fluentd](https://www.fluentd.org/)/[Fluentbit](https://fluentbit.io/)-[Kibana](https://www.elastic.co/kibana/) + [Loki](https://grafana.com/oss/loki/)-[Grafana](https://grafana.com/oss/grafana/))
    - Distributed tracing solution, [Tempo](https://grafana.com/oss/tempo/).
 
-Also services needed to learn about microservices architectures are include as part of the scope
+Also deployment of services for building a cloud-native microservices architecture are include as part of the scope:
 
 - Service mesh architecture, [Linkerd](https://linkerd.io/)
-- API security using Oauth2.0 and OpenId Connect, using IAM solution, [Keycloak](https://www.keycloak.org/)
+- API security with Oauth2.0 and OpenId Connect, using IAM solution, [Keycloak](https://www.keycloak.org/)
 - Streaming platform, [Kafka](https://kafka.apache.org/)
 
 ## Design Principles
