@@ -130,3 +130,7 @@ grafana:
   enabled: false
   # Enable deployment of kube-prometheus-stack grafana dashboards
   forceDeployDashboards: true
+  # Adding grafana folder annotation
+  sidecar:
+    annotations:
+      grafana_folder: Kubernetes
