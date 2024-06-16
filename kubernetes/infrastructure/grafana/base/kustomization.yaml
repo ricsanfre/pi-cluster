@@ -24,18 +24,6 @@ configMapGenerator:
 - name: dashboard-k3s-scheduler
   files:
   - dashboards/k3s-scheduler-dashboard.json
-# - name: dashboard-longhorn
-#   files:
-#   - dashboards/longhorn-dashboard.json
-# - name: dashboard-nginx
-#   files:
-#   - dashboards/nginx.json
-# - name: dashboard-minio
-#   files:
-#   - dashboards/minio-dashboard.json
-# - name: dashboard-velero
-#   files:
-#   - dashboards/velero-dashboard.json
 - name: dashboard-elasticsearch
   files:
   - dashboards/elasticsearch.json

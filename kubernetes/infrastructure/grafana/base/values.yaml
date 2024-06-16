@@ -75,7 +75,7 @@ dashboards:
         - { name: DS_PROMETHEUS, value: Prometheus }
     longhorn:
       # https://grafana.com/grafana/dashboards/16888-longhorn/
-      gnetId: 13032
+      gnetId: 16888
       revision: 9
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
@@ -91,8 +91,6 @@ dashboards:
       revision: 2
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
-
-
 
 # Data sources
 datasources:
