@@ -48,6 +48,52 @@ serviceMonitor:
       action: replace
       targetLabel: job
       replacement: grafana
+
+
+# Dashboard Providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default-folder
+
+dashboards:
+  default:
+    minio:
+      # renovate: depName="MinIO Dashboard"
+      # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
+      gnetId: 13502
+      revision: 26
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    longhorn:
+      # https://grafana.com/grafana/dashboards/16888-longhorn/
+      gnetId: 13032
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    logging:
+      # https://grafana.com/grafana/dashboards/7752-logging-dashboard/
+      gnetId: 7752
+      revision: 6
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    velero:
+      # https://grafana.com/grafana/dashboards/11055-kubernetes-addons-velero-stats/
+      gnetId: 11055
+      revision: 2
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+
+
+
 # Data sources
 datasources:
   datasources.yaml:
@@ -97,6 +143,8 @@ datasources:
       type: tempo
       access: proxy
       url: http://tempo-query-frontend.tempo.svc.cluster.local:3100
+
+
 
 
 # Enable provisioning of dashboards and datasources
