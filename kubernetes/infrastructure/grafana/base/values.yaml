@@ -91,6 +91,9 @@ dashboards:
       revision: 2
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
+    elasticsearch:
+      url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/examples/grafana/dashboard.json
+      datasource: Prometheus
 
 # Data sources
 datasources:

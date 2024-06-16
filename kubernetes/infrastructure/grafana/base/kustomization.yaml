@@ -24,9 +24,9 @@ configMapGenerator:
 - name: dashboard-k3s-scheduler
   files:
   - dashboards/k3s-scheduler-dashboard.json
-- name: dashboard-elasticsearch
-  files:
-  - dashboards/elasticsearch.json
+# - name: dashboard-elasticsearch
+#   files:
+#   - dashboards/elasticsearch.json
 # - name: dashboard-fluent-bit
 #   files:
 #   - dashboards/fluent-bit-dashboard.json
