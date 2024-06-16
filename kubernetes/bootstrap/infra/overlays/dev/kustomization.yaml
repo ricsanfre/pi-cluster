@@ -24,4 +24,4 @@ patches:
 - path: apps/fluent-app.yaml
 - path: apps/tempo-app.yaml
 - path: apps/kube-prom-stack-app.yaml
-
+- path: apps/grafana-app.yaml

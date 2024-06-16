@@ -90,86 +90,6 @@ prometheus:
         action: replace
         targetLabel: job
         replacement: prometheus
-grafana:
-  # Use an existing secret for the admin user.
-  adminUser: ""
-  adminPassword: ""
-  admin:
-    existingSecret: grafana
-    userKey: admin-user
-    passwordKey: admin-password
-  # Add grafana environment variables from secret
-  envFromSecret: grafana-env-secret
-  grafana.ini:
-    server:
-      # Configuring /grafana subpath
-      domain: monitoring.picluster.ricsanfre.com
-      root_url: "https://%(domain)s/grafana/"
-      # rewrite rules configured in nginx rules
-      # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
-      serve_from_sub_path: false
-    # SSO configuration
-    auth.generic_oauth:
-      enabled: true
-      name: Keycloak-OAuth
-      allow_sign_up: true
-      client_id: grafana
-      # client_secret: supersecret
-      scopes: openid email profile offline_access roles
-      email_attribute_path: email
-      login_attribute_path: username
-      name_attribute_path: full_name
-      auth_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/auth
-      token_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/token
-      api_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/userinfo
-      role_attribute_path: contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
-      signout_redirect_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.picluster.ricsanfre.com%2Fgrafana%2Flogin%2Fgeneric_oauth
-  # Set admin password
-  # adminPassword: ""
-  # Install required plugins
-  plugins:
-    - grafana-piechart-panel
-  # Relabel job name of Grafana's metrics
-  serviceMonitor:
-    labels:
-      release: kube-prometheus-stack
-    relabelings:
-      # Replace job value
-      - sourceLabels:
-        - __address__
-        action: replace
-        targetLabel: job
-        replacement: grafana
-  # Additional data source
-  additionalDataSources:
-  - name: Loki
-    type: loki
-    uid: loki
-    access: proxy
-    url: http://loki-gateway.loki.svc.cluster.local
-    jsonData:
-      derivedFields:
-          # Traefik traces integration
-          # - datasourceUid: tempo
-          #   matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
-          #   name: TraceID
-          #   url: $${__value.raw}
-          # NGINX traces integration
-        - datasourceUid: tempo
-          matcherRegex: '"trace_id": "(\w+)"'
-          name: TraceID
-          url: $${__value.raw}
-  - name: Tempo
-    uid: tempo
-    type: tempo
-    access: proxy
-    url: http://tempo-query-frontend.tempo.svc.cluster.local:3100
-
-  # Additional configuration to grafana dashboards sidecar
-  # Search in all namespaces for configMaps containing label `grafana_dashboard`
-  sidecar:
-    dashboards:
-      searchNamespace: ALL
 
 # Disabling monitoring of K8s services.
 # Monitoring of K3S components will be configured out of kube-prometheus-stack
@@ -204,3 +124,9 @@ defaultRules:
     kubernetesStorage: false
     kubernetesSystem: false
     kubeScheduler: false
+
+# Disabling instalation of Grafana sub-chart
+grafana:
+  enabled: false
+  # Enable deployment of kube-prometheus-stack grafana dashboards
+  forceDeployDashboards: true

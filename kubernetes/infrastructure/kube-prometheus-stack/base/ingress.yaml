@@ -1,39 +1,4 @@
 ---
-# Ingress Grafana
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-grafana
-  namespace: monitoring
-  annotations:
-    # Linkerd configuration. Configure Service as Upstream
-    nginx.ingress.kubernetes.io/service-upstream: "true"
-    # Rewrite target
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    # Enable cert-manager to create automatically the SSL certificate and store in Secret
-    cert-manager.io/cluster-issuer: letsencrypt-issuer
-    cert-manager.io/common-name: monitoring.picluster.ricsanfre.com
-
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - monitoring.picluster.ricsanfre.com
-      secretName: monitoring-tls
-  rules:
-    - host: monitoring.picluster.ricsanfre.com
-      http:
-        paths:
-          - path: /grafana/(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: kube-prometheus-stack-grafana
-                port:
-                  number: 80
-
----
 # Ingress Prometheus
 apiVersion: networking.k8s.io/v1
 kind: Ingress

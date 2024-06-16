@@ -21,3 +21,4 @@ resources:
 - apps/fluent-app.yaml
 - apps/tempo-app.yaml
 - apps/kube-prom-stack-app.yaml
+- apps/grafana-app.yaml
