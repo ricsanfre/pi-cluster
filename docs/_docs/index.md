@@ -312,7 +312,7 @@ From software perspective, I have developed the following:
 
    Source code can be found in Pi Cluster Git repository under [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
-4. This **documentation website** [picluster.ricsanfre.com](https://picluster.ricsanfre.com), hosted in Github pages.
+4. This **documentation website** [picluster.ricsanfre.com](/), hosted in Github pages.
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 
