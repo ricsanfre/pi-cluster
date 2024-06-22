@@ -115,6 +115,12 @@ hubble:
     ingress:
       enabled: true
       annotations:
+        # Enable external authentication using Oauth2-proxy
+        nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.picluster.ricsanfre.com/oauth2/start?rd=https://$host$request_uri
+        nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+        nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+
         # Enable cert-manager to create automatically the SSL certificate and store in Secret
         # Possible Cluster-Issuer values:
         #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
