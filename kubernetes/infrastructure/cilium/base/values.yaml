@@ -105,4 +105,8 @@ hubble:
         cert-manager.io/common-name: hubble.picluster.ricsanfre.com
       className: nginx
       hosts: ["hubble.picluster.ricsanfre.com"]
+      tls:
+        - hosts:
+          - hubble.picluster.ricsanfre.com
+          secretName: hubble-tls
 
