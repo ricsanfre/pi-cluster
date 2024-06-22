@@ -2,7 +2,7 @@
 title: Cilium (Kubernetes CNI)
 permalink: /docs/cilium/
 description: How to install Cilium CNI in the picluster.
-last_modified_at: "02-06-2024"
+last_modified_at: "22-06-2024"
 ---
 
 [Cilium](https://cilium.io/) is an open source, cloud native solution for providing, securing, and observing network connectivity between workloads, powered by [eBPF](https://ebpf.io/) Kernel technology.
@@ -202,6 +202,139 @@ Installation using `Helm` (Release 3):
   The leader election process, used by L2 annoucements, continually generates API traffic, so API request. The default client rate limit is 5 QPS (query per second) with allowed bursts up to 10 QPS. this default limit is quickly reached when utilizing L2 announcements and thus users should size the client rate limit accordingly.
 
   See details in [Cilium L2 announcements documentation](https://docs.cilium.io/en/latest/network/l2-announcements/#sizing-client-rate-limit)
+
+### Configure Cilium monitoring and Hubble UI
+
+{{site.data.alerts.note}}
+Prometheus Operator CDRs need to be installed before Cilium, so ServiceMonitor resources can be created.
+CDRs are automatically deployed when installing kube-prometheus-stack helm chart.
+
+As part of a cluster fresh installation, Only Prometheus Operator CDRs can be installed:
+
+```shell
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus-operator-crds prometheus-community/prometheus-operator-crds
+```
+
+Then Cilium CNI can be installed, to have fully functional cluster.
+
+Finally, when installing kube-prometheus-stack helm chart, installation of the CDRs can be skipped when executing helm install command (`helm install --skip-crds`).
+
+{{site.data.alerts.end}}
+
+- Configure Prometheus Monitoring metrics and Grafana dashboards
+
+  Add following configuration to helm chart `values.yaml`:
+
+  ```yaml
+  operator:
+    # Enable prometheus integration for cilium-operator
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+    # Enable Grafana dashboards for cilium-operator
+    dashboards:
+      enabled: true
+      annotations:
+        grafana_folder: Cilium
+
+  # Enable Prometheus integration for cilium-agent
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      # scrape interval
+      interval: "10s"
+      # -- Relabeling configs for the ServiceMonitor hubble
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: node
+          replacement: ${1}
+      trustCRDsExist: true
+  # Enable Grafana dashboards for cilium-agent
+  # grafana can import dashboards based on the label and value
+  # ref: https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards
+  dashboards:
+    enabled: true
+    annotations:
+      grafana_folder: Cilium
+
+  ```
+
+- Enable Huble UI
+
+  Add following configuration to helm chart `values.yaml`:
+
+  ```yaml
+  # Enable Hubble
+  hubble:
+    enabled: true
+    # Enable Monitoring
+    metrics:
+      enabled:
+        - dns:query
+        - drop
+        - tcp
+        - flow
+        - port-distribution
+        - icmp
+        - http
+      serviceMonitor:
+        enabled: true
+        # scrape interval
+        interval: "10s"
+        # -- Relabeling configs for the ServiceMonitor hubble
+        relabelings:
+          - action: replace
+            sourceLabels:
+              - __meta_kubernetes_pod_node_name
+            targetLabel: node
+            replacement: ${1}
+      # Grafana Dashboards
+      dashboards:
+        enabled: true
+        annotations:
+          grafana_folder: Cilium
+    relay:
+      enabled: true
+      rollOutPods: true
+      # Enable Prometheus for hubble-relay
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    ui:
+      enabled: true
+      rollOutPods: true
+      # Enable Ingress
+      ingress:
+        enabled: true
+        annotations:
+          # Enable external authentication using Oauth2-proxy
+          nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.picluster.ricsanfre.com/oauth2/start?rd=https://$host$request_uri
+          nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+          nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+          nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+
+          # Enable cert-manager to create automatically the SSL certificate and store in Secret
+          # Possible Cluster-Issuer values:
+          #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+          #   * 'ca-issuer' (CA-signed certificate, not valid)
+          cert-manager.io/cluster-issuer: letsencrypt-issuer
+          cert-manager.io/common-name: hubble.picluster.ricsanfre.com
+        className: nginx
+        hosts: ["hubble.picluster.ricsanfre.com"]
+        tls:
+          - hosts:
+            - hubble.picluster.ricsanfre.com
+            secretName: hubble-tls
+  ```
+
+See further details in [Cilium Monitoring and Metrics](https://docs.cilium.io/en/stable/observability/metrics/) and [Cilium Hubble UI](https://docs.cilium.io/en/stable/gettingstarted/hubble/) and [Cilium Hubble Configuration](https://docs.cilium.io/en/latest/gettingstarted/hubble-configuration/).
 
 ### Configure LB-IPAM
 
