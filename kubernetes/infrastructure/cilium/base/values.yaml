@@ -13,6 +13,18 @@ operator:
   nodeSelector:
     node-role.kubernetes.io/master: "true"
 
+  # Enable prometheus integration for cilium-operator
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+  # Enable Grafana dashboards for cilium-operator
+  dashboards:
+    enabled: true
+    annotations:
+      grafana_folder: Cilium  
+
 rollOutCiliumPods: true
 
 # K8s API service
@@ -34,3 +46,63 @@ l2announcements:
 
 externalIPs:
   enabled: true
+
+# Enable Prometheus integration for cilium-agent
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    trustCRDsExist: true
+
+# Enable Grafana dashboards for cilium-agent
+# grafana can import dashboards based on the label and value
+# ref: https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards
+dashboards:
+  enabled: true
+  annotations:
+    grafana_folder: Cilium
+
+# Enable Hubble
+hubble:
+  enabled: true
+
+  # Enable Monitoring
+  metrics:
+    enabled:
+      - dns:query
+      - drop
+      - tcp
+      - flow
+      - port-distribution
+      - icmp
+      - http
+    serviceMonitor:
+      enabled: true
+    # Grafana Dashboards
+    dashboards:
+      enabled: true
+      annotations:
+        grafana_folder: Cilium
+  relay:
+    enabled: true
+    rollOutPods: true
+    # Enable Prometheus for hubble-relay
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+  ui:
+    enabled: true
+    rollOutPods: true
+    ingress:
+      enabled: true
+      annotations:
+        # Enable cert-manager to create automatically the SSL certificate and store in Secret
+        # Possible Cluster-Issuer values:
+        #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+        #   * 'ca-issuer' (CA-signed certificate, not valid)
+        cert-manager.io/cluster-issuer: letsencrypt-issuer
+        cert-manager.io/common-name: hubble.picluster.ricsanfre.com
+      className: nginx
+      hosts: ["hubble.picluster.ricsanfre.com"]
+
