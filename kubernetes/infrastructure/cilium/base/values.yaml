@@ -52,6 +52,15 @@ prometheus:
   enabled: true
   serviceMonitor:
     enabled: true
+    # scrape interval
+    interval: "10s"
+    # -- Relabeling configs for the ServiceMonitor hubble
+    relabelings:
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: node
+        replacement: ${1}
     trustCRDsExist: true
 
 # Enable Grafana dashboards for cilium-agent
@@ -78,6 +87,15 @@ hubble:
       - http
     serviceMonitor:
       enabled: true
+      # scrape interval
+      interval: "10s"
+      # -- Relabeling configs for the ServiceMonitor hubble
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: node
+          replacement: ${1}
     # Grafana Dashboards
     dashboards:
       enabled: true
