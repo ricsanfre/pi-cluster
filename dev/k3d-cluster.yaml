@@ -1,0 +1,50 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: mycluster
+servers: 1
+agents: 2
+# Export traefik/nginx port
+# Available at http://localhost and https://localhost
+
+kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)
+  host: "localhost" # important for the `server` setting in the kubeconfig
+  hostIP: "0.0.0.0" # where the Kubernetes API will be listening on
+  hostPort: "6445"
+ports:
+  - port: 80:80 # same as `--port '80:80@loadbalancer'`
+    nodeFilters:
+      - loadbalancer
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+options:
+  k3s:
+    extraArgs:
+      # Disable traefik, servicelb, flannel, network-policy and flannel
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+      - arg: --disable=servicelb
+        nodeFilters:
+          - server:*
+      - arg: --disable=network-policy
+        nodeFilters:
+          - server:*
+      - arg: --disable=kube-proxy
+        nodeFilters:
+          - server:*
+      - arg: --flannel-backend=none
+        nodeFilters:
+          - server:*
+      - arg: --kube-proxy-arg=metrics-bind-address=0.0.0.0
+        nodeFilters:
+          - server:*
+          - agent:*
+      - arg: --kube-controller-manager-arg=bind-address=0.0.0.0
+        nodeFilters:
+          - server:*
+      - arg: --kube-scheduler-arg=bind-address=0.0.0.0
+        nodeFilters:
+          - server:*
+      
