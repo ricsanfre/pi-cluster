@@ -21,7 +21,7 @@ ports:
 options:
   k3s:
     extraArgs:
-      # Disable traefik, servicelb, flannel, network-policy and flannel
+      # Disable traefik, servicelb, flannel and network-policy
       - arg: --disable=traefik
         nodeFilters:
           - server:*
@@ -31,9 +31,9 @@ options:
       - arg: --disable=network-policy
         nodeFilters:
           - server:*
-      - arg: --disable=kube-proxy
-        nodeFilters:
-          - server:*
+      #- arg: --disable=kube-proxy
+      #  nodeFilters:
+      #    - server:*
       - arg: --flannel-backend=none
         nodeFilters:
           - server:*

@@ -1,1 +1,9 @@
 # cilium helm values (dev patch)
+
+# K8s API service
+k8sServiceHost: host.k3d.internal
+k8sServicePort: 6445
+
+# Disable Kube-proxy replacement (not working in k3d)
+kubeProxyReplacement: false
+kubeProxyReplacementHealthzBindAddr:
