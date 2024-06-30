@@ -55,6 +55,9 @@
         overlay: "prod"
       when: overlay is undefined
 
+    - name: Install CRDs
+      include_tasks: tasks/crds_install.yml
+
     - name: Install Cilium CNI
       include_tasks: tasks/cilium_install.yml
 
