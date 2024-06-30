@@ -1,26 +1,28 @@
 apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
-  name: mycluster
+  name: picluster
 servers: 1
 agents: 2
 # Export traefik/nginx port
 # Available at http://localhost and https://localhost
-
 kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)
-  host: "localhost" # important for the `server` setting in the kubeconfig
-  hostIP: "0.0.0.0" # where the Kubernetes API will be listening on
-  hostPort: "6445"
-ports:
-  - port: 80:80 # same as `--port '80:80@loadbalancer'`
-    nodeFilters:
-      - loadbalancer
-  - port: 443:443
-    nodeFilters:
-      - loadbalancer
+   hostIP: {{ .host_ip }} # where the Kubernetes API will be listening on
+   hostPort: "6443"
+# Setting version of k3s
+image: rancher/k3s:v1.29.6-k3s1
+# Setting docker network to be used
+network: picluster
 options:
+  # Disable Load balancer
+  k3d:
+    disableLoadbalancer: true
+  # Extra arguments for k3s
   k3s:
     extraArgs:
+      - arg: --tls-san=127.0.0.1
+        nodeFilters:
+          - server:*
       # Disable traefik, servicelb, flannel and network-policy
       - arg: --disable=traefik
         nodeFilters:
@@ -28,19 +30,25 @@ options:
       - arg: --disable=servicelb
         nodeFilters:
           - server:*
-      - arg: --disable=network-policy
+      - arg: --disable-network-policy
         nodeFilters:
           - server:*
-      #- arg: --disable=kube-proxy
-      #  nodeFilters:
-      #    - server:*
+      - arg: --disable-kube-proxy
+        nodeFilters:
+          - server:*
       - arg: --flannel-backend=none
         nodeFilters:
           - server:*
-      - arg: --kube-proxy-arg=metrics-bind-address=0.0.0.0
+      # - arg: --kube-proxy-arg=metrics-bind-address=0.0.0.0
+      #   nodeFilters:
+      #     - server:*
+      #     - agent:*
+      - arg: --cluster-cidr={{ .cluster_subnet }}
         nodeFilters:
           - server:*
-          - agent:*
+      - arg: --service-cidr={{ .service_subnet }}
+        nodeFilters:
+          - server:*
       - arg: --kube-controller-manager-arg=bind-address=0.0.0.0
         nodeFilters:
           - server:*
