@@ -4,7 +4,7 @@ metadata:
   name: nginx
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '60'
+    argocd.argoproj.io/sync-wave: '30'
 spec:
   destination:
     namespace: nginx

@@ -4,7 +4,7 @@ metadata:
   name: cilium
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '20'
+    argocd.argoproj.io/sync-wave: '40'
 spec:
   destination:
     namespace: kube-system

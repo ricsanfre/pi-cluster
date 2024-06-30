@@ -4,7 +4,7 @@ metadata:
   name: system-upgrade
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '50'
+    argocd.argoproj.io/sync-wave: '10'
 spec:
   destination:
     namespace: system-upgrade
