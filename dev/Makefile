@@ -1,14 +1,16 @@
+
 .EXPORT_ALL_VARIABLES:
+# https://github.com/k3d-io/k3d/pull/1268
 K3D_FIX_MOUNTS=1
 
 
 .PHONY: create-k3d
 create-k3d:
-	k3d cluster create mycluster -c k3d-cluster.yaml
+	./create_cluster.sh
 
 .PHONY: delete-k3d
 delete-k3d:
-	k3d cluster delete mycluster
+	k3d cluster delete picluster
 
 .PHONY: crds-install
 crds-install:
@@ -21,7 +23,7 @@ cilium-install:
 	   ../kubernetes/infrastructure/cilium/overlays/dev | kubectl apply -f -
 
 .PHONY: cilium-config
-cilium-cofig:
+cilium-config:
 	kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
 	   ../kubernetes/infrastructure/cilium-config/overlays/dev | kubectl apply -f -
 
