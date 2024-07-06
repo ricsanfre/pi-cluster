@@ -1,0 +1,9 @@
+# cloudnative-pg helm values (base)
+
+crds:
+  create: true
+
+monitoring:
+  podMonitorEnabled: false
+  grafanaDashboard:
+    create: true

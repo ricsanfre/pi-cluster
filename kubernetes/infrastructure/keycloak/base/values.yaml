@@ -15,17 +15,18 @@ auth:
   existingSecret: keycloak-secret
   adminUser: admin
 
-# postgresSQL
+
+# External DB: https://github.com/bitnami/charts/tree/main/bitnami/keycloak#use-an-external-database
 postgresql:
-  enabled: true
-  auth:
-    username: keycloak
-    database: keycloak
-    existingSecret: keycloak-secret
-    secretKeys:
-      adminPasswordKey: postgresql-admin-password
-      userPasswordKey: password
-  architecture: standalone
+  enabled: false
+
+externalDatabase:
+  host: "keycloak-db-rw"
+  port: 5432
+  database: keycloak
+  existingSecret: "keycloak-db-secret"
+  existingSecretUserKey: "username"
+  existingSecretPasswordKey: "password"
 
 # Adding additional secrets for realm configuration as environment variables
 extraEnvVarsSecret: keycloak-env-secret

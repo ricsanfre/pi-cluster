@@ -1,0 +1,35 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: keycloak-db
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.3-4
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  monitoring:
+    enablePodMonitor: true
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak
+      secret:
+        name: keycloak-db-secret
+  backup:
+    barmanObjectStore:
+      data:
+        compression: bzip2
+      wal:
+        compression: bzip2
+        maxParallel: 8
+      destinationPath: s3://k3s-barman/keycloak-db
+      endpointURL: https://s3.ricsanfre.com:9091
+      s3Credentials:
+        accessKeyId:
+          name: keycloak-minio-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: keycloak-minio-secret
+          key: AWS_SECRET_ACCESS_KEY
+    retentionPolicy: "30d"

@@ -55,6 +55,9 @@ vault:
     tempo:
       user: tempo
       key: {{ minio_tempo_password }}
+    barman:
+      user: barman
+      key: {{ minio_barman_password }}
   # elasticsearch and fluentd
   logging:
     es-admin:

@@ -14,6 +14,7 @@ resources:
 - apps/longhorn-app.yaml
 - apps/minio-app.yaml
 - apps/velero-app.yaml
+- apps/databases-app.yaml
 - apps/keycloak-app.yaml
 - apps/oauth2-proxy-app.yaml
 - apps/elastic-app.yaml

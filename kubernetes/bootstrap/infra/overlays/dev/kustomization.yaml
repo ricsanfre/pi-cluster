@@ -17,6 +17,7 @@ patches:
 - path: apps/longhorn-app.yaml
 - path: apps/minio-app.yaml
 - path: apps/velero-app.yaml
+- path: apps/databases-app.yaml
 - path: apps/keycloak-app.yaml
 - path: apps/oauth2-proxy-app.yaml
 - path: apps/elastic-app.yaml
