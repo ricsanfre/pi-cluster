@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: oauth2-proxy
+  name: databases
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '85'
+    argocd.argoproj.io/sync-wave: '75'
 spec:
   destination:
-    namespace: oauth2-proxy
+    namespace: databases
     name: in-cluster
   project: picluster
   source:
-    path: kubernetes/infrastructure/oauth2-proxy/overlays/prod
+    path: kubernetes/infrastructure/databases/overlays/prod
     repoURL: https://github.com/ricsanfre/pi-cluster
     targetRevision: master
   syncPolicy:

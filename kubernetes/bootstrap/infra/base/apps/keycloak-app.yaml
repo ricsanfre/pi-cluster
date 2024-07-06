@@ -4,7 +4,7 @@ metadata:
   name: keycloak
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '70'
+    argocd.argoproj.io/sync-wave: '80'
 spec:
   destination:
     namespace: keycloak
