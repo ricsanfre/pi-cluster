@@ -153,6 +153,8 @@ minio_buckets:
     policy: read-write
   - name: k3s-tempo
     policy: read-write
+  - name: k3s-barman
+    policy: read-write
 
 # Minio users and ACLs
 minio_users:
@@ -219,6 +221,13 @@ minio_users:
                   "arn:aws:s3:::k3s-tempo/*",
                   "arn:aws:s3:::k3s-tempo"
               ]
+
+  - name: "{{ vault.minio.barman.user }}"
+    password: "{{ vault.minio.barman.key }}"
+    buckets_acl:
+      - name: k3s-barman
+        policy: read-write
+
 
 ########################
 # Restic configuration #
