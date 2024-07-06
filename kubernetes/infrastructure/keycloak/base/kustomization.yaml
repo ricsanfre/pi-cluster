@@ -8,7 +8,7 @@ resources:
   - keycloak-env-externalsecret.yaml
   - keycloak-externalsecret.yaml
   - keycloak-db-externalsecret.yaml
-  - keycloal-db.yaml
+  - keycloak-db.yaml
 
 # Generate keycloak config realm
 configMapGenerator:
