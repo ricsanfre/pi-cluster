@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: databases
+
+resources:
+  - ../../base
+
+helmCharts:
+  - name: community-operator
+    repo: https://mongodb.github.io/helm-charts
+    version: 0.10.0
+    releaseName: "mongodb-community-operator"
+    namespace: databases
+    valuesFile: ../../base/mongodb-operator-values.yaml
+    includeCRDs: true
+    additionalValuesFiles:
+      - mongodb-operator-values.yaml
+  - name: cloudnative-pg
+    repo: https://cloudnative-pg.github.io/charts
+    version: 0.21.5
+    releaseName: "cloudnative-pg"
+    namespace: databases
+    valuesFile: ../../base/cloudnative-pg-values.yaml
+    includeCRDs: true
+    additionalValuesFiles:
+      - cloudnative-pg-values.yaml    
