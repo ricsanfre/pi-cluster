@@ -16,4 +16,20 @@ spec:
       owner: keycloak
       secret:
         name: keycloak-db-secret
-
+  backup:
+    barmanObjectStore:
+      data:
+        compression: bzip2
+      wal:
+        compression: bzip2
+        maxParallel: 8
+      destinationPath: s3://k3s-barman/keycloak-db
+      endpointURL: https://s3.ricsanfre.com:9091
+      s3Credentials:
+        accessKeyId:
+          name: keycloak-minio-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: keycloak-minio-secret
+          key: AWS_SECRET_ACCESS_KEY
+    retentionPolicy: "30d"
