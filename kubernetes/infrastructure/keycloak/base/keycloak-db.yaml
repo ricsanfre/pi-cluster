@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: keycloak-db
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.3-4
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  monitoring:
+    enablePodMonitor: true
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak
+      secret:
+        name: keycloak-db-secret
+
