@@ -35,9 +35,9 @@ Prometheus operator manages Prometheus and AlertManager deployments and their co
 
 {{site.data.alerts.note}}
 
-More details about Prometheus Operator CRDs can be found in [Prometheus Operator Design Documentation](https://prometheus-operator.dev/docs/operator/design/).
+More details about Prometheus Operator CRDs can be found in [Prometheus Operator Design Documentation](https://prometheus-operator.dev/docs/getting-started/design/).
 
-Spec of the different CRDs can be found in [Prometheus Operator API reference guide](https://prometheus-operator.dev/docs/operator/api/)
+Spec of the different CRDs can be found in [Prometheus Operator API reference guide](https://prometheus-operator.dev/docs/api-reference/api/)
 
 {{site.data.alerts.end}}
 
@@ -506,7 +506,7 @@ This `Prometheus` object specifies the following Prometheus configuration:
 
   In my cluster, mainly due to lack of resources, HA mechanism is not configured (only one shard and one replica are specified).
 
-  For details about HA configuration check [Prometheus Operator: High Availability](https://prometheus-operator.dev/docs/operator/high-availability/#prometheus)
+  For details about HA configuration check [Prometheus Operator: High Availability](https://prometheus-operator.dev/docs/platform/high-availability/)
 
   {{site.data.alerts.end}}
 
@@ -544,7 +544,7 @@ This `Prometheus` object specifies the following Prometheus configuration:
 
   |![prometheus-operator-crds](/assets/img/prometheus-custom-metrics-elements-1024x555.png) |
   |:---:|
-  | *[Source](https://prometheus-operator.dev/docs/operator/troubleshooting/#overview-of-servicemonitor-tagging-and-related-elements): Prometheus Operator Documentation* |
+  | *[Source](https://prometheus-operator.dev/docs/platform/troubleshooting/#overview-of-servicemonitor-tagging-and-related-elements): Prometheus Operator Documentation* |
 
 #### AlertManager Object
 

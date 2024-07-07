@@ -242,7 +242,7 @@ There is another list of services that I have decided to run outside the kuberen
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="/assets/img/logos/minio.svg" alt="minio logo"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
+| <img width="60" src="/assets/img/logos/minio.svg" alt="minio logo"> |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
 | <img width="32" src="/assets/img/logos/vault.svg" alt="vault logo"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 {: .table .table-white .border-dark .align-middle }
 

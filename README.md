@@ -245,7 +245,7 @@ There is another list of services that I have decided to run outside the kuberen
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="docs/assets/img/logos/minio.svg"> |[Minio](https://mini.io) | S3 Object Store | Cluster Backup  |
+| <img width="60" src="docs/assets/img/logos/minio.svg"> |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
 | <img width="32" src="docs/assets/img/logos/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 
 Minio backup servive is hosted in a VM running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
