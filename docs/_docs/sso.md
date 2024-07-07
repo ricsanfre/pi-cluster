@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "31-03-2024"
+last_modified_at: "07-07-2024"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -160,6 +160,104 @@ Alternatively, it can be provided in an external secret.
         userPasswordKey: password
     architecture: standalone
   ```
+
+### Alternative installation using external database
+
+Instead of using Bitnami's PosgreSQL subchart, an external PosgreSQL database can be used.
+For example, using CloudNative-PG a, keycload database cluster can be created. See details on how to install CloudNative-PG in ["Databases"](/docs/databases).
+
+- Step 1. Create secret for keycloak admin user
+
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+      name: keycloak-secret
+      namespace: keycloak
+  type: kubernetes.io/basic-auth
+  data:
+      admin-password: <`echo -n 'supersecret1' | base64`>
+  ```
+
+
+- Step 2. Create secret for external database
+
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: keycloak-db-secret
+    namespace: keycloak
+    labels:
+      cnpg.io/reload: "true"
+  type: kubernetes.io/basic-auth
+  data:
+    username: <`echo -n 'keycloak' | base64`>
+    password: <`echo -n 'supersecret' | base64`>  
+  ```
+
+- Step 1. Create CloudNative PG database for keycloak
+
+  ```yaml
+  apiVersion: postgresql.cnpg.io/v1
+  kind: Cluster
+  metadata:
+    name: keycloak-db
+    namespace: keycloak
+  spec:
+    instances: 3
+    imageName: ghcr.io/cloudnative-pg/postgresql:16.3-4
+    storage:
+      size: 10Gi
+      storageClass: longhorn
+    monitoring:
+      enablePodMonitor: true
+    bootstrap:
+      initdb:
+        database: keycloak
+        owner: keycloak
+        secret:
+          name: keycloak-db-secret
+    # Backup to external Minio (Optional)
+    backup:
+      barmanObjectStore:
+        data:
+          compression: bzip2
+        wal:
+          compression: bzip2
+          maxParallel: 8
+        destinationPath: s3://k3s-barman/keycloak-db
+        endpointURL: https://s3.ricsanfre.com:9091
+        s3Credentials:
+          accessKeyId:
+            name: keycloak-minio-secret
+            key: AWS_ACCESS_KEY_ID
+          secretAccessKey:
+            name: keycloak-minio-secret
+            key: AWS_SECRET_ACCESS_KEY
+      retentionPolicy: "30d"
+  ```
+
+- Step 3. Add external database configuration to helm values.yaml
+
+  ```yaml
+  # Admin user
+  auth:
+      existingSecret: keycloak-secret
+      adminUser: admin
+  # External DB: https://github.com/bitnami/charts/tree/main/bitnami/keycloak#use-an-external-database
+  postgresql:
+    enabled: false
+
+  externalDatabase:
+    host: "keycloak-db-rw"
+    port: 5432
+    database: keycloak
+    existingSecret: "keycloak-db-secret"
+    existingSecretUserKey: "username"
+    existingSecretPasswordKey: "password"
+  ```
+
 
 ## Keycloak Configuration
 

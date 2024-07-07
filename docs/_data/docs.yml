@@ -57,6 +57,7 @@
   - argocd
 - title: Microservices
   docs:
+  - databases
   - service-mesh
   - kafka
 - title: Reference Docs
