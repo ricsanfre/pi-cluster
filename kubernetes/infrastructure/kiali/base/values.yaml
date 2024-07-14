@@ -1,0 +1,9 @@
+# kiali helm values (base)
+
+cr:
+  create: true
+  namespace: istio-system
+  spec:
+    auth:
+      strategy: "anonymous"
+

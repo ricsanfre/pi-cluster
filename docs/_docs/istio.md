@@ -146,9 +146,127 @@ https://istio.io/latest/docs/ambient/install/helm-installation/
   helm install istio-ingress istio/gateway -n istio-ingress
   ```
 
-### Testing istio installation
+## Kiali installation
 
-Istio provides a testing application [BookInfo Application](https://istio.io/latest/docs/examples/bookinfo/
+[Kiali](https://kiali.io/) is an observability console for Istio with service mesh configuration and validation capabilities. It helps you understand the structure and health of your service mesh by monitoring traffic flow to infer the topology and report errors. Kiali provides detailed metrics and a basic Grafana integration, which can be used for advanced queries. Distributed tracing is provided by integration with Jaeger.
+
+See details about installing Kiali using Helm in [Kiali's Quick Start Installation Guide](https://kiali.io/docs/installation/quick-start/)
 
 
-See further details about deploying sample application here (https://istio.io/latest/docs/ambient/getting-started/deploy-sample-app/)
+Installation using `Helm` (Release 3):
+
+- Step 1: Add the Kiali Helm repository:
+
+  ```shell
+  helm repo add kiali https://istio-release.storage.googleapis.com/charts
+  ```
+- Step 2: Fetch the latest charts from the repository:
+
+  ```shell
+  helm repo update
+  ```
+
+- Step 3: Create `kiali-values.yaml`
+
+  ```yaml
+  auth:
+    strategy: "anonymous"
+  external_services:
+    istio:
+      root_namespace: istio-system
+      component_status:
+        enabled: true
+        components:
+        - app_label: istiod
+          is_core: true
+        - app_label: istio-ingress
+          is_core: true
+          is_proxy: true
+          namespace: istio-ingress  
+  ```
+
+- Step 4: Install Kiali in istio-system namespace
+
+  ```shell
+  helm install kiali-server kiali/kiali-server --namespace istio-system -f kiali-values.yaml
+  ```
+
+
+
+https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-in-separate-kubernetes-namespace/
+
+
+
+## Testing istio installation
+
+[Book info sample application](https://istio.io/latest/docs/examples/bookinfo/) can be deployed to test installation
+
+- Create Kustomized bookInfo app
+
+  - Create app directory
+
+    ```shell
+    mkdir book-info-app
+    ```
+
+  - Create book-info-app/kustomized.yaml file
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: book-info
+    resources:
+    - ns.yaml
+      # https://istio.io/latest/docs/examples/bookinfo/
+    - https://raw.githubusercontent.com/istio/istio/release-1.22/samples/bookinfo/platform/kube/bookinfo.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.22/samples/bookinfo/platform/kube/bookinfo-versions.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.22/samples/bookinfo/gateway-api/bookinfo-gateway.yaml
+    ```
+
+  - Create book-info-app/ns.yaml file
+
+    ```yaml
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: book-info
+    ```
+
+
+- Deploy book info app
+
+  ```shell
+  kubectl kustomize book-info-app | kubectl apply -f -  
+  ```
+
+- Label namespace to enable automatic sidecar injection
+
+  See [Ambient Mode - Add workloads to the mesh"](https://istio.io/latest/docs/ambient/usage/add-workloads/)
+  
+  ```shell
+  kubectl label namespace book-info istio.io/dataplane-mode=ambient
+  ```
+
+  Ambient mode can be seamlessly enabled (or disabled) completely transparently as far as the application pods are concerned. Unlike the sidecar data plane mode, there is no need to restart applications to add them to the mesh, and they will not show as having an extra container deployed in their pod.
+
+
+ - Validate configuration
+
+   ```shell
+   istioctl validate
+   ```
+
+## Monitoring
+
+https://istio.io/latest/docs/concepts/observability/
+
+https://github.com/istio/istio/tree/master/samples/addons
+
+
+## References
+
+- Install istio using Helm chart: https://istio.io/latest/docs/setup/install/helm/ 
+- Istio getting started: https://istio.io/latest/docs/setup/getting-started/
+- Kiali: https://kiali.io/
+
+- NGINX Ingress vs Istio gateway: https://imesh.ai/blog/kubernetes-nginx-ingress-vs-istio-ingress-gateway/
