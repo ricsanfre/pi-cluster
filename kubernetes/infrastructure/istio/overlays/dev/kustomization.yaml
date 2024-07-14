@@ -9,7 +9,7 @@ helmCharts:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.22.2
     releaseName: "istio-base"
-    namespace: kube-system
+    namespace: istio-system
     includeCRDs: true
     valuesFile: ../../base/istio-base-values.yaml
     additionalValuesFiles:
@@ -18,7 +18,7 @@ helmCharts:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.22.2
     releaseName: "istio-cni"
-    namespace: kube-system
+    namespace: istio-system
     valuesInline:
       profile: ambient
     valuesFile: ../../base/istio-cni-values.yaml
@@ -28,7 +28,7 @@ helmCharts:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.22.2
     releaseName: "istiod"
-    namespace: kube-system
+    namespace: istio-system
     valuesInline:
       profile: ambient
     valuesFile: ../../base/istiod-values.yaml
@@ -38,7 +38,7 @@ helmCharts:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.22.2
     releaseName: "ztunnle"
-    namespace: kube-system
+    namespace: istio-system
     valuesInline:
       profile: ambient
     valuesFile: ../../base/ztunnel-values.yaml
