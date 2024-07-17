@@ -83,17 +83,13 @@ Installation using `Helm` (Release 3):
     ```shell
     helm repo add cilium https://helm.cilium.io/
     ```
-- Step2: Fetch the latest charts from the repository:
+- Step 2: Fetch the latest charts from the repository:
 
     ```shell
     helm repo update
     ```
-- Step 3: Create namespace
 
-    ```shell
-    kubectl create namespace nginx
-    ```
-- Step 4: Create helm values file `cilium-values.yml`
+- Step 3: Create helm values file `cilium-values.yml`
 
   ```yml
   # Cilium operator config
@@ -135,13 +131,13 @@ Installation using `Helm` (Release 3):
     burst: 200
   ```
 
-- Step 5: Install Cilium in kube-system namespace
+- Step 4: Install Cilium in kube-system namespace
 
     ```shell
     helm install cilium cilium/cilium --namespace kube-system -f cilium-values.yaml
     ```
 
-- Step 6: Confirm that the deployment succeeded, run:
+- Step 5: Confirm that the deployment succeeded, run:
 
     ```shell
     kubectl -n kube-system get pod
