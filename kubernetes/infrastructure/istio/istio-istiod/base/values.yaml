@@ -1,0 +1,3 @@
+# istiod helm values (base)
+
+profile: ambient
