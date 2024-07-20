@@ -63,6 +63,14 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/default-folder
+      - name: istio
+        orgId: 1
+        folder: "Istio"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/istio
 
 dashboards:
   default:
@@ -94,6 +102,25 @@ dashboards:
     elasticsearch:
       url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/examples/grafana/dashboard.json
       datasource: Prometheus
+  istio:
+    istio-control-plane:
+      # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
+      gnetId: 7645
+      revision: 223
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    istio-mesh:
+      # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
+      gnetId: 7639
+      revision: 223
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    istio-performance:
+      # https://grafana.com/grafana/dashboards/11829-istio-performance-dashboard/
+      gnetId: 11829
+      revision: 223
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
 
 # Data sources
 datasources:
