@@ -2,13 +2,11 @@
 title: Service Mesh (Istio)
 permalink: /docs/istio/
 description: How to deploy service-mesh architecture based on Istio. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "10-07-2024"
+last_modified_at: "21-07-2024"
 
 ---
 
 ## Istio Ambient Mode
-
-
 
 
 ## Istio Installation
@@ -119,7 +117,7 @@ Installation using `Helm` (Release 3):
 - Step 6: Install Ztunnel
 
   ```shell
-  helm install ztunnel istio/ztunnel -n istio-system --set profile=ambient
+  helm install ztunnel istio/ztunnel -n istio-system
   ```
 
 
@@ -137,14 +135,73 @@ https://istio.io/latest/docs/ambient/install/helm-installation/
 - Create Istio Gateway namespace
 
   ```shell
-  kubectl create namespace istio-gateway
+  kubectl create namespace istio-ingress
   ```
 
 - Install helm chart
 
   ```shell
-  helm install istio-ingress istio/gateway -n istio-ingress
+  helm install istio-gateway istio/gateway -n istio-ingress
   ```
+
+### Istio Observability configuration
+
+Istio generates detailed telemetry (metrcis, traces and logs) for all service communications within a mesh
+
+See further details in [Istio Observability](https://istio.io/latest/docs/concepts/observability/)
+
+Metrics from control plane (istiod) and proxies (ztunnel) can be extracted from Prometheus sever:
+
+
+- Create following manifest file to create Prometheus Operator monitoring resources
+
+  ```yaml
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    name: istio-component-monitor
+    namespace: istio-system
+    labels:
+      monitoring: istio-components
+      release: istio
+  spec:
+    jobLabel: istio
+    targetLabels: [app]
+    selector:
+      matchExpressions:
+      - {key: istio, operator: In, values: [pilot]}
+    namespaceSelector:
+      matchNames:
+        - istio-system
+    endpoints:
+    - port: http-monitoring
+      interval: 60s
+
+  ---
+  apiVersion: monitoring.coreos.com/v1
+  kind: PodMonitor
+  metadata:
+    name: ztunnel-monitor
+    namespace: istio-system
+    labels:
+      monitoring: ztunnel-proxies
+      release: istio
+  spec:
+    selector:
+      matchLabels:
+        app: ztunnel
+    namespaceSelector:
+      matchNames:
+        - istio-system
+    jobLabel: ztunnel-proxy
+    podMetricsEndpoints:
+    - path: /stats/prometheus
+      interval: 60s
+
+  ```
+
+
 
 ## Kiali installation
 
@@ -152,6 +209,7 @@ https://istio.io/latest/docs/ambient/install/helm-installation/
 
 See details about installing Kiali using Helm in [Kiali's Quick Start Installation Guide](https://kiali.io/docs/installation/quick-start/)
 
+Kiali will be installing using Kiali operator which is recommeded
 
 Installation using `Helm` (Release 3):
 
@@ -166,36 +224,156 @@ Installation using `Helm` (Release 3):
   helm repo update
   ```
 
-- Step 3: Create `kiali-values.yaml`
+- Step 3: Create `kiali-operator-values.yaml`
 
   ```yaml
-  auth:
-    strategy: "anonymous"
-  external_services:
-    istio:
-      root_namespace: istio-system
-      component_status:
-        enabled: true
-        components:
-        - app_label: istiod
-          is_core: true
-        - app_label: istio-ingress
-          is_core: true
-          is_proxy: true
-          namespace: istio-ingress  
+  cr:
+    create: true
+    namespace: istio-system
+    spec:
+        auth:
+          strategy: "anonymous"
+        external_services:
+          prometheus:
+            # Prometheus service
+            url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
+          grafana:
+            enabled: true
+            # Grafana service name is "grafana" and is in the "telemetry" namespace.
+            in_cluster_url: 'http://grafana.monitoring/'
+            # Public facing URL of Grafana
+            url: 'https://monitoring.picluster.ricsanfre.com/grafana'
+          tracing:
+            # Enabled by default. Kiali will anyway fallback to disabled if
+            # Tempo is unreachable.
+            enabled: true
+            health_check_url: "http://tempo-query-frontend.tempo:3100"
+            # Tempo service name is "query-frontend" and is in the "tempo" namespace.
+            # Make sure the URL you provide corresponds to the non-GRPC enabled endpoint
+            # It does not support grpc yet, so make sure "use_grpc" is set to false.
+            in_cluster_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
+            provider: "tempo"
+            tempo_config:
+              org_id: "1"
+              datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
+            use_grpc: false
+        deployment:
+          ingress:
+            class_name: "nginx"
+            enabled: true
+            override_yaml:
+              metadata:
+                annotations:
+                  # Enable cert-manager to create automatically the SSL certificate and store in Secret
+                  # Possible Cluster-Issuer values:
+                  #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+                  #   * 'ca-issuer' (CA-signed certificate, not valid)
+                  cert-manager.io/cluster-issuer: letsencrypt-issuer
+                  cert-manager.io/common-name: kiali.picluster.ricsanfre.com
+              spec:
+                rules:
+                - host: kiali.picluster.ricsanfre.com
+                  http:
+                    paths:
+                    - backend:
+                        service:
+                          name: kiali
+                          port:
+                            number: 20001
+                      path: /
+                      pathType: Prefix
+                tls:
+                - hosts:
+                  - kiali.picluster.ricsanfre.com
+                  secretName: kiali-tls
   ```
 
-- Step 4: Install Kiali in istio-system namespace
+  With this configuration Kiali Server, Kiali Custom Resource, is created with the following config:
+
+  - No authentincation strategy (`cr.spec.auth.strategy: "anonymous"`).
+
+    See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/configuration/authentication/openid/)
+
+  - Ingress resource is created (`cr.spec.deployment.ingress`)
+
+    See further details in [Kiali Ingress Documentation](https://kiali.io/docs/installation/installation-guide/accessing-kiali/)
+
+  - External connection to Prometheus, Grafana and Tempo is configured (`cr.spec.external_services`)
+
+    See further details in [Kiali Configuring Prometheus Tracing Grafana](https://kiali.io/docs/configuration/p8s-jaeger-grafana/)
+
+- Step 4: Install Kiali Operator in istio-system namespace
 
   ```shell
-  helm install kiali-server kiali/kiali-server --namespace istio-system -f kiali-values.yaml
+  helm install kiali-operator kiali/kiali-operator --namespace istio-system -f kiali-operator-values.yaml
   ```
 
 
+### Kiali OpenID Authentication configuration
 
-https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-in-separate-kubernetes-namespace/
+Kiali can be configured to use as authentication mechanism Open Id Connect server.
+
+Kiali only supports the authorization code flow of the OpenId Connect spec.
+
+See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/configuration/authentication/openid/).
 
 
+- Step 1: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
+  Clients -> Create client
+
+  ![kiali-keycloak-1](/assets/img/kiali-keycloak-1.png)
+
+  - Provide the following basic configuration:
+    - Client Type: 'OpenID Connect'
+    - Client ID: 'kiali'
+  - Click Next.
+
+  ![kiali-keycloak-2](/assets/img/kiali-keycloak-2.png)
+
+  - Provide the following 'Capability config'
+    - Client authentication: 'On'
+    - Client authorization: 'On'
+    - Authentication flow
+      - Standard flow 'selected'
+      - Implicit flow 'selected'
+      - Direct access grants 'selected'
+  - Click Next
+
+  ![kiali-keycloak-3](/assets/img/kiali-keycloak-3.png)
+
+  - Provide the following 'Logging settings'
+    - Valid redirect URIs: https://kiali.picluster.ricsanfre.com/kiali/*
+    - Root URL: https://kiali.picluster.ricsanfre.com/kiali/
+  - Save the configuration.
+
+- Step 2: Locate kiali client credentials
+
+  Under the Credentials tab you will now be able to locate kiali client's secret.
+
+  ![kiali-keycloak-4](/assets/img/kiali-keycloak-4.png)
+
+- Step 3: Create secret for kiali storing client secret
+
+  ```shell
+  export CLIENT_SECRET=<kiali secret>
+
+  kubectl create secret generic kiali --from-literal="oidc-secret=$CLIENT_SECRET" -n istio-system
+  ```
+- Step 4: Configure's kiali openId Connect authentication
+
+  Add following to Kiali's helm chart operator values.yaml.
+
+  ```yaml
+  cr:
+    spec:
+      auth:
+        # strategy: "anonymous"
+        strategy: openid
+        openid:
+          client_id: "kiali"
+          disable_rbac: true
+          issuer_uri: "https://sso.picluster.ricsanfre.com/realms/picluster"
+  ```
 
 ## Testing istio installation
 
@@ -256,11 +434,12 @@ https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-i
    istioctl validate
    ```
 
-## Monitoring
+## Pending
 
-https://istio.io/latest/docs/concepts/observability/
+- Kiali cannot connect to Grafana or Tempo
 
-https://github.com/istio/istio/tree/master/samples/addons
+https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-in-separate-kubernetes-namespace/
+
 
 
 ## References
