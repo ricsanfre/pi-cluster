@@ -27,3 +27,19 @@ cr:
               #   * 'ca-issuer' (CA-signed certificate, not valid)
               cert-manager.io/cluster-issuer: letsencrypt-issuer
               cert-manager.io/common-name: kiali.picluster.ricsanfre.com
+          spec:
+            rules:
+            - host: kiali.picluster.ricsanfre.com
+              http:
+                paths:
+                - backend:
+                    service:
+                      name: kiali
+                      port:
+                        number: 80
+                  path: /
+                  pathType: Prefix
+            tls:
+            - hosts:
+              - kiali.picluster.ricsanfre.com
+              secretName: kiali-tls
