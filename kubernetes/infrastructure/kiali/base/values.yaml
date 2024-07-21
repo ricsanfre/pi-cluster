@@ -5,7 +5,12 @@ cr:
   namespace: istio-system
   spec:
     auth:
-      strategy: "anonymous"
+      # strategy: "anonymous"
+      strategy: openid
+      openid:
+        client_id: "kiali"
+        disable_rbac: true
+        issuer_uri: "https://sso.picluster.ricsanfre.com
     external_services:
       prometheus:
         # Prometheus service
@@ -15,7 +20,7 @@ cr:
         # Grafana service name is "grafana" and is in the "telemetry" namespace.
         in_cluster_url: 'http://grafana.monitoring/'
         # Public facing URL of Grafana
-        url: 'https://monitoring.picluster.ricsanfre.com/grafana'
+        url: 'https://monitoring.picluster.ricsanfre.com/grafana/'
       tracing:
         # Enabled by default. Kiali will anyway fallback to disabled if
         # Tempo is unreachable.
