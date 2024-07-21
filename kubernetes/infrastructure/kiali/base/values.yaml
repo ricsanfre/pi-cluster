@@ -6,7 +6,6 @@ cr:
   spec:
     auth:
       strategy: "anonymous"
-    
     external_services:
       prometheus:
         # Prometheus service
@@ -15,7 +14,8 @@ cr:
         enabled: true
         # Grafana service name is "grafana" and is in the "telemetry" namespace.
         in_cluster_url: 'http://grafana.monitoring/'
-
+        # Public facing URL of Grafana
+        url: 'https://monitoring.picluster.ricsanfre.com/grafana'
       tracing:
         # Enabled by default. Kiali will anyway fallback to disabled if
         # Tempo is unreachable.
@@ -30,7 +30,6 @@ cr:
           org_id: "1"
           datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
         use_grpc: false
-
     deployment:
       ingress:
         class_name: "nginx"
