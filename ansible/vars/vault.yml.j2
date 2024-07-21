@@ -89,3 +89,8 @@ vault:
     admin:
       user: admin
       password: {{ postgresql_admin_password }}
+  # Kiali
+  kiali:
+    oauth2:
+      client-id: kiali
+      client-secret: {{ kiali_client_secret }}
