@@ -36,7 +36,7 @@ cr:
                     service:
                       name: kiali
                       port:
-                        number: 80
+                        number: 20001
                   path: /
                   pathType: Prefix
             tls:
