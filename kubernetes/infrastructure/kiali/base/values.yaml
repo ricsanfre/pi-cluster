@@ -6,13 +6,30 @@ cr:
   spec:
     auth:
       strategy: "anonymous"
-    prometheus:
-      # Prometheus service
-      url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
-    grafana:
-      enabled: true
-      # Grafana service name is "grafana" and is in the "telemetry" namespace.
-      in_cluster_url: 'http://grafana.monitoring/'
+    
+    external_services:
+      prometheus:
+        # Prometheus service
+        url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
+      grafana:
+        enabled: true
+        # Grafana service name is "grafana" and is in the "telemetry" namespace.
+        in_cluster_url: 'http://grafana.monitoring/'
+
+      tracing:
+        # Enabled by default. Kiali will anyway fallback to disabled if
+        # Tempo is unreachable.
+        enabled: true
+        health_check_url: "http://tempo-query-frontend.tempo:3100"
+        # Tempo service name is "query-frontend" and is in the "tempo" namespace.
+        # Make sure the URL you provide corresponds to the non-GRPC enabled endpoint
+        # It does not support grpc yet, so make sure "use_grpc" is set to false.
+        in_cluster_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
+        provider: "tempo"
+        tempo_config:
+          org_id: "1"
+          datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
+        use_grpc: false
 
     deployment:
       ingress:
