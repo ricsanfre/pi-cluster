@@ -18,9 +18,9 @@ cr:
       grafana:
         enabled: true
         # Grafana service name is "grafana" and is in the "monitoring" namespace.
-        # in_cluster_url: 'http://grafana.monitoring.svc.cluster.local/grafana'
+        in_cluster_url: 'http://grafana.monitoring.svc.cluster.local/grafana/'
         # Public facing URL of Grafana
-        url: 'https://monitoring.picluster.ricsanfre.com/grafana'
+        url: 'https://monitoring.picluster.ricsanfre.com/grafana/'
         auth:
           # Use same OAuth2.0 token used for accesing Kiali
           type: bearer
