@@ -24,7 +24,7 @@ cr:
         auth:
           # Use same OAuth2.0 token used for accesing Kiali
           type: bearer
-          use_kiali_token: false
+          use_kiali_token: true
       tracing:
         # Enabled by default. Kiali will anyway fallback to disabled if
         # Tempo is unreachable.
