@@ -22,8 +22,9 @@ cr:
         # Public facing URL of Grafana
         url: 'https://monitoring.picluster.ricsanfre.com/grafana'
         auth:
+          # Use same OAuth2.0 token used for accesing Kiali
           type: bearer
-          use_kiali_token: true
+          use_kiali_token: false
       tracing:
         # Enabled by default. Kiali will anyway fallback to disabled if
         # Tempo is unreachable.
