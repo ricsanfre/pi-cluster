@@ -2,11 +2,58 @@
 title: Service Mesh (Istio)
 permalink: /docs/istio/
 description: How to deploy service-mesh architecture based on Istio. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "21-07-2024"
+last_modified_at: "22-07-2024"
 
 ---
 
+
+## Why a Service Mesh
+
+Introduce Service Mesh architecture to add observability, traffic management, and security capabilities to internal communications within the cluster.
+
+
+
+
+## Istio vs Linkerd
+
+https://github.com/solo-io/service-mesh-for-less-blog
+
+
+
+## Istio Architecture
+
+An Istio service mesh is logically split into a data plane and a control plane.
+
+
+- The **data plane** is the set of proxies that mediate and control all network communication between microservices. They also collect and report telemetry on all mesh traffic.
+- The **control plane** manages and configures the proxies in the data plane.
+
+Istio supports two main data plane modes:
+- **sidecar mode**, which deploys an Envoy proxy along with each pod that you start in your cluster, or running alongside services running on VMs.
+  sidecar mode is similar to the one providers by other Service Mesh solutions like linkerd.
+
+- **ambient mode**, sidecaless mode, which uses a per-node Layer 4 proxy, and optionally a per-namespace Envoy proxy for Layer 7 features.
+
+![istio-sidecar-vs-ambient](/assets/img/istio_sidecar_vs_ambient.jpg)
+
+
 ## Istio Ambient Mode
+
+In ambient mode, Istio implements its features using a per-node Layer 4 (L4) proxy, ztunnel, and optionally a per-namespace Layer 7 (L7) proxy, waypoint proxy.
+
+- `ztunnel` proxy, providing basic L4 secured connectivity and authenticating workloads within the mesh (i.e.:mTLS).
+  - L4 routing
+  - Encryption and authentication via mTLS
+  - L4 telemetry (metrics, logs)
+
+- `waypoint` proxy, providing L7 functionality, is a deployment of the Envoy proxy; the same engine that Istio uses for its sidecar data plane mode.
+  - L7 routing
+  - L7 telemetry (metrics, logs traces)
+
+
+
+
+See further details in [Istio Ambient Documentation](https://istio.io/latest/docs/ambient/)
 
 
 ## Istio Installation
@@ -146,9 +193,18 @@ https://istio.io/latest/docs/ambient/install/helm-installation/
 
 ### Istio Observability configuration
 
-Istio generates detailed telemetry (metrcis, traces and logs) for all service communications within a mesh
+Istio generates detailed telemetry (metricis, traces and logs) for all service communications within a mesh
 
 See further details in [Istio Observability](https://istio.io/latest/docs/concepts/observability/)
+
+#### Logs
+
+
+#### Traces
+
+Istio leverages Envoy's proxy distributed tracing capabilities. Since Istio Ambient mode is only using Envoy proxy for way
+
+#### Metrics (Prometheus configuration)
 
 Metrics from control plane (istiod) and proxies (ztunnel) can be extracted from Prometheus sever:
 
