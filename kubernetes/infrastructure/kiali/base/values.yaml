@@ -68,3 +68,6 @@ cr:
             - hosts:
               - kiali.picluster.ricsanfre.com
               secretName: kiali-tls
+      # Enabling debug logs
+      logger:
+        log_level: debug
