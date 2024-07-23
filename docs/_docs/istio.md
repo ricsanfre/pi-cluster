@@ -11,12 +11,51 @@ last_modified_at: "22-07-2024"
 
 Introduce Service Mesh architecture to add observability, traffic management, and security capabilities to internal communications within the cluster.
 
+I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since relase 1.3 (April 2022). See ["Service Mesh (Linkerd)"](/docs/service-mesh/) document.  
+
+Main reasons for selecting Linkerd over Istio were:
+- ARM64 architecture support. Istio did not support ARM architectures at that time.
+- Better performance and reduced memory/cpu footprint. Linkerd Proxy vs Istio's Envoy Proxy
+
+Since the initial evaluation was made:
+
+- In Aug 2022, Istio, introduced ARM64 support in release 1.15. See [istio 1.15 announcement](https://istio.io/latest/news/releases/1.15.x/announcing-1.15/)
+
+- In Feb 2024, Linkerd maintaner, Buyoyant, announced that it would no longer provide stable builds. See [Linkerd 2.15 release announcement](https://linkerd.io/2024/02/21/announcing-linkerd-2.15/#a-new-model-for-stable-releases). That decision prompted CNCF to open a health check on the project.
+
+- Istio is developing a sidecarless architecture, [Ambient mode](https://istio.io/latest/docs/ops/ambient/), which is expected to use a reduced footprint. In March 2024, Istio announced the beta relase of Ambient mode for upcoming 1.22 istio release: See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
 
 
 
 ## Istio vs Linkerd
 
-https://github.com/solo-io/service-mesh-for-less-blog
+- **Open Source Community**
+
+  Istio and Linkerd both are CNCF graduated projects.
+
+  After latest change in Linkerd licensing mode, continuity of Linkerd under CNCF is not clear.
+
+- **ARM support**
+
+  [Istio](https://istio.io) added ARM64 architecture support in release 1.15. See [istio 1.15 announcement](https://istio.io/latest/news/releases/1.15.x/announcing-1.15/).
+
+  [Linkerd](https://linkerd.io/) supports ARM64 architectures since release 2.9. See [linkerd 2.9 announcement](https://linkerd.io/2020/11/09/announcing-linkerd-2.9/).
+
+- **Performance and reduced footprint**
+
+  Linkerd uses its own implementation of the communications proxy, a sidecar container that need to be deployed with any Pod as to inctercep all inbound/outbound traffic. Instead of using a generic purpose proxy ([Envoy proxy](https://www.envoyproxy.io/)) used by traditional Istio's sidecar architecture, a specifc proxy tailored only to cover Kubernetes communications has been developed. Covering just Kubernetes scenario, allows Linkerd proxy to be a simpler, lighter, faster and more secure proxy than Envoy's based proxy
+
+  Istio new sidecarless mode, ambient, uses a new L4 proxy, ztunnel, which is coded in Rust and which is not deployed side-by-side with every single pod, but only deployed one per node.
+
+  This sidecarless new architecture is expected to use a lower footprint than Linkerd
+
+  Preliminary comparison, made by [solo-io](https://www.solo.io/), main contributor to Istio's new Ambient mode, shows reduced Istio footprint and better performance results than Likerd. See comparison analysis ["Istio in Ambient Mode - Doing More for Less!"](https://github.com/solo-io/service-mesh-for-less-blog)
+
+
+
+
+For those reasons, Service Mesh architecture will be migrate to Istio. See [issue #320](https://github.com/ricsanfre/pi-cluster/issues/320)
+
 
 
 
@@ -36,6 +75,13 @@ Istio supports two main data plane modes:
 
 ![istio-sidecar-vs-ambient](/assets/img/istio_sidecar_vs_ambient.jpg)
 
+{{site.data.alerts.note}}
+Even whe Istio Ambien mode is in beta state, since it is expected to provide a reduced footprint than the sidecar architecture, I will use ambient mode for the PiCluster
+
+See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
+
+{{site.data.alerts.end}}
+
 
 ## Istio Ambient Mode
 
@@ -46,12 +92,9 @@ In ambient mode, Istio implements its features using a per-node Layer 4 (L4) pro
   - Encryption and authentication via mTLS
   - L4 telemetry (metrics, logs)
 
-- `waypoint` proxy, providing L7 functionality, is a deployment of the Envoy proxy; the same engine that Istio uses for its sidecar data plane mode.
+- `waypoint` proxy, providing L7 functionality, is a deployment of the [Envoy proxy](https://www.envoyproxy.io/); the same engine that Istio uses for its sidecar data plane mode.
   - L7 routing
   - L7 telemetry (metrics, logs traces)
-
-
-
 
 See further details in [Istio Ambient Documentation](https://istio.io/latest/docs/ambient/)
 
@@ -199,10 +242,67 @@ See further details in [Istio Observability](https://istio.io/latest/docs/concep
 
 #### Logs
 
+Istio support sending [Envoy's access logs](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage) using OpenTelemetry and a way to configure it using [Istio's Telemetry API](https://istio.io/latest/docs/tasks/observability/telemetry/). So that Telemetry API can be used to configure Ambient's waypoint proxies (Envoy based proxies)
+
+ztunnel proxies also generate by default operational and access logs.
+
+See further details in [Istio Observability Logs](https://istio.io/latest/docs/tasks/observability/logs/)
+
 
 #### Traces
 
-Istio leverages Envoy's proxy distributed tracing capabilities. Since Istio Ambient mode is only using Envoy proxy for way
+Istio leverages Envoy's proxy distributed tracing capabilities. Since Istio Ambient mode is only using Envoy proxy for waypoint proxy.
+
+By default in Ambient mode, using Istio's [book-info](https://istio.io/latest/docs/examples/bookinfo/) testing application, traces are only generated from istio-gateway. No Spans are generated by different microservices since there is no any Envoy Proxy exporting traces.
+
+
+To enable Open Telemetry traces to be generated by Istio ingress gateway and other proxies:
+
+- Step 1 - Enable Open Telemetry tracing provider in Istio'd control plane within [Mesh global configuration options](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/)
+
+  Add following configuration to istiod helm chart `values.yaml`
+
+  ```yaml
+  meshConfig:  
+    # Enabling distributed traces
+    enableTracing: true
+    extensionProviders:
+    - name: opentelemetry
+      opentelemetry:
+        port: 4317
+        service: tempo-distributor.tempo.svc.cluster.local
+        resource_detectors:
+          environment: {}
+  ```
+
+  That configuration enables globallly OpenTelemetry provider using Grafana's Tempo Open Telemetry collector.
+
+- Step 2 - Use Istio's Telemetry API to apply the default distributed tracing configuration to the cluster
+
+  ```yaml
+  apiVersion: telemetry.istio.io/v1alpha1
+  kind: Telemetry
+  metadata:
+    name: otel-global
+    namespace: istio-system
+  spec:
+    tracing:
+    - providers:
+      - name: opentelemetry
+      randomSamplingPercentage: 100
+      customTags:
+        "my-attribute":
+          literal:
+            value: "default-value"  
+  ```
+  
+  A specific configuration, per namespace or workload can be also configured. 
+
+  See details in [Istio's Telemetry API doc](https://istio.io/latest/docs/tasks/observability/telemetry/)
+
+
+See furhter details in [Istio Distributed Tracing](https://istio.io/latest/docs/tasks/observability/distributed-tracing/)
+
 
 #### Metrics (Prometheus configuration)
 
@@ -212,7 +312,6 @@ Metrics from control plane (istiod) and proxies (ztunnel) can be extracted from 
 - Create following manifest file to create Prometheus Operator monitoring resources
 
   ```yaml
-  ---
   apiVersion: monitoring.coreos.com/v1
   kind: ServiceMonitor
   metadata:
@@ -234,7 +333,9 @@ Metrics from control plane (istiod) and proxies (ztunnel) can be extracted from 
     - port: http-monitoring
       interval: 60s
 
-  ---
+  ```
+  
+  ```yaml
   apiVersion: monitoring.coreos.com/v1
   kind: PodMonitor
   metadata:
@@ -254,9 +355,7 @@ Metrics from control plane (istiod) and proxies (ztunnel) can be extracted from 
     podMetricsEndpoints:
     - path: /stats/prometheus
       interval: 60s
-
   ```
-
 
 
 ## Kiali installation
@@ -295,24 +394,27 @@ Installation using `Helm` (Release 3):
             url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
           grafana:
             enabled: true
-            # Grafana service name is "grafana" and is in the "telemetry" namespace.
-            in_cluster_url: 'http://grafana.monitoring/'
+            # Grafana service name is "grafana" and is in the "monitoring" namespace.
+            in_cluster_url: 'http://grafana.monitoring.svc.cluster.local/grafana/'
             # Public facing URL of Grafana
-            url: 'https://monitoring.picluster.ricsanfre.com/grafana'
+            url: 'https://monitoring.picluster.ricsanfre.com/grafana/'
+            auth:
+              # Use same OAuth2.0 token used for accesing Kiali
+              type: bearer
+              use_kiali_token: true
           tracing:
             # Enabled by default. Kiali will anyway fallback to disabled if
             # Tempo is unreachable.
             enabled: true
-            health_check_url: "http://tempo-query-frontend.tempo:3100"
             # Tempo service name is "query-frontend" and is in the "tempo" namespace.
-            # Make sure the URL you provide corresponds to the non-GRPC enabled endpoint
-            # It does not support grpc yet, so make sure "use_grpc" is set to false.
             in_cluster_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
             provider: "tempo"
             tempo_config:
               org_id: "1"
               datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
-            use_grpc: false
+            # Use grpc to speed up the download of metrics
+            use_grpc: true
+            grpc_port: 9095
         deployment:
           ingress:
             class_name: "nginx"
@@ -431,7 +533,7 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
           issuer_uri: "https://sso.picluster.ricsanfre.com/realms/picluster"
   ```
 
-## Testing istio installation
+## Testing Istio installation
 
 [Book info sample application](https://istio.io/latest/docs/examples/bookinfo/) can be deployed to test installation
 
@@ -492,7 +594,7 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
 
 ## Pending
 
-- Kiali cannot connect to Grafana or Tempo
+- Kiali cannot connect to Grafana (authentication issue)
 
 https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-in-separate-kubernetes-namespace/
 
@@ -503,5 +605,4 @@ https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-i
 - Install istio using Helm chart: https://istio.io/latest/docs/setup/install/helm/ 
 - Istio getting started: https://istio.io/latest/docs/setup/getting-started/
 - Kiali: https://kiali.io/
-
 - NGINX Ingress vs Istio gateway: https://imesh.ai/blog/kubernetes-nginx-ingress-vs-istio-ingress-gateway/

@@ -17,6 +17,20 @@ spec:
     helm:
       values: |
         profile: ambient
+        # Mesh configuration
+        meshConfig:
+          # Prometheus Merge
+          enablePrometheusMerge: true
+
+          # Enabling distributed traces
+          enableTracing: true
+          extensionProviders:
+          - name: opentelemetry
+            opentelemetry:
+              port: 4317
+              service: tempo-distributor.tempo.svc.cluster.local
+              resource_detectors:
+                environment: {}
   syncPolicy:
     automated:
       prune: true
