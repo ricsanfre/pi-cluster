@@ -28,3 +28,12 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
     - ApplyOutOfSyncOnly=true
+
+  # TEMP WORKAROUND
+  # sync issue with ipmode
+  # https://github.com/argoproj/argo-cd/issues/17548
+  # Suppose to be fixed with https://github.com/argoproj/argo-cd/issues/17548 in argo cd 2.11.4
+  ignoreDifferences:
+  - kind: Service
+    jqPathExpressions:
+      - '.status.loadBalancer.ingress[].ipMode'
