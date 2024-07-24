@@ -10,15 +10,23 @@ last_modified_at: "01-05-2024"
 
 Introduce Service Mesh architecture to add observability, traffic management, and security capabilities to internal communications within the cluster.
 
-[Linkerd](https://linkerd.io/) service mesh implementation has been selected to be deployed in my Raspeberry PI Kuberentes cluster.
 
-## Why Linkerd and not Istio
+{{site.data.alerts.important}}
 
-{{site.data.alerts.warning}} **Update May 2024**
+I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since relase 1.3 (April 2022).
 
-Main reasons for selecting Linkerd over Istio were:
-- ARM64 architecture support
-- Better performance and reduced memory/cpu footprint
+I wanted to use an opensource solution for the cluster and Istio and Linkerd were assessed since both are CNCF graduated projects. 
+
+Main reasons for selecting Linkerd over [Istio](https://istio.io/) were:
+
+- ARM64 architecture support. It was important since my cluster was mainly built using Raspberry PIs. Istio did not support ARM architectures at that time.
+- Better performance and reduced memory/cpu footprint. Linkerd Proxy vs Istio's Envoy Proxy
+  
+  Linkerd uses its own implementation of the communications proxy, a sidecar container that need to be deployed with any Pod as to inctercep all inbound/outbound traffic. Instead of using a generic purpose proxy ([Envoy proxy](https://www.envoyproxy.io/)) used by others service mesh implementations (Istio, Consul), a specifc proxy tailored only to cover Kubernetes communications has been developed. Covering just Kubernetes scenario, allows Linkerd proxy to be a simpler, lighter, faster and more secure proxy.
+
+  Linkerd ulta-light proxy with a reduced memory/cpu footprint and its better performance makes it more suitable for nodes with reduced computing capabilities like Raspberry Pis.
+
+  As a reference of performance/footprint comparison this is what Linkerd claimed in 2021: [Istio vs Linkerd benchmarking](https://linkerd.io/2021/11/29/linkerd-vs-istio-benchmarks-2021/).
 
 Since the initial evaluation was made:
 
@@ -28,31 +36,12 @@ Since the initial evaluation was made:
 
 - Istio is developing a sidecarless architecture, [Ambient mode](https://istio.io/latest/docs/ops/ambient/), which is expected to use a reduced footprint. In March 2024, Istio announced the beta relase of Ambient mode for upcoming 1.22 istio release: See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
 
+For those reasons, Service Mesh solution in the cluster has been migrated to Istio and Linkerd will be deprecated.
 
-For those reasons, Service Mesh architecture will be migrate to Istio. See [issue #320](https://github.com/ricsanfre/pi-cluster/issues/320)
+See ["Service Mesh - Istio"](/docs/istio/).
 
-{{site.data.alerts.end}}
+{{site.data.alerts.end}} 
 
-
-- **Open Source Community**
-
-  Istio and Linkerd both are CNCF graduated projects.
-
-- **ARM support**
-
-  At the time the initial evaluation was made to select the service mesh for the cluster, Istio did not support ARM64 architectures while Linkerd did support it.
-
-  [Istio](https://istio.io) added ARM64 architecture support in release 1.15. See [istio 1.15 announcement](https://istio.io/latest/news/releases/1.15.x/announcing-1.15/).
-
-  [Linkerd](https://linkerd.io/) supports ARM64 architectures since release 2.9. See [linkerd 2.9 announcement](https://linkerd.io/2020/11/09/announcing-linkerd-2.9/).
-
-- **Performance and reduced footprint**
-
-  Linkerd uses its own implementation of the communications proxy, a sidecar container that need to be deployed with any Pod as to inctercep all inbound/outbound traffic. Instead of using a generic purpose proxy ([Envoy proxy](https://www.envoyproxy.io/)) used by others service mesh implementations (Istio, Consul), a specifc proxy tailored only to cover Kubernetes communications has been developed. Covering just Kubernetes scenario, allows Linkerd proxy to be a simpler, lighter, faster and more secure proxy.
-
-  Linkerd ulta-light proxy with a reduced memory/cpu footprint and its better performance makes it more suitable for nodes with reduced computing capabilities like Raspberry Pis.
-
-  As a reference of performance/footprint comparison this is the lastest [Istio vs Linkerd benchmarking](https://linkerd.io/2021/11/29/linkerd-vs-istio-benchmarks-2021/).
 
 
 ## Linkerd Architecture

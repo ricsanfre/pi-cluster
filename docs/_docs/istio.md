@@ -2,7 +2,7 @@
 title: Service Mesh (Istio)
 permalink: /docs/istio/
 description: How to deploy service-mesh architecture based on Istio. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "22-07-2024"
+last_modified_at: "24-07-2024"
 
 ---
 
@@ -10,6 +10,9 @@ last_modified_at: "22-07-2024"
 ## Why a Service Mesh
 
 Introduce Service Mesh architecture to add observability, traffic management, and security capabilities to internal communications within the cluster.
+
+
+{{site.data.alerts.important}}
 
 I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since relase 1.3 (April 2022). See ["Service Mesh (Linkerd)"](/docs/service-mesh/) document.  
 
@@ -25,7 +28,9 @@ Since the initial evaluation was made:
 
 - Istio is developing a sidecarless architecture, [Ambient mode](https://istio.io/latest/docs/ops/ambient/), which is expected to use a reduced footprint. In March 2024, Istio announced the beta relase of Ambient mode for upcoming 1.22 istio release: See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
 
+For those reasons, Service Mesh solution in the cluster has been migrated to Istio.
 
+{{site.data.alerts.end}} 
 
 ## Istio vs Linkerd
 
@@ -52,13 +57,6 @@ Since the initial evaluation was made:
   Preliminary comparison, made by [solo-io](https://www.solo.io/), main contributor to Istio's new Ambient mode, shows reduced Istio footprint and better performance results than Likerd. See comparison analysis ["Istio in Ambient Mode - Doing More for Less!"](https://github.com/solo-io/service-mesh-for-less-blog)
 
 
-
-
-For those reasons, Service Mesh architecture will be migrate to Istio. See [issue #320](https://github.com/ricsanfre/pi-cluster/issues/320)
-
-
-
-
 ## Istio Architecture
 
 An Istio service mesh is logically split into a data plane and a control plane.
@@ -83,9 +81,31 @@ See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024
 {{site.data.alerts.end}}
 
 
+## Istio Sidecar Mode
+
+![istio-sidecar-architecture](/assets/img/istio-architecture-sidecar.png)
+
+In sidecar mode, Istio implements its features using a per-pod L7 proxy,[Envoy proxy](https://www.envoyproxy.io/). This is a transparent proxy running as sidecar container within the pods. Proxies automatically intercept Pod's inbound/outbound TCP traffic and add transparantly encryption (mTLS), Later-7 load balancing, routing, retries, telemetry, etc.
+
+
 ## Istio Ambient Mode
 
-In ambient mode, Istio implements its features using a per-node Layer 4 (L4) proxy, ztunnel, and optionally a per-namespace Layer 7 (L7) proxy, waypoint proxy.
+
+![istio-sidecar-architecture](/assets/img/istio-architecture-ambient-L4.png)
+
+In ambient mode, Istio deploys a shared agent, running on each node in the Kubernetes cluster. This agent is a zero-trust tunnel (or `ztunnel`), and its primary responsibility is to securely connect and authenticate elements within the mesh. The networking stack on the node redirects all traffic of participating workloads through the local ztunnel agent.
+
+Ztunnels enable the core functionality of a service mesh: zero trust. A secure overlay is created when ambient is enabled for a namespace. It provides workloads with mTLS, telemetry, authentication, and L4 authorization, without terminating or parsing HTTP.
+
+After ambient mesh is enabled and a secure overlay is created, a namespace can be configured to utilize L7 features. 
+
+Namespaces operating in this mode use one or more Envoy-based waypoint proxies to handle L7 processing for workloads in that namespace. Istio’s control plane configures the ztunnels in the cluster to pass all traffic that requires L7 processing through the waypoint proxy. Importantly, from a Kubernetes perspective, waypoint proxies are just regular pods that can be auto-scaled like any other Kubernetes deployment.
+
+![istio-sidecar-architecture](/assets/img/istio-architecture-ambient-L7.png)
+
+
+In ambient mode, Istio implements its features using two different proxies, a per-node Layer 4 (L4) proxy, ztunnel, and optionally a per-namespace Layer 7 (L7) proxy, waypoint proxy.
+
 
 - `ztunnel` proxy, providing basic L4 secured connectivity and authenticating workloads within the mesh (i.e.:mTLS).
   - L4 routing
