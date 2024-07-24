@@ -59,6 +59,7 @@
   docs:
   - databases
   - service-mesh
+  - istio
   - kafka
 - title: Reference Docs
   docs:

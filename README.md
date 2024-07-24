@@ -40,7 +40,7 @@ As part of the project, the goal is to use a lightweight Kubernetes flavor based
 
 Also deployment of services for building a cloud-native microservices architecture are include as part of the scope:
 
-- Service mesh architecture, [Linkerd](https://linkerd.io/)
+- Service mesh architecture, [Istio](https://istio.io/)
 - API security with Oauth2.0 and OpenId Connect, using IAM solution, [Keycloak](https://www.keycloak.org/)
 - Streaming platform, [Kafka](https://kafka.apache.org/)
 
@@ -115,13 +115,8 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes Ingress Controller</td>
     </tr> 
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/traefik.svg"></td>
-        <td><a href="https://traefik.io/">Traefik</a></td>
-        <td>Kubernetes Ingress Controller (alternative)</td>
-    </tr>   
-    <tr>
-        <td><img width="32" src="docs/assets/img/logos/linkerd.svg"></td>
-        <td><a href="https://linkerd.io/">Linkerd</a></td>
+        <td><img width="32" src="/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
+        <td><a href="https://istio.io/">Istio</a></td>
         <td>Kubernetes Service Mesh</td>
     </tr>
     <tr>

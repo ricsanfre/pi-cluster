@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-ztunnel
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '40'
+spec:
+  destination:
+    namespace: istio-system
+    name: in-cluster
+  project: picluster
+  source:
+    chart: ztunnel
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    targetRevision: 1.22.3
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 1m
+        maxDuration: 16m
+        factor: 2
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true

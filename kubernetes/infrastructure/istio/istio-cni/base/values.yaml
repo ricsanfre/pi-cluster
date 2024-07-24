@@ -1,0 +1,4 @@
+# istio base helm values (base)
+
+# Install with ambient profile
+profile: ambient

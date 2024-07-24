@@ -114,6 +114,57 @@
         "configure": true,
         "manage": true
       }
+    },
+    {
+      "clientId": "${KIALI_OAUTH_CLIENT_ID}",
+      "name": "Kiali",
+      "description": "Kiali - Istio Obervability platform",
+      "rootUrl": "https://kiali.picluster.ricsanfre.com/kiali/",
+      "adminUrl": "https://kiali.picluster.ricsanfre.com/kiali/",
+      "baseUrl": "",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KIALI_OAUTH_CLIENT_SECRET}",
+      "redirectUris": [
+        "https://kiali.picluster.ricsanfre.com/kiali/*"
+      ],
+      "webOrigins": [
+        "https://kiali.picluster.ricsanfre.com"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "access": {
+        "view": true,
+        "configure": true,
+        "manage": true
+      }
     }
   ],
   "roles": {

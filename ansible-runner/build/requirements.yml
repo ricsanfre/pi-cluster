@@ -26,7 +26,7 @@ roles:
     version: v1.0.4
 collections:
   - name: community.general
-    version: 9.1.0
+    version: 9.2.0
   - name: kubernetes.core
     version: 5.0.0
   - name: community.hashi_vault
@@ -34,4 +34,4 @@ collections:
   - name: ansible.posix
     version: 1.5.4
   - name: community.crypto
-    version: 2.20.0
+    version: 2.21.0

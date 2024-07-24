@@ -1,0 +1,42 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: istio-component-monitor
+  namespace: istio-system
+  labels:
+    monitoring: istio-components
+    release: istio
+spec:
+  jobLabel: istio
+  targetLabels: [app]
+  selector:
+    matchExpressions:
+    - {key: istio, operator: In, values: [pilot]}
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  endpoints:
+  - port: http-monitoring
+    interval: 60s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ztunnel-monitor
+  namespace: istio-system
+  labels:
+    monitoring: ztunnel-proxies
+    release: istio
+spec:
+  selector:
+    matchLabels:
+      app: ztunnel
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  jobLabel: ztunnel-proxy
+  podMetricsEndpoints:
+  - path: /stats/prometheus
+    interval: 60s

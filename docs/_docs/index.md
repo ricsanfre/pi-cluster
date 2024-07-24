@@ -1,8 +1,8 @@
 ---
 title: What is this project about?
 permalink: /docs/home/
-description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Linkerd as service mesh architecture.
-last_modified_at: "02-06-2024"
+description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
+last_modified_at: "24-07-2024"
 ---
 
 
@@ -24,7 +24,7 @@ The project scope includes the automatic installation and configuration of a lig
 
 Also deployment of services for building a cloud-native microservices architecture are include as part of the scope:
 
-- Service mesh architecture, [Linkerd](https://linkerd.io/)
+- Service mesh architecture, [Istio](https://Istio.io/)
 - API security with Oauth2.0 and OpenId Connect, using IAM solution, [Keycloak](https://www.keycloak.org/)
 - Streaming platform, [Kafka](https://kafka.apache.org/)
 
@@ -110,13 +110,8 @@ The following picture shows the set of opensource solutions used for building th
         <td>Kubernetes Ingress Controller</td>
     </tr> 
     <tr>
-        <td><img width="32" src="/assets/img/logos/traefik.svg" alt="traefik logo"></td>
-        <td><a href="https://traefik.io/">Traefik</a></td>
-        <td>Kubernetes Ingress Controller (alternative)</td>
-    </tr>   
-    <tr>
-        <td><img width="32" src="/assets/img/logos/linkerd.svg" alt="linkerd logo"></td>
-        <td><a href="https://linkerd.io/">Linkerd</a></td>
+        <td><img width="32" src="/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
+        <td><a href="https://istio.io/">Istio</a></td>
         <td>Kubernetes Service Mesh</td>
     </tr>
     <tr>
@@ -326,40 +321,40 @@ The software used and the latest version tested of each component
 | Type | Software | Latest Version tested | Notes |
 |-----------| ------- |-------|----|
 | OS | Ubuntu | 22.04.2 | |
-| Control | Ansible | 2.17.0  | |
+| Control | Ansible | 2.17.2  | |
 | Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 22.04.2 |
-| Kubernetes | K3S | v1.29.4 | K3S version|
-| Kubernetes | Helm | v3.14.4 ||
+| Kubernetes | K3S | v1.30.2 | K3S version|
+| Kubernetes | Helm | v3.15.3 ||
 | Metrics | Kubernetes Metrics Server | v0.7.0 | version pre-integrated into K3S |
-| Kubernetes | etcd | v3.5.9-k3s1 | version pre-integrated into K3S |
-| Computing | containerd | v1.7.15-k3s1 | version pre-integrated into K3S |
-| Networking | Cilium | 1.15.6 | |
+| Kubernetes | etcd | v3.5.13-k3s1 | version pre-integrated into K3S |
+| Computing | containerd | v1.7.17-k3s1 | version pre-integrated into K3S |
+| Networking | Cilium | 1.15.7 | |
 | Networking | CoreDNS | v1.10.1 | version pre-integrated into K3S |
-| Service Mesh | Linkerd | v2.14.10 | Helm chart version: linkerd-control-plane-1.16.11 |
-| Service Proxy | Ingress NGINX | v1.10.1 | Helm chart version: 4.10.1 |
+| Service Mesh | Istio | v1.22.3 | Helm chart version: 1.22.3 |
+| Service Proxy | Ingress NGINX | v1.11.1 | Helm chart version: 4.11.1 |
 | Storage | Longhorn | v1.6.2 | Helm chart version: 1.6.2 |
 | Storage | Minio | RELEASE.2024-04-18T19-09-19Z | Helm chart version: 5.2.0 |
-| TLS Certificates | Certmanager | v1.15.0| Helm chart version: v1.15.0  |
+| TLS Certificates | Certmanager | v1.15.1| Helm chart version: v1.15.1  |
 | Logging | ECK Operator |  2.13.0 | Helm chart version: 2.13.0 |
 | Logging | Elastic Search | 8.13.0 | Deployed with ECK Operator |
 | Logging | Kibana | 8.13.0 | Deployed with ECK Operator |
 | Logging | Fluentbit | 3.0.7 | Helm chart version: 0.46.11 |
 | Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.2 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.3|
-| Logging | Loki | 3.0.0 | Helm chart grafana/loki version: 6.6.3  |
-| Monitoring | Kube Prometheus Stack | v0.74.0 | Helm chart version: 60.3.0 |
-| Monitoring | Prometheus Operator | v0.74.0 | Installed by Kube Prometheus Stack. Helm chart version: 60.3.0  |
-| Monitoring | Prometheus | v2.53.0 | Installed by Kube Prometheus Stack. Helm chart version: 60.3.0 |
-| Monitoring | AlertManager | v0.27.0 | Installed by Kube Prometheus Stack. Helm chart version: 60.3.0 |
-| Monitoring | Grafana | 11.0.0 | Installed as dependency of Kube Prometheus Stack chart 60.3.0 |
-| Monitoring | Prometheus Node Exporter | v1.8.1 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 60.3.0 |
-| Monitoring | Prometheus Elasticsearch Exporter | 1.7.0 | Helm chart version: prometheus-elasticsearch-exporter-5.8.1 |
-| Tracing | Grafana Tempo | 2.5.0 | Helm chart: tempo-distributed (1.11.0) |
+| Logging | Loki | 3.1.0 | Helm chart grafana/loki version: 6.7.1  |
+| Monitoring | Kube Prometheus Stack | v0.75.0 | Helm chart version: 61.2.0 |
+| Monitoring | Prometheus Operator | v0.75.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0  |
+| Monitoring | Prometheus | v2.53.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0 |
+| Monitoring | AlertManager | v0.27.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0 |
+| Monitoring | Prometheus Node Exporter | v1.8.1 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 61.2.0 |
+| Monitoring | Prometheus Elasticsearch Exporter | 1.7.0 | Helm chart version: prometheus-elasticsearch-exporter-6.0.0 |
+| Monitoring | Grafana | 11.1.0 | Helm chart version: 8.3.2 |
+| Tracing | Grafana Tempo | 2.5.0 | Helm chart: tempo-distributed (1.15.1) |
 | Backup | Minio External (self-hosted) | RELEASE.2024-03-07T00:43:48Z | |
 | Backup | Restic | 0.16.4 | |
 | Backup | Velero | 1.13.2 | Helm chart version: 6.7.0 |
 | Secrets | Hashicorp Vault | 1.16.1 | |
-| Secrets| External Secret Operator | 0.9.19 | Helm chart version: 0.9.19 |
-| SSO | Keycloak | 24.0.5 | Bitnami Helm chart version: 21.4.4 |
-| SSO| Oauth2.0 Proxy | 7.6.0 | Helm chart version: 7.7.4 |
-| GitOps | Argo CD | v2.11.3 | Helm chart version: 7.2.1 |
+| Secrets| External Secret Operator | 0.9.20 | Helm chart version: 0.9.20 |
+| SSO | Keycloak | 24.0.5 | Bitnami Helm chart version: 21.7.0 |
+| SSO| Oauth2.0 Proxy | 7.6.0 | Helm chart version: 7.7.9 |
+| GitOps | Argo CD | v2.11.5 | Helm chart version: 7.3.9 |
 {: .table .table-white .border-dark }
