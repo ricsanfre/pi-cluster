@@ -1,0 +1,16 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: otel-global
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '30'
+spec:
+  tracing:
+  - providers:
+    - name: opentelemetry
+    randomSamplingPercentage: 10
+    customTags:
+      "my-attribute":
+        literal:
+          value: "default-value"

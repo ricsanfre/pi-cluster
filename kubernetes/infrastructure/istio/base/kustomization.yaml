@@ -11,4 +11,5 @@ resources:
   - istio-gateway-app.yaml
   - cilium-istio-network-policy.yaml
   - istio-prometheus-config.yaml
+  - istio-opentelemetry.yaml
   - kiali-external-secret.yaml
