@@ -233,7 +233,7 @@ minio_users:
 # Restic configuration #
 ########################
 
-restic_version: 0.16.4
+restic_version: 0.16.5
 
 # Restic S3 repository configuration
 restic_repository: "s3:{{ minio_url }}/restic"
