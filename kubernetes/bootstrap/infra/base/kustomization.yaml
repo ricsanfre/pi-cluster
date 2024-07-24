@@ -23,4 +23,9 @@ resources:
 - apps/tempo-app.yaml
 - apps/kube-prom-stack-app.yaml
 - apps/grafana-app.yaml
-- apps/istio-app.yaml
+- apps/istio-base-app.yaml
+- apps/istio-cni-app.yaml
+- apps/istio-istiod-app.yaml
+- apps/istio-ztunnel-app.yaml
+- apps/istio-gateway-app.yaml
+- apps/istio-config-app.yaml

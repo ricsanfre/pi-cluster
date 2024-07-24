@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: istio-ztunnel
+  name: istio-gateway
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '40'
+    argocd.argoproj.io/sync-wave: '134'
 spec:
   destination:
-    namespace: istio-system
+    namespace: istio-ingress
     name: in-cluster
   project: picluster
   source:
-    chart: ztunnel
+    chart: gateway
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.22.3
   syncPolicy:

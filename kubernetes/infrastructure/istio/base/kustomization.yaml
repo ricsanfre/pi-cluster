@@ -2,13 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ns.yaml
-  - istio-base-app.yaml
-  - istio-cni-app.yaml
-  - istio-istiod-app.yaml
-  - istio-ztunnel-app.yaml
-  - istio-gateway-app.yaml
+#  - ns.yaml
   - cilium-istio-networkpolicy.yaml
   - istio-prometheus-config.yaml
-  # - istio-opentelemetry.yaml
+  - istio-opentelemetry.yaml
   - kiali-external-secret.yaml

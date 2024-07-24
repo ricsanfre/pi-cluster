@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: istio
+  name: istio-config
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '130'
+    argocd.argoproj.io/sync-wave: '135'
 spec:
   destination:
     namespace: istio-system

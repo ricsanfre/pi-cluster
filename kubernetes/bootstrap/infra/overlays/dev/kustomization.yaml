@@ -26,4 +26,5 @@ patches:
 - path: apps/tempo-app.yaml
 - path: apps/kube-prom-stack-app.yaml
 - path: apps/grafana-app.yaml
-- path: apps/istio-app.yaml
+- path: apps/istio-config-app.yaml
+

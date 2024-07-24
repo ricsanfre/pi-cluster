@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: istio-base
+  name: istio-ztunnel
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '10'
+    argocd.argoproj.io/sync-wave: '133'
 spec:
   destination:
     namespace: istio-system
     name: in-cluster
   project: picluster
   source:
-    chart: base
+    chart: ztunnel
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.22.3
   syncPolicy:
@@ -28,8 +28,3 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
     - ApplyOutOfSyncOnly=true
-  ignoreDifferences:     
-  - group: admissionregistration.k8s.io                                                              
-    kind: ValidatingWebhookConfiguration
-    jsonPointers:                                                                                    
-    - /webhooks/0/failurePolicy

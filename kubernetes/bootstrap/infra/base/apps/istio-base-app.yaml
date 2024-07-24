@@ -1,22 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: istio-cni
+  name: istio-base
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: '20'
+    argocd.argoproj.io/sync-wave: '130'
 spec:
   destination:
     namespace: istio-system
     name: in-cluster
   project: picluster
   source:
-    chart: cni
+    chart: base
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.22.3
-    helm:
-      values: |
-        profile: ambient
   syncPolicy:
     automated:
       prune: true
@@ -31,3 +28,8 @@ spec:
     - CreateNamespace=true
     - ServerSideApply=true
     - ApplyOutOfSyncOnly=true
+  ignoreDifferences:     
+  - group: admissionregistration.k8s.io                                                              
+    kind: ValidatingWebhookConfiguration
+    jsonPointers:                                                                                    
+    - /webhooks/0/failurePolicy
