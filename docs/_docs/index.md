@@ -350,7 +350,7 @@ The software used and the latest version tested of each component
 | Monitoring | Grafana | 11.1.0 | Helm chart version: 8.3.2 |
 | Tracing | Grafana Tempo | 2.5.0 | Helm chart: tempo-distributed (1.15.1) |
 | Backup | Minio External (self-hosted) | RELEASE.2024-03-07T00:43:48Z | |
-| Backup | Restic | 0.16.4 | |
+| Backup | Restic | 0.16.5 | |
 | Backup | Velero | 1.13.2 | Helm chart version: 6.7.0 |
 | Secrets | Hashicorp Vault | 1.16.1 | |
 | Secrets| External Secret Operator | 0.9.20 | Helm chart version: 0.9.20 |

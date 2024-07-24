@@ -2,7 +2,7 @@
 title: Backup & Restore
 permalink: /docs/backup/
 description: How to deploy a backup solution based on Velero and Restic in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "05-12-2023"
+last_modified_at: "24-07-2024"
 ---
 
 ## Backup Architecture and Design
@@ -56,17 +56,17 @@ The backup architecture is the following:
   kubectl exec pod -- app_unfreeze_command
   ```
 
-  Velero also support CSI snapshot API to take Persistent Volumes snapshots, through CSI provider, Longorn, when backing-up the PODs. See Velero [CSI snapshot support documentation](https://velero.io/docs/v1.12/csi/).
+  Velero also support CSI snapshot API to take Persistent Volumes snapshots, through CSI provider, Longorn, when backing-up the PODs. See Velero [CSI snapshot support documentation](https://velero.io/docs/v1.14/csi/).
 
   Integrating Container Storage Interface (CSI) snapshot support into Velero and Longhorn enables Velero to backup and restore CSI-backed volumes using the [Kubernetes CSI Snapshot feature](https://kubernetes.io/docs/concepts/storage/volume-snapshots/).
 
-  For orchestrating application-consistent backups, Velero supports the definition of [backup hooks](https://velero.io/docs/v1.12/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations.
+  For orchestrating application-consistent backups, Velero supports the definition of [backup hooks](https://velero.io/docs/v1.14/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations.
 
   So Velero, with its buil-in functionality, CSI snapshot support and backup hooks, is able to perform the orchestration of application-consistent backups. Velero delegates the actual backup/restore of PV to the CSI provider, Longhorn.
 
   {{site.data.alerts.note}}
 
-  Velero also supports, Persistent Volumes backup/restore procedures with [`restic` as backup engine](https://velero.io/docs/v1.9/restic/) and using the same S3 backend configured within Velero for backing up the cluster configuration. Velero restic support will be disabled whe deploying Velero, instead CSI snapshots will be used.
+  Velero also supports, Persistent Volumes backup/restore procedures using [File System Backup (FSB shortly) or Pod Volume Backup](https://velero.io/docs/v1.14/file-system-backup/).  [restic](restic.io) or [kopia](https://kopia.io/) can be used to transfer the data using the same S3 backend configured within Velero for backing up the cluster configuration. Velero node agent has to be installed to enable this functionality. FSB support is not enabled when deploying Velero, instead CSI snapshots will be used.
 
   {{site.data.alerts.end}}
 
@@ -88,14 +88,14 @@ Restic installation and backup scheduling tasks have been automated with Ansible
 
 ### Restic installation and backup scheduling configuration
 
-Ubuntu has as part of its distribution a `restic` package that can be installed with `apt` command. restic version is an old one (0.9), so it is better to install the last version binary (0.12.1) from github repository
+Ubuntu has as part of its distribution a `restic` package that can be installed with `apt` command. restic version is an old one, so it is better to install the last version binary (0.16.5) from github repository
 
 For doing the installation execute the following commands as root user
 ```shell
 cd /tmp
-wget https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_linux_arm64.bz2
-bzip2 -d /tmp/restic_0.12.1_linux_arm64.bz2
-cp /tmp/restic_0.12.1_linux_arm64 /usr/local/bin/restic
+wget https://github.com/restic/restic/releases/download/v0.16.5/restic_0.16.5_linux_[amd64/arm64].bz2
+bzip2 -d /tmp/restic_0.16.5_linux_[amd64/arm64].bz2
+cp /tmp/restic_0.16.5_linux_[amd64/arm64] /usr/local/bin/restic
 chmod 755 /usr/local/bin/restic 
 ```
 ### Create restic environment variables files
@@ -223,7 +223,7 @@ To enable this feature, follow instructions in [Longhorn documentation - Enable 
 
 {{site.data.alerts.note}}
 
-Longhorn 1.6.0 CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release  v6.3.2. Do not install latest version available of External Snapshotter.
+In Longhorn 1.6.2, CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release v6.3.2. Do not install latest version available of External Snapshotter.
 
 {{site.data.alerts.end}}
 
@@ -328,7 +328,7 @@ defaultSettings:
 ### Scheduling longhorn volumes backup
 
 A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
-See details in [documentation](https://longhorn.io/docs/1.3.1/snapshots-and-backups/scheduling-backups-and-snapshots/).
+See details in [Longhorn - Scheduling backups and snapshots](https://longhorn.io/docs/1.6.2/snapshots-and-backups/scheduling-backups-and-snapshots/).
 
 {{site.data.alerts.note}}
 
@@ -409,13 +409,13 @@ VolumeSnapshotClass objects from CSI Snapshot API need to be configured
 
 Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
 
-Velero as well provides a CLI to execute backup/restore commands using Kuberentes API. More details in official [documentation](https://velero.io/docs/v1.12/how-velero-works/)
+Velero as well provides a CLI to execute backup/restore commands using Kuberentes API. More details in official documentation, [How Velero works](https://velero.io/docs/v1.14/how-velero-works/)
 
 The complete backup workflow is the following:
 
 ![velero-backup-process](/assets/img/velero-backup-process.png)
 
-As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/v1.12/contributions/minio/).
+As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/v1.15/contributions/minio/).
 
 
 ### Configuring Minio bucket and user for Velero
@@ -513,20 +513,14 @@ Installation using `Helm` (Release 3):
 - Step 4: Create values.yml for Velero helm chart deployment
   
   ```yml
-  # AWS backend and CSI plugins configuration
+  # AWS backend plugin configuration
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.8.0
+      image: velero/velero-plugin-for-aws:v1.10.0
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
           name: plugins
-    - name: velero-plugin-for-csi
-      image: velero/velero-plugin-for-csi:v0.6.0
-      imagePullPolicy: IfNotPresent
-      volumeMounts:
-        - mountPath: /target
-          name: plugins      
 
   # Minio storage configuration
   configuration:
@@ -550,20 +544,6 @@ Installation using `Helm` (Release 3):
 
   # Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
   snapshotsEnabled: false
-
-  # Run velero only on amd64 nodes
-  # velero-plugin-for-csi was not available for ARM architecture (version < 0.6.0)
-  # Starting from plugin version 0.6.0 (Velero 1.12) ARM64 is available and so
-  # This rule is not longer required
-  # affinity:
-  #   nodeAffinity:
-  #     requiredDuringSchedulingIgnoredDuringExecution:
-  #       nodeSelectorTerms:
-  #       - matchExpressions:
-  #         - key: kubernetes.io/arch
-  #           operator: In
-  #           values:
-  #           - amd64
   ```
 
 - Step 5: Install Velero in the `velero` namespace with the overriden values
@@ -608,49 +588,20 @@ Installation using `Helm` (Release 3):
 
 - Velero plugins installation
 
-  The chart configuration deploys the following velero plugins as `initContainers`:
+  The chart configuration deploys the following velero plugin as `initContainers`:
   - `velero-plugin-for-aws` to enable S3 Minio as backup backend.
-  - `velero-plugin-for-csi` to enable CSI Snapshot support
 
   
   ```yml
   # AWS backend and CSI plugins configuration
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.8.0
+      image: velero/velero-plugin-for-aws:v1.10.0
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
           name: plugins
-    - name: velero-plugin-for-csi
-      image: velero/velero-plugin-for-csi:v0.6.0
-      imagePullPolicy: IfNotPresent
-      volumeMounts:
-        - mountPath: /target
-          name: plugins 
   ```
-
-- Affinity configuration (only needed for Velero releases previous to 1.12)
-  
-  ```yml
-  # Run velero only on amd64 nodes
-  # velero-plugin-for-csi not available for ARM architecture
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kubernetes.io/arch
-            operator: In
-            values:
-            - amd64
-  ```
-  {{site.data.alerts.note}}
-
-  Official docker image `velero/velero-plugin-for-csi` is supporting ARM64 architecture starting from version 0.6.0 (Velero 1.12).
-
-  {{site.data.alerts.end}}
-
 
 - Enable Velero CSI Snapshots
 
@@ -887,7 +838,7 @@ Set up daily full backup can be on with velero CLI
 ```shell
 velero schedule create full --schedule "0 4 * * *"
 ```
-Or creating a 'Schedule' [kubernetes resource](https://velero.io/docs/v1.12/api-types/schedule/):
+Or creating a 'Schedule' [kubernetes resource](https://velero.io/docs/v1.14/api-types/schedule/):
 
 ```yml
 apiVersion: velero.io/v1
