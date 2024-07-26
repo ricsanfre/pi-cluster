@@ -7,7 +7,7 @@ resources:
 helmCharts:
   - name: fluent-bit
     repo: https://fluent.github.io/helm-charts
-    version: 0.46.11
+    version: 0.47.5
     releaseName: "fluent-bit"
     namespace: fluent
     valuesFile: ../../base/fluent-bit-values.yaml
