@@ -1,0 +1,34 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: {{ .app_name }}
+spec:
+  url: {{ .chart_repo_url }}
+  interval: 10m
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: {{ .app_name }}
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: {{ .chart_name }}
+      version: {{ .chart_version }}
+      sourceRef:
+        kind: HelmRepository
+        name: {{ .app_name }}
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+  - kind: ConfigMap
+    name: {{ .app_name }}-helm-values
+    valuesKey: base-values.yaml
