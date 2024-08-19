@@ -27,7 +27,7 @@
   shell: |
     set -o pipefail
     kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
-     ../kubernetes/platform/cilium-config/overlays/"{{overlay}}" | kubectl apply -f -
+     ../kubernetes/platform/cilium/config/overlays/"{{overlay}}" | kubectl apply -f -
   args:
     executable: /bin/bash
   register: output
