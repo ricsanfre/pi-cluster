@@ -1,3 +1,6 @@
+FROM ghcr.io/helmfile/helmfile:v0.167.1 AS helmfile
+
+
 FROM python:slim
 ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--ignore-certs
 ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-certs
@@ -22,6 +25,9 @@ RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy collection install $ANSIB
 
 # Configure ansible-runner
 RUN ansible-playbook ansible_runner_setup.yml
+
+# Copy helmfile
+COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
 
 ENV USER runner

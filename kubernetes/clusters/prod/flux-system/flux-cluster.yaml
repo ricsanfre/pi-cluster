@@ -7,7 +7,7 @@ metadata:
 spec:
   interval: 1m0s
   ref:
-    branch: master
+    branch: flux
   secretRef:
     name: flux-system
   url: https://github.com/ricsanfre/pi-cluster.git

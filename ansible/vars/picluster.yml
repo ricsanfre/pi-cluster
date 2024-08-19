@@ -59,7 +59,7 @@ k3s_server_config:
     - local-storage
     - servicelb
     - traefik
-    - metric-server
+    - metrics-server
   write-kubeconfig-mode: 644
   node-taint:
     - 'node-role.kubernetes.io/control-plane:NoSchedule'
