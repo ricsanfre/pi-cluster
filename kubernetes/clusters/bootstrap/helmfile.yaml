@@ -24,8 +24,8 @@ releases:
     version: 1.16.0
     values:
       - ../../platform/cilium/app/base/values.yaml
-      - ../../platform/cilium/app/components/values.yaml
-      - ../../platform/cilium/app/overlays/dev/values.yaml
+      - ../../platform/cilium/app/components/istio-config/values.yaml
+      - ../../platform/cilium/app/overlays/prod/values.yaml
     needs:
      - kube-system/prometheus-operator-crds
   - name: cordns
