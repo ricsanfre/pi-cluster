@@ -5,7 +5,7 @@ FROM python:slim
 ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--ignore-certs
 ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-certs
 RUN apt-get update -qq && \
-    apt-get install sudo git apt-utils python3-pip pwgen gnupg -y && \
+    apt-get install sudo git apt-utils python3-pip pwgen gnupg curl -y && \
     apt-get clean && \
     rm -rf /usr/share/doc/* /usr/share/man/* /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -29,7 +29,6 @@ RUN ansible-playbook ansible_runner_setup.yml
 # Copy helmfile
 COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
-
 ENV USER runner
 ENV FOLDER /home/runner
 RUN /usr/sbin/groupadd $USER && \
@@ -44,6 +43,9 @@ RUN for dir in \
     do mkdir -p $dir ; chown $USER:$USER $dir; chmod 775 $dir ; done
 
 USER $USER
+
+# Install helmfile helm plugins
+RUN helmfile init --force
 
 RUN echo "export GPG_TTY=\$(tty)" >> /home/runner/.bashrc
 
