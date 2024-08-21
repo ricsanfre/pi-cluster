@@ -28,7 +28,7 @@ releases:
       - ../../platform/cilium/app/overlays/prod/values.yaml
     needs:
      - kube-system/prometheus-operator-crds
-  - name: cordns
+  - name: coredns
     namespace: kube-system
     chart: coredns/coredns
     version: 1.31.0
