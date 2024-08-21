@@ -30,5 +30,5 @@ spec:
       remediateLastFailure: true
   valuesFrom:
   - kind: ConfigMap
-    name: cilium--helm-values
+    name: cilium-helm-values
     valuesKey: base-values.yaml
