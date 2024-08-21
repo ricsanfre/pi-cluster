@@ -11,7 +11,7 @@
   shell: |
     kubectl create secret generic flux-system -n flux-system \
     --from-literal=username=git \
-    --from-literal=password="{{github_pat}}"
+    --from-literal=password="{{vault.flux.github.pat}}"
   args:
     executable: /bin/bash
   changed_when: false
