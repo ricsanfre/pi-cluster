@@ -1,4 +1,4 @@
 # nginx helm values (base)
 
 controller:
-  replicaCount: 2
+  replicaCount: 1
