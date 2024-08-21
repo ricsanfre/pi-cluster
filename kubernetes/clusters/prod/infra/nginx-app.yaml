@@ -1,0 +1,23 @@
+# nginx application
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: ingress-nginx-app
+  namespace: flux-system
+spec:
+  interval: 5m
+  targetNamespace: nginx
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/nginx/app/overlays/prod
+  prune: true
+  postBuild:
+    substitute:
+      NGINX_LOAD_BALANCER_IP: "10.0.0.100"
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+        # Use this ConfigMap if it exists, but proceed if it doesn't.
+        optional: true

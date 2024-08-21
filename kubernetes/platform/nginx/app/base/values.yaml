@@ -1,0 +1,8 @@
+# nginx helm values (base)
+
+controller:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
