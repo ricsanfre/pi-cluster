@@ -10,7 +10,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./kubernetes/platform/cilium/app/overlays/dev
+  path: ./kubernetes/platform/cilium/app/overlays/prod
   prune: true
 
 ---
@@ -27,5 +27,5 @@ spec:
     name: flux-system
   dependsOn:
     - name: cilium-app
-  path: ./kubernetes/platform/cilium/config/overlays/dev
+  path: ./kubernetes/platform/cilium/config/overlays/prod
   prune: true
