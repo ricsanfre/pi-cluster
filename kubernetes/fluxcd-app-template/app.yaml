@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m
-  targetNamespace: kube-system
+  targetNamespace: {{ .app_namespace }}
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -21,7 +21,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m
-  targetNamespace: kube-system
+  targetNamespace: {{ .app_namespace }}
   sourceRef:
     kind: GitRepository
     name: flux-system
