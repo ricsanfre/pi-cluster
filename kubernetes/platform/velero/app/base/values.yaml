@@ -1,0 +1,28 @@
+# velero helm values (base)
+
+# AWS backend and CSI plugins configuration
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.10.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Velero Configuration
+configuration:
+  # Configure Minio as backup backend
+  backupStorageLocation:
+    - provider: aws
+      bucket: k3s-velero
+      config:
+        region: eu-west-1
+        s3ForcePathStyle: true
+        s3Url: https://${S3_BACKUP_SERVER}:9091
+  # Enable CSI snapshot support
+  features: EnableCSI
+credentials:
+  existingSecret: velero-secret
+
+# Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
+snapshotsEnabled: false
