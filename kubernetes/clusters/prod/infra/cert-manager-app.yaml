@@ -45,6 +45,6 @@ spec:
   dependsOn:
     - name: cert-manager-app
     - name: cert-manager-webhook-ionos
-    - name: external-secrets
+    - name: external-secrets-config
   path: ./kubernetes/platform/cert-manager/config/overlays/prod
   prune: true
