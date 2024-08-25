@@ -1,6 +1,6 @@
 # minio helm values (base)
 # Get root user/password from secret
-existingSecret: minio-secret
+existingSecret: minio-root-secret
 
 # Number of drives attached to a node
 drivesPerNode: 1
