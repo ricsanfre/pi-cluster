@@ -29,7 +29,7 @@ spec:
       retries: 3
       remediateLastFailure: true
   dependsOn:
-    - name: longhorn-system
+    - name: longhorn
       namespace: longhorn-system
   valuesFrom:
   - kind: ConfigMap
