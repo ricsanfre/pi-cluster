@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: longhorn-app
+  namespace: flux-system
+spec:
+  interval: 5m
+  targetNamespace: longhorn-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: csi-external-snapshooter-app
+    - name: external-secrets-config
+  path: ./kubernetes/platform/longhorn/app/overlays/prod
+  prune: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+        # Use this ConfigMap if it exists, but proceed if it doesn't.
+        optional: true
+

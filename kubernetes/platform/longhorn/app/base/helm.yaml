@@ -1,0 +1,34 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: longhorn
+spec:
+  url: https://charts.longhorn.io
+  interval: 10m
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: longhorn
+      version: 1.6.2
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+  - kind: ConfigMap
+    name: longhorn-helm-values
+    valuesKey: base-values.yaml
