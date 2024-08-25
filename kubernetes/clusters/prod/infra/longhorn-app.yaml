@@ -11,7 +11,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: csi-external-snapshooter-app
+    - name: csi-external-snapshotter-app
     - name: external-secrets-config
   path: ./kubernetes/platform/longhorn/app/overlays/prod
   prune: true
