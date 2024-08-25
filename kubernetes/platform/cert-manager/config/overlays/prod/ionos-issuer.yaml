@@ -16,7 +16,7 @@ spec:
     solvers:
       - dns01:
           webhook:
-            groupName: acme.fabmade.de
+            groupName: acme.ricsanfre.com
             solverName: ionos
             config:
               apiUrl: https://api.hosting.ionos.com/dns/v1
