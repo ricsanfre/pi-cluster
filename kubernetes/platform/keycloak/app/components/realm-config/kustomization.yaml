@@ -12,6 +12,8 @@ configMapGenerator:
       - realm-config-values.yaml=values.yaml
   # Generate keycloak config realm
   - name: keycloak-realm-configmap
+    options:
+      disableNameSuffixHash: true
     files:
     - picluster-realm.json  
 
