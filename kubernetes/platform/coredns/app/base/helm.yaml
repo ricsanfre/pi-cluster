@@ -5,14 +5,14 @@ metadata:
   name: coredns
 spec:
   url: https://coredns.github.io/helm
-  interval: 10m
+  interval: 1h
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: coredns
 spec:
-  interval: 5m
+  interval: 30m
   chart:
     spec:
       chart: coredns
@@ -20,14 +20,14 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: coredns
-  upgrade:
-    remediation:
-      retries: 3
-      remediateLastFailure: true
   install:
     remediation:
       retries: 3
-      remediateLastFailure: true
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
   valuesFrom:
   - kind: ConfigMap
     name: coredns-helm-values
