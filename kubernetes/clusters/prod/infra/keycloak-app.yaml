@@ -34,7 +34,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: keycloak-app
+    - name: keycloak-db
   path: ./kubernetes/platform/keycloak/app/overlays/prod
   prune: true
 
