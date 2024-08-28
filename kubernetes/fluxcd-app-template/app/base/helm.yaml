@@ -1,12 +1,4 @@
 ---
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: {{ .app_name }}
-spec:
-  url: {{ .chart_repo_url }}
-  interval: 1h
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -20,6 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: {{ .app_name }}
+        namespace: flux-system
   install:
     remediation:
       retries: 3

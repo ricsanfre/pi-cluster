@@ -1,12 +1,4 @@
 ---
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: minio
-spec:
-  url: https://charts.min.io/
-  interval: 1h
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -20,6 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: minio
+        namespace: flux-system
   install:
     remediation:
       retries: 3
