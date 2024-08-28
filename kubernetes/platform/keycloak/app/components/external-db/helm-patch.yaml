@@ -3,4 +3,4 @@
   value:
     kind: ConfigMap
     name: keycloak-helm-values
-    valuesKey: externaldb-values.yaml
+    valuesKey: external-db-values.yaml
