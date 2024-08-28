@@ -37,5 +37,10 @@ spec:
     - name: keycloak-db
   path: ./kubernetes/platform/keycloak/app/overlays/prod
   prune: true
-
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+        # Use this ConfigMap if it exists, but proceed if it doesn't.
+        optional: true
 
