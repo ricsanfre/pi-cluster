@@ -5,7 +5,7 @@ metadata:
   name: system-upgrade-app
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: system-upgrade
   sourceRef:
     kind: GitRepository
@@ -20,7 +20,7 @@ metadata:
   name: system-upgrade-config
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: system-upgrade
   sourceRef:
     kind: GitRepository

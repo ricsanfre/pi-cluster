@@ -6,13 +6,18 @@ metadata:
   name: ingress-nginx-app
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: nginx
   sourceRef:
     kind: GitRepository
     name: flux-system
   path: ./kubernetes/platform/nginx/app/overlays/prod
   prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: ingress-nginx
+      namespace: nginx
   postBuild:
     substitute:
       NGINX_LOAD_BALANCER_IP: "10.0.0.100"

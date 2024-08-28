@@ -5,7 +5,7 @@ metadata:
   name: velero-app
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: velero
   sourceRef:
     kind: GitRepository
@@ -16,6 +16,11 @@ spec:
     - name: longhorn-app
   path: ./kubernetes/platform/velero/app/overlays/prod
   prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: velero
+      namespace: velero
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -24,7 +29,7 @@ metadata:
   name: velero-config
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: velero
   sourceRef:
     kind: GitRepository

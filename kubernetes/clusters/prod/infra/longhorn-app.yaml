@@ -5,7 +5,8 @@ metadata:
   name: longhorn-app
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
+  timeout: 15m
   targetNamespace: longhorn-system
   sourceRef:
     kind: GitRepository
@@ -15,6 +16,11 @@ spec:
     - name: external-secrets-config
   path: ./kubernetes/platform/longhorn/app/overlays/prod
   prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: longhorn
+      namespace: longhorn-system
   postBuild:
     substituteFrom:
       - kind: ConfigMap

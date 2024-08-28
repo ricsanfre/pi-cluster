@@ -6,7 +6,7 @@ metadata:
   name: csi-external-snapshotter-app
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: kube-system
   sourceRef:
     kind: GitRepository

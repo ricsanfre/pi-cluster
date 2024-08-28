@@ -5,7 +5,7 @@ metadata:
   name: mongodb-community-operator-app
   namespace: flux-system
 spec:
-  interval: 5m
+  interval: 30m
   targetNamespace: mongodb
   sourceRef:
     kind: GitRepository
@@ -14,3 +14,8 @@ spec:
     - name: longhorn-app
   path: ./kubernetes/platform/mongodb-community-operator/app/overlays/prod
   prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: mongodb-community-operator
+      namespace: mongodb
