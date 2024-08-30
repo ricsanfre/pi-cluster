@@ -1,7 +1,7 @@
 helmDefaults:
   wait: true
   waitForJobs: true
-  timeout: 600
+  timeout: 900
   recreatePods: false
   force: true
 
