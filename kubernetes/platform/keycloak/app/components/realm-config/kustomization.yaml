@@ -13,6 +13,8 @@ configMapGenerator:
   # Generate keycloak config realm
   - name: keycloak-realm-configmap
     options:
+      # Disable hashing.
+      # Automatic replacement does not work with configMaps references in values.yaml
       disableNameSuffixHash: true
     files:
     - picluster-realm.json  
