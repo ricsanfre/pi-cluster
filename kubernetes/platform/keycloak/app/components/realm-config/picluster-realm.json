@@ -6,18 +6,18 @@
   "resetPasswordAllowed": true,
   "clients": [
     {
-      "clientId": "${PROXY_OAUTH_CLIENT_ID}",
+      "clientId": "$PROXY_OAUTH_CLIENT_ID",
       "name": "Proxy OAuth 2.0",
       "description": "Proxy OAuth 2.0",
       "surrogateAuthRequired": false,
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "${PROXY_OAUTH_CLIENT_SECRET}",
+      "secret": "$PROXY_OAUTH_CLIENT_SECRET",
       "redirectUris": [
-        "https://oauth2-proxy.picluster.ricsanfre.com/oauth2/callback"
+        "https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
       ],
       "webOrigins": [
-        "https://oauth2-proxy.picluster.ricsanfre.com"
+        "https://oauth2-proxy.${CLUSTER_DOMAIN}"
       ],
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
@@ -29,7 +29,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "${PROXY_OAUTH_CLIENT_ID}",
+            "included.client.audience": "$PROXY_OAUTH_CLIENT_ID",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
@@ -55,22 +55,22 @@
       }
     },
     {
-      "clientId": "${GRAFANA_OAUTH_CLIENT_ID}",
+      "clientId": "$GRAFANA_OAUTH_CLIENT_ID",
       "name": "Grafana",
       "description": "Grafana",
-      "rootUrl": "https://monitoring.picluster.ricsanfre.com/grafana",
-      "adminUrl": "https://monitoring.picluster.ricsanfre.com/grafana",
-      "baseUrl": "https://monitoring.picluster.ricsanfre.com/grafana",
+      "rootUrl": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
+      "adminUrl": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
+      "baseUrl": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "${GRAFANA_OAUTH_CLIENT_SECRET}",
+      "secret": "$GRAFANA_OAUTH_CLIENT_SECRET",
       "redirectUris": [
-        "https://monitoring.picluster.ricsanfre.com/grafana/login/generic_oauth"
+        "https://monitoring.${CLUSTER_DOMAIN}/grafana/login/generic_oauth"
       ],
       "webOrigins": [
-        "https://monitoring.picluster.ricsanfre.com/grafana"
+        "https://monitoring.${CLUSTER_DOMAIN}/grafana"
       ],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
@@ -116,22 +116,22 @@
       }
     },
     {
-      "clientId": "${KIALI_OAUTH_CLIENT_ID}",
+      "clientId": "$KIALI_OAUTH_CLIENT_ID",
       "name": "Kiali",
       "description": "Kiali - Istio Obervability platform",
-      "rootUrl": "https://kiali.picluster.ricsanfre.com/kiali/",
-      "adminUrl": "https://kiali.picluster.ricsanfre.com/kiali/",
+      "rootUrl": "https://kiali.${CLUSTER_DOMAIN}/kiali/",
+      "adminUrl": "https://kiali.${CLUSTER_DOMAIN}/kiali/",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "${KIALI_OAUTH_CLIENT_SECRET}",
+      "secret": "$KIALI_OAUTH_CLIENT_SECRET",
       "redirectUris": [
-        "https://kiali.picluster.ricsanfre.com/kiali/*"
+        "https://kiali.${CLUSTER_DOMAIN}/kiali/*"
       ],
       "webOrigins": [
-        "https://kiali.picluster.ricsanfre.com"
+        "https://kiali.${CLUSTER_DOMAIN}"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -189,14 +189,14 @@
   },
   "users": [
     {
-      "username": "${PI_ADMIN_USERNAME}",
-      "email": "admin@picluster.ricsanfre.com",
+      "username": "$PI_ADMIN_USERNAME",
+      "email": "admin@${CLUSTER_DOMAIN}",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
         {
           "type": "password",
-          "value": "${PI_ADMIN_PASSWORD}"
+          "value": "$PI_ADMIN_PASSWORD"
         }
       ],
       "realmRoles": [
