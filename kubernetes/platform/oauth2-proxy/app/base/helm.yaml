@@ -1,0 +1,27 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: oauth2-proxy
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: oauth2-proxy
+      version: 7.7.9
+      sourceRef:
+        kind: HelmRepository
+        name: oauth2-proxy
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: oauth2-proxy-helm-values
+    valuesKey: base-values.yaml

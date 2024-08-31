@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# patch values.yaml?
+configMapGenerator:
+  - name: oauth2-proxy-helm-values
+    behavior: merge
+    files:
+      - ingress-values.yaml=values.yaml
+
+patches:
+- target:
+    group: helm.toolkit.fluxcd.io
+    kind: HelmRelease
+    name: oauth2-proxy
+  path: helm-patch.yaml

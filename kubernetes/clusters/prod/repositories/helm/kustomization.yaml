@@ -12,3 +12,4 @@ resources:
   - minio-helmrepo.yaml
   - mongodb-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml
+  - oauth2-proxy-helmrepo.yaml
