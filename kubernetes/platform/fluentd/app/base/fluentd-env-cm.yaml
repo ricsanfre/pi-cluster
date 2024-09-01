@@ -1,0 +1,9 @@
+# Logging internal services endpoints
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-env
+  namespace: fluent
+data:
+  lokiURL: "http://loki-gateway.loki"
+  elasticsearchHost: efk-es-http.elastic
