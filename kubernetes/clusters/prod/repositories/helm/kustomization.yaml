@@ -13,3 +13,7 @@ resources:
   - mongodb-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml
   - oauth2-proxy-helmrepo.yaml
+  - elastic-helmrepo.yaml
+  - prometheus-community-helmrepo.yaml
+  - grafana-helmrepo.yaml
+  - fluent-helmrepo.yaml
