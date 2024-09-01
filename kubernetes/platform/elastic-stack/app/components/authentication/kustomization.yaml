@@ -4,6 +4,8 @@ kind: Component
 resources:
   - elasticsearch-admin-externalsecret.yaml
   - elasticsearch-fluentd-externalsecret.yaml
+  - elasticsearch-fluentd-role.yaml
+  - elasticsearch-prometheus-role.yaml
   - elasticsearch-prometheus-externalsecret.yaml
 
 patches:
