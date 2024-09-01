@@ -6,7 +6,6 @@ resources:
   - fluentd-elastic-templates-cm.yaml
   - fluentd-externalsecret.yaml
   - fluentd-extservice.yaml
-  - fluentd-env-cm.yaml
   - helm.yaml
   - servicemonitor.yaml
 
@@ -14,5 +13,14 @@ configMapGenerator:
   - name: fluentd-helm-values
     files:
       - base-values.yaml=values.yaml
+  - name: fluentd-env
+    options:
+      # Disable hashing.
+      # Automatic replacement does not work with configMaps references in values.yaml
+      disableNameSuffixHash: true
+    literals: 
+      - lokiURL="http://loki-gateway.loki"
+      - elasticsearchHost=efk-es-http.elastic
+
 configurations:
   - kustomizeconfig.yaml

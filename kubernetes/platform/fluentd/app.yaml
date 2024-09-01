@@ -1,0 +1,48 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: fluentd-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: fluent
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/fluentd/app/overlays/prod
+  prune: true
+  dependsOn:
+    - name: cert-manager-config
+    - name: external-secrets-config
+    - name: elastic-stack-app
+    - name: loki-app
+
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: fluentd
+      namespace: fluent
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: fluent-bit-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: fluent
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/fluent-bit/app/overlays/prod
+  prune: true
+  dependsOn:
+    - name: fluentd-app
+    - name: external-secrets-config
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: fluent-bit
+      namespace: fluent
