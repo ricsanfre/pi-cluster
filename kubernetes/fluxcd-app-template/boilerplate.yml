@@ -14,4 +14,7 @@ variables:
   - name: chart_version
     description: Enter chart version
 
+  - name: chart_release_name
+    description: Enter chart release name
+
  
