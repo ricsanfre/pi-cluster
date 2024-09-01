@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus-elasticsearch-exporter
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: prometheus-elasticsearch-exporter
+      version: 6.0.0
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+  releaseName: prometheus-elasticsearch-exporter
+  targetNamespace: elastic
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: prometheus-elasticsearch-exporter-helm-values
+    valuesKey: base-values.yaml

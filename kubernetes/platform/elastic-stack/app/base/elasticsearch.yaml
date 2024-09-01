@@ -1,0 +1,34 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: efk
+  namespace: elastic
+  # annotations:
+  #   "helm.sh/hook": post-install,post-upgrade
+spec:
+  version: 8.13.0
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.store.allow_mmap: false
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Gi
+            storageClassName: longhorn
+      podTemplate:
+        spec:
+          # Limiting Resources consumption
+          containers:
+          - name: elasticsearch
+            resources:
+              requests:
+                memory: "1Gi"
+              limits:
+                memory: "1Gi"              
