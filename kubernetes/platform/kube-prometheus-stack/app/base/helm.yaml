@@ -13,7 +13,7 @@ spec:
         kind: HelmRepository
         name: prometheus-community
         namespace: flux-system
-  releaseName: tempo
+  releaseName: kube-prometheus-stack
   targetNamespace: monitoring
   install:
     crds: Skip
