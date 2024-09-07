@@ -24,8 +24,8 @@ storage:
     s3:
       bucket: k3s-tempo
       endpoint: minio.minio:9000
-      access_key: $MINIO_ACCESS_KEY_ID
-      secret_key: $MINIO_SECRET_ACCESS_KEY
+      access_key: ${MINIO_ACCESS_KEY_ID}
+      secret_key: ${MINIO_SECRET_ACCESS_KEY}
       insecure: true
 
 # Configure distributor
