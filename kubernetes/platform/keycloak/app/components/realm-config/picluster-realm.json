@@ -6,13 +6,13 @@
   "resetPasswordAllowed": true,
   "clients": [
     {
-      "clientId": "$PROXY_OAUTH_CLIENT_ID",
+      "clientId": "$${PROXY_OAUTH_CLIENT_ID}",
       "name": "Proxy OAuth 2.0",
       "description": "Proxy OAuth 2.0",
       "surrogateAuthRequired": false,
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "$PROXY_OAUTH_CLIENT_SECRET",
+      "secret": "$${PROXY_OAUTH_CLIENT_SECRET}",
       "redirectUris": [
         "https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
       ],
@@ -29,7 +29,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "$PROXY_OAUTH_CLIENT_ID",
+            "included.client.audience": "$${PROXY_OAUTH_CLIENT_ID}",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
@@ -55,7 +55,7 @@
       }
     },
     {
-      "clientId": "$GRAFANA_OAUTH_CLIENT_ID",
+      "clientId": "$${GRAFANA_OAUTH_CLIENT_ID}",
       "name": "Grafana",
       "description": "Grafana",
       "rootUrl": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
@@ -65,7 +65,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "$GRAFANA_OAUTH_CLIENT_SECRET",
+      "secret": "$${GRAFANA_OAUTH_CLIENT_SECRET}",
       "redirectUris": [
         "https://monitoring.${CLUSTER_DOMAIN}/grafana/login/generic_oauth"
       ],
@@ -116,7 +116,7 @@
       }
     },
     {
-      "clientId": "$KIALI_OAUTH_CLIENT_ID",
+      "clientId": "$${KIALI_OAUTH_CLIENT_ID}",
       "name": "Kiali",
       "description": "Kiali - Istio Obervability platform",
       "rootUrl": "https://kiali.${CLUSTER_DOMAIN}/kiali/",
@@ -126,7 +126,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "$KIALI_OAUTH_CLIENT_SECRET",
+      "secret": "$${KIALI_OAUTH_CLIENT_SECRET}",
       "redirectUris": [
         "https://kiali.${CLUSTER_DOMAIN}/kiali/*"
       ],
@@ -189,14 +189,14 @@
   },
   "users": [
     {
-      "username": "$PI_ADMIN_USERNAME",
+      "username": "$${PI_ADMIN_USERNAME}",
       "email": "admin@${CLUSTER_DOMAIN}",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
         {
           "type": "password",
-          "value": "$PI_ADMIN_PASSWORD"
+          "value": "$${PI_ADMIN_PASSWORD}"
         }
       ],
       "realmRoles": [
