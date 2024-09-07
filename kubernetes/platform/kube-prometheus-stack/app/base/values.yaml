@@ -1,0 +1,89 @@
+# kube-prometheus-stack helm values (base)
+
+# Making full name stack: monitoring
+# fullnameOverride: monitoring
+prometheusOperator:
+  # Relabeling job name for operator metrics
+  serviceMonitor:
+    relabelings:
+    # Replace job value
+    - sourceLabels:
+      - __address__
+      action: replace
+      targetLabel: job
+      replacement: prometheus-operator
+  # Disable creation of kubelet service
+  kubeletService:
+    enabled: false
+
+# Enable serviceaccount automount
+prometheus-node-exporter:
+  serviceAccount:
+    automountServiceAccountToken: true
+
+alertmanager:
+  alertmanagerSpec:
+    # Subpath /alertmanager configuration
+    externalUrl: http://monitoring.${CLUSTER_DOMAIN}/alertmanager/
+    routePrefix: /
+    # PVC config
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+  serviceMonitor:
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: alertmanager
+prometheus:
+  prometheusSpec:
+    # Subpath /prometheus configuration
+    externalUrl: http://monitoring.${CLUSTER_DOMAIN}/prometheus/
+    routePrefix: /
+    # Resources request and limits
+    resources:
+      requests:
+        memory: 2Gi
+      limits:
+        memory: 2Gi
+    # PVC configuration
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+    # Retention period
+    retention: 7d
+
+    # Removing default filter Prometheus selectors
+    # Default selector filters
+    # matchLabels:
+    #   release: {{ $.Release.Name | quote }}
+    # ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom helm release
+
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+  serviceMonitor:
+    relabelings:
+      # Replace job value
+      - sourceLabels:
+        - __address__
+        action: replace
+        targetLabel: job
+        replacement: prometheus
+
+
