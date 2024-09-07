@@ -51,7 +51,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: kube-prometheus-stack-config
+  name: kube-prometheus-stack-externalnodes
   namespace: flux-system
 spec:
   interval: 30m
@@ -64,3 +64,26 @@ spec:
     - name: external-secrets-config
   path: ./kubernetes/platform/kube-prometheus-stack/externalnodes-monitoring/overlays/prod
   prune: true
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kube-prometheus-stack-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: monitoring
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: kube-prometheus-stack-app
+  path: ./kubernetes/platform/kube-prometheus-stack/config/overlays/prod
+  prune: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+        # Use this ConfigMap if it exists, but proceed if it doesn't.
+        optional: true
