@@ -1,0 +1,33 @@
+# Ingress Grafana
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-grafana
+  namespace: monitoring
+  annotations:
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    # Rewrite target
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: monitoring.${CLUSTER_DOMAIN}
+
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - monitoring.${CLUSTER_DOMAIN}
+      secretName: monitoring-tls
+  rules:
+    - host: monitoring.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /grafana/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 80
