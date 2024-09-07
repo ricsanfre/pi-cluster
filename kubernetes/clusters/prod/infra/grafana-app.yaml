@@ -10,6 +10,11 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+    - name: kube-prometheus-stack-config
+    - name: tempo-app
+    - name: loki-app
+    - name: external-secrets-config
   path: ./kubernetes/platform/grafana/app/overlays/prod
   prune: true
   healthChecks:
