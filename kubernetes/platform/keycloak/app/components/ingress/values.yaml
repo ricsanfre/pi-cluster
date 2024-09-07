@@ -4,6 +4,7 @@
 ingress:
   enabled: true
   ingressClassName: "nginx"
+  pathType: Prefix
   annotations:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     # Possible Cluster-Issuer values:
@@ -15,13 +16,5 @@ ingress:
     # https://stackoverflow.com/questions/57503590/upstream-sent-too-big-header-while-reading-response-header-from-upstream-in-keyc
     nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
     nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-  rules:
-    - host: sso.${CLUSTER_DOMAIN}
-      # Paths for the host
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - hosts:
-      - sso.${CLUSTER_DOMAIN}
-      secretName: sso-tls
+  hostname: sso.${CLUSTER_DOMAIN}
+  tls: true
