@@ -7,14 +7,14 @@
   args:
     executable: /bin/bash
 
-- name: Create Github secret
-  shell: |
-    kubectl create secret generic flux-system -n flux-system \
-    --from-literal=username=git \
-    --from-literal=password="{{vault.flux.github.pat}}"
-  args:
-    executable: /bin/bash
-  changed_when: false
+# - name: Create Github secret
+#   shell: |
+#     kubectl create secret generic flux-system -n flux-system \
+#     --from-literal=username=git \
+#     --from-literal=password="{{vault.flux.github.pat}}"
+#   args:
+#     executable: /bin/bash
+#   changed_when: false
 
 - name: Bootstrap applications
   shell: |
