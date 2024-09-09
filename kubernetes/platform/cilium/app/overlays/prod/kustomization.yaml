@@ -6,6 +6,8 @@ resources:
   - ../../base
 
 components:
+  - ../../components/monitoring
+  - ../../components/hubble
   - ../../components/istio-config
 
 configMapGenerator:
