@@ -1,0 +1,141 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: istio
+spec:
+  url: https://istio-release.storage.googleapis.com/charts
+  interval: 10m
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-base
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: base
+      version: 1.22.3
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+  releaseName: istio-base
+  targetNamespace: istio-system
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+  - kind: ConfigMap
+    name: istio-base-base-values
+  - kind: ConfigMap
+    name: istio-base-overlay-values
+    optional: true
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-cni
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: cni
+      version: 1.22.3
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  releaseName: istio-cni
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istio-base
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+  - kind: ConfigMap
+    name: istio-cni-base-values
+  - kind: ConfigMap
+    name: istio-cni-overlay-values
+    optional: true
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-istiod
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: istiod
+      version: 1.22.3
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  releaseName: istio-istiod
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istio-base
+    - name: istio-cni
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+  - kind: ConfigMap
+    name: istio-istiod-base-values
+  - kind: ConfigMap
+    name: istio-istiod-overlay-values
+    optional: true
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-ztunnel
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ztunnel
+      version: 1.22.3
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  releaseName: istio-ztunnel
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istio-base
+    - name: istio-cni
+    - name: istio-istiod
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+  - kind: ConfigMap
+    name: istio-ztunnel-base-values
+  - kind: ConfigMap
+    name: istio-ztunnel-overlay-values
+    optional: true
