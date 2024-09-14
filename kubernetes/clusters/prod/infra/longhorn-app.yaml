@@ -25,6 +25,3 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
-        # Use this ConfigMap if it exists, but proceed if it doesn't.
-        optional: true
-
