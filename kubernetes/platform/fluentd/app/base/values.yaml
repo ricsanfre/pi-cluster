@@ -4,7 +4,7 @@
 image:
   repository: "ricsanfre/fluentd-aggregator"
   pullPolicy: "IfNotPresent"
-  tag: "v1.15.3-debian-1.2"
+  tag: "v1.17.1-debian-1.0"
 
 # Deploy fluentd as deployment
 kind: "Deployment"
@@ -23,9 +23,14 @@ serviceAccount:
 rbac:
   create: false
 
-# Do not create pod service policy (from removed kubernetes 1.25)
-podSecurityPolicy:
-  enabled: false
+# Setting security context. Fluentd is running as non root user
+securityContext:
+   capabilities:
+     drop:
+     - ALL
+   readOnlyRootFilesystem: false
+   runAsNonRoot: true
+   runAsUser: 1000
 
 ## Additional environment variables to set for fluentd pods
 env:
