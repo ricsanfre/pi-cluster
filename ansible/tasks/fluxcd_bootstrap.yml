@@ -2,23 +2,24 @@
 
 - name: Deploy Flux CD
   shell: |
-    kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+    kubectl kustomize  \
       ../kubernetes/clusters/bootstrap/flux | kubectl apply -f -
   args:
     executable: /bin/bash
 
-# - name: Create Github secret
-#   shell: |
-#     kubectl create secret generic flux-system -n flux-system \
-#     --from-literal=username=git \
-#     --from-literal=password="{{vault.flux.github.pat}}"
-#   args:
-#     executable: /bin/bash
-#   changed_when: false
+- name: Create Github secret
+  shell: |
+    kubectl create secret generic flux-system -n flux-system \
+    --from-literal=username=git \
+    --from-literal=password="{{vault.flux.github.pat}}"
+  when: git_private_repo
+  args:
+    executable: /bin/bash
+  changed_when: false
 
 - name: Bootstrap applications
   shell: |
-    kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
-      ../kubernetes/clusters/"{{overlay}}"/flux-system | kubectl apply -f -
+    kubectl kustomize  \
+      ../kubernetes/clusters/"{{overlay}}"/config | kubectl apply -f -
   args:
     executable: /bin/bash
