@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cert-manager-app.yaml
+  - cilium-app.yaml
+  - cloudnative-pg-app.yaml
+  - coredns-app.yaml
+  - csi-external-snapshotter-app.yaml
+  - elastic-stack-app.yaml
+  - external-secrets-app.yaml
+  - fluent-app.yaml
+  - grafana-app.yaml
+  - istio-app.yaml
+  - keycloak-app.yaml
+  - kube-prometheus-stack-app.yaml
+  - loki-app.yaml
+  - longhorn-app.yaml
+  - metrics-server-app.yaml
+  - minio-app.yaml
+  - mongodb-operator-app.yaml
+  - nginx-app.yaml
+  - oauth2-proxy-app.yaml
+  - system-upgrade-app.yaml
+  - tempo-app.yaml
+  - velero-app.yaml
