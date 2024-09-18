@@ -12,6 +12,7 @@ resources:
   - ingress-nginx-helmrepo.yaml
   - istio-helmrepo.yaml
   - jetstack-helmrepo.yaml
+  - kiali-helmrepo.yaml
   - longhorn-helmrepo.yaml
   - metrics-server-helmrepo.yaml
   - minio-helmrepo.yaml

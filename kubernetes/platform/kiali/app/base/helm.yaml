@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kiali-operator
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: kiali-operator
+      version: 1.87.0
+      sourceRef:
+        kind: HelmRepository
+        name: kiali
+        namespace: flux-system
+  releaseName: kiali-operator
+  targetNamespace: kiali-operator
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: kiali-operator-helm-values
+    valuesKey: base-values.yaml
