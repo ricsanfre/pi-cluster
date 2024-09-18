@@ -1,0 +1,16 @@
+# schema-registry helm values (base)
+
+# Disable Kafka sub-chart installation
+kafka:
+  enabled: false
+# Configure external Kafka
+externalKafka:
+  brokers:
+    - PLAINTEXT://cluster-kafka-bootstrap:9092
+
+auth:
+  protocol: {}
+service:
+  ports:
+    client: {}
+

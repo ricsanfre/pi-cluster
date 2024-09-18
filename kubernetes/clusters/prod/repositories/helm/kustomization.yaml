@@ -18,4 +18,6 @@ resources:
   - mongodb-helmrepo.yaml
   - oauth2-proxy-helmrepo.yaml
   - prometheus-community-helmrepo.yaml
+  - ricsanfre-helmrepo.yaml
+  - strimzi-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml
