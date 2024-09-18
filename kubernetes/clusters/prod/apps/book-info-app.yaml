@@ -11,7 +11,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: istio-config
+    - name: istio-app
   path: ./kubernetes/apps/book-info/app/overlays/prod
   prune: true
   postBuild:
