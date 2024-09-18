@@ -10,7 +10,7 @@ resources:
   - external-secrets-app.yaml
   - fluent-app.yaml
   - grafana-app.yaml
-  - istio-app.yaml
+#  - istio-app.yaml
   - keycloak-app.yaml
   - kube-prometheus-stack-app.yaml
   - loki-app.yaml
