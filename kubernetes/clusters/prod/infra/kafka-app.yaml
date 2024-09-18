@@ -35,6 +35,11 @@ spec:
     - name: longhorn-app
   path: ./kubernetes/platform/kafka/cluster/overlays/prod
   prune: true
+  healthChecks:
+    - apiVersion: kafka.strimzi.io/v1beta2
+      kind: Kafka
+      name: cluster
+      namespace: kafka
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
