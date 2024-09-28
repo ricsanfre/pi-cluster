@@ -10,7 +10,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./kubernetes/platform/kiali-operator/app/overlays/prod
+  path: ./kubernetes/platform/kiali/app/overlays/prod
   prune: true
   dependsOn:
     - name: istio-app
