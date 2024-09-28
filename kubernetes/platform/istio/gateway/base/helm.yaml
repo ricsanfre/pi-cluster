@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-gateway
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: istio-gateway
+      version: 1.23.2
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+  releaseName: istio-gateway
+  targetNamespace: istio-ingress
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: istio-gateway-helm-values
+    valuesKey: base-values.yaml

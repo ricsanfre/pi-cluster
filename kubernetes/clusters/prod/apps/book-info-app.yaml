@@ -12,6 +12,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: istio-app
+    - name: istio-gateway-app
   path: ./kubernetes/apps/book-info/app/overlays/prod
   prune: true
   postBuild:
