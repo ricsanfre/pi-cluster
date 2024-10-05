@@ -55,6 +55,7 @@
 - title: GitOps
   docs:
   - argocd
+  - fluxcd
 - title: Microservices
   docs:
   - databases
