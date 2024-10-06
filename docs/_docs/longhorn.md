@@ -93,8 +93,6 @@ Installation using `Helm` (Release 3):
       nginx.ingress.kubernetes.io/auth-type: basic
       # Secret defined in nginx namespace
       nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       # Possible Cluster-Issuer values: 
       #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 

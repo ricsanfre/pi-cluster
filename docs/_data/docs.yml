@@ -42,6 +42,7 @@
   - minio
 - title: Monitoring
   docs:
+  - metrics-server
   - observability
   - logging
   - loki

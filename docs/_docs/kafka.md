@@ -153,12 +153,12 @@ Once the cluster is running, you can run a simple producer to send messages to a
 
 - Step 1: launch producer
   ```shell
-  kubectl -n kafka run kafka-producer -ti --annotations="linkerd.io/inject=disabled" --image=quay.io/strimzi/kafka:0.29.0-kafka-3.2.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic
+  kubectl -n kafka run kafka-producer -ti --image=quay.io/strimzi/kafka:0.29.0-kafka-3.2.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic
   ```
 
 - Step 3: in a different terminal launch consumer
   ```shell
-  kubectl -n kafka run kafka-consumer -ti --annotations="linkerd.io/inject=disabled" --image=quay.io/strimzi/kafka:0.29.0-kafka-3.2.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning
+  kubectl -n kafka run kafka-consumer -ti --image=quay.io/strimzi/kafka:0.29.0-kafka-3.2.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning
   ```
 
 - Step 5: In producer terminal wait for the prompt and start typing messages. (Input Control-C to finish)
@@ -246,14 +246,14 @@ Kafka consumer and producers docker images used for testing ca be found in [kafk
 
 - Step 1: launch producer
   ```shell
-  kubectl -n kafka run kafka-producer -ti --annotations="linkerd.io/inject=disabled" --image=ricsanfre/kafka-python-client:latest --rm=true --restart=Never -- python avro_producer.py -b my-cluster-kafka-bootstrap:9092 -s http://kafka-schema-registry:8081 -t my-avro-topic
+  kubectl -n kafka run kafka-producer -ti --image=ricsanfre/kafka-python-client:latest --rm=true --restart=Never -- python avro_producer.py -b my-cluster-kafka-bootstrap:9092 -s http://kafka-schema-registry:8081 -t my-avro-topic
   ```
   Enter required fields for building the message
 
 
 - Step 3: in a different terminal launch consumer
   ```shell
-  kubectl -n kafka run kafka-consumer -ti --annotations="linkerd.io/inject=disabled" --image=ricsanfre/kafka-python-client:latest --rm=true --restart=Never -- python avro_consumer.py -b my-cluster-kafka-bootstrap:9092 -s http://kafka-schema-registry:8081 -t my-avro-topic
+  kubectl -n kafka run kafka-consumer -ti --image=ricsanfre/kafka-python-client:latest --rm=true --restart=Never -- python avro_consumer.py -b my-cluster-kafka-bootstrap:9092 -s http://kafka-schema-registry:8081 -t my-avro-topic
   ```
 
 ## Kafka UI (Kafdrop)
@@ -306,8 +306,6 @@ Even when helm chart source code is available in the repository, this helm chart
     path: /
     ## Ingress annotations
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       # Possible Cluster-Issuer values:
       #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)

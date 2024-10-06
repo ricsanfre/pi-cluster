@@ -24,7 +24,7 @@ Follow instructions in [Documentation: Monitoring (Prometheus)](/docs/prometheus
 
 {{site.data.alerts.end}}
 
-For those applications not providing any authentication capability (i.e. Longhorn, Prometheus, Linkerd-viz), Ingress controller-based External Authentication can be configured.
+For those applications not providing any authentication capability (i.e. Longhorn, Prometheus, etc.), Ingress controller-based External Authentication can be configured.
 Ingress NGINX supports OAuth2-based external authentication mechanism using [Oauth2-Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
 See [Ingress NGINX external Oauth authentication document](https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/)
 Oauth2-proxy can be integrated with OpenId-Connect IAM, such us Keycloak.
@@ -487,7 +487,7 @@ New ConfigMap, containing the JSON files to be imported need to be mounted by ke
 
 OAuth credentials (clientID, client secret), cookie secret and redis password can be provided from external secret
 
-{{site.data.alerts.note}}
+{{site.data.alerts.tip}} About ArgoCD and helm native commands
 
 Redis backend is installed using redis bitnami helm sub-chart. This helm chart creates a random credential for redis backend.
 When using ArgoCD, helm native commands, like `random` or `lookup`, used by the helm chart for generating this random secret are not supported and so oauth2-proxy fails to save any data to redis.

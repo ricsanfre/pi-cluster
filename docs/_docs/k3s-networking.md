@@ -2,14 +2,14 @@
 title: K3S Networking
 permalink: /docs/k3s-networking/
 description: Description of K3S default networking components and how they can be configured.
-last_modified_at: "17-01-2023"
+last_modified_at: "06-10-2024"
 ---
 
 {{site.data.alerts.note}}
 Basic kubernetes networking concepts and useful references can be found in [Reference Docs: Kubernetes networking basics](/docs/k8s-networking/) 
 {{site.data.alerts.end}}
 
-## K3S networking default add-ons
+## K3S networking default components
 
 By default K3s install and configure basic Kubernetes networking packages:
 
@@ -18,7 +18,7 @@ By default K3s install and configure basic Kubernetes networking packages:
 - [Traefik](https://traefik.io/) as ingress controller
 - [Klipper Load Balancer](https://github.com/k3s-io/klipper-lb) as embedded Service Load Balancer
 
-## Flannel as CNI
+### Flannel as CNI
 
 K3S run by default with flannel as the CNI, using VXLAN as the default backend. Flannel is running as backend `go` routine within k3s unique process
 
@@ -63,7 +63,13 @@ Traffics between cni0 and flannel.1 are forwarded by ip routing enabled in the n
 
 ![flannel](/assets/img/flannel.png)
 
-## CoreDNS
+In the cluster, alternative CNI solutions like `Cilium` can be used, so it is needed to disable Flannel CNI first.
+
+To disable embedded Flannel CNI, install K3s adding `--flannel-backend=none` option
+
+Further details about how to install and configure Cilium, disabling Flannel, can be found in ["Cilium documentation"](/docs/cilium/).
+
+### CoreDNS
 
 k3s server installation options can be provided in order to configure coreDNS
 
@@ -73,20 +79,44 @@ k3s server installation options can be provided in order to configure coreDNS
 | `--cluster-domain` | "cluster.local" | Cluster Domain
 {: .table .table-white .border-dark }
 
-## Traefik as Ingress Controller
+CoreDNS K3S add-on can be disabled, so it can be installed manually to have full control over the version and its initial configuration.
+
+To disable embedded CoreDNS, install K3s adding `--disable coredns` option
+
+#### Installing CoreDNS using Helm chart
+
+Using [CoreDNS Helm Chart](https://github.com/coredns/helm)
+
+- Add Git repo
+
+  ```shell
+  helm repo add coredns https://coredns.github.io/helm
+  ```
+
+- Install helm chart in `kube-system` namespace
+  ```shell
+  helm --namespace=kube-system install coredns coredns/coredns
+  ```
+
+
+### Traefik as Ingress Controller
 
 [Traefik](https://traefik.io/) is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease. It is embedded in K3s installatio and deployed by default when starting K3s cluster.
 
-Traefik K3S add-on is disabled during K3s installation, so it can be installed manually to have full control over the version and its initial configuration.
+Traefik K3S add-on can be disabled, so it can be installed manually to have full control over the version and its initial configuration or it can be replaced by other Ingress Controller like NGINX
 
 To disable embedded Traefik, install K3s with `--disable traefik` option.
 
-Further details about how to configure Traefik can be found in ["Ingress-Controller Traefik documentation"](/docs/traefik/).
+Further details about how to install and configure Traefik can be found in ["Ingress-Controller Traefik documentation"](/docs/traefik/).
 
-## Klipper-LB as Load Balancer
+How to install Nginx Ingress controller can be found in ["Ingress-Controller Nginx documentation"](/docs/nginx/).
+
+### Klipper-LB as Load Balancer
 
 [Klipper Load Balancer](https://github.com/k3s-io/klipper-lb) is deployed by default when starting the k3s cluster.
-In the cluster, Metal LB load balancer will be used so it is needed to disable Klipper-LB first.
+In the cluster, alternative solutions like `Metal LB` or `Cilium` can be used so it is needed to disable Klipper-LB first.
 To disable the embedded LB, configure all servers in the cluster with the `--disable servicelb` option.
 
 Further details about how to install Metal LB can be found in ["Load Balancer (Metal LB) documentation"](/docs/metallb/).
+
+

@@ -51,7 +51,6 @@ Installation using `Helm` (Release 3):
   # Allow snpippet anotations
   # From v1.9 default value has chaged to false.
   # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
-  # linkerd-viz ingress uses this annotations
   allowSnippetAnnotations: true
 
   config:
@@ -211,7 +210,6 @@ controller:
   # Allow snpippet anotations
   # From v1.9 default value has chaged to false.
   # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
-  # linkerd-viz ingress uses this annotations
   allowSnippetAnnotations: true
 
 ```

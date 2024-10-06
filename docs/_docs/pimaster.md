@@ -145,27 +145,28 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
 The following directory/files structure is needed for the ansible runtime environment (`ansible-runner`)
 
 ```
-├── ansible-runner
-│   ├── build
+📁
+├── 📁 ansible-runner
+│   ├── 📁 build
 │   │   ├── requirements.txt
 │   │   └── requirements.yml
-│   ├── certbot
-│   │   ├── config
-│   │   ├── log
-│   │   └── work
+│   ├── 📁 certbot
+│   │   ├── 📁 config
+│   │   ├── 📁 log
+│   │   └── 📁 work
 │   ├── docker-compose.yaml
 │   ├── Dockerfile
-│   └── runner
-│       ├── .ssh
-│       ├── .vault
-│       ├── .gnugp
-│       └── scripts
+│   └── 📁 runner
+│       ├── 📁 .ssh
+│       ├── 📁 .vault
+│       ├── 📁 .gnugp
+│       └── 📁 scripts
 │           ├── generate_gpg_key.sh
 │           └── generate_vault_password.sh
-├── ansible
+├──📁 ansible
     ├── ansible.cfg
     ├── inventory.yml
-    ├── roles 
+    ├── 📁 roles 
 ```
 
 Where:
@@ -179,7 +180,7 @@ Where:
 This docker image contains all packages needed for running ansible and bootstraping the cluster.
 
 ```
-├── build
+├── 📁 build
 │   ├── requirements.txt
 │   └── requirements.yml
 │   └── ansible_runner_setup.yml
@@ -188,6 +189,8 @@ This docker image contains all packages needed for running ansible and bootstrap
 
 `Dockerfile`:
 ```dockerfile
+FROM ghcr.io/helmfile/helmfile:v0.167.1 AS helmfile
+
 FROM python:slim
 ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--ignore-certs
 ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-certs
@@ -213,6 +216,8 @@ RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy collection install $ANSIB
 # Configure ansible-runner
 RUN ansible-playbook ansible_runner_setup.yml
 
+# Copy helmfile
+COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
 ENV USER runner
 ENV FOLDER /home/runner
@@ -241,6 +246,7 @@ The image automatically installs:
 - Certbot PIP package: `certbot`
 - Additional PIP packages in `build/requirements.txt` (packages needed by Ansible modules or cerbot plugins)
 - `helm` and `kubectl` binaries installation using Ansible (`build/ansible_runner_config.yaml`)
+- `helmfile` binary. [Helmfile](https://github.com/helmfile/helmfile) is used during bootstrap process to orchestrate the deployment of some HelmCharts.
 
 
 #### Docker-compose file
@@ -260,11 +266,13 @@ services:
     volumes:
       - ./../ansible:/runner
       - ./../kubernetes:/kubernetes
+      - ./../metal/x86/pxe-files:/metal/x86/pxe-files
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
       - ./runner/.secrets:/home/runner/.secrets
       - ./runner/scripts:/home/runner/scripts
       - ./runner/.ssh:/home/runner/.ssh
+      - ./runner/.kube:/home/runner/.kube
       - ./certbot/log:/var/log/letsencrypt
       - ./certbot/config:/etc/letsencrypt
       - ./certbot/work:/var/lib/letsencrypt
@@ -296,13 +304,13 @@ docker exec -it ansible-runner /bin/bash
 Ansible source code is structured following [typical directory layout](https://docs.ansible.com/ansible/latest/tips_tricks/sample_setup.html#sample-directory-layout):
 
 ```
-ansible
-├── host_vars
-├── group_vars
-├── vars
-├── tasks
-├── templates
-├── roles
+📁 ansible
+├── 📁 host_vars
+├── 📁 group_vars
+├── 📁 vars
+├── 📁 tasks
+├── 📁 templates
+├── 📁 roles 
 ├── ansible.cfg
 ├── inventory.yml
 ├── playbook1.yml

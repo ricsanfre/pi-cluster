@@ -14,7 +14,7 @@ Introduce Service Mesh architecture to add observability, traffic management, an
 
 {{site.data.alerts.important}}
 
-I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since relase 1.3 (April 2022). See ["Service Mesh (Linkerd)"](/docs/service-mesh/) document.  
+I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since release 1.3 (April 2022). See ["Service Mesh (Linkerd)"](/docs/service-mesh/) document.  
 
 Main reasons for selecting Linkerd over Istio were:
 - ARM64 architecture support. Istio did not support ARM architectures at that time.
@@ -256,7 +256,7 @@ https://istio.io/latest/docs/ambient/install/helm-installation/
 
 ### Istio Observability configuration
 
-Istio generates detailed telemetry (metricis, traces and logs) for all service communications within a mesh
+Istio generates detailed telemetry (metrics, traces and logs) for all service communications within a mesh
 
 See further details in [Istio Observability](https://istio.io/latest/docs/concepts/observability/)
 
@@ -611,14 +611,6 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
    ```shell
    istioctl validate
    ```
-
-## Pending
-
-- Kiali cannot connect to Grafana (authentication issue)
-
-https://www.lisenet.com/2023/kiali-does-not-see-istio-ingressgateway-installed-in-separate-kubernetes-namespace/
-
-
 
 ## References
 

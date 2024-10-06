@@ -1997,7 +1997,7 @@ For deploying fluent-bit in forwarder-only architecture, without aggregation lay
           Retry_Limit False
   ```
   
-  `tls` option is disabled (set to False/Off). TLS communications are enabled by linkerd service mesh.
+  `tls` option is disabled (set to False/Off). TLS communications are enabled by cluster service mesh.
 
   `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
 

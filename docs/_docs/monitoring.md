@@ -231,12 +231,6 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   
   - Configure Grafana to run behind a proxy http under a subpath `/grafana` (`grafana.grafana.ini.server`). See Grafana tutorial ["Running Grafana behind a proxy"](https://grafana.com/tutorials/run-grafana-behind-a-proxy/).
 
-    {{site.data.alerts.note}}
-
-    Linkerd-viz dashboard integration with Grafana, only works if Grafana runs behind /grafana subpath, so this configuration makes that integration work.
-
-    {{site.data.alerts.end}}
-
   - Configure Grafana to discover ConfigMaps containing dashobards definitions in all namespaces (`grafana.sidecar.dashboards.searchNamespaces`)
 
   - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd.enabled`.
@@ -298,8 +292,6 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
     name: ingress-grafana
     namespace: monitoring
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
@@ -331,8 +323,6 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
     name: ingress-prometheus
     namespace: monitoring
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
@@ -368,8 +358,6 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
     name: ingress-alertmanager
     namespace: monitoring
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
@@ -826,9 +814,9 @@ See next section ("GitOps installation"), to see how to generate a secret contai
 Single logout is configured: `signout_redirect_url`
 
 
-#### GitOps installation (ArgoCD)
+#### GitOps installation
 
-As an alternative, for GitOps deployments (using ArgoCD), credentials should not be set in Helm chart values.yaml file
+As an alternative, for GitOps deployments, credentials should not be set in Helm chart values.yaml file
 
 - Grafana's admin credentials can be in stored in an existing Secret.
 

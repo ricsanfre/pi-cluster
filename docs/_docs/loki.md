@@ -248,9 +248,9 @@ Installation from helm chart. There are two alternatives:
   kubectl get pods -l app.kubernetes.io/name=loki -n logging
   ```
 
-### GitOps installation (ArgoCD)
+### GitOps installation
 
-As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Loki's capability of using environment variables in config file](https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration).
+As an alternative, for GitOps deployments, instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Loki's capability of using environment variables in config file](https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration).
 
 
 The following secret need to be created:

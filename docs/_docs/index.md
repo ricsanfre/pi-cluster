@@ -1,14 +1,14 @@
 ---
 title: What is this project about?
 permalink: /docs/home/
-description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and ArgoCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "24-07-2024"
+description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
+last_modified_at: "06-10-2024"
 ---
 
 
 ## Scope
 
-The main goal of  this project is to create a kubernetes cluster at home using ARM/x86 bare metal nodes (**Raspberry Pis** and low cost refurbished **mini PCs**) and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Argo CD](https://argo-cd.readthedocs.io/en/stable/).
+The main goal of  this project is to create a kubernetes cluster at home using ARM/x86 bare metal nodes (**Raspberry Pis** and low cost refurbished **mini PCs**) and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Flux CD](https://fluxcd.io/).
 
 The project scope includes the automatic installation and configuration of a lightweight Kubernetes flavor based on [K3S](https://k3s.io/), and deployment of cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
@@ -37,8 +37,8 @@ Also deployment of services for building a cloud-native microservices architectu
 - Use latest versions of each opensource project to be able to test the latest Kubernetes capabilities.
 - Automate deployment of cluster using IaC (infrastructure as a code) and GitOps methodologies with tools like:
   - [cloud-init](https://cloudinit.readthedocs.io/en/latest/) to automate the initial OS installation of the cluster nodes.
-  - [Ansible](https://docs.ansible.com/) for automating the configuration of the cluster nodes, installation of kubernetes and external services, and triggering cluster bootstrap (ArgoCD bootstrap).
-  - [Argo CD](https://argo-cd.readthedocs.io/en/stable/) to automatically provision Kubernetes applications from git repository.
+  - [Ansible](https://docs.ansible.com/) for automating the configuration of the cluster nodes, installation of kubernetes and external services, and triggering cluster bootstrap (FluxCD bootstrap).
+  - [Flux CD](https://fluxcd.io/) to automatically provision Kubernetes applications from git repository.
 
 
 ## Technology Stack
@@ -60,8 +60,8 @@ The following picture shows the set of opensource solutions used for building th
         <td>Automate OS configuration, external services installation and k3s installation and bootstrapping</td>
     </tr>
     <tr>
-        <td><img width="32" src="/assets/img/logos/argocd.svg" alt="argocd logo"></td>
-        <td><a href="https://argoproj.github.io/cd">ArgoCD</a></td>
+        <td><img width="32" src="/assets/img/logos/flux-cd.png" alt="fluxcd logo"></td>
+        <td><a href="https://fluxcd.io/">FluxCD</a></td>
         <td>GitOps tool for deploying applications to Kubernetes</td>
     </tr>
     <tr>
@@ -303,7 +303,7 @@ From software perspective, I have developed the following:
    | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
    {: .table .table-white .border-dark } 
 
-3. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using ArgoCD
+3. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using FluxCD
 
    Source code can be found in Pi Cluster Git repository under [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
@@ -325,11 +325,11 @@ The software used and the latest version tested of each component
 | Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 22.04.2 |
 | Kubernetes | K3S | v1.30.2 | K3S version|
 | Kubernetes | Helm | v3.15.3 ||
-| Metrics | Kubernetes Metrics Server | v0.7.0 | version pre-integrated into K3S |
 | Kubernetes | etcd | v3.5.13-k3s1 | version pre-integrated into K3S |
 | Computing | containerd | v1.7.17-k3s1 | version pre-integrated into K3S |
 | Networking | Cilium | 1.15.7 | |
-| Networking | CoreDNS | v1.10.1 | version pre-integrated into K3S |
+| Networking | CoreDNS | v1.10.1 | Helm chart version: 1.31.0 |
+| Metric Server | Kubernetes Metrics Server | v0.7.2 | Helm chart version: 3.12.1|
 | Service Mesh | Istio | v1.22.3 | Helm chart version: 1.22.3 |
 | Service Proxy | Ingress NGINX | v1.11.1 | Helm chart version: 4.11.1 |
 | Storage | Longhorn | v1.6.2 | Helm chart version: 1.6.2 |
@@ -339,7 +339,7 @@ The software used and the latest version tested of each component
 | Logging | Elastic Search | 8.13.0 | Deployed with ECK Operator |
 | Logging | Kibana | 8.13.0 | Deployed with ECK Operator |
 | Logging | Fluentbit | 3.0.7 | Helm chart version: 0.46.11 |
-| Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.2 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.15.3|
+| Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.2 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.17.1|
 | Logging | Loki | 3.1.0 | Helm chart grafana/loki version: 6.7.1  |
 | Monitoring | Kube Prometheus Stack | v0.75.0 | Helm chart version: 61.2.0 |
 | Monitoring | Prometheus Operator | v0.75.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0  |
@@ -356,5 +356,5 @@ The software used and the latest version tested of each component
 | Secrets| External Secret Operator | 0.9.20 | Helm chart version: 0.9.20 |
 | SSO | Keycloak | 24.0.5 | Bitnami Helm chart version: 21.7.0 |
 | SSO| Oauth2.0 Proxy | 7.6.0 | Helm chart version: 7.7.9 |
-| GitOps | Argo CD | v2.11.5 | Helm chart version: 7.3.9 |
+| GitOps | Flux CD | v2.3.0 |  |
 {: .table .table-white .border-dark }

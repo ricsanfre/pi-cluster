@@ -2,7 +2,7 @@
 title: GitOps (FluxCD)
 permalink: /docs/fluxcd/
 description: How to apply GitOps to Pi cluster configuration using FluxCD.
-last_modified_at: "05-10-2024"
+last_modified_at: "06-10-2024"
 ---
 
 ## What is Flux
@@ -23,6 +23,22 @@ Kubernetes applications, to be deployed in Flux, can be defined using plain mani
 - Helm and Kustomize applications are declared using specific Flux CRDs: `Kustomization` and `HelmRealease`
 
 ![flux-cd-architecture](/assets/img/fluxcd-architecture.png)
+
+
+<pre class="mermaid">
+sequenceDiagram
+	participant HelmRepository
+	participant HelmController
+	participant Kubernetes API
+    alt Check & Update
+	    HelmController->>HelmRepository: Check new version
+	    HelmRepository->>HelmController: Download if new version
+	end
+    alt Rendering & Deployment
+	    HelmController->>HelmController: Render chart
+        HelmController->>Kubernetes API: Apply manifests
+    end
+</pre>
 
 ## Flux CRDs
 
@@ -58,7 +74,7 @@ Where:
 
 #### Secret
 
-To authenticate towards a Git repository over HTTPS using basic access authentication (using a username and password ([[GitHub Personal Access Token (PAT)]]), the referenced Secret is expected to contain `.data.username` and `.data.password` values.
+To authenticate towards a Git repository over HTTPS using basic access authentication (using a username and password (GitHub Personal Access Token (PAT)), the referenced Secret is expected to contain `.data.username` and `.data.password` values.
 
 
 ```yaml
@@ -163,10 +179,10 @@ Where:
 - `spec.path`: Path within GitRepository where the kubernetes manifest files or the kustomize application is located.
 - `spec.targetNamespace`: namespace where all the kuberentes manifest files will be deployed.
 - `spec.interval`: specifies the interval at which the Kustomization runs a a server-side apply dry-run to detect and correct drift inside the cluster.
-- `spec.prune`: It enables/disables garbage collection for a Kustomization. See details in [[#Prune resources (Garbage Collection)]]
-- `spec.dependsOn`: List of other Kustomization objects the application depends on. See details in [[#Dependencies]]
-- `spec.healthChecks` list of Kubernetes resources that are going to be checked to determine the rollout status of the Kustomization. See details in [[#Health checks]].
-- `spec.postBuild.substituteFrom`: Use a specific ConfigMap/Secret to substitute variables defined in the Kubernetes manifest files. See details in [[#Flux Kustomization Templating]]
+- `spec.prune`: It enables/disables garbage collection for a Kustomization. See details in [Prune resources (Garbage Collection)](#prune-resources-garbage-collection)
+- `spec.dependsOn`: List of other Kustomization objects the application depends on. See details in [Dependencies](#dependencies)
+- `spec.healthChecks` list of Kubernetes resources that are going to be checked to determine the rollout status of the Kustomization. See details in [Health checks](#health-checks).
+- `spec.postBuild.substituteFrom`: Use a specific ConfigMap/Secret to substitute variables defined in the Kubernetes manifest files. See details in [Flux Kustomization Templating](#flux-kustomization-templating)
 
 #### Prune resources (Garbage Collection)
 Garbage collection means that the Kubernetes objects that were previously applied on the cluster but are missing from the current source revision, are removed from the cluster automatically.
@@ -244,11 +260,6 @@ Where:
 - `spec.timeout`:
 - `spec.install` and `spec.upgrade`: define the installation and upgrade policies (retries and rollback strategies)
 
-
-## Flux CD Git Repo structure
-
-TBC
-
 ## K3S Cluster Preparation
 
 ### Disabling K3S Add-Ons
@@ -309,7 +320,7 @@ flux bootstrap github \
 
 ##### GitHub access requirements
 During bootstrapping process, `flux bootstrap` command need to access the Github repo and perform commits containing flux installation and bootstrapping manifest files. 
-For accessing the GitHub REST API, the bootstrap command requires a [[GitHub Personal Access Token (PAT)]] with administration permissions.
+For accessing the GitHub REST API, the bootstrap command requires a GitHub Personal Access Token (PAT) with administration permissions.
 
 {{site.data.alerts.note}}
 Bootstrap can be run with a GitHub [fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens).
@@ -329,7 +340,7 @@ If the `GITHUB_TOKEN` env var is not set, the bootstrap command will prompt yo
 
 You can also supply the token using a pipe e.g. `echo "<gh-token>" | flux bootstrap github`.
 
-##### What happens when executing `flux bootstrap github`
+##### What happens when executing bootstrap command
 
 If the flux bootstrap command executed is:
 ```shell
@@ -388,7 +399,7 @@ the following actions are taken:
 		```
 
 The files are written to the Git repo in two different commits
-![[flux-bootstrap-repo-commits.png]]
+![flux-bootstrap-repo-coomits](/assets/img/flux-bootstrap-repo-commits.png)
 
 2. Flux controllers are installed into Kubernetes cluster
 
@@ -536,6 +547,129 @@ With Read-only repos some FluxCD functionality won't work  like [Automate image 
 
 {{site.data.alerts.end}}
 
+## Flux CD Git Repo structure
+
+
+```
+📁 kubernetes
+├── 📁 clusters                   # clusters configuration
+│   ├── 📁 bootstrap      # Bootstrap configuration files to apply before installed flux
+|   |    ├── helmfile.yaml # Deploy Kuberentes CNI, DNS, etc.
+|   |    ├── 📁 vault      # Configure external Vault (external-secrets)
+│   ├── 📁 dev            # Dev cluster bootstrap files
+│   └── 📁 prod           # Prod cluster bootstrap files
+|       ├── 📁 flux-system  # Flux controller installation
+|       ├── 📁 repositories  # Flux Source resources
+|       |    ├── kustomization.yaml
+|       |    └── 📁 helm  # Flux HelmRepository resources
+|       |        ├── jetstack-helmrepo.yaml
+|       |        └── ...
+|       ├── 📁 config
+|       |    ├── kustomization.yaml
+|       |    ├── cluster-settings.yaml # Cluster variables (Flux Templates)
+|       |    └── cluster.yaml  # Flux GitRepository and Root Kustomization application
+|       ├── 📁 infra  # Flux Kustomization resources for deploying platform services
+|       |    ├── kustomization.yaml
+|       |    ├── cert-manager-app.yaml
+|       |    ├── external-secrets-app.yaml
+|       |    └── ...
+|       └── 📁 apps   # Flux Kustomization resources for deploying apps
+├── 📁 platform            # platform services
+│   ├── 📁 cert-manager      # Component for adding opentelemetry config in Helm chart values
+│   ├── 📁 external-secrets
+│   ├── 📁 longhorn
+│   └── 📁 ...
+└── 📁 apps                # Applications
+    ├── 📁 app1
+    └── 📁 ...
+
+```
+
+Following a mono repo approach[^1], the repo is structured in 3 main directories:
+
+- `clusters`: Flux bootstrap and configuration that is specific to each environment (prod, staging, dev)
+- `platform`: set of apps and configs installed in all clusters as platform services, and that allow operators to manage the cluster or provide features to the apps. It provides some pre-set variants (components) that clusters can reuse. Configured and installed by infra teams.
+- `apps`: set of apps that uses services provided by `platform`. Installed by tenants (usually developer teams) in a specific cluster.
+
+Applications in `platform` and `apps` directory are packaged using Kustomize, providing variants (overlays) for each cluster and reusable-components.
+
+Cluster specific configuration in `kubernetes/clusters/<environment>`
+
+- Cluster Config (`kubernetes/clusters/<environment>/config`)
+  - It contains `cluster.yaml` generated during manual installation
+  - Cluster settings: ConfigMap containing global variables/secrets
+    `kubernetes/clusters/prod/config/cluster-settings.yaml`
+
+  ```yaml
+  ---
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cluster-settings
+    namespace: flux-system
+  data:
+    CLUSTER_DOMAIN: picluster.ricsanfre.com
+    S3_BACKUP_SERVER: s3.ricsanfre.com
+  ```
+
+- Cluster repositories (helm, OCI, etc.): `kubernetes/clusters/<environment>/repositories
+
+  HelmRepository resources like (`kubernetes/clusters/<environment>/repositories/helm/jetstack-helmrepo.yaml)
+  
+  ```yaml
+  ---
+  apiVersion: source.toolkit.fluxcd.io/v1
+  kind: HelmRepository
+  metadata:
+    name: jetstack
+    namespace: flux-system
+  spec:
+    url: https://charts.jetstack.io
+    interval: 1h
+  ```
+
+- Cluster infrastructure applications: `kubernetes/clusters/<environment>/infra`
+   It contains Flux Kustomization resources linked to the Kustomize applications in `kubernetes/plaftorm`
+   Kustomization resources like: `kubernetes/clusters/prod/infra/cert-manager-app.yaml
+
+  ```yaml
+  ---
+  apiVersion: kustomize.toolkit.fluxcd.io/v1
+  kind: Kustomization
+  metadata:
+    name: cert-manager-app
+    namespace: flux-system
+  spec:
+    interval: 30m
+    targetNamespace: cert-manager
+    sourceRef:
+      kind: GitRepository
+      name: flux-system
+    path: ./kubernetes/platform/cert-manager/app/overlays/prod
+    prune: true
+    healthChecks:
+      - apiVersion: helm.toolkit.fluxcd.io/v2
+        kind: HelmRelease
+        name: cert-manager
+        namespace: cert-manager
+  ```
+
+  This Kustomization resources contain the corresponding dependencies, so Flux now which order to follow when deploying the applications
+
+<pre class="mermaid">
+graph TD;
+  id1>Kustomization: flux-system] -->|Creates| id2>Kustomization: external-secrets-app];
+  id2>Kustomization: external-secrets-app] -->|Creates| id4[HelmRelease: external-secrets];
+  id1>Kustomization: flux-system] -->|Creates| id6>Kustomization:csi-external-snapshotter-app];
+  id1>Kustomization: flux-system] -->|Creates| id7>Kustomization:longhorn-app];
+  id7>Kustomization:longhorn-app]-->|Creates| id8[HelmRelease: longhorn];
+  id1>Kustomization: flux-system] -->|Creates| id3>Kustomization: external-secrets-app-config];
+  id7>Kustomization:longhorn-app] -->|Depends on| id3>Kustomization: external-secrets-app-config];
+  id7>Kustomization:longhorn-app] -->|Depends on| id6>Kustomization:csi-external-snapshotter-app];
+  id3>Kustomization: external-secrets-config] -->|Depends on| id2>Kustomization: external-secrets-app];
+  id3>Kustomization: external-secrets-config] -->|Creates| id5[Cluster Secret Store];
+</pre>
+
 ## Application Desing Patterns
 
 ### Kustomize Variants
@@ -654,7 +788,7 @@ This design pattern means:
 See details of this pattern in [Flux Helmrealase user guide](https://fluxcd.io/flux/guides/helmreleases/#refer-to-values-in-configmaps-generated-with-kustomize)
 
 Additionally `HelmRelease` supports to import HelmChart values from more than one yaml source file, merging the content of the files in order (latter files overwriting definition of the previous). 
-This enables the evolution of the previous design pattern to be able to compose the `values.yaml` file using Kustomized overlays and components. The following pattern is an evolution of the one described in "Managing Kubernetes the GitOps way by Jeff French"[^1] to consider also kustomized components
+This enables the evolution of the previous design pattern to be able to compose the `values.yaml` file using Kustomized overlays and components. The following pattern is an evolution of the one described in "Managing Kubernetes the GitOps way by Jeff French"[^2] to consider also kustomized components
 
 Different configMaps can be generated for `base`,  `components` and `overlays` so they are imported in order by `HelmRelase`, making possible to overwrite base `values.yaml` with additional configuration provided by Kustomize Components or Kustomized Overlays.
 
@@ -692,7 +826,7 @@ As an example nginx flux application can be defined as follows
 
 Base defines the namespace manifest file and the HelmRelease resource. Kustomize configMap generator is used to create a configMap containing Helm Chart values.yaml
 
-Where `base\helm.yaml` contains HelmRelease resource expecting values.yaml in a Config Map 
+Where `base/helm.yaml` contains HelmRelease resource expecting values.yaml in a Config Map 
 
 ```yaml
 ---
@@ -724,7 +858,7 @@ spec:
     valuesKey: base-values.yaml
 ```
 
-`base\kustomization.yaml`
+`base/kustomization.yaml`
 
 Generate automatically a config map `ingress-nginx-helm-values` with the content of `values.yaml` file
 
@@ -760,10 +894,10 @@ nameReference:
 
 **Open Telemetry component**
 
-This component modify configMap generated in the base configuration, adding a new key `otel-values.yaml` with the content of `components\opentelemetry\values.yaml`.
+This component modify configMap generated in the base configuration, adding a new key `otel-values.yaml` with the content of `components/opentelemetry/values.yaml`.
 It also patches HelmRelease resource defined in the base adding a new entry into `spec.valuesFrom`, so new otel-values.yaml can be added
 
-`components\opentelemetry\kustomize.yaml`
+`components/opentelemetry/kustomize.yaml`
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
@@ -782,7 +916,7 @@ patches:
   path: helm-patch.yaml
 ```
 
-`components\opentelemetry\helm-patch.yaml`
+`components/opentelemetry/helm-patch.yaml`
 
 ```yaml
 - op: add
@@ -793,7 +927,7 @@ patches:
     valuesKey: otel-values.yaml
 ```
 
-`components\opentelemetry\values.yaml`
+`components/opentelemetry/values.yaml`
 
 ```yaml
 controller:
@@ -844,7 +978,7 @@ controller:
 
 Kustomize overlays uses the base configuration and any additional component. Additionally a new values.yaml file, containing ovelay addtional values, is added to the configMap `ingress-nginx-helm-values` and the HelmRelease object is patched (as it is in the component part)
 
-`overlay\prod\kustomization.yaml`
+`overlay/prod/kustomization.yaml`
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -872,7 +1006,7 @@ patches:
 
 ```
 
-`overlays\prod\helm-patch.yaml`
+`overlays/prod/helm-patch.yaml`
 
 ```yaml
 - op: add
@@ -925,7 +1059,6 @@ spec:
         # Fail if this Secret does not exist.
 ```
 
-
 {{site.data.alerts.important}}
 Fux executes substitution logic after the execution of `kustomize build` command.
  
@@ -935,6 +1068,7 @@ See further details in this [flux discussion](https://github.com/fluxcd/flux2/di
 {{site.data.alerts.end}}
 
 #### Testing variable substitution
+
 Output generated by flux can be tested using `flux envsubst` command.
 
 ```shell
@@ -951,8 +1085,9 @@ metadata:
 ```
 
 
-#### Avoid var substitution for certain resources
-Environment variables can be defined in different manifest fields (i.e container commands or environment variables whose values are obtained from ConfigMaps). If those environement variable s are defined using `${var}` notation, Flux will try to substitute the variable and it will replace by empty string if no definition is found. See [[PiCluster - ArgoCD to Flux migration#^354885| Pi Cluster Keycloak deployment error]] details.
+#### Skip var substitution for certain resources
+
+Environment variables can be defined in different manifest fields (i.e container commands or environment variables whose values are obtained from ConfigMaps). If those environement variable s are defined using `${var}` notation, Flux will try to substitute the variable and it will replace by empty string if no definition is found.
 
 If you want to avoid var substitutions in scripts embedded in ConfigMaps or container commands,  `$var` notation must be used instead of `${var}`. If you want to keep the curly braces you can use `$${var}` which will print out `${var}`.
 
@@ -965,9 +1100,13 @@ kustomize.toolkit.fluxcd.io/substitute: disabled
 ```
 
 
+## References
 
 
-[^1]: This design pattern explained in the following webinar.
+[^1]: All your Kubernetes manifests in a single Git repository. The various environments specific configs are all stored in the same branch
+    [Flux documentation: Ways of structuring your repositories](https://fluxcd.io/flux/guides/repository-structure/)
+
+[^2]: This design pattern explained in the following webinar.
 
     [**Managing Kubernetes the GitOps way with Flux by Jeff French**](https://www.youtube.com/embed/1DuxTlvmaNM)
 	

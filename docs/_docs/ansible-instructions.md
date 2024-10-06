@@ -1,14 +1,14 @@
 ---
 title: Quick Start Instructions
 permalink: /docs/ansible/
-description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and ArgoCD
-last_modified_at: "04-06-2024"
+description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and FluxCD
+last_modified_at: "06-10-2024"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
 - [cloud-init](https://cloudinit.readthedocs.io/en/latest/): to automate initial OS installation/configuration on each node of the cluster
-- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes,  install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vautl) install K3S, and bootstraping cluster through installation and configuration of ArgoCD
-- [Argo CD](https://argo-cd.readthedocs.io/en/stable/): to automatically deploy Applications to Kuberenetes cluster from manifest files in Git repository.
+- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes,  install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vautl) install K3S, and bootstraping cluster through installation and configuration of FluxCD
+- [Flux CD](https://fluxcd.io/): to automatically deploy Applications to Kuberenetes cluster from manifest files in Git repository.
 
 {{site.data.alerts.note}}
 
@@ -135,9 +135,20 @@ Default configuration, assumes the use of Letscrypt TLS certificates and IONOS D
 As an alternative, a custom CA can be created and use it to sign all certificates.
 The following changes need to be done:
 
-- Modify Ansible variable `enable_letsencrypt` to false in `/ansible/picluster.yml` file
-- Modify Kubernetes ingress resources in all applications (`/kubernetes/infrastructure` and `/kubernetes/apps`) so `cert-manager.io/cluster-issuer` annotation points to `ca-issuer` instead of `letsencrypt-issuer`.
+- Modify Ansible variable `enable_letsencrypt` to false in `/ansible/vars/picluster.yml` file
+- Modify Kubernetes ingress resources in all applications (`/kubernetes/platform` and `/kubernetes/apps`) so `cert-manager.io/cluster-issuer` annotation points to `ca-issuer` instead of `letsencrypt-issuer`.
 
+{{site.data.alerts.end}}
+
+{{site.data.alerts.important}}: **About GitOps Repository configuration**
+
+Default configuration, assumes the Git Repository used by FluxCD is a public repository.
+
+As an alternative, a private repository can be used.
+
+- Modify Ansible variable `git_private_repo` to true in `/ansible/group_vars/all.yml` file
+
+During Vault credentials generation process, see below, Github PAT will be required
 
 {{site.data.alerts.end}}
 
@@ -150,7 +161,7 @@ Execute the following command:
 ```shell
 make ansible-credentials
 ```
-Credentials for external cloud services (IONOS DNS API credentials) are asked during the execution of the playbook.
+Credentials for external cloud services (IONOS DNS API credentials) or Github PAT are asked during the execution of the playbook.
 
 ### Prepare PXE server
 
@@ -247,7 +258,7 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 #### Install x86 nodes
 
-Install Operating System on x86 nodes (`node-hp-1-2`). P
+Install Operating System on x86 nodes (`node-hp-x`). P
 
 Follow the installation procedure indicated in ["OS Installation - X86 (PXE)"](/docs/ubuntu/x86/) and adapt the cloud-init files to your environment.
 
@@ -303,20 +314,27 @@ Variable `restic_clean_service` which configure and schedule restic's purging ac
 
 ## Kubernetes Applications (GitOps)
 
-ArgoCD is used to deploy automatically packaged applications contained in the repository. These applications are located in [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
+FluxCD is used to deploy automatically packaged applications contained in the repository. These applications are located in [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
-- Modify Root application (App of Apps pattern) to point to your own repository
+- Modify cluster configuration to point to your own repository
 
-  Edit all `*-app.yaml` manifest files in [`/kubernetes/bootstrap/`]({{ site.git_edit_address }}/kubernetes/bootstrap/).
- 
-  `repoURL` should point to your own cloned repository.
-  
-  ```yml
-  apiVersion: argoproj.io/v1alpha1
-  kind: Application
+  Edit [`kubernetes/clusters/prod/config/cluster.yaml`]({{ site.git_edit_address }}/kubernetes/prod/config/cluster.yam).
+
+  In `GitRepository` resource definition, set `spec.url` to the URL of your repository
+
+- In case of using a private Git repository
+
+  Add following configuration to `GitRepository` resource
+
+  ```yaml
   spec:
-    repoURL: https://github.com/<your-user>/pi-cluster
+    secretRef:
+      name: flux-system
   ```
+
+- Modify cluster global variables
+
+  Edit [`kubernetes/clusters/prod/config/cluster-settings.yaml`]({{ site.git_edit_address }}/kubernetes/prod/config/cluster-settings.yam) to use your own configuration. Own DNS domain, External Services DNS names, etc.
 
 - Tune parameters of the different packaged Applications to meet your specific configuration
 
@@ -339,7 +357,8 @@ To bootstrap the cluster, run the command:
 ```shell
 make k3s-bootstrap
 ```
-Argo CD will be installed and it will automatically deploy all cluster applications automatically from git repo.
+
+Flux CD will be installed and it will automatically deploy all cluster applications automatically from git repo.
 
 
 ### K3s Cluster reset
