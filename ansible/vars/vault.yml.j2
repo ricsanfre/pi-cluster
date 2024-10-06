@@ -13,7 +13,7 @@ vault:
   # Flux secret
   flux:
     github:
-      pat: {{ github_pat }}
+      pat: {{ github_pat | default("") }}
   # Ingress secrets
   ingress:
     admin:
