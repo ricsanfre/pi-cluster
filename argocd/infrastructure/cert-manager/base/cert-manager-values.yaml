@@ -1,2 +1,0 @@
-# cert-manager helm values (base)
-installCRDs: true
