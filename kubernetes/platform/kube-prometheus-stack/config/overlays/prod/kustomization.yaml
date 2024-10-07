@@ -4,3 +4,6 @@ namespace: monitoring
 
 resources:
   - ../../base
+
+components:
+  - ../../components/k3s-dashboards
