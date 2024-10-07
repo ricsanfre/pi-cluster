@@ -8,4 +8,3 @@
   loop:
     - longhorn-util
     - velero-cli
-    - linkerd-cli
