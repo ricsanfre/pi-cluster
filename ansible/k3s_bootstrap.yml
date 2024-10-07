@@ -55,17 +55,24 @@
         overlay: "prod"
       when: overlay is undefined
 
-    - name: Install CRDs
-      include_tasks: tasks/crds_install.yml
+    - name: Install cilium and coreDNS
+      become: false
+      shell: |
+        set -o pipefail
+        helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff
+      args:
+        executable: /bin/bash
+      register: output
+      changed_when: true
 
-    - name: Install Cilium CNI
-      include_tasks: tasks/cilium_install.yml
+    - name: Config Cilium CNI
+      include_tasks: tasks/cilium_config.yml
 
     - name: Configure Vault integration
       include_tasks: tasks/configure_vault_integration.yml
 
-    - name: ArgoCD bootstrap
-      include_tasks: tasks/argocd_bootstrap.yml
+    - name: Flux bootstrap
+      include_tasks: tasks/fluxcd_bootstrap.yml
 
     - name: Install cli utils.
       include_tasks: tasks/install_cli_utils.yml

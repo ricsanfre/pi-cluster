@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/sso
+  - ../../components/dashboards
+
+configMapGenerator:
+  - name: grafana-helm-values
+    behavior: merge
+    files:
+      - overlay-values.yaml=values.yaml
+
+patches:
+- target:
+    group: helm.toolkit.fluxcd.io
+    kind: HelmRelease
+    name: grafana
+  path: helm-patch.yaml

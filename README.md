@@ -10,7 +10,7 @@
     <td><img src="docs/assets/img/pi-cluster-3.0.png" width="600" /></td>
 </table>
 
-**K3S Kubernetes Cluster at home automated with Ansible and ArgoCD**
+**K3S Kubernetes Cluster at home automated with Ansible and FluxCD**
 
 
 This is an educational project to build a hybrid x86/ARM Kubernetes cluster at home, using Raspberry Pi and refurbished x86 mini PCs, learn to deploy basic kubernetes services and automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies.
@@ -18,13 +18,13 @@ This is an educational project to build a hybrid x86/ARM Kubernetes cluster at h
 
 The entire process for creating this cluster at home, from cluster design and architecture to step-by-step manual configuration guides, has been documented and it is published in the project website: https://picluster.ricsanfre.com.
 
-This repository contains all source code used to automate all manual tasks described in the documentation: Cloud-init's configuration files, Ansible's source code (playbooks/roles), and packaged Kubernetes applications (helm and kustomize) to be deployed using ArgoCD. 
+This repository contains all source code used to automate all manual tasks described in the documentation: Cloud-init's configuration files, Ansible's source code (playbooks/roles), and packaged Kubernetes applications (helm and kustomize) to be deployed using FluxCD. 
 
 Since its deployment is completely automated, the cluster can be re-deployed in minutes as many times as needed for testing new cluster configurations, new software versions or just take you out of any mesh you could cause playing with the cluster.
 
 ## Scope
 
-The scope of this project is to build a hybrid x86/ARM kubernetes cluster at home, using low cost Raspeberry PIs and old refurbished mini PCs, and automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Argo CD](https://argo-cd.readthedocs.io/en/stable/).
+The scope of this project is to build a hybrid x86/ARM kubernetes cluster at home, using low cost Raspeberry PIs and old refurbished mini PCs, and automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Flux CD](https://fluxcd.io/).
 
 As part of the project, the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
@@ -46,7 +46,7 @@ Also deployment of services for building a cloud-native microservices architectu
 
 ## Technology Stack
 
-The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible/ArgoCD:
+The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible/FluxCD:
 
 <p align="center">
   <img src="docs/assets/img/pi-cluster-icons.png" width="500"/>
@@ -65,8 +65,8 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Automate OS configuration, external services installation and k3s installation and bootstrapping</td>
     </tr>
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/argocd.svg"></td>
-        <td><a href="https://argoproj.github.io/cd">ArgoCD</a></td>
+        <td><img width="32" src="docs/assets/img/logos/flux-cd.png" alt="fluxcd logo"></td>
+        <td><a href="https://fluxcd.io/">FluxCD</a></td>
         <td>GitOps tool for deploying applications to Kubernetes</td>
     </tr>
     <tr>
@@ -115,7 +115,7 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes Ingress Controller</td>
     </tr> 
     <tr>
-        <td><img width="32" src="/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
+        <td><img width="32" src="docs/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
         <td><a href="https://istio.io/">Istio</a></td>
         <td>Kubernetes Service Mesh</td>
     </tr>

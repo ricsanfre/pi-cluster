@@ -42,6 +42,7 @@
   - minio
 - title: Monitoring
   docs:
+  - metrics-server
   - observability
   - logging
   - loki
@@ -55,6 +56,7 @@
 - title: GitOps
   docs:
   - argocd
+  - fluxcd
 - title: Microservices
   docs:
   - databases

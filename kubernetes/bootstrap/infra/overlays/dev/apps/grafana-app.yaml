@@ -1,9 +1,0 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: grafana
-  namespace: argocd
-spec:
-  source:
-    path: kubernetes/infrastructure/grafana/overlays/dev
-    targetRevision: master

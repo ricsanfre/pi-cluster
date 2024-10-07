@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fluent
+
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: fluentd-helm-values
+    behavior: merge
+    files:
+      - overlay-values.yaml=values.yaml
+
+patches:
+- target:
+    group: helm.toolkit.fluxcd.io
+    kind: HelmRelease
+    name: fluentd
+  path: helm-patch.yaml

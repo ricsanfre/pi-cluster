@@ -1,0 +1,20 @@
+variables:
+  - name: app_name
+    description: Enter application name
+
+  - name: app_namespace
+    description: Enter application namespace
+
+  - name: chart_repo_url
+    description: Enter chart repo URL
+
+  - name: chart_name
+    description: Enter Chart name
+
+  - name: chart_version
+    description: Enter chart version
+
+  - name: chart_release_name
+    description: Enter chart release name
+
+ 

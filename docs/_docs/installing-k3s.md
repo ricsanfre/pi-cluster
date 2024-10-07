@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "02-06-2024"
+last_modified_at: "28-09-2024"
 ---
 
 
@@ -463,6 +463,36 @@ K3S master nodes need to be installed with the following additional options:
 
 - `--flannel-backend=none`: to disable Fannel instalation
 - `--disable-network-policy`: Most CNI plugins come with their own network policy engine, so it is recommended to set --disable-network-policy as well to avoid conflicts.
+
+
+## K3S Auto-deployed Add-ons
+
+K3s provides the capability to automatically deploy manifest files (AddOns). On server nodes, any file found in `/var/lib/rancher/k3s/server/manifests` is automatically deployed to Kubernetes in a manner similar to `kubectl apply` command, both on startup and when the file is changed on disk. Deleting files out of this directory will not delete the corresponding resources from the cluster.
+
+K3s comes with a number of packaged components that are deployed as AddOns via that manifests directory: coredns, traefik, local-storage, and metrics-server.
+
+Manifests are tracked as `AddOn` custom resources (CRD) in the `kube-system` namespace.
+
+Installation of this addOns can be disabled during k3s installation adding:
+
+- `--disable '<addon>'`: Where `<addon>` can be `coredns`, `traefik`, `local-storage` or `metric-server`
+
+K3s includes also a built-in Helm Controller that manages installing, upgrading/reconfiguring, and uninstalling Helm charts using a `HelmChart` Custom Resource Definition (CRD). Paired with auto-deploying AddOn manifests, installing a Helm chart can be automated by creating a single manifiest file on `/var/lib/rancher/k3s/server/manifests`.
+
+K3s uses this built-in helm chart controller only to deploy traefik. Rest of add-ons are instralled using Kubernetes manifest files.
+
+HelmChart controller can be disabled to avoid conflicts with other controllers (i.e.: Helm Controller deployed by GitOps solution FluxCD) and all the add-ons can be installed manually, following same installation process of any other K8S distribution.
+
+To disable K3s HelmChart Controller the following additional installation option need to be added:
+
+- `--disable-helm-controller`: to disable K3s helm controller
+
+If HelmChart controller is disabled Traefik add-ons need to be disabled as well
+
+- `--disable 'traefik'`: to disable Traefik installation
+
+
+See further details in [K3s documentationt - Managing k3s packaged components](https://docs.k3s.io/installation/packaged-components)
 
 ## Remote Access
 

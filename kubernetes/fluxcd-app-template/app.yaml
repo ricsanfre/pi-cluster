@@ -1,0 +1,36 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: {{ .app_name }}-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: {{ .app_namespace }}
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/{{ .app_name }}/app/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: {{ .app_name }}
+      namespace: {{ .app_namespace }}
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: {{ .app_name }}-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: {{ .app_namespace }}
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: {{ .app_name }}-app
+  path: ./kubernetes/platform/{{ .app_name }}/config/overlays/prod
+  prune: true

@@ -1,0 +1,16 @@
+# nginx application
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-external-snapshotter-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: kube-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/csi-external-snapshotter/app/overlays/prod
+  prune: true
+

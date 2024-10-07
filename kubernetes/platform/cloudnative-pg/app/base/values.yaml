@@ -1,0 +1,4 @@
+# cloudnative-pg helm values (base)
+
+crds:
+  create: true

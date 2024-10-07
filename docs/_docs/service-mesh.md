@@ -239,9 +239,9 @@ Installation using `Helm` (Release 3):
     -----END CERTIFICATE-----
   ```
 
-#### GitOps installation (ArgoCD)
+#### GitOps installation
 
-As an alternative, for GitOps deployments (using ArgoCD), instead of hardcoding CA certificate within Helm chart values, a external configMap can be created,`linkerd-identity-trust-roots`, containing the ca certificate (ca-bundle.crt key). If external configMap is provided, helm value `identity.externalCA=true` need to be provided during installation.
+As an alternative, for GitOps deployments, instead of hardcoding CA certificate within Helm chart values, a external configMap can be created,`linkerd-identity-trust-roots`, containing the ca certificate (ca-bundle.crt key). If external configMap is provided, helm value `identity.externalCA=true` need to be provided during installation.
 
 [Trust Manager](https://cert-manager.io/docs/projects/trust-manager/), installed jointly with Cert-Manager, can be used to automate the generation of that configMap containing the information about the ca secret.
 See detailed procedure described in [linkerd issue #7345](https://github.com/linkerd/linkerd2/issues/7345#issuecomment-979207861).

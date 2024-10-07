@@ -11,10 +11,6 @@ In June 2020, Elastic [announced](https://www.elastic.co/blog/elasticsearch-on-a
 To facilitate the deployment on a Kubernetes cluster [ECK project](https://github.com/elastic/cloud-on-k8s) was created.
 ECK ([Elastic Cloud on Kubernetes](https://www.elastic.co/guide/en/cloud-on-k8s/current/index.html)) automates the deployment, provisioning, management, and orchestration of ELK Stack (Elasticsearch, Kibana, APM Server, Enterprise Search, Beats, Elastic Agent, and Elastic Maps Server) on Kubernetes based on the operator pattern.
 
-{{site.data.alerts.note}}
-Logstash deployment is not supported by ECK operator
-{{site.data.alerts.end}}
-
 ECK Operator will be used to deploy Elasticsearh and Kibana.
 
 ## ECK Operator installation
@@ -122,9 +118,9 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
 
     By default ECK configures secured communications with auto-signed SSL certificates. Access to its service endpoint on port 9200 is only available through https.
 
-    Disabling TLS automatic configuration in Elasticsearch HTTP server enables Linkerd (Cluster Service Mesh) to gather more statistics about connections. Linkerd is parsing plain text traffic (HTTP) instead of encrypted (HTTPS).
+    Disabling TLS automatic configuration in Elasticsearch HTTP server enables Cluster Service Mesh to gather more statistics about connections. Service Mesh is parsing plain text traffic (HTTP) instead of encrypted (HTTPS).
     
-    Linkerd service mesh will enforce secure communications using TLS between all PODs.
+    Cluster service mesh will enforce secure communications using TLS between all PODs.
   
   - About limiting resources assigned to ES
 

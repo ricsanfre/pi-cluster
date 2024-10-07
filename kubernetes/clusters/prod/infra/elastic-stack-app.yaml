@@ -1,0 +1,73 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: eck-operator-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: elastic
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/eck-operator/app/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: eck-operator
+      namespace: elastic
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: elastic-stack-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: elastic
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: eck-operator-app
+    - name: longhorn-app
+    - name: external-secrets-config
+  path: ./kubernetes/platform/elastic-stack/app/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: elasticsearch.k8s.elastic.co/v1
+      kind: Elasticsearch
+      name: efk
+      namespace: elastic
+    - apiVersion: kibana.k8s.elastic.co/v1
+      kind: Kibana
+      name: efk
+      namespace: elastic
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus-elasticsearch-exporter-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: elastic
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: elastic-stack-app
+  path: ./kubernetes/platform/elastic-stack/prometheus-elasticsearch-exporter/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: prometheus-elasticsearch-exporter
+      namespace: elastic

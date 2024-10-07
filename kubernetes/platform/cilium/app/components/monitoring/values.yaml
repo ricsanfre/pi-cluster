@@ -1,0 +1,36 @@
+# cilium helm values (monitoring)
+
+operator:
+  # Enable prometheus integration for cilium-operator
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # Enable Grafana dashboards for cilium-operator
+  dashboards:
+    enabled: true
+    annotations:
+      grafana_folder: Cilium
+
+# Enable Prometheus integration for cilium-agent
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    # scrape interval
+    interval: "10s"
+    # -- Relabeling configs for the ServiceMonitor hubble
+    relabelings:
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: node
+        replacement: $${1}
+    trustCRDsExist: true
+# Enable Grafana dashboards for cilium-agent
+# grafana can import dashboards based on the label and value
+# ref: https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards
+dashboards:
+  enabled: true
+  annotations:
+    grafana_folder: Cilium

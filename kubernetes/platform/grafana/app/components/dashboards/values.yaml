@@ -1,0 +1,74 @@
+# grafana helm values (dashboards)
+
+# Dashboard Providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default-folder
+      - name: istio
+        orgId: 1
+        folder: "Istio"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/istio
+
+# Dashboards
+dashboards:
+  default:
+    minio:
+      # renovate: depName="MinIO Dashboard"
+      # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
+      gnetId: 13502
+      revision: 26
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    longhorn:
+      # https://grafana.com/grafana/dashboards/16888-longhorn/
+      gnetId: 16888
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    logging:
+      # https://grafana.com/grafana/dashboards/7752-logging-dashboard/
+      gnetId: 7752
+      revision: 6
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    velero:
+      # https://grafana.com/grafana/dashboards/11055-kubernetes-addons-velero-stats/
+      gnetId: 11055
+      revision: 2
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    elasticsearch:
+      url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/examples/grafana/dashboard.json
+      datasource: Prometheus
+  istio:
+    istio-control-plane:
+      # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
+      gnetId: 7645
+      revision: 223
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    istio-mesh:
+      # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
+      gnetId: 7639
+      revision: 223
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    istio-performance:
+      # https://grafana.com/grafana/dashboards/11829-istio-performance-dashboard/
+      gnetId: 11829
+      revision: 223
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }

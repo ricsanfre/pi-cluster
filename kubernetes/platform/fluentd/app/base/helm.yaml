@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: fluentd
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: fluentd
+      version: 0.5.2
+      sourceRef:
+        kind: HelmRepository
+        name: fluent
+        namespace: flux-system
+  releaseName: fluentd
+  targetNamespace: fluent
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: fluentd-helm-values
+    valuesKey: base-values.yaml

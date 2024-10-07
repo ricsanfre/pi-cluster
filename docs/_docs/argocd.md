@@ -85,8 +85,6 @@ ArgoCD can be installed through helm chart
 
       ## Ingress annotations
       annotations:
-        # Linkerd configuration. Configure Service as Upstream
-        nginx.ingress.kubernetes.io/service-upstream: "true"
         # Enable cert-manager to create automatically the SSL certificate and store in Secret
         # Possible Cluster-Issuer values: 
         #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 

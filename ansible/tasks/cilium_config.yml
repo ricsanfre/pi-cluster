@@ -1,0 +1,34 @@
+---
+
+- name: "Wait for K3S worker nodes to be ready. Nodes Ready status when Cilium has been installed"
+  command:
+    cmd: "kubectl get nodes {{ item }}"
+  register: nodes
+  until:
+    - '" Ready "  in nodes.stdout'
+  retries: 10
+  delay: 60
+  with_items: "{{ groups['k3s_worker'] }}"
+
+- name: Wait for Cilium CRDs to be ready
+  become: false
+  shell: |
+    set -o pipefail
+    while ! kubectl wait --for condition=established --timeout=60s crd/ciliuml2announcementpolicies.cilium.io crd/ciliuml2announcementpolicies.cilium.io
+    do
+    sleep 10
+    done
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Cilium configuration
+  become: false
+  shell: |
+    set -o pipefail
+    kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+     ../kubernetes/platform/cilium/config/overlays/"{{overlay}}" | kubectl apply -f -
+  args:
+    executable: /bin/bash
+  register: output
+  changed_when: true

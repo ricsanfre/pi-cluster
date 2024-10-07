@@ -1,0 +1,2 @@
+# istio-cni helm values (base)
+profile: ambient

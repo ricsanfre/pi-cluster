@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: system-upgrade-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: system-upgrade
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/system-upgrade/app/overlays/prod
+  prune: true
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: system-upgrade-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: system-upgrade
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: system-upgrade-app
+  path: ./kubernetes/platform/system-upgrade/config/overlays/prod
+  prune: true

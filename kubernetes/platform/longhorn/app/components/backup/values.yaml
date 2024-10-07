@@ -1,0 +1,6 @@
+# longhorn helm values (backup)
+
+defaultSettings:
+  # Backup S3 configuration
+  backupTarget: "s3://k3s-longhorn@eu-west-1/"
+  backupTargetCredentialSecret: longhorn-minio-secret

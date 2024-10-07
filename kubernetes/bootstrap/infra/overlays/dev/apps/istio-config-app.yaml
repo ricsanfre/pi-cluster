@@ -1,9 +1,0 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: istio
-  namespace: argocd
-spec:
-  source:
-    path: kubernetes/infrastructure/istio/overlays/dev
-    targetRevision: master

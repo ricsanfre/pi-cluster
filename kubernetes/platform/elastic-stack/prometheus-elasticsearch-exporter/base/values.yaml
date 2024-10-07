@@ -1,0 +1,14 @@
+# prometheus-elasticsearch-exporter helm values (base)
+
+# Elastic search passord from secret
+extraEnvSecrets:
+  ES_USERNAME:
+    secret: elasticsearch-exporter-secrets
+    key: username
+  ES_PASSWORD:
+    secret: elasticsearch-exporter-secrets
+    key: password
+
+# Elastic search URI
+es:
+  uri: http://efk-es-http:9200

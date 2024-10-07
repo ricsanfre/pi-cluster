@@ -1,0 +1,53 @@
+# minio helm values (ingress)
+
+# Ingress resource
+ingress:
+  ## Enable creation of ingress resource
+  enabled: true
+  ## Add ingressClassName to the Ingress
+  ingressClassName: nginx
+  # ingress host
+  hosts:
+    - s3.${CLUSTER_DOMAIN}
+  ## TLS Secret Name
+  tls:
+    - secretName: minio-tls
+      hosts:
+        - s3.${CLUSTER_DOMAIN}
+  ## Default ingress path
+  path: /
+  ## Ingress annotations
+  annotations:
+    # Linkerd configuration. Configure Service as Upstream
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    # Possible Cluster-Issuer values:
+    #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+    #   * 'ca-issuer' (CA-signed certificate, not valid)
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: s3.${CLUSTER_DOMAIN}
+
+# console Ingress
+consoleIngress:
+  ## Enable creation of ingress resource
+  enabled: true
+  ## Add ingressClassName to the Ingress
+  ingressClassName: nginx
+  # ingress host
+  hosts:
+    - minio.${CLUSTER_DOMAIN}
+  ## TLS Secret Name
+  tls:
+    - secretName: minio-console-tls
+      hosts:
+        - minio.${CLUSTER_DOMAIN}
+  ## Default ingress path
+  path: /
+  ## Ingress annotations
+  annotations:
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    # Possible Cluster-Issuer values:
+    #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+    #   * 'ca-issuer' (CA-signed certificate, not valid)
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: minio.${CLUSTER_DOMAIN}

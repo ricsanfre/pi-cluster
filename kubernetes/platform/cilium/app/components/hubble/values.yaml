@@ -1,0 +1,64 @@
+# cilium helm values (hubble)
+
+# Enable Hubble
+hubble:
+  enabled: true
+  # Enable Monitoring
+  metrics:
+    enabled:
+      - dns:query
+      - drop
+      - tcp
+      - flow
+      - port-distribution
+      - icmp
+      - http
+    serviceMonitor:
+      enabled: true
+      # scrape interval
+      interval: "10s"
+      # -- Relabeling configs for the ServiceMonitor hubble
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: node
+          replacement: $${1}
+    # Grafana Dashboards
+    dashboards:
+      enabled: true
+      annotations:
+        grafana_folder: Cilium
+  relay:
+    enabled: true
+    rollOutPods: true
+    # Enable Prometheus for hubble-relay
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+  ui:
+    enabled: true
+    rollOutPods: true
+    # Enable Ingress
+    ingress:
+      enabled: true
+      annotations:
+        # Enable external authentication using Oauth2-proxy
+        nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/start?rd=https://$host$request_uri
+        nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+        nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+
+        # Enable cert-manager to create automatically the SSL certificate and store in Secret
+        # Possible Cluster-Issuer values:
+        #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+        #   * 'ca-issuer' (CA-signed certificate, not valid)
+        cert-manager.io/cluster-issuer: letsencrypt-issuer
+        cert-manager.io/common-name: hubble.${CLUSTER_DOMAIN}
+      className: nginx
+      hosts: ["hubble.${CLUSTER_DOMAIN}"]
+      tls:
+        - hosts:
+          - hubble.${CLUSTER_DOMAIN}
+          secretName: hubble-tls

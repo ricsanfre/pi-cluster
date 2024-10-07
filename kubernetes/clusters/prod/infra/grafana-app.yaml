@@ -1,0 +1,49 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: grafana-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: monitoring
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: kube-prometheus-stack-config
+    - name: tempo-app
+    - name: loki-app
+    - name: external-secrets-config
+  path: ./kubernetes/platform/grafana/app/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: grafana
+      namespace: monitoring
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: grafana-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: monitoring
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: grafana-app
+  path: ./kubernetes/platform/grafana/config/overlays/prod
+  prune: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

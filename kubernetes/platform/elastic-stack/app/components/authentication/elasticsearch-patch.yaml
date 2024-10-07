@@ -1,0 +1,10 @@
+- op: add
+  path: /spec/auth
+  value:
+    roles:
+      - secretName: es-fluentd-roles-secret
+      - secretName: es-prometheus-roles-secret
+    fileRealm:
+      - secretName: es-admin-user-file-realm
+      - secretName: es-fluentd-user-file-realm
+      - secretName: es-prometheus-user-file-realm

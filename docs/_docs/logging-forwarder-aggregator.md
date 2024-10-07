@@ -2,8 +2,7 @@
 title: Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
 description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
-
-last_modified_at: "05-04-2024"
+last_modified_at: "18-09-2024"
 
 ---
 
@@ -43,7 +42,7 @@ Since in the future I might configure the aggregator to dispath logs to another 
 As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
 The multi-architecture (amd64/arm64) image is available in docker hub:
 
-- `ricsanfre/fluentd-aggregator:v1.15.2-debian-1.0`
+- `ricsanfre/fluentd-aggregator:v1.17.1-debian-1.0`
 
 {{site.data.alerts.end}}
 
@@ -52,7 +51,7 @@ As base image, the [official fluentd docker image](https://github.com/fluent/flu
 In our case, the list of plugins that need to be added to the default fluentd image are:
 
 - `fluent-plugin-elasticsearch`: ES as backend for routing the logs.
-  This plugin supports the creation of index templates and ILM policies associated to them during the process of creating a new index in ES. In order to enable ILM in fluend-elasticsearch-plugin, `elasticsearch-xpack` gem need to be installed.
+  This plugin supports the creation of index templates and ILM policies associated to them during the process of creating a new index in ES.
 
 - `fluent-plugin-prometheus`: Enabling prometheus monitoring
 
@@ -85,7 +84,8 @@ fluentd -c ${FLUENTD_CONF} ${FLUENTD_OPT} -r ${SIMPLE_SNIFFER}
 Customized image Dockerfile could look like this:
 
 ```dockerfile
-ARG BASE_IMAGE=fluent/fluentd:v1.15.2-debian-1.0
+ARG BASE_IMAGE=fluent/fluentd:v1.17.1-debian-1.0
+
 
 FROM $BASE_IMAGE
 
@@ -97,11 +97,10 @@ USER root
 RUN buildDeps="sudo make gcc g++ libc-dev" \
  && apt-get update \
  && apt-get install -y --no-install-recommends $buildDeps \
- && sudo gem install fluent-plugin-elasticsearch \
- && sudo gem install elasticsearch-xpack \
- && sudo gem install fluent-plugin-prometheus \
- && sudo gem install fluent-plugin-record-modifier \
- && sudo gem install fluent-plugin-grafana-loki \
+ && sudo gem install fluent-plugin-elasticsearch -v '~> 5.4.3' \
+ && sudo gem install fluent-plugin-prometheus -v '~> 2.2' \
+ && sudo gem install fluent-plugin-record-modifier -v '~> 2.2'\
+ && sudo gem install fluent-plugin-grafana-loki -v '~> 1.2'\
  && sudo gem sources --clear-all \
  && SUDO_FORCE_REMOVE=yes \
     apt-get purge -y --auto-remove \
@@ -111,117 +110,23 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
  && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.ge
 
 ## 2) (Optional) Copy customized fluentd config files (fluentd as aggregator)
-COPY ./conf/* /fluentd/etc/
 
-## 3) Modify entrypoint.sh to configure sniffer class
-COPY entrypoint.sh /fluentd/
-
-## 4) Change to fluent user to run fluentd
-USER fluent
-ENTRYPOINT ["tini",  "--", "/fluentd/entrypoint.sh"]
-CMD ["fluentd"]
-```
-
-{{site.data.alerts.important}}
-
-Starting from fluentd v1.15, official base images supporting multi-architecture (amd64/arm64) are provided.
-
-- `fluent/fluentd:v1.15.2-debian-1.0`: multiarch image for arm64(AArch64) and amd64(x86_64) architectures
-
-In previous versions, different tags where needed for different architectures
-
-- `fluent/fluentd:v1.14-debian-1`: for building amd64 docker image
- 
-- `fluent/fluentd:v1.14-debian-arm64-1`: for building arm64 docker image
-
-
-{{site.data.alerts.end}}
-
-#### Enabling Elasticsearch ILM
-
-[Elastisearch Index Lifecycle Management (ILM)](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-lifecycle-management.html) can be used to automatically manage the lifecycle of the indices and set retention policies for the data.
-
-fluentd-elasticsearch-plugin is able to create ILM policies and apply them to the elasticsearch's indices it automatically creates when ingesting data.
-
-ILM policy fails to be created using latest version of fluent-plugin-elasticsearh. It seems that the current version of the plugin does not support properly ILM in ES 8.x, since it is using a deprecated gem (`elasticsearch-xpack`) instead of the new `elasticsearch-api`
-
-The following warning appears when building the Docker Image:
-```
-WARNING: This library is deprecated
-The API endpoints currently living in elasticsearch-xpack will be moved into elasticsearch-api in version 8.0.0 and forward. You should be able to keep using elasticsearch-xpack and the xpack namespace in 7.x. We're running the same tests in elasticsearch-xpack, but if you encounter any problems, please let us know in this issue: https://github.com/elastic/elasticsearch-ruby/issues/1274
-```
-
-Currently the fluentd plugin does not support `elasticsearch-api` and `elasticsearh-xpack` need to be used. See [fluent-plugin-elasticsearch issue #937](https://github.com/uken/fluent-plugin-elasticsearch/issues/937).
-
-On the other hand, [`fluentd-kubernetes-daemonset`](https://github.com/fluent/fluentd-kubernetes-daemonset) docker image, which is the one installed by default by fluentd helm chart, does not have yet a version for 8.x. Docker images available are just tagged as 7.0, and it seems that this docker images built initially for ES 7.x are working without issues with ES 8.x. See [fluentd-kubernetes-daemonset issue #1373](https://github.com/fluent/fluentd-kubernetes-daemonset/issues/1373)
-
-Latest docker image available, containing elasticsearch plugins (v1.15/debian-elasticsearch7) uses a previous version of fluentd-elasticsearch-plugin and its dependencies). See [debian-elasticsearch7/Gemfile](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/docker-image/v1.15/debian-elasticsearch7/Gemfile) used in Dockerfile to install all plugins and its dependencies:
-
-```
-gem "fluentd", "1.15.3"
-...
-gem "elasticsearch", "~> 7.0"
-gem "fluent-plugin-elasticsearch", "~> 5.1.1"
-gem "elasticsearch-xpack", "~> 7.0"
-```
-
-The docker image is installing the following gems:
-- fluentd 1.15.3 
-- fluent-plugin-elasticsearch 5.1.1
-- elasticsearch -> 7.0
-- elasticsearch-xpack -> 7.0
-
-Modifiying fluentd-aggregator docker image, using release 5.1.1 of gem fluent-plugin-elasticsearch and its ES's dependencies (ES 7.0 version), solves the ILM creation issue.
-
-New Dockerfile:
-
-```dockerfile
-ARG BASE_IMAGE=fluent/fluentd:v1.15.3-debian-1.2
-
-
-FROM $BASE_IMAGE
-
-# UPDATE BASE IMAGE WITH PLUGINS
-
-# Use root account to use apk
-USER root
-
-RUN buildDeps="sudo make gcc g++ libc-dev" \
- && apt-get update \
- && apt-get install -y --no-install-recommends $buildDeps \
- && sudo gem install elasticsearch -v '~> 7.0' \
- && sudo gem install fluent-plugin-elasticsearch -v '~> 5.1.1' \
- && sudo gem install elasticsearch-xpack -v '~> 7.0' \
- && sudo gem install fluent-plugin-prometheus \
- && sudo gem install fluent-plugin-record-modifier \
- && sudo gem install fluent-plugin-grafana-loki \
- && sudo gem sources --clear-all \
- && SUDO_FORCE_REMOVE=yes \
-    apt-get purge -y --auto-remove \
-                  -o APT::AutoRemove::RecommendsImportant=false \
-                  $buildDeps \
- && rm -rf /var/lib/apt/lists/* \
- && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.ge
-
-
-# COPY AGGREGATOR CONF FILES
 COPY ./conf/fluent.conf /fluentd/etc/
 COPY ./conf/forwarder.conf /fluentd/etc/
 COPY ./conf/prometheus.conf /fluentd/etc/
 
-# COPY entry
+## 3) Modify entrypoint.sh to configure sniffer class
 COPY entrypoint.sh /fluentd/entrypoint.sh
 
 # Environment variables
 ENV FLUENTD_OPT=""
 
+## 4) Change to fluent user to run fluentd
 # Run as fluent user. Do not need to have privileges to access /var/log directory
 USER fluent
 ENTRYPOINT ["tini",  "--", "/fluentd/entrypoint.sh"]
 CMD ["fluentd"]
 ```
-
-See further details in [issue #107](https://github.com/ricsanfre/pi-cluster/issues/107)
 
 
 ### Deploying fluentd in K3S
@@ -400,7 +305,7 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
   image:
     repository: "ricsanfre/fluentd-aggregator"
     pullPolicy: "IfNotPresent"
-    tag: "v1.15.2-debian-1.0"
+    tag: "v1.17.1-debian-1.0"
 
   # Deploy fluentd as deployment
   kind: "Deployment"
@@ -418,6 +323,15 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
     create: false
   rbac:
     create: false
+
+  # Setting security context. Fluentd is running as non root user
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
 
   ## Additional environment variables to set for fluentd pods
   env:
@@ -757,7 +671,7 @@ The Helm chart deploy fluentd as a Deployment, passing environment values to the
 image:
   repository: "ricsanfre/fluentd-aggregator"
   pullPolicy: "IfNotPresent"
-  tag: "v1.15.2-debian-1.0"
+  tag: "v1.17.1-debian-1.0"
 
 # Deploy fluentd as deployment
 kind: "Deployment"
@@ -777,11 +691,22 @@ serviceAccount:
   create: false
 rbac:
   create: false
+
+# Setting security context. Fluentd is running as non root user
+securityContext:
+   capabilities:
+     drop:
+     - ALL
+   readOnlyRootFilesystem: false
+   runAsNonRoot: true
+   runAsUser: 1000
 ```
 
 Fluentd is deployed as Deployment (`kind: "Deployment"`) with 1 replica (`replicaCount: 1`, using custom fluentd image (`image.repository: "ricsanfre/fluentd-aggregator` and `image.tag`).
 
 Service account (`serviceAccount.create: false`) and corresponding RoleBinding (`rbac.create: false`) are not created since fluentd aggregator does not need to access to Kubernetes API.
+
+Security context for the pod (`securityContext`), since it is running using a non-root user.
 
 HPA autoscaling is also configured (`autoscaling.enabling: true`).
 
@@ -2072,7 +1997,7 @@ For deploying fluent-bit in forwarder-only architecture, without aggregation lay
           Retry_Limit False
   ```
   
-  `tls` option is disabled (set to False/Off). TLS communications are enabled by linkerd service mesh.
+  `tls` option is disabled (set to False/Off). TLS communications are enabled by cluster service mesh.
 
   `Suppress_Type_Name` option must be enabled (set to On/True). When enabled, mapping types is removed and Type option is ignored. Types are deprecated in APIs in v7.0. This option need to be disabled to avoid errors when injecting logs into elasticsearch:
 

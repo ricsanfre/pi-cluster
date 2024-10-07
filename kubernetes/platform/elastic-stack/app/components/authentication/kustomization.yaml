@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - elasticsearch-admin-externalsecret.yaml
+  - elasticsearch-fluentd-externalsecret.yaml
+  - elasticsearch-fluentd-role.yaml
+  - elasticsearch-prometheus-role.yaml
+  - elasticsearch-prometheus-externalsecret.yaml
+
+patches:
+- target:
+    group: elasticsearch.k8s.elastic.co
+    kind: Elasticsearch
+    name: efk
+  path: elasticsearch-patch.yaml

@@ -31,9 +31,11 @@ k3s_kubelet_config: |
 # --flannel-backend=none
 # --disable-kube-proxy
 # --disable-network-policy
+# --disable-helm-controller
 # --disable 'servicelb'
 # --disable 'traefik'
 # --disable 'local-storage'
+# --disable 'coredns'
 # --node-taint 'node-role.kubernetes.io/control-plane:NoSchedule'
 # --kube-controller-manager-arg 'bind-address=0.0.0.0'
 # --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
@@ -45,14 +47,19 @@ k3s_server_config:
   # Disable Flannel CNI
   flannel-backend: none
   disable-network-policy: true
+  # Disable Helm Controller
+  disable-helm-controller: true
   # Disable kube-proxy (using cilium kube-proxy replacement)
   disable-kube-proxy: true
   tls-san:
     - "{{ k3s_api_vip }}"  # IP to HAProxy
+  # Disable K3s addons: coredns, local path, servicelb, traefik and metric-server
   disable:
+    - coredns
     - local-storage
     - servicelb
     - traefik
+    - metrics-server
   write-kubeconfig-mode: 644
   node-taint:
     - 'node-role.kubernetes.io/control-plane:NoSchedule'

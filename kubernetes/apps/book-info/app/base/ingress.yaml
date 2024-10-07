@@ -1,0 +1,28 @@
+# Ingress Grafana
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-book-info
+  namespace: book-info
+  annotations:
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: book-info.${CLUSTER_DOMAIN}
+
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - book-info.${CLUSTER_DOMAIN}
+      secretName: book-info-tls
+  rules:
+    - host: book-info.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: productpage
+                port:
+                  number: 9080

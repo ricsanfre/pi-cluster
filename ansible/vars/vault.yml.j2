@@ -10,6 +10,10 @@ vault:
   cluster:
     k3s:
      token: {{ k3s_token }}
+  # Flux secret
+  flux:
+    github:
+      pat: {{ github_pat | default("") }}
   # Ingress secrets
   ingress:
     admin:

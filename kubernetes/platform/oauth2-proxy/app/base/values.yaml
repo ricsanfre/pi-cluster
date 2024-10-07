@@ -1,0 +1,55 @@
+# oauth2-proxy helm values (base)
+config:
+  # Add config annotations
+  annotations: {}
+  # OAuth client ID
+  # Follow instructions to configure Keycloak client
+  # https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/keycloak_oidc
+
+  # clientID, clientSecret and cookieSecret stored in a Secret
+  existingSecret: oauth2-proxy-secret
+  #  clientID: "proxy-oauth2"
+  #  # OAuth client secret
+  #  clientSecret: "Au03YXpH2wVGexoEtkrNoYCPQDEEFATr"
+  #  # Create a new secret with the following command
+  #  # openssl rand -base64 32 | head -c 32 | base64
+  #  cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
+  # The name of the cookie that oauth2-proxy will create
+  # If left empty, it will default to the release name
+  cookieName: "oauth2-proxy"
+
+  # Config file
+  configFile: |-
+    # Provider config
+    provider="keycloak-oidc"
+    provider_display_name="Keycloak"
+    redirect_url="https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
+    oidc_issuer_url="https://sso.${CLUSTER_DOMAIN}/realms/picluster"
+    code_challenge_method="S256"
+    ssl_insecure_skip_verify=true
+    # Upstream config
+    http_address="0.0.0.0:4180"
+    upstreams="file:///dev/null"
+    email_domains=["*"]
+    cookie_domains=["${CLUSTER_DOMAIN}"]
+    cookie_secure=false
+    scope="openid"
+    whitelist_domains=[".${CLUSTER_DOMAIN}"]
+    insecure_oidc_allow_unverified_email="true"
+
+sessionStorage:
+  # Can be one of the supported session storage cookie|redis
+  type: redis
+  redis:
+    existingSecret: oauth2-proxy-secret
+    passwordKey: redis-password
+# Enabling redis backend installation
+redis:
+  enabled: true
+  # standalone redis. No cluster
+  architecture: standalone
+  auth:
+    existingSecret: oauth2-proxy-secret
+    existingSecretPasswordKey: redis-password
+
+

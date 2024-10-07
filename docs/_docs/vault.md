@@ -7,13 +7,13 @@ last_modified_at: "27-12-2022"
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
 
-Vault will be deployed as a external service, not running as a Kuberentes service, so it can be used by GitOps solution, ArgoCD, to deploy automatically all cluster services.
+Vault will be deployed as a external service, not running as a Kuberentes service, so it can be used by GitOps solution, ArgoCD/FluxCD, to deploy automatically all cluster services.
 
 Vault could be installed as Kuberentes service, deploying it using an official Helm Chart or a community operator like [Banzai Bank-Vault](https://banzaicloud.com/products/bank-vaults/).
 
 Installing Vault as Kubernetes service will drive us to a chicken/egg situation if we want to use Vault as only source of secrets/credentials for all Kuberentes services deployed. Vault requires to have Block storage solution (Longhorn) deployed first since its POD needs Perstistent Volumes, and to install Longhorn, a few secrets need to be provided to configure its backup (Minio credentials).
 
-[External Secrets Operator](https://external-secrets.io/) will be used to automatically generate the Kubernetes Secrets from Vault data that is needed to deploy the different services using ArgoCD.
+[External Secrets Operator](https://external-secrets.io/) will be used to automatically generate the Kubernetes Secrets from Vault data that is needed to deploy the different services using FluxCD/ArgoCD.
 
 ![picluster-secretsmanagement-architecture](/assets/img/vault-externalsecrets.png)
 

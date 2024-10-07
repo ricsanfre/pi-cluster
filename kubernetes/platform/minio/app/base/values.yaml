@@ -1,0 +1,22 @@
+# minio helm values (base)
+# Get root user/password from secret
+existingSecret: minio-root-secret
+
+# Number of drives attached to a node
+drivesPerNode: 1
+# Number of MinIO containers running
+replicas: 3
+# Number of expanded MinIO clusters
+pools: 1
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Resource request
+resources:
+  requests:
+    memory: 512Mi

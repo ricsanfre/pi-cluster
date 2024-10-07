@@ -1,0 +1,6 @@
+# metrics-server helm values (base)
+
+metrics:
+  enabled: true
+serviceMonitor:
+  enabled: true

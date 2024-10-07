@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - elasticsearch-exporter-externalsecret.yaml
+  - helm.yaml
+  - servicemonitor.yaml
+
+configMapGenerator:
+  - name: prometheus-elasticsearch-exporter-helm-values
+    files:
+      - base-values.yaml=values.yaml
+configurations:
+  - kustomizeconfig.yaml

@@ -231,12 +231,6 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
   
   - Configure Grafana to run behind a proxy http under a subpath `/grafana` (`grafana.grafana.ini.server`). See Grafana tutorial ["Running Grafana behind a proxy"](https://grafana.com/tutorials/run-grafana-behind-a-proxy/).
 
-    {{site.data.alerts.note}}
-
-    Linkerd-viz dashboard integration with Grafana, only works if Grafana runs behind /grafana subpath, so this configuration makes that integration work.
-
-    {{site.data.alerts.end}}
-
   - Configure Grafana to discover ConfigMaps containing dashobards definitions in all namespaces (`grafana.sidecar.dashboards.searchNamespaces`)
 
   - Disables monitoring of kubernetes components (apiserver, etcd, kube-scheduler, kube-controller-manager, kube-proxy and kubelet): `kubeApiServer.enabled`, `kubeControllerManager.enabled`, `kubeScheduler.enabled`, `kubeProxy.enabled` , `kubelet.enabled` and `kubeEtcd.enabled`.
@@ -298,8 +292,6 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
     name: ingress-grafana
     namespace: monitoring
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
@@ -331,8 +323,6 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
     name: ingress-prometheus
     namespace: monitoring
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
@@ -368,8 +358,6 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
     name: ingress-alertmanager
     namespace: monitoring
     annotations:
-      # Linkerd configuration. Configure Service as Upstream
-      nginx.ingress.kubernetes.io/service-upstream: "true"
       # Rewrite target
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$1
@@ -659,7 +647,7 @@ The following chart configuration is provided:
 - Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
 - Loki data source is added (`grafana.additionalDataSource`)
 - Grafana ServiceMonitor label and job label is configured (`serviceMonitor`)
-- Grafana sidecar dashboard provisioner, additional configuration (on top of the one added by kube-prometheus-stack, to search in all namespaces (`sidecar.dashboards.searchNamespace`) 
+- Grafana sidecar dashboard provisioner configuration, to automatically provision dashboards and data-sources.
 
 ```yml
 grafana:
@@ -690,11 +678,24 @@ grafana:
   - name: Loki
     type: loki
     url: http://loki-gateway.logging.svc.cluster.local
-  # Additional configuration to grafana dashboards sidecar
-  # Search in all namespaces for configMaps containing label `grafana_dashboard`
+
+  # Enable provisioning of dashboards and datasources
   sidecar:
     dashboards:
+      enabled: true
+      # Search in all namespaces for configMaps containing label `grafana_dashboard`
       searchNamespace: ALL
+      label: grafana_dashboard
+      # set folder name through annotation `grafana_folder`
+      folderAnnotation: grafana_folder
+      provider:
+        disableDelete: true
+        foldersFromFilesStructure: true
+    datasources:
+      enabled: true
+      # Search in all namespaces for configMaps
+      searchNamespace: ALL
+      labelValue: ""
 ```
 
 #### Keycloak integration: Single sign-on configuration
@@ -826,9 +827,9 @@ See next section ("GitOps installation"), to see how to generate a secret contai
 Single logout is configured: `signout_redirect_url`
 
 
-#### GitOps installation (ArgoCD)
+#### GitOps installation
 
-As an alternative, for GitOps deployments (using ArgoCD), credentials should not be set in Helm chart values.yaml file
+As an alternative, for GitOps deployments, credentials should not be set in Helm chart values.yaml file
 
 - Grafana's admin credentials can be in stored in an existing Secret.
 
@@ -914,25 +915,24 @@ With this sidecar provider enabled, Grafana dashboards can be provisioned automa
 
 Check out ["Grafana chart documentation: Sidecar for Dashboards"](https://github.com/grafana/helm-charts/tree/main/charts/grafana#sidecar-for-dashboards) explaining how to enable/use dashboard provisioning side-car.
 
-`kube-prometheus-stack` configure by default grafana provisioning sidecar to check only for new ConfigMaps containing label `grafana_dashboard`
+Additional helm chart configuration is required for enabling the search for ConfigMaps in all namespaces (`sidecar.dashboards.searchNamespaces: ALL`), by default search is limited to grafana's namespace and to enable the folder annotation (`sidecar.dashboards.folderAnnotation`), so imported dashboards can be loaded into specific directory using a specific annotation in the configMap
 
-kube-prometheus-stack default helm chart values is the following
-
-```yml
-grafana:
-  sidecar:
-    dashboards:
-      SCProvider: true
-      annotations: {}
-      defaultFolderName: null
-      enabled: true
-      folder: /tmp/dashboards
-      folderAnnotation: null
-      label: grafana_dashboard
-      labelValue: null
+```yaml
+# Enable provisioning of dashboards and datasources
+sidecar:
+  dashboards:
+    enabled: true
+    # Search in all namespaces for configMaps containing label `grafana_dashboard`
+    searchNamespace: ALL
+    label: grafana_dashboard
+    # set folder name through annotation `grafana_folder`
+    folderAnnotation: grafana_folder
+    provider:
+      disableDelete: true
+      foldersFromFilesStructure: true
 ```
 
-For provision automatically a new dashboard, a new `ConfigMap` resource must be created, labeled with `grafana_dashboard: 1` and containing as `data` the json file content.
+For provision automatically a new dashboard, a new `ConfigMap` resource must be created, labeled with `grafana_dashboard: 1` and containing as `data` the json file content. It can be annotated with `grafana_folder` so it can be included in a specfic directory
 
 ```yml
 apiVersion: v1
@@ -940,23 +940,17 @@ kind: ConfigMap
 metadata:
   name: sample-grafana-dashboard
   labels:
-     grafana_dashboard: "1"
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "directory1"
 data:
   dashboard.json: |-
   [json_file_content]
 
 ```
 
-Additional helm chart configuration is required for enabling the search for ConfigMaps in all namespaces (by default search is limited to grafana's namespace).
-
-```yaml
-grafana:
-  sidecar:
-    dashboards:
-      searchNamespace: ALL
-```
-
 Following this procedure kube-prometheus-stack helm chart automatically deploy a set of Dashboards for monitoring metrics coming from Kubernetes processes and from Node Exporter. The list of [kube-prometheus-stack grafana dashboards](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack/templates/grafana/dashboards-1.14)
+
 
 For each dashboard a ConfigMap containing the json definition is created.
 
@@ -966,6 +960,48 @@ You can get all of them running the following command
 
 ```shell
 kubectl get cm -l "grafana_dashboard=1" -n monitoring
+```
+
+#### Import initial list of Dashboards
+
+On start-up Grafana can be configured to install dashboards from [Grafana community dashboards](https://grafana.com/grafana/dashboards/).
+
+```yaml
+# Dashboard Providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default-folder
+# Dashboards
+dashboards:
+  default:
+    minio:
+      # renovate: depName="MinIO Dashboard"
+      # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
+      gnetId: 13502
+      revision: 26
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    longhorn:
+      # https://grafana.com/grafana/dashboards/16888-longhorn/
+      gnetId: 16888
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    logging:
+      # https://grafana.com/grafana/dashboards/7752-logging-dashboard/
+      gnetId: 7752
+      revision: 6
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
 ```
 
 {{site.data.alerts.important}}
@@ -999,6 +1035,15 @@ Modify each json file, containing `DS_PROMETHEUS` input variable within `__input
       },
     ...
 ```
+
+This substitution process is automatically done when importing dashboars on start-up.
+See `datasource` configuration in every dashboard.
+
+```yaml
+datasource:
+  - { name: DS_PROMETHEUS, value: Prometheus }
+```
+
 {{site.data.alerts.end}}
 
 

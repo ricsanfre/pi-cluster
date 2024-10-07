@@ -1,0 +1,72 @@
+# kiali-operator helm values (base)
+
+cr:
+  create: true
+  namespace: istio-system
+  spec:
+    auth:
+      # strategy: "anonymous"
+      strategy: openid
+      openid:
+        client_id: "kiali"
+        disable_rbac: true
+        issuer_uri: "https://sso.${CLUSTER_DOMAIN}/realms/picluster"
+    external_services:
+      prometheus:
+        # Prometheus service
+        url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
+      grafana:
+        enabled: true
+        # Grafana service name is "grafana" and is in the "monitoring" namespace.
+        in_cluster_url: 'http://grafana.monitoring.svc.cluster.local/grafana/'
+        # Public facing URL of Grafana
+        url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
+        auth:
+          # Use same OAuth2.0 token used for accesing Kiali
+          type: bearer
+          use_kiali_token: true
+      tracing:
+        # Enabled by default. Kiali will anyway fallback to disabled if
+        # Tempo is unreachable.
+        enabled: true
+        # Tempo service name is "query-frontend" and is in the "tempo" namespace.
+        in_cluster_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
+        provider: "tempo"
+        tempo_config:
+          org_id: "1"
+          datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
+        # Use grpc to speed up the download of metrics
+        use_grpc: true
+        grpc_port: 9095
+    deployment:
+      ingress:
+        class_name: "nginx"
+        enabled: true
+        override_yaml:
+          metadata:
+            annotations:
+              # Enable cert-manager to create automatically the SSL certificate and store in Secret
+              # Possible Cluster-Issuer values:
+              #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+              #   * 'ca-issuer' (CA-signed certificate, not valid)
+              cert-manager.io/cluster-issuer: letsencrypt-issuer
+              cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
+          spec:
+            rules:
+            - host: kiali.${CLUSTER_DOMAIN}
+              http:
+                paths:
+                - backend:
+                    service:
+                      name: kiali
+                      port:
+                        number: 20001
+                  path: /
+                  pathType: Prefix
+            tls:
+            - hosts:
+              - kiali.${CLUSTER_DOMAIN}
+              secretName: kiali-tls
+      # Enabling debug logs
+      logger:
+        log_level: debug

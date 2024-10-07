@@ -1,0 +1,44 @@
+# minio helm values (config)
+
+# Minio Buckets
+buckets:
+  - name: k3s-loki
+    policy: none
+  - name: k3s-tempo
+    policy: none
+
+# Minio Policies
+policies:
+  - name: loki
+    statements:
+      - resources:
+          - 'arn:aws:s3:::k3s-loki'
+          - 'arn:aws:s3:::k3s-loki/*'
+        actions:
+          - "s3:DeleteObject"
+          - "s3:GetObject"
+          - "s3:ListBucket"
+          - "s3:PutObject"
+  - name: tempo
+    statements:
+      - resources:
+          - 'arn:aws:s3:::k3s-tempo'
+          - 'arn:aws:s3:::k3s-tempo/*'
+        actions:
+          - "s3:DeleteObject"
+          - "s3:GetObject"
+          - "s3:ListBucket"
+          - "s3:PutObject"
+          - "s3:GetObjectTagging"
+          - "s3:PutObjectTagging"
+
+# Minio Users
+users:
+  - accessKey: loki
+    existingSecret: minio-users-secret
+    existingSecretKey: lokiPassword
+    policy: loki
+  - accessKey: tempo
+    existingSecret: minio-users-secret
+    existingSecretKey: tempoPassword
+    policy: tempo
