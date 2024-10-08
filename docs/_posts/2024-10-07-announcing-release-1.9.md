@@ -30,7 +30,7 @@ Main reasons for this migration:
   
   FluxCD support the definition of dependencies between applications so the cluster can be bootstrapped in order. Each application start its deployment as soon as all its dependencies are already synchronized, improving the time required to make a full cluster deployment.
   
-- Avoid deffinition of extra-configurition in the manifest files to fix neverending out-of-sync ArgoCD issues. Due to how Argo CD drift assesment logic certain fields not mandatory are Certain fields need to be configured, so they can be ignored during the sync process
+- Avoid definition of extra-configuration in the manifest files to fix neverending out-of-sync ArgoCD issues. Due to how Argo CD drift assesment logic certain not mandatory fields or server assigned fields are marked as out-of-synch and they have to be configured to be ignored during the sync process.
 
 
 Cluster bootstrap process using Ansible playbook has been updated to use FluxCD instead of ArgoCD
