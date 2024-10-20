@@ -19,9 +19,10 @@
     - role: ricsanfre.security
       tags: [security]
 
-    # DNS/DHCP server configuration
+    # DNS Resolver Forwarder configuration
+    # DHCP server configuration
     - role: ricsanfre.dnsmasq
-      tags: [dnsmasq]
+      tags: [dns]
 
     # Update DNS server to point to DNSmasq
     - role: dns
@@ -111,3 +112,16 @@
             - open_iscsi_automatic_startup: true
       when: not centralized_san
       tags: [storage]
+
+- name: Configure DNS authoritative
+  hosts: node1
+  gather_facts: true
+  tags: [dns]
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
+  roles:
+    # DNS configuration
+    - role: ricsanfre.bind9

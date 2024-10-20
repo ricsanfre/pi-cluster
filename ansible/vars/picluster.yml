@@ -255,7 +255,7 @@ restic_environment:
 # Vault configuration
 #######################
 
-vault_hostname: "vault.picluster.ricsanfre.com"
+vault_hostname: "vault.{{ dns_domain }}"
 vault_version: 1.16.3
 
 vault_dns: "{{ vault_hostname }}"
