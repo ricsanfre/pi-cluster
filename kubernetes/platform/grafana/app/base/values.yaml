@@ -9,7 +9,7 @@ admin:
 grafana.ini:
   server:
     # Configuring /grafana subpath
-    domain: monitoring.picluster.ricsanfre.com
+    domain: monitoring.${CLUSTER_DOMAIN}
     root_url: "https://%(domain)s/grafana/"
     # rewrite rules configured in nginx rules
     # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
