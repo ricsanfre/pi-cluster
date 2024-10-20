@@ -5,5 +5,5 @@ metadata:
   name: cluster-settings
   namespace: flux-system
 data:
-  CLUSTER_DOMAIN: picluster.ricsanfre.com
+  CLUSTER_DOMAIN: homelab.ricsanfre.com
   S3_BACKUP_SERVER: s3.ricsanfre.com
