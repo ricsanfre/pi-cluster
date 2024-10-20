@@ -16,7 +16,7 @@ bind9_zones:
     ddns_update_key: ddnskey
     ddns_update_policy_grant: "zonesub any"
     default_ttl: 600
-    serial: 2024102001
+    serial: 2024102002
     refresh: 1D
     retry: 2H
     expire: 1000H
@@ -59,6 +59,9 @@ bind9_zones:
       - label: node-hp-3
         type: A
         rdata: 10.0.0.22
+      - label: vault
+        type: A
+        rdata: 10.0.0.11
   - name: 0.10.in-addr.arpa
     type: primary
     default_ttl: 600
