@@ -13,7 +13,7 @@ env:
   - name: FLUENT_AGGREGATOR_SHARED_KEY
     valueFrom:
       secretKeyRef:
-        name: fluent-bit-secrets
+        name: fluent-secrets
         key: fluentd-shared-key
   - name: FLUENT_SELFHOSTNAME
     valueFrom:

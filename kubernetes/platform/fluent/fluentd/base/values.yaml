@@ -48,19 +48,19 @@ env:
   - name: FLUENT_ELASTICSEARCH_USER
     valueFrom:
       secretKeyRef:
-        name: fluentd-secrets
+        name: fluent-secrets
         key: es-username
   # Elastic operator stores elastic user password in a secret
   - name: FLUENT_ELASTICSEARCH_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: fluentd-secrets
+        name: fluent-secrets
         key: es-password
   # Fluentd forward security
   - name: FLUENTD_FORWARD_SEC_SHARED_KEY
     valueFrom:
       secretKeyRef:
-        name: fluentd-secrets
+        name: fluent-secrets
         key: fluentd-shared-key
   # Loki url
   - name: LOKI_URL

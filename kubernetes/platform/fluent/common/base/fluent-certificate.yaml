@@ -8,7 +8,7 @@ spec:
   secretName: fluentd-tls
   duration: 2160h0m0s # 90d
   renewBefore: 360h0m0s # 15d
-  commonName: fluentd.picluster.ricsanfre.com
+  commonName: fluentd.${CLUSTER_DOMAIN}
   privateKey:
     algorithm: ECDSA
     size: 256
@@ -17,7 +17,7 @@ spec:
     - client auth
   # At least one of a DNS Name, URI, or IP address is required.
   dnsNames:
-    - fluentd.picluster.ricsanfre.com
+    - fluentd.${CLUSTER_DOMAIN}
   # ClusterIssuer: ca-issuer.
   issuerRef:
     name: ca-issuer

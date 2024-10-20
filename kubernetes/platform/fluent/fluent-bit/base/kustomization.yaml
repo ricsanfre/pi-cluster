@@ -1,26 +1,19 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ns.yaml
-  - fluentd-certificate.yaml
-  - fluentd-elastic-templates-cm.yaml
-  - fluentd-externalsecret.yaml
-  - fluentd-extservice.yaml
   - helm.yaml
   - servicemonitor.yaml
 
 configMapGenerator:
-  - name: fluentd-helm-values
+  - name: fluent-bit-helm-values
     files:
       - base-values.yaml=values.yaml
-  - name: fluentd-env
+  - name: fluent-bit-env
     options:
       # Disable hashing.
       # Automatic replacement does not work with configMaps references in values.yaml
       disableNameSuffixHash: true
-    literals: 
-      - lokiURL="http://loki-gateway.loki"
-      - elasticsearchHost=efk-es-http.elastic
-
+    literals:
+      - fluentdHost=fluentd
 configurations:
   - kustomizeconfig.yaml
