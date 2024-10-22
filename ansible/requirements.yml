@@ -32,6 +32,6 @@ collections:
   - name: community.hashi_vault
     version: 6.2.0
   - name: ansible.posix
-    version: 1.5.4
+    version: 1.6.2
   - name: community.crypto
     version: 2.21.0
