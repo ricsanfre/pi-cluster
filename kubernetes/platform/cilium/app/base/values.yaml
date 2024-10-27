@@ -18,8 +18,8 @@ operator:
 rollOutCiliumPods: true
 
 # K8s API service
-k8sServiceHost: 10.0.0.11
-k8sServicePort: 6443
+k8sServiceHost: 127.0.0.1
+k8sServicePort: 6444
 
 # Replace Kube-proxy
 kubeProxyReplacement: true
