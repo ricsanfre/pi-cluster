@@ -36,10 +36,6 @@
     - role: ricsanfre.ntp
       tags: [ntp]
 
-    # PXE server
-    - role: pxe-server
-      tags: [pxe]
-
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)
     - name: Centralized SAN
@@ -109,19 +105,6 @@
           include_role:
             name: ricsanfre.iscsi_initiator
           vars:
-            - open_iscsi_automatic_startup: true
+            open_iscsi_automatic_startup: true
       when: not centralized_san
       tags: [storage]
-
-- name: Configure DNS authoritative
-  hosts: node1
-  gather_facts: true
-  tags: [dns]
-  become: true
-  pre_tasks:
-    - name: Include vault variables
-      include_vars: "vars/vault.yml"
-      tags: ["always"]
-  roles:
-    # DNS configuration
-    - role: ricsanfre.bind9

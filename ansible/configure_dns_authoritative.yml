@@ -1,0 +1,13 @@
+---
+- name: Configure DNS authoritative
+  hosts: dns
+  gather_facts: true
+  tags: [dns]
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: "vars/vault.yml"
+      tags: ["always"]
+  roles:
+    # DNS configuration
+    - role: ricsanfre.bind9
