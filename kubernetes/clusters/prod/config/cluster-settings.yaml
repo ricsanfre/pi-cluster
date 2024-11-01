@@ -7,3 +7,7 @@ metadata:
 data:
   CLUSTER_DOMAIN: homelab.ricsanfre.com
   S3_BACKUP_SERVER: s3.ricsanfre.com
+  LB_POOL_MIN: 10.0.0.50
+  LB_POOL_MAX: 10.0.0.99
+  NGINX_LOAD_BALANCER_IP: 10.0.0.50
+  FLUENTD_LOAD_BALANCER_IP: 10.0.0.51

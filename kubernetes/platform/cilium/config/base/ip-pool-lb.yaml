@@ -6,5 +6,5 @@ metadata:
   namespace: kube-system
 spec:
   blocks:
-    - start: "10.0.0.100"
-      stop: "10.0.0.200"
+    - start: ${LB_POOL_MIN}
+      stop: ${LB_POOL_MAX}

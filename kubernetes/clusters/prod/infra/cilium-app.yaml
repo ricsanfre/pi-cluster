@@ -38,3 +38,7 @@ spec:
     - name: cilium-app
   path: ./kubernetes/platform/cilium/config/overlays/prod
   prune: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
