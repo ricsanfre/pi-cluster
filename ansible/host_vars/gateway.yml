@@ -12,7 +12,7 @@ dnsmasq_upstream_dns_servers:
   - "/0.10.in-addr.arpa/10.0.0.11"
   - 1.1.1.1
   - 8.8.8.8
-dnsmasq_dhcp_range: '10.0.0.32,10.0.0.99'
+dnsmasq_dhcp_range: '10.0.0.100,10.0.0.250'
 dnsmasq_discover_inventory: false
 # dnsmasq_additional_dns_hosts:
 #   ntp_server:
@@ -51,8 +51,8 @@ dnsmasq_discover_inventory: false
 #     desc: "Vault server"
 #     hostname: vault
 #     ip: 10.0.0.11
-dnsmasq_enable_tftp: true
-dnsmasq_tftp_root: /srv/tftp
+dnsmasq_enable_tftp: false
+# dnsmasq_tftp_root: /srv/tftp
 dnsmasq_additional_conf: |-
   # Enabling logs
   log-queries
@@ -64,7 +64,7 @@ dnsmasq_additional_conf: |-
   dhcp-boot=pxelinux.0
   # UEFI boot
   dhcp-match=set:efi-x86_64,option:client-arch,7
-  dhcp-boot=tag:efi-x86_64,bootx64.efi
+  dhcp-boot=tag:efi-x86_64,bootx64.efi,node1,10.0.0.11
 
 ####################
 # ntp role variables
