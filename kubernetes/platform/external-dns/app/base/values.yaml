@@ -28,5 +28,6 @@ sources:
   - istio-gateway
 domainFilters: 
   - homelab.ricsanfre.com
+logLevel: debug
 serviceMonitor:
   enabled: true
