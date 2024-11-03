@@ -1,0 +1,54 @@
+---
+
+- name: Configure Static IP address in raspberry Pi nodes
+  hosts: raspberrypi
+  gather_facts: true
+  tags: [node]
+  become: true
+  tasks:
+    # Disable cloud-init network
+    - name: Disable cloud-init network
+      ansible.builtin.shell: |
+        echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+      args:
+        executable: /bin/bash
+
+    - name: Check if cloud-init netplan file exists
+      ansible.builtin.stat: path=/etc/netplan/50-cloud-init.yaml
+      register: netplan
+
+    - name: Backup existing cloud-init neplan
+      ansible.builtin.command: mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.back
+      when: netplan.stat.exists
+
+    - name: Generate Netplan config file
+      ansible.builtin.template:
+        src: netplan.yml.j2
+        dest: "/etc/netplan/99-network-config.yaml"
+        owner: root
+        group: root
+        mode: 0600
+        backup: true
+      notify: Apply Netplan
+  handlers:
+    - name: Apply Netplan
+      ansible.builtin.command: netplan apply
+
+- name: Configure Static IP address in EliteDesk (x86) nodes
+  hosts: x86
+  gather_facts: true
+  tags: [node]
+  become: true
+  tasks:
+    - name: Generate Netplan config file
+      ansible.builtin.template:
+        src: netplan.yml.j2
+        dest: "/etc/netplan/00-installer-config.yaml"
+        owner: root
+        group: root
+        mode: 0600
+        backup: true
+      notify: Apply Netplan
+  handlers:
+    - name: Apply Netplan
+      ansible.builtin.command: netplan apply

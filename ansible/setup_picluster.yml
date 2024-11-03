@@ -19,9 +19,10 @@
     - role: ricsanfre.security
       tags: [security]
 
-    # DNS/DHCP server configuration
+    # DNS Resolver Forwarder configuration
+    # DHCP server configuration
     - role: ricsanfre.dnsmasq
-      tags: [dnsmasq]
+      tags: [dns]
 
     # Update DNS server to point to DNSmasq
     - role: dns
@@ -34,10 +35,6 @@
     # NTP Server configuration
     - role: ricsanfre.ntp
       tags: [ntp]
-
-    # PXE server
-    - role: pxe-server
-      tags: [pxe]
 
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)
@@ -108,6 +105,6 @@
           include_role:
             name: ricsanfre.iscsi_initiator
           vars:
-            - open_iscsi_automatic_startup: true
+            open_iscsi_automatic_startup: true
       when: not centralized_san
       tags: [storage]

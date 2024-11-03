@@ -1,0 +1,16 @@
+network:
+  version: 2
+  ethernets:
+    {{ ansible_default_ipv4.interface }}:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - {{ hostvars[inventory_hostname].ip }}/24
+      routes:
+      - to: default
+        via: 10.0.0.1
+      nameservers:
+        addresses:
+        - 10.0.0.1
+        search:
+        - homelab.ricsanfre.com

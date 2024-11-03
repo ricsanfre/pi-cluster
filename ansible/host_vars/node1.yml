@@ -1,0 +1,108 @@
+---
+# gateway node variables
+
+########################
+# Bind9 role variables
+########################
+
+bind9_authoritative: true
+bind9_forward: false
+bind9_recursor: false
+bind9_forward_servers: []
+bind9_generate_ddns_key: true
+bind9_zones:
+  - name: "{{ dns_domain }}"
+    type: primary
+    ddns_update_key: ddnskey
+    ddns_update_policy_grant: "zonesub any"
+    secondary_servers:
+      - 'key "ddnskey"'
+    default_ttl: 600
+    serial: 2024102002
+    refresh: 1D
+    retry: 2H
+    expire: 1000H
+    primary: "ns.{{ dns_domain }}"
+    admin: "admin.{{ dns_domain }}"
+    ns_records:
+      - "ns.{{ dns_domain }}"
+    # RR values are either relative to the zone, either with a final dot when outside.
+    rrs:
+      - label: gateway
+        type: A
+        rdata: 10.0.0.1
+      - label: ns
+        type: A
+        rdata: 10.0.0.11
+      - label: node1
+        type: A
+        rdata: 10.0.0.11
+      - label: node2
+        type: A
+        rdata: 10.0.0.12
+      - label: node3
+        type: A
+        rdata: 10.0.0.13
+      - label: node4
+        type: A
+        rdata: 10.0.0.14
+      - label: node5
+        type: A
+        rdata: 10.0.0.15
+      - label: node6
+        type: A
+        rdata: 10.0.0.16
+      - label: node-hp-1
+        type: A
+        rdata: 10.0.0.20
+      - label: node-hp-2
+        type: A
+        rdata: 10.0.0.21
+      - label: node-hp-3
+        type: A
+        rdata: 10.0.0.22
+      - label: vault
+        type: A
+        rdata: 10.0.0.11
+  - name: 0.10.in-addr.arpa
+    type: primary
+    default_ttl: 600
+    serial: 2024102001
+    refresh: 1D
+    retry: 2H
+    expire: 1000H
+    primary: "ns.{{ dns_domain }}"
+    admin: "admin.{{ dns_domain }}"
+    ns_records:
+      - "ns.{{ dns_domain }}."
+    rrs:
+      - label: 1.0
+        type: PTR
+        rdata: "gateway.{{ dns_domain }}."
+      - label: 11.0
+        type: PTR
+        rdata: "node1.{{ dns_domain }}."
+      - label: 12.0
+        type: PTR
+        rdata: "node2.{{ dns_domain }}."
+      - label: 13.0
+        type: PTR
+        rdata: "node3.{{ dns_domain }}."
+      - label: 14.0
+        type: PTR
+        rdata: "node4.{{ dns_domain }}."
+      - label: 15.0
+        type: PTR
+        rdata: "node5.{{ dns_domain }}."
+      - label: 16.0
+        type: PTR
+        rdata: "node6.{{ dns_domain }}."
+      - label: 20.0
+        type: PTR
+        rdata: "node-hp-1.{{ dns_domain }}."
+      - label: 21.0
+        type: PTR
+        rdata: "node-hp-2.{{ dns_domain }}."
+      - label: 22.0
+        type: PTR
+        rdata: "node-hp-3.{{ dns_domain }}."

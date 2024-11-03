@@ -20,7 +20,7 @@ git_private_repo: false
 #######################
 # DNS server
 dns_server: 10.0.0.1
-dns_domain: picluster.ricsanfre.com
+dns_domain: homelab.ricsanfre.com
 
 ############################
 # restic backup role variables

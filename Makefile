@@ -40,6 +40,14 @@ gateway-setup:
 nodes-setup:
 	${RUNNER} ansible-playbook setup_picluster.yml --tags "node"
 
+.PHONY: dns-setup
+dns-setup:
+	${RUNNER} ansible-playbook configure_dns_authoritative.yml
+
+.PHONY: pxe-setup
+pxe-setup:
+	${RUNNER} ansible-playbook configure_pxe_server.yml
+
 .PHONY: external-services
 external-services:
 	${RUNNER} ansible-playbook external_services.yml

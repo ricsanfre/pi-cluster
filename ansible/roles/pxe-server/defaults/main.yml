@@ -5,5 +5,9 @@ ubuntu_live_server_iso_file: jammy-live-server-amd64.iso
 # Kick-start server (http server)
 apache_package_list:
   - apache2
-kick_start_server: 10.0.0.1
+kick_start_server: "{{ hostvars[groups['pxe'][0]].ip }}"
 ks_http_conf: ks-server.conf
+
+# tftp server
+tftp_package_list:
+  - tftpd-hpa
