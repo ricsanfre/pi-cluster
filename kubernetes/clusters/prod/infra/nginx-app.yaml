@@ -19,8 +19,6 @@ spec:
       name: ingress-nginx
       namespace: nginx
   postBuild:
-    substitute:
-      NGINX_LOAD_BALANCER_IP: "10.0.0.100"
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
