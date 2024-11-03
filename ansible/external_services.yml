@@ -298,3 +298,8 @@
       include_tasks:
         file: tasks/create_minio_bearer_token.yml
       no_log: true
+
+    - name: Load bind9 DDNS key
+      include_tasks:
+        file: tasks/load_ddns_key_into_vault.yml
+      no_log: true
