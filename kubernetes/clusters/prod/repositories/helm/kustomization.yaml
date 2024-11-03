@@ -22,3 +22,4 @@ resources:
   - ricsanfre-helmrepo.yaml
   - strimzi-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml
+  - external-dns-helmrepo.yaml

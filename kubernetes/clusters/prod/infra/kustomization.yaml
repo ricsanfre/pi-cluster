@@ -7,6 +7,7 @@ resources:
   - coredns-app.yaml
   - csi-external-snapshotter-app.yaml
   - elastic-stack-app.yaml
+  - external-dns-app.yaml
   - external-secrets-app.yaml
   - fluent-app.yaml
   - grafana-app.yaml
