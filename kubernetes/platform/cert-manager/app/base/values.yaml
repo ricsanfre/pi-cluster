@@ -1,2 +1,8 @@
 # cert-manager helm values (base)
 installCRDs: true
+
+# Use specific DNS servers for DNS01 challenge
+# https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check
+extraArgs:
+  - --dns01-recursive-nameservers-only
+  - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
