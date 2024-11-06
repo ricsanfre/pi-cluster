@@ -2,8 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: kube-system
 resources:
-# Longhorn 1.6.0 is compatible with CSI Snapshot Controller 6.3.2
+# Longhorn 1.7.2 is compatible with CSI Snapshot Controller 7.0.2
 # (https://github.com/kubernetes-csi/external-snapshotter)
 # In this version of CSI Snapshot Controller kustomization files are available
-- https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v6.3.2
-- https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v6.3.2
+- https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v7.0.2
+- https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v7.0.2
