@@ -9,7 +9,7 @@ roles:
   - name: ricsanfre.dnsmasq
     version: v1.0.4
   - name: ricsanfre.bind9
-    version: v1.0.3
+    version: v1.0.5
   - name: ricsanfre.storage
     version: v1.0.0
   - name: ricsanfre.iscsi_target
@@ -28,12 +28,12 @@ roles:
     version: v1.0.4
 collections:
   - name: community.general
-    version: 9.5.0
+    version: 10.0.0
   - name: kubernetes.core
     version: 5.0.0
   - name: community.hashi_vault
     version: 6.2.0
   - name: ansible.posix
-    version: 1.6.1
+    version: 1.6.2
   - name: community.crypto
-    version: 2.22.2
+    version: 2.22.3
