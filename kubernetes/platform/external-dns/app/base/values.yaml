@@ -4,20 +4,24 @@ provider:
   name: rfc2136
 
 env:
-  - name: DDNS_KEY
+  - name: EXTERNAL_DNS_RFC2136_HOST
+    value: "${EXTERNAL_DNS_SERVER}"
+  - name: EXTERNAL_DNS_RFC2136_PORT
+    value: "53"
+  - name: EXTERNAL_DNS_RFC2136_ZONE
+    value: ${CLUSTER_DOMAIN}
+  - name: EXTERNAL_DNS_RFC2136_TSIG_AXFR
+    value: "true"
+  - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
+    value: ddnskey
+  - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET_ALG
+    value: hmac-sha512
+  - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
     valueFrom:
       secretKeyRef:
         name: external-dns-bind9-secret
         key: ddns-key
 
-extraArgs:
-  - --rfc2136-host=10.0.0.11
-  - --rfc2136-port=53
-  - --rfc2136-zone=homelab.ricsanfre.com
-  - --rfc2136-tsig-secret=$DDNS_KEY
-  - --rfc2136-tsig-secret-alg=hmac-sha512
-  - --rfc2136-tsig-keyname=ddnskey
-  - --rfc2136-tsig-axfr
 policy: sync
 registry: txt
 txtOwnerId: k8s
@@ -27,7 +31,7 @@ sources:
   - ingress
   - istio-gateway
 domainFilters: 
-  - homelab.ricsanfre.com
+  - ${CLUSTER_DOMAIN}
 logLevel: debug
 serviceMonitor:
   enabled: true

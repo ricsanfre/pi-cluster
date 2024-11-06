@@ -19,3 +19,7 @@ spec:
       kind: HelmRelease
       name: external-dns
       namespace: external-dns
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
