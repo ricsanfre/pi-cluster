@@ -2,7 +2,7 @@
 title: Cilium (Kubernetes CNI)
 permalink: /docs/cilium/
 description: How to install Cilium CNI in the picluster.
-last_modified_at: "22-06-2024"
+last_modified_at: "09-09-2024"
 ---
 
 [Cilium](https://cilium.io/) is an open source, cloud native solution for providing, securing, and observing network connectivity between workloads, powered by [eBPF](https://ebpf.io/) Kernel technology.
@@ -106,8 +106,8 @@ Installation using `Helm` (Release 3):
   rollOutCiliumPods: true
 
   # K8s API service
-  k8sServiceHost: 10.0.0.11
-  k8sServicePort: 6443
+  k8sServiceHost: 127.0.0.1
+  k8sServicePort: 6444
 
   # Replace Kube-proxy
   kubeProxyReplacement: true
@@ -187,6 +187,16 @@ Installation using `Helm` (Release 3):
   Cilium to perform L2 announcements and reply to ARP requests (`l2announcements.enabled`). This configuration requires Cilium to run in kube-proxy replacement mode.
 
   Also announce external IPs assigned to LoadBalancer type Services need to be enabled (`externalIPs.enabled`, i.e the IPs assigned by LB-IPAM.
+
+- Configure access to Kubernetes API
+
+  ```yaml
+  k8sServiceHost: 127.0.0.1
+  k8sServicePort: 6444
+  ```
+  This variables should point to Kuberentes API listening in a Virtual IP configured in `haproxy` (10.0.0.11) and port 6443.
+  K3s has an API server proxy listening in 127.0.0.1:6444 on all nodes in the cluster, so it is not needed to point to external virtual IP address.
+
 
 - Increase the k8s api client rate limit to avoid being limited due to increased API usage
   
@@ -477,4 +487,3 @@ rm /etc/cni/net.d
 - [Comparing Networking Solutions for Kubernetes: Cilium vs. Calico vs. Flannel](https://www.civo.com/blog/calico-vs-flannel-vs-cilium)
 - [Cilium Installation Using K3s](https://docs.cilium.io/en/stable/installation/k3s/)
 - [K3S install custom CNI](https://docs.k3s.io/networking/basic-network-options#custom-cni)
-
