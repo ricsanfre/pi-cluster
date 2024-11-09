@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "07-07-2024"
+last_modified_at: "09-09-2024"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -59,11 +59,10 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
     storageClass: longhorn
 
   # Run in production mode behind NGINX proxy terminating TLS sessions
-  # ref: https://www.keycloak.org/server/reverseproxy
-  # edge proxy mode: Enables communication through HTTP between the proxy and Keycloak.
-  # This mode is suitable for deployments with a highly secure internal network where the reverse proxy keeps a secure connection (HTTP over TLS) with clients while communicating with Keycloak using HTTP.
   production: true
-  proxy: edge
+  # ref: https://www.keycloak.org/server/reverseproxy
+  proxyHeaders: xforwarded
+
   # Admin user
   auth:
     adminUser: admin
@@ -89,7 +88,7 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
   ```
   
   With this configuration:
-  - Keycloak is deployed in 'production proxy-edge': running behind NGINX proxy terminating TLS connections.
+  - Keycloak is deployed to run behind NGINX proxy terminating TLS connections. `proxyHeaders` variable need to be used.
   - PostgreSQL is deployed in standalone mode.
   - Ingress resource is configured
 
