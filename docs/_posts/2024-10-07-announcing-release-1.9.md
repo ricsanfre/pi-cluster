@@ -93,7 +93,7 @@ Deploy  so PosgreSQL databases can be deployed in a declarative way
 
 It also supports the automation of database backup using an external S3 service.
 
-See further details in ["Databases"](/docs/databases/) and ["Keycloak installation- Alternative installation using external database"](/dosc/sso/#alternative-installation-using-external-database)
+See further details in ["Databases"](/docs/databases/) and ["Keycloak installation- Alternative installation using external database"](/docs/sso/#alternative-installation-using-external-database)
 
 ## Release v1.9.0 Notes
 
