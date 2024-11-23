@@ -1,7 +1,7 @@
 ---
 
 - name: Configure Pi-cluster nodes backup
-  hosts: picluster:gateway
+  hosts: picluster
   gather_facts: true
   tags: [backup]
   become: true
