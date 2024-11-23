@@ -76,7 +76,6 @@ k3s-bootstrap:
 k3s-bootstrap-dev:
 	${RUNNER} ansible-playbook k3s_bootstrap.yml -e overlay=dev
 
-
 .PHONY: k3s-reset
 k3s-reset:
 	${RUNNER} ansible-playbook k3s_reset.yml
@@ -100,18 +99,6 @@ shutdown-gateway:
 .PHONY: shutdown-picluster
 shutdown-picluster:
 	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" picluster
-
-.PHONY: get-argocd-passwd
-get-argocd-passwd:
-	kubectl get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' -n argocd | base64 -d;echo
-
-.PHONY: argocd-port-forward
-argocd-port-forward:
-	kubectl port-forward svc/argocd-server 8080:80 -n argocd
-
-.PHONY: get-elastic-passwd
-get-elastic-passwd:
-	kubectl get secret efk-es-elastic-user -o jsonpath='{.data.elastic}' -n logging | base64 -d;echo
 
 .PHONY: kubernetes-vault-config
 kubernetes-vault-config:
