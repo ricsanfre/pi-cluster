@@ -150,21 +150,21 @@ Edit config file: `/etc/bind/named.conf.local`
 // forward zone name
 zone "homelab.ricsanfre.com" {
     type primary;
-    file "/etc/bind/db.homelab.ricsanfre.com";
+    file "/var/lib/bind/db.homelab.ricsanfre.com";
     
 };
 
 // reverse zone name
-zone "10.0.in-addr.arpa" {
+zone "0.10.in-addr.arpa" {
     type primary;
-    file "/etc/bind/zones/db.10.0";  # 10.0.0.0/16 subnet
+    file "/var/lib/bind/zones/db.10.0";  # 10.0.0.0/16 subnet
 };
 ```
 #### Creating the Forward Zone File
 The forward zone file is where you define DNS records for forward DNS lookups.
 
 - Initial file can be copied from `/etc/bind/db.local`
-- Create the file: `/etc/bind/db.<domain>`: (i.e: `/etc/bind.db.homelab.ricsanfre.com`)
+- Create the file: `/var/lib/bind/db.<domain>`: (i.e: `/var/lib/bind.db.homelab.ricsanfre.com`)
 
 ```
 ;
@@ -197,11 +197,11 @@ node2.homelab.ricsanfre.com.  IN      A      10.0.0.12
 Used for the reverse DNS lookup (From IP to name)
 
 - Initial file can be copied from `/etc/bind/db.127`
-- Create the file (`/etc/bind/db.<IP>`)
+- Create the file (`/var/lib/bind/db.<IP>`)
 
 ```
 $TTL    604800
-@       IN      SOA     ns1.homelab.ricsanfre.com. admin.homelab.ricsanfre.com. (
+@       IN      SOA     ns.homelab.ricsanfre.com. admin.homelab.ricsanfre.com. (
                               1         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
@@ -293,8 +293,6 @@ dnsmasq installed in `gateway` is providing DHCP/DNS services and it should have
 
 [CoreDNS](https://coredns.io/) is used within Kubernetes cluster to discover all Services
 
-
-
 ### Installation
 
 Using [CoreDNS Helm Chart](https://github.com/coredns/helm)
@@ -352,9 +350,9 @@ Details on how to configure rfc2136 provider, used for integrating Bind9, can be
   Update `named.conf.local`
 
   ```
-  zone "homelab.example.com" {
-    type master;
-    file "/etc/bind/zones/db.homelab.example.com";
+  zone "homelab.ricsanfre.com" {
+    type primary;
+    file "/var/lib/bind/db.homelab.ricsanfre.com";
     allow-transfer {
         key "externaldns-key";
     };
