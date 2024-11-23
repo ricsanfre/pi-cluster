@@ -334,3 +334,10 @@ prometheus_grafana_password: "{{ vault.grafana.admin.password}}"
 minio_tempo_user: "{{ vault.minio.tempo.user }}"
 minio_tempo_key: "{{ vault.minio.tempo.key }}"
 minio_tempo_bucket: k3s-tempo
+
+
+#######################
+# Gateway configuration
+#######################
+
+gateway_hostname: "gateway.{{ dns_domain }}"
