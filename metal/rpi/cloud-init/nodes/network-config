@@ -1,0 +1,17 @@
+# Cloud-init net configuration 
+
+version: 2
+ethernets:
+  eth0:
+    dhcp4: false
+    dhcp6: false
+    addresses:
+      - 10.0.0.X/24
+    routes:
+      - to: default
+        via: 10.0.0.1
+    nameservers:
+      addresses:
+        - 10.0.0.1
+      search:
+        - homelab.ricsanfre.com

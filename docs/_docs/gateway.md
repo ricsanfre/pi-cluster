@@ -109,18 +109,29 @@ version: 2
 ethernets:
   eth0:
     dhcp4: false
-    addresses: [10.0.0.1/24]
+    dhcp6: false
+    optional: true
+    addresses: 
+     - 10.0.0.1/24
 wifis:
   wlan0:
     dhcp4: false
+    dhcp6: false
     optional: true
     access-points:
-      "<SSID_NAME>":
-        password: "<SSID_PASSWD>"
-    addresses: [192.168.1.11/24]
-    gateway4: 192.168.1.1
+      <SSID_NAME>:
+        password: <SSID_PASSWD>
+    addresses: 
+     - 192.168.1.11/24
+    routes:
+      - to: default
+        via: 192.168.1.1
     nameservers:
-      addresses: [80.58.61.250,80.58.61.254]
+      addresses:
+        - 1.1.1.1
+        - 8.8.8.8
+      search:
+        - homelab.ricsanfre.com
 ```
 
 It assigns static IP address 10.0.0.1 to eth0 port and configures wifi interface (wlan0) to have static IP address in home network (192.168.1.1). DNS servers of my ISP are also configured.
@@ -471,8 +482,14 @@ This route need to be added to my Laptop and the VM running `pimaster` node
 
 ## DHCP/DNS Configuration
 
-`dnsmasq` will be used as lightweigh DHCP/DNS server
+`dnsmasq` will be used as lightweight DHCP/DNS server.
+
+DNS configured as Resolver/Forwarder. See more details in [PiCluster - DNS Architecture](/docs/dns/).
+
+
 For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https://galaxy.ansible.com/ricsanfre/dnsmasq) has been developed.
+
+Manual installation process is the following:
 
 - Step 1. Install dnsmasq
 
@@ -485,29 +502,25 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   Edit file `/etc/dnsmasq.d/dnsmasq.conf`
 
   ```
-  # Our DHCP service will be providing addresses over our eth0 adapter
+  # Our DHCP/DNS service will be providing services over eth0 adapter
   interface=eth0
 
   # We will listen on the static IP address we declared earlier
   listen-address= 10.0.0.1
 
-  # Pre-allocate a bunch of IPs on the 10.0.0.0/8 network for the Raspberry Pi nodes
-  # DHCP will allocate these for 12 hour leases, but will always assign the same IPs to the same Raspberry Pi
-  # devices, as you'll populate the MAC addresses below with those of your actual Pi ethernet interfaces
+  # DHCP IP range
+  dhcp-range=10.0.0.100,10.0.0.249,12h
 
-  dhcp-range=10.0.0.32,10.0.0.128,12h
-
-  # DNS nameservers
-  server=80.58.61.250
-  server=80.58.61.254
+  # Upstream nameservers
+  server=/homelab.ricsanfre.com/10.0.11
+  server=1.1.1.1
+  server=8.8.8.8
 
   # Bind dnsmasq to the interfaces it is listening on (eth0)
   bind-interfaces
 
   # Never forward plain names (without a dot or domain part)
   domain-needed
-
-  local=/picluster.ricsanfre.com/
 
   domain=picluster.ricsanfre.com
 
@@ -521,56 +534,6 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   # log-queries
   # log-dhcp
 
-  # DHCP configuration based on inventory
-  dhcp-host=e4:5f:01:28:36:98,10.0.0.1
-  dhcp-host=08:00:27:f3:6b:dd,10.0.0.10
-  dhcp-host=dc:a6:32:9c:29:b9,10.0.0.11
-  dhcp-host=e4:5f:01:2d:fd:19,10.0.0.12
-  dhcp-host=e4:5f:01:2f:49:05,10.0.0.13
-  dhcp-host=e4:5f:01:2f:54:82,10.0.0.14
-  dhcp-host=e4:5f:01:d9:ec:5c,10.0.0.15
-  dhcp-host=d8:3a:dd:0d:be:c8,10.0.0.16
-
-  # Adding additional DHCP hosts
-  # Ethernet Switch
-  dhcp-host=94:a6:7e:7c:c7:69,10.0.0.2
-
-  # DNS configuration based on inventory
-  host-record=gateway.picluster.ricsanfre.com,10.0.0.1
-  host-record=pimaster.picluster.ricsanfre.com,10.0.0.10
-  host-record=node1.picluster.ricsanfre.com,10.0.0.11
-  host-record=node2.picluster.ricsanfre.com,10.0.0.12
-  host-record=node3.picluster.ricsanfre.com,10.0.0.13
-  host-record=node4.picluster.ricsanfre.com,10.0.0.14
-  host-record=node5.picluster.ricsanfre.com,10.0.0.15
-  host-record=node6.picluster.ricsanfre.com,10.0.0.16
-
-  # Adding additional DNS
-  # NTP Server
-  host-record=ntp.picluster.ricsanfre.com,10.0.0.1
-  # DNS Server
-  host-record=dns.picluster.ricsanfre.com,10.0.0.1
-  ```
-
-  {{site.data.alerts.note}}
-
-  Additional DNS records can be added for the different services exposed by the cluster. For example:
-
-  - S3/Vault service DNS name pointing to `node1`
-    ```
-    # S3 Server
-    host-record=s3.picluster.ricsanfre.com,10.0.0.11
-    # Vault server
-    host-record=vault.picluster.ricsanfre.com,10.0.0.11
-    ```
-  - Monitoring DNS service pointing to Ingress Controller IP address (from MetaLB pool)
-    ```
-    # Monitoring
-    host-record=monitoring.picluster.ricsanfre.com,10.0.0.100
-    ```
-
-  {{site.data.alerts.end}}
-
 - Step 3. Restart dnsmasq service
 
   ```shell
@@ -578,27 +541,6 @@ For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https:/
   ```
 
 ### Configuring Ansible Role
-
-DHCP static IP leases and DNS records are taken automatically from ansible inventory file for those hosts with `ip`, `hostname` and `mac` variables are defined. See [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.yml) file.
-
-```yml
-...
-    cluster:
-      hosts:
-        node1:
-          hostname: node1
-          ansible_host: 10.0.0.11
-          ip: 10.0.0.11
-          mac: dc:a6:32:9c:29:b9
-        node2:
-          hostname: node2
-          ansible_host: 10.0.0.12
-          ip: 10.0.0.12
-          mac: e4:5f:01:2d:fd:19
-...
-```
-
-Additional DHCP static IP leases and DNS records can be added using `dnsmasq_additional_dhcp_hosts` and `dnsmasq_additional_dns_hosts` role variables.
 
 DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) file.
 

@@ -2,7 +2,7 @@
 title: Cluster Nodes
 permalink: /docs/node/
 description: How to configure the nodes of our Pi Kubernetes Cluster. Ubuntu cloud-init configuration files, and basic OS configuration.
-last_modified_at: "03-02-2024"
+last_modified_at: "22-11-2024"
 ---
 
 A K3S cluster is composed of:
@@ -28,7 +28,7 @@ A K3S cluster is composed of:
 
 ### Network Configuration
 
-Only ethernet interface (eth0) will be used connected to the lan switch. Wifi interface won't be used. Ethernet interface will be configured through DHCP using `gateway` DHCP server.
+Only ethernet interface (eth0) will be used connected to the lan switch. Wifi interface won't be used. Ethernet interface will be configured with static IP address.
 
 ### Unbuntu OS Installation
 
@@ -40,8 +40,7 @@ In order to enable boot from USB, Raspberry PI firmware might need to be updated
 
 Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) described in the table below.
 
-`user-data` file to be used depends on the storage architectural option selected. Since DHCP is used to configure network interfaces, it is not needed to change default `/boot/network-config` file.
-
+`user-data` file to be used depends on the storage architectural option selected.
 
 | Dedicated Disks | Centralized SAN  |
 |-----------------| ---------------- |
@@ -54,6 +53,19 @@ In user-data file `hostname` field need to be changed for each node (node1-node6
 
 {{site.data.alerts.end}}
 
+`network-config` is the same in both architectures:
+
+| Network configuration |
+|---------------------- |
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/network-config) |
+{: .table .table-white .border-dark }
+
+
+{{site.data.alerts.note}}
+
+In network-config file `addresses` field need to be updated for each node (node1-node6), assigned the proper 10.0.0.X/24 address.
+
+{{site.data.alerts.end}}
 
 #### cloud-init partitioning configuration (SSD Disks)
 
@@ -107,6 +119,32 @@ This command:
 For `node1-node6`, the new partition created in boot time, `/dev/sda3`, uses most of the disk space leaving just 30GB for the root filesystem, `/dev/sda2`.
 
 Then cloud-init executes the commands (cloud-init's runcmd section) to format (`ext4`) and mounted the new partition as `/storage`.
+
+### cloud-init: network configuration
+
+
+Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is the following:
+
+```yml
+version: 2
+ethernets:
+  eth0:
+    dhcp4: false
+    dhcp6: false
+    addresses:
+      - 10.0.0.X/24
+    routes:
+      - to: default
+        via: 10.0.0.1
+    nameservers:
+      addresses:
+        - 10.0.0.1
+      search:
+        - homelab.ricsanfre.com
+```
+
+It assigns static IP address 10.0.0.X to eth0 port using as gateway and DNS server 10.0.0.1 (`gateway`).
+Also `homelab.ricsanfre.com` domain is added to dns search
 
 
 ## x86 mini PC nodes
@@ -200,6 +238,22 @@ autoinstall:
   ssh:
     allow-pw: false
     install-server: true
+  network:
+    version: 2
+    ethernets:
+      eth0:
+        dhcp4: false
+        dhcp6: false
+        addresses:
+          - 10.0.0.X/24
+        routes:
+          - to: default
+            via: 10.0.0.1
+        nameservers:
+          addresses:
+            - 10.0.0.1
+          search:
+            - homelab.ricsanfre.com
   storage:
     config:
     - ptable: gpt
