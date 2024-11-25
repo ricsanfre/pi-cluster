@@ -9,6 +9,7 @@
   - gateway
   - node
   - san
+  - dns
   - pxe-server
 - title: Nodes OS Setup
   docs:
@@ -27,7 +28,7 @@
   docs:
   - k3s-networking
   - cilium
-  - dns
+  - kube-dns
   - metallb
   - traefik
   - nginx

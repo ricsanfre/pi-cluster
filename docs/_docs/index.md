@@ -2,7 +2,7 @@
 title: What is this project about?
 permalink: /docs/home/
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "06-10-2024"
+last_modified_at: "25-11-2024"
 ---
 
 
@@ -93,6 +93,11 @@ The following picture shows the set of opensource solutions used for building th
         <td><img width="32" src="/assets/img/logos/coredns.svg" alt="coredns logo"></td>
         <td><a href="https://coredns.io/">CoreDNS</a></td>
         <td>Kubernetes DNS</td>
+    </tr>
+        <tr>
+        <td><img width="32" src="/assets/img/logos/external-dns.png" alt="external-dns logo"></td>
+        <td><a href="https://kubernetes-sigs.github.io/external-dns/">ExternalDNS</a></td>
+        <td>External DNS synchronization</td>
     </tr>
     <tr>
         <td><img width="32" src="/assets/img/logos/haproxy.svg" alt="haproxy logo"></td>
@@ -278,8 +283,9 @@ From software perspective, I have developed the following:
 
    Source code can be found in Pi Cluster Git repository under [`metal/rpi/cloud-init`]({{site.git_address}}/tree/master/metal/rpi/cloud-init) directory.
 
+2. Automate initial OS installation in x86_64 nodes using PXE server and Ubuntu's **auto-install** template files.
 
-2. **Ansible** playbook and roles for configuring cluster nodes and installating and bootstraping K3S cluster  
+3. **Ansible** playbook and roles for configuring cluster nodes and installating and bootstraping K3S cluster  
    
    Source code can be found in Pi Cluster Git repository under [`/ansible`]({{site.git_address}}/tree/master/ansible) directory.
 
@@ -293,6 +299,7 @@ From software perspective, I have developed the following:
    | [ricsanfre.ntp](https://galaxy.ansible.com/ricsanfre/ntp)  | Chrony NTP service configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-ntp) |
    | [ricsanfre.firewall](https://galaxy.ansible.com/ricsanfre/firewall) | NFtables firewall configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-firewall) |
    | [ricsanfre.dnsmasq](https://galaxy.ansible.com/ricsanfre/dnsmasq) | Dnsmasq configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-dnsmasq) |
+   | [ricsanfre.bind9](https://galaxy.ansible.com/ricsanfre/bind9) | Bind9 configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-bind9) |
    | [ricsanfre.storage](https://galaxy.ansible.com/ricsanfre/storage)| Configure LVM | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-storage) |
    | [ricsanfre.iscsi_target](https://galaxy.ansible.com/ricsanfre/iscsi_target)| Configure iSCSI Target| [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_target) |
    | [ricsanfre.iscsi_initiator](https://galaxy.ansible.com/ricsanfre/iscsi_initiator)| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator) |
@@ -303,11 +310,11 @@ From software perspective, I have developed the following:
    | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
    {: .table .table-white .border-dark } 
 
-3. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using FluxCD
+4. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using FluxCD
 
    Source code can be found in Pi Cluster Git repository under [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
-4. This **documentation website** [picluster.ricsanfre.com](/), hosted in Github pages.
+5. This **documentation website** [picluster.ricsanfre.com](/), hosted in Github pages.
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 
@@ -327,34 +334,35 @@ The software used and the latest version tested of each component
 | Kubernetes | Helm | v3.15.3 ||
 | Kubernetes | etcd | v3.5.13-k3s1 | version pre-integrated into K3S |
 | Computing | containerd | v1.7.17-k3s1 | version pre-integrated into K3S |
-| Networking | Cilium | 1.15.7 | |
-| Networking | CoreDNS | v1.10.1 | Helm chart version: 1.31.0 |
-| Metric Server | Kubernetes Metrics Server | v0.7.2 | Helm chart version: 3.12.1|
-| Service Mesh | Istio | v1.22.3 | Helm chart version: 1.22.3 |
-| Service Proxy | Ingress NGINX | v1.11.1 | Helm chart version: 4.11.1 |
-| Storage | Longhorn | v1.6.2 | Helm chart version: 1.6.2 |
-| Storage | Minio | RELEASE.2024-04-18T19-09-19Z | Helm chart version: 5.2.0 |
-| TLS Certificates | Certmanager | v1.15.1| Helm chart version: v1.15.1  |
-| Logging | ECK Operator |  2.13.0 | Helm chart version: 2.13.0 |
+| Networking | Cilium | 1.16.3 | |
+| Networking | CoreDNS | v1.11.1 | Helm chart version: 1.36.1 |
+| Networking | External-DNS | 0.15.0 | Helm chart version: 1.15.0 |
+| Metric Server | Kubernetes Metrics Server | v0.7.2 | Helm chart version: 3.12.2|
+| Service Mesh | Istio | v1.24.0 | Helm chart version: 1.22.3 |
+| Service Proxy | Ingress NGINX | v1.11.3 | Helm chart version: 4.11.3 |
+| Storage | Longhorn | v1.7.2 | Helm chart version: 1.7.2 |
+| Storage | Minio | RELEASE.2024-04-18T19-09-19Z | Helm chart version: 5.3.0 |
+| TLS Certificates | Certmanager | v1.16.1| Helm chart version: v1.16.1  |
+| Logging | ECK Operator |  2.14.0 | Helm chart version: 2.14.0 |
 | Logging | Elastic Search | 8.13.0 | Deployed with ECK Operator |
 | Logging | Kibana | 8.13.0 | Deployed with ECK Operator |
-| Logging | Fluentbit | 3.0.7 | Helm chart version: 0.46.11 |
+| Logging | Fluentbit | 3.1.9 | Helm chart version: 0.47.10 |
 | Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.2 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.17.1|
-| Logging | Loki | 3.1.0 | Helm chart grafana/loki version: 6.7.1  |
-| Monitoring | Kube Prometheus Stack | v0.75.0 | Helm chart version: 61.2.0 |
-| Monitoring | Prometheus Operator | v0.75.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0  |
-| Monitoring | Prometheus | v2.53.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0 |
-| Monitoring | AlertManager | v0.27.0 | Installed by Kube Prometheus Stack. Helm chart version: 61.2.0 |
-| Monitoring | Prometheus Node Exporter | v1.8.1 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 61.2.0 |
-| Monitoring | Prometheus Elasticsearch Exporter | 1.7.0 | Helm chart version: prometheus-elasticsearch-exporter-6.0.0 |
-| Monitoring | Grafana | 11.1.0 | Helm chart version: 8.3.2 |
-| Tracing | Grafana Tempo | 2.5.0 | Helm chart: tempo-distributed (1.15.1) |
-| Backup | Minio External (self-hosted) | RELEASE.2024-03-07T00:43:48Z | |
+| Logging | Loki | 3.2.0 | Helm chart grafana/loki version: 6.19.0  |
+| Monitoring | Kube Prometheus Stack | v0.77.2 | Helm chart version: 65.8.1 |
+| Monitoring | Prometheus Operator | v0.77.2 | Installed by Kube Prometheus Stack. Helm chart version: 65.8.1  |
+| Monitoring | Prometheus | v2.55.0 | Installed by Kube Prometheus Stack. Helm chart version: 65.8.1 |
+| Monitoring | AlertManager | v0.27.0 | Installed by Kube Prometheus Stack. Helm chart version: 65.8.1 |
+| Monitoring | Prometheus Node Exporter | v1.8.2 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 65.8.1 |
+| Monitoring | Prometheus Elasticsearch Exporter | 1.8.0 | Helm chart version: prometheus-elasticsearch-exporter-6.5.0 |
+| Monitoring | Grafana | 11.3.0 | Helm chart version: 8.5.12 |
+| Tracing | Grafana Tempo | 2.6.0 | Helm chart: tempo-distributed (v1.21.1) |
+| Backup | Minio External (self-hosted) | RELEASE.2024-11-07T00:52:20Z | |
 | Backup | Restic | 0.16.5 | |
-| Backup | Velero | 1.13.2 | Helm chart version: 6.7.0 |
-| Secrets | Hashicorp Vault | 1.16.1 | |
-| Secrets| External Secret Operator | 0.9.20 | Helm chart version: 0.9.20 |
-| SSO | Keycloak | 24.0.5 | Bitnami Helm chart version: 21.7.0 |
-| SSO| Oauth2.0 Proxy | 7.6.0 | Helm chart version: 7.7.9 |
-| GitOps | Flux CD | v2.3.0 |  |
+| Backup | Velero | 1.14.1 | Helm chart version: 7.2.2 |
+| Secrets | Hashicorp Vault | 1.18.1 | |
+| Secrets| External Secret Operator | 0.10.5 | Helm chart version: 0.10.5 |
+| SSO | Keycloak | 26.0.5 | Bitnami Helm chart version: 24.1.0 |
+| SSO| Oauth2.0 Proxy | 7.7.1 | Helm chart version: 7.7.28 |
+| GitOps | Flux CD | v2.4.0 |  |
 {: .table .table-white .border-dark }

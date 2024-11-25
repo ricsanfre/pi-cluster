@@ -100,6 +100,11 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes DNS</td>
     </tr>
     <tr>
+        <td><img width="32" src="docs/assets/img/logos/external-dns.png" alt="external-dns logo"></td>
+        <td><a href="https://kubernetes-sigs.github.io/external-dns/">ExternalDNS</a></td>
+        <td>External DNS synchronization</td>
+    </tr>
+    <tr>
         <td><img width="32" src="docs/assets/img/logos/haproxy.svg"></td>
         <td><a href="https://www.haproxy.org/">HA Proxy</a></td>
         <td>Kubernetes API Load-balancer</td>

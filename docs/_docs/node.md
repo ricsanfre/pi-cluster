@@ -22,7 +22,7 @@ A K3S cluster is composed of:
 
 - **Dedicated disks storage architecture**: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node6`.
 
-  SSD disk is partitioned to separate  root filesystem (mountpoit '/') from data storage destinated for Longhorn data (mountpoint '/storage')
+  SSD disk is partitioned to separate  root filesystem (mountpoit `/`) from data storage destinated for Longhorn data (mountpoint `/storage`)
 
 - **Centralized SAN architecture**: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
 
@@ -120,7 +120,7 @@ For `node1-node6`, the new partition created in boot time, `/dev/sda3`, uses mos
 
 Then cloud-init executes the commands (cloud-init's runcmd section) to format (`ext4`) and mounted the new partition as `/storage`.
 
-### cloud-init: network configuration
+#### cloud-init: network configuration
 
 
 Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is the following:
@@ -193,7 +193,7 @@ This partitioning scheme in installer GUI, will looks like
 
 ### Network Configuration
 
-Ethernet interface (eth0) will be used connected to the lan switch. Ethernet interface will be configured through DHCP using `gateway` DHCP server.
+Ethernet interface (eth0) will be used connected to the lan switch. Ethernet interface will be configured with static IP address.
 
 ### Unbuntu OS Installation
 
