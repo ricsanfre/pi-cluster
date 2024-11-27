@@ -663,8 +663,12 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
   # Get Kubernetes CA
   kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode > k3s_ca.crt
 
-  # Get Kubernetes Url
+  # Get Kubernetes Url when using just one context of one cluster
   KUBERNETES_HOST=$(kubectl config view -o jsonpath='{.clusters[].cluster.server}')
+
+  # Get Kubernetes Url of the actual cluster context using, in case there are multiples
+  KUBERNETES_HOST=$(kubectl config view --minify --flatten --output='jsonpath={.clusters[0].cluster.server}')
+  
   ```
 
 - Step 7. Enable Kubernetes auth method
