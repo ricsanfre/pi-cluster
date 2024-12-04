@@ -61,10 +61,12 @@ dnsmasq_additional_conf: |-
 
   # Enabling PXE boot x86 servers
   # Legacy BIOS boot
-  dhcp-boot=pxelinux.0
+  dhcp-match=set:bios,60,PXEClient:Arch:00000
+  dhcp-boot=tag:bios,pxelinux.0,node1,10.0.0.11
   # UEFI boot
-  dhcp-match=set:efi-x86_64,option:client-arch,7
+  dhcp-match=set:efi-x86_64,60,PXEClient:Arch:00007
   dhcp-boot=tag:efi-x86_64,bootx64.efi,node1,10.0.0.11
+
 
 ####################
 # ntp role variables

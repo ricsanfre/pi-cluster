@@ -15,6 +15,11 @@ centralized_san: false
 # Whether the repo is private or not
 git_private_repo: false
 
+###################
+# Default Gateway
+###################
+default_gateway: 10.0.0.1
+
 #######################
 # DNS configuration
 #######################

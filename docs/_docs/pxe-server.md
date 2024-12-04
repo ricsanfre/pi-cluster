@@ -2,14 +2,14 @@
 title: PXE sever
 permalink: /docs/pxe-server/
 description: How to deploy a PXE server for netbooting server auntoinstall for x86 cluster nodes.
-last_modified_at: "24-06-2023"
+last_modified_at: "04-12-2024"
 ---
 
 Ubuntu server autoinstallation can be done through network using PXE ([Preboot eXecution Environment](https://en.wikipedia.org/wiki/Preboot_Execution_Environment)). x86-64 systems boot in either UEFI or legacy (“BIOS”) mode (many systems can be configured to boot in either mode). The precise details depend on the system firmware, but both modes supports the PXE specification, which allows the provisioning of a bootloader over the network.
 
 See details in Ubuntu's documentation: ["Ubuntu Advance Installation - Netbooting the server installer in amd64"](https://ubuntu.com/server/docs/install/netboot-amd64)
 
-A PXE server will be deployed in the Cluster for automatically autoinstall Ubuntu 22.04 in x86 nodes. This PXE server will be deployed in `gateway` node, leveraging DHCP and TFTP server `dnsmasq` can provide, and adding a Kick-start web service for serving cloud-init files and ISO live image.
+A PXE server will be deployed in the Cluster for automatically autoinstall Ubuntu 22.04 in x86 nodes. This PXE server will be deployed in `node1` node, installing a TFTP server and a Kick-start web service to serve cloud-init files and ISO live image. DHCP service, running in `gateway`, has to be configured to provide the proper boot options.
 
 Install process is like this
 1. The to-be-installed machine boots, and is directed to network boot.
@@ -46,25 +46,25 @@ Webserver will be used as kick-start server providing to the netboot installer, 
 
 - Step 2. Created a new file ks-server.conf under /etc/apache2/sites-available/ with the following content
 
-```
-<VirtualHost 10.0.0.10:80>
-    ServerAdmin root@server1.example.com
-    DocumentRoot /
-    ServerName server.example.com
-    ErrorLog ${APACHE_LOG_DIR}/ks-server.example.com-error_log
-    CustomLog ${APACHE_LOG_DIR}/ks-server.example.com-access_log common
-    <Directory /ks>
-        Options Indexes MultiViews
-        AllowOverride All
-        Require all granted
-    </Directory>
-    <Directory /images>
-        Options Indexes MultiViews
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
+  ```
+  <VirtualHost 10.0.0.10:80>
+      ServerAdmin root@server1.example.com
+      DocumentRoot /
+      ServerName server.example.com
+      ErrorLog ${APACHE_LOG_DIR}/ks-server.example.com-error_log
+      CustomLog ${APACHE_LOG_DIR}/ks-server.example.com-access_log common
+      <Directory /ks>
+          Options Indexes MultiViews
+          AllowOverride All
+          Require all granted
+      </Directory>
+      <Directory /images>
+          Options Indexes MultiViews
+          AllowOverride All
+          Require all granted
+      </Directory>
+  </VirtualHost>
+  ```
 
 - Step 3. Create HTTP serving directories
 
@@ -108,16 +108,16 @@ Ubuntu live ISO need to be served by the HTTP server
 
 auto-install cloud-init files are served by HTTP server
 
-- Step 1.  Create a directory with name <server-macaddress> within /var/www/html/ks
+- Step 1.  Create a directory with name `<server-macaddress>` within `/var/www/html/ks`
 
   ```shell
   mkdir -p /var/www/html/ks/<server-macaddress>
   ```
-
+  This directory should contain two files per
   /var/www/html/ks/aa:bb:cc:dd:ee:00/meta-data
   /var/www/html/ks/aa:bb:cc:dd:ee:00/user-data
 
-- Step 2. Create user-data file in /var/www/html/ks/<server-macaddress>
+- Step 2. Create user-data file in `/var/www/html/ks/<server-macaddress>`
 
   This must be a [cloud-init ubuntu auto-install file](https://ubuntu.com/server/docs/install/autoinstall)
 
@@ -135,7 +135,7 @@ auto-install cloud-init files are served by HTTP server
   
   The above cloud-init user-data file creates a minimum installation, setting server hostname, and ubuntu default password (ubuntu)
 
-- Step 3. Create meta-data file in /var/www/html/ks/<server-macaddress>
+- Step 3. Create meta-data file in `/var/www/html/ks/<server-macaddress>`
 
   Create cloud-init meta-data file containing the hostname of the server or a empty file.
 
@@ -152,53 +152,57 @@ These files must be placed under /var/www/html/ks/<mac-address> if different con
 {{site.data.alerts.end}}
 
 
-### DHCP and TFTP configuration
+### DHCP configuration
 
-Assuming that DHCP is already installed and configured as part of `gateway` deployment, only additional configuration need to be added for PXE boot. TFTP server that is part of dnsmasq need to be also configured.
+Assuming that DHCP is already installed and configured as part of `gateway` deployment, only additional configuration need to be added for PXE boot. `dnsmasq` TFTP server won`t be used to serve the required boot files.
 
 See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
 
-- Step 1. Create TFTP server directory
-
-  
-  ```shell
-  sudo mkdir /srv/tftp
-  sudo mkdir /srv/tftp/grub
-  sudo mkdir /srv/tftp/pxelinux.cfg
-  ```
-
-- Step 2. Configure dnsmasq
+- Step 1. Configure dnsmasq service
 
   Edit file `/etc/dnsmasq.d/dnsmasq.conf` adding the following lines
 
   ```
-  # Enabling logs
-  log-queries
-  log-dhcp
-  log-facility=/var/log/dnsmasq.log
-
   # Enabling PXE boot x86 servers
   # Legacy BIOS boot
-  dhcp-boot=pxelinux.0
+  dhcp-match=set:bios,60,PXEClient:Arch:00000
+  dhcp-boot=tag:bios,pxelinux.0,node1,10.0.0.11
   # UEFI boot
-  dhcp-match=set:efi-x86_64,option:client-arch,7
-  dhcp-boot=tag:efi-x86_64,bootx64.efi
-
-  # Enable-tftp
-  enable-tftp
-  tftp-root=/srv/tftp
+  dhcp-match=set:efi-x86_64,PXEClient:Arch:00007
+  dhcp-boot=tag:efi-x86_64,bootx64.efi,node1,10.0.0.11
   ```
+  With this configuration uefi x86 clients (pxe-client-arch=7), uses `bootx64.efi` boot file that can be downloaded from TFTP server `node1` with IP `10.0.0.11`. Bios x86 clients (pxe-client-arch=0) will use `pxelinux.0` file to boot.
 
-- Step 3. Restart dnsmasq service
+- Step 2. Restart dnsmasq service
 
   ```shell
   sudo systemctl restart dnsmasq
   ```
 
-### Serving boot loading files via TFTP
+### TFTP Server
+
+TFTP server will be installed in external services node: `node1`
+
+- Step 1. Install `tftpd-hpa` package
+
+  ```shell
+  sudo apt-get install tftpd-hpa
+  ```
+
+  Default configuration stored in `/etc/default/tftpd-hpa`, uses TFTP directory `/srv/tftp`
 
 
-#### Copying kernel and initrd files
+- Step 2. Create TFTP server directories to store installation files.
+
+  ```shell
+  sudo mkdir /srv/tftp/grub
+  sudo mkdir /srv/tftp/pxelinux.cfg
+  ```
+
+#### Serving boot loading files via TFTP
+
+
+##### Copying kernel and initrd files
 
 - Step 1. Download Ubuntu 22.04 server live ISO
 
@@ -218,7 +222,7 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
   cp /mnt/casper/{vmlinuz,initrd} /srv/tftp/
   ```
 
-#### Copying files for UEFI boot
+##### Copying files for UEFI boot
 
 - Step 1. Copy the signed shim binary into place:
  
@@ -233,7 +237,7 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
   dpkg-deb --fsys-tarfile grub-efi-amd64-signed*deb | tar x ./usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed -O > /srv/tftp/grubx64.efi  
   ```
 
-- Step 3. Copy unicode.pf2
+- Step 3. Copy `unicode.pf2`
 
   ```shell
   apt download grub-common
@@ -274,7 +278,7 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
 
   menuentry 'Install Ubuntu 22.04' {
           gfxmode $linux_gfx_mode
-          linux vmlinuz ip=dhcp url=http://10.0.0.1/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.1/ks/${net_default_mac}/ cloud-config-url=/dev/null
+          linux vmlinuz ip=dhcp url=http://10.0.0.11/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/${net_default_mac}/ cloud-config-url=/dev/null
           initrd initrd
   }
   ```
@@ -282,16 +286,16 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
   This configuration launch live ISO in autoinstall mode using cloud-init files downloaded from  Kick-start web server under ks/<server-mac>/ (`${net_default_mac}`).
 
 
-#### Copying files for legacy boot
+##### Copying files for legacy boot
 
-- Step 1. Copy the pxelinux.0 binary:
+- Step 1. Copy the `pxelinux.0` binary:
  
   ```shell
   apt download pxelinux
   dpkg-deb --fsys-tarfile pxelinux*deb | tar x ./usr/lib/PXELINUX/pxelinux.0 -O > /srv/tftp/pxelinux.0
   ```
 
-- Step 2. Copy syslinux-common packages:
+- Step 2. Copy `syslinux-common` packages:
 
   ```shell
   apt download syslinux-common
@@ -301,7 +305,7 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
   dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/libutil.c32 -O > /srv/tftp/libutil.c32 
   ```
 
-- Step 4. Prepare pxe.conf file and copy to /srv/tftp/pxelinux.cfg
+- Step 4. Prepare `pxe.conf` file and copy to `/srv/tftp/pxelinux.cfg`
 
   PXE looks for a file containing in the name the MAC address, using as separator '-'
 
@@ -317,7 +321,7 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
           menu default
           kernel vmlinuz
           initrd initrd
-          append ip=dhcp url=http://10.0.0.1/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.1/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
+          append ip=dhcp url=http://10.0.0.11/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.11/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
   prompt 0
   timeout 300
   ```
@@ -326,15 +330,10 @@ See [Gateway DHCP/DNS Configuration](/docs/gateway/#dhcpdns-configuration)
   
 
 
-### Alternative booting ISO contents via nfsroot.
+#### Alternative booting ISO contents via nfsroot.
 
 Netboot installation requires to download the ISO and keep it in RAM, which is not possible if the server RAM is not > 4GB.
 Testing with servers with less than 5 GB of memory, for example for testing PXE server in virtualized environment like Virtualbox, installation hangs with initdram message "not space left".
-
-> NOTE: Idea from this POST: https://discourse.ubuntu.com/t/netbooting-the-live-server-installer/14510/184
->
-> "Extracting or mounting ISO on NFS server, then serve the contents itself, which goes around the requirement of keeping whole ISO in RAM plus additional RAM to do the booting and installation procedure"
-
 
 - Step 1: Intall NFS server
 
@@ -355,14 +354,14 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
 
   Configure mount on start
 
-  Add to /etc/fstab file the following line
+  Add to `/etc/fstab` file the following line
   ```
   /var/www/html/images/jammy-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs iso9660 loop 0 0
   ```
 
 - Step 4: Configure NFS
 
-  Edit /etc/exports file adding the following line:
+  Edit `/etc/exports` file adding the following line:
 
   ```
   /mnt/jammy-live-server-amd64-iso-nfs 10.0.0.0/24(ro,sync,no_subtree_check)

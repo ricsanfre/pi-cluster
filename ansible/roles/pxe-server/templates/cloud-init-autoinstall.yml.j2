@@ -7,23 +7,9 @@ autoinstall:
     allow-pw: false
     install-server: true
   network:
-    version: 2
-    ethernets:
-      eth0:
-        dhcp4: false
-        dhcp6: false
-        addresses:
-          - {{ hostvars[x86_host].ip }}/24
-        routes:
-          - to: default
-            via: 10.0.0.1
-        nameservers:
-          addresses:
-            - 10.0.0.1
-          search:
-            - {{ dns_domain }}
+    {{ hostvars[x86_host].autoinstall.network | to_nice_yaml | indent(4) }}
   storage:
-    config: {{ hostvars[x86_host].autoinstall.storage.config }}
+    {{ hostvars[x86_host].autoinstall.storage | to_nice_yaml | indent(4) }}
 
   user-data:
     # Set TimeZone and Locale
