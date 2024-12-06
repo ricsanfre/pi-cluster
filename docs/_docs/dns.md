@@ -25,6 +25,9 @@ Homelab DNS Architecture is composed of the following components:
 
   Configured as DNS server in all homelab nodes. It forwards request for `homelab.ricsanfre.com` domain to Authoritative Internal DNS server runing in `node1` and the rest of request to default DNS servers 1.1.1.1 (cloudflare) and 8.8.8.8 (google)
 
+
+![gateway-dns-dhcp-config](/assets/img/gateway-dns-dhcp-config.png)
+
 This architecture is complemented with the following Kubernetes components:
 
 - **Kubernetes DNS service**, [CoreDNS](https://coredns.io/). DNS server that can perform service discovery and name resolution within the cluster. 
@@ -350,5 +353,5 @@ DNS Resolver/Forwarding service, can be deployed in my linux laptop so DNS queri
   If using Ubuntu Desktop, [Network-Manager](https://ubuntu.com/core/docs/networkmanager) need to be configured.
   Go to Interface settings and set static DNS nameserver.
 
-  ![networ-manager-static](/assets/img/ubuntu-network-manager-ipv4-settings.png)
+  ![network-manager-static](/assets/img/ubuntu-network-manager-ipv4-settings.png)
 

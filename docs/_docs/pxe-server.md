@@ -11,6 +11,9 @@ See details in Ubuntu's documentation: ["Ubuntu Advance Installation - Netbootin
 
 A PXE server will be deployed in the Cluster for automatically autoinstall Ubuntu 22.04 in x86 nodes. This PXE server will be deployed in `node1` node, installing a TFTP server and a Kick-start web service to serve cloud-init files and ISO live image. DHCP service, running in `gateway`, has to be configured to provide the proper boot options.
 
+![gateway-dns-dhcp-config](/assets/img/gateway-dns-dhcp-config.png)
+
+
 Install process is like this
 1. The to-be-installed machine boots, and is directed to network boot.
 2. The DHCP server tells the machine its network configuration and where to get the bootloader.
