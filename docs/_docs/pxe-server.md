@@ -232,6 +232,7 @@ TFTP server will be installed in external services node: `node1`
   ```shell
   apt download shim-signed
   dpkg-deb --fsys-tarfile shim-signed*deb | tar x ./usr/lib/shim/shimx64.efi -O > /srv/tftp/bootx64.efi
+  ```
 
 - Step 2. Copy the signed GRUB binary into place:
 

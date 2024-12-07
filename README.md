@@ -49,7 +49,7 @@ Also deployment of services for building a cloud-native microservices architectu
 The following picture shows the set of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Ansible/FluxCD:
 
 <p align="center">
-  <img src="docs/assets/img/pi-cluster-icons.png" width="500"/>
+  <img src="docs/assets/img/pi-cluster-tech-stack.png" width="500"/>
 </p>
 
 <div class="d-flex">
@@ -78,6 +78,11 @@ The following picture shows the set of opensource solutions used so far in the c
         <td><img width="32" src="docs/assets/img/logos/ubuntu.svg"></td>
         <td><a href="https://ubuntu.com/">Ubuntu</a></td>
         <td>Cluster nodes OS</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="docs/assets/img/logos/openwrt-icon.png" alt="openwrt logo"></td>
+        <td><a href="https://openwrt.org/">OpenWRT</a></td>
+        <td>Router/Firewall OS</td>
     </tr>
     <tr>
         <td><img width="32" src="docs/assets/img/logos/k3s.svg"></td>
@@ -120,17 +125,12 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes Ingress Controller</td>
     </tr> 
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
-        <td><a href="https://istio.io/">Istio</a></td>
-        <td>Kubernetes Service Mesh</td>
-    </tr>
-    <tr>
         <td><img width="32" src="docs/assets/img/logos/longhorn.svg"></td>
         <td><a href="https://longhorn.io/">Longhorn</a></td>
         <td>Kubernetes distributed block storage</td>
     </tr>
     <tr>
-        <td><img width="60" src="docs/assets/img/logos/minio.svg"></td>
+        <td><img width="20" src="docs/assets/img/logos/minio.svg"></td>
         <td><a href="https://min.io/">Minio</a></td>
         <td>S3 Object Storage solution</td>
     </tr>
@@ -209,6 +209,26 @@ The following picture shows the set of opensource solutions used so far in the c
         <td><a href="https://grafana.com/oss/grafana/">Grafana</a></td>
         <td>Monitoring Dashboards</td>
     </tr>
+        <tr>
+        <td><img width="32" src="docs/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
+        <td><a href="https://istio.io/">Istio</a></td>
+        <td>Kubernetes Service Mesh</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="docs/assets/img/logos/apache_kafka.svg" alt="kafka logo"></td>
+        <td><a href="https://strimzi.io/">Strimzi Kafka</a></td>
+        <td>Kubernetes Operator for running Kafka streaming platform</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="docs/assets/img/logos/cloudnative-pg.png" alt="cnpg logo"></td>
+        <td><a href="https://cloudnative-pg.io/">CloudNative PosgreSQL</a></td>
+        <td>Kubernetes Operator for running PosgreSQL </td>
+    </tr>
+        <tr>
+        <td><img width="32" src="docs/assets/img/logos/mongodb.svg" alt="mongodb logo"></td>
+        <td><a href="https://github.com/mongodb/mongodb-kubernetes-operator">MongoDB Kubernetes Operator</a></td>
+        <td>Kubernetes Operator for running MongoDB </td>
+    </tr>
 </table>
 </div>
 
@@ -241,7 +261,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 ### Self-hosted external services 
 
-There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them..
+There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them.
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
@@ -258,7 +278,7 @@ Home lab architecture, showed in the picture below, consist of a Kubernetes clus
 
 
 <p align="center">
-  <img src="docs/assets/img/picluster-architecture.png" width="500"/>
+  <img src="docs/assets/img/pi-cluster-architecture.png" width="500"/>
 </p>
 
 

@@ -2,7 +2,7 @@
 title: What is this project about?
 permalink: /docs/home/
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "25-11-2024"
+last_modified_at: "07-12-2024"
 ---
 
 
@@ -45,10 +45,10 @@ Also deployment of services for building a cloud-native microservices architectu
 
 The following picture shows the set of opensource solutions used for building this cluster:
 
-![Cluster-Icons](/assets/img/pi-cluster-icons.png)
+![cluster-tech-stack](/assets/img/pi-cluster-tech-stack.png)
 
 <div class="d-flex">
-<table class="table table-white table-borderer border-dark w-auto align-middle">
+<table class="table table-borderer border-dark w-auto align-middle">
     <tr>
         <th></th>
         <th>Name</th>
@@ -75,6 +75,11 @@ The following picture shows the set of opensource solutions used for building th
         <td>Cluster nodes OS</td>
     </tr>
     <tr>
+        <td><img width="32" src="/assets/img/logos/openwrt-icon.png" alt="openwrt logo"></td>
+        <td><a href="https://openwrt.org/">OpenWRT</a></td>
+        <td>Router/Firewall OS</td>
+    </tr>
+    <tr>
         <td><img width="32" src="/assets/img/logos/k3s.svg" alt="k3s logo"></td>
         <td><a href="https://k3s.io/">K3S</a></td>
         <td>Lightweight distribution of Kubernetes</td>
@@ -94,7 +99,7 @@ The following picture shows the set of opensource solutions used for building th
         <td><a href="https://coredns.io/">CoreDNS</a></td>
         <td>Kubernetes DNS</td>
     </tr>
-        <tr>
+    <tr>
         <td><img width="32" src="/assets/img/logos/external-dns.png" alt="external-dns logo"></td>
         <td><a href="https://kubernetes-sigs.github.io/external-dns/">ExternalDNS</a></td>
         <td>External DNS synchronization</td>
@@ -115,17 +120,12 @@ The following picture shows the set of opensource solutions used for building th
         <td>Kubernetes Ingress Controller</td>
     </tr> 
     <tr>
-        <td><img width="32" src="/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
-        <td><a href="https://istio.io/">Istio</a></td>
-        <td>Kubernetes Service Mesh</td>
-    </tr>
-    <tr>
         <td><img width="32" src="/assets/img/logos/longhorn.svg" alt="longhorn logo"></td>
         <td><a href="https://longhorn.io/">Longhorn</a></td>
         <td>Kubernetes distributed block storage</td>
     </tr>
     <tr>
-        <td><img width="60" src="/assets/img/logos/minio.svg" alt="minio logo"></td>
+        <td><img width="20" src="/assets/img/logos/minio.svg" alt="minio logo"></td>
         <td><a href="https://min.io/">Minio</a></td>
         <td>S3 Object Storage solution</td>
     </tr>
@@ -204,6 +204,26 @@ The following picture shows the set of opensource solutions used for building th
         <td><a href="https://grafana.com/oss/grafana/">Grafana</a></td>
         <td>Monitoring Dashboards</td>
     </tr>
+    <tr>
+        <td><img width="32" src="/assets/img/logos/istio-icon-color.svg" alt="istio logo"></td>
+        <td><a href="https://istio.io/">Istio</a></td>
+        <td>Kubernetes Service Mesh</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="/assets/img/logos/apache_kafka.svg" alt="kafka logo"></td>
+        <td><a href="https://strimzi.io/">Strimzi Kafka</a></td>
+        <td>Kubernetes Operator for running Kafka streaming platform</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="/assets/img/logos/cloudnative-pg.png" alt="cnpg logo"></td>
+        <td><a href="https://cloudnative-pg.io/">CloudNative PosgreSQL</a></td>
+        <td>Kubernetes Operator for running PosgreSQL </td>
+    </tr>
+        <tr>
+        <td><img width="32" src="/assets/img/logos/mongodb.svg" alt="mongodb logo"></td>
+        <td><a href="https://github.com/mongodb/mongodb-kubernetes-operator">MongoDB Kubernetes Operator</a></td>
+        <td>Kubernetes Operator for running MongoDB </td>
+    </tr>
 </table>
 </div>
 
@@ -222,7 +242,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 | --- | --- | --- | --- |
 | <img width="60" src="/assets/img/logos/letsencrypt.svg" alt="letsencrypt logo" >| [Letsencrypt](https://letsencrypt.org/) | TLS CA Authority | Signed valid TLS certificates |
 | <img width="60" src="/assets/img/logos/ionos.png" alt="ionos logo"> |[IONOS](https://www.ionos.es/) | DNS | DNS and [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) for certificates |
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 **Alternatives:**
 
@@ -238,13 +258,13 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 ### Self-hosted external services 
 
-There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them.
+There is another list of services that I have decided to run outside the kubernetes cluster selfhosting them.
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="/assets/img/logos/minio.svg" alt="minio logo"> |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
+| <img width="20" src="/assets/img/logos/minio.svg" alt="minio logo"> |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
 | <img width="32" src="/assets/img/logos/vault.svg" alt="vault logo"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
-{: .table .table-white .border-dark .align-middle }
+{: .table .border-dark .align-middle }
 
 
 Minio backup servive is hosted in a VM running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
@@ -308,7 +328,7 @@ From software perspective, I have developed the following:
    | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio)| Configure Minio S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
    | [ricsanfre.backup](https://galaxy.ansible.com/ricsanfre/backup)| Configure Restic | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-backup) |
    | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
-   {: .table .table-white .border-dark } 
+   {: .table .border-dark } 
 
 4. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using FluxCD
 
@@ -365,4 +385,4 @@ The software used and the latest version tested of each component
 | SSO | Keycloak | 26.0.5 | Bitnami Helm chart version: 24.1.0 |
 | SSO| Oauth2.0 Proxy | 7.7.1 | Helm chart version: 7.7.28 |
 | GitOps | Flux CD | v2.4.0 |  |
-{: .table .table-white .border-dark }
+{: .table .border-dark }

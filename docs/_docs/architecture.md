@@ -2,13 +2,13 @@
 title: Lab Architecture
 permalink: /docs/architecture/
 description: Homelab architecture of our Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "03-02-2024"
+last_modified_at: "07-12-2024"
 ---
 
 
 The home lab I am building is shown in the following picture
 
-![Cluster-lab](/assets/img/picluster-architecture.png)
+![Cluster-lab](/assets/img/pi-cluster-architecture.png)
 
 
 A K3S cluster is composed of the following **cluster nodes**:
@@ -17,9 +17,9 @@ A K3S cluster is composed of the following **cluster nodes**:
   - `node5` and `node6`running on Raspberry Pi 4B (8GB)
   - `node-hp-1`, `node-hp-2` and `node-hp-3` running on HP Elitedesk 800 G3 (16GB)
 
-A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running on Raspberry Pi 4B (2GB). 
+A **LAN switch** (16 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running [OpenWRT](https://openwrt.org/) on Raspberry Pi 4B (2GB) or GL-iNet Slate Plus (GL-A1300).
 
-`gateway`, **cluster firewall/router**, is connected to LAN Switch using its Gigabit Ethernet port. It is also connected to my home network using its WIFI interface, so it can route and filter traffic comming in/out the cluster. With this architecture my lab network can be isolated from my home network.
+`gateway`, **cluster firewall/router** is connected to LAN Switch using its Gigabit Ethernet port. It is also connected to my home network using its WIFI interface, so it can route and filter traffic comming in/out the cluster. With this architecture my lab network can be isolated from my home network.
 
 `gateway` also provides networking services to my lab network:
  - Internet Access
@@ -29,14 +29,13 @@ A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide
 
 `node1`, running on Raspberry Pi 4B (4GB), for providing **kubernetes external services**:
   - Secret Management (Vault)
-  - Kuberentes API Load Balancer
-  - Backup server
+  - DNS Authoritative (Bind9)
 
-A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `node1` server.
+A load balancer is also needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `node1` server.
 
-For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `gateway` node.
+For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `node1` node.
 
-**Ansible control node**, `pimaster` is deployed in a Linux VM or Linux Laptop, so from this node the whole cluster configuration can be managed. `pimaster` is connected to my home network (ip in  192.168.1.0/24 network). In `pimaster`, a IP route to 10.0.0.0/24 network through `gateway` (192.168.1.11) need to be configured, so it can have connectivity to cluster nodes.
+**Ansible control node**, `pimaster` is deployed in a Linux VM or Linux Laptop, so from this node the whole cluster configuration can be managed. `pimaster` is connected to my home network (ip in  192.168.1.0/24 network). In `pimaster`, a IP route to 10.0.0.0/24 network through `gateway` (192.168.1.21) need to be configured, so it can have connectivity to cluster nodes.
 
 
 ## Hardware
@@ -100,20 +99,30 @@ The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power su
 
 ### Networking
 
-A 8 GE ports LAN switch, [NetGear GS108S](https://www.netgear.com/business/wired/switches/plus/gs108e/), and 5 GE ports LAN switch, [NetGear GS105E](https://www.netgear.es/support/product/gs105e), supporting VLAN configuration and remote management, are used to provide connectivity to all cluster nodes (Raspberry Pis and x86 mini PCs).
+A 16 GE ports LAN switch, [D-Link DGS-1016S](https://www.dlink.com/en/products/dgs-1016s-16-port-gigabit-unmanaged-switch) is used to provide connectivity to all cluster nodes (Raspberry Pis and x86 mini PCs).
 
 All nodes are connected to the switch with Cat6 eth cables, using their Gigabit Ethernet port.
 
-![netgear-gs108s](/assets/img/netgear-gs108e.jpg)
+![dlink-dgs-1016S](/assets/img/dlink-dgs-1016S.png)
 
+As homelab router/firewall, a wifi pocket-sized travel router, [GL-Inet Slate Plus (GL-A1300)](https://www.gl-inet.com/products/gl-a1300/). Firmware of the router is replaced by latest version of OpenWRT operating system.
 
-![netgear-gs105e](/assets/img/netgear-gs105E.png)
+![glinet-xlate-plus](/assets/img/glinet-xlate-plus.png)
+
+One of the LAN ports of GL-A1300 is connected to DL-Link switch. One of the WiFi ports is used as WAN port connected to my Home network.
+
+{{site.data.alerts.note}}
+
+As alternative to Gl-iNet router, a Raspberry Pi 4B can be used.
+
+{{site.data.alerts.end}}
 
 For networking, I have used the following hardware components:
 
-- [1 x Netgear GS108-300PES](https://www.amazon.es/Netgear-GS108E-300PES-conmutador-gestionable-met%C3%A1lica/dp/B00MYYTP3S). 8 ports GE ethernet managed switch (QoS and VLAN support)
+- [1 x D-Link DGS-1016S](https://www.amazon.es/D-Link-Gigabit-met%C3%A1lica-sobremesa-Ventiladores/dp/B08GYJ13XG). 16 ports GE ethernet unmanaged switch
 
-- [1 x Netgear GS105E](https://www.amazon.es/Netgear-GS105E-200PES-gestionable-puertos-Gigabit/dp/B00GWKN1Q2), 5 ports GE ehternet managed switch
+- [1 x GL-Inet Slate Plus (GL-A1300)](https://www.amazon.es/GL-iNet-GL-A1300-Slate-Enrutador-inal%C3%A1mbrico/dp/B0B4ZSR2PX), wifi router/firewall.
+
 - [10 x Ethernet Cable](https://www.aliexpress.com/item/32821735352.html). Flat Cat 6,  15 cm length
 
 ## Raspberry PI Storage
