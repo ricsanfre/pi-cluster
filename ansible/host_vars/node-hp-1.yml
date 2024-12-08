@@ -15,7 +15,7 @@ autoinstall:
           addresses:
             - "{{ dns_server }}"
           search:
-            - "{{ dns_domain }}"  
+            - "{{ dns_domain }}"
   storage:
     grub:
       reorder_uefi: false
