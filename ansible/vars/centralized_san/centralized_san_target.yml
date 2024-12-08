@@ -15,9 +15,6 @@ storage_volumegroups:
       - /dev/sda3
 
 storage_volumes:
-  - name: vg_iscsi_lv_node1
-    vg: vg_iscsi
-    size: 100g
   - name: vg_iscsi_lv_node2
     vg: vg_iscsi
     size: 100g
@@ -27,66 +24,81 @@ storage_volumes:
   - name: vg_iscsi_lv_node4
     vg: vg_iscsi
     size: 100g
+  - name: vg_iscsi_lv_node5
+    vg: vg_iscsi
+    size: 100g
+  - name: vg_iscsi_lv_node6
+    vg: vg_iscsi
+    size: 50g
 
 ###################
 # iSCSI_Target Role
 ###################
 
 iscsi_targets:
-  - name: iqn.2021-07.com.ricsanfre:gateway
+  - name: iqn.2021-07.com.ricsanfre:node1
     disks:
-      - name: lun_node1
-        path: /dev/vg_iscsi/vg_iscsi_lv_node1
-        type: block
-        lunid: 0
       - name: lun_node2
         path: /dev/vg_iscsi/vg_iscsi_lv_node2
         type: block
-        lunid: 1
+        lunid: 0
       - name: lun_node3
         path: /dev/vg_iscsi/vg_iscsi_lv_node3
         type: block
-        lunid: 2
+        lunid: 1
       - name: lun_node4
         path: /dev/vg_iscsi/vg_iscsi_lv_node4
         type: block
+        lunid: 2
+      - name: lun_node5
+        path: /dev/vg_iscsi/vg_iscsi_lv_node5
+        type: block
         lunid: 3
     initiators:
-      - name: iqn.2021-07.com.ricsanfre:node1
-        authentication:
-          userid: iqn.2021-07.com.ricsanfre:node1
-          password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
-          password_mutual: "{{ vault.san.iscsi.password_mutual }}"
-        mapped_luns:
-          - mapped_lunid: 0
-            lunid: 0
       - name: iqn.2021-07.com.ricsanfre:node2
         authentication:
           userid: iqn.2021-07.com.ricsanfre:node2
           password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
+          userid_mutual: iqn.2021-07.com.ricsanfre:node1
           password_mutual: "{{ vault.san.iscsi.password_mutual }}"
         mapped_luns:
           - mapped_lunid: 0
-            lunid: 1
+            lunid: 0
       - name: iqn.2021-07.com.ricsanfre:node3
         authentication:
           userid: iqn.2021-07.com.ricsanfre:node3
           password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
+          userid_mutual: iqn.2021-07.com.ricsanfre:node1
           password_mutual: "{{ vault.san.iscsi.password_mutual }}"
         mapped_luns:
           - mapped_lunid: 0
-            lunid: 2
+            lunid: 1
       - name: iqn.2021-07.com.ricsanfre:node4
         authentication:
           userid: iqn.2021-07.com.ricsanfre:node4
           password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
+          userid_mutual: iqn.2021-07.com.ricsanfre:node1
+          password_mutual: "{{ vault.san.iscsi.password_mutual }}"
+        mapped_luns:
+          - mapped_lunid: 0
+            lunid: 2
+      - name: iqn.2021-07.com.ricsanfre:node5
+        authentication:
+          userid: iqn.2021-07.com.ricsanfre:node5
+          password: "{{ vault.san.iscsi.node_pass }}"
+          userid_mutual: iqn.2021-07.com.ricsanfre:node1
           password_mutual: "{{ vault.san.iscsi.password_mutual }}"
         mapped_luns:
           - mapped_lunid: 0
             lunid: 3
+      - name: iqn.2021-07.com.ricsanfre:node6
+        authentication:
+          userid: iqn.2021-07.com.ricsanfre:node6
+          password: "{{ vault.san.iscsi.node_pass }}"
+          userid_mutual: iqn.2021-07.com.ricsanfre:node1
+          password_mutual: "{{ vault.san.iscsi.password_mutual }}"
+        mapped_luns:
+          - mapped_lunid: 0
+            lunid: 4
     portals:
-      - ip: 10.0.0.1
+      - ip: 10.0.0.11

@@ -2,12 +2,11 @@
 title: Cluster Nodes
 permalink: /docs/node/
 description: How to configure the nodes of our Pi Kubernetes Cluster. Ubuntu cloud-init configuration files, and basic OS configuration.
-last_modified_at: "03-02-2024"
+last_modified_at: "22-11-2024"
 ---
 
 A K3S cluster is composed of:
 
-- 1 **external services node** (`node1`), running on Raspberry Pi 4B (4GB)
 - 3 **master nodes** (`node2`, `node3`, `node4`), running on Raspberry Pi 4B (4GB)
 - 5 **worker nodes**:
   - `node5`and `node6` running on Raspberry Pi 4B (8GB)
@@ -18,17 +17,17 @@ A K3S cluster is composed of:
 
 ### Storage Configuration
 
-`node1-6` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+`node2-6` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
 
 - **Dedicated disks storage architecture**: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node6`.
 
-  SSD disk is partitioned to separate  root filesystem (mountpoit '/') from data storage destinated for Longhorn data (mountpoint '/storage')
+  SSD disk is partitioned to separate  root filesystem (mountpoit `/`) from data storage destinated for Longhorn data (mountpoint `/storage`)
 
 - **Centralized SAN architecture**: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
 
 ### Network Configuration
 
-Only ethernet interface (eth0) will be used connected to the lan switch. Wifi interface won't be used. Ethernet interface will be configured through DHCP using `gateway` DHCP server.
+Only ethernet interface (eth0) will be used connected to the lan switch. Wifi interface won't be used. Ethernet interface will be configured with static IP address.
 
 ### Unbuntu OS Installation
 
@@ -40,13 +39,12 @@ In order to enable boot from USB, Raspberry PI firmware might need to be updated
 
 Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) described in the table below.
 
-`user-data` file to be used depends on the storage architectural option selected. Since DHCP is used to configure network interfaces, it is not needed to change default `/boot/network-config` file.
-
+`user-data` file to be used depends on the storage architectural option selected.
 
 | Dedicated Disks | Centralized SAN  |
 |-----------------| ---------------- |
 | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data)| 
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 {{site.data.alerts.note}}
 
@@ -54,6 +52,19 @@ In user-data file `hostname` field need to be changed for each node (node1-node6
 
 {{site.data.alerts.end}}
 
+`network-config` is the same in both architectures:
+
+| Network configuration |
+|---------------------- |
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/network-config) |
+{: .table .border-dark }
+
+
+{{site.data.alerts.note}}
+
+In network-config file `addresses` field need to be updated for each node (node1-node6), assigned the proper 10.0.0.X/24 address.
+
+{{site.data.alerts.end}}
 
 #### cloud-init partitioning configuration (SSD Disks)
 
@@ -108,6 +119,32 @@ For `node1-node6`, the new partition created in boot time, `/dev/sda3`, uses mos
 
 Then cloud-init executes the commands (cloud-init's runcmd section) to format (`ext4`) and mounted the new partition as `/storage`.
 
+#### cloud-init: network configuration
+
+
+Ubuntu's netplan yaml configuration file used, part of cloud-init boot `/boot/network-config` is the following:
+
+```yml
+version: 2
+ethernets:
+  eth0:
+    dhcp4: false
+    dhcp6: false
+    addresses:
+      - 10.0.0.X/24
+    routes:
+      - to: default
+        via: 10.0.0.1
+    nameservers:
+      addresses:
+        - 10.0.0.1
+      search:
+        - homelab.ricsanfre.com
+```
+
+It assigns static IP address 10.0.0.X to eth0 port using as gateway and DNS server 10.0.0.1 (`gateway`).
+Also `homelab.ricsanfre.com` domain is added to dns search
+
 
 ## x86 mini PC nodes
 
@@ -128,7 +165,7 @@ For nodes having only SATA disk (hp-node-1)
 | /dev/sda1 |  EFI system Partition (ESP) | /boot/efi | fat32 | 1075 MB |
 | /dev/sda2 | Boot partition  | /boot | ext4 | 2GB |
 | /dev/sda3 | LVM Volume Group: ubuntu-vg| | Rest of space available |
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 For nodes having NvME disks (hp-node-2 and hp-node-3)
 
@@ -137,7 +174,7 @@ For nodes having NvME disks (hp-node-2 and hp-node-3)
 | /dev/nvme0n1p1 |  EFI system Partition (ESP) | /boot/efi | fat32 | 1075 MB |
 | /dev/nvme0n1p2 | Boot partition  | /boot | ext4 | 2GB |
 | /dev/nvme0n1p3 | LVM Volume Group: ubuntu-vg| | Rest of space available |
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 
 LVM logical volumes configuration is the same in both cases:
@@ -146,7 +183,7 @@ LVM logical volumes configuration is the same in both cases:
 |---| --- | --- | --- | --- |
 | ubuntu-lv |  Root filesystem | / | ext4 | 30 GB |
 | lv-data | Storage filesystem | /storage | ext4 | Rest of space available in ubuntu-vg|
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 This partitioning scheme in installer GUI, will looks like
 
@@ -155,7 +192,7 @@ This partitioning scheme in installer GUI, will looks like
 
 ### Network Configuration
 
-Ethernet interface (eth0) will be used connected to the lan switch. Ethernet interface will be configured through DHCP using `gateway` DHCP server.
+Ethernet interface (eth0) will be used connected to the lan switch. Ethernet interface will be configured with static IP address.
 
 ### Unbuntu OS Installation
 
@@ -200,6 +237,22 @@ autoinstall:
   ssh:
     allow-pw: false
     install-server: true
+  network:
+    version: 2
+    ethernets:
+      eth0:
+        dhcp4: false
+        dhcp6: false
+        addresses:
+          - 10.0.0.X/24
+        routes:
+          - to: default
+            via: 10.0.0.1
+        nameservers:
+          addresses:
+            - 10.0.0.1
+          search:
+            - homelab.ricsanfre.com
   storage:
     config:
     - ptable: gpt
@@ -336,7 +389,7 @@ Initial configuration tasks includes removal of snap package, and Raspberry PI s
 
 For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
-### NTP Server Configuration
+### NTP Service Configuration
 
 Cluster nodes will be configured as NTP clients using NTP server running in `gateway`
 See ["NTP Configuration instructions"](/docs/gateway/#ntp-server-configuration).

@@ -1,5 +1,21 @@
 ---
 autoinstall:
+  network:
+    version: 2
+    ethernets:
+      enp0s3:
+        dhcp4: false
+        dhcp6: false
+        addresses:
+          - "{{ ip }}/24"
+        routes:
+          - to: default
+            via: "{{ default_gateway }}"
+        nameservers:
+          addresses:
+            - "{{ dns_server }}"
+          search:
+            - "{{ dns_domain }}"
   storage:
     grub:
       reorder_uefi: false

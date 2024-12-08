@@ -6,8 +6,10 @@ autoinstall:
   ssh:
     allow-pw: false
     install-server: true
+  network:
+    {{ hostvars[x86_host].autoinstall.network | to_nice_yaml | indent(4) }}
   storage:
-    config: {{ hostvars[x86_host].autoinstall.storage.config }}
+    {{ hostvars[x86_host].autoinstall.storage | to_nice_yaml | indent(4) }}
 
   user-data:
     # Set TimeZone and Locale

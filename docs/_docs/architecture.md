@@ -2,13 +2,13 @@
 title: Lab Architecture
 permalink: /docs/architecture/
 description: Homelab architecture of our Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "03-02-2024"
+last_modified_at: "07-12-2024"
 ---
 
 
 The home lab I am building is shown in the following picture
 
-![Cluster-lab](/assets/img/picluster-architecture.png)
+![Cluster-lab](/assets/img/pi-cluster-architecture.png)
 
 
 A K3S cluster is composed of the following **cluster nodes**:
@@ -17,9 +17,9 @@ A K3S cluster is composed of the following **cluster nodes**:
   - `node5` and `node6`running on Raspberry Pi 4B (8GB)
   - `node-hp-1`, `node-hp-2` and `node-hp-3` running on HP Elitedesk 800 G3 (16GB)
 
-A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running on Raspberry Pi 4B (2GB). 
+A **LAN switch** (16 Gigabit ports) used to provide L2 connectivity to the cluster nodes. L3 connectivity and internet access is provided by a router/firewall (`gateway`) running [OpenWRT](https://openwrt.org/) on Raspberry Pi 4B (2GB) or GL-iNet Slate Plus (GL-A1300).
 
-`gateway`, **cluster firewall/router**, is connected to LAN Switch using its Gigabit Ethernet port. It is also connected to my home network using its WIFI interface, so it can route and filter traffic comming in/out the cluster. With this architecture my lab network can be isolated from my home network.
+`gateway`, **cluster firewall/router** is connected to LAN Switch using its Gigabit Ethernet port. It is also connected to my home network using its WIFI interface, so it can route and filter traffic comming in/out the cluster. With this architecture my lab network can be isolated from my home network.
 
 `gateway` also provides networking services to my lab network:
  - Internet Access
@@ -29,14 +29,13 @@ A couple of **LAN switches** (8 Gigabit ports + 5 Gigabit ports) used to provide
 
 `node1`, running on Raspberry Pi 4B (4GB), for providing **kubernetes external services**:
   - Secret Management (Vault)
-  - Kuberentes API Load Balancer
-  - Backup server
+  - DNS Authoritative (Bind9)
 
-A load balancer is needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `node1` server.
+A load balancer is also needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `node1` server.
 
-For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `gateway` node.
+For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `node1` node.
 
-**Ansible control node**, `pimaster` is deployed in a Linux VM or Linux Laptop, so from this node the whole cluster configuration can be managed. `pimaster` is connected to my home network (ip in  192.168.1.0/24 network). In `pimaster`, a IP route to 10.0.0.0/24 network through `gateway` (192.168.1.11) need to be configured, so it can have connectivity to cluster nodes.
+**Ansible control node**, `pimaster` is deployed in a Linux VM or Linux Laptop, so from this node the whole cluster configuration can be managed. `pimaster` is connected to my home network (ip in  192.168.1.0/24 network). In `pimaster`, a IP route to 10.0.0.0/24 network through `gateway` (192.168.1.21) need to be configured, so it can have connectivity to cluster nodes.
 
 
 ## Hardware
@@ -58,8 +57,8 @@ For building the cluster, using bare metal servers instead of virtual machines, 
 
   I have used the following hardware components to assemble Raspberry PI components of the cluster.
 
-  - [4 x Raspberry Pi 4 - Model B (4 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1100-raspberry-pi-4-modelo-b-4gb-765756931182.html) and [1 x Raspberry Pi 4 - Model B (8 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1231-raspberry-pi-4-modelo-b-8gb-765756931199.html) as ARM-based cluster nodes (1 master node and 5 worker nodes).
-  - [2 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) as router/firewall for the lab environment connected via wifi to my home network and securing the access to my lab network.
+  - [4 x Raspberry Pi 4 - Model B (4 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1100-raspberry-pi-4-modelo-b-4gb-765756931182.html) and [2 x Raspberry Pi 4 - Model B (8 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1231-raspberry-pi-4-modelo-b-8gb-765756931199.html) as ARM-based cluster nodes (1 master node and 5 worker nodes).
+  - [1 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) as router/firewall for the lab environment connected via wifi to my home network and securing the access to my lab network.
   - [4 x SanDisk Ultra 32 GB microSDHC Memory Cards](https://www.amazon.es/SanDisk-SDSQUA4-064G-GN6MA-microSDXC-Adaptador-Rendimiento-dp-B08GY9NYRM/dp/B08GY9NYRM) (Class 10) for installing Raspberry Pi OS for enabling booting from USB (update Raspberry PI firmware and modify USB partition)
   - [4 x Samsung USB 3.1 32 GB Fit Plus Flash Disk](https://www.amazon.es/Samsung-FIT-Plus-Memoria-MUF-32AB/dp/B07HPWKS3C) 
   - [1 x Kingston A400 SSD Disk 480GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N0TQPQB)
@@ -79,7 +78,7 @@ For building the cluster, using bare metal servers instead of virtual machines, 
   - RAM: 16 GB
   - Disk: Integrated SSD disk (SATA or NVMe)
 
-  ![hp-elitedesk-800](/assets/img/hpelitedesk800g3mini.png)
+  ![hp-elitedesk-800](/assets/img/hp-elitedesk-800-g3.png)
 
   I have used the following hardware components
 
@@ -100,20 +99,30 @@ The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power su
 
 ### Networking
 
-A 8 GE ports LAN switch, [NetGear GS108S](https://www.netgear.com/business/wired/switches/plus/gs108e/), and 5 GE ports LAN switch, [NetGear GS105E](https://www.netgear.es/support/product/gs105e), supporting VLAN configuration and remote management, are used to provide connectivity to all cluster nodes (Raspberry Pis and x86 mini PCs).
+A 16 GE ports LAN switch, [D-Link DGS-1016S](https://www.dlink.com/en/products/dgs-1016s-16-port-gigabit-unmanaged-switch) is used to provide connectivity to all cluster nodes (Raspberry Pis and x86 mini PCs).
 
 All nodes are connected to the switch with Cat6 eth cables, using their Gigabit Ethernet port.
 
-![netgear-gs108s](/assets/img/netgear-gs108e.jpg)
+![dlink-dgs-1016S](/assets/img/dlink-dgs-1016S.png)
 
+As homelab router/firewall, a wifi pocket-sized travel router, [GL-Inet Slate Plus (GL-A1300)](https://www.gl-inet.com/products/gl-a1300/). Firmware of the router is replaced by latest version of OpenWRT operating system.
 
-![netgear-gs105e](/assets/img/netgear-gs105E.png)
+![glinet-xlate-plus](/assets/img/glinet-xlate-plus.png)
+
+One of the LAN ports of GL-A1300 is connected to DL-Link switch. One of the WiFi ports is used as WAN port connected to my Home network.
+
+{{site.data.alerts.note}}
+
+As alternative to Gl-iNet router, a Raspberry Pi 4B can be used.
+
+{{site.data.alerts.end}}
 
 For networking, I have used the following hardware components:
 
-- [1 x Netgear GS108-300PES](https://www.amazon.es/Netgear-GS108E-300PES-conmutador-gestionable-met%C3%A1lica/dp/B00MYYTP3S). 8 ports GE ethernet managed switch (QoS and VLAN support)
+- [1 x D-Link DGS-1016S](https://www.amazon.es/D-Link-Gigabit-met%C3%A1lica-sobremesa-Ventiladores/dp/B08GYJ13XG). 16 ports GE ethernet unmanaged switch
 
-- [1 x Netgear GS105E](https://www.amazon.es/Netgear-GS105E-200PES-gestionable-puertos-Gigabit/dp/B00GWKN1Q2), 5 ports GE ehternet managed switch
+- [1 x GL-Inet Slate Plus (GL-A1300)](https://www.amazon.es/GL-iNet-GL-A1300-Slate-Enrutador-inal%C3%A1mbrico/dp/B0B4ZSR2PX), wifi router/firewall.
+
 - [10 x Ethernet Cable](https://www.aliexpress.com/item/32821735352.html). Flat Cat 6,  15 cm length
 
 ## Raspberry PI Storage
@@ -121,16 +130,16 @@ For networking, I have used the following hardware components:
 x86 mini PCs has their own integrated disk (SSD disk or NVME). For Raspberry PIs different storage alternatives can be applied:
 
 - Dedicated Disks: Each node has its SSD disks attached to one of its USB 3.0 ports. SSD disk + SATA to USB 3.0 adapter is needed for each node.
-- Centralized SAN: Each node has Flash Disk (USB3.0) for running OS and additional storage capacity is provide via iSCSI from a SAN (Storage Area Network). One of the cluster nodes, gateway, is configured as SAN server, and it needs to have SSD disk attached to its USB3.0 port.
+- Centralized SAN: Each node has Flash Disk (USB3.0) for running OS and additional storage capacity is provide via iSCSI from a SAN (Storage Area Network). One of the cluster nodes, `san`, is configured as SAN server, and it needs to have SSD disk attached to its USB3.0 port.
 
-![cluster-HW-storage](/assets/img/RaspberryPiCluster_HW_storage.png)
+![pi-cluster-rpi4-storage](/assets/img/pi-cluster-rpi4-storage.png)
 
 
 ### Dedicated Disks
 
 `gateway` uses local storage attached directly to USB 3.0 port (Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
 
-For having better cluster performance `node1-node6` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
+For having better cluster performance all Raspberry PI nodes will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
 
 ![pi-cluster-HW-2.0](/assets/img/pi-cluster-2.0.png)
 
@@ -139,19 +148,19 @@ For having better cluster performance `node1-node6` will use SSDs attached to US
 
 A cheaper alternative architecture, instead of using dedicated SSD disks for each cluster node, one single SSD disk can be used for configuring a SAN service.
 
-Each cluster node `node1-node6` can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
+Each raspberry pi in the cluster node can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
  
 As additional storage (required by distributed storage solution), iSCSI SAN can be deployed instead of attaching an additional USB Flash Disks to each of the nodes.
 
-A SAN (Storage Access Network) can be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node6`.
+A SAN (Storage Access Network) can be configured using one of the nodes, `san` node, as iSCSI Storage Server, providing additional storage (LUNs) to the rest of the Raspberry PI nodes.
 
-As storage device, a SSD disk was attached to `gateway` node. This SSD disk was used as well to host the OS.
+As storage device, a SSD disk was attached to `san` node. This SSD disk was used as well to host the OS.
 
 ![pi-cluster-HW-1.0](/assets/img/pi-cluster.png)
 
 This alternative setup is worth it from educational point of view, to test the different storage options for RaspberryPI and to learn about iSCSI configuration and deployment on bare-metal environments. As well it can be used as a cheaper solution for deploying centralized storage solution.
 
-See [SAN configuration document](/docs/san/) further details about the configuration of SAN using a Raspeberry PIs, `gateway`, as iSCSI Target exposing LUNs to cluster nodes.
+See [SAN configuration document](/docs/san/) further details about the configuration of SAN using a Raspeberry PIs, `san`, as iSCSI Target exposing LUNs to cluster nodes.
 
 
 ### Raspberry PI Storage benchmarking

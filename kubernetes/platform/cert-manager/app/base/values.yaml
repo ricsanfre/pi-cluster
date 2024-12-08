@@ -1,5 +1,6 @@
 # cert-manager helm values (base)
-installCRDs: true
+crds:
+  enabled: true
 
 # Use specific DNS servers for DNS01 challenge
 # https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check

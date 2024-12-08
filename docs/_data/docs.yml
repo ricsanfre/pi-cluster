@@ -7,8 +7,11 @@
   docs:
   - pimaster
   - gateway
+  - openwrt
+  - external
   - node
   - san
+  - dns
   - pxe-server
 - title: Nodes OS Setup
   docs:
@@ -27,6 +30,7 @@
   docs:
   - k3s-networking
   - cilium
+  - kube-dns
   - metallb
   - traefik
   - nginx

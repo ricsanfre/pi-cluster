@@ -1,6 +1,6 @@
 ---
 
-- name: Configure Pi Cluster Gateway
+- name: Configure Pi Cluster Gateway (Ubuntu)
   hosts: gateway
   gather_facts: true
   tags: [gateway]
@@ -36,6 +36,28 @@
     - role: ricsanfre.ntp
       tags: [ntp]
 
+- name: Configure External Node
+  hosts: node1
+  gather_facts: true
+  tags: [external]
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+      tags: ["always"]
+  roles:
+    # OS basic setup tasks
+    - role: basic_setup
+      tags: [os]
+
+    # Security Hardening
+    - role: ricsanfre.security
+      tags: [security]
+
+    # NTP Client configuration
+    - role: ricsanfre.ntp
+      tags: [ntp]
+
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)
     - name: Centralized SAN
@@ -56,7 +78,7 @@
       tags: [iscsi]
 
 - name: Configure Pi Cluster Nodes
-  hosts: picluster
+  hosts: k3s_cluster
   gather_facts: true
   tags: [node]
   become: true

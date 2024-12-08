@@ -51,9 +51,11 @@ Adjust [`ansible/inventory.yml`]({{ site.git_edit_address }}/ansible/inventory.y
 
 Add Raspberry PI nodes to the `rpi` group and x86 nodes to `x86` nodes.
 
+Se the node, i.e `node1`, which is going to be used to install non-kubernetes services (dns server, pxe server, load balancer (ha-proxy), vault server). It has to be added to groups `dns`, `pxe`, `vault` and `haproxy`
+
 {{site.data.alerts.tip}}
 
-If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, `mac` field (node's mac address) is the only that you need to change in `inventory.yml` file. MAC addresses are used by DHCP server to assign the proper IP to each node.
+If you maintain the private network assigned to the cluster (10.0.0.0/24) and nodes' hostname and IP address, `mac` field (node's mac address) is the only that you need to change in `inventory.yml` file. MAC addresses are used by PXE server (automate installation of x86 servers).
 
 {{site.data.alerts.end}}
 
@@ -87,7 +89,8 @@ The following table shows the variable files defined at ansible's group and host
 | [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
 | [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
 | [ansible/host_vars/gateway.yml]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) | gateway node specific variables|
-{: .table .table-white .border-dark }
+| [ansible/host_vars/node1.yml]({{ site.git_edit_address }}/ansible/host_vars/node1.yml) | external services node specific variables|
+{: .table .border-dark }
 
 
 The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
@@ -97,16 +100,16 @@ The following table shows the variable files used for configuring the storage, b
 | [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables |
 | [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
 | [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 
 {{site.data.alerts.important}}: **About Raspberry PI storage configuration**
 
 Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
 
-- **Centralized SAN** setup assumes `gateway` node has a SSD disk attached (`/dev/sda`) that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
+- **Centralized SAN** setup assumes `node1` node has a SSD disk attached (`/dev/sda`) that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
 
-  Final `gateway` disk configuration is:
+  Final `node1` disk configuration is:
 
   - /dev/sda1: Boot partition
   - /dev/sda2: Root Filesystem
@@ -182,24 +185,41 @@ Update firmware in all Raspberry-PIs following the procedure described in ["Rasp
 
 ### Install gateway node
 
-Install `gateway` Operating System on Rapberry PI.
-   
-The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) for `gateway`.
+Install OpenWRT operating system on Raspberry PI or GL-Inet router, `gateway` node
+The installation and configuration process is described in ["Cluster Gateway (OpenWRT)"](/docs/openwrt/)
 
-`user-data` depends on the storage architectural option selected::
+
+#### Option 2:  Ubuntu OS 
+
+`gateway` router/firewall can be implemented deploying Linux services on Ubuntu 22.04 OS
+The installation and configuration process is described in ["Cluster Gateway (Ubuntu)"](/docs/gateway/)
+
+### Install external services node
+
+Once `gateway` node is up and running. External services node, `node1` can be configured.
+
+`node1` is used to install common services: DNS server, PXE server, Vault, etc.
+
+In crentralized SAN architecture `node1` can be configured as SAN server.
+
+Install Ubuntu Operating System on `node1` (Rapberry PI-4B 4GB).
+   
+The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) for `node1`.
+
+`user-data` depends on the storage architectural option selected:
 
 | Dedicated Disks | Centralized SAN    |
 |--------------------| ------------- |
-|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data-centralizedSAN) |
-{: .table .table-white .border-dark }
+|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/user-data-centralizedSAN) |
+{: .table .border-dark }
 
 `network-config` is the same in both architectures:
 
 
 | Network configuration |
 |---------------------- |
-| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/network-config) |
-{: .table .table-white .border-dark }
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/network-config) |
+{: .table .border-dark }
 
 
 {{site.data.alerts.warning}}**About SSH keys**
@@ -211,27 +231,23 @@ Before applying the cloud-init files of the table above, remember to change the 
   - `ssh_authorized_keys` field for defaul user (`ricsanfre`). Your own ssh public keys, created during `pimaster` control node preparation, must be included.
   - `timezone` and `locale` can be changed as well to fit your environment.
 
-- `network-config` file: to fit yor home wifi network
-   - Replace <SSID_NAME> and <SSID_PASSWORD> by your home wifi credentials
-   - IP address (192.168.0.11 in the sample file ), and your home network gateway (192.168.0.1 in the sample file)
-
 {{site.data.alerts.end}}
 
-### Configure gateway node
+#### Configure external-services node
 
-For automatically execute basic OS setup tasks and configuration of gateway's services (DNS, DHCP, NTP, Firewall, etc.), execute the command:
+For automatically execute basic OS setup tasks and configuration of `node1`'s services (DNS, PXE Server, etc.), execute the command:
 
 ```shell
-make gateway-setup
+make external-setup
 ```
 
 ### Install cluster nodes.
 
-Once `gateway` is up and running the rest of the nodes can be installed and connected to the LAN switch, so they can obtain automatic network configuration via DHCP.
+Once `node1` is up and running the rest of the nodes can be installed and connected to the LAN switch.
 
 #### Install Raspberry PI nodes
 
-Install Operating System on Raspberry Pi nodes `node1-6`
+Install Operating System on Raspberry Pi nodes `node2-6`
 
 Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
 
@@ -239,11 +255,10 @@ Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/
 | Dedicated Disks | Centralized SAN  |
 |-----------------| ---------------- |
 | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data)| 
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 
 In above user-data files, `hostname` field need to be changed for each node (node1-node6).
-
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -258,21 +273,23 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 #### Install x86 nodes
 
-Install Operating System on x86 nodes (`node-hp-x`). P
+Install Operating System on x86 nodes (`node-hp-x`).
 
 Follow the installation procedure indicated in ["OS Installation - X86 (PXE)"](/docs/ubuntu/x86/) and adapt the cloud-init files to your environment.
 
-{{site.data.alerts.warning}}
+To automate deployment of PXE server execute the following command
 
-PXE server is automatically configured in `gateway` node and cloud-init files are automatically created from [autoinstall jinja template]({{ site.git_edit_address }}/ansible/roles/pxe-server/templates/cloud-init-autoinstall.yml.j2).
+```shell
+make pxe-setup
+```
+
+PXE server is automatically deployed in `node1` node (host belonging to `pxe` hosts group in Ansible's inventory file). `cloud-init` files are automatically created from [autoinstall jinja template]({{ site.git_edit_address }}/ansible/roles/pxe-server/templates/cloud-init-autoinstall.yml.j2). for every single host belonging to `x86` hosts group
 
 This file and the corresponding host-variables files containing storage configuration, can be tweak to be adpated to your needs.
 
 [autoinstall storage config node-hp-1]({{ site.git_edit_address }}/ansible/host_vars/node-hp-1.yml)
 
-If the template or the storage config files are changed, in order to deploy the changes in the PXE server, `make gateway-setup` need to be executed.
-
-{{site.data.alerts.end}}
+If the template or the storage config files are changed, in order to deploy the changes in the PXE server, `make pxe-setup` need to be re-executed.
 
 ### Configure cluster nodes
 
@@ -282,14 +299,26 @@ For automatically execute basic OS setup tasks (DNS, DHCP, NTP, etc.), execute t
 make nodes-setup
 ```
 
-## Configuring external services (Minio and Hashicorp Vault)
+## Configure External Services
+
+### DNS server
+
+Install and configure DNS authoritative server, Bind9, for homelab subdomain in `node1` (node belonging to Ansible's host group `dns`).
+
+Homelab subdomain is specified in variable `dns_domain` configured in [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml) and DNS server configuration in [ansible/host_vars/node1.yml]({{ site.git_edit_address }}/ansible/host_vars/node1.yml). Update both files to meet your cluster requirements.
+
+```shell
+make dns-setup
+```
+
+### Minio and Hashicorp Vault 
 
 Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the command:
 
 ```shell
 make external-services
 ```
-Ansible Playbook assumes S3 server is installed in a external node `s3` and Hashicorp Vault in `gateway`.
+Ansible Playbook assumes S3 server is installed in a external node `s3` and Hashicorp Vault in `node1` (node belonging to Ansible's host group `vault`).
 
 {{site.data.alerts.note}}
 All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault

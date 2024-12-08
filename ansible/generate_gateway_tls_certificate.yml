@@ -1,0 +1,51 @@
+---
+## Generate TLS certificates gateway
+## Generated using certbot (letsencrypt)
+- name: Generate gateway certificate
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates]
+  vars:
+    propagation_seconds: 300
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: "vars/vault.yml"
+    # Include picluster variables
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Copy ionos secret file
+      ansible.builtin.template:
+        src: "{{ item.template }}"
+        dest: "{{ item.dest }}"
+        mode: "0600"
+      with_items:
+        - template: ionos-credentials.ini.j2
+          dest: "~/.secrets/ionos-credentials.ini"
+      when: enable_letsencrypt
+
+  tasks:
+    - name: Create Letsencrytp certificate for gateway
+      ansible.builtin.command: |
+        certbot certonly \
+        --authenticator dns-ionos \
+        --dns-ionos-credentials ~/.secrets/ionos-credentials.ini \
+        --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --agree-tos \
+        --non-interactive \
+        --rsa-key-size 4096 \
+        -m {{ acme_issuer_email }} \
+        -d {{ item }}
+      register: certbot_create
+      changed_when:
+        - certbot_create.rc==0
+        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
+      when: enable_letsencrypt
+      with_items:
+        - "{{ gateway_hostname }}"
+
+    - name: Output
+      ansible.builtin.debug:
+        var: certbot_create.results[0].stdout
