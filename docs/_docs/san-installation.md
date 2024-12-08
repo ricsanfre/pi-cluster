@@ -9,14 +9,14 @@ The idea is to configure one of the Raspberry PIs as a SAN for the lab cluster, 
 
 A storage on a SAN network is called iSCSI Target, a Client which connects to iSCSI Target is called iSCSI Initiator.
 
-In my home lab, `gateway` will be the iSCSI Target and `node1-node6` will be the iSCSI Initiators.
+In my home lab, one of the nodes, `san`, can be configured as iSCSI Target and the rest of the nodes `nodeX` will be the iSCSI Initiators.
 
 ```
-+----------------------+         |             +----------------------+
-| [   iSCSI Target   ] |10.0.0.1 | 10.0.0.11-14| [ iSCSI Initiator  ] |
-|        gateway       +---------+-------------+        node1-6       |
-|                      |                       |                      |
-+----------------------+                       +----------------------+
++----------------------+          |             +----------------------+
+| [   iSCSI Target   ] |10.0.0.11 | 10.0.0.12-16| [ iSCSI Initiator  ] |
+|        san           +----------+-------------+        nodeX         |
+|                      |                        |                      |
++----------------------+                        +----------------------+
 
 ```
 
@@ -245,7 +245,7 @@ Follow these steps for preparing the storage device for hosting the LUNs: add ne
   In the Initiator server check the iqn (iSCSI Qualifier Name) within the file `/etc/iscsi/initiatorname.iscsi`
 
   {{site.data.alerts.important}}
-  Assign unique iqn (iSCSI Initiator Qualifier Name) to each cluster node (`node1-5`). See section [Configuring iSCSI Inititator](#configuring-iscsi-initiator)
+  Assign unique iqn (iSCSI Initiator Qualifier Name) to each cluster node (`nodeX`). See section [Configuring iSCSI Inititator](#configuring-iscsi-initiator)
   {{site.data.alerts.end}}
 
   Create ACL for the iSCSI Initiator. 
@@ -488,7 +488,7 @@ This configuration assumes that all iSCSI targets to which the host is connectin
     lsblk -S
     NAME HCTL       TYPE VENDOR   MODEL      REV TRAN
     sda  2:0:0:0    disk ATA      VBOX_HARDDISK 1.0  sata
-    sda  2:0:0:0    disk LIO-ORG  lun_node1 4.0  iscsi
+    sda  2:0:0:0    disk LIO-ORG  lun_node2 4.0  iscsi
     sdb  2:0:0:1    disk LIO-ORG  lun_node3 4.0  iscsi
     ```
 

@@ -86,3 +86,6 @@ all:
     haproxy:
       hosts:
         node1:
+    san:
+      hosts:
+        node1:

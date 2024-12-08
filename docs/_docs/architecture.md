@@ -57,8 +57,8 @@ For building the cluster, using bare metal servers instead of virtual machines, 
 
   I have used the following hardware components to assemble Raspberry PI components of the cluster.
 
-  - [4 x Raspberry Pi 4 - Model B (4 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1100-raspberry-pi-4-modelo-b-4gb-765756931182.html) and [1 x Raspberry Pi 4 - Model B (8 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1231-raspberry-pi-4-modelo-b-8gb-765756931199.html) as ARM-based cluster nodes (1 master node and 5 worker nodes).
-  - [2 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) as router/firewall for the lab environment connected via wifi to my home network and securing the access to my lab network.
+  - [4 x Raspberry Pi 4 - Model B (4 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1100-raspberry-pi-4-modelo-b-4gb-765756931182.html) and [2 x Raspberry Pi 4 - Model B (8 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1231-raspberry-pi-4-modelo-b-8gb-765756931199.html) as ARM-based cluster nodes (1 master node and 5 worker nodes).
+  - [1 x Raspberry Pi 4 - Model B (2 GB)](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/1099-raspberry-pi-4-modelo-b-2gb-765756931175.html) as router/firewall for the lab environment connected via wifi to my home network and securing the access to my lab network.
   - [4 x SanDisk Ultra 32 GB microSDHC Memory Cards](https://www.amazon.es/SanDisk-SDSQUA4-064G-GN6MA-microSDXC-Adaptador-Rendimiento-dp-B08GY9NYRM/dp/B08GY9NYRM) (Class 10) for installing Raspberry Pi OS for enabling booting from USB (update Raspberry PI firmware and modify USB partition)
   - [4 x Samsung USB 3.1 32 GB Fit Plus Flash Disk](https://www.amazon.es/Samsung-FIT-Plus-Memoria-MUF-32AB/dp/B07HPWKS3C) 
   - [1 x Kingston A400 SSD Disk 480GB](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N0TQPQB)
@@ -78,7 +78,7 @@ For building the cluster, using bare metal servers instead of virtual machines, 
   - RAM: 16 GB
   - Disk: Integrated SSD disk (SATA or NVMe)
 
-  ![hp-elitedesk-800](/assets/img/hpelitedesk800g3mini.png)
+  ![hp-elitedesk-800](/assets/img/hp-elitedesk-800-g3.png)
 
   I have used the following hardware components
 
@@ -130,16 +130,16 @@ For networking, I have used the following hardware components:
 x86 mini PCs has their own integrated disk (SSD disk or NVME). For Raspberry PIs different storage alternatives can be applied:
 
 - Dedicated Disks: Each node has its SSD disks attached to one of its USB 3.0 ports. SSD disk + SATA to USB 3.0 adapter is needed for each node.
-- Centralized SAN: Each node has Flash Disk (USB3.0) for running OS and additional storage capacity is provide via iSCSI from a SAN (Storage Area Network). One of the cluster nodes, gateway, is configured as SAN server, and it needs to have SSD disk attached to its USB3.0 port.
+- Centralized SAN: Each node has Flash Disk (USB3.0) for running OS and additional storage capacity is provide via iSCSI from a SAN (Storage Area Network). One of the cluster nodes, `san`, is configured as SAN server, and it needs to have SSD disk attached to its USB3.0 port.
 
-![cluster-HW-storage](/assets/img/RaspberryPiCluster_HW_storage.png)
+![pi-cluster-rpi4-storage](/assets/img/pi-cluster-rpi4-storage.png)
 
 
 ### Dedicated Disks
 
 `gateway` uses local storage attached directly to USB 3.0 port (Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
 
-For having better cluster performance `node1-node6` will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
+For having better cluster performance all Raspberry PI nodes will use SSDs attached to USB 3.0 port. SSD disk will be used to host OS (boot from USB) and to provide the additional storage required per node for deploying the Kubernetes distributed storage solution (Ceph or Longhorn).
 
 ![pi-cluster-HW-2.0](/assets/img/pi-cluster-2.0.png)
 
@@ -148,19 +148,19 @@ For having better cluster performance `node1-node6` will use SSDs attached to US
 
 A cheaper alternative architecture, instead of using dedicated SSD disks for each cluster node, one single SSD disk can be used for configuring a SAN service.
 
-Each cluster node `node1-node6` can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
+Each raspberry pi in the cluster node can use local storage attached directly to USB 3.0 port (USB Flash Disk) for hosting the OS, avoiding the use of less reliable SDCards.
  
 As additional storage (required by distributed storage solution), iSCSI SAN can be deployed instead of attaching an additional USB Flash Disks to each of the nodes.
 
-A SAN (Storage Access Network) can be configured using `gateway` as iSCSI Storage Server, providing additional storage (LUNs) to `node1-node6`.
+A SAN (Storage Access Network) can be configured using one of the nodes, `san` node, as iSCSI Storage Server, providing additional storage (LUNs) to the rest of the Raspberry PI nodes.
 
-As storage device, a SSD disk was attached to `gateway` node. This SSD disk was used as well to host the OS.
+As storage device, a SSD disk was attached to `san` node. This SSD disk was used as well to host the OS.
 
 ![pi-cluster-HW-1.0](/assets/img/pi-cluster.png)
 
 This alternative setup is worth it from educational point of view, to test the different storage options for RaspberryPI and to learn about iSCSI configuration and deployment on bare-metal environments. As well it can be used as a cheaper solution for deploying centralized storage solution.
 
-See [SAN configuration document](/docs/san/) further details about the configuration of SAN using a Raspeberry PIs, `gateway`, as iSCSI Target exposing LUNs to cluster nodes.
+See [SAN configuration document](/docs/san/) further details about the configuration of SAN using a Raspeberry PIs, `san`, as iSCSI Target exposing LUNs to cluster nodes.
 
 
 ### Raspberry PI Storage benchmarking

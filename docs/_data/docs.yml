@@ -8,6 +8,7 @@
   - pimaster
   - gateway
   - openwrt
+  - external
   - node
   - san
   - dns

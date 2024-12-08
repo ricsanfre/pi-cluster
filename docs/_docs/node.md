@@ -7,7 +7,6 @@ last_modified_at: "22-11-2024"
 
 A K3S cluster is composed of:
 
-- 1 **external services node** (`node1`), running on Raspberry Pi 4B (4GB)
 - 3 **master nodes** (`node2`, `node3`, `node4`), running on Raspberry Pi 4B (4GB)
 - 5 **worker nodes**:
   - `node5`and `node6` running on Raspberry Pi 4B (8GB)
@@ -18,7 +17,7 @@ A K3S cluster is composed of:
 
 ### Storage Configuration
 
-`node1-6` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+`node2-6` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
 
 - **Dedicated disks storage architecture**: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node6`.
 
@@ -45,7 +44,7 @@ Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/doc
 | Dedicated Disks | Centralized SAN  |
 |-----------------| ---------------- |
 | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data)| 
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 {{site.data.alerts.note}}
 
@@ -58,7 +57,7 @@ In user-data file `hostname` field need to be changed for each node (node1-node6
 | Network configuration |
 |---------------------- |
 | [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/network-config) |
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 
 {{site.data.alerts.note}}
@@ -166,7 +165,7 @@ For nodes having only SATA disk (hp-node-1)
 | /dev/sda1 |  EFI system Partition (ESP) | /boot/efi | fat32 | 1075 MB |
 | /dev/sda2 | Boot partition  | /boot | ext4 | 2GB |
 | /dev/sda3 | LVM Volume Group: ubuntu-vg| | Rest of space available |
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 For nodes having NvME disks (hp-node-2 and hp-node-3)
 
@@ -175,7 +174,7 @@ For nodes having NvME disks (hp-node-2 and hp-node-3)
 | /dev/nvme0n1p1 |  EFI system Partition (ESP) | /boot/efi | fat32 | 1075 MB |
 | /dev/nvme0n1p2 | Boot partition  | /boot | ext4 | 2GB |
 | /dev/nvme0n1p3 | LVM Volume Group: ubuntu-vg| | Rest of space available |
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 
 LVM logical volumes configuration is the same in both cases:
@@ -184,7 +183,7 @@ LVM logical volumes configuration is the same in both cases:
 |---| --- | --- | --- | --- |
 | ubuntu-lv |  Root filesystem | / | ext4 | 30 GB |
 | lv-data | Storage filesystem | /storage | ext4 | Rest of space available in ubuntu-vg|
-{: .table .table-white .border-dark }
+{: .table .border-dark }
 
 This partitioning scheme in installer GUI, will looks like
 
@@ -390,7 +389,7 @@ Initial configuration tasks includes removal of snap package, and Raspberry PI s
 
 For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
-### NTP Server Configuration
+### NTP Service Configuration
 
 Cluster nodes will be configured as NTP clients using NTP server running in `gateway`
 See ["NTP Configuration instructions"](/docs/gateway/#ntp-server-configuration).

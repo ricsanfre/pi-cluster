@@ -6,7 +6,7 @@ last_modified_at: "03-02-2024"
 ---
 
 One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
-It will also provide DNS, NTP and DHCP services to my lab network. In case of deployment using centralized SAN storage architectural option, `gateway` is providing SAN services also.
+It will also provide DNS, NTP and DHCP services to my lab network.
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
@@ -15,10 +15,7 @@ In order to ease the automation with Ansible, OS installed on **gateway** is the
 
 ## Storage Configuration
 
-`gateway` node is based on a Raspberry Pi 4B 2GB booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
-
-- Dedicated disks storage architecture: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
-- Centralized SAN architecture: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `gateway`. SSD disk for hosting OS and iSCSI LUNs.
+`gateway` node is based on a Raspberry Pi 4B 2GB booting from a USB Flash Disk.
 
 
 ## Network Configuration
@@ -39,10 +36,10 @@ The installation procedure followed is the described in ["Ubuntu OS Installation
 
 `user-data` depends on the storage architectural option selected::
 
-| Dedicated Disks | Centralized SAN    |
-|--------------------| ------------- |
-|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data-centralizedSAN) |
-{: .table .table-white .border-dark }
+| User Data | 
+|--------------------|
+|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/user-data) | 
+{: .table .border-dark }
 
 `network-config` is the same in both architectures:
 
@@ -50,53 +47,7 @@ The installation procedure followed is the described in ["Ubuntu OS Installation
 | Network configuration |
 |---------------------- |
 | [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/gateway/network-config) |
-{: .table .table-white .border-dark }
-
-### cloud-init partitioning configuration (Centralized SAN)
-
-By default, during first boot, cloud image partitions grow to fill the whole capacity of the SDCard/USB Flash Disk or SSD disk). So root partition (/) will grow to fill the full capacity of the disk.
-
-{{ site.data.alerts.note }}
-
-As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/).
-
-{{ site.data.alerts.end }}
-
-
-In case of centralized SAN, gateway's SSD Disk will be partitioned in boot time reserving 30 GB for root filesystem (OS installation) and the rest will be used for creating logical volumes (LVM), SAN LUNs to be mounted using iSCSI by the other nodes.
-
-cloud-init configuration `user-data` includes commands to be executed once in boot time, executing a command that changes partition table and creates a new partition before the automatic growth of root partitions to fill the entire disk happens.
-
-```yml
-bootcmd:
-  # Create second LVM partition. Leaving 30GB for root partition
-  # sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
-  # First convert MBR partition to GPT (-g option)
-  # Second moves the GPT backup block to the end of the disk where it belongs (-e option)
-  # Then creates a new partition starting 10GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
-  # And labels it as an LVM partition (-t option)
-  - [cloud-init-per, once, addpartition, sgdisk, /dev/sda, "-g", "-e", "-n=0:30G:0", -t, "0:8e00"]
-
-runcmd:
-  # reload partition table
-  - "sudo partprobe /dev/sda"
-```
-
-Command executed in boot time is
-
-```shell
-sgdisk /dev/sda -e .g -n=0:30G:0 -t 0:8e00
-```
-
-This command:
-  - First convert MBR partition to GPT (-g option)
-  - Second moves the GPT backup block to the end of the disk  (-e option)
-  - then creates a new partition starting 30GiB into the disk filling the rest of the disk (-n=0:10G:0 option)
-  - And labels it as an LVM partition (-t option)
-
-LVM logical volumes creation using the new partition,`/dev/sda3`, (LUNs) have been automated with Ansible developing the ansible role: **ricsanfre.storage** for managing LVM.
-
-Specific ansible variables to be used by this role are stored in [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml)
+{: .table .border-dark }
 
 
 ### cloud-init: network configuration
@@ -687,15 +638,3 @@ Check time synchronization with Chronyc
    ```shell
    chronyc tracking
 	 ```
-
-## iSCSI configuration. Centralized SAN
-
-`gateway` has to be configured as iSCSI Target to export LUNs mounted by `node1-node6`
-
-iSCSI configuration in `gateway` has been automated developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_target** for configuring a iSCSI target.
-
-Specific `gateway` ansible variables to be used by these roles are stored in [`ansible/vars/centralized_san/centralized_san_target.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml)
-
-Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
-
-`gateway` exposes a dedicated LUN of 100 GB for each of the clusters nodes.

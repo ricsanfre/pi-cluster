@@ -32,9 +32,9 @@ view-vault-credentials:
 os-upgrade:
 	${RUNNER} ansible-playbook update.yml
 
-.PHONY: gateway-setup
-gateway-setup:
-	${RUNNER} ansible-playbook setup_picluster.yml --tags "gateway"
+.PHONY: external-setup
+external-setup:
+	${RUNNER} ansible-playbook setup_picluster.yml --tags "external"
 
 .PHONY: nodes-setup
 nodes-setup:
