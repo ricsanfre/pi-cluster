@@ -9,8 +9,19 @@ Centralized authentication and Single-Sign On can be implemented using [Keycloak
 Keycloak is an opensource Identity Access Management solution, providing centralized authentication and authorization 
 services based on standard protocols and provides support for OpenID Connect, OAuth 2.0, and SAML.
 
-![keycloak-sso](/assets/img/keycloak-sso.png)
-
+<pre class="mermaid">
+sequenceDiagram
+  actor User
+  participant Keycloak
+  participant Application
+    User->>Application: User enters URL of an Application
+    Application->>Keycloak: Redirects to Keycloak
+    Keycloak->>User: Login page
+    User->>Keycloak: User gives credentials
+    Keycloak-->>Keycloak: Validates User
+    Keycloak->>Application: if Valid, Redirect to Application
+    Keycloak-->>User: Invalid credentials
+</pre>
 
 Some of the GUIs of the Pi Cluster, Grafana or Kibana, SSO can be configured, so authentication can be done
 using Keycloak instead of local accounts.

@@ -23,7 +23,37 @@ Install process is like this
 6. The RAM Disk downloads the ISO and mounts it as a loop device.
 7. From this point on the install follows the same path as if the ISO was on a local block device
 
-![pxe-flow](/assets/img/pxe-boot-flow.png)
+
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+	participant Bare metal node
+	participant DHCP server
+	participant TFTP server
+  participant Web server
+  Bare metal node->>Bare metal node: netboot
+  activate Bare metal node
+  Bare metal node->>DHCP server: DHCP Request(PXE Arch)
+  activate DHCP server
+  DHCP server->>Bare metal node: IP TFTP Boot Server, Bootloader File 
+  deactivate DHCP server
+  Bare metal node->>TFTP server: Get bootloader file
+  activate TFTP server
+  TFTP server-->>Bare metal node: pxelinux.0/boot64.efi
+  Bare metal node->>TFTP server: Get boot config
+  TFTP server-->>Bare metal node: pxelinux.cfg/grub.cfg
+  Bare metal node->>TFTP server: Get kernel files
+  TFTP server-->>Bare metal node: vmlinuz, initrd
+  deactivate TFTP server
+  Bare metal node->>Web server: Get ISO file
+  activate Web server
+  Web server-->>Bare metal node: ubuntu.iso
+  Bare metal node->>Web server: Get cloud-init files
+  Web server-->>Bare metal node: meta-data, user-data
+  deactivate Web server
+  Bare metal node->>Bare metal node: launch live CD installer
+  deactivate Bare metal node
+</pre>
 
 ## PXE server installation
 
