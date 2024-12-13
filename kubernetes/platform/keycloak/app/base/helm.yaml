@@ -11,7 +11,7 @@ spec:
       chart: keycloak
       version: 24.3.0
       sourceRef:
-        kind: OCIRepository
+        kind: HelmRepository
         name: bitnami
         namespace: flux-system
   install:

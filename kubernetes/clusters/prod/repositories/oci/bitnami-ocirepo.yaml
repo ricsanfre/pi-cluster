@@ -1,9 +1,0 @@
----
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: OCIRepository
-metadata:
-  name: bitnami
-  namespace: flux-system
-spec:
-  url: oci://registry-1.docker.io/bitnamicharts
-  interval: 1h
