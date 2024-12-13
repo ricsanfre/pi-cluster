@@ -10,7 +10,7 @@ spec:
       chart: schema-registry
       version: 23.1.0
       sourceRef:
-        kind: HelmRepository
+        kind: OCIRepository
         name: bitnami
         namespace: flux-system
   releaseName: schema-registry
