@@ -43,11 +43,11 @@ This is the process to flash OpenWRT into SD-Card that can be used to boot Raspb
   Open RpI Imager
   - Select Raspberry Pi Model
 
-    ![rpi-imager-1](/assets/img/rpi-imager-1.png)
+    ![rpi-imager-1](/assets/img/rpi-imager-openwrt-1.png)
 
   - Select "Use Custom" when specifying "Operating System", and the `.img` file previously unzipped.
 
-    ![rpi-imager-2](/assets/img/rpi-imager-2.png)
+    ![rpi-imager-2](/assets/img/rpi-imager-openwrt-2.png)
 
   - Select SD Card when choosing "Storage"
   - Click on "Write" to start the SD-card flashing
