@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: fluent
+  namespace: flux-system
+spec:
+  url: https://fluent.github.io/helm-charts
+  interval: 1h

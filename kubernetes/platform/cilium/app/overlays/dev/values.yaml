@@ -1,5 +1,7 @@
 # cilium helm values (dev overlay)
 
-# K8s API service
-k8sServiceHost: picluster-control-plane
-
+# cgroup v2 filesystem is already mounted by k3d entrypoint script
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /run/cilium/cgroupv2
