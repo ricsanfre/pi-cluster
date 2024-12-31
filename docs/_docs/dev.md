@@ -2,7 +2,7 @@
 title: Kubernetes development environment
 permalink: /docs/dev/
 description: How to configure a development environment for the Pi Cluster using K3D.
-last_modified_at: "13-12-2024"
+last_modified_at: "31-12-2024"
 
 ---
 
@@ -14,6 +14,7 @@ The development setup is the following:
 - Cilium L2-LB awareness is enabled, and a set of IP’s are configured for Loadbalancers services and advertised via L2 announcements. 
 - Docker cluster nodes and Load balancer Kubernetes services are reachable from local host through docker network
 
+![picluster-dev-k3d](/assets/img/pi-cluster-dev-k3d-architecture.png)
 
 ## Preparing the development environment
 
@@ -32,7 +33,7 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
 - Step 1. Uninstall old versions of docker
 
   ```shell
-  sudo apt-get remove docker docker-engine docker.io containerd runc
+  for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
   ```
 
 - Step 2. Install packages to allow apt to use a repository over HTTPS
@@ -50,22 +51,24 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
   
 - Step 3. Add docker´s official GPG key
 
-  ```shell  
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  ```shell
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.asc
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
   ```
   
 - Step 4: Add x86_64 repository 
 
   ```shell
   echo \
-    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   ```
 
 - Step 5: Install Docker Engine
 
   ```shell
-  sudo apt-get install docker-ce docker-ce-cli containerd.io
+  sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   ```
 
 - Step 6: Enable docker management with non-priviledge user
@@ -204,6 +207,43 @@ k3s cluster can be created using K3D. The cluster will be configured with same o
 - kube-proxy is disabled (Cilium Kube-proxy replacement feature will be used)
 - Cilium L2 LB announcement will be used
 
+
+### Prerequisites
+
+#### Enable kernel modules
+
+Since cilium uses IPtables to write routes to kernel, we need to enable additional kernel modules
+
+```shell
+sudo modprobe -v iptable_filter  
+sudo modprobe -v ip_tables  
+sudo modprobe -v iptable_mangle  
+sudo modprobe -v iptable_raw  
+sudo modprobe -v iptable_nat  
+sudo modprobe -v xt_socket
+```
+Add this configuration in kernel modules configuration file to persist the modules after restart
+
+```shell
+echo "iptable_filter
+ip_tables
+iptable_mangle
+iptable_raw
+iptable_nat
+xt_socket" | sudo tee /etc/modules-load.d/modules.conf
+```
+
+#### Ensure sysctl parameters are enabled
+
+```shell
+echo "net.core.devconf_inherit_init_net=1
+net.netfilter.nf_conntrack_max=196608
+net.ipv4.conf.all.forwarding = 1 | sudo tee /etc/sysctl.d/01-sysctl.conf > /dev/null
+
+sudo sysctl -p
+```
+
+
 ### Creating docker network
 
 A specific docker network, 172.30.0.0/16, will be created for the k3d dev environment
@@ -217,6 +257,7 @@ docker network create \
       "picluster"
 ```
 
+
 ### Creating K3D cluster
 
 
@@ -229,8 +270,11 @@ docker network create \
     name: picluster
   servers: 1
   agents: 2
+  kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)
+    hostIP: 127.172.30.1 # where the Kubernetes API will be listening on
+    hostPort: "6443"
   # Setting version of k3s
-  image: rancher/k3s:v1.29.6-k3s1
+  image: rancher/k3s:v1.30.6-k3s1
   # Setting docker network to be used
   network: picluster
   options:
@@ -243,30 +287,42 @@ docker network create \
         - arg: --tls-san=127.0.0.1
           nodeFilters:
             - server:*
-          # Disable helmcontroller
+        # Disable helmcontroller
         - arg: --disable-helm-controller
           nodeFilters:
             - server:*
-          # Disable coreDNS
+        # Disable coreDNS
         - arg: --disable=coredns
           nodeFilters:
             - server:*
-          # Disable traefik, servicelb, flannel and network-policy
+        # Disable traefik
         - arg: --disable=traefik
           nodeFilters:
             - server:*
+        # Disable servicelb
         - arg: --disable=servicelb
           nodeFilters:
             - server:*
+        # Disable local storage
+        - arg: --disable=local-storage
+          nodeFilters:
+            - server:*
+        # Disable metric server
+        - arg: --disable=metrics-server
+          nodeFilters:
+            - server:*
+        # Disable network-policy
         - arg: --disable-network-policy
           nodeFilters:
-            - server:*
+          - server:*
+        # Disable kube-proxy
         - arg: --disable-kube-proxy
           nodeFilters:
-            - server:*
+          - server:*
+        # Disable flannel-backend
         - arg: --flannel-backend=none
           nodeFilters:
-            - server:*
+          - server:*
         # Adding cluster PODs and Services CIDRs
         - arg: --cluster-cidr=10.42.0.0/16
           nodeFilters:
@@ -274,38 +330,52 @@ docker network create \
         - arg: --service-cidr=10.43.0.0/16
           nodeFilters:
             - server:*
-          # Exposing metrics
+        # Exposing metrics
         - arg: --kube-controller-manager-arg=bind-address=0.0.0.0
           nodeFilters:
             - server:*
         - arg: --kube-scheduler-arg=bind-address=0.0.0.0
           nodeFilters:
             - server:*
+    kubeconfig:
+      updateDefaultKubeconfig: true
+      switchCurrentContext: true  
   ```
 
-  - This config 3 nodes cluster is created (1 control plane node and 2 workers)
+  - This config 3 nodes cluster is created (1 control plane node and 2 workers) connected to docker network created before (`picluster`)
 
     - k3d-picluster-server-0, with IP 172.30.0.2
     - k3d-picluster-agent-0, with IP 172.30.0.3
     - k3d-picluster-agent-1, with IP 172.30.0.4
 
-  - k3s version is defined through the corresponding docker image label (`image: rancher/k3s:v1.29.6-k3s1`)
 
-  - Following k3s services are disabled: traefik, servicelb, flannel and network-policy
+  - k3s version is defined through the corresponding docker image label (`image: rancher/k3s:v1.30.6-k3s1`)
+
+  - Following k3s services are disabled: `kube-proxy`, `traefik`, `servicelb`, `flannel` and `network-policy`
 
   - k3d default load balancer is also disabled (`k3d.disableLoadbalancer: true`)
+
 
 - Step 2: Create K3d cluster
 
   ```shell
-  K3D_FIX_MOUNTS=1 k3d cluster create -c k3d-config.yaml
+  K3D_FIX_MOUNTS=1 K3D_FIX_DNS=0 k3d cluster create -c k3d-config.yaml
   ```
 
   {{site.data.alerts.note}}
 
-  K3D_FIX_MOUNTS environment variable need to be set before executing k3d command.
+  **K3D_FIX_MOUNTS** environment variable need to be set before executing k3d command.
   That makes / in the node containers `rshared` mounts fixing issues with Cilium installation.
-  See details in this these k3d issues: [#1268](https://github.com/k3d-io/k3d/pull/1268) and [#479](https://github.com/k3d-io/k3d/discussions/479)
+  See details in this these k3d issues: [#1268](https://github.com/k3d-io/k3d/pull/1268) and [#479](https://github.com/k3d-io/k3d/discussions/479).
+
+  **K3D_FIX_DNS** environment variable need to be set also, so K3d DNS fix that is executed by default is disabled.
+
+  Purpose of this DNS fix is to update defautl behaviour of DNS in docker. By default, containers use the Docker daemon’s embedded DNS resolver, which listens on the default DNS server IP address 127.0.0.11. This DNS server handles DNS queries from containers and forwards them to the appropriate DNS server for resolution.
+
+  K3D_FIX_DNS variable makes k3d to execute a fixing script that modifies /etc/resolv.conf in the container to point to host IP address, so host stub DNS resolver can be used.
+
+  However, DNS fix (K3D_FIX_DNS=1) breaks DNS resolution for external domain names (Internet)": See details in open k3d issue: [#1515](https://github.com/k3d-io/k3d/issues/1515)
+
 
   {{site.data.alerts.end}}
 
@@ -438,6 +508,7 @@ For details about Cilium installation and configuration see ["Cilium CNI"](/docs
 
 ## References
 
-- https://allanjohn909.medium.com/harnessing-the-power-of-cilium-a-guide-to-bgp-integration-with-gateway-api-on-ipv4-7b0d058a1c0d
-
--
+- [Testing cilium with k3d and kind](https://blogops.mixinet.net/posts/testing_cilium_with_k3d_and_kind/)
+- [Harnessing the Power of Cilium: A Guide to BGP Integration with Gateway API on IPv4](https://allanjohn909.medium.com/harnessing-the-power-of-cilium-a-guide-to-bgp-integration-with-gateway-api-on-ipv4-7b0d058a1c0d)
+- [Integrating Cilium with Gateway API, IPv6, and BGP for Advanced Networking Solutions](https://allanjohn909.medium.com/integrating-cilium-with-gateway-api-ipv6-and-bgp-for-advanced-networking-solutions-5b41b0ca0090)
+- [Understanding Docker DNS](https://medium.com/@prajwal.chin/understanding-docker-dns-2ed4b070a0)

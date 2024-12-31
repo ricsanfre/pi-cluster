@@ -5,6 +5,11 @@ namespace: kube-system
 resources:
   - ../../base
 
+components:
+#  - ../../components/monitoring
+#  - ../../components/hubble
+  - ../../components/istio-config
+
 configMapGenerator:
   - name: cilium-overlay-values
     files:

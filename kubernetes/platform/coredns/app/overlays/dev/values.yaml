@@ -1,1 +1,3 @@
 # coredns helm values (dev overlay)
+
+replicaCount: 1

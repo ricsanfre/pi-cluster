@@ -3,6 +3,7 @@
   - home
   - architecture
   - ansible
+  - dev
 - title: Cluster Setup
   docs:
   - pimaster
