@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - bitnami-helmrepo.yaml
+  - cilium-helmrepo.yaml
+  - elastic-helmrepo.yaml
+  - cloudnative-pg-helmrepo.yaml
+  - coredns-helmrepo.yaml
+  - external-secrets-helmrepo.yaml
+  - fluent-helmrepo.yaml
+  - grafana-helmrepo.yaml
+  - ingress-nginx-helmrepo.yaml
+  - istio-helmrepo.yaml
+  - jetstack-helmrepo.yaml
+  - kiali-helmrepo.yaml
+  - longhorn-helmrepo.yaml
+  - metrics-server-helmrepo.yaml
+  - minio-helmrepo.yaml
+  - mongodb-helmrepo.yaml
+  - oauth2-proxy-helmrepo.yaml
+  - prometheus-community-helmrepo.yaml
+  - ricsanfre-helmrepo.yaml
+  - strimzi-helmrepo.yaml
+  - vmware-tanzu-helmrepo.yaml
+  - external-dns-helmrepo.yaml
