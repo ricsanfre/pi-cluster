@@ -31,3 +31,9 @@ cluster-setup:
 	helmfile --quiet --file helmfile.yaml apply --skip-diff-on-install --suppress-diff
 	kubectl kustomize ../kubernetes/platform/cilium/config/overlays/dev | kubectl apply -f -
 
+.PHONY: cluster-bootstrap
+cluster-bootstrap:
+	kubectl kustomize  \
+      ../kubernetes/clusters/bootstrap/flux | kubectl apply -f -
+	kubectl kustomize  \
+      ../kubernetes/clusters/dev/config | kubectl apply -f -
