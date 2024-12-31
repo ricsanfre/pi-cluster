@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-settings
+  namespace: flux-system
+data:
+  CLUSTER_DOMAIN: dev.homelab.ricsanfre.com
+  LB_POOL_MIN: 172.30.200.1
+  LB_POOL_MAX: 172.30.200.254
+  NGINX_LOAD_BALANCER_IP: 172.30.200.1

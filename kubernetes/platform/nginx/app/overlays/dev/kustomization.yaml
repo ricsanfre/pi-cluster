@@ -5,6 +5,9 @@ namespace: nginx
 resources:
   - ../../base
 
+components:
+  - ../../components/loadbalancer
+
 configMapGenerator:
   - name: ingress-nginx-helm-values
     behavior: merge
