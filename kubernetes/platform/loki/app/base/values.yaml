@@ -15,8 +15,8 @@ loki:
     type: s3
     s3:
       endpoint: minio.minio:9000
-      secretAccessKey: $MINIO_SECRET_ACCESS_KEY
-      accessKeyId: $MINIO_ACCESS_KEY_ID
+      secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
+      accessKeyId: ${MINIO_ACCESS_KEY_ID}
       s3ForcePathStyle: true
       insecure: true
       http_config:
