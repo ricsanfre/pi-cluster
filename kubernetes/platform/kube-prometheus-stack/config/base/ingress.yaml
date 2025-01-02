@@ -30,7 +30,7 @@ spec:
       http:
         paths:
           - path: /prometheus/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: kube-prometheus-stack-prometheus
@@ -70,7 +70,7 @@ spec:
       http:
         paths:
           - path: /alertmanager/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: kube-prometheus-stack-alertmanager
