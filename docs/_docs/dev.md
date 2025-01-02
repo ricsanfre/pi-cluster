@@ -18,7 +18,7 @@ The development setup is the following:
 
 ## Preparing the development environment
 
-The following need to be installed in your local developement environement
+The following need to be installed in your local development environment
 
 - Docker
 - [K3D](https://k3d.io/)
