@@ -241,6 +241,7 @@ minio_users:
 # Restic configuration #
 ########################
 
+# renovate: datasource=github-releases depName=restic/restic
 restic_version: 0.16.5
 
 # Restic S3 repository configuration
@@ -257,6 +258,7 @@ restic_environment:
 #######################
 
 vault_hostname: "vault.{{ dns_domain }}"
+# renovate: datasource=github-releases depName=hashicorp/vault
 vault_version: 1.18.1
 
 vault_dns: "{{ vault_hostname }}"
