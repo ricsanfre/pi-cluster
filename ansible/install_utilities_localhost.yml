@@ -1,0 +1,16 @@
+---
+- name: Install utilities
+  hosts: localhost
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+      tags: ["always"]
+  roles:
+    - role: fluxcd-cli
+    - role: longhorn-cli
+    - role: velero-cli
+      vars:
+        velero_arch: amd64
+    - role: istio-cli

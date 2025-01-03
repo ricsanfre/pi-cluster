@@ -88,6 +88,13 @@ k3s_agent_config:
 #  kube-proxy-arg:
 #    - 'metrics-bind-address=0.0.0.0'
 
+
+##########
+# FluxCD #
+##########
+# renovate: datasource=github-releases depName=fluxcd/flux2
+fluxcd_version: "v2.4.0"
+
 ###########
 # Ingress #
 ###########
@@ -254,7 +261,7 @@ restic_environment:
     value: "{{ vault.minio.restic.key }}"
 
 #######################
-# Vault configuration
+# Vault configuration #
 #######################
 
 vault_hostname: "vault.{{ dns_domain }}"
@@ -286,9 +293,12 @@ policies:
         capabilities = [ "read" ]
       }
 
-###################
-# Velero  Secrets #
-###################
+#########################
+# Velero  Configuration #
+#########################
+
+# renovate: datasource=github-releases depName=vmware-tanzu/velero
+velero_version: v1.15.1
 
 # Minio user, key and bucket
 minio_velero_user: "{{ vault.minio.velero.user }}"
@@ -299,13 +309,23 @@ velero_secret_content: |
   aws_access_key_id: "{{ minio_velero_user }}"
   aws_secret_access_key: "{{ minio_velero_key }}"
 
-###################
-# Longhorn Secrets#
-###################
+##########################
+# Longhorn Configuration #
+##########################
+
+# renovate: datasource=github-releases depName=longhorn/longhorn
+longhorn_version: v1.7.2
 
 # Minio user, key and bucket
 minio_longhorn_user: "{{ vault.minio.longhorn.user }}"
 minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
+
+#######################
+# Istio Configuration #
+#######################
+
+# renovate: datasource=github-releases depName=istio/istio
+istio_version: 1.24.2
 
 ###################
 # Logging Secrets #

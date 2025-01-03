@@ -1,0 +1,6 @@
+---
+
+- name: Install istio cli
+  ansible.builtin.shell: |
+    ISTIO_VERSION={{ istio_version }} curl -sL https://istio.io/downloadIstioctl | sh -
+  changed_when: true

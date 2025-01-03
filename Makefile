@@ -111,3 +111,9 @@ kubernetes-vault-config:
 .PHONY: get-pi-status
 get-pi-status:
 	${RUNNER} ansible -b -m shell -a "pi_throttling" raspberrypi
+
+.PHONY: install-local-utils
+install-local-utils:
+	echo "dummy" > ansible/vault-pass-dummy
+	cd ansible; ANSIBLE_VAULT_PASSWORD_FILE=vault-pass-dummy ansible-playbook install_utilities_localhost.yml --ask-become-pass
+	rm ansible/vault-pass-dummy

@@ -1,0 +1,7 @@
+---
+
+- name: Install Flux CD CLI
+  ansible.builtin.include_tasks: install_fluxcd_cli.yml
+  args:
+    apply:
+      become: true
