@@ -334,7 +334,7 @@ From software perspective, I have developed the following:
 
    Source code can be found in Pi Cluster Git repository under [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
-5. This **documentation website** [picluster.ricsanfre.com](/), hosted in Github pages.
+5. This **documentation website**, *picluster.ricsanfre.com*, hosted in Github pages.
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 
@@ -366,7 +366,7 @@ The software used and the latest version tested of each component
 | Logging | ECK Operator |  2.16.0 | Helm chart version: 2.16.0 |
 | Logging | Elastic Search | 8.15.0 | Deployed with ECK Operator |
 | Logging | Kibana | 8.15.0 | Deployed with ECK Operator |
-| Logging | Fluentbit | 3.2.2 | Helm chart version: 0.48.3 |
+| Logging | Fluentbit | 3.2.4 | Helm chart version: 0.48.4 |
 | Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.2 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.17.1|
 | Logging | Loki | 3.3.2 | Helm chart grafana/loki version: 6.24.0  |
 | Monitoring | Kube Prometheus Stack | v0.79.2 | Helm chart version: 67.5.0 |
@@ -378,7 +378,7 @@ The software used and the latest version tested of each component
 | Monitoring | Grafana | 11.4.2 | Helm chart version: 8.8.2 |
 | Tracing | Grafana Tempo | 2.6.0 | Helm chart: tempo-distributed (v1.28.0) |
 | Backup | Minio External (self-hosted) | RELEASE.2024-11-07T00:52:20Z | |
-| Backup | Restic | 0.16.5 | |
+| Backup | Restic | 0.17.2 | |
 | Backup | Velero | 1.15.1 | Helm chart version: 8.2.0 |
 | Secrets | Hashicorp Vault | 1.18.1 | |
 | Secrets| External Secret Operator | 0.12.1 | Helm chart version: 0.12.1 |
