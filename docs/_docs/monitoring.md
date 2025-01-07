@@ -1723,7 +1723,7 @@ Traefik dashboard can be donwloaded from [grafana.com](https://grafana.com): [da
 
 ### Longhorn Monitoring
 
-As stated by official [documentation](https://longhorn.io/docs/1.2.2/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
+As stated by official [documentation](https://longhorn.io/docs/latest/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
 
 Backend endpoint is already exposing Prometheus metrics.
 

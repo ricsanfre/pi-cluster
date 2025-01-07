@@ -219,11 +219,15 @@ Backup policies scheduling
 
 K3S distribution currently does not come with a preintegrated Snapshot Controller that is needed to enable CSI Snapshot feature. An external snapshot controller need to be deployed. K3S can be configured to use [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter).
 
-To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/1.6.0/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
+To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
 
 {{site.data.alerts.note}}
 
-In Longhorn 1.6.2, CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release v6.3.2. Do not install latest version available of External Snapshotter.
+Each release of Longhorn is compatible with a specific version external-snapshotter. Do not install latest available version.
+
+For example, in Longhorn 1.7.2, CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release v7.0.2.
+
+Check which version to use in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
 
 {{site.data.alerts.end}}
 
@@ -236,8 +240,8 @@ In Longhorn 1.6.2, CSI Snapshots support is compatible with [kubernetes-csi/exte
   kind: Kustomization
   namespace: kube-system
   resources:
-  - https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v6.3.2
-  - https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v6.3.2
+  - https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v7.0.2
+  - https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v7.0.2
   ```
 
 - Step Deploy Snapshot-Controller
@@ -328,7 +332,7 @@ defaultSettings:
 ### Scheduling longhorn volumes backup
 
 A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
-See details in [Longhorn - Scheduling backups and snapshots](https://longhorn.io/docs/1.6.2/snapshots-and-backups/scheduling-backups-and-snapshots/).
+See details in [Longhorn - Scheduling backups and snapshots](https://longhorn.io/docs/latest/snapshots-and-backups/scheduling-backups-and-snapshots/).
 
 {{site.data.alerts.note}}
 
@@ -866,7 +870,7 @@ spec:
 ## References
 
 - [K3S Backup/Restore official documentation](https://rancher.com/docs/k3s/latest/en/backup-restore/)
-- [Longhorn Backup/Restore official documentation](https://longhorn.io/docs/1.5.1/snapshots-and-backups/)
+- [Longhorn Backup/Restore official documentation](https://longhorn.io/docs/latest/snapshots-and-backups/)
 - [Bare metal Minio documentation](https://docs.min.io/minio/baremetal/)
 - [Create a Multi-User MinIO Server for S3-Compatible Object Hosting](https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting)
 - [Backup Longhorn Volumes to a Minio S3 bucket](https://www.civo.com/learn/backup-longhorn-volumes-to-a-minio-s3-bucket)
