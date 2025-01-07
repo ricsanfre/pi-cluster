@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kibana-config-job
+spec:
+  parallelism: 1
+  completions: 1
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-kibana
+          image: alpine/curl:latest
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: KIBANA_URL
+            value: efk-kb-http
+          - name: KIBANA_PORT
+            value: "5601"
+          command: ["/bin/sh","/kibana/wait-for-kibana.sh"]
+          volumeMounts:
+          - name: kibana-config-data
+            mountPath: /kibana/ 
+      containers:
+        - name: kibana-config-job
+          image: alpine/curl:latest
+          env:
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: efk-es-elastic-user
+                  key: elastic
+            - name: KIBANA_URL
+              value: efk-kb-http
+            - name: KIBANA_PORT
+              value: "5601"
+          command: ["/bin/sh","/kibana/create-data-view.sh"]
+          volumeMounts:
+          - name: kibana-config-data
+            mountPath: /kibana/ 
+      volumes:
+      - name: kibana-config-data
+        configMap:
+          name: kibana-config-data
+          defaultMode: 0777
