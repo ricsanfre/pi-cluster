@@ -56,17 +56,17 @@ The backup architecture is the following:
   kubectl exec pod -- app_unfreeze_command
   ```
 
-  Velero also support CSI snapshot API to take Persistent Volumes snapshots, through CSI provider, Longorn, when backing-up the PODs. See Velero [CSI snapshot support documentation](https://velero.io/docs/v1.14/csi/).
+  Velero also support CSI snapshot API to take Persistent Volumes snapshots, through CSI provider, Longorn, when backing-up the PODs. See Velero [CSI snapshot support documentation](https://velero.io/docs/latest/csi/).
 
   Integrating Container Storage Interface (CSI) snapshot support into Velero and Longhorn enables Velero to backup and restore CSI-backed volumes using the [Kubernetes CSI Snapshot feature](https://kubernetes.io/docs/concepts/storage/volume-snapshots/).
 
-  For orchestrating application-consistent backups, Velero supports the definition of [backup hooks](https://velero.io/docs/v1.14/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations.
+  For orchestrating application-consistent backups, Velero supports the definition of [backup hooks](https://velero.io/docs/latest/backup-hooks/), commands to be executed before and after the backup, that can be configured at POD level through annotations.
 
   So Velero, with its buil-in functionality, CSI snapshot support and backup hooks, is able to perform the orchestration of application-consistent backups. Velero delegates the actual backup/restore of PV to the CSI provider, Longhorn.
 
   {{site.data.alerts.note}}
 
-  Velero also supports, Persistent Volumes backup/restore procedures using [File System Backup (FSB shortly) or Pod Volume Backup](https://velero.io/docs/v1.14/file-system-backup/).  [restic](https://restic.net/) or [kopia](https://kopia.io/) can be used to transfer the data using the same S3 backend configured within Velero for backing up the cluster configuration. Velero node agent has to be installed to enable this functionality. FSB support is not enabled when deploying Velero, instead CSI snapshots will be used.
+  Velero also supports, Persistent Volumes backup/restore procedures using [File System Backup (FSB shortly) or Pod Volume Backup](https://velero.io/docs/latest/file-system-backup/).  [restic](https://restic.net/) or [kopia](https://kopia.io/) can be used to transfer the data using the same S3 backend configured within Velero for backing up the cluster configuration. Velero node agent has to be installed to enable this functionality. FSB support is not enabled when deploying Velero, instead CSI snapshots will be used.
 
   {{site.data.alerts.end}}
 
@@ -413,13 +413,13 @@ VolumeSnapshotClass objects from CSI Snapshot API need to be configured
 
 Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
 
-Velero as well provides a CLI to execute backup/restore commands using Kuberentes API. More details in official documentation, [How Velero works](https://velero.io/docs/v1.14/how-velero-works/)
+Velero as well provides a CLI to execute backup/restore commands using Kuberentes API. More details in official documentation, [How Velero works](https://velero.io/docs/latest/how-velero-works/)
 
 The complete backup workflow is the following:
 
 ![velero-backup-process](/assets/img/velero-backup-process.png)
 
-As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/v1.15/contributions/minio/).
+As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/latest/contributions/minio/).
 
 
 ### Configuring Minio bucket and user for Velero
@@ -842,7 +842,7 @@ Set up daily full backup can be on with velero CLI
 ```shell
 velero schedule create full --schedule "0 4 * * *"
 ```
-Or creating a 'Schedule' [kubernetes resource](https://velero.io/docs/v1.14/api-types/schedule/):
+Or creating a 'Schedule' [kubernetes resource](https://velero.io/docs/latest/api-types/schedule/):
 
 ```yml
 apiVersion: velero.io/v1
