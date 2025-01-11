@@ -1,0 +1,26 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mongodb-certificate
+  namespace: mongodb
+spec:
+  isCA: false
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  dnsNames:
+    - mongodb-0.mongodb-svc.mongodb.svc.cluster.local
+    - mongodb-1.mongodb-svc.mongodb.svc.cluster.local
+    - mongodb-2.mongodb-svc.mongodb.svc.cluster.local
+    - db-node-1.homelab.ricsanfre.com
+    - db-node-2.homelab.ricsanfre.com
+    - db-node-3.homelab.ricsanfre.com
+  secretName: mongodb-cert
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 4096
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
