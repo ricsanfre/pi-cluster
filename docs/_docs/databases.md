@@ -2,7 +2,7 @@
 title: Databases
 permalink: /docs/databases/
 description: How to deploy databases in Kubernetes cluster. Leveraging cloud-native operators such as CloudNative-PG or MongoDB
-last_modified_at: "07-07-2024"
+last_modified_at: "11-01-2025"
 
 ---
 
@@ -302,3 +302,238 @@ S3, storage server, like Minio need to be configured.
             key: AWS_SECRET_ACCESS_KEY
       retentionPolicy: "30d"
   ```
+
+## MongoDB Operator
+
+
+
+
+### MongoDB operator installation
+
+MongoDB Community Kubernetes Operator can be installed following different procedures. See [MonogDB Community Operator installation](https://github.com/mongodb/mongodb-kubernetes-operator/blob/master/docs/install-upgrade.md#install-the-operator). Helm installation procedure will be described here:
+
+Installation using `Helm` (Release 3):
+
+- Step 1: Add the MongoDB Helm repository:
+
+  ```shell
+  helm repo add mongodb https://mongodb.github.io/helm-charts
+  ```
+- Step 2: Fetch the latest charts from the repository:
+
+  ```shell
+  helm repo update
+  ```
+- Step 3: Create namespace
+
+  ```shell
+  kubectl create namespace mongodb
+  ```
+
+- Step 4: Install MongoDB operator
+
+  ```shell
+  helm install community-operator mongodb/community-operator --namespace mongodb --set operator.watchNamespace="*"
+  ```
+
+  Setting `operator.watchNamespace="*"` value, allow us to create MongoDB databases (CRD resources) in any namespace.
+
+- Step 5: Confirm that the deployment succeeded, run:
+
+  ```shell
+  kubectl -n mongodb get pod
+  ```
+
+### Create a MongoDB database cluster
+
+
+- Create secret containing password of admin user
+
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: admin-user
+    namespace: mongodb
+  type: Opaque
+  stringData:
+    password: s1cret0
+  ```
+
+- Create MongoDBCommunity resource containing the declarative definition of MongoDB cluster
+
+  ```yaml
+  apiVersion: mongodbcommunity.mongodb.com/v1
+  kind: MongoDBCommunity
+  metadata:
+    name: mongodb
+    namespace: mongodb
+  spec:
+    members: 3
+    type: ReplicaSet
+    version: "6.0.11"
+    security:
+      authentication:
+        modes: ["SCRAM"]
+    users:
+      - name: admin
+        db: admin
+        passwordSecretRef: # a reference to the secret that will be used to generate the user's password
+          name: admin-user
+        roles:
+          - name: clusterAdmin
+            db: admin
+          - name: userAdminAnyDatabase
+            db: admin
+        scramCredentialsSecretName: my-scram
+    additionalMongodConfig:
+      storage.wiredTiger.engineConfig.journalCompressor: zlib
+  ```
+  Where:
+
+  - `spec.members` specify the number of replicas 
+  - `spec.version` specify Mongodb version
+
+### Connection to Mongodb
+
+MongoDB operator creates a headless service `<metadata.name>-svc`, so DNS query to the service returns the IP addresses of all stateful pods created for the cluster. Also every single pod, mongodb replica, is reachable through DNS using dns name `<metadata.name>-<id>` (where `<id>` indicates the replica number: 0, 1, 2, etc.)
+
+The Community Kubernetes Operator creates secrets that contains users' connection strings and credentials.
+
+The secrets follow this naming convention: `<metadata.name>-<auth-db>-<username>`, where:
+
+|Variable|Description|Value in Sample|
+|---|---|---|
+|`<metadata.name>`|Name of the MongoDB database resource.|`mongodb`|
+|`<auth-db>`|[Authentication database](https://www.mongodb.com/docs/manual/core/security-users/#std-label-user-authentication-database) where you defined the database user.|`admin`|
+|`<username>`|Username of the database user.|`admin`|
+
+**NOTE**: Alternatively, you can specify an optional `users[i].connectionStringSecretName` field in the `MongoDBCommunity` custom resource to specify the name of the connection string secret that the Community Kubernetes Operator creates.
+
+To obtain the connection string execute the following command
+
+```shell
+kubectl get secret mongodb-admin-admin -n mongodb \
+-o json | jq -r '.data | with_entries(.value |= @base64d)'
+```
+
+The connection string is like:
+```shell
+{
+  "connectionString.standard": "mongodb://admin:s1cret0@mongodb-0.mongodb-svc.mongodb.svc.cluster.local:27017,mongodb-1.mongodb-svc.mongodb.svc.cluster.local:27017,mongodb-2.mongodb-svc.mongodb.svc.cluster.local:27017/admin?replicaSet=mongodb&ssl=true",
+  "connectionString.standardSrv": "mongodb+srv://admin:s1cret0@mongodb-svc.mongodb.svc.cluster.local/admin?replicaSet=mongodb&ssl=true",
+  "password": "s1cret0",
+  "username": "admin"
+}
+
+```
+
+Connection string from the secret (`connectionString.standardSrv`) can be used within application as an environment variable.
+
+```yaml
+containers:
+ - name: test-app
+   env:
+    - name: "CONNECTION_STRING"
+      valueFrom:
+        secretKeyRef:
+          name: <metadata.name>-<auth-db>-<username>
+          key: connectionString.standardSrv
+```
+
+Also connectivity can be tested using `mongosh`
+
+- Connect to one of the mongodb pods
+
+  ```shell
+  kubectl -n mongodb exec -it mongodb-0 -- /bin/bash
+  ```
+
+- Execute mongosh using the previous connection string
+
+  ```shell
+  mongosh "mongodb+srv://admin:s1cret0@mongodb-svc.mongodb.svc.cluster.local/admin?replicaSet=mongodb&ssl=false"
+  ```
+
+### Secure MongoDBCommunity Resource Connections using TLS
+
+MongoDB Community Kubernetes Operator can be configured to use TLS certificates to encrypt traffic between:
+- MongoDB hosts in a replica set, and
+- Client applications and MongoDB deployments.
+
+Certificate can be generated using cert-manager
+
+- Create MongoDB certificate
+
+  ```yaml
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: mongodb-certificate
+    namespace: mongodb
+  spec:
+    isCA: false
+    duration: 2160h # 90d
+    renewBefore: 360h # 15d
+    dnsNames:
+      - mongodb-0.mongodb-svc.mongodb.svc.cluster.local
+      - mongodb-1.mongodb-svc.mongodb.svc.cluster.local
+      - mongodb-2.mongodb-svc.mongodb.svc.cluster.local
+    secretName: mongodb-cert
+    privateKey:
+      algorithm: RSA
+      encoding: PKCS1
+      size: 4096
+    issuerRef:
+      name: ca-issuer
+      kind: ClusterIssuer
+      group: cert-manager.io  
+  ```
+
+- Create MongoDB cluster with tls enabled
+
+  ```yaml
+  apiVersion: mongodbcommunity.mongodb.com/v1
+  kind: MongoDBCommunity
+  metadata:
+    name: mongodb
+    namespace: mongodb
+  spec:
+    members: 3
+    type: ReplicaSet
+    version: "6.0.11"
+    security:
+      tls:
+        enabled: true
+        certificateKeySecretRef:
+          name: mongodb-cert
+        caCertificateSecretRef:
+          name: mongodb-cert
+      authentication:
+        modes: ["SCRAM"]
+    users:
+      - name: admin
+        db: admin
+        passwordSecretRef: # a reference to the secret that will be used to generate the user's password
+          name: admin-user
+        roles:
+          - name: clusterAdmin
+            db: admin
+          - name: userAdminAnyDatabase
+            db: admin
+        scramCredentialsSecretName: my-scram
+    additionalMongodConfig:
+      storage.wiredTiger.engineConfig.journalCompressor: zlib  
+  ```
+  - Test connection using TLS
+
+    Connecting to a mongod container inside a pod using kubectl:
+    ```shell
+    kubectl -n mongodb exec -it mongodb-0 -- /bin/bash
+    ```
+  -  Use mongosh to connect over TLS. U
+    ```shell
+    mongosh "<connection-string>" --tls --tlsCAFile /var/lib/tls/ca/*.pem --tlsCertificateKeyFile /var/lib/tls/server/*.pem 
+    ```
+    where `<connection-string>` can be obtained using the procedure described before.
+    TLS certificates are mounted automatically in mongodb pods in `/var/lib/tls/` path
