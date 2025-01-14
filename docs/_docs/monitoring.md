@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "02-01-2025"
+last_modified_at: "14-01-2025"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -152,7 +152,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
         # Running Grafana behind proxy rewrite path
         # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
-        serve_from_sub_path: true
+        serve_from_sub_path: false
     # Admin user password
     adminPassword: "admin_password"
     # List of grafana plugins to be installed
@@ -656,7 +656,9 @@ grafana:
     server:
       domain: monitoring.picluster.ricsanfre.com
       root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
-      serve_from_sub_path: true
+      # Running Grafana behind proxy rewrite path
+      # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
+      serve_from_sub_path: false
   # Admin user password
   adminPassword: "admin_password"
   # List of grafana plugins to be installed
