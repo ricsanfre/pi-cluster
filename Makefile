@@ -17,8 +17,7 @@ ansible-runner-setup:
 	make -C ansible-runner
 
 .PHONY: init
-init: os-upgrade gateway-setup nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap configure-monitoring-gateway
-
+init: os-upgrade nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap
 
 .PHONY: ansible-credentials
 ansible-credentials:
@@ -56,10 +55,6 @@ external-services:
 configure-os-backup:
 	${RUNNER} ansible-playbook backup_configuration.yml
 
-.PHONY: configure-monitoring-gateway
-configure-monitoring-gateway:
-	${RUNNER} ansible-playbook deploy_monitoring_agent.yml
-
 .PHONY: os-backup
 os-backup:
 	${RUNNER} ansible -b -m shell -a 'systemctl start restic-backup' picluster
@@ -96,9 +91,6 @@ shutdown-k3s-worker:
 shutdown-k3s-master:
 	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" k3s_master
 
-.PHONY: shutdown-gateway
-shutdown-gateway:
-	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" gateway
 
 .PHONY: shutdown-picluster
 shutdown-picluster:

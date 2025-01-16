@@ -1,5 +1,5 @@
 ---
-# gateway node variables
+# node1 node variables
 
 ########################
 # Bind9 role variables
@@ -106,3 +106,8 @@ bind9_zones:
       - label: 22.0
         type: PTR
         rdata: "node-hp-3.{{ dns_domain }}."
+
+############################
+# restic backup role variables
+############################
+restic_clean_service: true

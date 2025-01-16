@@ -2,10 +2,15 @@
 title: Cluster Gateway (Ubuntu OS)
 permalink: /docs/gateway/
 description: How to configure a Raspberry Pi as router/firewall for our Kubernetes Cluster, runing Ubuntu OS, providing connectivity and basic services (DNS, DHCP, NTP, SAN).
-last_modified_at: "03-02-2024"
+last_modified_at: "16-01-2025"
 ---
 
-One of the Raspeberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the raspberry pi cluster from my home network.
+
+{{site.data.alerts.important}}
+Instead of configuring Ubuntu OS, running on a Raspberry Pi to provide Router/Firewall capabilities, a embedded device or Raspberry Pi running [OpenWRT](https://openwrt.org/) is currently being used in my homelab cluster. See details in ["Cluster Gateway (OpenWRT)"](/docs/openwrt/)
+{{site.data.alerts.end}}
+
+One of the Raspberry Pi (2GB), **gateway**, is used as Router and Firewall for the home lab, isolating the homelab network from my home network.
 It will also provide DNS, NTP and DHCP services to my lab network.
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
@@ -93,12 +98,14 @@ After booting from the USB3.0 external storage for the first time, the Raspberry
 
 Initial configuration tasks includes: removal of snap package, and Raspberry PI specific configurations tasks such as: intallation of fake hardware clock, installation of some utility packages scripts and change default GPU Memory plit configuration. See instructions in ["Ubuntu OS initial configurations"](/docs/os-basic/).
 
-For automating all this initial configuration tasks, ansible role **basic_setup** has been developed.
 
 ## Router/Firewall Configuration
 
-For automating configuration tasks, ansible role [**ricsanfre.firewall**](https://galaxy.ansible.com/ricsanfre/firewall) has been developed.
+{{site.data.alerts.note}}
 
+For automating configuration tasks, ansible role [**ricsanfre.firewall**](https://galaxy.ansible.com/ricsanfre/firewall) can be used.
+
+{{site.data.alerts.end}}
 
 ### Enabling IP Forwarding
 
@@ -144,7 +151,6 @@ As a modular example:
   `/etc/nftables.conf`
   ```
   #!/usr/sbin/nft -f
-  # Ansible managed
 
   # clean
   flush ruleset
@@ -385,12 +391,6 @@ Rules are stored in the following location:
 
 {{site.data.alerts.end}}
 
-### Configuring Ansible Role
-
-nftables default rules establish by the role can be updated by changing roles variables for `gateway` host (see `gateway` host variables in [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) file)
-
-The rules configured for `gateway` allow incoming traffic (icmp, http, https, iscsi, ssh, dns, dhcp, ntp and snmp) and forward http, https, ssh, dns and ntp traffic.
-
 
 ### Configuring static routes to access to cluster from home network
 
@@ -437,8 +437,9 @@ This route need to be added to my Laptop and the VM running `pimaster` node
 
 DNS configured as Resolver/Forwarder. See more details in [PiCluster - DNS Architecture](/docs/dns/).
 
-
-For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https://galaxy.ansible.com/ricsanfre/dnsmasq) has been developed.
+{{site.data.alerts.note}}
+For automating configuration tasks, ansible role [**ricsanfre.dnsmasq**](https://galaxy.ansible.com/ricsanfre/dnsmasq) can be used.
+{{site.data.alerts.end}}
 
 Manual installation process is the following:
 
@@ -491,9 +492,6 @@ Manual installation process is the following:
   sudo systemctl restart dnsmasq
   ```
 
-### Configuring Ansible Role
-
-DNS/DHCP specific configuration, dnsmasq role variables for `gateway` host, are located in [`ansible/host_vars/gateway.yml`]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) file.
 
 ### Useful Commands
 
@@ -578,7 +576,9 @@ Since ntp and ntpdate are deprecated **chrony** package will be used for configu
 
 **gateway** will be hosting a NTP server and the rest of cluster nodes will be configured as NTP Clients.
 
-For automating ntp configuration tasks on all nodes (gateway and node1-5), ansible role [**ricsanfre.ntp**](https://galaxy.ansible.com/ricsanfre/ntp) has been created.
+{{site.data.alerts.note}}
+For automating ntp configuration tasks, ansible role [**ricsanfre.ntp**](https://galaxy.ansible.com/ricsanfre/ntp) can be used
+{{site.data.alerts.end}}
 
 - Step 1. Install chrony
 
