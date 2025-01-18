@@ -2,21 +2,30 @@
 
 # Get list of packages installed
 - name: Get list of packages
-  package_facts:
+  ansible.builtin.package_facts:
     manager: auto
 
 - name: Check whether snap is package is installed
-  debug:
+  ansible.builtin.debug:
     msg: "snapd found"
   when: "'snapd' in ansible_facts.packages"
 
 - name: Remove snap package
-  include_tasks: remove_snap.yaml
+  ansible.builtin.include_tasks: remove_snap.yaml
   when: "'snapd' in ansible_facts.packages"
 
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    update_cache: true
+    state: present
+
 - name: Execute RaspberryPi specific setup tasks
-  include_tasks: raspberrypi_tasks.yml
+  ansible.builtin.include_tasks: raspberrypi_tasks.yml
   when: "'raspberrypi' in group_names"
 
+- name: Load required Kernel modules
+  ansible.builtin.include_tasks: load_kernel_modules.yml
+
 - name: Blacklist storage devices in multipath configuration
-  include_tasks: multipath_blacklist.yml
+  ansible.builtin.include_tasks: multipath_blacklist.yml

@@ -1,6 +1,15 @@
 ---
 
-basic_packages:
+common_packages:
+  - curl
+  - bridge-utils
+  # Longhorn requirements
+  - open-iscsi
+  - nfs-common
+  - cryptsetup
+  - dmsetup
+
+rpi_packages:
   - libraspberrypi-bin
   - linux-modules-extra-raspi
   - fake-hwclock

@@ -2,7 +2,7 @@
 title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Pi Kubernetes Cluster.
-last_modified_at: "26-07-2023"
+last_modified_at: "18-01-2025"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won't be able to access the data.
@@ -13,17 +13,101 @@ A distributed block storage is needed to handle this issue. With distributed blo
 
 ## LongHorn Installation
 
-### Open-iscsi Requirement
+### Installation requirements
 
-LongHorn requires that `open-iscsi` package has been installed on all the nodes of the Kubernetes cluster, and `iscsid` daemon is running on all the nodes.
+#### Kubernetes version requirements
+- A container runtime compatible with Kubernetes (Docker v1.13+, containerd v1.3.7+, etc.)
+- Kubernetes >= v1.21
+- Mount propagation must be supported[^2]
 
-Longhorn uses internally iSCSI to expose the block device presented by the Longhorn volume to the kuberentes pods. So the iSCSI initiator need to be setup on each node. Longhorn, acting as iSCSI Target, exposes Longhorn Volumes that are discovered by the iSCSI Initiator running on the node as `/dev/longhorn/` block devices. For implementation details see [Longhorn enfine document](https://github.com/longhorn/longhorn-engine).
+#### Installing open-iscsi
+
+LongHorn requires that `open-iscsi` package has been installed on all the nodes of the Kubernetes cluster, and `iscsid` daemon is running on all the nodes.[^3]
+
+Longhorn uses internally iSCSI to expose the block device presented by the Longhorn volume to the kuberentes pods. So the iSCSI initiator need to be setup on each node. Longhorn, acting as iSCSI Target, exposes Longhorn Volumes that are discovered by the iSCSI Initiator running on the node as `/dev/longhorn/` block devices. For implementation details see [Longhorn engine document](https://github.com/longhorn/longhorn-engine).
 
 ![longhorn](https://github.com/longhorn/longhorn-engine/raw/master/overview.png)
 
-Since all cluster nodes (`node1-node5`) have been already configured as iSCSI Initiators all pre-requisties are met.
 
-### Longhorn issues with Multipath
+Check than  `open-iscsi` is installed, and the `iscsid` daemon is running on all the nodes. This is necessary, since Longhorn relies on `iscsiadm` on the host to provide persistent volumes to Kubernetes.
+
+- Install open-iscsi package
+
+  ```shell
+  sudo apt get install open-iscsi
+  ```
+
+- Ensure `iscsid` daemon is up and running and is started on boot
+
+  ```shell
+  sudo systemclt start iscsid
+  sudo systemctl enable iscsid
+  ```
+
+
+#### Installing NFSv4 Client
+In Longhorn system, backup feature requires NFSv4, v4.1 or v4.2, and ReadWriteMany (RWX) volume feature requires NFSv4.1.[^4]
+
+Make sure the client kernel support is enabled on each Longhorn node.
+
+- Check `NFSv4.1` support is enabled in kernel
+    
+  ```shell
+  cat /boot/config-`uname -r`| grep CONFIG_NFS_V4_1
+  ```
+    
+- Check `NFSv4.2` support is enabled in kernel
+    
+  ```shell
+  cat /boot/config-`uname -r`| grep CONFIG_NFS_V4_2
+  ```
+
+- Installl NFSv4 client in all nodes
+
+  ```shell
+  sudo apt install nfs-common
+  ```
+
+
+#### Installing Cryptsetup and LUKS
+
+Longhorn supports Volume encryption.
+
+[Cryptsetup](https://gitlab.com/cryptsetup/cryptsetup) is an open-source utility used to conveniently set up `dm-crypt` based device-mapper targets and Longhorn uses [LUKS2](https://gitlab.com/cryptsetup/cryptsetup#luks-design) (Linux Unified Key Setup) format that is the standard for Linux disk encryption to support volume encryption.
+
+To use encrypted volumes, `dm_crypt` kernel module has to be loaded and that `cryptsetup` is installed on all worker nodes.[^5]
+
+- Install `cryptsetup` package
+  ```shell
+  sudo apt install cryptsetup 
+  ```
+
+- Load `dm_crypt` kernel module
+
+  ```shell
+  sudo modprobe -v dm_crypt 
+  ```
+
+  Make that change persisent across reboots
+
+  ```shell
+  echo "dm_crypt" | sudo tee /etc/modules-load.d/dm_crypt.conf
+  ```
+
+
+#### Installing Device Mapper Userspace Tool
+
+The device mapper is a framework provided by the Linux kernel for mapping physical block devices onto higher-level virtual block devices. It forms the foundation of the `dm-crypt` disk encryption and provides the linear dm device on the top of v2 volume.[^6]
+
+Ubuntu 22.04 sever includes this package by default.
+
+To install the package:
+
+```shell
+sudo apt install dmsetup
+```
+
+#### Longhorn issues with Multipath
 
 Multipath running on the storage nodes might cause problems when starting Pods using Longhorn volumes ("Error messages of type: volume already mounted").
 
@@ -341,3 +425,11 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
 
 
+## References
+
+
+[^2]: [Mount Propagation](https://kubernetes.io/docs/concepts/storage/volumes/#mount-propagation) is a feature activated by defult since Kubernetes v1.14
+[^3]: [Longorn Requirements- Installing open-iscsi](https://longhorn.io/docs/latest/deploy/install/#installing-open-iscsi)
+[^4]: [Longorn Requirements- Installing NFSv4 Client](https://longhorn.io/docs/latest/deploy/install/#installing-nfsv4-client)
+[^5]: [Longorn Requirements- Installing Cryptsetup and Luks](https://longhorn.io/docs/latest/deploy/install/#installing-cryptsetup-and-luks)
+[^6]: [Longorn Requirements- Installing Device Mapper](https://longhorn.io/docs/latest/deploy/install/#installing-device-mapper-userspace-tool)
