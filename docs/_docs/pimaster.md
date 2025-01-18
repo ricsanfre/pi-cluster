@@ -2,7 +2,7 @@
 title: Ansible Control Node
 permalink: /docs/pimaster/
 description: How to configure an Ansible Control node for our Raspberry Pi Kubernetes Cluster. Control node will be used for automating configuration tasks of the cluster using Ansible. How to create this control node using a docker container running on a Linux server or a VM.
-last_modified_at: "17-05-2023"
+last_modified_at: "18-01-2025"
 ---
 
 My laptop running Ubuntu desktop will be used as Ansible Control Node.
@@ -34,7 +34,7 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
 - Step 1. Uninstall old versions of docker
 
   ```shell
-  sudo apt-get remove docker docker-engine docker.io containerd runc
+  for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
   ```
 
 - Step 2. Install packages to allow apt to use a repository over HTTPS
@@ -49,25 +49,27 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
   gnupg \
   lsb-release
   ```
-	
-- Step 3. Add docker´s official GPG	key
+  
+- Step 3. Add docker´s official GPG key
 
-  ```shell	
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  ```shell
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.asc
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
   ```
-	
-- Step 4: Add x86_64 repository	
+  
+- Step 4: Add x86_64 repository 
 
   ```shell
   echo \
-    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   ```
 
 - Step 5: Install Docker Engine
 
   ```shell
-  sudo apt-get install docker-ce docker-ce-cli containerd.io
+  sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   ```
 
 - Step 6: Enable docker management with non-priviledge user
@@ -94,11 +96,11 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
 - Step 8: Configure docker daemon.
 
   - Edit file `/etc/docker/daemon.json`
-	
+  
     Set storage driver to overlay2 and to use systemd for the management of the container’s cgroups.
     Optionally default directory for storing images/containers can be changed to a different disk partition (example /data).
     Documentation about the possible options can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file)
-  	
+    
     ```json
     {
         "exec-opts": ["native.cgroupdriver=systemd"],
@@ -109,36 +111,12 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
         "storage-driver": "overlay2",
         "data-root": "/data/docker"  
     }
-    ```	
+    ``` 
   - Restart docker
 
     ```shell
     sudo systemctl restart docker
     ```
-
-### Installing Docker Compose
-
-
-- Step 1: Check latest available version in https://github.com/docker/compose/releases
-
-
-- Step 2: Download binary and install in /usr/local/bin
-  
-  ```shell
-  sudo curl -L "https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-  ```
-
-- Step 3: Set proper permissions to binary
-
-  ```shell
-  sudo chmod +x /usr/local/bin/docker-compose
-  ```
-
-- Step 4: check docker-compose version
-
-  ```shell
-  docker-compose --version
-  ```
 
 ### Creating ansible-runner docker environment
 
@@ -283,7 +261,7 @@ This docker-compose file build and start `ansible-runner` docker container and m
 `ansible-runner` container can be started with the command:
 
 ```shell
-docker-compose up --detach
+docker compose up --detach
 ```
 
 Any command, including ansible's commands, can be executed using the container 

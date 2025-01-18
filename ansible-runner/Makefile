@@ -10,7 +10,7 @@ default: start-ansible-runner runner/.ssh/id_rsa runner/.vault/vault_passphrase.
 
 .PHONY: start-ansible-runner
 start-ansible-runner:
-	docker-compose up --detach
+	docker compose up --detach
 
 
 runner/.ssh/id_rsa:

@@ -28,7 +28,7 @@ Step-by-step manual process to deploy and configure each component is also descr
   git clone https://github.com/ricsanfre/pi-cluster.git
   ```
 
-- Install `docker` and `docker-compose`
+- Install `docker` and `docker compose`
 
   Follow instructions in ["Ansible Control Node: Installing Ansible Runtime environment"](/docs/pimaster/#installing-ansible-runtime-environment).
 
