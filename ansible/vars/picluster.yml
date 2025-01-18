@@ -298,7 +298,7 @@ policies:
 #########################
 
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
-velero_version: v1.15.1
+velero_version: v1.15.2
 
 # Minio user, key and bucket
 minio_velero_user: "{{ vault.minio.velero.user }}"
