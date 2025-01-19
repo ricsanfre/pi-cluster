@@ -34,7 +34,7 @@ alertmanager:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 5Gi
+              storage: 1Gi
   serviceMonitor:
     relabelings:
       # Replace job value
@@ -62,7 +62,7 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 20Gi
+              storage: 10Gi
     # Retention period
     retention: 7d
 

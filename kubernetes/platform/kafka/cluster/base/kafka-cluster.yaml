@@ -36,7 +36,7 @@ spec:
     replicas: 3
     storage:
       type: persistent-claim
-      size: 5Gi
+      size: 512Mi
       deleteClaim: true
       class: longhorn
   entityOperator:

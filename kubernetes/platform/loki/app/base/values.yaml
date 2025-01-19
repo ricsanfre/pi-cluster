@@ -40,7 +40,7 @@ write:
   replicas: 2
   persistence:
     # -- Size of persistent disk
-    size: 10Gi
+    size: 1Gi
     # -- Storage class to be used.
     storageClass: longhorn
 
@@ -66,7 +66,7 @@ read:
   replicas: 2
   persistence:
     # -- Size of persistent disk
-    size: 10Gi
+    size: 1Gi
     # -- Storage class to be used.
     storageClass: longhorn
 
@@ -92,7 +92,7 @@ backend:
   replicas: 3
   persistence:
     # -- Size of persistent disk
-    size: 10Gi
+    size: 1Gi
     # -- Storage class to be used.
     storageClass: longhorn
 

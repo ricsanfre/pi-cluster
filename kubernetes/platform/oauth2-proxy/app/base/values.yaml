@@ -51,5 +51,8 @@ redis:
   auth:
     existingSecret: oauth2-proxy-secret
     existingSecretPasswordKey: redis-password
+  # Limit PVC size to 1Gi
+  persistence:
+    size: 1Gi
 
 
