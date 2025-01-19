@@ -28,6 +28,7 @@ txtOwnerId: k8s
 txtPrefix: external-dns-
 sources: 
   - crd
+  - service
   - ingress
   - istio-gateway
 domainFilters: 
