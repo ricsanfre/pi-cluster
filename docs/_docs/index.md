@@ -356,7 +356,7 @@ The software used and the latest version tested of each component
 | Computing | containerd | v1.7.23-k3s2 | version pre-integrated into K3S |
 | Networking | Cilium | 1.16.6 | |
 | Networking | CoreDNS | v1.11.4 | Helm chart version: 1.37.3 |
-| Networking | External-DNS | 0.15.0 | Helm chart version: 1.15.0 |rljY1IiT0gZDmnT2mY9ISkVl8O13Mv4X
+| Networking | External-DNS | 0.15.0 | Helm chart version: 1.15.0 |
 | Metric Server | Kubernetes Metrics Server | v0.7.2 | Helm chart version: 3.12.2|
 | Service Mesh | Istio | v1.24.2 | Helm chart version: 1.24.2 |
 | Service Proxy | Ingress NGINX | v1.12.0 | Helm chart version: 4.12.0 |
