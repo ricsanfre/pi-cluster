@@ -354,35 +354,35 @@ The software used and the latest version tested of each component
 | Kubernetes | Helm | v3.15.3 ||
 | Kubernetes | etcd | v3.5.16-k3s1 | version pre-integrated into K3S |
 | Computing | containerd | v1.7.23-k3s2 | version pre-integrated into K3S |
-| Networking | Cilium | 1.16.5 | |
-| Networking | CoreDNS | v1.11.4 | Helm chart version: 1.37.0 |
-| Networking | External-DNS | 0.15.0 | Helm chart version: 1.15.0 |
+| Networking | Cilium | 1.16.6 | |
+| Networking | CoreDNS | v1.11.4 | Helm chart version: 1.37.3 |
+| Networking | External-DNS | 0.15.0 | Helm chart version: 1.15.0 |rljY1IiT0gZDmnT2mY9ISkVl8O13Mv4X
 | Metric Server | Kubernetes Metrics Server | v0.7.2 | Helm chart version: 3.12.2|
 | Service Mesh | Istio | v1.24.2 | Helm chart version: 1.24.2 |
 | Service Proxy | Ingress NGINX | v1.12.0 | Helm chart version: 4.12.0 |
-| Storage | Longhorn | v1.7.2 | Helm chart version: 1.7.2 |
-| Storage | Minio | RELEASE.2024-04-18T19-09-19Z | Helm chart version: 5.3.0 |
-| TLS Certificates | Certmanager | v1.16.2| Helm chart version: v1.16.2  |
-| Logging | ECK Operator |  2.16.0 | Helm chart version: 2.16.0 |
-| Logging | Elastic Search | 8.15.0 | Deployed with ECK Operator |
-| Logging | Kibana | 8.15.0 | Deployed with ECK Operator |
-| Logging | Fluentbit | 3.2.4 | Helm chart version: 0.48.4 |
+| Storage | Longhorn | v1.8.0 | Helm chart version: 1.8.0 |
+| Storage | Minio | RELEASE.2024-12-18T13-15-44Z | Helm chart version: 5.4.0 |
+| TLS Certificates | Certmanager | v1.16.3 | Helm chart version: v1.16.3  |
+| Logging | ECK Operator |  2.16.1 | Helm chart version: 2.16.1 |
+| Logging | Elastic Search | 8.17.1 | Deployed with ECK Operator |
+| Logging | Kibana | 8.17.1 | Deployed with ECK Operator |
+| Logging | Fluentbit | 3.2.4 | Helm chart version: 0.48.5 |
 | Logging | Fluentd | 1.15.3 | Helm chart version: 0.5.2 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.17.1|
-| Logging | Loki | 3.3.2 | Helm chart grafana/loki version: 6.24.0  |
-| Monitoring | Kube Prometheus Stack | v0.79.2 | Helm chart version: 67.5.0 |
-| Monitoring | Prometheus Operator | v0.79.2 | Installed by Kube Prometheus Stack. Helm chart version: 67.5.0  |
-| Monitoring | Prometheus | v3.0.1 | Installed by Kube Prometheus Stack. Helm chart version: 67.5.0 |
-| Monitoring | AlertManager | v0.27.0 | Installed by Kube Prometheus Stack. Helm chart version: 67.5.0 |
-| Monitoring | Prometheus Node Exporter | v1.8.2 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 67.5.0 |
+| Logging | Loki | 3.3.2 | Helm chart grafana/loki version: 6.25.0  |
+| Monitoring | Kube Prometheus Stack | v0.79.2 | Helm chart version: 68.3.2 |
+| Monitoring | Prometheus Operator | v0.79.2 | Installed by Kube Prometheus Stack. Helm chart version: 68.3.2  |
+| Monitoring | Prometheus | v3.1.0 | Installed by Kube Prometheus Stack. Helm chart version: 68.3.2 |   
+| Monitoring | AlertManager | v0.28.0 | Installed by Kube Prometheus Stack. Helm chart version: 68.3.2 |
+| Monitoring | Prometheus Node Exporter | v1.8.2 | Installed as dependency of Kube Prometheus Stack chart. Helm chart version: 68.3.2 |
 | Monitoring | Prometheus Elasticsearch Exporter | 1.8.0 | Helm chart version: prometheus-elasticsearch-exporter-6.6.0 |
-| Monitoring | Grafana | 11.4.2 | Helm chart version: 8.8.2 |
-| Tracing | Grafana Tempo | 2.6.0 | Helm chart: tempo-distributed (v1.28.0) |
+| Monitoring | Grafana | 11.4.0 | Helm chart version: 8.8.5 |
+| Tracing | Grafana Tempo | 2.7.0 | Helm chart: tempo-distributed (v1.31.0) |
 | Backup | Minio External (self-hosted) | RELEASE.2024-11-07T00:52:20Z | |
 | Backup | Restic | 0.17.2 | |
-| Backup | Velero | 1.15.1 | Helm chart version: 8.2.0 |
+| Backup | Velero | 1.15.2 | Helm chart version: 8.3.0 |
 | Secrets | Hashicorp Vault | 1.18.1 | |
-| Secrets| External Secret Operator | 0.12.1 | Helm chart version: 0.12.1 |
-| SSO | Keycloak | 26.0.7 | Bitnami Helm chart version: 24.3.2 |
-| SSO| Oauth2.0 Proxy | 7.7.1 | Helm chart version: 7.9.0 |
+| Secrets| External Secret Operator | 0.13.0 | Helm chart version: 0.13.0 |
+| SSO | Keycloak | 26.1.0 | Bitnami Helm chart version: 24.4.6 |
+| SSO| Oauth2.0 Proxy | 7.8.1 | Helm chart version: 7.10.2 |
 | GitOps | Flux CD | v2.4.0 |  |
 {: .table .border-dark }
