@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: coredns
+  namespace: flux-system
+spec:
+  url: https://coredns.github.io/helm
+  interval: 1h

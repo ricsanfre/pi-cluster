@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and FluxCD
-last_modified_at: "06-10-2024"
+last_modified_at: "16-01-2025"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -28,7 +28,7 @@ Step-by-step manual process to deploy and configure each component is also descr
   git clone https://github.com/ricsanfre/pi-cluster.git
   ```
 
-- Install `docker` and `docker-compose`
+- Install `docker` and `docker compose`
 
   Follow instructions in ["Ansible Control Node: Installing Ansible Runtime environment"](/docs/pimaster/#installing-ansible-runtime-environment).
 
@@ -84,11 +84,10 @@ The following table shows the variable files defined at ansible's group and host
 
 | Group/Host Variable file | Nodes affected |
 |----|----|
-| [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + gateway node + pimaster |
-| [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: gateway node + pimaster |
-| [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all nodes of the k3s cluster |
+| [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + pimaster |
+| [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: pimaster |
+| [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all kubernetes nodes (master and workers) of the cluster |
 | [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
-| [ansible/host_vars/gateway.yml]({{ site.git_edit_address }}/ansible/host_vars/gateway.yml) | gateway node specific variables|
 | [ansible/host_vars/node1.yml]({{ site.git_edit_address }}/ansible/host_vars/node1.yml) | external services node specific variables|
 {: .table .border-dark }
 
@@ -326,7 +325,7 @@ All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
 
 ## Configuring OS level backup (restic)
 
-Automate backup tasks at OS level with restic in all nodes (`node1-node6` and `gateway`) running the command:
+Automate backup tasks at OS level with restic in all nodes (`node1-node6`) running the command:
 
 ```shell
 make configure-os-backup
@@ -337,7 +336,7 @@ Minio S3 server VM, `s3`, hosted in Public Cloud (Oracle Cloud Infrastructure), 
 
 List of directories to be backed up by restic in each node can be found in variables file `var/all.yml`: `restic_backups_dirs`
 
-Variable `restic_clean_service` which configure and schedule restic's purging activities need to be set to "true" only in one of the nodes. Defaul configuration set `gateway` as the node for executing these tasks.
+Variable `restic_clean_service` which configure and schedule restic's purging activities need to be set to "true" only in one of the nodes. Defaul configuration set `node1` as the node for executing these tasks.
 
 {{site.data.alerts.end}}
 
@@ -398,9 +397,9 @@ If you mess anything up in your Kubernetes cluster, and want to start fresh, the
 make k3s-reset
 ```
 
-## Shutting down the Raspberry Pi Cluster
+## Shutting down the Pi Cluster
 
-To automatically shut down the Raspberry PI cluster, Ansible can be used.
+To automatically shut down the cluster, Ansible can be used.
 
 [Kubernetes graceful node shutdown feature](https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/) is enabled in the culster. This feature is documented [here](https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown). and it ensures that pods follow the normal [pod termination process](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) during the node shutdown.
 
@@ -418,14 +417,10 @@ For doing a controlled shutdown of the cluster execute the following commands
   make shutdown-k3s-master
   ```
 
-- Step 3: Shutdown gateway node:
-  ```shell
-  make shutdown-gateway
-  ```
 
-`shutdown` commands connects to each Raspberry PI in the cluster and execute the command `sudo shutdown -h 1m`, commanding the raspberry-pi to shutdown in 1 minute.
+`shutdown` commands connects to each node in the cluster and execute the command `sudo shutdown -h 1m`, commanding the node to shutdown in 1 minute.
 
-After a few minutes, all raspberry pi will be shutdown. You can notice that when the Switch ethernet ports LEDs are off. Then it is safe to unplug the Raspberry PIs.
+After a few minutes, all nodes will be shutdown. You can notice that when the Switch ethernet ports LEDs are off. Then it is safe to unplug all nodes.
 
 ## Updating Ubuntu packages
 

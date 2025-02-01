@@ -1,0 +1,40 @@
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  timeout: 900
+  recreatePods: false
+  force: true
+
+repositories:
+  - name: cilium
+    url: https://helm.cilium.io
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: coredns
+    url: https://coredns.github.io/helm
+
+releases:
+  - name: prometheus-operator-crds
+    namespace: kube-system
+    chart: prometheus-community/prometheus-operator-crds
+    version: 17.0.2
+  - name: cilium
+    namespace: kube-system
+    chart: cilium/cilium
+    version: 1.16.6
+    values:
+      - ../kubernetes/platform/cilium/app/base/values.yaml
+      - ../kubernetes/platform/cilium/app/components/istio-config/values.yaml
+      - ../kubernetes/platform/cilium/app/overlays/dev/values.yaml
+    needs:
+     - kube-system/prometheus-operator-crds
+  - name: coredns
+    namespace: kube-system
+    chart: coredns/coredns
+    version: 1.37.3
+    values:
+      - ../kubernetes/platform/coredns/app/base/values.yaml
+      - ../kubernetes/platform/coredns/app/overlays/dev/values.yaml
+    needs:
+     - kube-system/prometheus-operator-crds
+     - kube-system/cilium

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-config-data
+data:
+  wait-for-kibana.sh: |
+    #!/bin/sh
+    # Wait for Kibana to be available & healthy
+    echo "Testing connection to Kibana"
+    until $(curl -k -X GET http://$KIBANA_URL:$KIBANA_PORT/_cluster/health); do sleep 5; done
+    until [ "$(curl -k -X GET http://$KIBANA_URL:$KIBANA_PORT/_cluster/health | wc -l)" == "0" ]
+    do sleep 5
+    done
+
+  create-data-view.sh: |
+    #!/bin/sh
+    #Import data view
+    echo "Importing data_view..."
+    curl -u elastic:$ELASTICSEARCH_PASSWORD \
+    -X POST http://$KIBANA_URL:$KIBANA_PORT/api/data_views/data_view \
+    -H 'Content-Type: application/json; Elastic-Api-Version=2023-10-31' \
+    -H 'kbn-xsrf: string' \
+    -d '
+    { 
+      "data_view": {
+        "name": "fluentd",
+        "title": "fluentd-*",
+        "timeFieldName": "@timestamp"
+      }
+    }
+    '

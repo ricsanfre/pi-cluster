@@ -6,7 +6,8 @@ metadata:
   # annotations:
   #   "helm.sh/hook": post-install,post-upgrade
 spec:
-  version: 8.13.0
+  # renovate: datasource=github-releases depName=elastic/elasticsearch
+  version: 8.17.1
   count: 1
   elasticsearchRef:
     name: efk

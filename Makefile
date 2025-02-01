@@ -17,8 +17,7 @@ ansible-runner-setup:
 	make -C ansible-runner
 
 .PHONY: init
-init: os-upgrade gateway-setup nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap configure-monitoring-gateway
-
+init: os-upgrade nodes-setup external-services configure-os-backup k3s-install k3s-bootstrap
 
 .PHONY: ansible-credentials
 ansible-credentials:
@@ -56,10 +55,6 @@ external-services:
 configure-os-backup:
 	${RUNNER} ansible-playbook backup_configuration.yml
 
-.PHONY: configure-monitoring-gateway
-configure-monitoring-gateway:
-	${RUNNER} ansible-playbook deploy_monitoring_agent.yml
-
 .PHONY: os-backup
 os-backup:
 	${RUNNER} ansible -b -m shell -a 'systemctl start restic-backup' picluster
@@ -96,9 +91,6 @@ shutdown-k3s-worker:
 shutdown-k3s-master:
 	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" k3s_master
 
-.PHONY: shutdown-gateway
-shutdown-gateway:
-	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" gateway
 
 .PHONY: shutdown-picluster
 shutdown-picluster:
@@ -111,3 +103,9 @@ kubernetes-vault-config:
 .PHONY: get-pi-status
 get-pi-status:
 	${RUNNER} ansible -b -m shell -a "pi_throttling" raspberrypi
+
+.PHONY: install-local-utils
+install-local-utils:
+	echo "dummy" > ansible/vault-pass-dummy
+	cd ansible; ANSIBLE_VAULT_PASSWORD_FILE=vault-pass-dummy ansible-playbook install_utilities_localhost.yml --ask-become-pass
+	rm ansible/vault-pass-dummy

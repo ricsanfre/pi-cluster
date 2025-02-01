@@ -1,0 +1,7 @@
+---
+
+- name: Install longhorn client
+  ansible.builtin.include_tasks: install_longhorn_cli.yml
+  args:
+    apply:
+      become: true

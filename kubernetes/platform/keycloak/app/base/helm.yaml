@@ -9,11 +9,13 @@ spec:
   chart:
     spec:
       chart: keycloak
-      version: 24.3.0
+      version: 24.4.6
       sourceRef:
         kind: HelmRepository
         name: bitnami
         namespace: flux-system
+  releaseName: keycloak
+  targetNamespace: keycloak
   install:
     remediation:
       retries: 3

@@ -127,6 +127,7 @@
           include_role:
             name: ricsanfre.iscsi_initiator
           vars:
+            open_iscsi_initiator_name: "iqn.2021-07.com.ricsanfre.homelab:{{ ansible_facts['nodename'] }}"
             open_iscsi_automatic_startup: true
       when: not centralized_san
       tags: [storage]

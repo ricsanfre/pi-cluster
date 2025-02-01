@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "04-01-2024"
+last_modified_at: "14-01-2025"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
@@ -152,7 +152,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
         # Running Grafana behind proxy rewrite path
         # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
-        serve_from_sub_path: true
+        serve_from_sub_path: false
     # Admin user password
     adminPassword: "admin_password"
     # List of grafana plugins to be installed
@@ -309,7 +309,7 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
         http:
           paths:
             - path: /grafana/(.*)
-              pathType: Prefix
+              pathType: ImplementationSpecific
               backend:
                 service:
                   name: kube-prometheus-stack-grafana
@@ -344,7 +344,7 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
         http:
           paths:
             - path: /prometheus/(.*)
-              pathType: Prefix
+              pathType: ImplementationSpecific
               backend:
                 service:
                   name: kube-prometheus-stack-prometheus
@@ -375,7 +375,7 @@ Ingress [NGINX rewrite rules](https://kubernetes.github.io/ingress-nginx/example
         http:
           paths:
             - path: /alertmanager/(.*)
-              pathType: Prefix
+              pathType: ImplementationSpecific
               backend:
                 service:
                   name: kube-prometheus-stack-alertmanager
@@ -656,7 +656,9 @@ grafana:
     server:
       domain: monitoring.picluster.ricsanfre.com
       root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
-      serve_from_sub_path: true
+      # Running Grafana behind proxy rewrite path
+      # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
+      serve_from_sub_path: false
   # Admin user password
   adminPassword: "admin_password"
   # List of grafana plugins to be installed
@@ -1723,7 +1725,7 @@ Traefik dashboard can be donwloaded from [grafana.com](https://grafana.com): [da
 
 ### Longhorn Monitoring
 
-As stated by official [documentation](https://longhorn.io/docs/1.2.2/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
+As stated by official [documentation](https://longhorn.io/docs/latest/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
 
 Backend endpoint is already exposing Prometheus metrics.
 

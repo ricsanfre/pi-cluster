@@ -2,10 +2,10 @@
 title: Cluster Gateway (OpenWrt)
 permalink: /docs/openwrt/
 description: How to configure a router/firewall for our homelab Cluster, running OpenWRT OS and providing connectivity and basic networking services (DNS, DHCP, NTP). 
-last_modified_at: "06-12-2024"
+last_modified_at: "16-01-2025"
 ---
 
-Instead of configuring Ubuntu OS, running on a Raspberry Pi to provide Router/Firewall capabilities, which procedure is described in ["Cluster Gateway (Ubuntu OS)"](/docs/gateway/), a embedded device or Raspberry Pi, can be used to run [OpenWRT](https://openwrt.org/)
+To isolate my kubernetes cluster from my home network, a Router/Firewall running OpenWRT will be used, **gateway** node.
 
 **OpenWrt** (from *open wireless router*) is a highly extensible GNU/Linux distribution for embedded devices to route traffic. 
 OpenWrt can run on various types of devices, including CPE routers, residential gateways, smartphones and SBC (like Raspeberry Pis). It is also possible to run OpenWrt on personal computers.

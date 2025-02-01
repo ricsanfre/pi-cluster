@@ -5,10 +5,11 @@ metadata:
   name: loki
 spec:
   interval: 30m
+  timeout: 15m
   chart:
     spec:
       chart: loki
-      version: 6.23.0
+      version: 6.25.0
       sourceRef:
         kind: HelmRepository
         name: grafana

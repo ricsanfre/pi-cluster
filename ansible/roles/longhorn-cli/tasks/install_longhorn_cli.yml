@@ -1,0 +1,7 @@
+---
+
+- name: Download Longhorn CLI
+  ansible.builtin.get_url:
+    url: https://github.com/longhorn/cli/releases/download/{{ longhorn_version }}/longhornctl-linux-{{ longhorn_arch }}
+    dest: /usr/local/bin/longhornctl
+    mode: '0755'

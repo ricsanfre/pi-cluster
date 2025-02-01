@@ -164,6 +164,6 @@ As described in ["PiCluster - PXE Server"](/docs/pxe-server), PXE server, to aut
 
 ## Vault Installation
 
-As descrived in ["PiCluster - Secrets Management (Vault)"](/doc/vault/), Hashicorp Vault is installed in `node1`
+As descrived in ["PiCluster - Secrets Management (Vault)"](/docs/vault/), Hashicorp Vault is installed in `node1`
 
 For automating configuration tasks, ansible role [**ricsanfre.vault**](https://galaxy.ansible.com/ricsanfre/vault) has been developed.

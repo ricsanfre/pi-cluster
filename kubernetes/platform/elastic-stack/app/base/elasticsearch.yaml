@@ -6,7 +6,8 @@ metadata:
   # annotations:
   #   "helm.sh/hook": post-install,post-upgrade
 spec:
-  version: 8.13.0
+  # renovate: datasource=github-releases depName=elastic/elasticsearch
+  version: 8.17.1
   nodeSets:
     - name: default
       count: 1
@@ -20,7 +21,7 @@ spec:
               - ReadWriteOnce
             resources:
               requests:
-                storage: 20Gi
+                storage: 10Gi
             storageClassName: longhorn
       podTemplate:
         spec:
