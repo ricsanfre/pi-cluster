@@ -16,7 +16,7 @@
 
     # Install Python PIP and jq utility packages
     - name: Ensure required packages are installed.
-      package:
+      ansible.builtin.package:
         name:
           - python3-pip
           - python3-setuptools
@@ -25,13 +25,13 @@
       become: true
     # Install kubernetes python packages (Ansible kubernetes collection dependency)
     - name: Ensure kubernetes Python library is installed.
-      pip:
+      ansible.builtin.pip:
         name: kubernetes
         state: present
       become: true
     # Install Hashicorp python packages (Ansible hashi module dependency)
     - name: Ensure hashicorp vault python library is installed.
-      pip:
+      ansible.builtin.pip:
         name: hvac
         state: present
       become: true
@@ -43,21 +43,21 @@
     #     state: present
 
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      ansible.builtin.include_vars: "vars/vault.yml"
 
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      ansible.builtin.include_vars: "vars/picluster.yml"
 
   tasks:
 
     - name: Set overlay to prod in case not defined by an input argument
-      set_fact:
+      ansible.builtin.set_fact:
         overlay: "prod"
       when: overlay is undefined
 
     - name: Install cilium and coreDNS
       become: false
-      shell: |
+      ansible.builtin.shell: |
         set -o pipefail
         helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff
       args:
@@ -66,13 +66,20 @@
       changed_when: true
 
     - name: Config Cilium CNI
-      include_tasks: tasks/cilium_config.yml
+      ansible.builtin.include_tasks: tasks/cilium_config.yml
 
     - name: Configure Vault integration
-      include_tasks: tasks/configure_vault_integration.yml
+      ansible.builtin.include_tasks: tasks/configure_vault_integration.yml
 
     - name: Flux bootstrap
-      include_tasks: tasks/fluxcd_bootstrap.yml
+      become: false
+      ansible.builtin.shell: |
+        set -o pipefail
+        helmfile --quiet --file ../kubernetes/clusters/bootstrap/flux/helmfile-flux.yaml apply --skip-diff-on-install --suppress-diff
+      args:
+        executable: /bin/bash
+      register: output
+      changed_when: true
 
     - name: Install cli utils.
-      include_tasks: tasks/install_cli_utils.yml
+      ansible.builtin.include_tasks: tasks/install_cli_utils.yml

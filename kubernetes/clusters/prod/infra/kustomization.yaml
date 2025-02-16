@@ -10,6 +10,7 @@ resources:
   - external-dns-app.yaml
   - external-secrets-app.yaml
   - fluent-app.yaml
+  - flux-app.yaml
   - grafana-app.yaml
   - istio-app.yaml
   - kafka-app.yaml

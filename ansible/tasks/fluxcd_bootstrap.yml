@@ -1,25 +1,43 @@
 ---
 
-- name: Deploy Flux CD
-  shell: |
-    kubectl kustomize  \
-      ../kubernetes/clusters/bootstrap/flux | kubectl apply -f -
-  args:
-    executable: /bin/bash
+- name: Deploy Flux CD Operator
+  kubernetes.core.helm:
+    name: flux-operator
+    chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
+    # renovate: datasource=helm depName=flux-operator repository=oci://ghcr.io/controlplaneio-fluxcd/charts
+    chart_version: 0.14.0
+    release_namespace: flux-system
+    create_namespace: true
+    values_files:
+      - ../kubernetes/platform/flux-operator/operator/base/values.yaml
+      - ../kubernetes/platform/flux-operator/operator/components/monitoring/values.yaml
+      - ../kubernetes/platform/flux-operator/operator/overlays/prod/values.yaml
 
 - name: Create Github secret
-  shell: |
+  ansible.builtin.shell: |
     kubectl create secret generic flux-system -n flux-system \
     --from-literal=username=git \
-    --from-literal=password="{{vault.flux.github.pat}}"
+    --from-literal=password="{{ vault.flux.github.pat }}"
   when: git_private_repo
   args:
     executable: /bin/bash
   changed_when: false
 
-- name: Bootstrap applications
-  shell: |
+- name: Add cluster settings
+  ansible.builtin.shell: |
     kubectl kustomize  \
-      ../kubernetes/clusters/"{{overlay}}"/config | kubectl apply -f -
+      ../kubernetes/clusters/"{{ overlay }}"/config | kubectl apply -f -
   args:
     executable: /bin/bash
+
+- name: Bootstrap Flux
+  kubernetes.core.helm:
+    name: flux-instance
+    chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
+    # renovate: datasource=helm depName=flux-instance repository=oci://ghcr.io/controlplaneio-fluxcd/charts
+    chart_version: 0.14.0
+    release_namespace: flux-system
+    create_namespace: true
+    values_files:
+      - ../kuberenetes/platform/flux-operator/instance/base/values.yaml
+      - ../kubernetes/platform/flux-operator/instance/overlays/prod/values.yaml

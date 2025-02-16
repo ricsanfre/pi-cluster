@@ -1,0 +1,8 @@
+# flux-instance helm values (dev overlay)
+instance:
+  sync:
+    kind: GitRepository
+    url: https://github.com/ricsanfre/pi-cluster
+    ref: refs/heads/master
+    path: kubernetes/cluster/dev
+    interval: 1h

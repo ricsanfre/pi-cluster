@@ -3,9 +3,11 @@ kind: Kustomization
 resources:
   - bitnami-helmrepo.yaml
   - cilium-helmrepo.yaml
+  - controplane-helmrepo.yaml
   - elastic-helmrepo.yaml
   - cloudnative-pg-helmrepo.yaml
   - coredns-helmrepo.yaml
+  - external-dns-helmrepo.yaml
   - external-secrets-helmrepo.yaml
   - fluent-helmrepo.yaml
   - grafana-helmrepo.yaml
@@ -22,4 +24,3 @@ resources:
   - ricsanfre-helmrepo.yaml
   - strimzi-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml
-  - external-dns-helmrepo.yaml
