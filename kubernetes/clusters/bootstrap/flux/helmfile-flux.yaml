@@ -1,0 +1,27 @@
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  timeout: 900
+  recreatePods: false
+  force: true
+
+releases:
+  - name: flux-operator
+    namespace: flux-system
+    chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
+    version: 0.14.0
+    values: 
+      - ../../platform/flux-operator/operator/base/values.yaml
+      - ../../platform/flux-operator/operator/components/monitoring/values.yaml
+      - ../../platform/flux-operator/operator/overlays/prod/values.yaml
+     
+  - name: flux-instance
+    namespace: flux-system
+    chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
+    version: 0.14.0
+    values: 
+      - ../../platform/flux-operator/instance/base/values.yaml
+      - ../../platform/flux-operator/instance/overlays/prod/values.yaml
+    needs: 
+      - flux-system/flux-operator
+    wait: false

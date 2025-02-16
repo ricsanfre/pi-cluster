@@ -4,7 +4,9 @@ resources:
   - bitnami-helmrepo.yaml
   - cilium-helmrepo.yaml
   - elastic-helmrepo.yaml
+  - external-dns-helmrepo.yaml
   - cloudnative-pg-helmrepo.yaml
+  - controlplane-helmrepo.yaml
   - coredns-helmrepo.yaml
   - external-secrets-helmrepo.yaml
   - fluent-helmrepo.yaml
@@ -22,4 +24,4 @@ resources:
   - ricsanfre-helmrepo.yaml
   - strimzi-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml
-  - external-dns-helmrepo.yaml
+
