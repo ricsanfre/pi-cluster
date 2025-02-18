@@ -4,7 +4,7 @@ instance:
     kind: GitRepository
     url: https://github.com/ricsanfre/pi-cluster
     ref: refs/heads/flux-operator
-    path: kubernetes/cluster/prod
+    path: kubernetes/clusters/prod
     interval: 1h
   kustomize:
     patches:

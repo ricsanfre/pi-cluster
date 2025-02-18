@@ -72,14 +72,7 @@
       ansible.builtin.include_tasks: tasks/configure_vault_integration.yml
 
     - name: Flux bootstrap
-      become: false
-      ansible.builtin.shell: |
-        set -o pipefail
-        helmfile --quiet --file ../kubernetes/clusters/bootstrap/flux/helmfile-flux.yaml apply --skip-diff-on-install --suppress-diff
-      args:
-        executable: /bin/bash
-      register: output
-      changed_when: true
+      ansible.builtin.include_tasks: tasks/fluxcd_bootstrap.yml
 
     - name: Install cli utils.
       ansible.builtin.include_tasks: tasks/install_cli_utils.yml
