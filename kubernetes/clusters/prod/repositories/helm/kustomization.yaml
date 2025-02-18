@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - bitnami-helmrepo.yaml
   - cilium-helmrepo.yaml
-  - controplane-helmrepo.yaml
+  - controlplane-helmrepo.yaml
   - elastic-helmrepo.yaml
   - cloudnative-pg-helmrepo.yaml
   - coredns-helmrepo.yaml
