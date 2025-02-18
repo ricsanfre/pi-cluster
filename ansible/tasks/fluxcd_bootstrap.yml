@@ -39,5 +39,5 @@
     release_namespace: flux-system
     create_namespace: true
     values_files:
-      - ../kuberenetes/platform/flux-operator/instance/base/values.yaml
+      - ../kubernetes/platform/flux-operator/instance/base/values.yaml
       - ../kubernetes/platform/flux-operator/instance/overlays/prod/values.yaml
