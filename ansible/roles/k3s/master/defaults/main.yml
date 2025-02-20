@@ -7,7 +7,10 @@ k3s_token: s1cret0
 k3s_version: v1.24.7+k3s1
 
 # k3s config file
-k3s_config_file: /etc/rancher/k3s/config.yaml
+k3s_config_file: "{{ k3s_config_dir }}/config.yaml"
+
+# k3s registries file
+k3s_registries_file: "{{ k3s_config_dir }}/registries.yaml"
 
 # k3s kubelet config content
 k3s_kubelet_config: ""

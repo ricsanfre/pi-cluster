@@ -52,6 +52,9 @@ k3s_server_config:
   disable-helm-controller: true
   # Disable kube-proxy (using cilium kube-proxy replacement)
   disable-kube-proxy: true
+  # Enabling Embedded Registry Mirror (Spegel)
+  embedded-registry: true
+  # TLS config
   tls-san:
     - "{{ k3s_api_vip }}"  # IP to HAProxy
   # Disable K3s addons: coredns, local path, servicelb, traefik and metric-server
@@ -87,6 +90,10 @@ k3s_agent_config:
     - 'config=/etc/rancher/k3s/kubelet.config'
 #  kube-proxy-arg:
 #    - 'metrics-bind-address=0.0.0.0'
+
+k3s_registries:
+  mirrors:
+    "*":
 
 
 ##########
