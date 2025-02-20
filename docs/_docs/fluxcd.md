@@ -2,7 +2,7 @@
 title: GitOps (FluxCD)
 permalink: /docs/fluxcd/
 description: How to apply GitOps to Pi cluster configuration using FluxCD.
-last_modified_at: "06-10-2024"
+last_modified_at: "20-02-2025"
 ---
 
 ## What is Flux
@@ -524,7 +524,7 @@ Credentials are needed for two purposes:
 
 To bootstrap a read-only repo avoiding the need of providing any credential follow the following process:
 
-Bootstrap cluster using manual process instead using  `flux bootstrap` command. Follow the process described before, "Manually Bootstrap", with this modifications:
+Bootstrap cluster using manual process instead using `flux bootstrap` command. Follow the process described before, "Manually Bootstrap", with this modifications:
 - Do not execute step 4
 - In Step 5, configure GitRepository resource without including `secretRef`
 
@@ -544,6 +544,110 @@ Bootstrap cluster using manual process instead using  `flux bootstrap` command. 
 
 {{site.data.alerts.important}} 
 With Read-only repos some FluxCD functionality won't work  like [Automate image updates to Git](https://fluxcd.io/flux/guides/image-update/)
+
+{{site.data.alerts.end}}
+
+### FluxCD Operator
+
+The [Flux Operator](https://github.com/controlplaneio-fluxcd/flux-operator) is an open-source project developed by ControlPlane that offers an alternative to the Flux Bootstrap procedure, it removes the operational burden of managing Flux across fleets of clusters by fully automating the installation, configuration, and upgrade of the Flux controllers based on a declarative API.
+
+Flux Operator is a Kubernetes controller for managing the lifecycle of Flux CD. It uses Kubernetes Operator design pattern so, Flux deployment can be configured via customized CRDs.
+
+#### Install the Flux Operator
+
+Install the Flux Operator in the `flux-system` namespace, for example using Helm:
+
+```shell
+helm install flux-operator oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator \
+  --namespace flux-system
+```
+
+#### Install the Flux Controllers
+
+Create a [FluxInstance](https://fluxcd.control-plane.io/operator/fluxinstance/) resource named `flux` in the `flux-system` namespace to install the latest Flux stable version:
+
+```yaml
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  namespace: flux-system
+  annotations:
+    fluxcd.controlplane.io/reconcileEvery: "1h"
+    fluxcd.controlplane.io/reconcileArtifactEvery: "10m"
+    fluxcd.controlplane.io/reconcileTimeout: "5m"
+spec:
+  distribution:
+    version: "2.4"
+    registry: "ghcr.io/fluxcd"
+    artifact: "oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests"
+  components:
+    - source-controller
+    - kustomize-controller
+    - helm-controller
+    - notification-controller
+  cluster:
+    type: kubernetes
+    multitenant: false
+    networkPolicy: true
+    domain: "cluster.local"
+  kustomize:
+    patches:
+      - target:
+          kind: Deployment
+          name: "(kustomize-controller|helm-controller)"
+        patch: |
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --concurrent=10
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --requeue-dependency=5s
+```
+
+#### Sync from a Git Repository
+
+To sync the cluster state from a Git repository, add the following configuration to the `FluxInstance` resource:
+
+```yaml
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  sync:
+    kind: GitRepository
+    url: "https://github.com/ricsanfre/fluxcd-test.git"
+    ref: "refs/heads/master"
+    path: "kubernetes/clusters/prod"
+    pullSecret: "flux-system" # Not needed if Git repository is public.
+  # distribution omitted for brevity
+```
+
+If the source repository is private, `spec.sync.pullSecret` need to be specified and the Kubernetes secret must be created in the `flux-system` namespace and should contain the credentials to clone the repository:
+
+```shell
+flux create secret git flux-system \
+  --url=https://github.com/ricsanfre/fluxcd-test.git \
+  --username=git \
+  --password=$GITHUB_TOKEN
+```
+
+#### Monitor the Flux Installation
+
+To monitor the Flux deployment status, check the [FluxReport](https://fluxcd.control-plane.io/operator/fluxreport/) resource in the `flux-system` namespace:
+
+```shell
+kubectl get fluxreport/flux -n flux-system -o yaml
+```
+
+The report is update at regular intervals and contains information about the deployment readiness status, the distribution details, reconcilers statistics, Flux CRDs versions, the cluster sync status and more.
+
+
+{{site.data.alerts.tip}}
+
+[flux-instance](https://github.com/controlplaneio-fluxcd/charts/tree/main/charts/flux-instance) helm chart can be used as a wrapper for creating `FluxInstace` custom resource.
 
 {{site.data.alerts.end}}
 
