@@ -57,3 +57,7 @@ spec:
       kind: HelmRelease
       name: istio-gateway
       namespace: istio-ingress
+  postBuild:
+  substituteFrom:
+    - kind: ConfigMap
+      name: cluster-settings

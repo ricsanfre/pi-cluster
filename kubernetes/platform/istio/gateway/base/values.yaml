@@ -1,1 +1,4 @@
 # istio-gateway helm values (base)
+service:
+  annotations:
+    io.cilium/lb-ipam-ips: ${ISTIO_GATEWAY_LOAD_BALANCER_IP}
