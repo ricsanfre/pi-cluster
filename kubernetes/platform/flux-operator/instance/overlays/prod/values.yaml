@@ -3,7 +3,7 @@ instance:
   sync:
     kind: GitRepository
     url: https://github.com/ricsanfre/pi-cluster
-    ref: refs/heads/flux-operator
+    ref: refs/heads/master
     path: kubernetes/clusters/prod
     interval: 1h
   kustomize:
