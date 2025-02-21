@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "28-09-2024"
+last_modified_at: "21-02-2025"
 ---
 
 
@@ -465,17 +465,61 @@ K3S master nodes need to be installed with the following additional options:
 - `--disable-network-policy`: Most CNI plugins come with their own network policy engine, so it is recommended to set --disable-network-policy as well to avoid conflicts.
 
 
-## K3S Auto-deployed Add-ons
+## Enabling Embedded Registry Mirror
 
-K3s provides the capability to automatically deploy manifest files (AddOns). On server nodes, any file found in `/var/lib/rancher/k3s/server/manifests` is automatically deployed to Kubernetes in a manner similar to `kubectl apply` command, both on startup and when the file is changed on disk. Deleting files out of this directory will not delete the corresponding resources from the cluster.
+K3s embeds [Spegel](https://spegel.dev/), a stateless distributed OCI registry mirror that allows peer-to-peer sharing of container images between nodes in a Kubernetes cluster.
 
-K3s comes with a number of packaged components that are deployed as AddOns via that manifests directory: coredns, traefik, local-storage, and metrics-server.
+The distributed registry mirror is disabled by default.
+
+### Enabling The Distributed OCI Registry Mirror
+
+In order to enable the embedded registry mirror, server nodes (not agent nodes) must be started with the `--embedded-registry` flag, or with `embedded-registry: true` in the configuration file. This option enables the embedded mirror for use on all nodes in the cluster.
+
+When enabled at a cluster level, all nodes will host a local OCI registry on port 6443, and publish a list of available images via a peer to peer network on port 5001.
+
+Any image available in the `containerd` image store on any node, can be pulled by other cluster members without access to an external registry.
+
+### Enabling Registry Mirroring
+
+Enabling mirroring for a registry allows a node to both pull images from that registry from other nodes, and share the registry's images with other nodes. If a registry is enabled for mirroring on some nodes, but not on others, only the nodes with the registry enabled will exchange images from that registry.
+
+In order to enable mirroring of images from an upstream container registry, nodes must have an entry in the `mirrors` section of `/etc/rancher/k3s/registries.yaml` for that registry. The registry does not need to have any endpoints listed, it just needs to be present.
+
+The `"*"` wildcard mirror entry can be used to enable distributed mirroring of all registries. Note that the asterisk MUST be quoted:
+
+```yaml
+mirrors:  "*": 
+```
+
+If no registries are enabled for mirroring on a node, that node does not participate in the distributed registry in any capacity.
+
+### Verifying Spegel is working
+Verify if Spegel is working in K3s
+
+Check exposed metrics:
+
+```shell
+kubectl get --raw /api/v1/nodes/<NODENAME>/proxy/metrics | grep -F 'spegel'
+```
+
+
+## K3S Packaged Components
+
+### Auto-deployed Manifests (Add-ons)
+
+K3s provides the capability to automatically deploy manifest files (AddOns). 
+
+On server nodes, any file found in `/var/lib/rancher/k3s/server/manifests` is automatically deployed to Kubernetes in a manner similar to `kubectl apply` command, both on startup and when the file is changed on disk. Deleting files out of this directory will not delete the corresponding resources from the cluster.
+
+K3s comes with a number of packaged components that are deployed as AddOns via that manifests directory: `coredns`, `traefik`, `local-path-storage`, and `metrics-server`.
 
 Manifests are tracked as `AddOn` custom resources (CRD) in the `kube-system` namespace.
 
-Installation of this addOns can be disabled during k3s installation adding:
+Installation of this addOns can be disabled during k3s installation:
 
 - `--disable '<addon>'`: Where `<addon>` can be `coredns`, `traefik`, `local-storage` or `metric-server`
+
+### Helm Add-ons
 
 K3s includes also a built-in Helm Controller that manages installing, upgrading/reconfiguring, and uninstalling Helm charts using a `HelmChart` Custom Resource Definition (CRD). Paired with auto-deploying AddOn manifests, installing a Helm chart can be automated by creating a single manifiest file on `/var/lib/rancher/k3s/server/manifests`.
 
@@ -610,14 +654,4 @@ ansible-playbook k3s_install.yml
 For resetting the cluster execute:
 ```shell
 ansible-playbook k3s_reset.yml
-```
-
-### Configure master node to enable remote deployment of pods with Ansible
-
-Ansible collection for managing kubernetes cluster is available: [kubernetes.core ansible collection](https://github.com/ansible-collections/kubernetes.core).
-
-For using this ansible collection from the `pimaster` node, python package `kubernetes` need to be installed on k3s master node
-
-```shell
-pip3 install kubernetes
 ```
