@@ -42,7 +42,10 @@ spec:
     - name: elastic-stack-app
     - name: loki-app
     - name: fluent-common-app
-
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
