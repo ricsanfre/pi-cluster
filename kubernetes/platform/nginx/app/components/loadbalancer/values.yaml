@@ -1,3 +1,4 @@
+controller:
   # Set specific LoadBalancer IP address for Ingress service
   service:
     annotations:
