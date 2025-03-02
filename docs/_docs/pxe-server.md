@@ -35,7 +35,7 @@ sequenceDiagram
   activate Bare metal node
   Bare metal node->>DHCP server: DHCP Request(PXE Arch)
   activate DHCP server
-  DHCP server->>Bare metal node: IP TFTP Boot Server, Bootloader File 
+  DHCP server->>Bare metal node: IP TFTP Boot Server, Bootloader File
   deactivate DHCP server
   Bare metal node->>TFTP server: Get bootloader file
   activate TFTP server
@@ -112,7 +112,7 @@ Webserver will be used as kick-start server providing to the netboot installer, 
 
   ```shell
   sudo systemctl enable apache2 --now
-  ``` 
+  ```
 
 - Step 4. Check apache status
 
@@ -128,13 +128,13 @@ Ubuntu live ISO need to be served by the HTTP server
 - Step 1. Download Ubuntu 22.04 server live ISO
 
   ```shell
-  wget http://cdimage.ubuntu.com/ubuntu-server/jammy/daily-live/current/jammy-live-server-amd64.iso
+  wget https://releases.ubuntu.com/jammy/ubuntu-22.04.5-live-server-amd64.iso
   ```
 
 - Step 2. Copy to images directory
 
   ```shell
-  cp jammy-live-server-amd64.iso /var/www/html/images/.
+  cp ubuntu-22.04.5-live-server-amd64.iso /var/www/html/images/.
   ```
 
 #### Serving cloud-init files via HTTP
@@ -165,7 +165,7 @@ auto-install cloud-init files are served by HTTP server
       username: ubuntu
     version: 1
   ```
-  
+
   The above cloud-init user-data file creates a minimum installation, setting server hostname, and ubuntu default password (ubuntu)
 
 - Step 3. Create meta-data file in `/var/www/html/ks/<server-macaddress>`
@@ -180,7 +180,7 @@ auto-install cloud-init files are served by HTTP server
 
 {{site.data.alerts.note}}
 
-These files must be placed under /var/www/html/ks/<mac-address> if different configurations are desired for different servers.  
+These files must be placed under /var/www/html/ks/<mac-address> if different configurations are desired for different servers.
 
 {{site.data.alerts.end}}
 
@@ -240,13 +240,13 @@ TFTP server will be installed in external services node: `node1`
 - Step 1. Download Ubuntu 22.04 server live ISO
 
   ```shell
-  wget http://cdimage.ubuntu.com/ubuntu-server/jammy/daily-live/current/jammy-live-server-amd64.iso
+  wget https://releases.ubuntu.com/jammy/ubuntu-22.04.5-live-server-amd64.iso
   ```
-  
+
 - Step 2. Mount the ISO file
 
   ```shell
-  mount jammy-live-server-amd64.iso /mnt
+  mount ubuntu-22.04.5-live-server-amd64.iso /mnt
   ```
 
 - Step 3. Copy linux kernel and initrd files to TFTP server root
@@ -258,7 +258,7 @@ TFTP server will be installed in external services node: `node1`
 ##### Copying files for UEFI boot
 
 - Step 1. Copy the signed shim binary into place:
- 
+
   ```shell
   apt download shim-signed
   dpkg-deb --fsys-tarfile shim-signed*deb | tar x ./usr/lib/shim/shimx64.efi -O > /srv/tftp/bootx64.efi
@@ -268,7 +268,7 @@ TFTP server will be installed in external services node: `node1`
 
   ```shell
   apt download grub-efi-amd64-signed
-  dpkg-deb --fsys-tarfile grub-efi-amd64-signed*deb | tar x ./usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed -O > /srv/tftp/grubx64.efi  
+  dpkg-deb --fsys-tarfile grub-efi-amd64-signed*deb | tar x ./usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed -O > /srv/tftp/grubx64.efi
   ```
 
 - Step 3. Copy `unicode.pf2`
@@ -312,7 +312,7 @@ TFTP server will be installed in external services node: `node1`
 
   menuentry 'Install Ubuntu 22.04' {
           gfxmode $linux_gfx_mode
-          linux vmlinuz ip=dhcp url=http://10.0.0.11/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/${net_default_mac}/ cloud-config-url=/dev/null
+          linux vmlinuz ip=dhcp url=http://10.0.0.11/images/ubuntu-22.04.5-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/${net_default_mac}/ cloud-config-url=/dev/null
           initrd initrd
   }
   ```
@@ -323,7 +323,7 @@ TFTP server will be installed in external services node: `node1`
 ##### Copying files for legacy boot
 
 - Step 1. Copy the `pxelinux.0` binary:
- 
+
   ```shell
   apt download pxelinux
   dpkg-deb --fsys-tarfile pxelinux*deb | tar x ./usr/lib/PXELINUX/pxelinux.0 -O > /srv/tftp/pxelinux.0
@@ -336,7 +336,7 @@ TFTP server will be installed in external services node: `node1`
   dpkg-deb --fsys-tarfile pxelinux*deb | tar x ./usr/lib/PXELINUX/pxelinux.0 -O > /srv/tftp/pxelinux.0
   dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/ldlinux.c32 -O > /srv/tftp/ldlinux.c32
   dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/menu.c32 -O > /build/menu.c32
-  dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/libutil.c32 -O > /srv/tftp/libutil.c32 
+  dpkg-deb --fsys-tarfile syslinux-common*deb | tar x ./usr/lib/syslinux/modules/bios/libutil.c32 -O > /srv/tftp/libutil.c32
   ```
 
 - Step 4. Prepare `pxe.conf` file and copy to `/srv/tftp/pxelinux.cfg`
@@ -355,13 +355,13 @@ TFTP server will be installed in external services node: `node1`
           menu default
           kernel vmlinuz
           initrd initrd
-          append ip=dhcp url=http://10.0.0.11/images/jammy-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.11/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
+          append ip=dhcp url=http://10.0.0.11/images/ubuntu-22.04.5-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.11/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
   prompt 0
   timeout 300
   ```
 
   This configuration launch live ISO in autoinstall mode using cloud-init files downloaded from  Kick-start web server under ks/<server-mac>/.
-  
+
 
 
 #### Alternative booting ISO contents via nfsroot.
@@ -383,14 +383,14 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
 - Step 3: Mount ubuntu ISO file
 
   ```shell
-  sudo mount /var/www/html/images/jammy-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs/ 
+  sudo mount /var/www/html/images/ubuntu-22.04.5-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs/
   ```
 
   Configure mount on start
 
   Add to `/etc/fstab` file the following line
   ```
-  /var/www/html/images/jammy-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs iso9660 loop 0 0
+  /var/www/html/images/ubuntu-22.04.5-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs iso9660 loop 0 0
   ```
 
 - Step 4: Configure NFS
@@ -420,7 +420,7 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
   ```
 
 - Step 8: Update `/srv/tftp/grub/grub.cfg` file
- 
+
   ```
   set default="0"
   set timeout=-30
