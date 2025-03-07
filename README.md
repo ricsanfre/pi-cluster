@@ -115,11 +115,6 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes API Load-balancer</td>
     </tr>
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/metallb.svg"></td>
-        <td><a href="https://metallb.universe.tf/">Metal LB</a></td>
-        <td>Load-balancer implementation for bare metal Kubernetes clusters (Cilium LB alternative)</td>
-    </tr>
-    <tr>
         <td><img width="32" src="docs/assets/img/logos/nginx.svg"></td>
         <td><a href="https://kubernetes.github.io/ingress-nginx/">Ingress NGINX</a></td>
         <td>Kubernetes Ingress Controller</td>
@@ -231,6 +226,18 @@ The following picture shows the set of opensource solutions used so far in the c
     </tr>
 </table>
 </div>
+
+## Deprecated Technology
+
+The following technologies have been used in previous releases of PiCluster but they have been deprecated and not longer maintained
+
+
+|                      | Name         | Description                                                                                                             |
+| -------------------- | ------------ |:----------------------------------------------------------------------------------------------------------------------- |
+| <img width="60" src="docs/assets/img/logos/metallb.svg" > | [Metal-LB](https://metallb.universe.tf) | Load-balancer implementation for bare metal Kubernetes clusters. Replaced by Cilium CNI load balancing capabilities |
+| <img width="32" src="docs/assets/img/logos/traefik.svg" > | [Traefik](https://traefik.io/traefik/)  | Kubernetes Ingress Controller. Replaced by NGINX Ingress Controller  |
+| <img width="32" src="docs/assets/img/logos/argocd.svg" >  | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)  | GitOps tool. Replaced by FluxCD |
+| <img width="20" src="docs/assets/img/logos/flannel.svg" > | [Flannel](https://github.com/flannel-io/flannel/) | Kubernetes CNI plugin. Embedded into K3s. Replaced by Cilium CNI |
 
 
 ## External Resources and Services
