@@ -5,7 +5,7 @@ description: How to deploy kuberentes cluster monitoring solution based on Prome
 last_modified_at: "14-01-2025"
 ---
 
-Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintaned by the community.
+Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintained by the community.
 
 That project collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
 
@@ -45,7 +45,7 @@ Spec of the different CRDs can be found in [Prometheus Operator API reference gu
 
 ### Helm chart installation
 
-Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) maintaind by the community
+Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) maintained by the community
 
 - Step 1: Add the Prometheus repository
 
@@ -642,7 +642,7 @@ Kube-prometheus-stack's helm chart `grafana` value is used to pass the configura
 
 The following chart configuration is provided:
 
-- Grafana front-ed configured to run behind HTTP proxy in /grafana subpath (`grafana.ini.server`)
+- Grafana front-end configured to run behind HTTP proxy in /grafana subpath (`grafana.ini.server`)
 - Admin password is specified (`grafana.adminPassword`)
 - Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
 - Loki data source is added (`grafana.additionalDataSource`)

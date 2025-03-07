@@ -2,7 +2,7 @@
 title: Service Mesh (Istio)
 permalink: /docs/istio/
 description: How to deploy service-mesh architecture based on Istio. Adding observability, traffic management and security to our Kubernetes cluster.
-last_modified_at: "24-07-2024"
+last_modified_at: "07-03-2025"
 
 ---
 
@@ -14,7 +14,7 @@ Introduce Service Mesh architecture to add observability, traffic management, an
 
 {{site.data.alerts.important}}
 
-I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since release 1.3 (April 2022). See ["Service Mesh (Linkerd)"](/docs/service-mesh/) document.  
+I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since release 1.3 (April 2022). See ["Service Mesh (Linkerd)"](/docs/service-mesh/) document.
 
 Main reasons for selecting Linkerd over Istio were:
 - ARM64 architecture support. Istio did not support ARM architectures at that time.
@@ -28,7 +28,7 @@ Since the initial evaluation was made:
 
 - Istio is developing a sidecarless architecture, [Ambient mode](https://istio.io/latest/docs/ops/ambient/), which is expected to use a reduced footprint. In March 2024, Istio announced the beta relase of Ambient mode for upcoming 1.22 istio release: See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
 
-For those reasons, Service Mesh solution in the cluster has been migrated to Istio.
+For those reasons, Service Mesh solution in the cluster has been migrated to Istio since release 1.9.
 
 {{site.data.alerts.end}} 
 
@@ -163,6 +163,9 @@ spec:
 ```
 See [istio issue #49277](https://github.com/istio/istio/issues/49277) for more details.
 
+{{site.data.alerts.important}}
+This policy override is _not_ required unless you already have other default-deny `NetworkPolicies` or `CiliumNetworkPolicies` applied in the cluster
+{{site.data.alerts.end}}
 
 See further details in [Cilium Istio Configuration](https://docs.cilium.io/en/latest/network/servicemesh/istio/) and [Istio Cilium CNI Requirements](https://istio.io/latest/docs/ambient/install/platform-prerequisites/#cilium)
 

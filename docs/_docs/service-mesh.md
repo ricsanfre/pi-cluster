@@ -6,43 +6,21 @@ last_modified_at: "01-05-2024"
 
 ---
 
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+ServiceMesh solution for the cluster has been migrated to Istio in release 1.9.
+Linkerd technology has been deprecated and this documentation is not updated anymore.
+
+Reasons behind this decission in [PiCluster 1.9 release announcement](/blog/2024/10/07/announcing-release-1.9/).
+
+See alternative Service Mesh solution documentation: ["Service Mesh (Istio)"](/docs/istio/).
+
+{{site.data.alerts.end}}
+
+
 ## Why a Service Mesh
 
 Introduce Service Mesh architecture to add observability, traffic management, and security capabilities to internal communications within the cluster.
-
-
-{{site.data.alerts.important}}
-
-I have been testing and using [Linkerd](https://linkerd.io/) as Service Mesh solution for my cluster since relase 1.3 (April 2022).
-
-I wanted to use an opensource solution for the cluster and Istio and Linkerd were assessed since both are CNCF graduated projects. 
-
-Main reasons for selecting Linkerd over [Istio](https://istio.io/) were:
-
-- ARM64 architecture support. It was important since my cluster was mainly built using Raspberry PIs. Istio did not support ARM architectures at that time.
-- Better performance and reduced memory/cpu footprint. Linkerd Proxy vs Istio's Envoy Proxy
-  
-  Linkerd uses its own implementation of the communications proxy, a sidecar container that need to be deployed with any Pod as to inctercep all inbound/outbound traffic. Instead of using a generic purpose proxy ([Envoy proxy](https://www.envoyproxy.io/)) used by others service mesh implementations (Istio, Consul), a specifc proxy tailored only to cover Kubernetes communications has been developed. Covering just Kubernetes scenario, allows Linkerd proxy to be a simpler, lighter, faster and more secure proxy.
-
-  Linkerd ulta-light proxy with a reduced memory/cpu footprint and its better performance makes it more suitable for nodes with reduced computing capabilities like Raspberry Pis.
-
-  As a reference of performance/footprint comparison this is what Linkerd claimed in 2021: [Istio vs Linkerd benchmarking](https://linkerd.io/2021/11/29/linkerd-vs-istio-benchmarks-2021/).
-
-Since the initial evaluation was made:
-
-- In Aug 2022, Istio, introduced ARM64 support in release 1.15. See [istio 1.15 announcement](https://istio.io/latest/news/releases/1.15.x/announcing-1.15/)
-
-- In Feb 2024, Linkerd maintaner, Buyoyant, announced that it would no longer provide stable builds. See [Linkerd 2.15 release announcement](https://linkerd.io/2024/02/21/announcing-linkerd-2.15/#a-new-model-for-stable-releases). That decision prompted CNCF to open a health check on the project.
-
-- Istio is developing a sidecarless architecture, [Ambient mode](https://istio.io/latest/docs/ops/ambient/), which is expected to use a reduced footprint. In March 2024, Istio announced the beta relase of Ambient mode for upcoming 1.22 istio release: See [Istio ambient mode beta release announcement](https://www.cncf.io/blog/2024/03/19/istio-announces-the-beta-release-of-ambient-mode/)
-
-For those reasons, Service Mesh solution in the cluster has been migrated to Istio and Linkerd will be deprecated.
-
-See ["Service Mesh - Istio"](/docs/istio/).
-
-{{site.data.alerts.end}} 
-
-
 
 ## Linkerd Architecture
 

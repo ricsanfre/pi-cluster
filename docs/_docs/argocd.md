@@ -2,8 +2,19 @@
 title: GitOps (ArgoCD)
 permalink: /docs/argocd/
 description: How to apply GitOps to Pi cluster configuration using ArgoCD.
-last_modified_at: "03-06-2024"
+last_modified_at: "07-10-2024"
 ---
+
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+GitOps solution for the cluster has been migrated to FluxCD in release 1.9.
+ArgoCD technology has been deprecated and this documentation is not updated anymore.
+
+Reasons behind this decission in [PiCluster 1.9 release announcement](/blog/2024/10/07/announcing-release-1.9/).
+
+See alternative GitOps solution documentation: ["GitOps (FluxCD)"](/docs/fluxcd/).
+
+{{site.data.alerts.end}}
 
 
 [Argo CD](https://argo-cd.readthedocs.io/) is a declarative, GitOps continuous delivery tool for Kubernetes.
@@ -20,7 +31,6 @@ Argo CD follows the GitOps pattern of using Git repositories as the source of tr
 
 Argo CD automates the deployment of the desired application states in the specified target environments (git repository). Application deployments can track updates to branches, tags, or pinned to a specific version of manifests at a Git commit.
 
-ArgoCD will be used in Pi Cluster to automatically deploy the different applications in Kuberenets cluster.
 
 ## ArgoCD installation
 

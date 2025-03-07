@@ -20,6 +20,16 @@ By default K3s install and configure basic Kubernetes networking packages:
 
 ### Flannel as CNI
 
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+Kubernetes CNI solution for the cluster has been migrated to Cilium in release 1.9.
+
+Reasons behind this decission in [PiCluster 1.9 release announcement](/blog/2024/10/07/announcing-release-1.9/).
+
+See alternative Kubernetes CNI solution documentation: ["Cilium (Kubernetes CNI)"](/docs/cilium/).
+
+{{site.data.alerts.end}}
+
 K3S run by default with flannel as the CNI, using VXLAN as the default backend. Flannel is running as backend `go` routine within k3s unique process
 
 k3s server installation options can be provided in order to configure Network CIDR to be used by PODs ans Services and the flannel backend to be used.
@@ -83,21 +93,7 @@ CoreDNS K3S add-on can be disabled, so it can be installed manually to have full
 
 To disable embedded CoreDNS, install K3s adding `--disable coredns` option
 
-#### Installing CoreDNS using Helm chart
-
-Using [CoreDNS Helm Chart](https://github.com/coredns/helm)
-
-- Add Git repo
-
-  ```shell
-  helm repo add coredns https://coredns.github.io/helm
-  ```
-
-- Install helm chart in `kube-system` namespace
-  ```shell
-  helm --namespace=kube-system install coredns coredns/coredns
-  ```
-
+Details about how to install and configure CoreDNS manually can be found in ["DNS (CoreDNS and External-DNS)"](/docs/kube-dns/)
 
 ### Traefik as Ingress Controller
 
@@ -119,4 +115,5 @@ To disable the embedded LB, configure all servers in the cluster with the `--dis
 
 Further details about how to install Metal LB can be found in ["Load Balancer (Metal LB) documentation"](/docs/metallb/).
 
+How to configure Cilium CNI Load balancer capabitily can be found in ["Cilium documentation"](/docs/cilium/).
 

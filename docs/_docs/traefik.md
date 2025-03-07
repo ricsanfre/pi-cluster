@@ -5,7 +5,18 @@ description: How to configure Ingress Contoller based on Traefik in our Pi Kuber
 last_modified_at: "04-11-2023"
 ---
 
-All HTTP/HTTPS traffic comming to K3S exposed services should be handled by a Ingress Controller.
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+Ingress Controller solution for the cluster has been migrated to NGINX in release 1.8.
+Traefik technology has been deprecated and this documentation is not updated anymore.
+
+Reasons behind this decission in [PiCluster 1.8 release announcement](/blog/2024/01/04/announcing-release-1.8/).
+
+See alternative Ingress Controller solution documentation: ["Ingress Controller (NGINX)"](/docs/nginx/).
+
+{{site.data.alerts.end}}
+
+All HTTP/HTTPS traffic comming to K3S exposed services should be handled by an Ingress Controller.
 K3S default installation comes with Traefik HTTP reverse proxy which is a Kuberentes compliant Ingress Controller.
 
 Traefik is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease. It simplifies networking complexity while designing, deploying, and running applications.

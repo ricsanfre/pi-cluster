@@ -6,9 +6,16 @@ last_modified_at: "17-01-2023"
 ---
 
 
-{{site.data.alerts.note}}
 
-Metal LB load balancer can be replaced by Cilium's LB-IPAM capability, if Cilium CNI is installed in the cluster. See [Cilium installation doc](/docs/cilium/)
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+Kubernetes CN solution for the cluster has been migrated to Cilium in release 1.9. Metal LB load balancer has been replaced by Cilium's LB-IPAM capability.
+
+Metal-LB technology has been deprecated and this documentation is not updated anymore.
+
+Reasons behind this decission in [PiCluster 1.9 release announcement](/blog/2024/10/07/announcing-release-1.9/).
+
+See how to configure Cilium Load Balancer in: ["Cilium (Kubernetes CNI)"](/docs/cilium/).
 
 {{site.data.alerts.end}}
 
@@ -68,6 +75,7 @@ MetalLB consists of two different pods:
 MetalLB respects the Kubernetes service `spec.loadBalancerIP` parameter, so if a static IP address from the available pool need to be set up for a specific service, it can be requested by setting that parameter. If MetalLB does not own the requested address, or if the address is already in use by another service, assignment will fail and MetalLB will log a warning event visible in `kubectl describe service <service name>`.
 
 {{site.data.alerts.note}}
+
 Service's `.spec.loadBalancerIP` was the method used to specify the external IP, from load balancer Ip Pool, to be assigned to the service. It has been deprecated since [Kubernetes v1.24](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.24.md) and might be removed in a future release. It is recommended to use implementation-specific annotations when available
 
 In case of Metal LB the annotation that can be used is `metallb.universe.tf/loadBalancerIPs`

@@ -88,11 +88,17 @@ For building the cluster, using bare metal servers instead of virtual machines, 
 
 {{site.data.alerts.note}}
 
-Initially the intent of this project was to build a kuberentes cluster using only Raspberry PI nodes. Due to Raspberry shortage during last 2 years, which makes impossible to buy them at reasonable prices, I have decided to look for alternatives to be able to scale up my cluster.
+Initially the intent of this project was to build a kuberentes cluster using only Raspberry PI nodes. Due to Raspberry shortage happened during 2021-2023 period, which made impossible to buy them at reasonable prices, I decided to look for alternatives to be able to scale up my cluster.
 
-Use old x86 refurbished mini PCs, with Intel i5 processors, has been the solution. These mini PCs provide similar performance to RaspberryPi's Quadcore ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
+Use old x86 refurbished mini PCs, with Intel i5 processors, was the solution. These mini PCs provide similar performance to RaspberryPi 4B's Quadcore ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI 4B higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
 
-The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power supply, ([aprox 130 €](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8/)) is cheaper than the overal cost of building a cluster node using a Rasbperry PI: cost of Raspberry PI 8GB (100€) + Power Adapter (aprox 10 €) + SSD Disk ([aprox 20 €](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N5IB20Q)) + USB3.0 to SATA converter ([aprox 20€](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84))
+The overall price of a mini PC, intel i5 + 8 GB RAM + 256 GB SSD disk + power supply, ([aprox 130 €](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8/)) was cheaper than the overal cost of building a cluster node using a Rasbperry PI: cost of Raspberry PI 4B 8GB (100€) + Power Adapter (aprox 10 €) + SSD Disk ([aprox 20 €](https://www.amazon.es/Kingston-SSD-A400-Disco-s%C3%B3lido/dp/B01N5IB20Q)) + USB3.0 to SATA converter ([aprox 20€](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84))
+
+Similar comparative exercice can be made using newer Raspberry Pi model. Raspberry Pi 5 based mode has a higher processor than Pi 4 model, Quadcore ARM Cortex-A76, and its higher model support 16 GB RAM. It also features a PCIe connector, higher SSD disk perfomace than USB sata converter
+
+The overall cost to build a Raspberry Pi-5-based node for the kubernetes homelab cluster could be aprox 220€: [Raspberry PI-5 16GB](https://www.tiendatec.es/raspberry-pi/gama-raspberry-pi/2149-1386-raspberry-pi-5-16gb-8gb-4gb-2gb-modelo-b.html#/251-ram-16gb?src=raspberrypi) (144€), [Power Adapter](https://www.tiendatec.es/raspberry-pi/raspberry-pi-alimentacion/2150-1252-fuente-alimentacion-oficial-raspberry-pi-5-27w-pd-usb-c.html#/7-color-blanco?src=raspberrypi) (aprox 15€), [Active cooler](https://www.tiendatec.es/raspberry-pi/accesorios/2152-disipador-activo-oficial-raspberry-pi-5-5056561803357.html?src=raspberrypi)(aprox 6€) , [RTC Batery](https://www.tiendatec.es/raspberry-pi/accesorios/2153-bateria-rtc-oficial-raspberry-pi-5-8472496026895.html)(aprox 7€) , NVMe base + NVMe 256GB disk (50€), i.e [Piromori NVMe base](https://shop.pimoroni.com/products/nvme-base?variant=41219587178579) + NVMe disk
+
+As alternative a overall price of refurbished mini PC, intel i5, 16GB RAM + 256 GB NVME disk + power supply, [aprox 150], [base model](https://www.amazon.es/HP-EliteDesk-800-G3-reacondicionado/dp/B09TL2N2M8/)(aprox 130 €) + 8GB RAM expansion(aprox. 20 €).
 
 {{site.data.alerts.end}}
 
