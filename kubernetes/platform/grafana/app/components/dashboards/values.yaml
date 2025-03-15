@@ -41,7 +41,7 @@ dashboards:
         - { name: DS_PROMETHEUS, value: Prometheus }
     logging:
       # https://grafana.com/grafana/dashboards/7752-logging-dashboard/
-      # renovate: depName="Longging Dashboard"
+      # renovate: depName="Logging Dashboard"
       gnetId: 7752
       revision: 6
       datasource:
@@ -66,21 +66,21 @@ dashboards:
   istio:
     istio-control-plane:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
-      # renovate: depName="Istio Control Plane Dashboard"
+      # renovate: depName="Istio Dashboard"
       gnetId: 7645
       revision: 244
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-mesh:
       # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
-      # renovate: depName="Istio Mesh Dashboard"
+      # renovate: depName="Istio Dashboard"
       gnetId: 7639
       revision: 244
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-performance:
       # https://grafana.com/grafana/dashboards/11829-istio-performance-dashboard/
-      # renovate: depName="Istio Performance Dashboard"
+      # renovate: depName="Istio Dashboard"
       gnetId: 11829
       revision: 244
       datasource:
