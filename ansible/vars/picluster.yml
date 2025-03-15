@@ -332,7 +332,7 @@ minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
 #######################
 
 # renovate: datasource=github-releases depName=istio/istio
-istio_version: 1.24.3
+istio_version: 1.25.0
 
 ###################
 # Logging Secrets #
