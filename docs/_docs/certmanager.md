@@ -2,7 +2,7 @@
 title: TLS Certificates (Cert-Manager)
 permalink: /docs/certmanager/
 description: How to deploy a centralized TLS certificates management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "23-11-2024"
+last_modified_at: "23-03-2025"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
@@ -161,7 +161,9 @@ Installation using `Helm` (Release 3):
 
 ## Cert-Manager Configuration
 
-A PKI (Public Key Infrastructure) with a custom CA will be created in the cluster and all certificates will be auto-signed by this CA. For doing so, A CA `ClusterIssuer` resource need to be created.
+A Private CA (Private PKI (Public Key Infrastructure))  can be created in the cluster, so all certificates can be auto-signed by this CA. That removes the need to use a of valid certificates signed by a trusted public CA. Certificates issued by Private CA won't be trusted certificates and some applications using them need to be configured to ignore the certificate validation.
+
+For creating a private PKI,a CA `ClusterIssuer` resource need to be created.
 
 Root CA certificate is needed for generated this CA Issuer. A selfsigned `ClusterIssuer` resource will be used to generate that root CA certificate (self-signed root CA).
 
@@ -212,28 +214,6 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
     ca:
       secretName: root-secret
   ```
-
-{{site.data.alerts.important}}
-
-Algorithm used for creating private keys is ECDSA P-256. The use of this algorithm is required by the service mesh implementation I have selected for the cluster, Linkerd. RootCa and Linkerd identity issuer certificate must used ECDSA P-256 algorithm.
-
-{{site.data.alerts.end}}
-
-## Trust Manager Installation
-
-[Trust-manager](https://cert-manager.io/docs/projects/trust-manager/) is an operator for distributing trust bundles across a Kubernetes cluster. trust-manager is designed to complement cert-manager by enabling services to trust X.509 certificates signed by Issuers, distributing data from trust namespace (cert-manager).
-
-trust ships with a single cluster scoped Bundle resource. A Bundle represents a set of data (configMap, secret) from the trust namespace that should be distributed and made available across the cluster.
-
-To install Trust-Manager, from Helm chart execute the following command:
-```shell
-helm install trust-manager jetstack/cert-manager --namespace cert-manager
-```
-{{site.data.alerts.note}}
-
-Trust Manager can be used to automatically share CA certificate created by Cert-Manager during linkerd installation.
-
-{{site.data.alerts.end}}
 
 ## Lets Encrypt Certificates
 
@@ -370,7 +350,7 @@ Execute all the following commands from $HOME directory.
 
 #### Configuring Certmanager with Letsencrypt
 
-In case of using DNS split horizong architecture where a internal DNS server is used, cert-manager need to be re-configured so internal DNS server is not used during DNS01 challenge process.
+In case of using DNS split horizon architecture where a internal DNS server is used, cert-manager need to be re-configured so internal DNS server is not used during DNS01 challenge process.
 
 - Step 1: Create `cert-manager-values.yaml` file
 
@@ -532,5 +512,5 @@ Enable port forwarding for TCP ports 80/443 to `gateway` node.
 
 #### Configure Pi cluster Gateway
 
-Configure NFtables for forwarding incoming traffic at 8080 and 4430 ports.
+Configure firewall forwarding rules to manage incoming traffic at 8080 and 4430 ports.
 

@@ -644,7 +644,7 @@ The following chart configuration is provided:
 
 - Grafana front-end configured to run behind HTTP proxy in /grafana subpath (`grafana.ini.server`)
 - Admin password is specified (`grafana.adminPassword`)
-- Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
+- Additional plugin(`grafana.plugins`), For example: `grafana-piechart-panel`
 - Loki data source is added (`grafana.additionalDataSource`)
 - Grafana ServiceMonitor label and job label is configured (`serviceMonitor`)
 - Grafana sidecar dashboard provisioner configuration, to automatically provision dashboards and data-sources.
@@ -1673,54 +1673,6 @@ spec:
 #### Ingress NGINX Grafana dashboard
 
 Ingress NGINX grafana dashboard in JSON format can be found here: [Kubernetes Ingress-nginx Github repository: `nginx.json`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/grafana/dashboards/nginx.json).
-
-
-### Traefik Monitoring
-
-The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Traefik metrics endpoint as a Prometheus target.
-
-- Create a manifest file `traefik-servicemonitor.yml`
-
-```yml
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    app: traefik
-    release: kube-prometheus-stack
-  name: traefik
-  namespace: monitoring
-spec:
-  jobLabel: app.kubernetes.io/name
-  endpoints:
-    - port: traefik
-      path: /metrics
-  namespaceSelector:
-    matchNames:
-      - traefik
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik
-      app.kubernetes.io/component: traefik-metrics
-``` 
-{{site.data.alerts.important}}
-
-`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
-
-{{site.data.alerts.end}}
-
-- Apply manifest file
-  ```shell
-  kubectl apply -f traefik-servicemonitor.yml
-  ```
-
-- Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
-
-#### Traefik Grafana dashboard
-
-Traefik dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11462](https://grafana.com/grafana/dashboards/11462). This dashboard has as prerequisite to have installed `grafana-piechart-panel` plugin. The list of plugins to be installed can be specified during kube-prometheus-stack helm deployment as values (`grafana.plugins` variable).
 
 
 ### Longhorn Monitoring

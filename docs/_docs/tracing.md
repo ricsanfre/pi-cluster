@@ -331,80 +331,16 @@ minio:
   enabled: false
 ```
   
-## Linkerd traces integration
-
-Follow procedure described in ["Service Mesh (Linkerd) - Linkerd Jaeger extension installation"](/docs/service-mesh/#linkerd-jaeger-extension-installation) to enable linkerd distributing tracing capability.
-
-
-## Traefik traces integration
-
-The ingress is a key component for distributed tracing solution because it is reposible for creating the root span of each trace and for deciding if that trace should be sampled or not.
-
-Distributed tracing systems all rely on propagate the trace context throuhg the chain of involved services. This trace contex is encoding in HTTP request headers. Of the available propagation protocols, B3 is the only one supported by Linkerd, and so this is the one to be used in the whole system.
-
-Traefik uses OpenTrace to export traces to different backends. 
-
-To activate tracing using B3 propagation protocol, the following options need to be provided
-  
-```
---tracing.zipkin=true
---tracing.zipkin.httpEndpoint=http://tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
---tracing.zipkin.sameSpan=true
---tracing.zipkin.id128Bit=true
---tracing.zipkin.sampleRate=1
-```
-
-For more details see [Traefik tracing documentation](https://doc.traefik.io/traefik/observability/tracing/overview/)
-
-In order to be able to correlate logs with traces in Grafana, Traefik access log should be configured so, trace ID is also present as a field in the logs. Trace ID comes as a header field (`X-B3-Traceid`), that need to be included in the logs.
-
-By default no header is included in Traefik's access log. Additional parameters need to be added to include the traceID.
-
-```
---accesslog.fields.headers.defaultmode=drop
---accesslog.fields.headers.names.X-B3-Traceid=keep
-```
-
-See more details in [Traefik access log documentation](https://doc.traefik.io/traefik/observability/access-logs/#limiting-the-fieldsincluding-headers).
-
-When installing Traefik with Helm the following values.yml file achieve the above configuration
-
-```yml
-# Enable access log
-logs:
-  access:
-    enabled: true
-    format: json
-    fields:
-      general:
-        defaultmode: keep
-      headers:
-        defaultmode: drop
-        names:
-          X-B3-Traceid: keep
-# Enabling tracing
-tracing:
-  zipkin:
-    httpEndpoint: http://tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
-    sameSpan: true
-    id128Bit: true
-    sampleRate: 1.0
-``` 
-
-In Traefik's access logs, a new field appear `request_X-B3-Traceid` containing trace id that can be used to extrac Tempo traces information.
-
 
 ## Ingress NGINX traces integration
 
-Ingress Contoller is a key component for distributed tracing solution because it is reposible for creating the root span of each trace and for deciding if that trace should be sampled or not.
+Ingress Contoller is a key component for distributed tracing solution because it is responsible for creating the root span of each trace and for deciding if that trace should be sampled or not.
 
-Distributed tracing systems all rely on propagate the trace context throuhg the chain of involved services. This trace contex is encoding in HTTP request headers. There is two key protocols used to propagate tracing context: W3C, used by OpenTelemetry, and B3, used by OpenTracing.
+Distributed tracing systems all rely on propagate the trace context through the chain of involved services. This trace contex is encoding in HTTP request headers. There is two key protocols used to propagate tracing context: W3C, used by OpenTelemetry, and B3, used by OpenTracing.
 
 Since release 1.10, Ingress Nginx has deprecated OpenTracing and Zipkin modules, being OpenTelemtry the only supported. See [Ingress Nginx 1.10 release notes](https://github.com/kubernetes/ingress-nginx/releases/tag/controller-v1.10.0)
 
 Ingress Nginx's OpenTelemetry module only supports W3C context propagation. B3 context propagation is not supported. See [nginx ingress open issue #10324](https://github.com/kubernetes/ingress-nginx/issues/10324).
-
-By the other hand, linkerd included support to W3C tracing propagation since release v2.13. See [linkerd issue #5416](https://github.com/linkerd/linkerd2/issues/5416). When multiple headers are present: proxy will use w3c by default, if that's not present, it will fallback to b3.
 
 To activate tracing using W3C propagation protocol, the following options need to be provided following to helm values.yml:
 
@@ -508,9 +444,9 @@ A derived field `TraceID` is added to logs whose message contains field `request
 
 {{site.data.alerts.warning}}
 
-Because of the deprecation of OpenTracing in Ingress NGINX release 1.10. E2E tracing propagation using emojivoto application is not working anymore.
+Because of the deprecation of OpenTracing in Ingress NGINX release 1.10. E2E tracing propagation using Linkerd's emojivoto application is not working anymore.
 
-Emojivoto is using OpenTracing, B3 context propagation whereas linkerd and Nginx are using W3C. So tracing context is not being propagated from NGINX to emojivoto microservices.
+Emojivoto is using OpenTracing, B3 context propagation while Nginx is using W3C. So tracing context is not being propagated from NGINX to emojivoto microservices.
 
 See [issue #329](https://github.com/ricsanfre/pi-cluster/issues/329).
 

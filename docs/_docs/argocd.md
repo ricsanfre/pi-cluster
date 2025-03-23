@@ -328,8 +328,10 @@ Different types of applications will be needed for the Pi Cluster
     Kustomize has support for helm chart inflation using `helm template` command.
 
     {{site.data.alerts.note}}
-    Currently, not all `helm template` options are supported but there is a commitment to support it all.
+
+    Not all `helm template` options are supported. ArgoCD community has the intention to support them all eventually.
     See [kustomization helmChart documentation](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/helmcharts/).
+
     {{site.data.alerts.end}}
 
     kustomize `--enable-helm` build option need to be added to support helm chart inflation.
@@ -347,20 +349,63 @@ Different types of applications will be needed for the Pi Cluster
   
   Chek out further details in [Argo CD Kustomize applications documentation](https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/).
 
-### Helm Umbrella Charts 
 
-ArgoCD Helm application has the limitation that helm Values file must be in the same git repository as the Helm chart.
+### Helm Charts (Multiple source repos)
 
-Since all charts we want to deploy in the cluster belongs to third party repositories, we could not use the values file option (values file will be in our repository and not in the 3rd party repository) and specifying all chart parameters within the Application definition is not manageable since some of the charts contain lots of parameters.
+Since ArgoCD 2.6, multiples sources can be defined per Application.
+One of the most common scenarios for using multiple sources is for deploying 3rd party helm charts:
 
-{{site.data.alerts.note}}
-There is a new ArgoCd functionality, currently (release v2.11.2) in beta status, to support multiple source repos per Application, that will remove that limitation.
-See details in ["ArgoCD documentation: Multiple Sources for an Application"](
+1. Use an external/public Helm chart
+2. You want to override the Helm values with your own local values
+3. You don't want to clone the Helm chart locally as well because that would lead to duplication and you would need to monitor it manually for upstream changes.
+
+With this new functionality, definition of Umbrella Charts is not needed anymore.
+
+Example of an Application is:
+
+```yml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+name: cert-manager
+namespace: argocd
+spec:
+project: default
+sources:
+  - repoURL: https://charts.jetstack.io
+    targetRevision: v1.10.0
+    chart: cert-manager
+    helm:
+      releaseName: cert-manager
+      valueFiles:
+       - $values/charts/cert-manager/values.yaml
+  - repoURL: 'https://github.com/<user>/<repo>.git'
+    targetRevision: dev
+    ref: values
+destination:
+  server: "https://kubernetes.default.svc"
+  namespace: cert-manager
+```
+
+In this case the Helm values is provided from a specific path within a specific repo.
+
+### Helm Umbrella Charts
+
+{{site.data.alerts.important}}
+ArgoCD 2.6 introduced new functionality to support multiple source repos per Application. That new functionality removes the need of using Helm Umbrella Charts
+to deploy 3rd party helm charts.
+
+See further details in ["ArgoCD documentation: Multiple Sources for an Application"](
 https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/)
 {{site.data.alerts.end}}
 
+ArgoCD Helm application, before release 2.6, had the limitation that helm Values file must be in the same git repository as the Helm chart.
 
-As an alternative a Helm Umbrella Chart pattern can be used. Helm Umbrella chart is sort of a "meta" (empty) Helm Chart that lists other Helm Charts as a dependency ([subcharts](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/)). 
+If you wanted to deploy helm charts belonging to third party repositories, it was not possible to define your own helm values file located in your own repository to override the default set of values.
+
+To enable this scenario Helm Umbrella design pattern had to be used.
+
+Helm Umbrella chart is sort of a "meta" (empty) Helm Chart that lists other Helm Charts as a dependency ([subcharts](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/)). 
 It consists of a empty helm chart in a repo directory containing only chart definition file (`Chart.yaml`), listing all subcharts, and its corresponding `values.yaml` file.
 
 - `<repo-path>/Chart.yaml`
@@ -492,11 +537,6 @@ Using kustomize, manifest files are generated via `helm template` command. This 
 Applying kustomize manifest files directly could provoke undesired results, in case that inflated helm chart contains [helm hooks](https://helm.sh/docs/topics/charts_hooks/), only processed by `helm install` or `helm upgrade` commands but not by `kubectl kustomize <options> <path> | kubectl apply -f -` command.
 
 ArgoCD, is processing helm hooks annotated resources, and translate them into ArgoCD hooks, so the functionality provided by the helm hooks is not lost. See [ArgoCD helm hooks support](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks).
-{{site.data.alerts.end}}
-
-
-{{site.data.alerts.note}}
-Packaged helm applications will be deployed using kustomize applications following the previous defined pattern. This pattern is the preferred solution over defining umbrella helm charts, because it is simpler and it can leverage all patching capabilities provided by kustomized.
 {{site.data.alerts.end}}
 
 
@@ -660,14 +700,15 @@ Within git repo the following directory structure can be created
 
   `infrastructure` and `apps` applications point to a different repository path, containing another kustomized application following the app of apps pattern (manifest files are argoCD Application) and its folder structure is similar to the one used by `root-app`
 
+{{site.data.alerts.tip}}
 
-{{site.data.alerts.note}}
+Example of this structure can be found in an old version of the repo. Checkout [/kubernetes (release 1.8.9)]({{ site.git_address }}/tree/v1.8.9/kubernetes/)
 
-Root application created for Pi-Cluster can be found in [/kubernets/bootstrap/root-app]({{ site.git_address }}/tree/master/kubernetes/bootstrap/root-app).
+- Root application created for Pi-Cluster can be found in [/kubernets/bootstrap/root-app (release 1.8.9)]({{ site.git_address }}/tree/v1.8.9/kubernetes/bootstrap/root-app).
 
-Infrastructure app of apps can be found in [/kubernets/bootstrap/infra]({{ site.git_address }}/tree/master/kubernetes/bootstrap/infra).
+- Infrastructure app of apps can be found in [/kubernets/bootstrap/infra (release 1.8.9)]({{ site.git_address }}/tree/v1.8.9/kubernetes/bootstrap/infra).
 
-Applications app of apps can be found in [/kubernets/bootstrap/apps]({{ site.git_address }}/tree/master/kubernetes/bootstrap/apps).
+- Applications app of apps can be found in [/kubernets/bootstrap/apps (release 1.8.9)]({{ site.git_address }}/tree/v1.8.9/kubernetes/bootstrap/apps).
 
 {{site.data.alerts.end}}
 
@@ -717,8 +758,10 @@ kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
 
 Application containing all CRDs could be created and deployed in the first sync-wave. So all other applications making use of CRDs can be deployed with success even when the corresponding Controller services are not yet deployed. For example: Deploying Prometheus Operator CRDs as part of a CRDs Application, allows to deploy prometheus monitoring objects (ServiceMonitor, PodMonitor, etc) for applications that are deployed before kube-prometheus-stack application.
 
-For an example of such CRDs application, check repository [/kubernetes/infraestructure/crds]({{ site.git_address }}/tree/master/kubernetes/infrastructure/crds).
 
+{{site.data.alerts.tip}}
+For an example of such CRDs application, check out [/kubernetes/infraestructure/crds]({{ site.git_address }}/tree/v1.8.9/kubernetes/infrastructure/crds). Old ArgoCd applications in the repository.
+{{site.data.alerts.end}}
 
 ## Repo Structure
 
@@ -735,6 +778,11 @@ kubernetes
 │   └── vault # vault bootstraping manifest files
 └── infrastructure # infrastructure applications
 ```
+{{site.data.alerts.tip}}
+
+Example of this structure can be found in an old version of the repo. Checkout [/kubernetes (release 1.8.9)]({{ site.git_address }}/tree/v1.8.9/kubernetes/)
+
+{{site.data.alerts.end}}
 
 
 ## References
