@@ -793,3 +793,48 @@ grafana.ini:
 -   Refresh tokens use is enabled: `offline_access` scope has ben added to `auth.generic.oauth.scopes`  and `auth.generic.oauth.use_refresh_token` is set to true
 
 See configuration details about all options that can be provided in `grafana.ini` in https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/generic-oauth/#configure-generic-oauth-authentication-client-using-the-grafana-configuration-file
+
+
+## Observability
+### Metrics
+By default Grafana expose Prometheus metrics at `/metrics`. This is expose by default.
+
+Kube-Prometheus-Stack automatically configure Prometheus to monitor Grafana
+
+> [!important] Prometheus Integration when configuring Grafana to run behind a Proxy under a subpath
+> When `serve_from_subpath` is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
+> This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
+> To make Prometheus work,  `server_from_sub_path` must be set to false and add rewrite rule in NGINX proxy
+> ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
+
+```yaml
+grafana.ini:
+  server:
+    domain: monitoring.local.test
+    root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+    # When serve_from_subpath is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
+    # This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
+    # To make Prometheus work, disable server_from_sub_path and add rewrite rule in NGINX proxy
+    # ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
+    serve_from_sub_path: false
+
+# Ingress configuration
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  # Values can be templated
+  annotations:
+    # Enable cert-manager to create automatically the SSL certificate and store in Secret
+    cert-manager.io/cluster-issuer: ca-issuer
+    cert-manager.io/common-name: monitoring.local.test
+    # Nginx rewrite rule
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  path: /grafana/?(.*)
+  pathType: ImplementationSpecific
+  hosts:
+    - monitoring.local.test
+  tls:
+    - hosts:
+      - monitoring.local.test
+      secretName: monitoring-tls
+```

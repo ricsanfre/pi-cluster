@@ -206,7 +206,11 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         server:
           domain: monitoring.local.test
           root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
-          serve_from_sub_path: true
+          # When serve_from_subpath is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
+          # This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
+          # To make Prometheus work, disable server_from_sub_path and add rewrite rule in NGINX proxy
+          # ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
+          serve_from_sub_path: false
       ##
       ## Provisioning sidecars
       sidecar:
@@ -241,15 +245,16 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           # Enable cert-manager to create automatically the SSL certificate and store in Secret
           cert-manager.io/cluster-issuer: ca-issuer
           cert-manager.io/common-name: monitoring.${DOMAIN}
-        path: /grafana
-        pathType: Prefix
+          # Nginx rewrite rule. Needed since serve_from_sub_path has been disabled
+          nginx.ingress.kubernetes.io/rewrite-target: /$1
+        path: /grafana/?(.*)
+        pathType: ImplementationSpecific
         hosts:
           - monitoring.${DOMAIN}
         tls:
           - hosts:
             - monitoring.${DOMAIN}
             secretName: monitoring-tls
-
      ```
 
     {{site.data.alerts.note}}
@@ -449,7 +454,11 @@ grafana:
       # Run Grafana behind HTTP reverse proxy using a subpath
       domain: monitoring.local.test
       root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
-      serve_from_sub_path: true
+      # When serve_from_subpath is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
+      # This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
+      # To make Prometheus work, disable server_from_sub_path and add rewrite rule in NGINX proxy
+      # ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
+      serve_from_sub_path: false
   # Grafana Ingress configuration
   ingress:
     enabled: true
@@ -459,8 +468,10 @@ grafana:
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
       cert-manager.io/common-name: monitoring.${DOMAIN}
-    path: /grafana
-    pathType: Prefix
+      # Nginx rewrite rule. Needed since serve_from_sub_path has been disabled
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+    path: /grafana/?(.*)
+    pathType: ImplementationSpecific
     hosts:
       - monitoring.${DOMAIN}
     tls:
