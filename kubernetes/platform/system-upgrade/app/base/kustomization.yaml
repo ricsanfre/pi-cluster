@@ -5,8 +5,4 @@ resources:
   # renovate: datasource=github-releases depName=rancher/system-upgrade-controller
   - https://github.com/rancher/system-upgrade-controller/releases/download/v0.15.2/crd.yaml
   # renovate: datasource=github-releases depName=rancher/system-upgrade-controller
-  - https://github.com/rancher/system-upgrade-controller/releases/download/v0.15.2/clusterrole.yaml
-  # renovate: datasource=github-releases depName=rancher/system-upgrade-controller
-  - https://github.com/rancher/system-upgrade-controller/releases/download/v0.15.2/clusterrolebinding.yaml
-  # renovate: datasource=github-releases depName=rancher/system-upgrade-controller
   - https://github.com/rancher/system-upgrade-controller/releases/download/v0.15.2/system-upgrade-controller.yaml
