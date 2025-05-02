@@ -18,7 +18,7 @@
       "description": ["Flux Group"],
       "groupName": "Flux",
       "matchPackagePatterns": ["fluxcd"],
-      "matchDatasources": ["docker", "github-tags"],
+      "matchDatasources": ["docker", "helm", "github-tags"],
       "versioning": "semver",
       "group": {
         "commitMessageTopic": "{{{groupName}}} group"
