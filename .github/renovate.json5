@@ -2,9 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
+    ":skipStatusChecks",
     "github>ricsanfre/pi-cluster//.github/renovate/customManagers.json5",
-    "github>ricsanfre/pi-cluster//.github/renovate/grafanaDashboards.json5"
+    "github>ricsanfre/pi-cluster//.github/renovate/grafanaDashboards.json5",
+    "github>ricsanfre/pi-cluster//.github/renovate/groups.json5",
+    "github>ricsanfre/pi-cluster//.github/renovate/labels.json5"
   ],
+  "dependencyDashboardTitle": "Renovate Dashboard 🤖"
   "flux": {
     "fileMatch": [
       "(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"
@@ -15,9 +19,20 @@
       "(^|/)kubernetes/.+\\.ya?ml$"
     ]
   },
+  "helmfile": {
+    "fileMatch": [
+      "(^|/)helmfile\\.ya?ml(?:\\.j2)?$"
+    ]
+  },
   "kubernetes": {
     "fileMatch": [
       "(^|/)kubernetes/.+\\.ya?ml$"
     ]
+  },
+  "kustomize": {
+    "fileMatch": ["(^|/)kustomization\\.ya?ml(?:\\.j2)?$"]
+  },
+  "pip_requirements": {
+    "fileMatch": ["(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$"]
   }
 }
