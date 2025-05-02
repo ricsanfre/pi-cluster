@@ -7,7 +7,7 @@
       "fileMatch": [
         "(^|/)kubernetes/.+\\.env$",
         "(^|/)kubernetes/.+\\.ya?ml$",
-        "(^|/)ansible/vars/.+\\.ya?ml$"
+        "(^|/)ansible/.+\\.ya?ml$"
       ],
       "matchStrings": [
 
