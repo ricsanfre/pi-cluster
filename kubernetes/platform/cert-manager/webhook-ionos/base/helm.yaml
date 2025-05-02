@@ -16,7 +16,7 @@ spec:
   chart:
     spec:
       chart: cert-manager-webhook-ionos
-      version: 1.2.0
+      version: 1.2.2
       sourceRef:
         kind: HelmRepository
         name: cert-manager-webhook-ionos
