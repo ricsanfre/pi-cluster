@@ -8,7 +8,7 @@
     "github>ricsanfre/pi-cluster//.github/renovate/groups.json5",
     "github>ricsanfre/pi-cluster//.github/renovate/labels.json5"
   ],
-  "dependencyDashboardTitle": "Renovate Dashboard 🤖"
+  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
   "flux": {
     "fileMatch": [
       "(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"
