@@ -35,24 +35,20 @@ datasources:
       type: prometheus
       uid: prometheus
       access: proxy
-      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090
-      jsonData:
-        httpMethod: POST
-        timeInterval: 30s
+      url: http://prometheus-operated.kube-prom-stack.svc.cluster.local:9090
       isDefault: true
     - name: Alertmanager
       type: alertmanager
       uid: alertmanager
-      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
+      url: http://alertmanager-operated.kube-prom-stack.svc.cluster.local:9093
       access: proxy
       jsonData:
-        handleGrafanaManagedAlerts: false
         implementation: prometheus
     - name: Loki
       type: loki
       uid: loki
       access: proxy
-      url: http://loki-gateway.loki.svc.cluster.local
+      url: http://loki-read-headless.loki.svc.cluster.local:3100
       jsonData:
         derivedFields:
             # Traefik traces integration
@@ -69,7 +65,7 @@ datasources:
       uid: tempo
       type: tempo
       access: proxy
-      url: http://tempo-query-frontend.tempo.svc.cluster.local:3100
+      url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3100
 ##
 ## Provisioning sidecars
 ##
