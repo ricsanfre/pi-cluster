@@ -14,7 +14,7 @@ spec:
         name: prometheus-community
         namespace: flux-system
   releaseName: kube-prometheus-stack
-  targetNamespace: monitoring
+  targetNamespace: kube-prom-stack
   install:
     crds: Skip
     remediation:

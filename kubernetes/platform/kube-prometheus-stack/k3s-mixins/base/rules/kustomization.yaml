@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./kubernetes-mixin-rules.yaml
+  - ./prometheus-mixin-rules.yaml
+  - ./prometheus-operator-mixin-rules.yaml
+  - ./node-exporter-mixin-rules.yaml
+  - ./etcd-mixin-rules.yaml
+  - ./coredns-mixin-rules.yaml
+  - ./grafana-mixin-rules.yaml

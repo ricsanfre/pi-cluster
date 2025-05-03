@@ -2,10 +2,5 @@
 # Disabling instalation of Grafana sub-chart
 grafana:
   enabled: false
-  # Enable deployment of kube-prometheus-stack grafana dashboards
-  forceDeployDashboards: true
-  # Adding grafana folder annotation
-  sidecar:
-    dashboards:
-      annotations:
-        grafana_folder: Kubernetes
+  # Disable deployment of kube-prometheus-stack grafana dashboards
+  forceDeployDashboards: false

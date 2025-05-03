@@ -1,35 +1,21 @@
-# kube-prometheus-stack helm values (k3s)
-
-# Disabling monitoring of K8s services.
-# Monitoring of K3S components will be configured out of kube-prometheus-stack
+grafana:
+  # The default dashboards are not working for `k3s`, so we disable them.
+  defaultDashboardsEnabled: false
+defaultRules:
+  # The default rules are not working for `k3s`, so we disable them.
+  create: false
+# Source for issues/solutions: https://github.com/k3s-io/k3s/issues/3619#issuecomment-1425852034
+# `k3s` exposes all metrics combined for each component, so we don't need to scrape them separately
+# We'll only scrape kubelet, otherwise we'd get duplicate metrics.
 kubelet:
-  enabled: false
+  enabled: true
+# Kubernetes API server collects data from master nodes, while kubelet collects data from master and worker nodes
+# To not duplicate metrics we'll only scrape Kubelet
 kubeApiServer:
   enabled: false
 kubeControllerManager:
   enabled: false
-kubeScheduler:
-  enabled: false
 kubeProxy:
   enabled: false
-kubeEtcd:
+kubeScheduler:
   enabled: false
-# Disable K8S Prometheus Rules
-# Rules for K3S components will be configured out of kube-prometheus-stack
-defaultRules:
-  create: true
-  rules:
-    etcd: false
-    k8s: false
-    kubeApiserverAvailability: false
-    kubeApiserverBurnrate: false
-    kubeApiserverHistogram: false
-    kubeApiserverSlos: false
-    kubeControllerManager: false
-    kubelet: false
-    kubeProxy: false
-    kubernetesApps: false
-    kubernetesResources: false
-    kubernetesStorage: false
-    kubernetesSystem: false
-    kubeScheduler: false

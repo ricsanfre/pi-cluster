@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./grafana-dashboard-namespace-by-workload.yaml
+  - ./grafana-dashboard-nodes-aix.yaml
+  - ./grafana-dashboard-proxy.yaml
+  - ./grafana-dashboard-namespace-by-pod.yaml
+  - ./grafana-dashboard-node-cluster-rsrc-use.yaml
+  - ./grafana-dashboard-cluster-total.yaml
+  - ./grafana-dashboard-k8s-resources-windows-namespace.yaml
+  - ./grafana-dashboard-grafana-overview.yaml
+  - ./grafana-dashboard-k8s-resources-namespace.yaml
+  - ./grafana-dashboard-nodes-darwin.yaml
+  - ./grafana-dashboard-prometheus.yaml
+  - ./grafana-dashboard-etcd.yaml
+  - ./grafana-dashboard-scheduler.yaml
+  - ./grafana-dashboard-k8s-windows-cluster-rsrc-use.yaml
+  - ./grafana-dashboard-workload-total.yaml
+
+  - ./grafana-dashboard-node-rsrc-use.yaml
+  - ./grafana-dashboard-k8s-resources-windows-pod.yaml
+  - ./grafana-dashboard-controller-manager.yaml
+  - ./grafana-dashboard-persistentvolumesusage.yaml
+  - ./grafana-dashboard-k8s-resources-workloads-namespace.yaml
+  - ./grafana-dashboard-coredns.yaml
+  - ./grafana-dashboard-apiserver.yaml
+  - ./grafana-dashboard-nodes.yaml
+  - ./grafana-dashboard-k8s-resources-pod.yaml
+  - ./grafana-dashboard-k8s-resources-node.yaml
+  - ./grafana-dashboard-prometheus-remote-write.yaml
+  - ./grafana-dashboard-k8s-windows-node-rsrc-use.yaml
+

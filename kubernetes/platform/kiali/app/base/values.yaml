@@ -14,7 +14,7 @@ cr:
     external_services:
       prometheus:
         # Prometheus service
-        url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
+        url: "http://kube-prometheus-stack-prometheus.kube-prom-stack:9090/"
       grafana:
         enabled: true
         # Grafana service name is "grafana" and is in the "monitoring" namespace.

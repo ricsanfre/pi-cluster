@@ -1,0 +1,807 @@
+apiVersion: v1
+data:
+  prometheus.json: |-
+    {
+        "panels": [
+            {
+                "collapsed": false,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 1,
+                "panels": [
+
+                ],
+                "title": "Prometheus Stats",
+                "type": "row"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "decimals": 2,
+                        "displayName": "",
+                        "unit": "short"
+                    },
+                    "overrides": [
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "Time"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Time"
+                                },
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "custom.hidden",
+                                    "value": "true"
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "cluster"
+                            },
+                            "properties": [
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "short"
+                                },
+                                {
+                                    "id": "decimals",
+                                    "value": 2
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "job"
+                            },
+                            "properties": [
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "short"
+                                },
+                                {
+                                    "id": "decimals",
+                                    "value": 2
+                                },
+                                {
+                                    "id": "displayName",
+                                    "value": "Job"
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "instance"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Instance"
+                                },
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "short"
+                                },
+                                {
+                                    "id": "decimals",
+                                    "value": 2
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "version"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Version"
+                                },
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "short"
+                                },
+                                {
+                                    "id": "decimals",
+                                    "value": 2
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "Value #A"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Count"
+                                },
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "short"
+                                },
+                                {
+                                    "id": "decimals",
+                                    "value": 2
+                                },
+                                {
+                                    "id": "custom.hidden",
+                                    "value": "true"
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "Value #B"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Uptime"
+                                },
+                                {
+                                    "id": "custom.align",
+                                    "value": null
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "s"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 24,
+                    "x": 0,
+                    "y": 1
+                },
+                "id": 2,
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "count by (job, instance, version) (prometheus_build_info{job=~\"$job\", instance=~\"$instance\"})",
+                        "format": "table",
+                        "instant": true,
+                        "legendFormat": ""
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "max by (job, instance) (time() - process_start_time_seconds{job=~\"$job\", instance=~\"$instance\"})",
+                        "format": "table",
+                        "instant": true,
+                        "legendFormat": ""
+                    }
+                ],
+                "title": "Prometheus Stats",
+                "type": "table"
+            },
+            {
+                "collapsed": false,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 8
+                },
+                "id": 3,
+                "panels": [
+
+                ],
+                "title": "Discovery",
+                "type": "row"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 10,
+                            "showPoints": "never"
+                        },
+                        "min": 0,
+                        "unit": "ms"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 0,
+                    "y": 9
+                },
+                "id": 4,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(rate(prometheus_target_sync_length_seconds_sum{job=~\"$job\",instance=~\"$instance\"}[5m])) by (scrape_job) * 1e3",
+                        "format": "time_series",
+                        "legendFormat": "{{scrape_job}}"
+                    }
+                ],
+                "title": "Target Sync",
+                "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "short"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 12,
+                    "y": 9
+                },
+                "id": 5,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(prometheus_sd_discovered_targets{job=~\"$job\",instance=~\"$instance\"})",
+                        "format": "time_series",
+                        "legendFormat": "Targets"
+                    }
+                ],
+                "title": "Targets",
+                "type": "timeseries"
+            },
+            {
+                "collapsed": false,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 16
+                },
+                "id": 6,
+                "panels": [
+
+                ],
+                "title": "Retrieval",
+                "type": "row"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 10,
+                            "showPoints": "never"
+                        },
+                        "min": 0,
+                        "unit": "ms"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 8,
+                    "x": 0,
+                    "y": 17
+                },
+                "id": 7,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "rate(prometheus_target_interval_length_seconds_sum{job=~\"$job\",instance=~\"$instance\"}[5m]) / rate(prometheus_target_interval_length_seconds_count{job=~\"$job\",instance=~\"$instance\"}[5m]) * 1e3",
+                        "format": "time_series",
+                        "legendFormat": "{{interval}} configured"
+                    }
+                ],
+                "title": "Average Scrape Interval Duration",
+                "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "ms"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 8,
+                    "x": 8,
+                    "y": 17
+                },
+                "id": 8,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum by (job) (rate(prometheus_target_scrapes_exceeded_body_size_limit_total[1m]))",
+                        "format": "time_series",
+                        "legendFormat": "exceeded body size limit: {{job}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum by (job) (rate(prometheus_target_scrapes_exceeded_sample_limit_total[1m]))",
+                        "format": "time_series",
+                        "legendFormat": "exceeded sample limit: {{job}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum by (job) (rate(prometheus_target_scrapes_sample_duplicate_timestamp_total[1m]))",
+                        "format": "time_series",
+                        "legendFormat": "duplicate timestamp: {{job}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum by (job) (rate(prometheus_target_scrapes_sample_out_of_bounds_total[1m]))",
+                        "format": "time_series",
+                        "legendFormat": "out of bounds: {{job}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum by (job) (rate(prometheus_target_scrapes_sample_out_of_order_total[1m]))",
+                        "format": "time_series",
+                        "legendFormat": "out of order: {{job}}"
+                    }
+                ],
+                "title": "Scrape failures",
+                "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "short"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 8,
+                    "x": 16,
+                    "y": 17
+                },
+                "id": 9,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "rate(prometheus_tsdb_head_samples_appended_total{job=~\"$job\",instance=~\"$instance\"}[5m])",
+                        "format": "time_series",
+                        "legendFormat": "{{job}} {{instance}}"
+                    }
+                ],
+                "title": "Appended Samples",
+                "type": "timeseries"
+            },
+            {
+                "collapsed": false,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 24
+                },
+                "id": 10,
+                "panels": [
+
+                ],
+                "title": "Storage",
+                "type": "row"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "short"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 0,
+                    "y": 25
+                },
+                "id": 11,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "prometheus_tsdb_head_series{job=~\"$job\",instance=~\"$instance\"}",
+                        "format": "time_series",
+                        "legendFormat": "{{job}} {{instance}} head series"
+                    }
+                ],
+                "title": "Head Series",
+                "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "short"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 12,
+                    "y": 25
+                },
+                "id": 12,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "prometheus_tsdb_head_chunks{job=~\"$job\",instance=~\"$instance\"}",
+                        "format": "time_series",
+                        "legendFormat": "{{job}} {{instance}} head chunks"
+                    }
+                ],
+                "title": "Head Chunks",
+                "type": "timeseries"
+            },
+            {
+                "collapsed": false,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 32
+                },
+                "id": 13,
+                "panels": [
+
+                ],
+                "title": "Query",
+                "type": "row"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "short"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 0,
+                    "y": 33
+                },
+                "id": 14,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "rate(prometheus_engine_query_duration_seconds_count{job=~\"$job\",instance=~\"$instance\",slice=\"inner_eval\"}[5m])",
+                        "format": "time_series",
+                        "legendFormat": "{{job}} {{instance}}"
+                    }
+                ],
+                "title": "Query Rate",
+                "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 100,
+                            "lineWidth": 0,
+                            "showPoints": "never",
+                            "stacking": {
+                                "mode": "normal"
+                            }
+                        },
+                        "min": 0,
+                        "unit": "ms"
+                    }
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 12,
+                    "y": 33
+                },
+                "id": 15,
+                "options": {
+                    "tooltip": {
+                        "mode": "multi",
+                        "sort": "desc"
+                    }
+                },
+                "pluginVersion": "v11.4.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "expr": "max by (slice) (prometheus_engine_query_duration_seconds{quantile=\"0.9\",job=~\"$job\",instance=~\"$instance\"}) * 1e3",
+                        "format": "time_series",
+                        "legendFormat": "{{slice}}"
+                    }
+                ],
+                "title": "Stage Duration",
+                "type": "timeseries"
+            }
+        ],
+        "schemaVersion": 39,
+        "tags": [
+            "prometheus-mixin"
+        ],
+        "templating": {
+            "list": [
+                {
+                    "current": {
+                        "selected": false,
+                        "text": "default",
+                        "value": "default"
+                    },
+                    "hide": 0,
+                    "label": "Data source",
+                    "name": "datasource",
+                    "query": "prometheus",
+                    "type": "datasource"
+                },
+                {
+                    "allValue": ".+",
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "includeAll": true,
+                    "label": "job",
+                    "multi": true,
+                    "name": "job",
+                    "query": "label_values(prometheus_build_info{job=\"prometheus\"}, job)",
+                    "refresh": 2,
+                    "sort": 2,
+                    "type": "query"
+                },
+                {
+                    "allValue": ".+",
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "includeAll": true,
+                    "label": "instance",
+                    "multi": true,
+                    "name": "instance",
+                    "query": "label_values(prometheus_build_info{job=~\"$job\"}, instance)",
+                    "refresh": 2,
+                    "sort": 2,
+                    "type": "query"
+                }
+            ]
+        },
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "timepicker": {
+            "refresh_intervals": [
+                "60s"
+            ]
+        },
+        "timezone": "utc",
+        "title": "Prometheus / Overview"
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: "1"
+  name: grafana-dashboard-prometheus
+  namespace: kube-prom-stack

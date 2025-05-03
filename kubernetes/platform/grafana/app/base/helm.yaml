@@ -14,7 +14,7 @@ spec:
         name: grafana
         namespace: flux-system
   releaseName: grafana
-  targetNamespace: monitoring
+  targetNamespace: grafana
   install:
     remediation:
       retries: 3

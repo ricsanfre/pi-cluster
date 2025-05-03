@@ -5,7 +5,6 @@ metadata:
   name: external-minio-metrics-service
   labels:
     app.kubernetes.io/name: minio-ext
-  namespace: monitoring
 spec:
   ports:
   - name: http-metrics

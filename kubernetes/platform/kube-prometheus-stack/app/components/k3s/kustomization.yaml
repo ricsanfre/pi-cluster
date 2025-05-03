@@ -1,11 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
-resources:
-  - k3s-metrics-service.yaml
-  - k3s-service-monitor.yaml
-  - prometheus-rules.yaml
-
 # patch values.yaml
 configMapGenerator:
   - name: kube-prometheus-stack-helm-values

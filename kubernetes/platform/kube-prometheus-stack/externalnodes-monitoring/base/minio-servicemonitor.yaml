@@ -5,7 +5,6 @@ metadata:
     app: minio
     release: kube-prometheus-stack
   name: external-minio-servicemonitor
-  namespace: monitoring
 spec:
   jobLabel: app.kubernetes.io/name
   endpoints:
@@ -19,7 +18,7 @@ spec:
         key: token
   namespaceSelector:
     matchNames:
-    - monitoring
+    - kube-prom-stack
   selector:
     matchLabels:
       app.kubernetes.io/name: minio-ext

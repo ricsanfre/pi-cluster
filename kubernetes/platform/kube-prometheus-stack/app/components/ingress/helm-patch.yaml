@@ -1,0 +1,6 @@
+- op: add
+  path: /spec/valuesFrom/-
+  value:
+    kind: ConfigMap
+    name: kube-prometheus-stack-helm-values
+    valuesKey: ingress-values.yaml

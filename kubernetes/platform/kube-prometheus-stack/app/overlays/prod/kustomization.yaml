@@ -1,11 +1,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: monitoring
+namespace: kube-prom-stack
 
 resources:
   - ../../base
 
 components:
+  - ../../components/ingress
   - ../../components/k3s
   - ../../components/disable-grafana
 

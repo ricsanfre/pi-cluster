@@ -1,89 +1,368 @@
 # kube-prometheus-stack helm values (base)
 
-# Making full name stack: monitoring
-# fullnameOverride: monitoring
-prometheusOperator:
-  # Relabeling job name for operator metrics
-  serviceMonitor:
-    relabelings:
-    # Replace job value
-    - sourceLabels:
-      - __address__
-      action: replace
-      targetLabel: job
-      replacement: prometheus-operator
-  # Disable creation of kubelet service
-  kubeletService:
-    enabled: false
-
-# Enable serviceaccount automount
-prometheus-node-exporter:
-  serviceAccount:
-    automountServiceAccountToken: true
-
+# Produce cleaner resources names
+cleanPrometheusOperatorObjectNames: true
+# AlertManager configuration
 alertmanager:
   alertmanagerSpec:
-    # Subpath /alertmanager configuration
+    ##
+    ## Configure access to AlertManager via sub-path
     externalUrl: http://monitoring.${CLUSTER_DOMAIN}/alertmanager/
-    routePrefix: /
-    # PVC config
+    routePrefix: /alertmanager
+    ##
+    ## HA configuration: Replicas
+    ## Number of Alertmanager POD replicas
+    replicas: 1
+    ##
+    ## POD Storage Spec
     storage:
       volumeClaimTemplate:
         spec:
-          storageClassName: longhorn
+          storageClassName: ${STORAGE_CLASS:=longhorn}
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
               storage: 1Gi
-  serviceMonitor:
-    relabelings:
-      # Replace job value
-      - sourceLabels:
-        - __address__
-        action: replace
-        targetLabel: job
-        replacement: alertmanager
+    ##
+# Prometheus configuration
 prometheus:
   prometheusSpec:
-    # Subpath /prometheus configuration
+    ##
+    ## Removing default filter Prometheus selectors
+    ## Default selector filters defined by default in helm chart.
+    ## matchLabels:
+    ##   release: {{ $.Release.Name | quote }}
+    ## ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom-stack helm release (kube-prom-stack)
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ##
+    ## EnableAdminAPI enables Prometheus the administrative HTTP API which includes functionality such as deleting time series.
+    ## This is disabled by default. --web.enable-admin-api command line
+    ## ref: https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+    enableAdminAPI: true
+    ##
+    ## Configure access to Prometheus via sub-path
+    ## --web.external-url and --web.route-prefix Prometheus command line parameters
     externalUrl: http://monitoring.${CLUSTER_DOMAIN}/prometheus/
-    routePrefix: /
-    # Resources request and limits
+    routePrefix: /prometheus
+    ##
+    ## HA configuration: Replicas & Shards
+    ## Number of replicas of each shard to deploy for a Prometheus deployment.
+    ## Number of replicas multiplied by shards is the total number of Pods created.
+    replicas: 1
+    shards: 1
+    ##
+    ## TSDB Configuration
+    ## ref: https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects
+    # Enable WAL compression
+    walCompression: true
+    # Retention data configuration
+    retention: 14d
+    retentionSize: 50GB
+    ## Enable Experimental Features
+    # ref: https://prometheus.io/docs/prometheus/latest/feature_flags/
+    enableFeatures:
+      # Enable Memory snapshot on shutdown.
+      - memory-snapshot-on-shutdown
+    ##
+    ## Limit POD Resources
     resources:
       requests:
-        memory: 2Gi
+        cpu: 100m
       limits:
-        memory: 2Gi
-    # PVC configuration
+        memory: 2000Mi
+    ##
+    ## POD Storage Spec
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: longhorn
+          storageClassName: ${STORAGE_CLASS:=longhorn}
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
               storage: 10Gi
-    # Retention period
-    retention: 7d
+    ##
+# Prometheus Node Exporter Configuration
+nodeExporter:
+  enabled: true
+  operatingSystems:
+    linux:
+      enabled: true
+    aix:
+      enabled: false
+    darwin:
+      enabled: false
+prometheus-node-exporter:
+  fullnameOverride: node-exporter
+  prometheus:
+    monitor:
+      enabled: true
+      relabelings:
+        - action: replace
+          regex: (.*)
+          replacement: $1
+          sourceLabels: ["__meta_kubernetes_pod_node_name"]
+          targetLabel: kubernetes_node
+# Kube-State-Metrics Configuration
+kube-state-metrics:
+  fullnameOverride: kube-state-metrics
+  metricLabelsAllowlist:
+    - pods=[*]
+    - deployments=[*]
+    - persistentvolumeclaims=[*]
+  prometheus:
+    monitor:
+      enabled: true
+      relabelings:
+        - action: replace
+          regex: (.*)
+          replacement: $1
+          sourceLabels: ["__meta_kubernetes_pod_node_name"]
+          targetLabel: kubernetes_node
+# Grafana Configuration
+grafana:
+  fullnameOverride: grafana
+  # Admin user password
+  adminPassword: "s1cret0"
+  # grafana configuration
+  grafana.ini:
+    server:
+      domain: monitoring.${CLUSTER_DOMAIN}
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      # When serve_from_subpath is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
+      # This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
+      # To make Prometheus work, disable server_from_sub_path and add rewrite rule in NGINX proxy
+      # ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
+      serve_from_sub_path: false
+  ##
+  ## Provisioning sidecars
+  ##
+  sidecar:
+    dashboards:
+      # Enable dashboard sidecar
+      enabled: true
+      # Enable discovery in all namespaces
+      searchNamespace: ALL
+      # Search for ConfigMaps containing `grafana_dashboard` label
+      label: grafana_dashboard
+      # Annotation containing the folder where sidecar will place the dashboard.
+      folderAnnotation: grafana_folder
+      provider:
+        # disableDelete to activate a import-only behaviour
+        disableDelete: true
+        # allow Grafana to replicate dashboard structure from filesystem
+        foldersFromFilesStructure: true
+    datasources:
+      # Enable datasource sidecar
+      enabled: true
+      # Enable discovery in all namespaces
+      searchNamespace: ALL
+      # Search for ConfigMaps containing `grafana_datasource` label
+      label: grafana_datasource
+      labelValue: "1"
 
-    # Removing default filter Prometheus selectors
-    # Default selector filters
-    # matchLabels:
-    #   release: {{ $.Release.Name | quote }}
-    # ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom helm release
+  ## Provisioning Dashboards
+  # Dashboard Providers
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default-folder
+        - name: infrastructure
+          orgId: 1
+          folder: "Infrastructure"
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/infrastructure-folder
+        - name: kubernetes
+          orgId: 1
+          folder: Kubernetes
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/kubernetes-folder
+  # Dashboards
+  dashboards:
+    kubernetes:
+      kubernetes-api-server:
+        # renovate: depName="Kubernetes / System / API Server"
+        gnetId: 15761
+        revision: 19
+        datasource: Prometheus
+      kubernetes-coredns:
+        # renovate: depName="Kubernetes / System / CoreDNS"
+        gnetId: 15762
+        revision: 20
+        datasource: Prometheus
+      kubernetes-global:
+        # renovate: depName="Kubernetes / Views / Global"
+        gnetId: 15757
+        revision: 43
+        datasource: Prometheus
+      kubernetes-namespaces:
+        # renovate: depName="Kubernetes / Views / Namespaces"
+        gnetId: 15758
+        revision: 42
+        datasource: Prometheus
+      kubernetes-nodes:
+        # renovate: depName="Kubernetes / Views / Nodes"
+        gnetId: 15759
+        revision: 35
+        datasource: Prometheus
+      kubernetes-pods:
+        # renovate: depName="Kubernetes / Views / Pods"
+        gnetId: 15760
+        revision: 36
+        datasource: Prometheus
+      kubernetes-volumes:
+        # renovate: depName="K8s / Storage / Volumes / Cluster"
+        gnetId: 11454
+        revision: 14
+        datasource: Prometheus
+  # Grafana Ingress configuration
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    # Values can be templated
+    annotations:
+      # Enable cert-manager to create automatically the SSL certificate and store in Secret
+      cert-manager.io/cluster-issuer: ${TLS_ISSUER:=letsencrypt-issuer}
+      cert-manager.io/common-name: monitoring.${CLUSTER_DOMAIN}
+      # Nginx rewrite rule
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+    path: /grafana/?(.*)
+    pathType: ImplementationSpecific
+    hosts:
+      - monitoring.${CLUSTER_DOMAIN}
+    tls:
+      - hosts:
+        - monitoring.${CLUSTER_DOMAIN}
+        secretName: monitoring-tls
 
-    ruleSelectorNilUsesHelmValues: false
-    serviceMonitorSelectorNilUsesHelmValues: false
-    podMonitorSelectorNilUsesHelmValues: false
-    probeSelectorNilUsesHelmValues: false
+## Kubernetes metrics
 
+## Kubelet
+##
+# Enable kubelet service
+kubeletService:
+  ## Prometheus Operator creates Kubelet service
+  ## Prometheus Operator started with options
+  ## `--kubelet-service=kube-system/kube-prometheus-stack-kubelet`
+  ## `--kubelet-endpoints=true`
+  enabled: true
+  namespace: kube-system
+
+## Configuring Kubelet Monitoring
+kubelet:
+  enabled: true
   serviceMonitor:
-    relabelings:
-      # Replace job value
-      - sourceLabels:
-        - __address__
-        action: replace
-        targetLabel: job
-        replacement: prometheus
+    enabled: true
 
+## Kube API
+## Configuring Kube API monitoring
+kubeApiServer:
+  enabled: true
+  serviceMonitor:
+    # Enable Service Monitor
+    enabled: true
+
+## Kube Controller Manager
+kubeControllerManager:
+  ## K3s controller manager is not running as a POD
+  ## ServiceMonitor and Headless service is generated
+  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  ##
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+
+  # Enable KubeController manager montoring
+  enabled: true
+  # endpoints : IP addresses of K3s control plane nodes
+  # K3d tip: Get the K3d control plane node IPs e.g. as follows:
+  # kubectl get nodes -l node-role.kubernetes.io/control-plane=true -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' | tr ' ' ',' | sed 's/^/[&/;s/$/]/'
+  endpoints: &cp
+    - 10.0.0.12
+    - 10.0.0.13
+    - 10.0.0.14
+  service:
+    # Enable creation of service
+    enable: true
+  serviceMonitor:
+    # Enable and configure Service Monitor
+    enabled: true
+
+## Etcd monitoring
+kubeEtcd:
+  enabled: true
+  # K3s etcd not running as a POD, so endpoints need to be configured
+  endpoints: *cp
+  service:
+    enabled: true
+    port: 2381
+    targetPort: 2381
+
+## Kube Scheduler
+kubeScheduler:
+  ## K3s Kube-scheduler is not running as a POD
+  ## ServiceMonitor and Headless service is generated
+  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  ##
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+  enabled: true
+  # K3s kube-scheduler not running as a POD
+  # Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  #
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+  endpoints: *cp
+  serviceMonitor:
+    enabled: true
+
+kubeProxy:
+  ## K3s kube-proxy is not running as a POD
+  ## ServiceMonitor and Headless service is generated
+  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  ##
+  enabled: true
+  # K3s kube-proxy not running as a POD
+  endpoints:
+    - 10.0.0.12
+    - 10.0.0.13
+    - 10.0.0.14
+    - 10.0.0.15
+    - 10.0.0.16
+    - 10.0.0.20
+    - 10.0.0.21
+    - 10.0.0.22
+  serviceMonitor:
+    enabled: true
+
+## Core DNS monitoring
+##
+coreDns:
+  enabled: true
+  # Creates headless service to get accest to all coreDNS Pods
+  service:
+    enabled: true
+    port: 9153
+  # Enable service monitor
+  serviceMonitor:
+    enabled: true
 

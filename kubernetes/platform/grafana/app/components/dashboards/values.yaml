@@ -1,5 +1,6 @@
 # grafana helm values (dashboards)
 
+
 # Dashboard Providers
 dashboardProviders:
   dashboardproviders.yaml:
@@ -21,10 +22,61 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/istio
-
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+      - name: kubernetes
+        orgId: 1
+        folder: Kubernetes
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes-folder
 # Dashboards
 dashboards:
-  default:
+  kubernetes:
+    kubernetes-api-server:
+      # renovate: depName="Kubernetes / System / API Server"
+      gnetId: 15761
+      revision: 19
+      datasource: Prometheus
+    kubernetes-coredns:
+      # renovate: depName="Kubernetes / System / CoreDNS"
+      gnetId: 15762
+      revision: 20
+      datasource: Prometheus
+    kubernetes-global:
+      # renovate: depName="Kubernetes / Views / Global"
+      gnetId: 15757
+      revision: 43
+      datasource: Prometheus
+    kubernetes-namespaces:
+      # renovate: depName="Kubernetes / Views / Namespaces"
+      gnetId: 15758
+      revision: 42
+      datasource: Prometheus
+    kubernetes-nodes:
+      # renovate: depName="Kubernetes / Views / Nodes"
+      gnetId: 15759
+      revision: 35
+      datasource: Prometheus
+    kubernetes-pods:
+      # renovate: depName="Kubernetes / Views / Pods"
+      gnetId: 15760
+      revision: 36
+      datasource: Prometheus
+    kubernetes-volumes:
+      # renovate: depName="K8s / Storage / Volumes / Cluster"
+      gnetId: 11454
+      revision: 14
+      datasource: Prometheus
+  infrastructure:
     minio:
       # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
       # renovate: depName="MinIO Dashboard"
