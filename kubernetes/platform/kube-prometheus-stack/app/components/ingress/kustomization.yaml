@@ -12,5 +12,5 @@ patches:
 - target:
     group: helm.toolkit.fluxcd.io
     kind: HelmRelease
-    name: kube-prom-stack
+    name: kube-prometheus-stack
   path: helm-patch.yaml
