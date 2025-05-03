@@ -35,7 +35,7 @@ datasources:
       type: prometheus
       uid: prometheus
       access: proxy
-      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090/
+      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090
       jsonData:
         httpMethod: POST
         timeInterval: 30s
@@ -43,7 +43,7 @@ datasources:
     - name: Alertmanager
       type: alertmanager
       uid: alertmanager
-      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093/
+      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
       access: proxy
       jsonData:
         handleGrafanaManagedAlerts: false
