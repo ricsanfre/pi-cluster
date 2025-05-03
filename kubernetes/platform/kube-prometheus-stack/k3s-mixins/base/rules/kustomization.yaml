@@ -9,3 +9,7 @@ resources:
   - ./etcd-mixin-rules.yaml
   - ./coredns-mixin-rules.yaml
   - ./grafana-mixin-rules.yaml
+
+# Disable fluxcd substitution
+commonAnnotations:
+  kustomize.toolkit.fluxcd.io/substitute: disabled

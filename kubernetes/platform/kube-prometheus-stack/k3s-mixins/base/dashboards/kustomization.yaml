@@ -31,3 +31,6 @@ resources:
   - ./grafana-dashboard-prometheus-remote-write.yaml
   - ./grafana-dashboard-k8s-windows-node-rsrc-use.yaml
 
+# Disable fluxcd substitution
+commonAnnotations:
+  kustomize.toolkit.fluxcd.io/substitute: disabled
