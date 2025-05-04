@@ -2,8 +2,11 @@
 crds:
   enabled: true
 
-# Use specific DNS servers for DNS01 challenge
-# https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check
-extraArgs:
-  - --dns01-recursive-nameservers-only
-  - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
+
+# Setting Nameservers for DNS01 ACME challenge.
+# For more information, see the [cert-manager documentation](https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check).
+# A comma-separated string with the host and port of the recursive nameservers cert-manager should query.
+dns01RecursiveNameservers: 8.8.8.8:53,1.1.1.1:53
+# Forces cert-manager to use only the recursive nameservers for verification.
+# Enabling this option could cause the DNS01 self check to take longer owing to caching performed by the recursive nameservers.
+dns01RecursiveNameserversOnly: true
