@@ -55,29 +55,104 @@ Installation procedure using cert-manager to automatically rotate control-plane 
 
 The following instalation procedure is a slightly different from the one proposed in that documentation since we will use, as linkerd trust-anchor, the root CA and CA ClusterIssuer already created during Cert-manager installation and configuration for the cluster.
 
-### Installation pre-requisite: Configure Cert-Manager
+### Installation pre-requisite: Cert-Manager
+
+#### Install Cert-manager
+
+Installation using `Helm` (Release 3):
+
+- Step 1: Add the JetStack Helm repository:
+
+    ```shell
+    helm repo add jetstack https://charts.jetstack.io
+    ```
+- Step 2: Fetch the latest charts from the repository:
+
+    ```shell
+    helm repo update
+    ```
+- Step 3: Create namespace
+
+    ```shell
+    kubectl create namespace cert-manager
+    ```
+- Step 4: Create `cert-manager-values.yaml` file
+
+  ```yaml
+  crds:
+    enabled: true
+  ```
+
+- Step 5: Install Cert-Manager
+
+    ```shell
+    helm install cert-manager jetstack/cert-manager --namespace cert-manager -f cert-manager-values.yaml
+    ```
+- Step 6: Confirm that the deployment succeeded, run:
+
+    ```shell
+    kubectl -n cert-manager get pod
+    ```
+#### Configure Cert-manager
 
 Cert-manager need to be configured to act as an on-cluster CA and to re-issue Linkerd’s issuer certificate and private key on a periodic basis.
+Cert-manager CA root certificate (trust-anchor) and CA Cluster issuer need to be created.
+That trust-anchor and `ClusterIssuer`  will be used to generate linkerd certificate used as intermediate CA for signing linkerd's mTLS certificates.
 
-Cert-manager CA root certificate (trust-anchor) and CA Cluster issuer is already configured as part of [Cert-Manager installation and configuration](/docs/certmanager/).
+- Step 1: Create selfsigned `ClusterIssuer`
 
-That trust-anchor anc ClusterIssuer will be used to generate linkerd certificate used as intermediate CA for signing linkerd's mTLS certificates.
+  First step is to create the self-signed issuer for being able to selfsign a custom root certificate of the PKI (CA certificate).
 
-### Linkerd Installation using Helm
+  In order to obtain certificates from cert-manager, we need to create an issuer to act as a certificate authority. We have the option of creating an `Issuer` which is a namespaced resource, or a `ClusterIssuer` which is a global resource. We’ll create a self-signed `ClusterIssuer` using the following definition:
 
+  ```yml
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: self-signed-issuer
+  spec:
+    selfSigned: {}
+  ```
 
-{{site.data.alerts.note}}
+- Step 2: Bootstrapping CA Issuers
 
-Starting from release 2.12, linkerd installation procedure has changed.
+  Bootstrap a custom root certificate for a private PKI (custom CA) and create the corresponding cert-manager CA issuer
 
-[Linkerd v2.12 installation procedure using helm](https://linkerd.io/2.12/tasks/install-helm/) requires to deploy two different new charts:
-- `linkerd-crd`
-- `linkerd-control-plane`
+  ```yml
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: my-selfsigned-ca
+    namespace: cert-manager
+  spec:
+    isCA: true
+    commonName: my-selfsigned-ca
+    secretName: root-secret
+    privateKey:
+      algorithm: ECDSA
+      size: 256
+    issuerRef:
+      name: self-signed-issuer
+      kind: ClusterIssuer
+      group: cert-manager.io
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: ca-issuer
+    namespace: cert-manager
+  spec:
+    ca:
+      secretName: root-secret
+  ```
 
-Chart available from previous versions (till v2.11.4), `linkerd2`, is not used anymore.
+{{site.data.alerts.important}}
+Algorithm used for creating private keys is ECDSA P-256.  This is a requirement for Linkerd to work . RootCa and Linkerd identity issuer certificate must use ECDSA P-256 algorithm.
 
 {{site.data.alerts.end}}
 
+### Linkerd Installation using Helm
 
 Installation using `Helm` (Release 3):
 
@@ -225,6 +300,19 @@ As an alternative, for GitOps deployments, instead of hardcoding CA certificate 
 See detailed procedure described in [linkerd issue #7345](https://github.com/linkerd/linkerd2/issues/7345#issuecomment-979207861).
 
 See Trust-Manager installation procedure in [TLS certification management documentation](/docs/certmanager/).
+
+##### Trust Manager Installation
+
+[Trust-manager](https://cert-manager.io/docs/projects/trust-manager/) is an operator for distributing trust bundles across a Kubernetes cluster. trust-manager is designed to complement cert-manager by enabling services to trust X.509 certificates signed by Issuers, distributing data from trust namespace (cert-manager).
+
+trust ships with a single cluster scoped Bundle resource. A Bundle represents a set of data (configMap, secret) from the trust namespace that should be distributed and made available across the cluster.
+
+To install Trust-Manager, from Helm chart execute the following command:
+```shell
+helm install trust-manager jetstack/cert-manager --namespace cert-manager
+```
+
+##### Linkerd Installation
 
 In the previous installation procedure, step 6 and step 8 can be replaced by the following:
 
@@ -557,6 +645,13 @@ Installation procedure:
 
 Linkerd jaegger extension, by default, installs Jaeger, as traces backend, [OpenTelemetry collector](https://opentelemetry.io/docs/collector/), to collect and distribute traces to Jaeger backend and Jaegger-injector, responsible for configuring the Linkerd proxies to emit spans.
 
+{{site.data.alerts.note}} **Linkerd and Tracing context propagation**
+
+Linkerd included support to W3C tracing propagation since release v2.13. See [linkerd issue #5416](https://github.com/linkerd/linkerd2/issues/5416).
+When multiple headers are present: proxy will use w3c by default, if that's not present, it will fallback to b3.
+
+{{site.data.alerts.end}} 
+
 As part of the [Pi Cluster - Observability platform](/docs/observability/), Tempo is used as tracing backend, instead of Jaeger. See [Tempo installation documentation](/docs/tracing/).
 
 Tempo's distributor component has embedded an OpenTelemetry collector. So neither Jaeger nor the collector are needed, only jaeger-injector is going to be installed.
@@ -711,42 +806,44 @@ env:
 
 This environment variable can be changed using on an already deployed daemon set using the command `kubectl set env` or can be patched during installation of Helm Chart using its post-rendering feature with `kustomize`:
 
-- `kubectl set env` procedure described in [this comment of issue #47]:(https://github.com/ricsanfre/pi-cluster/issues/47#issuecomment-1077866955)
-- `helm+kustomize` procedure described in [this comment of issue #47]: (https://github.com/ricsanfre/pi-cluster/issues/47#issuecomment-1081754487)
+- `kubectl set env` procedure described in [this comment of issue #47](https://github.com/ricsanfre/pi-cluster/issues/47#issuecomment-1077866955)
+- `helm+kustomize` procedure described in [this other comment of issue #47](https://github.com/ricsanfre/pi-cluster/issues/47#issuecomment-1081754487)
+
+{{site.data.alerts.note}}
+
+Applying patching procedure on installation time (`helm+kustomize` procedure), before Longhorn 1.6, produced an error that Longhorn is not completely deployed (CSI driver is not deployed).
+See the analysis and the root cause identified in [issue #47](https://github.com/ricsanfre/pi-cluster/issues/47) and the correponding bug submitted to longhorn project, [Longorhn issue #3809](https://github.com/longhorn/longhorn/issues/3809).
+Longhorn Issue #3809 was fixed in release Longhorn 1.6, so early described procedure can be used to automatically apply service mesh to longhorn manager and steps below are not needed anymore.
+
+{{site.data.alerts.end}}
 
 
-Applying patching procedure on installation time (`helm+kustomize` procedure) still produces the error that Longhorn is not completely deployed (CSI driver is not deployed). See the analysis and the root cause identified in [issue #47](https://github.com/ricsanfre/pi-cluster/issues/47) and the correponding [bug submitted to longhorn project](https://github.com/longhorn/longhorn/issues/3809).
+~~So the only way to meshing `longhorn-manager` component is to wait till Longhorn is completely deployed and inject linkerd-proxy using explicit annotation afterwards:~~
 
+- ~~Deploy Lonhgorn using Helm.~~
 
-So the only way to meshing `longhorn-manager` component is to wait till Longhorn is completely deployed and inject linkerd-proxy using explicit annotation afterwards:
+- ~~Wait till it is completely deployed.~~
 
-- Deploy Lonhgorn using Helm.
+- ~~Meshing `longhorn-manager` daemonset~~
 
+    1. ~~Change environment variable (POD_IP) to make the container listen to localhost connetions~~
 
-- Wait till it is completely deployed.
+        ```shell
+        kubectl set env daemonset/longhorn-manager -n longhorn-system POD_IP=0.0.0.0
+        ```
 
+    2. ~~Annotate daemonset to deploy linkerd sidecar~~
 
-- Meshing `longhorn-manager` daemonset
-
-  1) Change environment variable (POD_IP) to make the container listen to localhost connetions
-
-    ```shell
-    kubectl set env daemonset/longhorn-manager -n longhorn-system POD_IP=0.0.0.0
-    ```
-
-  2) Annotate daemonset to deploy linkerd sidecar
-
-    ```shell
-    kubectl patch daemonset longhorn-manager "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"linkerd.io/inject\":\"enabled\"}}}}}" -n longhorn-system
-
-    ```
+        ```shell
+        kubectl patch daemonset longhorn-manager "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"linkerd.io/inject\":\"enabled\"}}}}}" -n longhorn-system
+        ```
+  
 - Meshing `longhorn-ui` deployment
 
   Annotate daemonset to deploy linkerd sidecar
 
   ```shell
   kubectl patch deployment longhorn-ui "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"linkerd.io/inject\":\"enabled\"}}}}}" -n longhorn-system
-
   ``` 
      
 
@@ -755,7 +852,7 @@ So the only way to meshing `longhorn-manager` component is to wait till Longhorn
 For applying linkerd service mesh to Prometheus-stack services, implicit annotation at namespace level can be used before deploying kube-prometheys-stack chart.
 
 
-When deploying `kube-prometheus-stack` helm using an annotated namespace (`linkerd.io/inject: enabled`), causes the Prometheus Operartor to hung.
+When deploying `kube-prometheus-stack` helm using an annotated namespace (`linkerd.io/inject: enabled`), causes the Prometheus Operator to hung.
 
 Job pod `pod/kube-prometheus-stack-admission-create-<randomAlphanumericString>` is created and its status is always `NotReady` since the linkerd-proxy continues to run after the job container ends so the Job Pod never ends.
 
@@ -819,7 +916,7 @@ For details about how to integrate with linkerd Elastic stack components using E
 
 {{site.data.alerts.important}}
 
-Elasticsearch automatic TLS configuration that was itinitially configured has been disabled, so Linkerd can gather more metrics about the connections. See [issue #45](https://github.com/ricsanfre/pi-cluster/issues/45)
+Elasticsearch default TLS configuration has been disabled, so Linkerd can gather more metrics about the connections. See [issue #45](https://github.com/ricsanfre/pi-cluster/issues/45)
 
 {{site.data.alerts.end}}
 
@@ -864,7 +961,7 @@ In order to integrate Traefik with Linkerd the following must be done:
 
    {{site.data.alerts.important}}
 
-   In ingress mode only HTTP traffic is routed by linkerd-proxy. Traefik will stop routing any HTTPS traffic. In this mode we must be sure that Traefik will end all TLS communications coming from ourside de cluster and that it communicate with the internal services only using HTTP.
+   In ingress mode only HTTP traffic is routed by linkerd-proxy. Traefik will stop routing any HTTPS traffic. In this mode we must be sure that Traefik will end all TLS communications coming from outside the cluster and that it communicates with the internal services only using HTTP.
 
    This is how we have configured all services within the cluster. Disabling TLS configurations of all internal HTTP services.
 
@@ -874,9 +971,9 @@ In order to integrate Traefik with Linkerd the following must be done:
 
    {{site.data.alerts.end}}
 
-   Since Traefik needs to talk to Kubernetes API using HTTPS standard port (to impliments its own routing and load balancing mechanism), this mode of execution breaks Traefik unless outbound communications using port 443 skips the linkerd-proxy.
+   Since Traefik needs to talk to Kubernetes API using HTTPS standard port, to implements its own routing and load balancing mechanism, this mode of execution breaks Traefik unless outbound communications using port 443 skips the linkerd-proxy.
 
-   For making Traefik still working with its own loadbalancing/routing mechanism the following command need to be executed.
+   For making Traefik works with its own loadbalancing/routing mechanism, the following command need to be executed.
 
    ```shell
    kubectl get deployment traefik -o yaml -n kube-system | linkerd inject --ingress --skip-outbound-ports 443 - | kubectl apply -f - 
@@ -963,7 +1060,7 @@ In order to integrate Traefik with Linkerd the following must be done:
 
 {{site.data.alerts.note}}
 
-Since Traefik terminates TLS, this TLS traffic (e.g. HTTPS calls from outside the cluster) will pass through Linkerd as an opaque TCP stream and Linkerd will only be able to provide byte-level metrics for this side of the connection. The resulting HTTP or gRPC traffic to internal services, of course, will have the full set of metrics and mTLS support.
+Since Traefik terminates TLS connections, TLS encrypted traffic (e.g. HTTPS calls from outside the cluster) will pass through Linkerd as an opaque TCP stream and Linkerd will only be able to provide byte-level metrics for this side of the connection. The resulting HTTP or gRPC traffic to internal services, of course, will have the full set of metrics and mTLS support.
 
 {{site.data.alerts.end}}
 
