@@ -12,15 +12,8 @@ plugins:
   - grafana-piechart-panel
 # Relabel job name of Grafana's metrics
 serviceMonitor:
-  labels:
-    release: kube-prometheus-stack
-  relabelings:
-    # Replace job value
-    - sourceLabels:
-      - __address__
-      action: replace
-      targetLabel: job
-      replacement: grafana
+  enabled: true
+
 # Data sources
 datasources:
   datasources.yaml:
