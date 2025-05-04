@@ -85,6 +85,11 @@ dashboards:
       revision: 14
       datasource: Prometheus
   infrastructure:
+    cert-manager:
+      # renovate: depName="Cert-manager-Kubernetes"
+      gnetId: 20842
+      revision: 3
+      datasource: Prometheus
     minio:
       # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
       # renovate: depName="MinIO Dashboard"
