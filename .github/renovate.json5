@@ -1,38 +1,42 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":skipStatusChecks",
-    "github>ricsanfre/pi-cluster//.github/renovate/customManagers.json5",
-    "github>ricsanfre/pi-cluster//.github/renovate/grafanaDashboards.json5",
-    "github>ricsanfre/pi-cluster//.github/renovate/groups.json5",
-    "github>ricsanfre/pi-cluster//.github/renovate/labels.json5"
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    ':skipStatusChecks',
+    'github>ricsanfre/pi-cluster//.github/renovate/customManagers.json5',
+    'github>ricsanfre/pi-cluster//.github/renovate/grafanaDashboards.json5',
+    'github>ricsanfre/pi-cluster//.github/renovate/groups.json5',
+    'github>ricsanfre/pi-cluster//.github/renovate/labels.json5',
   ],
-  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
-  "flux": {
-    "fileMatch": [
-      "(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"
-    ]
+  dependencyDashboardTitle: 'Renovate Dashboard 🤖',
+  flux: {
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
-  "helm-values": {
-    "fileMatch": [
-      "(^|/)kubernetes/.+\\.ya?ml$"
-    ]
+  'helm-values': {
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml$/',
+    ],
   },
-  "helmfile": {
-    "fileMatch": [
-      "(^|/)helmfile\\.ya?ml(?:\\.j2)?$"
-    ]
+  helmfile: {
+    managerFilePatterns: [
+      '/(^|/)helmfile\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
-  "kubernetes": {
-    "fileMatch": [
-      "(^|/)kubernetes/.+\\.ya?ml$"
-    ]
+  kubernetes: {
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml$/',
+    ],
   },
-  "kustomize": {
-    "fileMatch": ["(^|/)kustomization\\.ya?ml(?:\\.j2)?$"]
+  kustomize: {
+    managerFilePatterns: [
+      '/(^|/)kustomization\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
-  "pip_requirements": {
-    "fileMatch": ["(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$"]
-  }
+  pip_requirements: {
+    managerFilePatterns: [
+      '/(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$/',
+    ],
+  },
 }
