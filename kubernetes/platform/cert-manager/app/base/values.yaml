@@ -14,5 +14,5 @@ dns01RecursiveNameserversOnly: true
 # Enabling Prometheus monitoring
 prometheus:
   enabled: true
-  serviceMonitor:
+  servicemonitor:
     enabled: true
