@@ -125,6 +125,9 @@ dashboards:
       revision: 3
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
+    external-secrets:
+      url: https://raw.githubusercontent.com/external-secrets/external-secrets/main/docs/snippets/dashboard.json
+      datasource: Prometheus
     elasticsearch:
       url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/elasticsearch-mixin/compiled/dashboards/cluster.json
       datasource: Prometheus
