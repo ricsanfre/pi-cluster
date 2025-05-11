@@ -331,6 +331,61 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
 
 
+## Observability
+
+### Metrics
+
+As stated by official documentation[^7], Longhorn natively exposes metrics in Prometheus text format[^8] at a REST endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`.
+
+Longhorn Backend kubernetes service is pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
+
+Backend endpoint is already exposing Prometheus metrics.
+
+#### Prometheus Integration
+
+`ServiceMonitoring`, [[Prometheus Operator]] [[Kubernetes Custom Resource Definitions (CRDs)|CRD]],  resource can be automatically created so [[Kube-Prometheus-Stack]] is able to automatically start collecting metrics from Longhorn
+
+```yaml
+metrics:
+  serviceMonitor:
+    enabled: true
+```
+
+#### Grafana Dashboards
+
+Longhorn dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13032](https://grafana.com/grafana/dashboards/13032).
+
+Dashboard can be automatically added using dashboards providers in the list of automated provisioned dashboards. Add following configuration to Grafana's helm chart values file
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    longhorn:
+      # https://grafana.com/grafana/dashboards/16888-longhorn/
+      gnetId: 16888
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
+
+
 ## References
 
 
@@ -339,3 +394,5 @@ Procedure is explained in kubernetes documentation: ["Change default Storage Cla
 [^4]: [Longorn Requirements- Installing NFSv4 Client](https://longhorn.io/docs/latest/deploy/install/#installing-nfsv4-client)
 [^5]: [Longorn Requirements- Installing Cryptsetup and Luks](https://longhorn.io/docs/latest/deploy/install/#installing-cryptsetup-and-luks)
 [^6]: [Longorn Requirements- Installing Device Mapper](https://longhorn.io/docs/latest/deploy/install/#installing-device-mapper-userspace-tool)
+[^7]: [Longorn Monitoring- Prometheus and Grafana setup](https://longhorn.io/docs/1.8.0/monitoring/prometheus-and-grafana-setup/)
+[^8]: [Prometheus - Instrumenting - Exposition formats: Test-based-format](https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format)
