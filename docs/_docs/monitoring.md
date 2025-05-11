@@ -1465,58 +1465,6 @@ by:
 
 ## Monitoring Cluster Applications
 
-
-### Longhorn Monitoring
-
-As stated by official [documentation](https://longhorn.io/docs/latest/monitoring/prometheus-and-grafana-setup/), Longhorn Backend service is a service pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
-
-Backend endpoint is already exposing Prometheus metrics.
-
-The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Longhorn metrics endpoint as a Prometheus target.
-
-- Create a manifest file `longhorm-servicemonitor.yml`
-  
-  ```yml
-  ---
-  apiVersion: monitoring.coreos.com/v1
-  kind: ServiceMonitor
-  metadata:
-    labels:
-      app: longhorn
-      release: kube-prometheus-stack
-    name: longhorn-prometheus-servicemonitor
-    namespace: monitoring
-  spec:
-    jobLabel: app.kubernetes.io/name
-    selector:
-      matchLabels:
-        app: longhorn-manager
-    namespaceSelector:
-      matchNames:
-      - longhorn-system
-    endpoints:
-    - port: manager
-  ``` 
-
-{{site.data.alerts.important}}
-
-`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`).
-
-{{site.data.alerts.end}}
-
-- Apply manifest file
-
-  ```shell
-  kubectl apply -f longhorn-servicemonitor.yml
-  ```
-
-- Check target is automatically discovered in Prometheus UI:`http://prometheus/targets`
-
-
-#### Longhorn Grafana dashboard
-
-Longhorn dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13032](https://grafana.com/grafana/dashboards/13032).
-
 ### Velero Monitoring
 
 By default velero helm chart is configured to expose Prometheus metrics in port 8085
