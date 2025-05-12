@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: schema-registry
-      version: 25.1.2
+      version: 25.1.6
       sourceRef:
         kind: HelmRepository
         name: bitnami
