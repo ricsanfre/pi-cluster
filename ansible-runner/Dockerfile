@@ -1,4 +1,4 @@
-FROM ghcr.io/helmfile/helmfile:v1.0.0 AS helmfile
+FROM ghcr.io/helmfile/helmfile:v1.1.0 AS helmfile
 
 
 FROM python:slim
