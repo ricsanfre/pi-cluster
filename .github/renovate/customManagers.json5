@@ -18,7 +18,7 @@
         // https://github.com/rancher/system-upgrade-controller/releases/download/v0.13.2/crd.yaml
         "(?m:# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n.+?\/(?<currentValue>(v|\\d)[^\/]+)\\S+$)",
         // # renovate: datasource=docker depName=flux-instance ociRepository=oci://ghcr.io/controlplaneio-fluxcd/charts
-        "(?m:# renovate: datasource=(?<datasource>docker) depName=(?<depName>\\S+) ociRepository=oci://(?<ociPath>\\S+))?\\n.+?: \"?(?<currentValue>\\S+?)\"?$",
+        "(?m:# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) ociRepository=oci://(?<ociPath>\\S+))?\\n.+?: \"?(?<currentValue>\\S+?)\"?$",
       ],
       "datasourceTemplate": "{{#if datasource}}{{{datasource}}}{{else}}github-releases{{/if}}"
     },
