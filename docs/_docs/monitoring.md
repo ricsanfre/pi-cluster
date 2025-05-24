@@ -1547,7 +1547,7 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
   ``` 
 {{site.data.alerts.important}}
 
-`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`.
+`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`).
 {{site.data.alerts.end}}
 
 - Apply manifest file
