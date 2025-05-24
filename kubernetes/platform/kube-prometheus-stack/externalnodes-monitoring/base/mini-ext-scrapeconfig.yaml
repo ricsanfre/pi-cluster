@@ -1,0 +1,64 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: minio-job
+spec:
+  jobName: minio-job
+  authorization:
+    type: bearer
+    credentials:
+      name: minio-monitor-token
+      key: token
+  metricsPath: /minio/v2/metrics/cluster
+  scheme: https
+  staticConfigs:
+  - targets: ['s3.ricsanfre.com:9091']
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: minio-job-node
+spec:
+  jobName: minio-job-node
+  authorization:
+    type: bearer
+    credentials:
+      name: minio-monitor-token
+      key: token
+  metricsPath: /minio/v2/metrics/node
+  scheme: https
+  staticConfigs:
+  - targets: ['s3.ricsanfre.com:9091']
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: minio-job-bucket
+spec:
+  jobName: minio-job-bucket
+  authorization:
+    type: bearer
+    credentials:
+      name: minio-monitor-token
+      key: token
+  metricsPath: /minio/v2/metrics/bucket
+  scheme: https
+  staticConfigs:
+  - targets: ['s3.ricsanfre.com:9091']
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: minio-job-resource
+spec:
+  jobName: minio-job-resource
+  authorization:
+    type: bearer
+    credentials:
+      name: minio-monitor-token
+      key: token
+  metricsPath: /minio/v2/metrics/resource
+  scheme: https
+  staticConfigs:
+  - targets: ['s3.ricsanfre.com:9091']
