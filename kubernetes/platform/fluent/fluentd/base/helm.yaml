@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: fluentd
-      version: 0.5.2
+      version: 0.5.3
       sourceRef:
         kind: HelmRepository
         name: fluent
