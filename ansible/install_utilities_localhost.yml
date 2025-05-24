@@ -1,5 +1,22 @@
 ---
-- name: Install utilities
+
+- name: Install helm and kubectl
+  hosts: localhost
+  gather_facts: false
+  become: true
+  vars:
+    install_kubectl: true
+    install_helm: true
+    k8s_platform: linux
+    k8s_arch: amd64
+    kubectl_version: "1.33.0"
+    # SHA512 checksum of the binary (see https://dl.k8s.io/release/v1.33.0/bin/linux/amd64/kubectl.sha512)
+    kubectl_checksum_binary: "sha512:8569511fc0e8a334961c018e33915952edbb0160ff5859a4391548ef7ea76a6791c58036cad5b25864b8fa67295f9fbe8ecf9ed81e0737b211d9f402dc378969"
+    helm_version: 'v3.17.3'
+  roles:
+    - role: ricsanfre.k8s_cli
+
+- name: Install other utilities
   hosts: localhost
   gather_facts: false
   become: true
