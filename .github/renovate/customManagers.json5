@@ -31,20 +31,6 @@
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "redhat"
-    },
-    {
-      "customType": regex
-      "description": ["Process Helm chart in ansible kubernetes module"],
-      "fileMatch": [
-        "(^|/)ansible/.+\\.ya?ml$"
-      ],
-      "matchStrings": [
-        // name: flux-operator
-        // chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
-        // version: 0.20
-        "name:\\s+(?<depName>.*?)\\s+chart_ref:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\"(?<currentValue>.*)\""
-      ],
-      "datasourceTemplate": "helm"
-  }
+    }
   ]
 }
