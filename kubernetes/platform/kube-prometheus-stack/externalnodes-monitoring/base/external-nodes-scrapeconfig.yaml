@@ -1,0 +1,9 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: node-exporter
+spec:
+  staticConfigs:
+    - targets:
+        - node1.${CLUSTER_DOMAIN}:9100
+  metricsPath: /metrics

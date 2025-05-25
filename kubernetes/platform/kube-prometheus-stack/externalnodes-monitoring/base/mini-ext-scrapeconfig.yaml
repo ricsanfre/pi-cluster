@@ -4,61 +4,61 @@ kind: ScrapeConfig
 metadata:
   name: minio-job
 spec:
-  jobName: minio-job
+  jobName: minio-ext
   authorization:
-    type: bearer
     credentials:
       name: minio-monitor-token
       key: token
   metricsPath: /minio/v2/metrics/cluster
-  scheme: https
+  scheme: HTTPS
   staticConfigs:
-  - targets: ['s3.ricsanfre.com:9091']
+  - targets:
+    - ${S3_BACKUP_SERVER}:9091
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: minio-job-node
 spec:
-  jobName: minio-job-node
+  jobName: minio-ext
   authorization:
-    type: bearer
     credentials:
       name: minio-monitor-token
       key: token
   metricsPath: /minio/v2/metrics/node
-  scheme: https
+  scheme: HTTPS
   staticConfigs:
-  - targets: ['s3.ricsanfre.com:9091']
+  - targets:
+    - ${S3_BACKUP_SERVER}:9091
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: minio-job-bucket
 spec:
-  jobName: minio-job-bucket
+  jobName: minio-ext
   authorization:
-    type: bearer
     credentials:
       name: minio-monitor-token
       key: token
   metricsPath: /minio/v2/metrics/bucket
-  scheme: https
+  scheme: HTTPS
   staticConfigs:
-  - targets: ['s3.ricsanfre.com:9091']
+  - targets:
+    - ${S3_BACKUP_SERVER}:9091
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: minio-job-resource
 spec:
-  jobName: minio-job-resource
+  jobName: minio-ext
   authorization:
-    type: bearer
     credentials:
       name: minio-monitor-token
       key: token
   metricsPath: /minio/v2/metrics/resource
-  scheme: https
+  scheme: HTTPS
   staticConfigs:
-  - targets: ['s3.ricsanfre.com:9091']
+  - targets:
+    - ${S3_BACKUP_SERVER}:9091

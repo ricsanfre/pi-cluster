@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-- external-node-metrics-service.yaml
+- external-nodes-scrapeconfig.yaml
 - minio-bearer-externalsecret.yaml
-- minio-service-metrics.yaml
-- minio-servicemonitor.yaml
+- minio-ext-scrapeconfig.yaml
