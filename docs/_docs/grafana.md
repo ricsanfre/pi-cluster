@@ -797,15 +797,21 @@ See configuration details about all options that can be provided in `grafana.ini
 
 ## Observability
 ### Metrics
-By default Grafana expose Prometheus metrics at `/metrics`. This is expose by default.
+By default Grafana expose Prometheus metrics at `/metrics`. This is exposed by default.
 
-Kube-Prometheus-Stack automatically configure Prometheus to monitor Grafana
+Kube-Prometheus-Stack automatically configures Prometheus to monitor Grafana
 
-> [!important] Prometheus Integration when configuring Grafana to run behind a Proxy under a subpath
-> When `serve_from_subpath` is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
-> This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
-> To make Prometheus work,  `server_from_sub_path` must be set to false and add rewrite rule in NGINX proxy
-> ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
+{{site.data.alerts.important}}
+**About Prometheus Integration when configuring Grafana to run behind a Proxy under a subpath**
+
+When `serve_from_subpath` is enabled, internal requests from e.g. prometheus get redirected to the defined `root_url`.
+This is making prometheus not to be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url.
+
+To make Prometheus work, `server_from_sub_path` must be set to false and a rewrite rule need to be added to NGINX proxy.
+
+See details in this [grafana issue](https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779)
+
+The following Grafana Helm chart configuration should be added in this case, setting `server_from_sub_path` to false, and configuring the corresponding rewrite rule adding `nginx.ingress.kubernetes.io/rewrite-target` annotation to the ingress resource.
 
 ```yaml
 grafana.ini:
@@ -838,3 +844,5 @@ ingress:
       - monitoring.local.test
       secretName: monitoring-tls
 ```
+
+{{site.data.alerts.end}}
