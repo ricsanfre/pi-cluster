@@ -55,6 +55,7 @@
   - logging-forwarder-aggregator
   - prometheus
   - tracing
+  - grafana
 - title: Backup
   docs:
   - backup
