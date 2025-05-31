@@ -2,7 +2,7 @@
 title: Load Balancer (Metal LB)
 permalink: /docs/metallb/
 description: How to configure Metal LB as load balancer in our Raspberry Pi Kubernetes cluster. How to disable default K3s load balancer and configure Metal LB.
-last_modified_at: "17-01-2023"
+last_modified_at: "07-10-2024"
 ---
 
 
@@ -49,7 +49,7 @@ Kubernetes does not offer an implementation of network load balancers (Services 
 
 In bare-metal kubernetes clusters, like the one I am building, "LoadBalancer" services will remain in the “pending” state indefinitely when created. See in previous output of `kubectl get services` command how `traefik` LoadBAlancer service "External IP" is "pending".
 
-For Bare-metal cluster only two optios remain availale for managing incoming traffic to the cluster: “NodePort” and “externalIPs” services. Both of these options have significant downsides for production use, which makes bare-metal clusters second-class citizens in the Kubernetes ecosystem.
+For Bare-metal cluster, only two options remain available for managing incoming traffic to the cluster: “NodePort” and “externalIPs” services. Both of these options have significant downsides for production use, which makes bare-metal clusters second-class citizens in the Kubernetes ecosystem.
 
 MetalLB provides a network load balacer that can be integrated with standard network equipment, so that external services on bare-metal clusters can be accesible using a pool of "external" ip addresses.
 
@@ -70,15 +70,16 @@ MetalLB consists of two different pods:
 ![metal-lb-architecture](/assets/img/metallb_architecture.png)
 
 
-## Requesting Specific IPs
+## How to use
 
-MetalLB respects the Kubernetes service `spec.loadBalancerIP` parameter, so if a static IP address from the available pool need to be set up for a specific service, it can be requested by setting that parameter. If MetalLB does not own the requested address, or if the address is already in use by another service, assignment will fail and MetalLB will log a warning event visible in `kubectl describe service <service name>`.
+After Metal-LB is installed and configured, to expose a Kubernetes Service externally, simply it has to be created with `spec.type` set to `LoadBalancer`, and MetalLB will do the rest.
 
-{{site.data.alerts.note}}
+### Requesting Specific IPs
 
-Service's `.spec.loadBalancerIP` was the method used to specify the external IP, from load balancer Ip Pool, to be assigned to the service. It has been deprecated since [Kubernetes v1.24](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.24.md) and might be removed in a future release. It is recommended to use implementation-specific annotations when available
+Metal-LB supports  custom `metallb.universe.tf/loadBalancerIPs` annotation that can be set in the Service to use a specific IP of Metal-LB pool.
+if Metal-LB does not own the requested address, or if the address is already in use by another service, assignment will fail and MetalLB will log a warning event visible in `kubectl describe service <service name>`.
 
-In case of Metal LB the annotation that can be used is `metallb.universe.tf/loadBalancerIPs`
+The annotation also supports a comma separated list of IPs to be used in case of Dual Stack services.
 
 ```yaml
 kind: Service
@@ -90,8 +91,6 @@ metadata:
 ```
 See details in [Metal-LB usage doc](https://metallb.universe.tf/usage/)
 
-
-{{site.data.alerts.end}}
 
 
 ## Install Metal Load Balancer
@@ -174,19 +173,3 @@ Installation using `Helm` (Release 3):
     kube-system   metrics-server   ClusterIP      10.43.169.140   <none>        443/TCP                      63m
     kube-system   traefik          LoadBalancer   10.43.50.56     10.0.0.100    80:30582/TCP,443:30123/TCP   60m
     ```
-{{site.data.alerts.important}}
-
-  In previous chart releases there was a way to configure MetallB in deployment time providing the following values.yaml:
-  
-  ```yml
-    configInline:
-      address-pools:
-        - name: default
-            protocol: layer2
-            addresses:
-              - 10.0.0.100-10.0.0.200
-  ```
-  Helm chart `configInline` in `values.yaml` has been deprecated since MetalLB 0.13.
-  Configuration must be done creating the corresponding MetalLB Kubernets CRD (`IPAddressPool` and `L2Advertisement`). See [MetalLB configuration documentation](https://metallb.universe.tf/configuration/).
-
-{{site.data.alerts.end}}
