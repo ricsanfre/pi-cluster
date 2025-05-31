@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "21-04-2025"
+last_modified_at: "31-05-2025"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintained by the community.
@@ -22,7 +22,7 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
 
 The architecture of components deployed is showed in the following image.
 
-![kube-prometheus-stack](/assets/img/prometheus-stack-architecture.png)
+![kube-prometheus-stack](/assets/img/kube-prom-stack.png)
 
 ## About Prometheus Operator
 
@@ -33,10 +33,11 @@ Prometheus operator manages Prometheus and AlertManager deployments and their co
 -   `PrometheusRules` CRD: defines Prometheus' alerting and recording rules. Alerting rules, to define alert conditions to be notified (via AlertManager), and recording rules, allowing Prometheus to precompute frequently needed or computationally expensive expressions and save their result as a new set of time series.
 -   `AlertManagerConfig` CRD defines Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules.
 
-{{site.data.alerts.note}}
-[!note] New `ScrapeConfig`CRD
-Starting with prometheus-operator v0.65.x, one can use the `ScrapeConfig` CRD to scrape targets external to the Kubernetes cluster or create scrape configurations that are not possible with the higher level `ServiceMonitor`/`Probe`/`PodMonitor` resources
-https://prometheus-operator.dev/docs/developer/scrapeconfig/
+{{site.data.alerts.note}} **New `ScrapeConfig`CRD**
+
+Starting with prometheus-operator v0.65.x, one can use the `ScrapeConfig` CRD to scrape targets external to the Kubernetes cluster or create scrape configurations that are not possible with the higher level `ServiceMonitor`/`Probe`/`PodMonitor` resources.
+See further details in ["Prometheus Operator Doc: ScrapeConfig CRD"](https://prometheus-operator.dev/docs/developer/scrapeconfig/).
+
 {{site.data.alerts.end}}
 
 
@@ -67,10 +68,11 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 
 -   Step 3: Create `kube-prom-stack-values.yml` providing basic configuration
 
+    {% raw  %}
     ```yaml
     # Produce cleaner resources names
     cleanPrometheusOperatorObjectNames: true
-
+    
     # AlertManager configuration
     alertmanager:
       alertmanagerSpec:
@@ -87,7 +89,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         storage:
           volumeClaimTemplate:
             spec:
-              storageClassName: longhorn
+              storageClassName: ${STORAGE_CLASS}
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
@@ -109,7 +111,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           - hosts:
             - monitoring.${DOMAIN}
             secretName: monitoring-tls
-
+    
     # Prometheus configuration
     prometheus:
       prometheusSpec:
@@ -165,7 +167,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
         storageSpec:
           volumeClaimTemplate:
             spec:
-              storageClassName: longhorn
+              storageClassName: ${STORAGE_CLASS}
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
@@ -187,15 +189,15 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           - hosts:
             - monitoring.${DOMAIN}
             secretName: monitoring-tls
-
+    
     # Prometheus Node Exporter Configuration
     prometheus-node-exporter:
       fullnameOverride: node-exporter
-
+    
     # Kube-State-Metrics Configuration
     kube-state-metrics:
       fullnameOverride: kube-state-metrics
-
+    
     # Grafana Configuration
     grafana:
       fullnameOverride: grafana
@@ -213,6 +215,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           serve_from_sub_path: false
       ##
       ## Provisioning sidecars
+      ##
       sidecar:
         dashboards:
           # Enable dashboard sidecar
@@ -236,7 +239,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           # Search for ConfigMaps containing `grafana_datasource` label
           label: grafana_datasource
           labelValue: "1"
-      ## Grafana Ingress configuration
+          ## Grafana Ingress configuration
       ingress:
         enabled: true
         ingressClassName: nginx
@@ -245,7 +248,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           # Enable cert-manager to create automatically the SSL certificate and store in Secret
           cert-manager.io/cluster-issuer: ca-issuer
           cert-manager.io/common-name: monitoring.${DOMAIN}
-          # Nginx rewrite rule. Needed since serve_from_sub_path has been disabled
+          # Nginx rewrite rule
           nginx.ingress.kubernetes.io/rewrite-target: /$1
         path: /grafana/?(.*)
         pathType: ImplementationSpecific
@@ -255,14 +258,128 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           - hosts:
             - monitoring.${DOMAIN}
             secretName: monitoring-tls
+
+    # Kubernetes Monitoring
+    ## Kubelet
+    ##
+    # Enable kubelet service
+    kubeletService:
+      ## Prometheus Operator creates Kubelet service
+      ## Prometheus Operator started with options
+      ## `--kubelet-service=kube-system/kube-prometheus-stack-kubelet`
+      ## `--kubelet-endpoints=true`
+      enabled: true
+      namespace: kube-system
+    
+    ## Configuring Kubelet Monitoring
+    kubelet:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+    
+    ## Kube API
+    ## Configuring Kube API monitoring
+    kubeApiServer:
+      enabled: true
+      serviceMonitor:
+        # Enable Service Monitor
+        enabled: true
+    
+    ## Kube Controller Manager
+    kubeControllerManager:
+      ## K3s controller manager is not running as a POD
+      ## ServiceMonitor and Headless service is generated
+      ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+      ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+      ##
+      # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+    
+      # Enable KubeController manager montoring
+      enabled: true
+      # endpoints : IP addresses of K3s control plane nodes
+      endpoints: &cp
+        - ${K8S_CP_NODE_1}
+        - ${K8S_CP_NODE_2}
+        - ${K8S_CP_NODE_3}
+      service:
+        # Enable creation of service
+        enable: true
+      serviceMonitor:
+        # Enable and configure Service Monitor
+        enabled: true
+    
+    ## Etcd monitoring
+    kubeEtcd:
+      enabled: true
+      # K3s etcd not running as a POD, so endpoints need to be configured
+      endpoints: *cp
+      service:
+        enabled: true
+        port: 2381
+        targetPort: 2381
+    
+    ## Kube Scheduler
+    kubeScheduler:
+      ## K3s Kube-scheduler is not running as a POD
+      ## ServiceMonitor and Headless service is generated
+      ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+      ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+      ##
+      # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+      enabled: true
+      # K3s kube-scheduler not running as a POD
+      # Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+      #
+      # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+      endpoints: *cp
+      serviceMonitor:
+        enabled: true
+    
+    kubeProxy:
+      ## K3s kube-proxy is not running as a POD
+      ## ServiceMonitor and Headless service is generated
+      ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+      ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+      ##
+      enabled: true
+      # K3s kube-proxy not running as a POD
+      endpoints:
+        - ${K8S_CP_NODE_1}
+        - ${K8S_CP_NODE_2}
+        - ${K8S_CP_NODE_3}
+        - ${K8S_WK_NODE_1}
+        - ${K8S_WK_NODE_2}
+        - ${K8S_WK_NODE_2}
+      serviceMonitor:
+        enabled: true
+    
+    ## Core DNS monitoring
+    ##
+    coreDns:
+      enabled: true
+      # Creates headless service to get accest to all coreDNS Pods
+      service:
+        enabled: true
+        port: 9153
+      # Enable service monitor
+      serviceMonitor:
+        enabled: true
      ```
+     {% endraw  %}
 
     {{site.data.alerts.note}}
-    Replace variables in the above yaml file before deploying helm chart.
-    -   Replace `${DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`
-        FQDN must be mapped, in cluster DNS server configuration, to [[NGINX Ingress Controller]]'s Load Balancer service external IP.
-        [[External-DNS]] can be configured to automatically configured that entry in your DNS service.
-    -   Replace `${K8S_CP_NODEx}` variables with the IP addresses of the cluster.
+
+    Substitute variables in the above yaml (`${var}`) file before deploying helm chart.
+    -   Substitute `${DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`
+        FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
+        External-DNS can be configured to automatically configured that entry in your DNS service.
+    -   Substitute `${STORAGE_CLASS}` varaiable with storage class used (i.e. `longhorn`, `local-path`, etc.)
+    -   Substitute `${K8S_CP_NODE_x}` variables with IP addresses of the control plane nodes of the cluster.
+    -   Substitute `${K8S_WK_NODE_x}` variables with IP addresses of the worker nodes.
+
     {{site.data.alerts.end}}
 
 -   Step 4: Install kube-Prometheus-stack in `kube-prom-stack` namespace
@@ -276,6 +393,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 #### Cleaner resource Names
 
 Following options in `values.yaml` files makes produce cleaner resources names removing `kube-prom-stack` prefix from all resources generated from subcharts deployef: Grafana, Node Exporter, Kube-State-Metrics
+
 
 ```yaml
 # Produce cleaner resources names
@@ -295,6 +413,8 @@ grafana:
 ```
 
 #### Prometheus Configuration
+
+{% raw  %}
 ```yaml
 # Prometheus configuration
 prometheus:
@@ -340,6 +460,8 @@ prometheus:
       # Enable Memory snapshot on shutdown.
       - memory-snapshot-on-shutdown
 ```
+
+{% endraw  %}
 
 The following options are used to configure Prometheus Server
 -   Admin API is enabled  (`prometheus.prometheusSpec.enableAdminAPI)
@@ -396,7 +518,9 @@ The following options are used to configure Grafana
 -   Grafana server configured to run behind a proxy under a subpath: `server` configuration under  `grafana.grafana.ini`
 -   Dynamic provisioning of dashboard: Configure Grafana's dashboard sidecar to discover ConfigMaps containing dashboards definitions from all namespaces (`grafana.sidecar.dashboards.searchNamespaces`) containing label `grafana_dashboard`. Annoration `grafana_folder` can be used to select the folder where the dashboard is placed.
 -   Dynamic provisioning of datasources: Configure Grafana's datasources sidecar to discover ConfigMaps containing dashboards definitions from all namespaces (`grafana.sidecar.datasources.searchNamespaces`)  containing label `grafana_datasource`
+
 #### Ingress Configuration
+
 To make endpoints available under same FQDN in different paths as specified in the following table
 
 | UI           | endpoint               | Prefix          |
@@ -404,6 +528,7 @@ To make endpoints available under same FQDN in different paths as specified in t
 | Grafana      | `monitoring.${DOMAIN}` | `/grafana`      |
 | Prometheus   |                        | `/prometheus`   |
 | AlertManager |                        | `/alertmanager` |
+{: .table .border-dark }
 
 The following `values.yaml` need to be specified to generate Ingress resources and configure Prometheus, AlertManager and Grafana servers to run behind a HTTP Proxy under a subpath.
 
@@ -480,12 +605,15 @@ grafana:
             secretName: monitoring-tls
 ```
 {{site.data.alerts.note}}
+
 For Ingress resources, TLS certificates are generated automatically using Cert-Manager, through annotations `cert-manager.io/cluster-issuer` and `cert-manager.io/common-name`
 In the sample above, it is assumed that a `ClusterIssuer` resources has been configured, [[Cert-Manager#Private PKI]] or [[Cert-Manager#Public PKI]] has been configured
-See [[Cert-Manager#Cert Manager Usage]]
+See [Cert-Manager Documentation: Cert Manager Usage](/docs/cert-manager#certmanagerusage)
+
 {{site.data.alerts.end}}
 
 #### POD Configuration:  CPU and Memory limit Resources and Storage
+
 Configures AlerManager and Prometheus' PODs persistent volumes to use the class `longhorn` and defines volume sizes and limiting resources used by Prometheus POD
 
 ```yaml
@@ -494,7 +622,7 @@ alertmanager:
     storage:
       volumeClaimTemplate:
         spec:
-          storageClassName: longhorn
+          storageClassName: ${STORAGE_CLASS}
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -513,7 +641,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: longhorn
+          storageClassName: ${STORAGE_CLASS}
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -702,7 +830,7 @@ Prometheus-node-exporter's metrics are exposed in TCP port 9100 (`/metrics` endp
 
 `kube-state-metrics` gathers data using the standard Kubernetes go client and Kubernetes API. This raw data is used to create snapshot of the state of the objects in Kubernetes cluster. it generate Prometheus compliant metrics that are exposed at `/metrics`endpoint on port 8080.
 
-![[kube-state-metrics-pipeline.svg|900]]
+![kube-state-metrics-pipeline](/assets/img/kube-state-metrics-pipeline.svg)
 
 [Prometheus Kube State Metrics helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) is deployed as a subchart of the kube-prometheus-stack helm chart. This chart deploys [kube-state-metrics agent](https://github.com/kubernetes/kube-state-metrics).
 In kube-prometheus-stack's helm chart `kube-state-metrics` value is used to pass the configuration to kube-state-metrics's chart.
@@ -716,7 +844,8 @@ In kube-prometheus-stack's helm chart `grafana` value is used to pass the config
 
 By default kube-prom-stack configures Grafana's following features:
 
--  Enabling data-source and dashboards sidecars so automatic provisioning of dashobards and datasources, is enabled. This functionality is used by `kube-prom-stack` to automatically provision Prometheus datasource and Kubernetes dashboards. See details in [[Grafana Kubernetes Installation#Dynamic Provisioning of DataSources]] and [[Grafana Kubernetes Installation#Dynamic Provisioning of Dashboards]]
+-  Enabling data-source and dashboards sidecars so automatic provisioning of dashobards and datasources, is enabled. This functionality is used by `kube-prom-stack` to automatically provision Prometheus datasource and Kubernetes dashboards. See details in See ["Grafana Kubernetes Configuration: Dynamic Provisioning of DataSources"](/docs/grafana/#dynamic-provisioning-of-datasources) and ["Grafana Kubernetes Configuration: Dynamic Provisioning of Dashboards"](/docs/grafana/#dynamic-provisioning-of-dashboards).
+
 -  Generates Prometheus Operator's `ServiceMonitor`, so Prometheus can start scrapping metrics from Grafana application.
 
 #### Prometheus Operator Configuration
@@ -839,11 +968,12 @@ This `Prometheus` object specifies the following Prometheus configuration:
     | Probe          | `spec.probeNamespaceSelector`          | `spec.probeSelector`          |
     | Rule           | `spec.ruleNamespaceSelector`           | `spec.ruleSelector`           |
     | ScrapeConfig   | `spec.scrapeConfigNamespaceSelector`   | `spec.scrapeConfigSelector`   |
-   
+    {: .table .border-dark } 
+
     The following diagram, from official prometheus operator documentation, shows an example of how the filtering rules are applied. A Deployment and Service called my-app is being monitored by Prometheus based on a ServiceMonitor named my-service-monitor: 
     
    
-    |  ![[prometheus-operator-filtering.png]] |
+    |  ![prometheus-operator-filtering](/assets/img/prometheus-operator-filtering.png) |
     |:---:|
     | *[Source](https://prometheus-operator.dev/docs/platform/troubleshooting/#overview-of-servicemonitor-tagging-and-related-elements): Prometheus Operator Documentation* |
 
@@ -930,6 +1060,7 @@ This `AlartManager` object specifies the following Alert Manager configuration:
 -   Persistent volume specification (`storage: volumeClaimTemplate:`) used by the Statefulset objects deployed. In my case volume claim from Longhorn.
 
 #####  ServiceMonitor
+
 kube-prometheus-stack creates several `ServiceMonitor` objects to start scraping metrics from all the applications deployed:
 
 -   Node Exporter
@@ -1177,7 +1308,7 @@ Two possible solutions:
     - Lack of documentation about the metrics exposed by each endpoint makes difficult to configure the discarding metric rules.
 2. Disabling scrapping of most Kubernetes endpoints, keeping only `kubelet` port scrapping (TCP: 10250): `/metrics`, `/metrics/cadvisor`, `/metrics/resource` and `/metrics/probes`
     - This solution avoid both data duplication ingestion and overlapping scrapping
-    - As a draw-back, default kube-Prometheus-stack dashboards and prometheus rules are not valid since they use different `job` labels to identify metrics coming from different end-points). Dashboards and prometheus rules need to be maintained separately.
+    - As a draw-back, default kube-Prometheus-stack dashboards and prometheus rules are not valid since they use different `job` labels to identify metrics coming from different end-points). Dashboards and prometheus rules need to be generated so `kubelet` jobname is used.
 
 {{site.data.alerts.note}}
 
@@ -1185,282 +1316,338 @@ See issue [#67](https://github.com/ricsanfre/pi-cluster/issues/67) for details a
 
 {{site.data.alerts.end}}
 
-#### Solution 1
 
-
-
-
-#### Solution 2
+#### Solution: Monitor only kubelet endpoints and re-build K3s-compliant dashboards and prometheys rules
 
 ##### Disabling kube-prom-stack K8s monitoring
 
-Add following additional variables to `values.yaml` when deploying kube-prom-stack helm chart:
-
-```yml
-# Disable creation of kubelet service
-prometheusOperator:
-  kubeletService:
-    enabled: false
-# Disabling monitoring of K8s services.
-# Monitoring of K3S components will be configured out of kube-prometheus-stack
+```yaml
+grafana:
+  # The default dashboards are not working for `k3s`, so we disable them.
+  defaultDashboardsEnabled: false
+defaultRules:
+  # The default rules are not working for `k3s`, so we disable them.
+  create: false
+# Source for issues/solutions: https://github.com/k3s-io/k3s/issues/3619#issuecomment-1425852034
+# `k3s` exposes all metrics combined for each component, so we don't need to scrape them separately
+# We'll only scrape kubelet, otherwise we'd get duplicate metrics.
 kubelet:
-  enabled: false
+  enabled: true
+# Kubernetes API server collects data from master nodes, while kubelet collects data from master and worker nodes
+# To not duplicate metrics we'll only scrape Kubelet
 kubeApiServer:
   enabled: false
 kubeControllerManager:
   enabled: false
-kubeScheduler:
-  enabled: false
 kubeProxy:
   enabled: false
-kubeEtcd:
+kubeScheduler:
   enabled: false
-# Disable K8S Prometheus Rules
-# Rules for K3S components will be configured out of kube-prometheus-stack
-defaultRules:
-  create: true
-  rules:
-    etcd: false
-    k8s: false
-    kubeApiserverAvailability: false
-    kubeApiserverBurnrate: false
-    kubeApiserverHistogram: false
-    kubeApiserverSlos: false
-    kubeControllerManager: false
-    kubelet: false
-    kubeProxy: true
-    kubernetesApps: false
-    kubernetesResources: false
-    kubernetesStorage: false
-    kubernetesSystem: true
-    kubeScheduler: false
 ```
 
-With this configuration, the kubernetes resources (headless `Service`, `ServiceMonitor` and `PrometheusRules`) are not created for activate K8S components monitoring and correponding Grafana's dashboards are not deployed. 
+With this configuration, kube-prom-stack does not install any Grafana dashboard (`grafana.defaultDashboardsEnabled` false) or any Prometheus rule (`defaultRules.create` false)
+Only Kubelet endpoint monitoring is kept, disabling monitoring of rest of Kubernetes components.
 
 
-##### Use Kubelet endpoint to scrape all metrics
+##### Creating Grafana and Prometheus rules from available mixins
 
-To configure monitoring of only kubelet end-point follow this procedure:
+The following process describe how to generate K3s-compliant Prometheus Monitoring Mixins[^1], replicating building process of kube-prom-stack.
 
--   Create a manifest file `k3s-metrics-service.yml` for deploying the Kuberentes service used by Prometheus to scrape all K3S metrics.
+{{site.data.alerts.note}}
 
-    This service must be a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services), `spec.clusterIP=None`, allowing Prometheus to discover each of the pods behind the service. Since the metrics are exposed not by a pod but by a k3s process, the service need to be defined [`without selector`](https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors) and the `endpoints` must be defined explicitly.
+Following procedure is an adapted version of the procedure described in https://hodovi.cc/blog/configuring-kube-prometheus-stack-dashboards-and-alerts-for-k3s-compatibility/
 
-    The service will be use the kubelet endpoint (TCP port 10250) for scraping all K3S metrics available in each node. 
-  
-      ```yaml
-      ---
-      ## Headless service for K3S metrics. No selector
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: k3s-metrics-service
-        labels:
-          app.kubernetes.io/name: kubelet
-        namespace: kube-system
-      spec:
-        clusterIP: None
-        ports:
-        - name: https-metrics
-          port: 10250
-          protocol: TCP
-          targetPort: 10250
-        type: ClusterIP
-      ---
-      ## Endpoint for the headless service without selector
-      apiVersion: v1
-      kind: Endpoints
-      metadata:
-        name: k3s-metrics-service
-        namespace: kube-system
-      subsets:
-      - addresses:
-        # All cluster nodes need to be added here: control plane and worker nodes
-        - ip: 10.0.0.11
-        - ip: 10.0.0.12
-        - ip: 10.0.0.13
-        - ip: 10.0.0.14
-        - ip: 10.0.0.15
-        ports:
-        - name: https-metrics
-          port: 10250
-          protocol: TCP
-      ```
+Big shout out to [Adin Hodovic](https://hodovi.cc/) for describing the procedure in detail
 
--   Create manifest file for defining the service monitor resource for let Prometheus discover these targets
+{{site.data.alerts.end}}
 
-    The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover K3S metrics endpoint as a Prometheus target.
+The `kube-prometheus` project uses monitoring mixins to generate alerts and dashboards. Monitoring mixins are a collection of Jsonnet libraries that generate dashboards and alerts for Kubernetes. The [`kubernetes-mixin`](https://github.com/kubernetes-monitoring/kubernetes-mixin) is a mixin that generates dashboards and alerts for Kubernetes. The `node-exporter`, `coredns`, `grafana`, `prometheus` and `prometheus-operator` mixins are also used to generate dashboards and alerts for the Kubernetes cluster.
 
-    A single ServiceMonitor resource to enable the collection of all k8s components metrics from unique port TCP 10250.
+Using [jsonnet](https://jsonnet.org/) the kuberentes dashboards and Prometheus rules can be generated from mixins
 
-    This `ServiceMonitor` includes all Prometheus' relabeling/dropping rules defined by the ServiceMonitor resources that kube-prometheus-stack chart would have created if monitoring of all k8s component were activated.
+Instead of installing go locally as described in the Adin's blog, we will generate a jsonnet development environment using docker to build everything and extract the required yaml files
 
-    ```yml
-    apiVersion: monitoring.coreos.com/v1
-    kind: ServiceMonitor
-    metadata:
-      labels:
-        release: kube-prometheus-stack
-      name: k3s-monitoring
-      namespace: monitoring
-    spec:
-      endpoints:
-      # /metrics endpoint
-      - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-        honorLabels: true
-        metricRelabelings:
-        # apiserver
-        - action: drop
-          regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
-          sourceLabels:
-          - __name__
-          - le
-        port: https-metrics
-        relabelings:
-        - action: replace
-          sourceLabels:
-          - __metrics_path__
-          targetLabel: metrics_path
-        scheme: https
-        tlsConfig:
-          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecureSkipVerify: true
-      # /metrics/cadvisor
-      - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-        honorLabels: true
-        metricRelabelings:
-        - action: drop
-          regex: container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)
-          sourceLabels:
-          - __name__
-        - action: drop
-          regex: container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
-          sourceLabels:
-          - __name__
-        - action: drop
-          regex: container_memory_(mapped_file|swap)
-          sourceLabels:
-          - __name__
-        - action: drop
-          regex: container_(file_descriptors|tasks_state|threads_max)
-          sourceLabels:
-          - __name__
-        - action: drop
-          regex: container_spec.*
-          sourceLabels:
-          - __name__
-        path: /metrics/cadvisor
-        port: https-metrics
-        relabelings:
-        - action: replace
-          sourceLabels:
-          - __metrics_path__
-          targetLabel: metrics_path
-        scheme: https
-        tlsConfig:
-          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecureSkipVerify: true
-        # /metrics/probes
-      - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-        honorLabels: true
-        path: /metrics/probes
-        port: https-metrics
-        relabelings:
-        - action: replace
-          sourceLabels:
-          - __metrics_path__
-          targetLabel: metrics_path
-        scheme: https
-        tlsConfig:
-          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecureSkipVerify: true
-      jobLabel: app.kubernetes.io/name
-      namespaceSelector:
-        matchNames:
-        - kube-system
-      selector:
-        matchLabels:
-          app.kubernetes.io/name: kubelet
-      ```
+The following steps will create the following directory structure and files
+```shell
+k3s-mixins
+├── build
+│   ├── Dockerfile
+│   ├── Makefile
+│   ├── out
+│   ├── src
+│   │   ├── generate.sh
+│   │   ├── main.jsonnet
+└── kustomization.yaml
+```
+
+-   Create a k3s-mixin building directory
+    ```shell
+    mkdir -p k3s-mixins/build
+    mkdir -p k3s-mixins/out
+    mkidr -p k3s-mixins/src
+    ```
+
+-   Create `k3s-mixins/build/src/main.jsonnet`)
 
     {{site.data.alerts.note}}
 
-    This ServiceMonitor configures a single Prometheus' scrapping job (job="kubelet").
-
-    "kubelet" job label is kept so less dahsboards need to be modified. Most of "Computer Resources - X" dashboards are using kubelet metrics and the promQL queries in the dashboard are filter metrics by label job="kubelet".
+    Original version from Adin's post has be updated to
+    -   Include etcd mixin. Etcd metrics are exposed by k3s in the same way of the rest. So they can alsob be obtained from kubelet endpoint
+    -   Adding `showMultiCluster` config option to several of the mixins, so "cluster" variable in Dashboards is not displayed. 
+        This obtain same outcomes as kube-prom-stack helm chart hacking scripts generating manifest files from mixins: [sync_grafana_dashboards.py#1L171](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/hack/sync_grafana_dashboards.py#L171)
 
     {{site.data.alerts.end}}
 
-##### Configure Prometheus rules
 
-kube-prometheus-stack's Prometheus rules associated to K8s components are not intalled when disabling their monitoring. Anyway those rules are not valid for K3S since it contains promQL queries filtering metrics by job labels "apiserver", "kubelet", etc. 
-
-kube-prometheus-stack creates by default different PrometheusRules resources, but all of them are included in single manifest file in prometheus-operator source repository: [kubernetesControlPlane-prometheusRule.yaml](https://github.com/prometheus-operator/kube-prometheus/blob/main/manifests/kubernetesControlPlane-prometheusRule.yaml)
-
-Modify the yaml file to replace job labels names:
-
--   Replace job labels names
-
-    Replace the following strings:
-
-    -   `job="apiserver"`
-    -   `job="kube-proxy"`
-    -   `job="kube-scheduler"`
-    -   `job="kube-controller-manager"`
-
-    by:
-
-    `job="kubelet"`
-
--   Add the following label so it match the PrometheusOperator selector for rules
-
-    ```yml
-    apiVersion: monitoring.coreos.com/v1
-    kind: PrometheusRule
-    metadata:
-     labels:
-       release: kube-prometheus-stack` 
+    ```javascript
+    # We use helper functions from kube-prometheus to generate dashboards and alerts for Kubernetes.
+    local addMixin = (import 'kube-prometheus/lib/mixin.libsonnet');
+    
+    local kubernetesMixin = addMixin({
+      name: 'kubernetes',
+      dashboardFolder: 'Kubernetes',
+      mixin: (import 'kubernetes-mixin/mixin.libsonnet') + {
+        _config+:: {
+          cadvisorSelector: 'job="kubelet"',
+          kubeletSelector: 'job="kubelet"',
+          kubeSchedulerSelector: 'job="kubelet"',
+          kubeControllerManagerSelector: 'job="kubelet"',
+          kubeApiserverSelector: 'job="kubelet"',
+          kubeProxySelector: 'job="kubelet"',
+          showMultiCluster: false,
+        },
+      },
+    });
+    
+    local nodeExporterMixin = addMixin({
+      name: 'node-exporter',
+      dashboardFolder: 'General',
+      mixin: (import 'node-mixin/mixin.libsonnet') + {
+        _config+:: {
+          nodeExporterSelector: 'job="node-exporter"',
+          showMultiCluster: false,
+        },
+      },
+    });
+    
+    local corednsMixin = addMixin({
+      name: 'coredns',
+      dashboardFolder: 'DNS',
+      mixin: (import 'coredns-mixin/mixin.libsonnet') + {
+        _config+:: {
+          corednsSelector: 'job="coredns"',
+        },
+      },
+    });
+    
+    local etcdMixin = addMixin({
+      name: 'etcd',
+      dashboardFolder: 'Kubernetes',
+      mixin: (import 'github.com/etcd-io/etcd/contrib/mixin/mixin.libsonnet') + {
+        _config+:: {
+          clusterLabel: 'cluster',
+        },
+      },
+    });
+    
+    local grafanaMixin = addMixin({
+      name: 'grafana',
+      dashboardFolder: 'Grafana',
+      mixin: (import 'grafana-mixin/mixin.libsonnet') + {
+        _config+:: {},
+      },
+    });
+    
+    local prometheusMixin = addMixin({
+      name: 'prometheus',
+      dashboardFolder: 'Prometheus',
+      mixin: (import 'prometheus/mixin.libsonnet') + {
+        _config+:: {
+          showMultiCluster: false,
+        },
+      },
+    });
+    
+    local prometheusOperatorMixin = addMixin({
+      name: 'prometheus-operator',
+      dashboardFolder: 'Prometheus Operator',
+      mixin: (import 'prometheus-operator-mixin/mixin.libsonnet') + {
+        _config+:: {},
+      },
+    });
+    
+    local stripJsonExtension(name) =
+      local extensionIndex = std.findSubstr('.json', name);
+      local n = if std.length(extensionIndex) < 1 then name else std.substr(name, 0, extensionIndex[0]);
+      n;
+    
+    local grafanaDashboardConfigMap(folder, name, json) = {
+      apiVersion: 'v1',
+      kind: 'ConfigMap',
+      metadata: {
+        name: 'grafana-dashboard-%s' % stripJsonExtension(name),
+        namespace: 'kube-prom-stack',
+        labels: {
+          grafana_dashboard: '1',
+        },
+      },
+      data: {
+        [name]: std.manifestJsonEx(json, '    '),
+      },
+    };
+    
+    local generateGrafanaDashboardConfigMaps(mixin) = if std.objectHas(mixin, 'grafanaDashboards') && mixin.grafanaDashboards != null then {
+      ['grafana-dashboard-' + stripJsonExtension(name)]: grafanaDashboardConfigMap(folder, name, mixin.grafanaDashboards[folder][name])
+      for folder in std.objectFields(mixin.grafanaDashboards)
+      for name in std.objectFields(mixin.grafanaDashboards[folder])
+    } else {};
+    
+    local nodeExporterMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(nodeExporterMixin);
+    local kubernetesMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(kubernetesMixin);
+    local corednsMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(corednsMixin);
+    local etcdMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(etcdMixin);
+    local grafanaMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(grafanaMixin);
+    local prometheusMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(prometheusMixin);
+    local prometheusOperatorMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(prometheusOperatorMixin);
+    
+    local grafanaDashboards =
+      kubernetesMixinHelmGrafanaDashboards +
+      nodeExporterMixinHelmGrafanaDashboards +
+      corednsMixinHelmGrafanaDashboards +
+      etcdMixinHelmGrafanaDashboards +
+      grafanaMixinHelmGrafanaDashboards +
+      prometheusMixinHelmGrafanaDashboards +
+      prometheusOperatorMixinHelmGrafanaDashboards;
+    
+    
+    local prometheusAlerts = {
+      'kubernetes-mixin-rules': kubernetesMixin.prometheusRules,
+      'node-exporter-mixin-rules': nodeExporterMixin.prometheusRules,
+      'coredns-mixin-rules': corednsMixin.prometheusRules,
+      'etcd-mixin-rules': etcdMixin.prometheusRules,
+      'grafana-mixin-rules': grafanaMixin.prometheusRules,
+      'prometheus-mixin-rules': prometheusMixin.prometheusRules,
+      'prometheus-operator-mixin-rules': prometheusOperatorMixin.prometheusRules,
+    };
+    
+    grafanaDashboards + prometheusAlerts
     ```
 
--   Apply manifest file
+-   Create script (`k3s-mixins/build/src/generate.sh`) to automate the generation of the yaml files from the mixins
+
+    {{site.data.alerts.note}}
+
+    Original script from from Adin's post has be updated to
+    -   Yaml escape logic should be applied only to Prometheus Rules yaml files and not Dashboards yaml files.
+        See kube-prom-stack ci/cd code generating prometheus-rules from mixins: [sync_prometheus_rules.py#L259-L260](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/hack/sync_prometheus_rules.py#L259-L260)
+
+    {{site.data.alerts.end}}
+
+    {% raw  %}
+    
+    ```shell
+    #!/bin/sh
+    
+    set -e # Exit on any error
+    set -u # Treat unset variables as an error
+    
+    # Define paths
+    MIXINS_DIR="./templates"
+    
+    # Function to escape YAML content
+    escape_yaml() {
+      local file_path="$1"
+      echo "Escaping $file_path..."
+      # Read the file content, process, and overwrite it
+      sed -i \
+        -e 's/{{/{{`{{/g' \
+        -e 's/}}/}}`}}/g' \
+        -e 's/{{`{{/{{`{{`}}/g' \
+        -e 's/}}`}}/{{`}}`}}/g' \
+        "$file_path"
+      echo "Escaped $file_path."
+    }
+    
+    # Clean the templates directory
+    echo "Cleaning templates directory..."
+    rm -rf ${MIXINS_DIR}/*
+    echo "Templates directory cleaned."
+    
+    # Convert Jsonnet to YAML
+    echo "Converting Jsonnet to YAML..."
+    jsonnet main.jsonnet -J vendor -m ${MIXINS_DIR} | xargs -I{} sh -c 'cat {} | gojsontoyaml > {}.yaml' -- {}
+    echo "Jsonnet conversion completed."
+    
+    # Remove all non-YAML files
+    echo "Removing non-YAML files..."
+    find ${MIXINS_DIR} -type f ! -name "*.yaml" -exec rm {} +
+    echo "Non-YAML files removed."
+    
+    # Escape brackets in the rules yaml files similar to how the kube-prometheus-stack Helm chart does.
+    # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/hack/sync_prometheus_rules.py#L259-L260
+    echo "Escaping YAML files..."
+    find ${MIXINS_DIR} -name '*-rules.yaml' | while read -r file; do
+      escape_yaml "$file"
+    done
+    echo "YAML files escaped."
+    
+    echo "Processing completed successfully!"
+    ```
+    {% endraw %}
+
+-   Create Dockerfile (`k3s-mixins/build/Dockerfile`) to build and extract the generated yaml files
+
+    ```dockerfile
+    FROM golang:1.24.2-alpine AS build
+    LABEL stage=builder
+    
+    WORKDIR /k3s-mixins
+    
+    COPY src/ .
+    
+    # Install required packages
+    RUN apk add git
+    
+    # Install jsonnet and the jsonnet-bundler
+    RUN go install github.com/google/go-jsonnet/cmd/jsonnet@latest
+    RUN go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
+    
+    # Install gojsontoyaml
+    RUN go install github.com/brancz/gojsontoyaml@latest
+    
+    # Init Jsonnet project
+    RUN jb init
+    
+    # Install mixinx
+    RUN jb install github.com/kubernetes-monitoring/kubernetes-mixin@master
+    RUN jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@main
+    RUN jb install github.com/povilasv/coredns-mixin@master
+       
+    # Create output directory for the manifest files
+    RUN mkdir templates
+    
+    # Execute command to generate
+    RUN chmod +x generate.sh
+    RUN ./generate.sh
+    
+    FROM scratch AS mixins
+    COPY --from=build /k3s-mixins/templates /    
+    ```
+
+-   Execute docker build command within `k3s-mixins/build` directory to extract dashboards and rule files to `out` directory
+    ```shell
+    cd k3x-mixins/build
+    ```
+    
+    ```shell
+    docker build --no-cache --target mixins --output out/ .
+    ```
+
+-   Go to `build/out` directory and apply all manifest files
 
     ```shell
-    kubectl apply -f k3s-metrics-service.yml k3s-servicemonitor.yml kubernetesControlPlane-prometheusRule.yaml
+    kubectl apply -f .
     ```
-
--   Check targets are automatically discovered in Prometheus UI: 
-
-    `http://prometheus/targets`
-
-
-##### K3S Grafana dashboards
-
-kube-prometheus-stack should install the Grafana dashboards corresponding to K8S components, but since their monitoring is disabled in the helm chart configuration, they need to be intalled manually.
-
-Kubernetes components dashboards can be donwloaded from [grafana.com](https://grafana.com):
-
-- kubelet dashboard: [ID 16361](https://grafana.com/grafana/dashboards/16361-kubernetes-kubelet/)
-- apiserver dashboard [ID 12654](https://grafana.com/grafana/dashboards/12654-kubernetes-api-server)
-- etcd dashboard [ID 16359](https://grafana.com/grafana/dashboards/16359-etcd/)
-- kube-scheduler [ID 12130](https://grafana.com/grafana/dashboards/12130-kubernetes-scheduler/)
-- kube-controller-manager [ID 12122](https://grafana.com/grafana/dashboards/12122-kubernetes-controller-manager)
-- kube-proxy [ID 12129](https://grafana.com/grafana/dashboards/12129-kubernetes-proxy)
-
-These Grafana's dashboards need to be modified because promQL queries are filtering by job name label (kube-scheduler, kube-proxy, apiserver, etc.) that are not used in our configuration. In our configuration only one scrapping job ("kubelet") is configured to scrape metrics from all K3S components.
-
-The following changes need to be applied to json files:
-
-Replace the following strings:
-
-- `job=\"apiserver\"`
-- `job=\"kube-proxy\"`
-- `job=\"kube-scheduler\"`
-- `job=\"kube-controller-manager\"`
-
-by:
-
-`job=\"kubelet\"`
 
 
 ## Monitoring Cluster Applications
@@ -1834,3 +2021,14 @@ This dashboard has been modified to include fluentbit's storage metrics (chunks 
 #### Grafana dashboards
 
 Not need to install additional dashboards. Node-exporter dashboards pre-integrated by kube-stack shows the external nodes metrics.
+
+---
+
+[^1]: A [monitoring mixin](https://monitoring.mixins.dev/) is a set of Grafana dashboards and Prometheus rules and alerts, packaged together in a reusable and extensible bundle. Mixins are written in [jsonnet](https://jsonnet.org/), and are typically installed and updated with [jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler).
+
+      For more information about mixins, see:
+      
+      -   [Prometheus Monitoring Mixins Design Doc](https://docs.google.com/document/d/1A9xvzwqnFVSOZ5fD3blKODXfsat5fg6ZhnKu9LK3lB4/view). A [cached pdf](https://github.com/monitoring-mixins/docs/blob/master/design.pdf) is included in this repo.
+      -   For more motivation, see "[The RED Method: How to instrument your services](https://kccncna17.sched.com/event/CU8K/the-red-method-how-to-instrument-your-services-b-tom-wilkie-kausal?iframe=no&w=100%&sidebar=yes&bg=no)" talk from CloudNativeCon Austin 2018. The KLUMPs system demo'd became the basis for the kubernetes-mixin.
+      - "[Prometheus Monitoring Mixins: Using Jsonnet to Package Together Dashboards, Alerts and Exporters](https://www.youtube.com/watch?v=b7-DtFfsL6E)" talk from CloudNativeCon Copenhagen 2018.
+      -   "[Prometheus Monitoring Mixins: Using Jsonnet to Package Together Dashboards, Alerts and Exporters](https://promcon.io/2018-munich/talks/prometheus-monitoring-mixins/)" talk from PromCon 2018 (slightly updated).
