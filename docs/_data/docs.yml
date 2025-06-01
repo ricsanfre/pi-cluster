@@ -37,6 +37,7 @@
   - nginx
 - title: Certificate Management
   docs:
+  - certbot
   - certmanager
 - title: Single Sign-On
   docs:
@@ -55,6 +56,7 @@
   - logging-forwarder-aggregator
   - prometheus
   - tracing
+  - grafana
 - title: Backup
   docs:
   - backup
