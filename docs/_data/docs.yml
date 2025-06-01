@@ -37,6 +37,7 @@
   - nginx
 - title: Certificate Management
   docs:
+  - certbot
   - certmanager
 - title: Single Sign-On
   docs:

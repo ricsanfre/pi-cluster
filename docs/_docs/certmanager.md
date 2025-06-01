@@ -1,51 +1,50 @@
 ---
 title: TLS Certificates (Cert-Manager)
 permalink: /docs/certmanager/
-description: How to deploy a centralized TLS certificates management solution based on Cert-manager in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "23-03-2025"
+description: How to deploy a centralized TLS certificates management solution based on Cert-manager in Kuberentes cluster.
+last_modified_at: "01-06-2025"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
 
-It can issue certificates from a variety of supported sources, including support for auto-signed certificates or use [Let's Encrypt](https://letsencrypt.org/) service to obtain validated TLS certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry. It also keep up to date the associated Kuberentes Secrets storing key pairs used by Ingress resources when securing the incoming communications.
+It can issue certificates from a [variety of certificate authorities](https://cert-manager.io/docs/configuration/issuers/), including support for [private PKI](https://cert-manager.io/docs/configuration/ca/), Private CA[^1], to generate non publivly trusted auto-signed certificates, or use [Let's Encrypt](https://letsencrypt.org/) service to obtain publicly trusted TLS certificates. It will ensure certificates are valid and up to date, and attempt to renew certificates at a configured time before expiry. It also keep up to date the associated Kubernetes Secrets storing key pairs used by Ingress resources when securing the incoming communications.
 
-![picluster-certmanager](/assets/img/cert-manager.png)
 
-## Cert-Manager certificates issuers
+## How does it work?
+
+cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
+
+It follows Kubernetes Controller pattern extending Kubernetes API with new custom resource types (Kubernetes Custom Resources Definition (CRD)).
+
+With cert-manager's [Certificate resource](https://cert-manager.io/docs/usage/certificate/), the private key and certificate are stored in a Kubernetes Secret which is mounted by an application Pod or used by an Ingress controller.
+
+![picluster-crds](/assets/img/cert-manager.png)
+
+### Cert-Manager certificates issuers
 
 In cert-manager different kind of certificate issuer can be configured to generate signed TLS certificates
 
-### Self-signed Issuer
+#### Self-signed Issuer
 
 The SelfSigned issuer doesn’t represent a certificate authority as such, but instead denotes that certificates will “sign themselves” using a given private key. In other words, the private key of the certificate will be used to sign the certificate itself.
 
 This Issuer type is useful for bootstrapping a root certificate (CA) for a custom PKI (Public Key Infrastructure).
 
-We will use this Issuer for bootstrapping our custom CA.
 
-### CA Issuer
+#### CA Issuer
 
 The CA issuer represents a Certificate Authority whereby its certificate and private key are stored inside the cluster as a Kubernetes Secret, and will be used to sign incoming certificate requests. This internal CA certificate can then be used to trust resulting signed certificates.
 
 This issuer type is typically used in a private Public Key Infrastructure (PKI) setup to secure your infrastructure components to establish mTLS or otherwise provide a means to issue certificates where you also own the private key. Signed certificates with this custom CA will not be trusted by clients, such a web browser, by default.
 
-### ACME issuers (Lets Encrypt)
+#### ACME issuers (Let's Encrypt)
 
 The ACME Issuer type represents a single account registered with the Automated Certificate Management Environment (ACME) Certificate Authority server. See section [Let's Encrypt certificates](#lets-encrypt-certificates). 
 
 
-{{site.data.alerts.important}}
-
-CertManager is configured to deploy in the cluster a private PKI (Public Key Infrastructure) using a self-signed CA to issue auto-signed certificates.
-
-CertManager also is configured to deliver valid certificates, using your own DNS domain, through its integration with Let's Encrypt using ACME DNS challenges. Configuration is provided for using IONOS DNS provider, using developer API available to automate challenge resolution. Similar configuration can be implemented for other supported DNS providers.
-
-Valid certificates signed by Letscript will be used for cluster exposed services.
-
-{{site.data.alerts.end}}
-
-
 ## Cert Manager Usage
+
+### Requesting Certificates
 
 Cert-manager add a set of Kubernetes custom resource (CRD):
 
@@ -53,7 +52,7 @@ Cert-manager add a set of Kubernetes custom resource (CRD):
 
 - `Certificate`, resources that represent a human readable definition of a certificate request that need to be generated and keep up to date by an issuer.
 
-In order to generate new TLS certificates a `Certificate` resource can be created. 
+In order to generate new TLS certificates a `Certificate` resource has to be created.
 
 ```yml
 apiVersion: cert-manager.io/v1
@@ -126,34 +125,34 @@ spec:
 
 Installation using `Helm` (Release 3):
 
-- Step 1: Add the JetStack Helm repository:
+-   Step 1: Add the JetStack Helm repository:
 
     ```shell
     helm repo add jetstack https://charts.jetstack.io
     ```
-- Step 2: Fetch the latest charts from the repository:
+-   Step 2: Fetch the latest charts from the repository:
 
     ```shell
     helm repo update
     ```
-- Step 3: Create namespace
+-   Step 3: Create namespace
 
     ```shell
     kubectl create namespace cert-manager
     ```
-- Step 4: Create `cert-manager-values.yaml` file
+-   Step 4: Create `cert-manager-values.yaml` file
 
-  ```yaml
-  crds:
-    enabled: true
-  ```
+    ```yaml
+    crds:
+      enabled: true
+    ```
 
-- Step 5: Install Cert-Manager
+-   Step 5: Install Cert-Manager
 
     ```shell
     helm install cert-manager jetstack/cert-manager --namespace cert-manager -f cert-manager-values.yaml
     ```
-- Step 6: Confirm that the deployment succeeded, run:
+-   Step 6: Confirm that the deployment succeeded, run:
 
     ```shell
     kubectl -n cert-manager get pod
@@ -161,69 +160,82 @@ Installation using `Helm` (Release 3):
 
 ## Cert-Manager Configuration
 
+### Private PKI
+
 A Private CA (Private PKI (Public Key Infrastructure))  can be created in the cluster, so all certificates can be auto-signed by this CA. That removes the need to use a of valid certificates signed by a trusted public CA. Certificates issued by Private CA won't be trusted certificates and some applications using them need to be configured to ignore the certificate validation.
 
 For creating a private PKI,a CA `ClusterIssuer` resource need to be created.
 
 Root CA certificate is needed for generated this CA Issuer. A selfsigned `ClusterIssuer` resource will be used to generate that root CA certificate (self-signed root CA).
 
-- Step 1: Create selfsigned `ClusterIssuer`
+-   Step 1: Create selfsigned `ClusterIssuer`
 
-  First step is to create the self-signed issuer for being able to selfsign a custom root certificate of the PKI (CA certificate).
+    First step is to create the self-signed issuer for being able to selfsign a custom root certificate of the PKI (CA certificate).
 
-  In order to obtain certificates from cert-manager, we need to create an issuer to act as a certificate authority. We have the option of creating an `Issuer` which is a namespaced resource, or a `ClusterIssuer` which is a global resource. We’ll create a self-signed `ClusterIssuer` using the following definition:
+   In order to obtain certificates from cert-manager, we need to create an issuer to act as a certificate authority. We have the option of creating an `Issuer` which is a namespaced resource, or a `ClusterIssuer` which is a global resource. We’ll create a self-signed `ClusterIssuer` using the following definition:
 
-  ```yml
-  apiVersion: cert-manager.io/v1
-  kind: ClusterIssuer
-  metadata:
-    name: self-signed-issuer
-  spec:
-    selfSigned: {}
-  ```
-
-- Step 2: Bootstrapping CA Issuers
-
-  Bootstrap a custom root certificate for a private PKI (custom CA) and create the corresponding cert-manager CA issuer
-
-  ```yml
-  ---
-  apiVersion: cert-manager.io/v1
-  kind: Certificate
-  metadata:
-    name: my-selfsigned-ca
-    namespace: cert-manager
-  spec:
-    isCA: true
-    commonName: my-selfsigned-ca
-    secretName: root-secret
-    privateKey:
-      algorithm: ECDSA
-      size: 256
-    issuerRef:
+    ```yml
+    apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
       name: self-signed-issuer
-      kind: ClusterIssuer
-      group: cert-manager.io
-  ---
-  apiVersion: cert-manager.io/v1
-  kind: ClusterIssuer
-  metadata:
-    name: ca-issuer
-    namespace: cert-manager
-  spec:
-    ca:
+    spec:
+      selfSigned: {}
+    ```
+
+-   Step 2: Bootstrapping CA Issuers
+
+    Bootstrap a custom root certificate for a private PKI (custom CA) and create the corresponding cert-manager CA issuer
+
+    ```yml
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: my-selfsigned-ca
+      namespace: cert-manager
+    spec:
+      isCA: true
+      commonName: my-selfsigned-ca
       secretName: root-secret
-  ```
+      privateKey:
+        algorithm: ECDSA
+        size: 256
+      issuerRef:
+        name: self-signed-issuer
+        kind: ClusterIssuer
+        group: cert-manager.io
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: ca-issuer
+      namespace: cert-manager
+    spec:
+      ca:
+        secretName: root-secret
+    ```
 
-## Lets Encrypt Certificates
+### Public PKI with Let's Encry
 
-Lets Encrypt provide publicly validated TLS certificates for free. Not need to generate auto-signed TLS Certificates for the websites that are not automatic validated by HTTP browsers.
 
-The process is the following, we issue a request for a certificate to Let's Encrypt for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME DNS or HTTP validation mechanism. If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
+Let's Encrypt provide publicly trusted TLS certificates for free. Not need to generate auto-signed TLS Certificates for the websites that are not automatically trusted by HTTP browsers.
+
+Let's Encrypt uses ACME Protocol[^2] to issue certificates.
+
+The process is the following, ACME client issues a request for a certificate to ACME server (Let's Encrypt), for a domain name that we own. Let's Encrypt verifies that we own that domain by using an ACME Challenge (DNS or HTTP validation mechanism). If the verification is successful, Let's Encrypt provides us with certificates that cert-manager installs in our website (or other TLS encrypted endpoint). These certificates are good for 90 days before the process needs to be repeated. Cert-manager, however, will automatically keep the certificates up-to-date for us.
+
+Cert-Manager takes the role of ACME client automating the process to obtain and renew the certificate from the ACME Server, Let's Encrypt.
+
+Cert-Manager supports two type of ACME Protocol Challenges: DNS-01 and HTTP-01 challenges:
+
+[HTTP01](https://cert-manager.io/docs/configuration/acme/http01/) challenges are completed by presenting a computed key, that should be present at a HTTP URL endpoint and is routable over the internet. This URL will use the domain name requested for the certificate. Once the ACME server is able to get this key from this URL over the internet, the ACME server can validate you are the owner of this domain. When a HTTP01 challenge is created, cert-manager will automatically configure your cluster ingress to route traffic for this URL to a small web server that presents this key.
+
+[DNS01](https://cert-manager.io/docs/configuration/acme/dns01/) challenges are completed by providing a computed key that is present at a DNS TXT record. Once this TXT record has been propagated across the internet, the ACME server can successfully retrieve this key via a DNS lookup and can validate that the client owns the domain for the requested certificate. With the correct permissions, cert-manager will automatically present this TXT record for your given DNS provider.
 
 For details see cert-manager [ACME issuer type documentation](https://cert-manager.io/docs/configuration/acme/)
 
-### Let's Encrypt DNS validation method
+#### Configuring ACME DNS-01 Challenge
 
 DNS validation method requires to expose a "challenge DNS" record within the DNS domain associated to the TLS certificate.
 This method do not require to expose to the Public Internet the web services hosted within my K3S cluster and so it would be the preferred method to use Let's Encrypt.
@@ -233,15 +245,53 @@ This method do not require to expose to the Public Internet the web services hos
 3. Cert-manager temporary creates the requested TXT record in the DNS. If Let's Encrypt can read the challenge and it is correct, it will issue the certificates back to cert-manager.
 4. Cert-manager will then store the certificates as secrets, and our website (or whatever) will use those certificates for securing our traffic with TLS.
 
-Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge. For supporting additional DNS providers webhooks can be developed. See supported list and further documentation in [Certmanager documentation: "ACME DNS01" ](https://cert-manager.io/docs/configuration/acme/dns01/).
+##### DNS Split horizon
 
-IONOS, my DNS server provider, is not supported by Certmanager (neither OOTB support nor through supported external webhooks). Even when it is not officially supported by the community, there is a github project  providing a [IONOS cert-manager webhook](https://github.com/fabmade/cert-manager-webhook-ionos).
+In case of using [[DNS#Split Horizon architecture|DNS split horizon architecture]], where a internal private DNS server is used, cert-manager need to be re-configured so internal DNS server is not used during DNS01 challenge process.
+
+-   Step 1: Create `cert-manager-values.yaml` file
+
+    ```yaml
+    crds:
+      enabled: true
+    # Setting Nameservers for DNS01 ACME challenge.
+    # For more information, see the [cert-manager documentation](https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check).
+    # A comma-separated string with the host and port of the recursive nameservers cert-manager should query.
+    dns01RecursiveNameservers: 8.8.8.8:53,1.1.1.1:53
+    # Forces cert-manager to use only the recursive nameservers for verification.
+    # Enabling this option could cause the DNS01 self check to take longer owing to caching performed by the recursive nameservers.
+    dns01RecursiveNameserversOnly: true
+    ```
+
+-   Step 2: Reinstall cert-manager
+
+    ```shell
+    helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager -f cert-manager-values.yaml
+    ```
+
+##### Configuring different DNS providers
+
+Cert-manager by default support several DNS providers to automatically configure the requested DNS record challenge.
+
+For supporting additional DNS providers webhooks can be developed. See supported list and further documentation in [Certmanager documentation: "ACME DNS01" ](https://cert-manager.io/docs/configuration/acme/dns01/).
+
+Some of the supported DNS service providers are:
+
+-   AWS Route53
+-   Google CloudDNS
+-   AzureDNS
+-   CloudFlare
+-   Dynamic DNS (DDNS). Support RFC-2136 compliant DNS server like Bind9.
+
+###### IONOS as DNS provider
+
+[IONOS](https://www.ionos.com/), DNS server provider, is not supported by Certmanager (neither OOTB support nor through supported external webhooks).
+
+Even when it is not officially supported by the community, there is a github project  providing a [IONOS cert-manager webhook](https://github.com/fabmade/cert-manager-webhook-ionos).
 
 This ionos-webhook uses the [IONOS developer API](https://developer.hosting.ionos.es/), allowing the remote configuration of the DNS using a RESTFUL API.
 
-This IONOS developer API can be used also with Certbot. [Cerbot](https://certbot.eff.org/) is an opensource software to automate the interaction with Let's Encrypt. A Certbot plugin is needed to automate DNS challenge process using IONOS developer API. See an implementation of such Cerbot plugin in this [cerbot-dns-ionos project](https://github.com/helgeerbe/certbot-dns-ionos).
-
-#### Creating IONOS developer API Key
+{{site.data.alerts.note}}
 
 To use IONOS developer API, first API key must be created.
 
@@ -249,130 +299,7 @@ Follow [IONOS developer API: Get Started instructions](https://developer.hosting
 
 API key is composed of two parts:  Public Prefix (public key) and Secret (private key)
 
-#### Installing Certbot IONOS
-
-In `pimaster` node, Certbot and [certbot-dns-ionos plugin](https://github.com/helgeerbe/certbot-dns-ionos) can be installed so, Lets encrypt certificates can be issued.
-
-Cerbot will be installed in a python virtualenv. Similar procedure to the one used to build ansible developer environment.
-
-Execute all the following commands from $HOME directory.
-
-- Step 1. Create Virtual Env for Ansible
-
-  ```shell
-  python3 -m venv letsencrypt
-  ```
-
-- Step 2. Activate Virtual Environment
-
-  ```shell
-  source letsencrypt/bin/activate
-  ```
-
-- Step 3. Upgrade setuptools and pip packages
-
-  ```shell
-  pip3 install --upgrade pip setuptools
-  ```
-
-- Step 4. Install certbot and certbot-ionos-plugin
-
-  ```shell
-  pip3 install certbot certbot-dns-ionos
-  ```
-
-- Step 5. Create certbot working directories
-
-  ```shell
-  mkdir -p letsencrypt/config
-  mkdir -p letsencrypt/logs
-  mkdir -p letsencrypt/.secrets
-  chmod 700 letsencrypt/.secrets
-  ```
-
-- Step 6. Create ionos credentials file `letsencrypt/.secrets/ionos-credentials.ini`
-
-  ```
-  dns_ionos_prefix = myapikeyprefix
-  dns_ionos_secret = verysecureapikeysecret
-  dns_ionos_endpoint = https://api.hosting.ionos.com
-  ```
-  
-  In this file, IONOS API key prefix and secret need to be provided
-
-- Step 7. Change permission of `ionos-credentials.ini` file
-
-  ```shell
-  chmod 600 letsencrypt/.secrets/ionos-credentials.ini
-  ```
-
-- Step 8. Certificate can be created using the following command
-
-  ```shell
-  letsencrypt/bin/certbot certonly \
-  --config-dir letsencrypt/config \
-  --work-dir letsencrypt \
-  --logs-dir letsencrypt/logs \
-  --authenticator dns-ionos \
-  --dns-ionos-credentials letsencrypt/.secrets/ionos-credentials.ini \
-  --dns-ionos-propagation-seconds 900 \
-  --server https://acme-v02.api.letsencrypt.org/directory \
-  --agree-tos \
-  --non-interactive \
-  --rsa-key-size 4096 \
-  -m <your-email> \
-  -d <host_dns>
-  ```
-  
-  Signed certificate will be stored in letsencrypt/config.
-
-  {{site.data.alerts.note}}
-
-  Certificates managed by certbot can be listed using the commad:
-
-  ```shell
-  letsencrypt/bin/certbot certificates \
-  --config-dir letsencrypt/config \
-  --work-dir letsencrypt \
-  --logs-dir letsencrypt/logs \
-  ```
-
-  Certificate and key path are showed. Also expiration date is showed.
-
-  To automatic renew the certificates the following command can be executed periodically in a cron
-
-  ```shell
-  letsencrypt/bin/certbot/certbot renew
-  ```
-
-  {{site.data.alerts.end}}
-
-
-#### Configuring Certmanager with Letsencrypt
-
-In case of using DNS split horizon architecture where a internal DNS server is used, cert-manager need to be re-configured so internal DNS server is not used during DNS01 challenge process.
-
-- Step 1: Create `cert-manager-values.yaml` file
-
-  ```yaml
-  crds:
-    enabled: true
-  # Use specific DNS servers for DNS01 challenge
-  # https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check
-  extraArgs:
-    - --dns01-recursive-nameservers-only
-    - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
-  ```
-
-- Step 2: Reinstall cert-manager
-
-  ```shell
-  helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager -f cert-manager-values.yaml
-
-  ```
-
-#####  IONOS as DNS provider
-
+{{site.data.alerts.end}}
 
 - Step 1: Install cert-manager-webhook-ionos chart repo:
 
@@ -428,54 +355,49 @@ In case of using DNS split horizon architecture where a internal DNS server is u
     name: letsencrypt-issuer
     namespace: cert-manager
     spec:
-        acme:
-          # The ACME server URL
-          server: https://acme-v02.api.letsencrypt.org/directory
-          # Email address used for ACME registration
-          email: <your-email-address>
-          # Name of a secret used to store the ACME account private key
-          privateKeySecretRef:
-            name: letsencrypt-ionos-prod
-          # Enable the dns01 challenge provider
-          solvers:
-            - dns01:
-                webhook:
-                  groupName: acme.<your-domain>
-                  solverName: ionos
-                  config:
-                    apiUrl: https://api.hosting.ionos.com/dns/v1
-                    publicKeySecretRef:
-                      key: IONOS_PUBLIC_PREFIX
-                      name: ionos-secret
-                    secretKeySecretRef:
-                      key: IONOS_SECRET
-                      name: ionos-secret
+      acme:
+        # The ACME server URL
+        server: https://acme-v02.api.letsencrypt.org/directory
+        # Email address used for ACME registration
+        email: <your-email-address>
+        # Name of a secret used to store the ACME account private key
+        privateKeySecretRef:
+          name: letsencrypt-ionos-prod
+        # Enable the dns01 challenge provider
+        solvers:
+          - dns01:
+              webhook:
+                groupName: acme.<your-domain>
+                solverName: ionos
+                config:
+                  apiUrl: https://api.hosting.ionos.com/dns/v1
+                  publicKeySecretRef:
+                    key: IONOS_PUBLIC_PREFIX
+                    name: ionos-secret
+                  secretKeySecretRef:
+                    key: IONOS_SECRET
+                    name: ionos-secret
   ```
 
-### Lets Encrypt HTTP validation method
+#### Configuring ACME HTTP-01 Challenge
 
 HTTP validation method requires to actually expose a "challenge URL" in the Public Internet using the DNS domain associated to the TLS certificate.
 
 HTTP validation method is as follows: 
 1. Cert-manager issues a certificate request to Let's Encrypt. 
 2. Let's Encrypt requests an ownership verification challenge in response. 
-The challenge will be to put an HTTP resource at a specific URL under the domain name that the certificate is being requested for. The theory is that if we can put that resource at that URL and Let's Encrypt can retrieve it remotely, then we must really be the owners of the domain. Otherwise, either we could not have placed the resource in the correct place, or we could not have manipulated DNS to allow Let's Encrypt to get to it. 
+   The challenge will be to put an HTTP resource at a specific URL under the domain name that the certificate is being requested for. The theory is that if we can put that resource at that URL and Let's Encrypt can retrieve it remotely, then we must really be the owners of the domain. Otherwise, either we could not have placed the resource in the correct place, or we could not have manipulated DNS to allow Let's Encrypt to get to it. 
 3. Cert-manager puts the resource in the right place and automatically creates a temporary Ingress record that will route traffic to the correct place. If Let's Encrypt can read the challenge and it is correct, it will issue the certificates back to cert-manager.
 4. Cert-manager will then store the certificates as secrets, and our website (or whatever) will use those certificates for securing our traffic with TLS.
 
-For this procedure to work it is needed to enable and route HTTP traffic from the Internet to our Cluster Load Balancer Ingress node (Traefik/Ingress NGINX).
+To make ACME HTTP-01 challenge work, HTTP traffic need to be enabled and routed from the Internet to Kubernetes Cluster's  Load Balancer IP assigned to Kubernetes Ingress Controller used (i.e: Traefik or Ingress NGINX).
 
-- Configure Dynamic DNS
+In case of Kubernetes running in a homelab, where public dynamic IP address is  allocated by ISP's  to home Router, the following need to be configured
 
-  To keep up to date the DNS records mapped to my public IP address (dynamic IP address)
+-   Configure Dynamic DNS: To keep up to date the DNS records mapped to public IP address (dynamic IP address) assigned to ISP's Router
+-   Configure Home Router:  To forward HTTP/HTTPS traffic to the cluster (forward to homelab `gateway` router)
 
-- Configure Home Router
-
-  To forward HTTP/HTTPS traffic to the cluster (forward to `gateway`)
-
-- Configure Pi Cluster firewall (`gateway`)
-
-#### Configure Dynamic DNS
+##### Configure Dynamic DNS
 
 Lets Encrypt validation process includes to make a resolution of the domain included in the certificate requests.
 
@@ -500,7 +422,7 @@ To configure DynDNS IONOS provider, follow these [instructions](https://www.iono
   domain-connect-dyndns update --all
   ```
 
-#### Configure Home Router
+##### Configure Home Router
 
 Enable port forwarding for TCP ports 80/443 to `gateway` node.
 
@@ -510,7 +432,67 @@ Enable port forwarding for TCP ports 80/443 to `gateway` node.
 | 443 | `gateway`| 4430 |
 {: .table .table-white .border-dark }
 
-#### Configure Pi cluster Gateway
+##### Configure Pi cluster Gateway
 
 Configure firewall forwarding rules to manage incoming traffic at 8080 and 4430 ports.
 
+
+## Observability
+
+### Metrics
+Cert-manager exposes metrics in the[Prometheus format from the controller, webhook and cainjector components. These are available at the standard `/metrics` endpoint on port `9402` of each component Pod.
+
+#### Prometheus Integration
+`ServiceMonitoring`, Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from cert-manager
+
+```yaml
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+```
+
+#### Grafana Dashboards
+
+cert-manager's Grafana dashboard can be downloaded from [grafana.com](https://grafana.com): [dashboard id: 20842](https://grafana.com/grafana/dashboards/20842-cert-manager-kubernetes/) 
+
+Dashboard can be automatically added using dashboards providers in the list of automated provisioned dashboards. Add following configuration to Grafana's helm chart values file
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    cert-manager:
+      # https://grafana.com/grafana/dashboards/20842-cert-manager-kubernetes/
+      gnetId: 20842
+      revision: 3
+      datasource: Prometheus
+```
+
+
+---
+
+[^1]: A **Private CA (Private PKI)** is an enterprise-specific certificate authority that functions like a publicly trusted CA. With a private CA, an enterprise creates its own internal root certificate that can issue other private certificates for internal servers and users.
+
+      Certificates issued by private CAs are not publicly trusted and should not be used outside of their enterprise's trusted members and infrastructure. A private CA is also known as private public key infrastructure (private PKI) or internal certificate authority.
+
+
+[^2]: The **Automatic Certificate Management Environment** (**ACME**) protocol is a communications protocol for automating interactions between certificate authorities and their users' servers, allowing the automated deployment of public key infrastructure at very low cost. It was designed by the [Internet Security Research Group](https://www.abetterinternet.org/) (ISRG) for their Let's Encrypt service.
+
+      The protocol, based on passing JSON-formatted messages over HTTPS has been published as an Internet Standard in [RFC 8555](https://datatracker.ietf.org/doc/html/rfc8555) by its own chartered IETF working group
