@@ -830,7 +830,7 @@ Prometheus-node-exporter's metrics are exposed in TCP port 9100 (`/metrics` endp
 
 `kube-state-metrics` gathers data using the standard Kubernetes go client and Kubernetes API. This raw data is used to create snapshot of the state of the objects in Kubernetes cluster. it generate Prometheus compliant metrics that are exposed at `/metrics`endpoint on port 8080.
 
-![kube-state-metrics-pipeline](/assets/img/kube-state-metrics-pipeline.svg)
+![kube-state-metrics-pipeline](/assets/img/kube-state-metrics-pipeline.svg){:width="900"}
 
 [Prometheus Kube State Metrics helm chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) is deployed as a subchart of the kube-prometheus-stack helm chart. This chart deploys [kube-state-metrics agent](https://github.com/kubernetes/kube-state-metrics).
 In kube-prometheus-stack's helm chart `kube-state-metrics` value is used to pass the configuration to kube-state-metrics's chart.
@@ -1750,42 +1750,6 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
 #### Velero Grafana dashboard
 
 Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11055](https://grafana.com/grafana/dashboards/11055).
-
-### Elasticsearch Monitoring
-
-[prometheus-elasticsearch-exporter](https://github.com/prometheus-community/elasticsearch_exporter) need to be installed in order to have Elastic search metrics in Prometheus format. See documentation ["Prometheus elasticsearh exporter installation"](/docs/elasticsearch/#prometheus-elasticsearh-exporter-installation).
-
-This exporter exposes `/metrics` endpoint in port 9108.
-
-The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Fluentbit metrics endpoint as a Prometheus target.
-
-- Create a manifest file `elasticsearch-servicemonitor.yml`
-  
-  ```yml
-  ---
-  apiVersion: monitoring.coreos.com/v1
-  kind: ServiceMonitor
-  metadata:
-    labels:
-      app: prometheus-elasticsearch-exporter
-      release: kube-prometheus-stack
-    name: elasticsearch-prometheus-servicemonitor
-    namespace: monitoring
-  spec:
-    endpoints:
-      - port: http
-        path: /metrics
-    namespaceSelector:
-      matchNames:
-        - logging
-    selector:
-      matchLabels:
-        app: prometheus-elasticsearch-exporter
-  ```
-
-#### Elasticsearch Grafana dashboard
-
-Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-grafana](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
 
 ### Fluentbit/Fluentd Monitoring
 
