@@ -2,7 +2,7 @@
 title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Pi Kubernetes Cluster.
-last_modified_at: "18-01-2025"
+last_modified_at: "23-03-2025"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won't be able to access the data.
@@ -208,100 +208,6 @@ Installation using `Helm` (Release 3):
   kubectl -n longhorn-system get pod
   ```
 
-
-## Configuring acces to Longhorn UI (Only Traefik Ingress)
-
-Create a Ingress rule to make Longhorn front-end available through the Ingress Controller (Traefik) using a specific URL (`longhorn.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
-
-Longhorn backend is providing not secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
-Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured.
-
-There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Longhorn APIs calls fail. Traefik 2.x ingress controller does not set the WebSocket headers and a specific middleware to route to the Longhorn UI must be specified. See [Longhorn documentation: "Troubleshooting Traefik 2.x as ingress controller"](https://longhorn.io/kb/troubleshooting-traefik-2.x-as-ingress-controller/) to know how to solve this particular issue.
-
-
-- Step 1. Create a manifest file `longhorn_ingress.yml`
-
-  Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares, HTTPS redirect, basic authentication and X-Forwareded-Proto headers will be used.
-  
-  ```yml
-  # Solving API issue. 
-  ---
-  apiVersion: traefik.containo.us/v1alpha1
-  kind: Middleware
-  metadata:
-    name: svc-longhorn-headers
-    namespace: longhorn-system
-  spec:
-    headers:
-      customRequestHeaders:
-        X-Forwarded-Proto: "https"
-  ---
-  # HTTPS Ingress
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: longhorn-ingress
-    namespace: longhorn-system
-    annotations:
-      # HTTPS as entry point
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      # Enable TLS
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      # Use Basic Auth Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: 
-        traefik-basic-auth@kubernetescrd,
-        longhorn-system-svc-longhorn-headers@kubernetescrd
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: longhorn.picluster.ricsanfre.com
-  spec:
-    tls:
-    - hosts:
-      - storage.picluster.ricsanfre.com
-      secretName: storage-tls
-    rules:
-    - host: longhorn.picluster.ricsanfre.com
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: longhorn-frontend
-              port:
-                number: 80
-  ---
-  # http ingress for http->https redirection
-  kind: Ingress
-  apiVersion: networking.k8s.io/v1
-  metadata:
-    name: longhorn-redirect
-    namespace: longhorn-system
-    annotations:
-      # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
-      # HTTP as entrypoint
-      traefik.ingress.kubernetes.io/router.entrypoints: web
-  spec:
-    rules:
-      - host: longhorn.picluster.ricsanfre.com
-        http:
-          paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: longhorn-frontend
-                port:
-                  number: 80
-  ```
-
-- Step 2. Apply the manifest file
-
-  ```shell
-  kubectl apply -f longhorn_ingress.yml
-  ```
-
 ## Testing Longhorn
 
 For testing longorn storage, create a specification for a `PersistentVolumeClaim` and use the `storageClassName` of `longhorn` and a POD making use of that volume claim.
@@ -425,6 +331,61 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
 
 
+## Observability
+
+### Metrics
+
+As stated by official documentation[^7], Longhorn natively exposes metrics in Prometheus text format[^8] at a REST endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`.
+
+Longhorn Backend kubernetes service is pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
+
+Backend endpoint is already exposing Prometheus metrics.
+
+#### Prometheus Integration
+
+`ServiceMonitoring`, [[Prometheus Operator]] [[Kubernetes Custom Resource Definitions (CRDs)|CRD]],  resource can be automatically created so [[Kube-Prometheus-Stack]] is able to automatically start collecting metrics from Longhorn
+
+```yaml
+metrics:
+  serviceMonitor:
+    enabled: true
+```
+
+#### Grafana Dashboards
+
+Longhorn dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13032](https://grafana.com/grafana/dashboards/13032).
+
+Dashboard can be automatically added using dashboards providers in the list of automated provisioned dashboards. Add following configuration to Grafana's helm chart values file
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    longhorn:
+      # https://grafana.com/grafana/dashboards/16888-longhorn/
+      gnetId: 16888
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
+
+
 ## References
 
 
@@ -433,3 +394,5 @@ Procedure is explained in kubernetes documentation: ["Change default Storage Cla
 [^4]: [Longorn Requirements- Installing NFSv4 Client](https://longhorn.io/docs/latest/deploy/install/#installing-nfsv4-client)
 [^5]: [Longorn Requirements- Installing Cryptsetup and Luks](https://longhorn.io/docs/latest/deploy/install/#installing-cryptsetup-and-luks)
 [^6]: [Longorn Requirements- Installing Device Mapper](https://longhorn.io/docs/latest/deploy/install/#installing-device-mapper-userspace-tool)
+[^7]: [Longorn Monitoring- Prometheus and Grafana setup](https://longhorn.io/docs/1.8.0/monitoring/prometheus-and-grafana-setup/)
+[^8]: [Prometheus - Instrumenting - Exposition formats: Test-based-format](https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format)
