@@ -9,7 +9,7 @@ last_modified_at: "07-10-2024"
 
 {{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
 
-Kubernetes CN solution for the cluster has been migrated to Cilium in release 1.9. Metal LB load balancer has been replaced by Cilium's LB-IPAM capability.
+Kubernetes CNI solution for the cluster has been migrated to Cilium in release 1.9. Metal LB load balancer has been replaced by Cilium's LB-IPAM capability.
 
 Metal-LB technology has been deprecated and this documentation is not updated anymore.
 
