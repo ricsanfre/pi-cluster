@@ -22,5 +22,5 @@
       data:
         bearer-token: "{{ minio_prom_bearer_token }}"
     body_format: json
-    vars:
-      ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
+  vars:
+    ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
