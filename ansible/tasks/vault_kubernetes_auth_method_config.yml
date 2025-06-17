@@ -23,6 +23,8 @@
 - name: Get vault token
   set_fact:
     vault_token: "{{ vault_login.stdout | from_json | community.hashi_vault.vault_login_token }}"
+  vars:
+    ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
 
 - name: Get status of kubernetes auth method
   ansible.builtin.uri:

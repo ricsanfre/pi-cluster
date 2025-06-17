@@ -240,8 +240,17 @@
     - name: Ensure PIP is installed.
       package:
         name:
-          - python3-hvac
+          - python3-pip
+          - python3-virtualenv
+          - python3-setuptools
         state: present
+      become: true
+
+    - name: Ensure hvac Python library is installed.
+      pip:
+        name: hvac
+        state: present
+        virtualenv: "{{ vault_venv_path }}"
       become: true
 
   tasks:
@@ -273,6 +282,8 @@
         policies: ["write"]
       register: token_data
       become: false
+      vars:
+        ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
     # Load ansible vault variables into Hashicorp Vault Server
     - name: Load vault credentials
       include_tasks:
