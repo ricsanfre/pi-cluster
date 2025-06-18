@@ -46,7 +46,7 @@
   docs:
   - longhorn
   - minio
-- title: Monitoring
+- title: Observability
   docs:
   - metrics-server
   - observability
@@ -54,6 +54,8 @@
   - loki
   - elasticsearch
   - logging-forwarder-aggregator
+  - fluentbit
+  - fluentd
   - prometheus
   - tracing
   - grafana
