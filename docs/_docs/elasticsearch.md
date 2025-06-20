@@ -2,7 +2,7 @@
 title: Log Analytics (Elasticsearch and Kibana)
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Pi Kuberentes cluster.
-last_modified_at: "02-06-2025"
+last_modified_at: "20-06-2025"
 
 ---
 
@@ -47,7 +47,7 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
       name: efk
       namespace: elastic
     spec:
-      version: 8.18.1
+      version: 8.15.0
       nodeSets:
       - name: default
         count: 1    # One node elastic search cluster
@@ -62,13 +62,20 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
               resources:
                 requests:
                   storage: 5Gi
-              storageClassName: longhorn
+              storageClassName: ${STORAGE_CLASS}
       http:
         tls: # Disabling TLS automatic configuration.
           selfSignedCertificate:
             disabled: true
 
     ```
+
+    {{site.data.alerts.note}}
+
+    Substitute variables in the above yaml (`${var}`) file before deploying mangifest file.
+    -   Substitute `${STORAGE_CLASS}` varaiable with storage class used (i.e. `longhorn`, `local-path`, etc.)
+
+    {{site.data.alerts.end}}
   
     -   About Virtual Memory configuration (mmap)
 
@@ -97,7 +104,7 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
               resources:
                 requests:
                   storage: 5Gi
-              storageClassName: longhorn
+              storageClassName: ${STORAGE_CLASS}
         ```
 
         See how to configure PersistenVolumeTemplates for Elasticsearh using this operator in [ECK Documentation: "Volume claim templates"](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html)
@@ -161,12 +168,12 @@ Basic instructions can be found in [ECK Documentation: "Deploy and elasticsearch
     ```shell
     kubectl get elasticsearch -n elastic
     NAME   HEALTH   NODES   VERSION   PHASE   AGE
-    efk    yellow   1       8.1.2    Ready   139m
+    efk    green   1       8.15.0    Ready   139m
     ```
     
     {{site.data.alerts.note}}
 
-    Elasticsearch status `HEALTH=yellow` indicates that only one node of the Elasticsearch is running (no HA mechanism), `PHASE=Ready` indicates that the server is up and running
+    Elasticsearch status `HEALTH=green` indicates that Elasticsearch is running and healthy, `PHASE=Ready` indicates that the server is up and running
 
     {{site.data.alerts.end}}
 
@@ -346,11 +353,10 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
 
   See ["Ingress NGINX Controller - Ingress Resources Configuration"](/docs/nginx/#ingress-resources-configuration) for furher details.
   
-  ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP assigned to Ingress Controller, making fluentd service available at `elasticsearch.{$CLUSTER_DOMAIN}` port 24224. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+  ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP assigned to Ingress Controller, making ElasticSearch service available at `elasticsearch.{$CLUSTER_DOMAIN}. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
 
   {{site.data.alerts.end}}
   
-
 
 - Step 2: Apply manifest
 
@@ -359,7 +365,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   ```
 - Step 3. Access to Elastic HTTP service
 
-  UI can be access through http://elasticsearch.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
+  UI can be access through http://elasticsearch.${CLUSTER_DOMAIN} using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
 
   It should shows the following output (json message)
 
@@ -367,15 +373,15 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   {
     "name" : "efk-es-default-0",
     "cluster_name" : "efk",
-    "cluster_uuid" : "w5BUxIY4SKOtxPUDQfb4lQ",
+    "cluster_uuid" : "WTb_fupJRl27biWOnJY5tQ",
     "version" : {
-      "number" : "8.1.2",
+      "number" : "8.15.0",
       "build_flavor" : "default",
       "build_type" : "docker",
-      "build_hash" : "31df9689e80bad366ac20176aa7f2371ea5eb4c1",
-      "build_date" : "2022-03-29T21:18:59.991429448Z",
+      "build_hash" : "1a77947f34deddb41af25e6f0ddb8e830159c179",
+      "build_date" : "2024-08-05T10:05:34.233336849Z",
       "build_snapshot" : false,
-      "lucene_version" : "9.0.0",
+      "lucene_version" : "9.11.1",
       "minimum_wire_compatibility_version" : "7.17.0",
       "minimum_index_compatibility_version" : "7.0.0"
     },
@@ -394,8 +400,8 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
     name: kibana
     namespace: elastic
   spec:
-    version: 8.1.2
-    count: 2 # Elastic Search statefulset deployment with two replicas
+    version: 8.15.0
+    count: 1
     elasticsearchRef:
       name: "efk"
     http:  # NOTE disabling kibana automatic TLS configuration
@@ -411,7 +417,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   ```shell
   kubectl get kibana -n elastic
   NAME   HEALTH   NODES   VERSION   AGE
-  efk    green    1       8.1.2    171m
+  efk    green    1       8.15.0    171m
   ```
 
   {{site.data.alerts.note}}
@@ -437,15 +443,15 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
     annotations:
       # Enable cert-manager to create automatically the SSL certificate and store in Secret
       cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: kibana.picluster.ricsanfre.com
+      cert-manager.io/common-name: kibana.${CLUSTER_DOMAIN}
   spec:
     ingressClassName: nginx
     tls:
       - hosts:
-          - kibana.picluster.ricsanfre.com
+          - kibana.${CLUSTER_DOMAIN}
         secretName: kibana-tls
     rules:
-      - host: kibana.picluster.ricsanfre.com
+      - host: kibana.${CLUSTER_DOMAIN}
         http:
           paths:
             - path: /
@@ -456,6 +462,19 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
                   port:
                     number: 5601
   ```
+
+  {{site.data.alerts.note}}
+
+  Substitute variables in the above yaml (`${var}`) file before deploying manifest.
+  -   Substitute `${CLUSTER_DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`.
+
+  Ingress Controller NGINX exposes Kibana server as `kibana.${CLUSTER_DOMAIN}` virtual host, routing rules are configured for redirecting all incoming HTTP traffic to HTTPS and TLS is enabled using a certificate generated by Cert-manager. 
+
+  See ["Ingress NGINX Controller - Ingress Resources Configuration"](/docs/nginx/#ingress-resources-configuration) for furher details.
+  
+  ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP assigned to Ingress Controller, making Kibana service available at `kibana.{$CLUSTER_DOMAIN}. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+
+  {{site.data.alerts.end}}
   
 - Step 2: Apply manifest
   ```shell
@@ -464,6 +483,12 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
 - Step 3. Access to Kibana UI
 
   UI can be access through http://kibana.picluster.ricsanfre.com using loging `elastic` and the password stored in `<efk_cluster_name>-es-elastic-user`.
+
+  Execute the following command to get `elastic` user password
+
+  ```shell
+  kubectl get secret efk-es-elastic-user -o jsonpath='{.data.elastic}' -n elastic | base64 -d;echo
+  ```
 
 ### Initial Kibana Setup (DataView configuration)
 
@@ -567,3 +592,30 @@ Providing `serviceMonitor.enabled: true` to the helm chart values.yaml file, cor
 #### Grafana Dashboards
 
 Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-exporter repo](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. Add following configuration to Grafana's helm chart values file
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    elasticsearch:
+      url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/examples/grafana/dashboard.json
+      datasource: Prometheus
+```
