@@ -2,7 +2,7 @@
 title: Observability Visualization with Grafana
 permalink: /docs/grafana/
 description: How to deploy Grafana as Observability Visualization tool in our Pi Kuberentes cluster.
-last_modified_at: "07-04-2025"
+last_modified_at: "20-06-2025"
 ---
 
 [Grafana](https://grafana.com/oss/grafana/)  is an open source Observability and data visualization platform. 
@@ -36,80 +36,41 @@ Installation using `Helm` (Release 3):
 -   Step 4: Create helm values file `grafana-values.yml` containing Grafana deployment configuration
 
     ```yml
-    # Configuring /grafana subpath
-    grafana.ini:
-      server:
-        domain: monitoring.homelab.ricsanfre.com
-        root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
-        # Running Grafana behind proxy rewrite path
-        # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
-        serve_from_sub_path: true
     # Admin user password
+    adminUser: admin
     adminPassword: "admin_password"
-    # List of grafana plugins to be installed
-    plugins:
-    - grafana-piechart-panel
-    # ServiceMonitor label and job relabel
-    serviceMonitor:
-      labels:
-        release: kube-prometheus-stack
-      relabelings:
-        # Replace job value
-        - sourceLabels:
-          - __address__
-          action: replace
-          targetLabel: job
-          replacement: grafana
-    # Additional data source: Loki
-    additionalDataSources:
-    - name: Loki
-      type: loki
-      url: http://loki-gateway.logging.svc.cluster.local
-    # Enable provisioning of dashboards and datasources
-    sidecar:
-      dashboards:
-        enabled: true
-        # Search in all namespaces for configMaps containing label `grafana_dashboard`
-        searchNamespace: ALL
-        label: grafana_dashboard
-        # set folder name through annotation `grafana_folder`
-        folderAnnotation: grafana_folder
-        provider:
-          disableDelete: true
-          foldersFromFilesStructure: true
-      datasources:
-        enabled: true
-        # Search in all namespaces for configMaps
-        searchNamespace: ALL
-        labelValue: ""
-    # Ingress configuration
-    ingress:
-      enabled: true
-      ingressClassName: nginx
-      # Values can be templated
-      annotations:
-        # Enable cert-manager to create automatically the SSL certificate and store in Secret
-        cert-manager.io/cluster-issuer: ca-issuer
-        cert-manager.io/common-name: monitoring.local.test
-      path: /grafana
-      pathType: Prefix
-      hosts:
-        - monitoring.local.test
-      tls:
-        - hosts:
-          - monitoring.local.test
-          secretName: monitoring-tls
+
+    # Adding Prometheus and AlertManager data sources
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        deleteDatasources:
+          - { name: Alertmanager, orgId: 1 }
+          - { name: Prometheus, orgId: 1 }
+        datasources:
+        - name: Prometheus
+          type: prometheus
+          uid: prometheus
+          access: proxy
+          url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090/
+          jsonData:
+            httpMethod: POST
+            timeInterval: 30s
+          isDefault: true
+        - name: Alertmanager
+          type: alertmanager
+          uid: alertmanager
+          url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093/
+          access: proxy
+          jsonData:
+            handleGrafanaManagedAlerts: false
+            implementation: prometheus
     
     ```
 
     This values.yaml configures Grafana with the following options: 
-    -   Grafana front-end configured to run behind HTTP proxy to be accessible at  `<domain>/grafana`  (`grafana.ini.server`)
     -   Admin password is specified (`grafana.adminPassword`)
-    -   Additional plugin(`grafana.plugins`), `grafana-piechart-panel` needed in by Traefik's dashboard is installed.
-    -   Loki data source is added (`grafana.additionalDataSource`)
-    -   Grafana ServiceMonitor label and job label is configured (`serviceMonitor`)
-    -   Grafana provisioning sidecars (`sidecar`)  configuration, to automatically provision dashboards and data-sources.
-    -   Ingress resource configured (`ingress`).
+    -   Prometheus data source is added (`grafana.datasources`)
 
 -   Step 5: Install Grafana Helm chart
 
@@ -231,16 +192,16 @@ metadata:
   annotations:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: ca-issuer
-    cert-manager.io/common-name: monitoring.local.test
+    cert-manager.io/common-name: monitoring.${CLUSTER_DOMAIN}
 
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - monitoring.local.test
+        - monitoring.${CLUSTER_DOMAIN}
       secretName: monitoring-tls
   rules:
-    - host: monitoring.local.test
+    - host: monitoring.${CLUSTER_DOMAIN}
       http:
         paths:
           - path: /grafana
@@ -263,16 +224,29 @@ ingress:
   annotations:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: ca-issuer
-    cert-manager.io/common-name: monitoring.local.test
+    cert-manager.io/common-name: monitoring.${CLUSTER_DOMAIN}
   path: /grafana
   pathType: Prefix
   hosts:
-    - monitoring.local.test
+    - monitoring.${CLUSTER_DOMAIN}
   tls:
     - hosts:
-      - monitoring.local.test
+      - monitoring.${CLUSTER_DOMAIN}
       secretName: monitoring-tls
 ```
+
+{{site.data.alerts.note}}
+
+  Substitute variables in the above yaml (`${var}`) file before deploying manifest.
+  -   Substitute `${CLUSTER_DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`.
+
+  Ingress Controller NGINX exposes grafana server as `monitoring.${CLUSTER_DOMAIN}` virtual host, and route all requests to `/grafana` path to Grafana backend. Routing rules are also configured for redirecting all incoming HTTP traffic to HTTPS and TLS is enabled using a certificate generated by Cert-manager.
+
+  See ["Ingress NGINX Controller - Ingress Resources Configuration"](/docs/nginx/#ingress-resources-configuration) for furher details.
+
+  ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP assigned to Ingress Controller, making grafana service available at `monitoring.{$CLUSTER_DOMAIN}/grafana`. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+
+{{site.data.alerts.end}}
 
 ### Provisioning Data Sources
 
@@ -417,7 +391,7 @@ dashboards:
 
 Grafana Helm template converts this dashboards into ConfigMaps that are automatically mounted into Grafana POD.
 
-##### Issue importing downloaded  JSON files
+##### Known issue importing downloaded JSON files
 
 Most of [Grafana community dashboards available](https://grafana.com/grafana/dashboards/) have been exported from a running Grafana and so they include a input  variable (`DS_PROMETHEUS`) which represent a datasource which is referenced in all dashboard panels (`${DS_PROMETHEUS}`). See details in [Grafana export/import documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/).
 
@@ -468,7 +442,7 @@ Instead of embedding JSON files into Helm chart `values.yaml`, dashboards from [
 
 A Grafana's POD init-container, `download-dashboards` executes a script to download the files. This script also support the automatic replacement of any DS_PROMETEUS variable.
 
-See script code within Helm chart templates : https://github.com/grafana/helm-charts/blob/main/charts/grafana/templates/_config.tpl#L74-L140
+See script code in [Grafana's Helm chart template file: config.tpl](https://github.com/grafana/helm-charts/blob/main/charts/grafana/templates/_config.tpl#L74-L140)
 
 Dashboards to be downloaded can be specified in `dashboard` variable in Helm `values.yaml`, `gnetId` specifies dashboard Id and `revision` its revision.
 
@@ -797,7 +771,7 @@ See configuration details about all options that can be provided in `grafana.ini
 
 ## Observability
 ### Metrics
-By default Grafana expose Prometheus metrics at `/metrics`. This is exposed by default.
+By default Grafana exposes Prometheus metrics at `/metrics`. This is exposed by default.
 
 Kube-Prometheus-Stack automatically configures Prometheus to monitor Grafana
 
