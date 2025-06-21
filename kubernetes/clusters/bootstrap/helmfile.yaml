@@ -21,7 +21,7 @@ releases:
   - name: cilium
     namespace: kube-system
     chart: cilium/cilium
-    version: 1.17.4
+    version: 1.17.5
     values:
       - ../../platform/cilium/app/base/values.yaml
       - ../../platform/cilium/app/components/istio-config/values.yaml
@@ -37,3 +37,16 @@ releases:
     needs:
      - kube-system/prometheus-operator-crds
      - kube-system/cilium
+  - name: nginx
+    namespace: nginx
+    chart: nginx/ingress-nginx
+    version: 4.12.3
+    values:
+      - ../../platform/nginx/app/base/values.yaml
+      - ../../platform/nginx/app/components/loadbalancer/values.yaml
+      - ../../platform/nginx/app/components/opentelemetry/values.yaml
+      - ../../platform/nginx/app/overlays/prod/values.yaml
+    needs:
+     - kube-system/prometheus-operator-crds
+     - kube-system/cilium
+     - kube-system/coredns
