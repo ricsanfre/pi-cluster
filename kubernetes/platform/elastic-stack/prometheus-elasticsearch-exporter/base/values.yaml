@@ -12,3 +12,7 @@ extraEnvSecrets:
 # Elastic search URI
 es:
   uri: http://efk-es-http:9200
+
+# Create Service Monitor
+serviceMonitor:
+  enabled: true
