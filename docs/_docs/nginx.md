@@ -146,6 +146,25 @@ controller:
 
 With this configuration ip 10.0.0.100 is assigned to NGINX proxy and so, for all services exposed by the cluster.
 
+
+
+#### Enabling Ingress snippet annotations
+
+Since nginx-ingress 1.9, by default is not allowed to include in Ingress resources `nginx.ingress.kubernetes.io/configuration-snippet` annotation. It need to be enabled in the helm chart configuration
+
+```yml
+controller:
+  # Allow snpippet anotations
+  # From v1.9 default value has chaged to false.
+  # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
+  allowSnippetAnnotations: true
+
+```
+
+## Observability
+
+### Logs
+
 #### Enabling Access log
 
 Access logs are enabled by default for all Ingress resources.
@@ -201,22 +220,25 @@ controller:
 
 This configuration enables NGINX access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
 
-#### Enabling Ingress snippet annotations
+### Metrics
 
-Since nginx-ingress 1.9, by default is not allowed to include in Ingress resources `nginx.ingress.kubernetes.io/configuration-snippet` annotation. It need to be enabled in the helm chart configuration
+By default helm installation does not enable NGINX's metrics for Prometheus.
+
+The following configuration must be provided to Helm chart:
 
 ```yml
 controller:
-  # Allow snpippet anotations
-  # From v1.9 default value has chaged to false.
-  # allow-snippet-annotations: Enables Ingress to parse and add -snippet annotations/directives created by the user.
-  allowSnippetAnnotations: true
-
+  metrics:
+    enabled: true
 ```
+This configuration makes NGINX pod to open its metric port at TCP port 10254
 
-#### Enabling Observability
 
-To enable Prometheus /metrics collection endpoint and create the corresponging ServiceMonitor configuration (Prometheus Operator), the following need to be added
+#### Prometheus Integration
+
+Also `ServiceMonitoring`, Prometheus Operator's CRD, resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from NGINX Ingress Controller.
+
+The following configuration must be provided to Helm chart:
 
 ```yaml
 controller:
@@ -226,6 +248,38 @@ controller:
     serviceMonitor:
       enabled: true
 ```
+
+#### Grafana Dashboard
+Ingress NGINX grafana dashboards in JSON format can be found here: [Kubernetes Ingress-nginx Github repository: `grafana`](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards).
+
+The following configuration can be added to Grafana's Helm Chart so a NGINX's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+
+```yaml
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: nginx
+        orgId: 1
+        folder: Nginx
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/nginx-folder
+# Dashboards
+dashboards:
+  nginx:
+    nginx:
+      url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/nginx.json
+      datasource: Prometheus
+    nginx-request-handling-performance:
+      url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/request-handling-performance.json
+      datasource: Prometheus
+```
+
+
+### Traces
 
 To enable OTel traces the following need to be added:
 
@@ -249,7 +303,7 @@ controller:
 
 OTEL collector need to be specified (`otlp-collector-host`) and the access log format can be configured to add trace_id and span_id configuration
 
-## Configuring access to cluster services with Ingress NGINX
+## Ingress Resources Configuration
 
 Standard kuberentes resource, `Ingress` can be used to configure the access to cluster services through HTTP proxy capabilities provide by Ingress NGINX.
 

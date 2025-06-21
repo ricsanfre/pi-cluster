@@ -6,6 +6,21 @@ last_modified_at: "18-09-2024"
 
 ---
 
+{{site.data.alerts.important}} **Obsolete document**
+
+Fluentbit/Fluentd installation procedures have been reviewed in June 2025.
+
+New documentation has been generated containing.
+
+-  [Log Collection with Fluentbit](/docs/fluentbit/)
+-  [Log Aggregation and Distribution with Fluentd](/docs/fluentd/).
+
+
+This document is not updated anymore
+
+{{site.data.alerts.end}}
+
+
 A Forwarder/Aggregator log architecture will be implemented in the Kubernetes cluster with Fluentbit and Fluentd.
 
 Both fluentbit and fluentd can be deployed as forwarder and/or aggregator.

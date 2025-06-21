@@ -9,7 +9,7 @@ Minio will be deployed as a Kuberentes service providing Object Store S3-compati
 
 Official [Minio Kubernetes installation documentation](https://min.io/docs/minio/kubernetes/upstream/index.html) uses Minio Operator to deploy and configure a multi-tenant S3 cloud service.
 
-Instead of using Minio Operator, [Vanilla Minio helm chart](https://github.com/minio/minio/tree/master/helm/minio) will be used. Not need to support multi-tenant installations and Vanilla Minio helm chart supports also the automatic creation of buckets, policies and users. Minio Operator creation does not automate this process.
+Instead of using Minio Operator, [Vanilla Minio helm chart](https://github.com/minio/minio/tree/master/helm/minio) will be used. Not need to support multi-tenant installations and Vanilla Minio helm chart supports also the automatic creation of buckets, policies and users. Minio Operator does not support automate provisioning of such resources.
 
 
 ## Minio installation
@@ -215,3 +215,10 @@ Annotated so Cert-Manager generate the TLS certificate automatically.
   ```shell
   kubectl get pods -l app.kubernetes.io/name=minio -n minio
   ```
+
+## Observability
+
+### Metrics
+
+By default, MinIO requires authentication to scrape the metrics endpoints, but Vanilla Minio Helm Chart, set `MINIO_PROMETHEUS_AUTH_TYPE` environment variable to `public`, and authentication is not needed.
+

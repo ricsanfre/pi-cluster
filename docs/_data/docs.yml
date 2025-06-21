@@ -37,6 +37,7 @@
   - nginx
 - title: Certificate Management
   docs:
+  - certbot
   - certmanager
 - title: Single Sign-On
   docs:
@@ -45,16 +46,18 @@
   docs:
   - longhorn
   - minio
-- title: Monitoring
+- title: Observability
   docs:
   - metrics-server
   - observability
   - logging
   - loki
   - elasticsearch
-  - logging-forwarder-aggregator
+  - fluentbit
+  - fluentd
   - prometheus
   - tracing
+  - grafana
 - title: Backup
   docs:
   - backup
