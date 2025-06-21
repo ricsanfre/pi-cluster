@@ -37,16 +37,3 @@ releases:
     needs:
      - kube-system/prometheus-operator-crds
      - kube-system/cilium
-  - name: nginx
-    namespace: nginx
-    chart: nginx/ingress-nginx
-    version: 4.12.3
-    values:
-      - ../../platform/nginx/app/base/values.yaml
-      - ../../platform/nginx/app/components/loadbalancer/values.yaml
-      - ../../platform/nginx/app/components/opentelemetry/values.yaml
-      - ../../platform/nginx/app/overlays/prod/values.yaml
-    needs:
-     - kube-system/prometheus-operator-crds
-     - kube-system/cilium
-     - kube-system/coredns
