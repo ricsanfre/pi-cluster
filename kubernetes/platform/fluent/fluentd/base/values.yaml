@@ -61,7 +61,7 @@ env:
         name: fluentd-secrets
         key: es-password
   # Fluentd forward security
-  - name: FLUENTD_FORWARD_SEC_SHARED_KEY
+  - name: FLUENT_AGGREGATOR_SHARED_KEY
     valueFrom:
       secretKeyRef:
         name: fluentd-secrets
