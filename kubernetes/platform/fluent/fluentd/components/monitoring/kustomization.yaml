@@ -1,18 +1,12 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: fluent
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
 
-resources:
-  - ../../base
-
-components:
-  - ../../components/monitoring
-
+# patch values.yaml?
 configMapGenerator:
   - name: fluentd-helm-values
     behavior: merge
     files:
-      - overlay-values.yaml=values.yaml
+      - monitoring-values.yaml=values.yaml
 
 patches:
 - target:

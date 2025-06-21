@@ -20,17 +20,17 @@ data:
           }
         },
         "mappings" : {
-          "dynamic_templates" : [ 
+          "dynamic_templates" : [
             {
               "message_field" : {
-                "path_match" : "message",
+                "path_match" : "log",
                 "match_mapping_type" : "string",
                 "mapping" : {
                   "type" : "text",
                   "norms" : false
                 }
               }
-            }, 
+            },
             {
               "string_fields" : {
                 "match" : "*",
@@ -48,5 +48,5 @@ data:
           }
         }
       }
-    } 
+    }
 

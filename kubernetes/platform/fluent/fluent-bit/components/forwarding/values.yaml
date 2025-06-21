@@ -1,0 +1,31 @@
+# fluent-bit helm values (forwarding)
+
+# Environment variables used by Fluent Config files
+env:
+  # ElasticSearch Output Plugin config
+  #
+  - name: FLUENT_ELASTICSEARCH_HOST
+    value: "efk-es-http.elastic"
+  # Default elasticsearch default port
+  - name: FLUENT_ELASTICSEARCH_PORT
+    value: "9200"
+  # Elasticsearch user
+  - name: FLUENT_ELASTICSEARCH_USER
+    valueFrom:
+      secretKeyRef:
+        name: fluent-bit-secrets
+        key: es-username
+  # Elastic operator stores elastic user password in a secret
+  - name: FLUENT_ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: fluent-bit-secrets
+        key: es-password
+
+  # Loki Output plugin config
+  #
+  - name: FLUENT_LOKI_HOST
+    value: "loki-headless.loki"
+  # Default elasticsearch default port
+  - name: FLUENT_LOKI_PORT
+    value: "3100"

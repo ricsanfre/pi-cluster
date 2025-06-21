@@ -3,4 +3,4 @@
   value:
     kind: ConfigMap
     name: fluent-bit-helm-values
-    valuesKey: componentX-values.yaml
+    valuesKey: aggregator-values.yaml

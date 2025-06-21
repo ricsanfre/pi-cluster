@@ -47,6 +47,10 @@ spec:
       kind: HelmRelease
       name: fluentd
       namespace: fluent
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -70,3 +74,7 @@ spec:
       kind: HelmRelease
       name: fluent-bit
       namespace: fluent
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

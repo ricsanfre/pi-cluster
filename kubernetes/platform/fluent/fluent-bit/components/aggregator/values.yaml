@@ -1,0 +1,24 @@
+# fluent-bit helm values (forwarding)
+
+# Environment variables used by Fluent Config files
+env:
+  # Forward Outpur Plugin config
+  #
+  # Fluentd deployment service
+  - name: FLUENT_AGGREGATOR_HOST
+    value: fluentd
+
+  # Default fluentd forward port
+  - name: FLUENT_AGGREGATOR_PORT
+    value: "24224"
+  - name: FLUENT_AGGREGATOR_SHARED_KEY
+    valueFrom:
+      secretKeyRef:
+        name: fluent-bit-secrets
+        key: fluentd-shared-key
+
+  # Setting nodeName as environment variable
+  - name: FLUENT_SELFHOSTNAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName

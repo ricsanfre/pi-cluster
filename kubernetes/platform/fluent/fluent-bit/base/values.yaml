@@ -1,164 +1,86 @@
 # fluent-bit helm values (base)
-#fluentbit-container environment variables:
-env:
-  # Fluentd deployment service
-  - name: FLUENT_AGGREGATOR_HOST
-    valueFrom:
-      configMapKeyRef:
-        name: fluent-bit-env
-        key: fluentdHost
-  # Default fluentd forward port
-  - name: FLUENT_AGGREGATOR_PORT
-    value: "24224"
-  - name: FLUENT_AGGREGATOR_SHARED_KEY
-    valueFrom:
-      secretKeyRef:
-        name: fluent-secrets
-        key: fluentd-shared-key
-  - name: FLUENT_SELFHOSTNAME
-    valueFrom:
-      fieldRef:
-        fieldPath: spec.nodeName
-  # Specify TZ
-  - name: TZ
-    value: "Europe/Madrid"
-# Fluentbit config
-config:
-  # Helm chart combines service, inputs, outputs, custom_parsers and filters section
-  # fluent-bit.config SERVICE
-  service: |
 
-    [SERVICE]
-        Daemon Off
-        Flush 1
-        Log_Level info
-        Parsers_File parsers.conf
-        Parsers_File custom_parsers.conf
-        HTTP_Server On
-        HTTP_Listen 0.0.0.0
-        HTTP_Port 2020
-        Health_Check On
-        storage.path /var/log/fluentbit/storage
-        storage.sync normal
-        storage.checksum off
-        storage.backlog.mem_limit 5M
-        storage.metrics on
+# Deploy fluent-bit as daemonSet. One POD per node
+kind: DaemonSet
+# Host directories containing Host and POD logs files
+# Mounted into Fluent-bit DaemonSet POD
+daemonSetVolumes:
+  # Mount file containing host and POD logs
+  # In K3S, PODS logs are located in /var/log/pods
+  # Host OS logs located in /var/logs
+  - name: varlog
+    hostPath:
+      path: /var/log
+  # Mount /etc/machine-id identifying node
+  - name: etcmachineid
+    hostPath:
+      path: /etc/machine-id
+      type: File
+daemonSetVolumeMounts:
+  - name: varlog
+    mountPath: /var/log
+  - name: etcmachineid
+    mountPath: /etc/machine-id
+    readOnly: true
 
-  # fluent-bit.config INPUT:
-  inputs: |
+# Environment variables used by Fluent Config files
+# env:
+#   # Fluentd deployment service
+#   - name: FLUENT_AGGREGATOR_HOST
+#     valueFrom:
+#       configMapKeyRef:
+#         name: fluent-bit-env
+#         key: fluentdHost
+#   # Default fluentd forward port
+#   - name: FLUENT_AGGREGATOR_PORT
+#     value: "24224"
+#   - name: FLUENT_AGGREGATOR_SHARED_KEY
+#     valueFrom:
+#       secretKeyRef:
+#         name: fluent-secrets
+#         key: fluentd-shared-key
+#   - name: FLUENT_SELFHOSTNAME
+#     valueFrom:
+#       fieldRef:
+#         fieldPath: spec.nodeName
+# Environment variables used by Fluent Config files can be also loaded from ConfigMaps and Secrets
+# envFrom:
+#   - configMapRef:
+#       name: fluent-bit-env-configmap
+#   - secretRef:
+#       name: fluent-bit-env-secret
 
-    [INPUT]
-        Name tail
-        Alias input.kube
-        Path /var/log/containers/*.log
-        Path_Key filename
-        multiline.parser docker, cri
-        DB /var/log/fluentbit/flb_kube.db
-        Tag kube.*
-        Mem_Buf_Limit 5MB
-        storage.type filesystem
-        Skip_Long_Lines On
+# Define configuration file in external configMap using YAML syntax
+# Remove classic default configuration
+config: {}
+customParsers: {}
+# ConfigMap mounted as /fluent-bit/etc/conf directory
+existingConfigMap: fluent-bit-config
+# Change args to load yaml config file instead default fluent-bit.conf
+command:
+  - /fluent-bit/bin/fluent-bit
+args:
+  - --workdir=/fluent-bit/etc
+  - --config=/fluent-bit/etc/conf/fluent-bit.yaml
 
-    [INPUT]
-        Name tail
-        Alias input.host
-        Tag host.*
-        DB /var/log/fluentbit/flb_host.db
-        Path /var/log/auth.log,/var/log/syslog
-        Path_Key filename
-        Mem_Buf_Limit 5MB
-        storage.type filesystem
-        Parser syslog-rfc3164-nopri
+# Lua Scripts. ConfigMap luascripts mounted as /fluent-bit/scripts
+luaScripts: {}
+# Example lua Script for changing local time to UTC
+# luaScripts:
+#   adjust_ts.lua: |
+#     function local_timestamp_to_UTC(tag, timestamp, record)
+#         local utcdate   = os.date("!*t", ts)
+#         local localdate = os.date("*t", ts)
+#         localdate.isdst = false -- this is the trick
+#         utc_time_diff = os.difftime(os.time(localdate), os.time(utcdate))
+#         return 1, timestamp - utc_time_diff, record
+#     end
+# Enable fluentbit instalaltion on master node
 
-  # fluent-bit.config OUTPUT
-  outputs: |
-
-    [OUTPUT]
-        Name forward
-        Alias output.aggregator
-        match *
-        Host ${FLUENT_AGGREGATOR_HOST}
-        Port ${FLUENT_AGGREGATOR_PORT}
-        Self_Hostname ${FLUENT_SELFHOSTNAME}
-        Shared_Key ${FLUENT_AGGREGATOR_SHARED_KEY}
-        tls On
-        tls.verify Off
-
-  # fluent-bit.config PARSERS:
-  customParsers: |
-
-    [PARSER]
-        Name syslog-rfc3164-nopri
-        Format regex
-        Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
-        Time_Key time
-        Time_Format %b %d %H:%M:%S
-        Time_Keep Off
-
-  # fluent-bit.config FILTERS:
-  filters: |
-    [FILTER]
-        name                  multiline
-        match                 *
-        multiline.key_content log
-        multiline.parser      java,python,go
-
-    [FILTER]
-        Name kubernetes
-        Match kube.*
-        Buffer_Size 512k
-        Kube_Tag_Prefix kube.var.log.containers.
-        Merge_Log Off
-        Merge_Log_Trim Off
-        Merge_Log_Key log_processed
-        Keep_Log On
-        K8S-Logging.Parser On
-        K8S-Logging.Exclude On
-        Annotations Off
-        Labels On
-
-    [FILTER]
-        Name modify
-        Match kube.*
-        Remove _p
-        Rename log message
-
-    [FILTER]
-        Name lua
-        Match host.*
-        script /fluent-bit/scripts/adjust_ts.lua
-        call local_timestamp_to_UTC
-  # json-exporter config
-  extraFiles:
-    json-exporter-config.yml: |
-      modules:
-        default:
-          metrics:
-            - name: fluenbit_storage_layer
-              type: object
-              path: '{.storage_layer}'
-              help: The total number of chunks in the fs storage
-              values:
-                fs_chunks_up: '{.chunks.fs_chunks_up}'
-                fs_chunks_down: '{.chunks.fs_chunks_down}'
-
-# Fluentbit config Lua Scripts.
-luaScripts:
-  adjust_ts.lua: |
-    function local_timestamp_to_UTC(tag, timestamp, record)
-        local utcdate   = os.date("!*t", ts)
-        local localdate = os.date("*t", ts)
-        localdate.isdst = false -- this is the trick
-        utc_time_diff = os.difftime(os.time(localdate), os.time(utcdate))
-        return 1, timestamp - utc_time_diff, record
-    end
-
-# Enable fluentbit instalaltion on master node.
 tolerations:
-  - key: node-role.kubernetes.io/control-plane
+  - key: node-role.kubernetes.io/master
     operator: Exists
     effect: NoSchedule
-
 # Init container. Create directory for fluentbit
 initContainers:
   - name: init-fluentbit-directory
@@ -167,17 +89,11 @@ initContainers:
     volumeMounts:
       - name: varlog
         mountPath: /var/log
-# Sidecar container to export storage metrics
-extraContainers:
-  - name: json-exporter
-    image: quay.io/prometheuscommunity/json-exporter
-    command: ['/bin/json_exporter']
-    args: ['--config.file=/json-exporter-config.yml']
-    ports:
-      - containerPort: 7979
-        name: http
-        protocol: TCP
-    volumeMounts:
-      - mountPath: /json-exporter-config.yml
-        name: config
-        subPath: json-exporter-config.yml
+
+# Enable hot-reload
+# jimmidyson/configmap-reload is deployed as side-car
+# By default it watches for changes in /fluent-bit/etc/conf/ (fluent-conf) and /fluent-bit/scripts (luascripts)
+# If any change is detected reload endpoint is ivoked:
+# http://localhost:2020/api/v2/reload
+hotReload:
+  enabled: true

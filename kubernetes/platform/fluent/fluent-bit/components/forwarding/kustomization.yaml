@@ -1,19 +1,16 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: fluent
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
 
 resources:
-  - ../../base
+  - fluent-bit-externalsecret.yaml
+  - fluent-bit-config.yaml
 
-components:
-  - ../../components/monitoring
-  - ../../components/aggregator
-
+# patch values.yaml?
 configMapGenerator:
   - name: fluent-bit-helm-values
     behavior: merge
     files:
-      - overlay-values.yaml=values.yaml
+      - forwarding-values.yaml=values.yaml
 
 patches:
 - target:
