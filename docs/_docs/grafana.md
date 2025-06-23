@@ -1,5 +1,5 @@
 ---
-title: Observability Visualization with Grafana
+title: Observability Visualization (Grafana)
 permalink: /docs/grafana/
 description: How to deploy Grafana as Observability Visualization tool in our Pi Kuberentes cluster.
 last_modified_at: "20-06-2025"
@@ -437,7 +437,8 @@ curl -skf --connect-timeout 60 \
      https://grafana.com/api/dashboards/13502/revisions/26/download \
      | sed 's/${DS_PROMETHEUS}/Prometheus/g > dashboard.json
 ```
-##### Automating  download  of Grafana community dashboards
+##### Automating installation of Grafana community dashboards
+
 Instead of embedding JSON files into Helm chart `values.yaml`, dashboards from [Grafana community dashboards](https://grafana.com/grafana/dashboards/) can be automatically provision during deployment.
 
 A Grafana's POD init-container, `download-dashboards` executes a script to download the files. This script also support the automatic replacement of any DS_PROMETEUS variable.
