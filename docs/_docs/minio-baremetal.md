@@ -502,7 +502,7 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
         - ${S3_BACKUP_SERVER}:9091
     ```
 
-    Where ${S3_BACKUP_SERVER}, should be replaced by DNS or IP address of the backup server.
+    Where `${S3_BACKUP_SERVER}` should be replaced by DNS or IP address of the backup server.
 
 
 #### Grafana Dashboards

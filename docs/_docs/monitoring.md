@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "31-05-2025"
+last_modified_at: "23-06-2025"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintained by the community.
@@ -1648,110 +1648,6 @@ k3s-mixins
     ```shell
     kubectl apply -f .
     ```
-
-
-## Monitoring Cluster Applications
-
-### Velero Monitoring
-
-By default velero helm chart is configured to expose Prometheus metrics in port 8085
-Backend endpoint is already exposing Prometheus metrics.
-
-It can be confirmed checking velero service
-
-```shell
-kubectl get svc velero -n velero -o yaml
-```
-```yml
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    meta.helm.sh/release-name: velero
-    meta.helm.sh/release-namespace: velero
-  creationTimestamp: "2021-12-31T11:36:39Z"
-  labels:
-    app.kubernetes.io/instance: velero
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: velero
-    helm.sh/chart: velero-2.27.1
-  name: velero
-  namespace: velero
-  resourceVersion: "9811"
-  uid: 3a6707ba-0e0f-49c3-83fe-4f61645f6fd0
-spec:
-  clusterIP: 10.43.3.141
-  clusterIPs:
-  - 10.43.3.141
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
-  ports:
-  - name: http-monitoring
-    port: 8085
-    protocol: TCP
-    targetPort: http-monitoring
-  selector:
-    app.kubernetes.io/instance: velero
-    app.kubernetes.io/name: velero
-    name: velero
-  sessionAffinity: None
-  type: ClusterIP
-```
-And executing `curl` command to obtain the velero metrics:
-
-```shell
-curl 10.43.3.141:8085/metrics
-```
-
-The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be used to automatically discover Velero metrics endpoint as a Prometheus target.
-
-- Create a manifest file `velero-servicemonitor.yml`
-  
-  ```yml
-  ---
-  apiVersion: monitoring.coreos.com/v1
-  kind: ServiceMonitor
-  metadata:
-    labels:
-      app: velero
-      release: kube-prometheus-stack
-    name: velero-prometheus-servicemonitor
-    namespace: monitoring
-  spec:
-    jobLabel: app.kubernetes.io/name
-    endpoints:
-      - port: http-monitoring
-        path: /metrics
-    namespaceSelector:
-      matchNames:
-        - velero
-    selector:
-      matchLabels:
-        app.kubernetes.io/instance: velero
-        app.kubernetes.io/name: velero
-  ``` 
-{{site.data.alerts.important}}
-
-`app.kubernetes.io/name` service label will be used as Prometheus' job label (`jobLabel`).
-{{site.data.alerts.end}}
-
-- Apply manifest file
-  ```shell
-  kubectl apply -f longhorn-servicemonitor.yml
-  ```
-
-- Check target is automatically discovered in Prometheus UI
-
-  http://prometheus.picluster.ricsanfre/targets
-
-
-#### Velero Grafana dashboard
-
-Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11055](https://grafana.com/grafana/dashboards/11055).
-
-
 
 ---
 

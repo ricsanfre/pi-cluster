@@ -264,14 +264,14 @@ Create kuberentes secret resource containing Minio end-point access information 
   apiVersion: v1
   kind: Secret
   metadata:
-  name: minio-secret
-  namespace: longhorn-system
+    name: minio-secret
+    namespace: longhorn-system
   type: Opaque
   data:
-  AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
-  AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
-  AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
-  AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
+    AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
+    AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
+    AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
+    AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
   ```
 
   {{site.data.alerts.note}}
@@ -520,7 +520,7 @@ Installation using `Helm` (Release 3):
   # AWS backend plugin configuration
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.10.0
+      image: velero/velero-plugin-for-aws:v1.12.1
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
@@ -600,7 +600,7 @@ Installation using `Helm` (Release 3):
   # AWS backend and CSI plugins configuration
   initContainers:
     - name: velero-plugin-for-aws
-      image: velero/velero-plugin-for-aws:v1.10.0
+      image: velero/velero-plugin-for-aws:v1.12.1
       imagePullPolicy: IfNotPresent
       volumeMounts:
         - mountPath: /target
@@ -865,6 +865,59 @@ spec:
         schedule: 'daily'
     ttl: 720h0m0s
 ```
+
+### Observability
+
+#### Integration with Kube-prom-stack
+
+
+`ServiceMonitoring`, Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from fluentf.
+
+Add following to the helm chart values.yaml file,
+
+```yaml
+# Settings for Velero's prometheus metrics. Enabled by default.
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+  serviceMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true
+```
+
+Corresponding Prometheus Operator's resource, `ServiceMonitor` will be created, so Kube-Prometheus-Stack can automatically start scraping metrics endpoint.
+
+#### Grafana Dashboards
+
+Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11055](https://grafana.com/grafana/dashboards/11055)
+
+The following configuration can be added to Grafana's Helm Chart so a MinIO's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+
+```yaml
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: Infrastructure
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+# Dashboards
+dashboards:
+  infrastructure:
+    velero:
+      # https://grafana.com/grafana/dashboards/11055-kubernetes-addons-velero-stats/
+      # renovate: depName="Velero Dashboard"
+      gnetId: 11055
+      revision: 2
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
 
 
 ## References
