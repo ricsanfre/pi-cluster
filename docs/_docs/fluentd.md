@@ -254,8 +254,8 @@ Installation process is the following:
 
     {{site.data.alerts.note}}
 
-    Substitute variables in the above yaml (`${var}`) file before deploying manifest.
-    -   Substitute `${CLUSTER_DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`
+    Substitute variables (`${var}`) in the above yaml file before deploying manifest.
+    -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`
 
     {{site.data.alerts.end}}
 
@@ -497,7 +497,7 @@ securityContext:
 
 ##### Fluentd container environment variables.
 
-Fluentd environmnet variables can be used in fluentd configuration file using the `#{ENV['VARIABLE_NAME']}` syntax (Any ruby code can be ingested usong `#{}`)
+Fluentd environment variables can be referenced in fluentd configuration file using the `#{ENV['VARIABLE_NAME']}` syntax (Any ruby code can be ingested usong `#{}`)
 
 Any environment variable used by Fluentd configuration can be provided to Fluentd pod through `env` and `envFrom` helm chart value.
 
@@ -553,7 +553,7 @@ fluentd docker image and configuration files use the following environment varia
 
   {{site.data.alerts.note}}
 
-  `FLUENTD_CONF` environment variable is automatically by Helm Chart. Not need to be specifiec in Helm Chart `values.yaml`
+  `FLUENTD_CONF` environment variable is automatically by Helm Chart. Not need to be specified in Helm Chart `values.yaml`
 
   {{site.data.alerts.end}}
 
@@ -753,8 +753,8 @@ The following fluentd configuration files are used:
         </transport>
         # Enabling access security
         <security>
-        self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
-        shared_key "#{ENV['FLUENT_AGGREGATOR_SHARED_KEY'] || 'sharedkey'}"
+            self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+            shared_key "#{ENV['FLUENT_AGGREGATOR_SHARED_KEY'] || 'sharedkey'}"
         </security>
     </source>
     ## Enable Prometheus end point
@@ -819,8 +819,6 @@ The following fluentd configuration files are used:
 
     -   Additional filters could be added here to transform the data. Initially all transformations have been included at the source (Fluent-bit)
 
-   
-
 -   `config.d/03_dispatch.conf`
 
     ```xml
@@ -856,7 +854,7 @@ The following fluentd configuration files are used:
             <store>
                 @type relabel
                 @label @OUTPUT_LOKI
-            </store>  
+            </store>
         </match>
     </label>
     ```
@@ -990,7 +988,109 @@ All these files should be put together into a ConfigMap. [TODO] Add reference to
 
 ### Input Configuration (Forward input plugin)
 
+```xml
+<source>
+    @type forward
+    @label @FORWARD
+    bind "#{ENV['FLUENTD_FORWARD_BIND'] || '0.0.0.0'}"
+    port "#{ENV['FLUENTD_FORWARD_PORT'] || '24224'}"
+    # Enabling TLS
+    <transport tls>
+        cert_path /etc/fluent/certs/tls.crt
+        private_key_path /etc/fluent/certs/tls.key
+    </transport>
+    # Enabling access security
+    <security>
+        self_hostname "#{ENV['FLUENTD_FORWARD_SEC_SELFHOSTNAME'] || 'fluentd-aggregator'}"
+        shared_key "#{ENV['FLUENT_AGGREGATOR_SHARED_KEY'] || 'sharedkey'}"
+    </security>
+</source>
+```
+
+-   Fluentd to expose `forward` protocol on port 24224 (by default unless `FLUEND_FORWARD_PORT` variable is specified)
+-   TLS communication is enabled for `forward` protocol. Fluentd TLS certificate and private key are read from filesystem (ConfigMap is mounted as volume)
+-   Authentication is configured using shared_key
+
 ### ElasticSearch Output Configuration
+
+
+#### Basic configuration
+
+Output plugin is configured with following detils
+
+
+```xml
+<label @OUTPUT_ES>
+    <match **>
+        @type elasticsearch
+        # ...
+        # Log ES HTTP API errors
+        log_es_400_reason true
+        # avoid 7.x errors
+        suppress_type_name true
+        # setting sniffer class
+        sniffer_class_name Fluent::Plugin::ElasticsearchSimpleSniffer
+        # Include tag key
+        include_tag_key true
+        # Do not use logstash format
+        logstash_format false
+        # Setting index_name
+        index_name fluentd-${index_name}
+        # specifying time key
+        time_key time
+        # including @timestamp field
+        include_timestamp true
+        # ...
+    </match>
+</label>
+
+```
+-   Setting snifer class (`sniffer_class_name`).  `fluent-plugin-elasticsearch` plugin configuration requires to set a specific sniffer class for implementing reconnection logic to ES(`sniffer_class_name Fluent::Plugin::ElasticsearchSimpleSniffer`). See plugin documentation [fluent-plugin-elasticsearh: Sniffer Class Name](https://github.com/uken/fluent-plugin-elasticsearch#sniffer-class-name).
+-   Logging reasons for ElasticSearch API 400 errors (`log_es_400_reason`)
+-   `suppress_type_name` to true to make it work with Elastic 8.0. `type` document has been deprecated in Elastic 8.0
+-   Include `tag` key in the emitted records (`include_tag_key true`). Tag is part of the records forwarded by Fluent-bit collectors 
+-   Do not use logstash format (`logstash_format true`). Avoid to generate indexes with the format `<logstash_prefix>-YYYY-MM-DD` (Rollover will be used)
+-   Add `@timestap` field (`include_timestamp`) to mimic Logstash behaviour
+-   Set `time_key` to `time` (original timestamp Fluent-bit extracted from the logs)
+-   Set index name to `fluentd-host` or `fluentd-<namespace>` (`index_name fluentd-${index_name}`)
+    `index_name` key is generated by filter plugin within `@OUTPUT_ES` label section.
+
+    ```xml
+    # Setup index name. Index per namespace or per container
+    <filter kube.**>
+        @type record_transformer
+        enable_ruby
+        <record>
+            index_name ${record['namespace']}
+        </record>
+    </filter>
+    <filter host.**>
+        @type record_transformer
+        enable_ruby
+        <record>
+            index_name "host"
+        </record>
+    </filter>
+    ```
+    {{site.data.alerts.note}}
+    A different index can be created by pod/container, if different structured logs recores were generated a different index template has to be created to specify the format/syntax of the different fields
+
+    In this case index_name can be set to application name
+
+    ```xml
+    <filter kube.**>
+        @type record_transformer
+        enable_ruby
+        <record>
+            index_name ${record['app']}-${record['container']}
+        </record>
+    </filter>
+    ```
+    {{site.data.alerts.end}}
+
+
+
+#### Index Template and ILM policies
 
 `fluentd-elasticsearch-plugin` supports the creation of index templates and ILM policies associated to each new index it creates in ES.
 
@@ -1002,97 +1102,166 @@ Additionally, separate ES indexes can be created for storing logs from different
 
 Storing logs from different applications in different indexes is an alternative solution to [issue #58](https://github.com/ricsanfre/pi-cluster/issues/58), avoiding mismatch-data-type ingestion errors that might occur when Merge_Log, option in fluentbit's kubernetes filter configuration, is enabled.
 
-[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) is configured, so a separate index is generated for each namespace (index name: fluentd-namespace) with a common ILM policy.
+[ILM using fixed index names](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#fixed-ilm-indices) has been configured. Default plugin behaviour of creating indexes in logstash format (one new index per day) is not used. [Dynamic index template configuration](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#configuring-for-dynamic-index-or-template) is configured, so a separate index is generated for each namespace (index name: `fluentd-<namespace>`) with a common ILM policy.
 
-- ILM policy
 
-  ILM policy configured (`ilm_policy` field in fluent-plugin-elascticsearch) for all fluentd logs is the following:
+-   Configuring ILM policy with rollover support
 
-  ```json
-  {
-    "policy":
-     {
-      "phases":
-       {
-         "hot":
-         {
-            "min_age":"0ms",
-            "actions":
+    ```xml
+    <label @OUTPUT_ES>
+        <match **>
+            @type elasticsearch
+            # ...
+            # ILM Settings - WITH ROLLOVER support
+            # https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.Troubleshooting.md#enable-index-lifecycle-management
+            index_date_pattern ""
+            enable_ilm true
+            ilm_policy_id fluentd-policy
+            ilm_policy {"policy":{"phases":{"hot":{"min_age":"0ms","actions":{"rollover":{"max_size":"10gb","max_age":"1d"}}},"delete":{"min_age":"7d","actions":{"delete":{ }}}}}}
+            ilm_policy_overwrite true
+            # ...
+        </match>
+    </label>
+    ```
+
+    -   Enable ILM (`enable_ilm true`), so fluentd can generate ILM policies and attach those policies to the indexes it creates.
+    -   Setting ILM policy id (`ilm_policy_id` and content (`ilm_policy`)
+
+        ILM policy configured (`ilm_policy` field in `fluent-plugin-elascticsearch`) for all fluentd logs is the following:
+
+        ```json
+        {
+          "policy":
+          {
+            "phases":
             {
-              "rollover":
-               {
-                 "max_size":"10gb",
-                 "max_age":"7d"
-               }
-             }
-          },
-          "warm":
-          {
-             "min_age":"2d",
-             "actions":
-             {
-                "shrink":
-                {
-                  "number_of_shards":1
-                },
-                "forcemerge":
-                {
-                  "max_num_segments":1}
-                }
-              },
-          "delete":
-          {
-             "min_age":"7d",
-             "actions":
+              "hot":
               {
+                  "min_age":"0ms",
+                  "actions":
+                  {
+                    "rollover":
+                    {
+                      "max_size":"10gb",
+                      "max_age":"1d"
+                    }
+                  }
+                },
                 "delete":
                 {
-                  "delete_searchable_snapshot":true
+                  "min_age":"7d",
+                  "actions":
+                    {
+                      "delete": { }
+                    }
                 }
               }
           }
         }
-    }
-  }
-  ```
+        ```
 
-- Dynamic index template
+        This policy consists of hot, warm, and delete phases.
 
-  A index template will be generated per index (container). The index template applied to each index created is the following
+        -   Hot phase — The index enters into this phase as soon as the index is created ("min_age": "0ms"). The index moves into the roll-over stage and waits for the conditions to be satisfied: the maximum size is 10 GB ("max_size": "10gb") or the age is older than 1 days ("max_age": "1d"). Once any of these conditions are met, the index is rolled over and transition to delete phase.
 
-  ```json
-  {
-    "index_patterns": ["fluentd-<<TAG>>-*"],
-    "template": {
-      "settings": {
-        "index": {
-          "lifecycle": {
-            "name": "fluentd-policy",
-            "rollover_alias": "fluentd-<<TAG>>"
-          },
-          "number_of_shards": "<<shard>>",
-          "number_of_replicas": "<<replica>>"
-        }
-      },
-      "mappings" : {
-        "dynamic_templates" : [ 
-          {
-            ...
+        -   Delete phase — The index stays in this phase for 7 days ("min_age": "7d"). Once this time lapses, the index is deleted permanently.
+
+
+-   Dynamic index template
+
+    ```xml
+    <label @OUTPUT_ES>
+        <match **>
+            @type elasticsearch
+            # ...
+            # index template
+            use_legacy_template false
+            template_overwrite true
+            template_name fluentd-${index_name}
+            template_file "/etc/fluent/template/fluentd-es-template.json"
+            customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_name}"}
+            # ...
+        </match>
+    </label>
+    ```
+
+    A index template can be generated per index. These index templates need to be mounted as a volume in Fluentd POD.
+    The index template is a JSON document that can be applied to each index created:
+
+    ```json
+    {
+      "index_patterns": ["fluentd-<<TAG>>-*"],
+      "template": {
+        "settings": {
+          "index": {
+            "lifecycle": {
+              "name": "fluentd-policy",
+              "rollover_alias": "fluentd-<<TAG>>"
+            },
+            "number_of_shards": "<<shard>>",
+            "number_of_replicas": "<<replica>>"
           }
-          ]
+        },
+        "mappings" : {
+          "dynamic_templates" : [
+              {
+                ...
+              }
+            ]
+          }
         }
       }
-    }
-  ```
+    ```
+    The template defines the ILM policy to be applied (`fluentd-policy`) in `template.settings.index.lifecycle`
+    It also include the field mappings to be included `template.mappings`
 
-  fluentd-elasticsearch-plugin dynamically replaces `<<TAG>>`, `<<shard>>` and `<<replica>>` parameters with the values stored in `template_customize` field.
+    `fluentd-elasticsearch-plugin` dynamically replaces `<<TAG>>`, `<<shard>>` and `<<replica>>` parameters with the values stored in `customize_template` field.
 
-  ```
-  customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
-  ```
+    ```
+    customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
+    ```
 
 
 ### Loki Output Configuration
+
+```xml
+<label @OUTPUT_LOKI>
+    <match **>
+        @type loki
+        @id out_loki_kube
+        @log_level info
+        url "#{ENV['LOKI_URL']}"
+        username "#{ENV['LOKI_USERNAME'] || use_default}"
+        password "#{ENV['LOKI_PASSWORDD'] || use_default}"
+        extra_labels {"job": "fluentd"}
+        line_format json
+        <label>
+            app
+            container
+            pod
+            namespace
+            host
+            filename
+        </label>
+        # ...
+    </match>
+</label>
+```
+
+-   `url` indicates Loki Endpoint
+
+    If Loki has been installed following instructions in [PiCluster - Loki](/docs/loki/), the following values need to be provided as environment variables
+
+    -   `${LOKI_URL}` = `http://loki-headless.loki:3100`
+
+    -   Loki endpoint is not protected, so `username` and `password` can be leave as default values. Not need to specify `${LOKI_URL}` and `${LOKI_PASSWORD}`
+
+-   `label` and `extra_labes` define the labels Loki can use to index the logs. Main keys from the record are used to index the logs.
+
+-   `line_format`. Use JSON
+
+
+### Monitoring Configuration
 
 
 ## Logs from external nodes
@@ -1139,9 +1308,9 @@ spec:
 
 {{site.data.alerts.note}}
 
-  Substitute variables in the above yaml (`${var}`) file before deploying manifest.
-  -   Substitute `${FLUENTD_LOAD_BALANCER_IP}` with IP within Cilium's Load Balancer address pool range (i.e. 10.0.0.101).
-  -   Substitute `${CLUSTER_DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`.
+  Substitute variables (`${var}`) in the above yaml file before deploying manifest.
+  -   Replace `${FLUENTD_LOAD_BALANCER_IP}` by Load balancer IP. IP belonging to Cilium's Load Balancer address pool range (i.e. 10.0.0.101).
+  -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
 
 ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP, making fluentd service available at fluentd.{$CLUSTER_DOMAIN} port 24224. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
 
@@ -1154,15 +1323,11 @@ Fluentbit can be installed in external nodes and configured so logs can be forwa
 
 There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
 
-Fluentbit installation and configuration tasks have been automated with Ansible developing a role: role [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
+Fluentbit installation and configuration can be automated with Ansible. For example using Ansible role: [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
 
 #### Fluent bit configuration
 
-{{site.data.alerts.note}}
-**ricsanfre.fluentbit** role configuration is defined through a set of ansible variables. This variables are defined at `control` inventory group (group_vars/control.yml), to which `gateway`and `pimaster` belong to.
-{{site.data.alerts.end}}
-
-Configuration is quite similar to the one defined for the fluentbit-daemonset, removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
+Configuration is quite similar to the one defined for the fluentbit (See ["Collecting logs with FluentBit"](/docs/fluent-bit/)), removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
 
 `/etc/fluent-bit/fluent-bit.conf`
 ```
@@ -1184,22 +1349,26 @@ Configuration is quite similar to the one defined for the fluentbit-daemonset, r
     Path /var/log/auth.log,/var/log/syslog
     Parser syslog-rfc3164-nopri
 
-[FILTER]
-    Name lua
-    Match host.*
-    script /etc/fluent-bit/adjust_ts.lua
-    call local_timestamp_to_UTC
-
 [OUTPUT]
     Name forward
     Match *
-    Host fluentd.picluster.ricsanfre.com
+    Host fluentd.${CLUSTER_DOMAIN}
     Port 24224
-    Self_Hostname gateway
-    Shared_Key s1cret0
+    Self_Hostname ${HOSTNAME}
+    Shared_Key ${SHARED_KEY}
     tls true
     tls.verify false
 ```
+
+{{site.data.alerts.note}}
+
+Substitute variables (`${var}`) in the above config file before applying it.
+-   Replace `${CLUSTER_DOMAIN}` by the domain used in the cluster. For example: `homelab.ricsanfre.com`
+-   Replace `${HOSTNAME}` by the hostname of the server where fluent-bit is installed. For example: `node1`
+-   Replace `${SHARED_KEY}` by the fluentd shared key configured for the `forward` protocol`
+
+{{site.data.alerts.end}}
+
 
 `/etc/fluent-bit/custom_parsers.conf`
 ```
@@ -1212,6 +1381,7 @@ Configuration is quite similar to the one defined for the fluentbit-daemonset, r
     Time_Keep False
 ```
 
+
 With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
 
 
@@ -1223,25 +1393,105 @@ With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` 
 
 In order to monitor Fluentd with Prometheus, `fluent-plugin-prometheus` plugin need to be installed and configured. The custom docker image [fluentd-aggregator](https://github.com/ricsanfre/fluentd-aggregator), I have developed for this project, has this plugin installed.
 
-This plugin need to be configured. It provides '/metrics' endpoint on port 24231.
+To expose Fluentd metrics to Prometheus, the following need to be configure
 
-```
-# Prometheus metric exposed on 0.0.0.0:24231/metrics
-<source>
-  @type prometheus
-  @id in_prometheus
-  bind "#{ENV['FLUENTD_PROMETHEUS_BIND'] || '0.0.0.0'}"
-  port "#{ENV['FLUENTD_PROMETHEUS_PORT'] || '24231'}"
-  metrics_path "#{ENV['FLUENTD_PROMETHEUS_PATH'] || '/metrics'}"
-</source>
 
-<source>
-  @type prometheus_output_monitor
-  @id in_prometheus_output_monitor
-</source>
-```
 
-Check out further details in [Fluentd Documentation: Monitoring by Prometheus] (https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus).
+-   Expose Metrics by Prometheus Input Plugin via HTTP
+
+    The following configuration exposes '/metrics' endpoint on port 24231.
+
+    ```xml
+    # Prometheus metric exposed on 0.0.0.0:24231/metrics
+    <source>
+      @type prometheus
+      @id in_prometheus
+      bind "#{ENV['FLUENTD_PROMETHEUS_BIND'] || '0.0.0.0'}"
+      port "#{ENV['FLUENTD_PROMETHEUS_PORT'] || '24231'}"
+      metrics_path "#{ENV['FLUENTD_PROMETHEUS_PATH'] || '/metrics'}"
+    </source>
+
+    <source>
+        @type prometheus_monitor
+        @id in_prometheus_monitor
+    </source>
+
+    <source>
+      @type prometheus_output_monitor
+      @id in_prometheus_output_monitor
+    </source>
+    ```
+    -   It configures `prometheus` input plugin so Prometheus metrics are exposed at `/metrics` on port 24231
+    -   It configures `prometheus_monitor` input plugin so it collects internal fluentd metrics . See metrics details in https://github.com/fluent/fluent-plugin-prometheus?tab=readme-ov-file#prometheus_monitor-input-plugin
+    -   It configures `prometheus_output_monitor` input plugin so it collects internal metrics for output plugins. See details about output metrics collected in https://github.com/fluent/fluent-plugin-prometheus?tab=readme-ov-file#prometheus_output_monitor-input-plugin
+
+-   Counting Incoming Records by Prometheus Filter Plugin
+
+    ```xml
+        # Calculate prometheus metrics
+    <filter kube.**>
+        @type prometheus
+        <metric>
+            name fluentd_input_status_num_k8s_records_total
+            type counter
+            desc The total number of incoming records
+            <labels>
+                host $.host
+                app_namespace $.namespace
+                app $.app
+                app_pod $.pod
+                app_container $.container
+            </labels>
+        </metric>
+    </filter>
+    <filter host.**>
+        @type prometheus
+        <metric>
+            name fluentd_input_status_num_host_records_total
+            type counter
+            desc The total number of incoming records
+            <labels>
+                host $.host
+                filename $.filename
+            </labels>
+        </metric>
+    </filter>
+    ```
+    -   It configures `prometheus` filter plugin so records are counted as they arrived
+    -   k8s records are counted by container (it labels the counter per `host`, `namespace`, `pod` and `container` keys)
+    -   host records are counted by filename
+
+-   Counting Outgoing Records by Prometheus Output Plugin
+
+    ```xml
+    # count the number of outgoing records per tag
+    <match **>
+      @type copy
+      <store>
+          @type relabel
+          @label @OUTPUT_ES
+      </store>
+      <store>
+          @type relabel
+          @label @OUTPUT_LOKI
+      </store>
+      <store>
+        @type prometheus
+        <metric>
+          name fluentd_output_status_num_records_total
+          type counter
+          desc The total number of outgoing records
+          <labels>
+            host $.host
+            filename $.filename
+          </labels>
+        </metric>
+      </store>
+    </match>
+    ```
+    With this configuration output records are counted per record key (`host` and `filename`)
+
+Check out further details in [Fluentd Documentation: Monitoring by Prometheus](https://docs.fluentd.org/monitoring-fluentd/monitoring-prometheus).
 
 
 #### Integration with Kube-prom-stack
