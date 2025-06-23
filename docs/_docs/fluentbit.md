@@ -1,5 +1,5 @@
 ---
-title: Log Collection with Fluent-bit
+title: Log Collection (Fluent-bit)
 permalink: /docs/fluentbit/
 description: How to deploy logs collection solution for Kubernetes Cluster using Fluent-bit.
 last_modified_at: "20-06-2025"

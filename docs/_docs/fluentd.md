@@ -1,5 +1,5 @@
 ---
-title: Log aggregation and distribution with Fluentd
+title: Log aggregation and distribution (Fluentd)
 permalink: /docs/fluentd/
 description: How to deploy log distribution solution for Kubernetes Cluster using Fluentd.
 last_modified_at: "17-06-2025"
