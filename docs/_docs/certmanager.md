@@ -216,7 +216,7 @@ Root CA certificate is needed for generated this CA Issuer. A selfsigned `Cluste
         secretName: root-secret
     ```
 
-### Public PKI with Let's Encry
+### Public PKI with Let's Encrypt
 
 
 Let's Encrypt provide publicly trusted TLS certificates for free. Not need to generate auto-signed TLS Certificates for the websites that are not automatically trusted by HTTP browsers.
