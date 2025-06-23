@@ -428,9 +428,9 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
     kind: Secret
     type: Opaque
     metadata:
-        name: minio-monitor-token
+      name: minio-monitor-token
     data:
-        token: < minio_bearer_token | b64encode >
+      token: < minio_bearer_token | b64encode >
     ```
 
 -   Create Prometheus Operator ScrapeConfig resources
@@ -440,65 +440,65 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
     apiVersion: monitoring.coreos.com/v1alpha1
     kind: ScrapeConfig
     metadata:
-    name: minio-job
+      name: minio-job
     spec:
-    jobName: minio-ext
-    authorization:
+      jobName: minio-ext
+      authorization:
         credentials:
-        name: minio-monitor-token
-        key: token
-    metricsPath: /minio/v2/metrics/cluster
-    scheme: HTTPS
-    staticConfigs:
-    - targets:
+          name: minio-monitor-token
+          key: token
+      metricsPath: /minio/v2/metrics/cluster
+      scheme: HTTPS
+      staticConfigs:
+      - targets:
         - ${S3_BACKUP_SERVER}:9091
     ---
     apiVersion: monitoring.coreos.com/v1alpha1
     kind: ScrapeConfig
     metadata:
-    name: minio-job-node
+      name: minio-job-node
     spec:
-    jobName: minio-ext
-    authorization:
+      jobName: minio-ext
+      authorization:
         credentials:
-        name: minio-monitor-token
-        key: token
-    metricsPath: /minio/v2/metrics/node
-    scheme: HTTPS
-    staticConfigs:
-    - targets:
+          name: minio-monitor-token
+          key: token
+      metricsPath: /minio/v2/metrics/node
+      scheme: HTTPS
+      staticConfigs:
+      - targets:
         - ${S3_BACKUP_SERVER}:9091
     ---
     apiVersion: monitoring.coreos.com/v1alpha1
     kind: ScrapeConfig
     metadata:
-    name: minio-job-bucket
+      name: minio-job-bucket
     spec:
-    jobName: minio-ext
-    authorization:
+      jobName: minio-ext
+      authorization:
         credentials:
-        name: minio-monitor-token
-        key: token
-    metricsPath: /minio/v2/metrics/bucket
-    scheme: HTTPS
-    staticConfigs:
-    - targets:
+          name: minio-monitor-token
+          key: token
+      metricsPath: /minio/v2/metrics/bucket
+      scheme: HTTPS
+      staticConfigs:
+      - targets:
         - ${S3_BACKUP_SERVER}:9091
     ---
     apiVersion: monitoring.coreos.com/v1alpha1
     kind: ScrapeConfig
     metadata:
-    name: minio-job-resource
+      name: minio-job-resource
     spec:
-    jobName: minio-ext
-    authorization:
+      jobName: minio-ext
+      authorization:
         credentials:
-        name: minio-monitor-token
-        key: token
-    metricsPath: /minio/v2/metrics/resource
-    scheme: HTTPS
-    staticConfigs:
-    - targets:
+          name: minio-monitor-token
+          key: token
+      metricsPath: /minio/v2/metrics/resource
+      scheme: HTTPS
+      staticConfigs:
+      - targets:
         - ${S3_BACKUP_SERVER}:9091
     ```
 
