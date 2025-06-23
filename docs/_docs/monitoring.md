@@ -372,13 +372,13 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
 
     {{site.data.alerts.note}}
 
-    Substitute variables in the above yaml (`${var}`) file before deploying helm chart.
-    -   Substitute `${DOMAIN}` with the domain used in the cluster. For example: `homelab.ricsanfre.com`
+    Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+    -   Replace `${DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
         FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
         External-DNS can be configured to automatically configured that entry in your DNS service.
-    -   Substitute `${STORAGE_CLASS}` varaiable with storage class used (i.e. `longhorn`, `local-path`, etc.)
-    -   Substitute `${K8S_CP_NODE_x}` variables with IP addresses of the control plane nodes of the cluster.
-    -   Substitute `${K8S_WK_NODE_x}` variables with IP addresses of the worker nodes.
+    -   Replace `${STORAGE_CLASS}` by storage class name used (i.e. `longhorn`, `local-path`, etc.)
+    -   Replace `${K8S_CP_NODE_x}` by cluster's control node IP addresses.
+    -   Replace `${K8S_WK_NODE_x}` by cluster's worker node IP addresses.
 
     {{site.data.alerts.end}}
 
@@ -1752,137 +1752,6 @@ The Prometheus custom resource definition (CRD), `ServiceMonitoring` will be use
 Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11055](https://grafana.com/grafana/dashboards/11055).
 
 
-
-### External Nodes Monitoring
-
-- Install Node metrics exporter
-
-  Instead of installing Prometheus Node Exporter, fluentbit built-in similar functionallity can be used.
-
-  Fluentbit's [node-exporter-metric](https://docs.fluentbit.io/manual/pipeline/inputs/node-exporter-metrics) and [prometheus-exporter](https://docs.fluentbit.io/manual/pipeline/outputs/prometheus-exporter) plugins can be configured to expose `gateway` metrics that can be scraped by Prometheus.
-
-  Add to node's fluent.conf file the following configuration:
-
-  ```
-  [INPUT]
-      name node_exporter_metrics
-      tag node_metrics
-      scrape_interval 30
-  ```
-  
-  It configures node exporter input plugin to get node metrics
-
-  ```
-  [OUTPUT]
-      name prometheus_exporter
-      match node_metrics
-      host 0.0.0.0
-      port 9100
-  ```
-
-  It configures prometheuss output plugin to expose metrics endpoint `/metrics` in port 9100.
-
-- Create a manifest file external-node-metrics-service.yml for creating the Kuberentes service pointing to a external server used by Prometheus to scrape External nodes metrics.
-
-  This service. as it happens with k3s-metrics, and Minio must be a headless service and without selector and the endpoints must be defined explicitly.
-
-
-  The service will be use the Fluentbit metrics endpoint (TCP port 9100) for scraping all metrics.
-
-  ```yml
-  ---
-  # Headless service for External Node metrics. No Selector
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: external-node-metrics-service
-    labels:
-      app: prometheus-node-exporter
-      release: kube-prometheus-stack
-      jobLabel: node-exporter
-    namespace: monitoring
-  spec:
-    clusterIP: None
-    ports:
-    - name: http-metrics
-      port: 9100
-      protocol: TCP
-      targetPort: 9100
-    type: ClusterIP
-  ---
-  # Endpoint for the headless service without selector
-  apiVersion: v1
-  kind: Endpoints
-  metadata:
-    name: external-node-metrics-servcie
-    namespace: monitoring
-  subsets:
-  - addresses:
-    - ip: 10.0.0.1
-    ports:
-    - name: http-metrics
-      port: 9100
-      protocol: TCP
-  ```
-  
-  The service has been configured with specific labels so it matches the discovery rules configured in the Node-Exporter ServiceMonitoring Object (part of the kube-prometheus installation) and no new service monitoring need to be configured and the new nodes will appear in the corresponing Grafana dashboards.
-
-  
-      app: prometheus-node-exporter
-      release: kube-prometheus-stack
-      jobLabel: node-exporter
-
-
-  Prometheus-Node-Exporter Service Monitor is the following:
-  ```yml
-  apiVersion: monitoring.coreos.com/v1
-  kind: ServiceMonitor
-  metadata:
-    annotations:
-      meta.helm.sh/release-name: kube-prometheus-stack
-      meta.helm.sh/release-namespace: monitoring
-    generation: 1
-    labels:
-      app: prometheus-node-exporter
-      app.kubernetes.io/managed-by: Helm
-      chart: prometheus-node-exporter-3.3.1
-      heritage: Helm
-      jobLabel: node-exporter
-      release: kube-prometheus-stack
-    name: kube-prometheus-stack-prometheus-node-exporter
-    namespace: monitoring
-    resourceVersion: "6369"
-  spec:
-    endpoints:
-    - port: http-metrics
-      scheme: http
-    jobLabel: jobLabel
-    selector:
-      matchLabels:
-        app: prometheus-node-exporter
-        release: kube-prometheus-stack
-  ```
-  
-  `spec.selector.matchLabels` configuration specifies which labels values must contain the services in order to be discovered by this ServiceMonitor object.
-  ```yml
-  app: prometheus-node-exporter
-  release: kube-prometheus-stack
-  ```
-
-  `jobLabel` configuration specifies the name of a service label which contains the job_label assigned to all the metrics. That is why `jobLabel` label is added to the new service with the corresponding value (`node-exporter`). This jobLabel is used in all configured Grafana's dashboards, so it need to be configured to reuse them for the external nodes.
-  ```yml
-  jobLabel: node-exporter
-  ```
-
-- Apply manifest file
-  ```shell
-  kubectl apply -f exterlnal-node-metrics-service.yml
-  ```
-- Check target is automatically discovered in Prometheus UI: `http://prometheus/targets`
-
-#### Grafana dashboards
-
-Not need to install additional dashboards. Node-exporter dashboards pre-integrated by kube-stack shows the external nodes metrics.
 
 ---
 

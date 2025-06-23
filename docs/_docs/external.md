@@ -164,6 +164,167 @@ As described in ["PiCluster - PXE Server"](/docs/pxe-server), PXE server, to aut
 
 ## Vault Installation
 
-As descrived in ["PiCluster - Secrets Management (Vault)"](/docs/vault/), Hashicorp Vault is installed in `node1`
+As described in ["PiCluster - Secrets Management (Vault)"](/docs/vault/), Hashicorp Vault is installed in `node1`
 
 For automating configuration tasks, ansible role [**ricsanfre.vault**](https://galaxy.ansible.com/ricsanfre/vault) has been developed.
+
+## Observability
+
+### Metrics
+
+[Node Exporter](https://github.com/prometheus/node_exporter) is a Prometheus exporter for hardware and OS metrics exposed by UNIX kernels, written in Go with pluggable metric collectors.
+
+Node Exporter is deployed on external node, so it exposes a Prometheus compliant metrics endpoint that can be used by Prometheus Server to collect metrics.
+
+#### Node Exporter installation
+
+The Prometheus Node Exporter is a single static binary that can be installed via tarball that can be downloaded from [Prometheus download website](https://prometheus.io/download/#node_exporter)
+
+-   Step 1: Add user for node_exporter
+    ```
+    sudo useradd --no-create-home --shell /sbin/nologin node_exporter
+    ```
+
+-   Step 2: Download tar file and untar it
+
+   ```shell
+   cd tmp
+   wget https://github.com/prometheus/node_exporter/releases/download/v<VERSION>/node_exporter-<VERSION>.linux-<ARCH>.tar.gz
+   ```
+
+-   Step 3: Copy node_exporter binary to `/usr/local/bin`
+
+    ```shell
+    sudo cp /tmp/node_exporter-<VERSION>.linux-<ARCH>/node_exporter /usr/local/bin
+    ```
+
+-   Step 4: Create service file for systemd `/etc/systemd/system/node_exporter.service`
+
+    ```
+    [Unit]
+    Description=Node Exporter
+    Wants=network-online.target
+    After=network-online.target
+
+    [Service]
+    User=node_exporter
+    Group=node_exporter
+    Type=simple
+    ExecStart=/opt/node_exporter/node_exporter --collector.systemd
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+-   Step 4: Reload systemd daemon
+
+    ```shell
+    sudo systemctl daemon-reload
+    ```
+
+-   Step 5: Start and enable node exporter service
+
+    ```shell
+    sudo systemctl enable node_exporter
+    sudo systemctl start node_exporter
+    ```
+
+-   Step 6: Check that node_exporter has started
+
+    ```shell
+    sudo journalctl -f --unit node_exporter
+    ```
+
+Node Exporter installation and configuration can be automated with Ansible. For example using Ansible role: [**geerlingguy.ansible-role-node_exporter**](https://github.com/geerlingguy/ansible-role-node_exporter).
+
+#### Integration with Kube-Prom-Stack
+
+In case Prometheus server is deployed in Kuberentes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
+
+
+-   Create Prometheus Operator ScrapeConfig resources
+
+    ```yaml
+    apiVersion: monitoring.coreos.com/v1alpha1
+    kind: ScrapeConfig
+    metadata:
+      name: node-exporter
+    spec:
+      staticConfigs:
+        - targets:
+            - ${NODE_NAME}:9100
+      metricsPath: /metrics
+    ```
+
+    Where ${NODE_NAME}, should be replaced by DNS or IP address of the external node (i.e.: `node1.homelab.ricsanfre.com`).
+
+
+### Logs
+
+#### Fluent-bit Agent installation
+
+Fluentbit can be installed in external nodes and configured so logs can be forwarded to Fluentd aggregator service running within the cluster.
+
+There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
+
+Fluentbit installation and configuration can be automated with Ansible. For example using Ansible role: [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
+
+#### Fluent bit configuration
+
+Configuration is quite similar to the one defined for the fluentbit (See ["Collecting logs with FluentBit"](/docs/fluent-bit/)), removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
+
+`/etc/fluent-bit/fluent-bit.conf`
+```
+[SERVICE]
+    Daemon Off
+    Flush 1
+    Log_Level info
+    Parsers_File parsers.conf
+    Parsers_File custom_parsers.conf
+    HTTP_Server On
+    HTTP_Listen 0.0.0.0
+    HTTP_Port 2020
+    Health_Check On
+
+[INPUT]
+    Name tail
+    Tag host.*
+    DB /run/fluentbit-state.db
+    Path /var/log/auth.log,/var/log/syslog
+    Parser syslog-rfc3164-nopri
+
+[OUTPUT]
+    Name forward
+    Match *
+    Host fluentd.${CLUSTER_DOMAIN}
+    Port 24224
+    Self_Hostname ${HOSTNAME}
+    Shared_Key ${SHARED_KEY}
+    tls true
+    tls.verify false
+```
+
+{{site.data.alerts.note}}
+
+Substitute variables (`${var}`) in the above config file before applying it.
+-   Replace `${CLUSTER_DOMAIN}` by the domain used in the cluster. For example: `homelab.ricsanfre.com`
+-   Replace `${HOSTNAME}` by the hostname of the server where fluent-bit is installed. For example: `node1`
+-   Replace `${SHARED_KEY}` by the fluentd shared key configured for the `forward` protocol`
+
+{{site.data.alerts.end}}
+
+
+`/etc/fluent-bit/custom_parsers.conf`
+```
+[PARSER]
+    Name syslog-rfc3164-nopri
+    Format regex
+    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Time_Key time
+    Time_Format %b %d %H:%M:%S
+    Time_Keep False
+```
+
+
+With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
+
