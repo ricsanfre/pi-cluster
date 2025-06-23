@@ -986,7 +986,7 @@ The following fluentd configuration files are used:
 All these files should be put together into a ConfigMap. [TODO] Add reference to ConfigMap in github repo.
 {{site.data.alerts.end}}
 
-### Input Configuration (Forward input plugin)
+### Forward Input Plugin
 
 ```xml
 <source>
@@ -1010,6 +1010,25 @@ All these files should be put together into a ConfigMap. [TODO] Add reference to
 -   Fluentd to expose `forward` protocol on port 24224 (by default unless `FLUEND_FORWARD_PORT` variable is specified)
 -   TLS communication is enabled for `forward` protocol. Fluentd TLS certificate and private key are read from filesystem (ConfigMap is mounted as volume)
 -   Authentication is configured using shared_key
+
+### Syslog Input Plugin
+
+
+```xml
+<source>
+  @type syslog
+  @label @FORWARD
+  tag host
+  bind 0.0.0.0
+  port 5140
+  protocol_type udp
+  <parse>
+    message_format rfc5424
+  </parse>
+<source>
+```
+-  Fluentd to expose `syslog` protocol on port 5140
+-  Input messages are parsed using embedded rfc5424 syslog parser (i.e. OpenWRT generates syslog messages following that format)
 
 ### ElasticSearch Output Configuration
 
@@ -1221,7 +1240,6 @@ Storing logs from different applications in different indexes is an alternative 
     customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_app_name}"}
     ```
 
-
 ### Loki Output Configuration
 
 ```xml
@@ -1261,22 +1279,23 @@ Storing logs from different applications in different indexes is an alternative 
 -   `line_format`. Use JSON
 
 
-### Monitoring Configuration
-
-
 ## Logs from external nodes
 
 For colleting the logs from external nodes (nodes not belonging to kubernetes cluster: i.e: `node1`, `gateway`), fluentd service can be exposed so external systems can use it to ingest logs
 
-### Exposing Fluentd Service
+### Exposing Fluentd Services
+
+Fluentd Forward and Syslog endpoints need to be exposed outside the cluster
 
 In order to expose Fluentd service and be reachable from outside the cluster, a new Kubernetes `Service`, LoadBalancer type, has to be created:
 
 
+![fluentd-architecture](/assets/img/flluentd-external-services.png)
+
 {{site.data.alerts.note}}
 
 Helm chart creates a Service resource (ClusterIP) exposing all ports (forward and metrics ports) to PODS running inside the cluster. 
-With this Service Resource, only forward port will be reachable from outside the cluster.
+With this Service Resource, only `forward` and `syslog` ports will be reachable from outside the cluster.
 
 {{site.data.alerts.end}}
 
@@ -1299,8 +1318,11 @@ spec:
     port: 24224
     protocol: TCP
     targetPort: 24224
+  - name: syslog-ext
+    port: 5140
+    protocol: UDP
+    targetPort: 5140
   selector:
-    app.kubernetes.io/instance: fluentd
     app.kubernetes.io/name: fluentd
   sessionAffinity: None
   type: LoadBalancer
@@ -1315,75 +1337,6 @@ spec:
 ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP, making fluentd service available at fluentd.{$CLUSTER_DOMAIN} port 24224. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
 
 {{site.data.alerts.end}}
-
-
-### Configuring external nodes
-
-Fluentbit can be installed in external nodes and configured so logs can be forwarded to fluentd aggregator service running within the cluster.
-
-There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
-
-Fluentbit installation and configuration can be automated with Ansible. For example using Ansible role: [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
-
-#### Fluent bit configuration
-
-Configuration is quite similar to the one defined for the fluentbit (See ["Collecting logs with FluentBit"](/docs/fluent-bit/)), removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
-
-`/etc/fluent-bit/fluent-bit.conf`
-```
-[SERVICE]
-    Daemon Off
-    Flush 1
-    Log_Level info
-    Parsers_File parsers.conf
-    Parsers_File custom_parsers.conf
-    HTTP_Server On
-    HTTP_Listen 0.0.0.0
-    HTTP_Port 2020
-    Health_Check On
-
-[INPUT]
-    Name tail
-    Tag host.*
-    DB /run/fluentbit-state.db
-    Path /var/log/auth.log,/var/log/syslog
-    Parser syslog-rfc3164-nopri
-
-[OUTPUT]
-    Name forward
-    Match *
-    Host fluentd.${CLUSTER_DOMAIN}
-    Port 24224
-    Self_Hostname ${HOSTNAME}
-    Shared_Key ${SHARED_KEY}
-    tls true
-    tls.verify false
-```
-
-{{site.data.alerts.note}}
-
-Substitute variables (`${var}`) in the above config file before applying it.
--   Replace `${CLUSTER_DOMAIN}` by the domain used in the cluster. For example: `homelab.ricsanfre.com`
--   Replace `${HOSTNAME}` by the hostname of the server where fluent-bit is installed. For example: `node1`
--   Replace `${SHARED_KEY}` by the fluentd shared key configured for the `forward` protocol`
-
-{{site.data.alerts.end}}
-
-
-`/etc/fluent-bit/custom_parsers.conf`
-```
-[PARSER]
-    Name syslog-rfc3164-nopri
-    Format regex
-    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
-    Time_Key time
-    Time_Format %b %d %H:%M:%S
-    Time_Keep False
-```
-
-
-With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
-
 
 ## Observability
 
