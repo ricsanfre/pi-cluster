@@ -354,9 +354,9 @@ Fluent-bit will be deployed as `DaemonSet` and the config file will be externall
     #         return 1, timestamp - utc_time_diff, record
     #     end
     
-    # Enable fluentbit instalaltion on master node
+    # Enable fluentbit installation on control-plane nodes
     tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: NoSchedule
     
