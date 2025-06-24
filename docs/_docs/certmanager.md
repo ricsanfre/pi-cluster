@@ -456,7 +456,9 @@ prometheus:
 
 cert-manager's Grafana dashboard can be downloaded from [grafana.com](https://grafana.com): [dashboard id: 20842](https://grafana.com/grafana/dashboards/20842-cert-manager-kubernetes/) 
 
-Dashboard can be automatically added using dashboards providers in the list of automated provisioned dashboards. Add following configuration to Grafana's helm chart values file
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
 
 ```yaml
 # Configure default Dashboard Provider

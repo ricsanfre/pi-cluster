@@ -375,7 +375,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
     -   Replace `${DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
         FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
-        External-DNS can be configured to automatically configured that entry in your DNS service.
+        External-DNS can be configured to automatically add that entry in your DNS service.
     -   Replace `${STORAGE_CLASS}` by storage class name used (i.e. `longhorn`, `local-path`, etc.)
     -   Replace `${K8S_CP_NODE_x}` by cluster's control node IP addresses.
     -   Replace `${K8S_WK_NODE_x}` by cluster's worker node IP addresses.
