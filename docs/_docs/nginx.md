@@ -252,7 +252,9 @@ controller:
 #### Grafana Dashboard
 Ingress NGINX grafana dashboards in JSON format can be found here: [Kubernetes Ingress-nginx Github repository: `grafana`](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards).
 
-The following configuration can be added to Grafana's Helm Chart so a NGINX's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file, so a NGINX's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
 
 ```yaml
 dashboardProviders:

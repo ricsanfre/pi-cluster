@@ -1204,8 +1204,7 @@ kustomize.toolkit.fluxcd.io/substitute: disabled
 ```
 
 
-## References
-
+---
 
 [^1]: All your Kubernetes manifests in a single Git repository. The various environments specific configs are all stored in the same branch
     [Flux documentation: Ways of structuring your repositories](https://fluxcd.io/flux/guides/repository-structure/)

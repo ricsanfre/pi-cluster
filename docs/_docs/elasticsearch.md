@@ -587,13 +587,15 @@ elasticsearch_breakers_estimated_size_bytes{breaker="model_inference",cluster="e
 
 #### Integration with Kube-prom-stack
 
-Providing `serviceMonitor.enabled: true` to the helm chart values.yaml file, corresponding Prometheus Operator's resource, `ServiceMonitor`, so Kube-Prometheus-Stack can automatically start scraping metrics form this endpoint
+Providing `serviceMonitor.enabled: true` to the helm chart `values.yaml` file, corresponding Prometheus Operator's resource, `ServiceMonitor`, so Kube-Prometheus-Stack can automatically start scraping metrics form this endpoint
 
 #### Grafana Dashboards
 
 Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-exporter repo](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. Add following configuration to Grafana's helm chart values file
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
 
 ```yaml
 # Configure default Dashboard Provider
