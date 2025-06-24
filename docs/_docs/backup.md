@@ -47,12 +47,12 @@ The backup architecture is the following:
   Wiht this functionality application-consistent backups can be orchestrated:
 
   ```shell
-  # Freeze POD's filesystem
+  # Freeze POD filesystem
   kubectl exec pod -- app_feeze_commandç
   # Take snapshot using CSI Snapshot CRDs
   kubectl apply -f volume_snapshot.yml
   # wait till snapshot finish
-  # Unfreeze POD's filesystem
+  # Unfreeze POD filesystem
   kubectl exec pod -- app_unfreeze_command
   ```
 
@@ -76,7 +76,7 @@ The backup architecture is the following:
 
 {{site.data.alerts.note}}
 
-Minio S3 server installed as stand-alone service and configured as described in [Pi Cluster S3 Object Storage Service](/docs/minio/) will be used as backup backend.
+Minio S3 server installed as stand-alone service and configured as described in [Pi Cluster S3 Object Storage Service](/docs/s3-backup/) will be used as backup backend.
 
 {{site.data.alerts.end}}
 
@@ -85,6 +85,62 @@ Minio S3 server installed as stand-alone service and configured as described in 
 OS filesystems from different nodes will be backed up using `restic`. As backend S3 Minio server will be used.
 
 Restic installation and backup scheduling tasks have been automated with Ansible developing a role: **ricsanfre.backup**. This role installs restic and configure a systemd service and timer to schedule the backup execution.
+
+
+### Minio Backupstore configuration
+
+##### Install Minio backup server
+
+See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup).
+
+##### Configure Restic bucket and user
+
+| User | Bucket |
+|:--- |:--- |
+|restic | restic |
+{: .table .table-white .border-dark }
+
+-   Create bucket for storing Longhorn backups/snapshots
+
+    ```shell
+    mc mb ${MINIO_ALIAS}/restic
+    ```
+
+-   Add `restic` user using Minio's CLI
+    ```shell
+    mc admin user add ${MINIO_ALIAS} restic supersecret
+    ```
+
+-   Define user policy to grant `restic` user access to backups bucket
+    Create file `restic_policy.json` file:
+
+    ```json
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:DeleteObject",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::restic",
+                "arn:aws:s3:::restic/*"
+            ]
+        }
+      ]
+    }
+    ```
+
+    This policy grants read-write access to `restic` bucket
+
+-   Add access policy to `restic` user:
+    ```shell
+    mc admin policy add ${MINIO_ALIAS} resitc restic_policy.json
+    ```
 
 ### Restic installation and backup scheduling configuration
 
@@ -202,7 +258,7 @@ restic prune
 The folling directories are backed-up from the cluster nodes
 
 |Path | Exclude patterns|
-|----|----|
+|:----|:----|
 | /etc/ | |
 | /home/oss | .cache |
 | /root | .cache |
@@ -214,200 +270,13 @@ Backup policies scheduling
 - Daily backup at 03:00 (executed from all nodes)
 - Daily restic repo maintenance at 06:00 (executed from `gateway` node)
 
-
-## Enable CSI snapshots support in K3S
-
-K3S distribution currently does not come with a preintegrated Snapshot Controller that is needed to enable CSI Snapshot feature. An external snapshot controller need to be deployed. K3S can be configured to use [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter).
-
-To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
-
-{{site.data.alerts.note}}
-
-Each release of Longhorn is compatible with a specific version external-snapshotter. Do not install latest available version.
-
-For example, in Longhorn 1.7.2, CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release v7.0.2.
-
-Check which version to use in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
-
-{{site.data.alerts.end}}
-
-- Step 1. Prepare kustomization yaml file to install external csi snaphotter (setting namespace to `kube-system`)
-
-  `tmp/kustomization.yaml`
-
-  ```yml
-  apiVersion: kustomize.config.k8s.io/v1beta1
-  kind: Kustomization
-  namespace: kube-system
-  resources:
-  - https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v7.0.2
-  - https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v7.0.2
-  ```
-
-- Step Deploy Snapshot-Controller
-
-  ```shell
-  kubectl apply -k ./tmp
-  ```
-
-## Longhorn backup configuration
-
-For configuring the backup in Longhorn is needed to define a backup target, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets. [Minio](https://min.io) can be used as backend.
-
-### Minio end-point credentials
-
-Create kuberentes secret resource containing Minio end-point access information and credentials
-
-- Create manifest file `longhorn-minio-secret.yml`
-
-  ```yml
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: minio-secret
-    namespace: longhorn-system
-  type: Opaque
-  data:
-    AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
-    AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
-    AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
-    AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
-  ```
-
-  {{site.data.alerts.note}}
-
-  AWS_CERT parameter is only needed in case of using a self-signed certificate.
-
-  {{site.data.alerts.end}}
-
-  For encoding the different access paramenters the following commands can be used:
-
-  ```shell
-  echo -n minio_url | base64
-  echo -n minio_access_key_id | base64
-  echo -n minio_secret_access_key | base64
-  cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
-  ```
-
-  {{site.data.alerts.important}}
-  As the command shows, SSL certificates in the validation chain must be concatenated and `\n` characters from the base64 encoded SSL pem must be removed.
-  {{site.data.alerts.end}}
-
-- Apply manifest file
-
-  ```shell
-  kubectl apply -f longhorn-s3-secret.yml
-  ```
-
-### Configure Longhorn backup target
-
-Go to the Longhorn UI. In the top navigation bar, click Settings. In the Backup section, set Backup Target to:
-
-```
-s3://<bucket-name>@<minio-s3-region>/
-```
-
-{{site.data.alerts.important}}
-Make sure that you have `/` at the end, otherwise you will get an error.
-{{site.data.alerts.end}}
-
-In the Backup section set Backup Target Credential Secret to the secret resource created before
-
-```
-minio-secret
-```
-
-![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
-
-### Target can be automatically configured when deploying helm chart
-
-Additional overriden values can be provided to helm chart deployment to configure S3 target.
-
-```yml
-defaultSettings:
-  backupTarget: s3://longhorn@eu-west-1/
-  backupTargetCredentialSecret: minio-secret
-```
-
-### Scheduling longhorn volumes backup
-
-A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
-See details in [Longhorn - Scheduling backups and snapshots](https://longhorn.io/docs/latest/snapshots-and-backups/scheduling-backups-and-snapshots/).
-
-{{site.data.alerts.note}}
-
-Since full cluster backup will be scheduled using Velero, including Longhorn's Persistent Volumes using CSI Snapshots, configuring this job is not needed.
-
-{{site.data.alerts.end}}
-
-- Create `RecurringJob` manifest resource
-
-  ```yml
-  ---
-  apiVersion: longhorn.io/v1beta1
-  kind: RecurringJob
-  metadata:
-    name: backup
-    namespace: longhorn-system
-  spec:
-    cron: "0 5 * * *"
-    task: "backup"
-    groups:
-    - default
-    retain: 2
-    concurrency: 2
-    labels:
-      type: 'full'
-      schedule: 'daily'
-  ```
-
-  This will create  recurring backup job for `default`. Longhorn will automatically add a volume to the default group when the volume has no recurring job.
-
-- Apply manifest file
-
-  ```shell  
-  kubectl apply -f recurring_job.yml
-  ```
-
-### Configure Longhorn CSI Snapshots
-
-VolumeSnapshotClass objects from CSI Snapshot API need to be configured
-
-- Create VolumeSnapshotClass to create Longhorn snapshots (in-cluster snapshots, not backed up to S3 backend), `volume_snapshotclass_snap.yml`
-
-  ```yml
-  # CSI VolumeSnapshot Associated With Longhorn Snapshot
-  kind: VolumeSnapshotClass
-  apiVersion: snapshot.storage.k8s.io/v1
-  metadata:
-    name: longhorn-snapshot-vsc
-  driver: driver.longhorn.io
-  deletionPolicy: Delete
-  parameters:
-    type: snap
-  ```
-
-- Create VolumeSnapshotClass to create Longhorn backups (backed up to S3 backend), `volume_snapshotclass_bak.yml`
-
-  ```yml
-  # CSI VolumeSnapshot Associated With Longhorn Backup
-  kind: VolumeSnapshotClass
-  apiVersion: snapshot.storage.k8s.io/v1
-  metadata:
-    name: longhorn-backup-vsc
-  driver: driver.longhorn.io
-  deletionPolicy: Delete
-  parameters:
-    type: bak
-  ```
-
-- Apply manifest file
-
-  ```shell
-  kubectl apply -f volume_snapshotclass_snap.yml volume_snapshotclass_bak.yml
-  ```
-
 ## Kubernetes Backup with Velero
+
+### Enabling CSI Snapshot support
+
+Kubernetes CSI Snapshot API used by Velero to automate backup of POD's volumes need to be configured for Longhorn CSI.
+
+See how to enable CSI Snapshot using Longhorn in [PiCluster- Longhorn - Configuring CSI Snapshot API](/docs/longhorn/#configuring_csi_snapshot_api)
 
 ### Velero installation and configuration
 
@@ -424,43 +293,67 @@ As storage provider, Minio will be used. See [Velero's installation documentatio
 
 ### Configuring Minio bucket and user for Velero
 
-Velero requires an object storage bucket to store backups in. In Minio a dedicated S3 bucket is created for Velero (name: `k3s-velero`) 
+Velero requires an object storage bucket to store backups in.
 
-A specific Minio user `velero` is configured with specic access policy to grant the user access to the bucket.
+In Minio a dedicated S3 bucket is created for Velero
 
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:DeleteObject",
-                "s3:GetObject",
-                "s3:ListMultipartUploadParts",
-                "s3:PutObject",
-                "s3:AbortMultipartUpload"
-            ],
-            "Resource": [
-                "arn:aws:s3:::k3s-velero/*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::k3s-velero"
-            ]
-        }
-    ]
-}
+| User | Bucket |
+|:--- |:--- |
+|velero | k3s-velero |
+{: .table .table-white .border-dark }
 
-```
+-   Create bucket for storing Velero backups
+
+    ```shell
+    mc mb ${MINIO_ALIAS}/k3s-velero
+    ```
+
+-   Add `longhorn` user using Minio's CLI
+    ```shell
+    mc admin user add ${MINIO_ALIAS} velero supersecret
+    ```
+
+-   Define user policy to grant `velero` user access to backups bucket
+    Create file `velero_policy.json` file:
+
+
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:DeleteObject",
+                    "s3:GetObject",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:AbortMultipartUpload"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::k3s-velero/*"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:ListBucket"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::k3s-velero"
+                ]
+            }
+        ]
+    }
+    ```
+
+    This policy grants read-write access to `k3s-velero` bucket
+
+-   Add access policy to `velero` user:
+    ```shell
+    mc admin policy add ${MINIO_ALIAS} velero velero_policy.json
 
 See more details in [Velero plugin for aws](https://github.com/vmware-tanzu/velero-plugin-for-aws).
-
 
 ### Installing Velero CLI
 
