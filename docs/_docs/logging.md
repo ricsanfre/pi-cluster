@@ -27,7 +27,15 @@ Two different stacks can be deployed as centralized logging solution for the kub
 
   Loki is a lightweigh alternative to Elasticsearch providing a horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus for Kubernetes environments.
 
-  Loki consumption of resources is lower than ES because it does not index the contents of the logs, it rather indexes a set of labels for each log stream. 
+  Loki consumption of resources is lower than ES because it does not index the contents of the logs, it rather indexes a set of labels for each log stream.
+
+  {{site.data.alerts.important}} About Promtail deprecation
+
+  Promtail has been deprecated, since Feb 2025 no new features are added and only support is provided till its EOL is March 2026.
+
+  [Grafana Alloy Agent](https://grafana.com/docs/alloy/latest/), generic telemetry agent, is the new component to be used in Grafana observability stack.
+
+  {{site.data.alerts.end}}
 
 In the cluster both stacks can be deployed to deliver complimentary logs-based monitoring (observability) and advance log analytics capabilities.
 
@@ -128,7 +136,7 @@ In this deployment fluentbit is installed as forwarder (plugins available are en
    -   Fluent Bit + Fluentd mode: Deploy Fluentbit as collector and Fluentd as distribution/aggregation layer to perform more complicated processing of logs.
    -   Fluentd only mode: Deploy just Fluentd as collection and distribution/aggregation layer
 
-Most of the fluent-bit and fluentd plugins used are supported by Fluent Operator, but theCurrent limitations of Fluent Operator: Fluentd cannot be configured to be integrated with Prometheus. See [Fluent Operator issue #725](https://github.com/fluent/fluent-operator/issues/725)
+Most of the fluent-bit and fluentd plugins, used in PiCluster project, are supported by Fluent Operator, but currently there is a limitation related to observability capabilites: Fluentd obsevability cannot be configured, Fluent Operator does not support fluentd's Prometheus plugin configuration. See [Fluent Operator issue #725](https://github.com/fluent/fluent-operator/issues/725)
 
 Becasue of this limitation Fluent Operator is not used in the Kubernetes Cluster
 
