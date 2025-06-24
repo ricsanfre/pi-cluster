@@ -2,7 +2,7 @@
 title: S3 Backup Backend (Minio)
 permalink: /docs/s3-backup/
 description: How to deploy a Minio S3 object storage server in Bare-metal environment as backup backend for our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "17-02-2023"
+last_modified_at: "24-06-2025"
 ---
 
 Minio can be deployed as a Kuberentes service or as stand-alone in bare-metal environment. Since I want to use Minio Server for backing-up/restoring the cluster itself, I will go with a bare-metal installation, considering Minio as an external service in Kubernetes.
@@ -11,7 +11,7 @@ Official [documentation](https://docs.min.io/minio/baremetal/installation/deploy
 
 For installing Minio S3 storage server, a VM (Ubuntu OS) hosted in Public Cloud or any linux server/VM that is not not part of the cluster can be used.
 
-Minio installation and configuration tasks have been automated with Ansible developing a role: **ricsanfre.minio**. This role, installs Minio Server and Minio Client and automatically create S3 buckets, and configure users and ACLs for securing the access.
+Minio installation and configuration tasks can be automated using Ansible role: [**ricsanfre.minio**](https://github.com/ricsanfre/ansible-role-minio). This role can be used to install Minio Server and Minio Client and automate the creation of S3 buckets, users and ACLs for securing the access.
 
 ## Minio installation (baremetal server)
 
@@ -44,14 +44,14 @@ Official [documentation](https://docs.min.io/minio/baremetal/installation/deploy
 -   Step 4. Download server binary (`minio`) and minio client (`mc`) and copy them to `/usr/local/bin`
 
     ```shell
-    wget https://dl.min.io/server/minio/release/linux-<arch>/minio
-    wget https://dl.minio.io/client/mc/release/linux-<arch>/mc
+    wget https://dl.min.io/server/minio/release/linux-${ARCH}/minio
+    wget https://dl.minio.io/client/mc/release/linux-${ARCH}/mc
     chmod +x minio
     chmod +x mc
     sudo mv minio /usr/local/bin/minio
     sudo mv mc /usr/local/bin/mc
     ```
-  where `<arch>` is amd64 or arm64.
+  where `${ARCH}` is amd64 or arm64 depending on the server architecture.
 
 -   Step 5: Create minio Config file `/etc/minio/minio.conf`
 
@@ -147,7 +147,7 @@ Official [documentation](https://docs.min.io/minio/baremetal/installation/deploy
 
 MinIO enables [Transport Layer Security (TLS)](https://min.io/docs/minio/linux/operations/network-encryption.html#minio-tls) 1.2+ automatically upon detecting a valid x.509 certificate (`.crt`) and private key (`.key`) in the MinIO  cert directory
 
-#### Minio cert- directory
+#### Minio cert directory
 
 By default  minio certs directory is `${HOME}/.minio/certs` directory.
 Directory can be changed starting minio server with `--cert-dir` parameter
@@ -157,43 +157,79 @@ minio server --certs-dir /opt/minio/certs ...
 
 #### Create Minio TLS certificate
 
-In case you have your own domain, a valid SSL certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Minio server, using [Certbot](https://certbot.eff.org/).
+##### Trusted Certificate with Let's Encrypt
 
-See certbot installation instructions in [CertManager - Letsencrypt Certificates Section](/docs/certmanager/#installing-certbot-ionos). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
+In case you have your own domain, a valid TLS certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Minio server, using [Certbot](https://certbot.eff.org/).
 
-Letsencrypt using HTTP challenge is avoided for security reasons (cluster services are not exposed to public internet).
+See certbot installation instructions and how to issue certificates in ["PiCluster - TLS Certificates (Certbot)"](/docs/certbot/).
 
-If generating valid SSL certificate is not possible, selfsigned certificates with a custom CA can be used instead.
+
+##### Private PKI
+
+
+If generating public trusted TLS certificate is not possible, selfsigned certificates with a custom CA can be used instead.
 
 Follow this procedure for creating a self-signed certificate for Minio Server
 
-1. Create a self-signed CA key and self-signed certificate
+-   Step 1. Create Root CA
 
-    ```shell
-    openssl req -x509 \
-         -sha256 \
-         -nodes \
-         -newkey rsa:4096 \
-         -subj "/CN=Ricsanfre CA" \
-         -keyout rootCA.key -out rootCA.crt
-    ```
+    -   Create Root CA Key
 
-2. Create a SSL certificate for Minio server signed using the custom CA
+        ```shell
+        openssl genrsa -out rootCA.key 4096
+        ```
+    -   Create and self sign the Root Certificate
 
-    ```shell
-    openssl req -new -nodes -newkey rsa:4096 \
-                 -keyout minio.key \
-                 -out minio.csr \
-                 -batch \
-                 -subj "/C=ES/ST=Madrid/L=Madrid/O=Ricsanfre CA/OU=picluster/CN=s3.picluster.ricsanfre.com"
+        ```shell
+        openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt
+        ```
 
-    openssl x509 -req -days 365000 -set_serial 01 \
-            -extfile <(printf "subjectAltName=DNS:s3.picluster.ricsanfre.com") \
-            -in minio.csr \
-            -out minio.crt \
-            -CA rootCA.crt \
-            -CAkey rootCA.key
-    ```
+-   Step 2. Create the signing request (csr)
+
+    -   Create key
+
+        ```shell
+        openssl genrsa -out private.key 4096
+        ```
+    -   Create a file named `openssl.conf` with the content below. Set `IP.1` and/or `DNS.1` to point to the correct IP/DNS addresses:
+
+        ```sh
+        [req]
+        distinguished_name = req_distinguished_name
+        x509_extensions = v3_req
+        prompt = no
+
+        [req_distinguished_name]
+        C = ES
+        ST = Madrid
+        L = Somewhere
+        O = MyOrg
+        OU = MyOU
+        CN = MyServerName
+
+        [v3_req]
+        subjectAltName = @alt_names
+
+        [alt_names]
+        IP.1 = 127.0.0.1
+        DNS.1 = myserver.mydomain.com
+        ```
+
+        Run `openssl` by specifying the configuration file and enter a passphrase if prompted:
+
+        ```shell
+        openssl req -new -x509 -nodes -days 730 -key private.key -out public.csr -config openssl.conf
+        ```
+    -   Verify the csr's content
+
+        ```shell
+        openssl req -in public.csr -noout -text
+        ```
+    -   Generate the certificate using the mydomain csr and key along with the CA Root key
+
+        ```shell
+        openssl x509 -req -in public.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out public.crt -days 500 -sha256
+        ```
 
 
 #### Install Minio TLS certificate
@@ -229,46 +265,75 @@ Once the certificate is created, public certificate and private key need to be i
 
 ## Minio Configuration
 
-### Configure Minio client
+### Install Minio client
 
-Configure connection alias to minio server.
+Minio client can be installed in any server to perform management operations remotely
 
-```shell
-mc alias set minio_alias <minio_url> <minio_root_user> <minio_root_password>
-```
+-   Step 1: Download `mc` binary
+
+    ```shell
+    cd tmp
+    wget  https://dl.min.io/client/mc/release/linux-${ARCH}$/mc
+    ```
+
+    Where:
+    -  `${ARCH}` is amd64 or amr64 depending on the architecture of the linux host
+
+
+-   Step 2: Move binary to /usr/local/bin
+
+    ```shell
+    sudo mv /tmp/mc /usr/local/bin
+    chmod +x /user/local/bin/mc
+    ```
+
+-   Step 4: Configure connection alias to minio server.
+
+    ```shell
+    mc alias set ${MINIO_ALIAS} ${MINIO_URL} ${ACCESS_KEY} ${SECRET_KEY}
+    ```
+    where
+
+    -   `${MINIO_ALIAS}` is a connection alias assigned to the S3 server
+    -   `${MINIO_URL}`: Containing URL of the service (i.e.: "https://${S3_FQDN}:9091", "https://s3.mydomain.com:9091")
+    -   `${ACCESS_KEY}`: Contains Minio `root` user configured during installation
+    -   `${SECRET_KEY}` : Contains minio `root` user password configured during installation
+
+-   Step 5: Test client
+
+    ```shell
+    mc admin info ${MINIO_ALIAS}
+    ```
+
 
 ### Buckets
-
-The following buckets need to be created for backing-up different cluster components:
-
-- Longhorn Backup: `k3s-longhorn`
-- Velero Backup: `k3s-velero`
-- OS backup: `restic`
 
 Buckets can be created using Minio's CLI (`mc`)
 
 ```shell
-mc mb <minio_alias>/<bucket_name> 
+mc mb ${MINIO_ALIAS}/${MINIO_BUCKET}
 ```
-Where: `<minio_alias>` is the mc's alias connection to Minio Server using admin user credentials, created during Minio installation in step 9.
+Where:
+
+-   `${MINIO_ALIAS}` is the mc's alias connection to Minio Server created during Minio Client configuration
+-   `${MINIO_BUCKET}` is the name of the bucket to be created
 
 ### Users and ACLs
 
-Following users will be created to grant access to Minio S3 buckets:
-
-- `longhorn` with read-write access to `k3s-longhorn` bucket.
-- `velero` with read-write access to `k3s-velero` bucket. 
-- `restic` with read-write access to `restic` bucket
-
-  
 Users can be created usinng Minio's CLI
 ```shell
-mc admin user add <minio_alias> <user_name> <user_password>
+mc admin user add ${MINIO_ALIAS} ${USER_NAME} ${USER_PASSWORD}
 ```
+Where:
+
+-   `${MINIO_ALIAS}` is the mc's alias connection to Minio Server created during Minio Client configuration
+-   `${MINIO_USER}` is the name of the user to be created
+-   `${MINIO_PASSWORD}` is the password assigned to the user
+
 Access policies to the different buckets can be assigned to the different users using the command:
 
 ```shell
-mc admin policy add <minio_alias> <user_name> user_policy.json
+mc admin policy add ${MINIO_ALIAS} ${USER_NAME} user_policy.json
 ```
 Where `user_policy.json`, contains AWS access policies definition like:
 
@@ -292,7 +357,7 @@ Where `user_policy.json`, contains AWS access policies definition like:
 ]
 }
 ``` 
-This policy grants read-write access to `bucket_name`. For each user a different json need to be created, granting access to dedicated bucket. Those json files can be stored in `/etc/minio/policy` directory.
+This policy grants read-write access to `bucket_name`. For each user a different json need to be created, granting access to dedicated bucket.
 
 ## Observability
 
@@ -513,10 +578,12 @@ There are 3 Dashboards available:
 
 -   MinIO Server Metrics Dashboard: [Grafana dashboard id: 13502](https://grafana.com/grafana/dashboards/13502-minio-dashboard/)
 -   MinIO Bucket Metrics Dashboard: [Grafana dashboard id: 19237](https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/)
--   MinIO Node Metrics Dashboard: Available in MiniO GitHub Repo: https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json
--   MinIO Replication Metrics Dashboard: [Grafana dashbord Id 15305] (https://grafana.com/grafana/dashboards/15305-minio-replication-dashboard/)
+-   MinIO Node Metrics Dashboard: Available in MiniO GitHub Repo: [mino-node.json](https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json)
+-   MinIO Replication Metrics Dashboard: [Grafana dashbord Id 15305](https://grafana.com/grafana/dashboards/15305-minio-replication-dashboard/)
 
-The following configuration can be added to Grafana's Helm Chart so a MinIO's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file, so a MinIO's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
 
 ```yaml
 dashboardProviders:
@@ -560,7 +627,7 @@ dashboards:
         - { name: DS_PROMETHEUS, value: Prometheus }
 ```
 
-## References
+---
 
 [^1]: [https://min.io/docs/minio/linux/operations/monitoring/metrics-v2.html](https://min.io/docs/minio/linux/operations/monitoring/metrics-v2.html)
 [^2]: [https://min.io/docs/minio/linux/operations/monitoring/metrics-and-alerts.html](https://min.io/docs/minio/linux/operations/monitoring/metrics-and-alerts.html)
