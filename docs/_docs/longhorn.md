@@ -518,7 +518,7 @@ See details in [Longhorn - Scheduling backups and snapshots](https://longhorn.io
 
 If Velero is used to perform full cluster backup, including Longhorn's Persistent Volumes using CSI Snapshots, configuring this job is not needed.
 
-See detais about Velero installation and configuration in ["Pi Cluster - Backup and Restore with Velero"](/docs/backup/)
+See details about Velero installation and configuration in ["Pi Cluster - Backup and Restore with Velero"](/docs/backup/)
 
 {{site.data.alerts.end}}
 
