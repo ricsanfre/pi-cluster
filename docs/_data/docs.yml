@@ -22,7 +22,6 @@
   - os-basic
 - title: External Services
   docs:
-  - s3-backup
   - vault
 - title: K3S Installation
   docs:
@@ -60,6 +59,8 @@
   - grafana
 - title: Backup
   docs:
+  - s3-backup
+  - restic
   - backup
 - title: GitOps
   docs:
