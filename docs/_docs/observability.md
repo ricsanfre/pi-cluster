@@ -2,7 +2,7 @@
 title: Observability solution
 permalink: /docs/observability/
 description: Observability solution for Raspberry Pi Cluster. Solution based on Grafana Loki (logs), Prometheus (metrics) and Tempo (traces). Observability solution combined with Logs analytics solution based on ElasticSearch and Kibana.
-last_modified_at: "19-11-2022"
+last_modified_at: "26-06-2025"
 
 ---
 
@@ -34,7 +34,8 @@ The procedure for deploying observability solution stack is described in the fol
    - [Logging Architecture (EFK + LG)](/docs/logging/)
    - [Log Aggregation - Loki installation and configuration](/docs/loki/)
    - [Log Analytics - Elasticsearch and Kibana installation and configuration](/docs/elasticsearch/)
-   - [Log collection and distribution - Fluentbit/Fluentd installation and configuration](/docs/logging-forwarder-aggregator/)
+   - [Log collection with Fluent-bit](/docs/fluentbit/)
+   - [Log aggregation and distribution with Fluentd](/docs/fluentd/)
 2. **Monitoring**
    - [Prometheus installation and configuration](/docs/prometheus/)
 3. **Distributing tracing**
