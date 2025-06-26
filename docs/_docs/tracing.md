@@ -127,7 +127,7 @@ Where `user_policy.json`, contains the following AWS access policies definition:
   ```
 - Step 3: Create namespace
   ```shell
-  kubectl create namespace tracing
+  kubectl create namespace tempo
   ```
 - Step 4: Create file `tempo-values.yml`
 
@@ -180,13 +180,13 @@ Where `user_policy.json`, contains the following AWS access policies definition:
 
   - Disable minio server installation (`minio.enabled`)
 
-- Step 3: Install Tempo in `tracing` namespace
+- Step 3: Install Tempo in `tempo` namespace
   ```shell
-  helm install tempo grafana/tempo-distributed -f tempo-values.yml --namespace tracing
+  helm install tempo grafana/tempo-distributed -f tempo-values.yml --namespace tempo
   ```
 - Step 4: Check status of Loki pods
   ```shell
-  kubectl get pods -l app.kubernetes.io/name=loki -n logging
+  kubectl get pods -l app.kubernetes.io/name=tempo -n tempo
   ```
 
 ### GitOps installation
@@ -199,7 +199,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: tempo-minio-secret
-  namespace: tracing
+  namespace: tempo
 type: Opaque
 data:
   MINIO_ACCESS_KEY_ID: < minio_tempo_user | b64encode >
@@ -232,11 +232,11 @@ storage:
     backend: s3
     s3:
       bucket: k3s-tempo
-      endpoint: s3.picluster.ricsanfre.com:9091
+      endpoint: minio.minio:9091
       region: eu-west-1
       access_key: ${MINIO_ACCESS_KEY_ID}
       secret_key: ${MINIO_SECRET_ACCESS_KEY}
-      insecure: false
+      insecure: true
 
 # Configure distributor
 distributor:
@@ -330,62 +330,11 @@ queryFrontend:
 minio:
   enabled: false
 ```
-  
 
-## Ingress NGINX traces integration
-
-Ingress Contoller is a key component for distributed tracing solution because it is responsible for creating the root span of each trace and for deciding if that trace should be sampled or not.
-
-Distributed tracing systems all rely on propagate the trace context through the chain of involved services. This trace contex is encoding in HTTP request headers. There is two key protocols used to propagate tracing context: W3C, used by OpenTelemetry, and B3, used by OpenTracing.
-
-Since release 1.10, Ingress Nginx has deprecated OpenTracing and Zipkin modules, being OpenTelemtry the only supported. See [Ingress Nginx 1.10 release notes](https://github.com/kubernetes/ingress-nginx/releases/tag/controller-v1.10.0)
-
-Ingress Nginx's OpenTelemetry module only supports W3C context propagation. B3 context propagation is not supported. See [nginx ingress open issue #10324](https://github.com/kubernetes/ingress-nginx/issues/10324).
-
-To activate tracing using W3C propagation protocol, the following options need to be provided following to helm values.yml:
-
-```yml
-controller:
-  config:
-    # Open Telemetry
-    enable-opentelemetry: "true"
-    otlp-collector-host: tracing-tempo-distributor.tracing.svc.cluster.local
-    otlp-service-name: nginx-internal
-    # Print access log to file instead of stdout
-    # Separating acces logs from the rest
-    access-log-path: "/data/access.log"
-    log-format-escape-json: "true"
-    log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "request_method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentelemetry_trace_id", "span_id": "$opentelemetry_span_id"}'
-```
-
-With this configuratin, embedded Tempo OTEL collector (distributor) is used as destination. Access logs format is also changed to include W3C context: `$opentelemetry_trace_id` and `$opentelemetry_span_id` appears as field in the logs: `trace_id` and `span_id`
-
-For more details, see [Ingress NGINX Open Telemetry documentation](https://kubernetes.github.io/ingress-nginx/user-guide/third-party-addons/opentelemetry/).
+## Tempo Configuration
 
 
-{{site.data.alerts.note}}
-
-Before NGINX Ingress 1.10, openTracing and B3 propagation protocol were configured using the following helm chart values.
-
-```yml
-controller:
-  config:
-    # Open Tracing
-    enable-opentracing: "true"
-    zipkin-collector-host: tracing-tempo-distributor.tracing.svc.cluster.local
-    zipkin-service-name: nginx-internal
-    log-format-escape-json: "true"
-    log-format-upstream: '{"source": "nginx", "time": $msec, "resp_body_size": $body_bytes_sent, "request_host": "$http_host", "request_address": "$remote_addr", "request_length": $request_length, "method": "$request_method", "uri": "$request_uri", "status": $status,  "user_agent": "$http_user_agent", "resp_time": $request_time, "upstream_addr": "$upstream_addr", "trace_id": "$opentracing_context_x_b3_traceid", "span_id": "$opentracing_context_x_b3_spanid"}'
-```
-
-In this case Zipkin tempo embedded collector, ditributor, was used as destination. Access logs format was also configured to include B3 context. Opentrace context (x_b3_traceid and x_b3_spanId) appears as field in the logs: `trace_id` and `span_id`
-
-NGINX configuration using OpenTracing protocol is not working since Ingress NGINX 1.10. See [issue #329](https://github.com/ricsanfre/pi-cluster/issues/329).
-
-
-{{site.data.alerts.end}}
-
-## Grafana Configuration
+### Grafana Configuration
 
 Tempo need to be added to Grafana as DataSource
 
@@ -399,7 +348,7 @@ grafana:
     type: tempo
     uid: tempo
     access: proxy
-    url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
+    url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3100
 ```
 
 ### Loki and Tempo integration
@@ -417,7 +366,7 @@ grafana
     type: loki
     uid: loki
     access: proxy
-    url: http://loki-gateway.logging.svc.cluster.local
+    url: http://loki-read-headless.loki.svc.cluster.local
     jsonData:
       derivedFields:
         # Traefik traces integration
@@ -434,7 +383,7 @@ grafana
     uid: tempo
     type: tempo
     access: proxy
-    url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
+    url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3100
 ```
 
 A derived field `TraceID` is added to logs whose message contains field `request_X-B3-Traceid` (Traefik access logs) or containing `trace_id` (NGINX access logs)
@@ -446,7 +395,7 @@ A derived field `TraceID` is added to logs whose message contains field `request
 
 Because of the deprecation of OpenTracing in Ingress NGINX release 1.10. E2E tracing propagation using Linkerd's emojivoto application is not working anymore.
 
-Emojivoto is using OpenTracing, B3 context propagation while Nginx is using W3C. So tracing context is not being propagated from NGINX to emojivoto microservices.
+Emojivoto is using OpenTracing B3 context propagation while Nginx is using W3C. So tracing context is not being propagated from NGINX to emojivoto microservices.
 
 See [issue #329](https://github.com/ricsanfre/pi-cluster/issues/329).
 
@@ -461,10 +410,10 @@ Linkerd's testing application emojivoto can be used to test the tracing solution
   linkerd inject https://run.linkerd.io/emojivoto.yml | kubectl apply -f -
   ```
 
-- Step 2: Configure emojivoto applicatio to emit spans to Tempo
+- Step 2: Configure emojivoto application to emit spans to Tempo
 
   ```shell
-  kubectl -n emojivoto set env --all deploy OC_AGENT_HOST=tempo-distributor.tracing:55678
+  kubectl -n emojivoto set env --all deploy OC_AGENT_HOST=tempo-distributor.tempo:55678
   ```
 
 - Step 3: Create Ingress
