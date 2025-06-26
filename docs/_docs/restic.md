@@ -7,7 +7,7 @@ last_modified_at: "25-06-2025"
 
 
 
-Operating System configuration files should be backed up in order to being able to restore configuration at OS level.
+Operating System configuration files should be backed up so configuration at OS level can be restored.
 
 [Restic](https://restic.net) can be used to perform this OS filesystem backup. Restic provides a fast and secure backup program that can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports opensource S3 [Minio](https://min.io).
 
@@ -157,6 +157,8 @@ For checking whether the repo is initialized or not execute:
 restic init cat config
 ```
 That command shows the information about the repository (file `config` stored within the S3 bucket)
+
+## Restic Operation
 
 ### Execute restic backup
 
