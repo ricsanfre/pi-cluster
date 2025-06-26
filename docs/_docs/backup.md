@@ -7,7 +7,7 @@ last_modified_at: "25-06-2025"
 
 ## Backup Architecture and Design
 
-It is needed to implement a backup strategy for the K3S cluster. This backup strategy should, at least, contains a backup infrastructure, and backup and restore procedures for Kubernetes cluster configuration and PODs Persistent Volumes.
+A backup strategy is needed for Kubernetes cluster. This backup strategy should, at least, contains a backup infrastructure, and backup and restore procedures for Kubernetes cluster configuration and PODs Persistent Volumes.
 
 {{site.data.alerts.note}} **About OS Filesystem backup**
 
@@ -67,7 +67,7 @@ The backup architecture for the Kubernetes cluster is the following:
 
   {{site.data.alerts.note}}
 
-  Velero also supports, Persistent Volumes backup/restore procedures using [File System Backup (FSB shortly) or Pod Volume Backup](https://velero.io/docs/latest/file-system-backup/).  [restic](https://restic.net/) or [kopia](https://kopia.io/) can be used to transfer the data using the same S3 backend configured within Velero for backing up the cluster configuration. Velero node agent has to be installed to enable this functionality. FSB support is not enabled when deploying Velero, instead CSI snapshots will be used.
+  Velero also supports Persistent Volumes backup/restore procedures using [File System Backup (FSB shortly) or Pod Volume Backup](https://velero.io/docs/latest/file-system-backup/).  [restic](https://restic.net/) or [kopia](https://kopia.io/) can be used to transfer the data using the same S3 backend configured within Velero for backing up the cluster configuration. Velero node agent has to be installed to enable this functionality. FSB support is not enabled when deploying Velero, instead CSI snapshots will be used.
 
   {{site.data.alerts.end}}
 
@@ -93,13 +93,13 @@ Longhorn has to be configured so it can perform backups to a en external backups
 Kubernetes CSI Snapshot API used by Velero to automate backup of POD's volumes need to be configured and enabled for Longhorn.
 See how to enable CSI Snapshot using Longhorn in [PiCluster- Longhorn - Configuring CSI Snapshot API](/docs/longhorn/#configuring_csi_snapshot_api).
 
-## Intstalling and configuring Minio backupstore
+## Installing and configuring Minio backupstore
 
-#### Installing Minio
+### Minio Installation
 
 See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup).
 
-#### Configuring Minio bucket and user for Velero
+### Configuring Minio bucket and user for Velero
 
 Velero requires an object storage bucket to store backups in.
 
@@ -164,7 +164,7 @@ In Minio a dedicated S3 bucket is created for Velero
 
 See more details in [Velero plugin for aws](https://github.com/vmware-tanzu/velero-plugin-for-aws).
 
-## Installing Velero
+## Velero Installation
 
 Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
 Velero also provides a CLI to execute backup/restore commands using Kuberentes API. More details in official documentation, [How Velero works](https://velero.io/docs/latest/how-velero-works/)
@@ -176,7 +176,7 @@ The complete backup workflow is the following:
 As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/latest/contributions/minio/).
 
 
-### Installing Velero CLI
+### Velero CLI
 
 Before installin Velero CLI, `kubectl` has to be installed. `velero` uses kubectl config file (`~/.kube/config`) to connect to Kuberentes API.
 
@@ -210,7 +210,7 @@ Before installin Velero CLI, `kubectl` has to be installed. `velero` uses kubect
     velero client config set namespace=${VELERO_NAMESPACE}
     ```
 
-### Installing Velero Kubernetes Service
+### Velero Kubernetes Service
 
 Installation using `Helm` (Release 3):
 
@@ -409,162 +409,161 @@ credentials:
   existingSecret: velero-secret
 ```
 
-### Testing Velero installation
+### Testing Velero
 
-- Step 1: Deploy a testing application (nginx), which uses a Longhorn's Volume for storing its logs (`/var/logs/nginx`)
+Deploy a testing application (nginx), which uses a Longhorn's Volume for storing its logs (`/var/logs/nginx`)
 
-  1) Create manifest file: `nginx-example.yml`
-
+-   Step 1. Create manifest file: `nginx-example.yml`
   
-  ```yml
-  ---
-  apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: nginx-example
-    labels:
-      app: nginx
-  ---
-  kind: PersistentVolumeClaim
-  apiVersion: v1
-  metadata:
-    name: nginx-logs
-    namespace: nginx-example
-    labels:
-      app: nginx
-  spec:
-    storageClassName: longhorn
-    accessModes:
-      - ReadWriteOnce
-    resources:
-      requests:
-        storage: 50Mi
-  ---
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: nginx-deployment
-    namespace: nginx-example
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
+    ```yml
+    ---
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: nginx-example
+      labels:
         app: nginx
-    template:
-      metadata:
-        labels:
-            app: nginx
-        annotations:
-            pre.hook.backup.velero.io/container: fsfreeze
-            pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
-            post.hook.backup.velero.io/container: fsfreeze
-            post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
-      spec:
-        volumes:
-          - name: nginx-logs
-            persistentVolumeClaim:
-              claimName: nginx-logs
-        containers:
-          - image: nginx:1.17.6
-            name: nginx
-            ports:
-              - containerPort: 80
-            volumeMounts:
-              - mountPath: "/var/log/nginx"
-                name: nginx-logs
-                readOnly: false
-          - image: ubuntu:bionic
-            name: fsfreeze
-            securityContext:
-              privileged: true
-            volumeMounts:
-              - mountPath: "/var/log/nginx"
-                name: nginx-logs
-                readOnly: false
-            command:
-              - "/bin/bash"
-              - "-c"
-              - "sleep infinity"
-  ---
-  apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
+    ---
+    kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: nginx-logs
+      namespace: nginx-example
+      labels:
         app: nginx
-    name: my-nginx
-    namespace: nginx-example
-  spec:
-    ports:
-      - port: 80
-        targetPort: 80
-    selector:
-      app: nginx
-    type: LoadBalancer
-  ```
+    spec:
+      storageClassName: longhorn
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Mi
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+      namespace: nginx-example
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+              app: nginx
+          annotations:
+              pre.hook.backup.velero.io/container: fsfreeze
+              pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
+              post.hook.backup.velero.io/container: fsfreeze
+              post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
+        spec:
+          volumes:
+            - name: nginx-logs
+              persistentVolumeClaim:
+                claimName: nginx-logs
+          containers:
+            - image: nginx:1.17.6
+              name: nginx
+              ports:
+                - containerPort: 80
+              volumeMounts:
+                - mountPath: "/var/log/nginx"
+                  name: nginx-logs
+                  readOnly: false
+            - image: ubuntu:bionic
+              name: fsfreeze
+              securityContext:
+                privileged: true
+              volumeMounts:
+                - mountPath: "/var/log/nginx"
+                  name: nginx-logs
+                  readOnly: false
+              command:
+                - "/bin/bash"
+                - "-c"
+                - "sleep infinity"
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+          app: nginx
+      name: my-nginx
+      namespace: nginx-example
+    spec:
+      ports:
+        - port: 80
+          targetPort: 80
+      selector:
+        app: nginx
+      type: LoadBalancer
+    ```
 
-  {{site.data.alerts.note}}
-  Deployment template is annotated so, volume is included in the backup (`backup.velero.io/backup-volumes`) and before doing the backup the filesystem is freeze (`pre.hook.backup.velero.io` and `post.hook.backup.velero.io`)
-  {{site.data.alerts.end}}
+    {{site.data.alerts.note}}
+    Deployment template is annotated so, volume is included in the backup (`backup.velero.io/backup-volumes`) and before doing the backup the filesystem is freeze (`pre.hook.backup.velero.io` and `post.hook.backup.velero.io`)
+    {{site.data.alerts.end}}
 
-  2) Apply manifest file `nginx-example.yml`
+-   Step 2. Apply manifest file `nginx-example.yml`
    
-  ```shell
-  kubectl apply -f nginx-example.yml
-  ```
-  3) Connect to nginx pod and create manually a file within `/var/log/nginx`
+    ```shell
+    kubectl apply -f nginx-example.yml
+    ```
+-   Step 3. Connect to nginx pod and create manually a file within `/var/log/nginx`
 
-  ```shell
-  kubectl exec <nginx-pod> -n nginx-example -it -- /bin/sh
-  # touch /var/log/nginx/testing
-  ```
+      ```shell
+      kubectl exec <nginx-pod> -n nginx-example -it -- /bin/sh
+      # touch /var/log/nginx/testing
+      ```
 
-  4) Create a backup for any object included in nginx-example namespace:
+-   Step 4. Create a backup for any object included in nginx-example namespace:
   
-  ```shell
-  velero backup create nginx-backup --include-namespaces nginx-example --wait  
-  ```
+    ```shell
+    velero backup create nginx-backup --include-namespaces nginx-example --wait  
+    ```
 
-  5) Simulate a disaster:
+-   Step 5. Simulate a disaster:
   
-  ```shell
-  kubectl delete namespace nginx-example
-  ```
+    ```shell
+    kubectl delete namespace nginx-example
+    ```
 
-  6) To check that the nginx deployment and service are gone, run:
+-   Step 6. To check that the nginx deployment and service are gone, run:
 
-  ```shell
-  kubectl get deployments --namespace=nginx-example
-  kubectl get services --namespace=nginx-example
-  kubectl get namespace/nginx-example
-  ```
+    ```shell
+    kubectl get deployments --namespace=nginx-example
+    kubectl get services --namespace=nginx-example
+    kubectl get namespace/nginx-example
+    ```
 
-  7) Run the restore
+-   Step 7. Run the restore
 
-  ```shell
-  velero restore create --from-backup nginx-backup
-  ```
+    ```shell
+    velero restore create --from-backup nginx-backup
+    ```
   
-  8) Check the status of the restore:
+-   Step 8. Check the status of the restore:
 
-  ```shell
-  velero restore get
-  ```
+    ```shell
+    velero restore get
+    ```
 
-  After the restore finishes, the output looks like the following:
-  ```
-  NAME                          BACKUP         STATUS      STARTED                         COMPLETED                       ERRORS   WARNINGS   CREATED                         SELECTOR
-  nginx-backup-20211220180613   nginx-backup   Completed   2021-12-20 18:06:13 +0100 CET   2021-12-20 18:06:50 +0100 CET   0        0          2021-12-20 18:06:13 +0100 CET   <none>
-  ```
+    After the restore finishes, the output looks like the following:
+    ```
+    NAME                          BACKUP         STATUS      STARTED                         COMPLETED                       ERRORS   WARNINGS   CREATED                         SELECTOR
+    nginx-backup-20211220180613   nginx-backup   Completed   2021-12-20 18:06:13 +0100 CET   2021-12-20 18:06:50 +0100 CET   0        0          2021-12-20 18:06:13 +0100 CET   <none>
+    ```
 
-  9) Check nginx deployment and services are back
+-   Step 9. Check nginx deployment and services are back
   
-  ```shell
-  kubectl get deployments --namespace=nginx-example
-  kubectl get services --namespace=nginx-example
-  kubectl get namespace/nginx-example
-  ```
+    ```shell
+    kubectl get deployments --namespace=nginx-example
+    kubectl get services --namespace=nginx-example
+    kubectl get namespace/nginx-example
+    ```
 
-  10) Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
+-   Step 10. Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
 
 ### Schedule a periodic full backup
 
@@ -573,9 +572,10 @@ Set up daily full backup can be on with velero CLI
 ```shell
 velero schedule create full --schedule "0 4 * * *"
 ```
-Or creating a 'Schedule' [kubernetes resource](https://velero.io/docs/latest/api-types/schedule/):
 
-```yml
+Or creating a [`Schedule`](https://velero.io/docs/latest/api-types/schedule/) kubernetes resource:
+
+```yaml
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
@@ -649,7 +649,7 @@ dashboards:
       revision: 2
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
-
+```
 
 ## References
 
