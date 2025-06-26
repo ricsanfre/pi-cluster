@@ -74,7 +74,7 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 
 -   Add access policy to `restic` user:
     ```shell
-    mc admin policy add ${MINIO_ALIAS} resitc restic_policy.json
+    mc admin policy add ${MINIO_ALIAS} restic restic_policy.json
     ```
 
 ## Restic Installation
@@ -169,7 +169,7 @@ restic backup ${FILESYSTEM_PATH} --exclude ${EXCLUDE_PATTERN}
 where:
 
 -   `${FILESYSTEM_PATH}` is the filesystem path to backup
--   `${EXCLDE_PATTERN}` contains a regular expression matching the files that need to be excluded from the backup
+-   `${EXCLUDE_PATTERN}` contains a regular expression matching the files that need to be excluded from the backup
 
 
 Backups snapshots can be displayed executing
