@@ -2,7 +2,7 @@
 title: Kafka
 permalink: /docs/kafka/
 description: How to deploy Kafka to our Kubernetes cluster. Using Strimzi Kafka Operator to streamline the deployment
-last_modified_at: "16-09-2023"
+last_modified_at: "26-06-2025"
 
 ---
 
@@ -42,75 +42,81 @@ Installation using `Helm` (Release 3):
 
 ### Deploy Kafka cluster
 
-Using Strimzi operator build Kafka cluster CRD.
+Using Strimzi operator, Kafka cluster in KRaft mode can be deployed.
 
-
-- Step 1: Create a manifest file deploying a 3 broker tls-encrypted cluster. It contains basic configuration of Kafka cluster with 3 Zookeeper replicas and 3 Kafka broker replicas. Persistence will be configure to use Longhorn as storageClass and 5GB of storage in the volume claims. 
+-   Step 1: Create a Kafka cluster of 3 nodes with dual roles (Kraft controller/ Kafka broker),configure its storage (5gb) and create a Kafka cluster from that pool broker using a specific Kafka release.
   
-  ```yml
-	apiVersion: kafka.strimzi.io/v1beta2
-	kind: Kafka
-	metadata:
-	  name: my-cluster
-	  namespace: kafka
-	spec:
-	  kafka:
-	    version: 3.5.1
-	    replicas: 3
-	    listeners:
-	      - name: plain
-	        port: 9092
-	        type: internal
-	        tls: false
-	      - name: tls
-	        port: 9093
-	        type: internal
-	        tls: true
-	    config:
-	      offsets.topic.replication.factor: 3
-	      transaction.state.log.replication.factor: 3
-	      transaction.state.log.min.isr: 2
-	      default.replication.factor: 3
-	      min.insync.replicas: 2
-	      inter.broker.protocol.version: "3.5"
-	    storage:
-	      type: jbod
-	      volumes:
-	      - id: 0
-	        type: persistent-claim
-          class: longhorn
-	        size: 5Gi
-	        deleteClaim: false
+    ```yaml
+    ---
+    apiVersion: kafka.strimzi.io/v1beta2
+    kind: KafkaNodePool
+    metadata:
+      name: dual-role
+      labels:
+        strimzi.io/cluster: my-cluster
+    spec:
+      replicas: 3
+      roles:
+        - controller
+        - broker
+      storage:
+        type: jbod
+        volumes:
+          - id: 0
+            type: persistent-claim
+            size: 5Gi
+            class: longhorn
+            deleteClaim: false
+            kraftMetadata: shared
+    ---
+    apiVersion: kafka.strimzi.io/v1beta2
+    kind: Kafka
+    metadata:
+      name: my-cluster
+      annotations:
+        strimzi.io/node-pools: enabled
+        strimzi.io/kraft: enabled
+    spec:
+      kafka:
+        version: 4.0.0
+        metadataVersion: 4.0-IV3
+        listeners:
+          - name: plain
+            port: 9092
+            type: internal
+            tls: false
+          - name: tls
+            port: 9093
+            type: internal
+            tls: true
+        config:
+          offsets.topic.replication.factor: 3
+          transaction.state.log.replication.factor: 3
+          transaction.state.log.min.isr: 2
+          default.replication.factor: 3
+          min.insync.replicas: 2
+      entityOperator:
+        topicOperator: {}
+        userOperator: {}
+    ```
 
-	  zookeeper:
-	    replicas: 3
-	    storage:
-	      type: persistent-claim
-	      size: 5Gi
-	      deleteClaim: false5Gi
-	      class: longhorn
-	  entityOperator:
-	    topicOperator: {}
-	    userOperator: {}  
-  ```
 
-- Step 2: Apply manifest
+-   Step 2: Apply manifest
   
-  ```shell
-  kubectl apply -f manifest.yml
-  ```
-- Step 3: Check Kafka status
+    ```shell
+    kubectl apply -f manifest.yml
+    ```
+-   Step 3: Check Kafka status
   
-  ```shell
-  kubectl get kafka -n kafka
-  NAME         DESIRED KAFKA REPLICAS   DESIRED ZK REPLICAS   READY   WARNINGS
-  my-cluster   3                        3                     True
-  ```
+    ```shell
+    kubectl get kafka -n kafka
+    NAME         DESIRED KAFKA REPLICAS   DESIRED ZK REPLICAS   READY   WARNINGS
+    my-cluster   3                        3                     True
+    ```
 
 {{site.data.alerts.note}}
 
-By default, intra-broker communication is encrypted with TLS while communication with ZooKeeper is both autenticated and encrypted with mTLS.
-The Apache ZooKeeper clusters backing the Kafka instances are not exposed outside of the Kubernetes cluster, providing additionnal security.
+By default, intra-broker communication is encrypted with TLS.
 
 {{site.data.alerts.end}}
 
@@ -164,9 +170,6 @@ Once the cluster is running, you can run a simple producer to send messages to a
 - Step 5: In producer terminal wait for the prompt and start typing messages. (Input Control-C to finish)
 
   Messages will be outputed in consumer terminal.
-
-
-
 
 ## Schema Registry
 
@@ -262,7 +265,7 @@ Kafka consumer and producers docker images used for testing ca be found in [kafk
 
 {{site.data.alerts.note}}
 
-Even when helm chart source code is available in the repository, this helm chart is not hosted in any official helm repository. I have decided to selfhost this helm chart within my own repository `https://ricsanfre.github.io/helm-charts/`
+Even when helm chart source code is available in the repository, this helm chart is not hosted in any official helm repository. I have decided to selfhost this helm chart within my own repository [ricsanfre/helm-charts/kafdrop](https://github.com/ricsanfre/helm-charts/tree/master/charts/kafdrop) that is available in my own helm repository `https://ricsanfre.github.io/helm-charts/`
 
 {{site.data.alerts.end}}
 
@@ -296,12 +299,12 @@ Even when helm chart source code is available in the repository, this helm chart
     ingressClassName: nginx
     # ingress host
     hosts:
-      - kafdrop.picluster.ricsanfre.com
+      - kafdrop.${CLUSTER_DOMAIN}
     ## TLS Secret Name
     tls:
       - secretName: kafdrop-tls
         hosts:
-          - kafdrop.picluster.ricsanfre.com
+          - kafdrop.${CLUSTER_DOMAIN}
     ## Default ingress path
     path: /
     ## Ingress annotations
@@ -311,7 +314,7 @@ Even when helm chart source code is available in the repository, this helm chart
       #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
       #   * 'ca-issuer' (CA-signed certificate, not valid)
       cert-manager.io/cluster-issuer: letsencrypt-issuer
-      cert-manager.io/common-name: kafdrop.picluster.ricsanfre.com
+      cert-manager.io/common-name: kafdrop.${CLUSTER_DOMAIN}
 
   # Kafdrop docker images are not multi-arch. Only amd64 image is available
   affinity:
@@ -324,6 +327,21 @@ Even when helm chart source code is available in the repository, this helm chart
             values:
             - amd64
   ```
+
+
+  {{site.data.alerts.note}}
+
+  Substitute variables (`${var}`) in the above yaml file before deploying manifest.
+  -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
+
+  Ingress Controller NGINX exposes kafdrop server as `kafdrop.${CLUSTER_DOMAIN}` virtual host, routing rules are configured for redirecting all incoming HTTP traffic to HTTPS and TLS is enabled using a certificate generated by Cert-manager.
+
+  See ["Ingress NGINX Controller - Ingress Resources Configuration"](/docs/nginx/#ingress-resources-configuration) for furher details.
+
+  ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP assigned to Ingress Controller, making kafdrop service available at `kafdrop.{$CLUSTER_DOMAIN}. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+
+  {{site.data.alerts.end}}
+
 
   Kafdrop is configured to use Schema Registry, so messages can be decoded when Schema Registry is used. See helm chart value `cmdArgs`:
   -  `--schemaregistry.connect=http://kafka-schema-registry:8081`
