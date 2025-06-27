@@ -247,7 +247,7 @@ This method do not require to expose to the Public Internet the web services hos
 
 ##### DNS Split horizon
 
-In case of using [[DNS#Split Horizon architecture|DNS split horizon architecture]], where a internal private DNS server is used, cert-manager need to be re-configured so internal DNS server is not used during DNS01 challenge process.
+In case of using DNS split horizon architecture, where an internal private DNS server is used, cert-manager has to be configured so internal DNS server is not used during DNS01 challenge process. See further details about DNS split horizon in ["Pi Cluster - DNS Homelab Architecture](/docs/dns/).
 
 -   Step 1: Create `cert-manager-values.yaml` file
 
@@ -378,64 +378,6 @@ API key is composed of two parts:  Public Prefix (public key) and Secret (privat
                     key: IONOS_SECRET
                     name: ionos-secret
   ```
-
-#### Configuring ACME HTTP-01 Challenge
-
-HTTP validation method requires to actually expose a "challenge URL" in the Public Internet using the DNS domain associated to the TLS certificate.
-
-HTTP validation method is as follows: 
-1. Cert-manager issues a certificate request to Let's Encrypt. 
-2. Let's Encrypt requests an ownership verification challenge in response. 
-   The challenge will be to put an HTTP resource at a specific URL under the domain name that the certificate is being requested for. The theory is that if we can put that resource at that URL and Let's Encrypt can retrieve it remotely, then we must really be the owners of the domain. Otherwise, either we could not have placed the resource in the correct place, or we could not have manipulated DNS to allow Let's Encrypt to get to it. 
-3. Cert-manager puts the resource in the right place and automatically creates a temporary Ingress record that will route traffic to the correct place. If Let's Encrypt can read the challenge and it is correct, it will issue the certificates back to cert-manager.
-4. Cert-manager will then store the certificates as secrets, and our website (or whatever) will use those certificates for securing our traffic with TLS.
-
-To make ACME HTTP-01 challenge work, HTTP traffic need to be enabled and routed from the Internet to Kubernetes Cluster's  Load Balancer IP assigned to Kubernetes Ingress Controller used (i.e: Traefik or Ingress NGINX).
-
-In case of Kubernetes running in a homelab, where public dynamic IP address is  allocated by ISP's  to home Router, the following need to be configured
-
--   Configure Dynamic DNS: To keep up to date the DNS records mapped to public IP address (dynamic IP address) assigned to ISP's Router
--   Configure Home Router:  To forward HTTP/HTTPS traffic to the cluster (forward to homelab `gateway` router)
-
-##### Configure Dynamic DNS
-
-Lets Encrypt validation process includes to make a resolution of the domain included in the certificate requests.
-
-In my home network only a public dysnamic IP is available from my ISP. My DNS provider, 1&1 IONOS supports DynDNS with an open protocol [Domain Connect](https://www.domainconnect.org/).
-To configure DynDNS IONOS provider, follow these [instructions](https://www.ionos.com/help/domains/configuring-your-ip-address/connecting-a-domain-to-a-network-with-a-changing-ip-using-dynamic-dns-linux/).
-
-- Step 1: Install python package
-
-  ```shell
-  pip3 install domain-connect-dyndns
-  ```
-
-- Step 2: Configure domain to be dynamically updated
-
-  ```shell
-  domain-connect-dyndns setup --domain picluster.ricsanfre.com
-  ```
-
-- Step 3: Update it
-
-  ```shell
-  domain-connect-dyndns update --all
-  ```
-
-##### Configure Home Router
-
-Enable port forwarding for TCP ports 80/443 to `gateway` node.
-
-| WAN Port | LAN IP | LAN Port |
-|----------|--------|----------|
-| 80 | `gateway` | 8080 |
-| 443 | `gateway`| 4430 |
-{: .table .table-white .border-dark }
-
-##### Configure Pi cluster Gateway
-
-Configure firewall forwarding rules to manage incoming traffic at 8080 and 4430 ports.
-
 
 ## Observability
 
