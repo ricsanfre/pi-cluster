@@ -14,7 +14,7 @@ spec:
         name: kiali
         namespace: flux-system
   releaseName: kiali-operator
-  targetNamespace: kiali-operator
+  targetNamespace: kiali
   install:
     remediation:
       retries: 3
