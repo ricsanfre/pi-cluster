@@ -7,3 +7,7 @@ spec:
     - targets:
         - node1.${CLUSTER_DOMAIN}:9100
   metricsPath: /metrics
+  relabelings:
+    - action: replace
+      targetLabel: job
+      replacement: node-exporter
