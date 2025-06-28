@@ -52,6 +52,7 @@ cr:
               cert-manager.io/cluster-issuer: letsencrypt-issuer
               cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
           spec:
+            ingressClassName: nginx
             rules:
             - host: kiali.${CLUSTER_DOMAIN}
               http:
