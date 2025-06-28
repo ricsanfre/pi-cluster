@@ -12,9 +12,9 @@ resources:
   - fluent-app.yaml
   - flux-app.yaml
   - grafana-app.yaml
-  # - istio-app.yaml
+  - istio-app.yaml
   - kafka-app.yaml
-  # - kiali-app.yaml
+  - kiali-app.yaml
   - keycloak-app.yaml
   - kube-prometheus-stack-app.yaml
   - loki-app.yaml
