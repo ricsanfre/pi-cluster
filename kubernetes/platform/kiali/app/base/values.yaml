@@ -2,8 +2,9 @@
 
 cr:
   create: true
-  namespace: istio-system
+  namespace: kiali
   spec:
+    istio_namespace: "istio-system"
     auth:
       # strategy: "anonymous"
       strategy: openid
