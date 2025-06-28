@@ -461,7 +461,7 @@ dashboardProviders:
         options:
           path: /var/lib/grafana/dashboards/<provider-folder>
 dashboards:
-  <provider_name>
+  <provider_name>:
     <dashboard-name>:
      gnetId: <dasbhoard_id>
      revision: <dasboard_rev>
@@ -658,10 +658,10 @@ Follow procedure in [Grafana documentation: Configure Keycloak OAuth2 authentica
       ![grafana-client-3](/assets/img/grafana-keycloak-3.png)
 
     -   Provide the following 'Logging settings'
-        -   Valid redirect URIs: https://monitoring.picluster.ricsanfre.com/grafana/login/generic_oauth
-        -   Home URL: https://monitoring.picluster.ricsanfre.com/grafana
-        -   Root URL: https://monitoring.picluster.ricsanfre.com/grafana
-        -   Web Origins: https://monitoring.picluster.ricsanfre.com/grafana
+        -   Valid redirect URIs: `https://monitoring.S{CLUSTER_DOMAIN}/grafana/login/generic_oauth`
+        -   Home URL: https://monitoring.S{CLUSTER_DOMAIN}/grafana
+        -   Root URL: https://monitoring.S{CLUSTER_DOMAIN}/grafana
+        -   Web Origins: https://monitoring.S{CLUSTER_DOMAIN}/grafana
     -   Save the configuration.
 
 -   Step 3: Locate grafana client credentials
@@ -672,7 +672,7 @@ Follow procedure in [Grafana documentation: Configure Keycloak OAuth2 authentica
 
 -   Step 4: Configure Grafana client roles
 
-    ![[Pasted image 20250331173303.png]]
+    ![grafana-client-4.1](/assets/img/grafana-keycloak-4.1.png)
 
     -   Create following roles
         - admin
@@ -729,7 +729,7 @@ envFromSecret: grafana-env-secret
 grafana.ini:
   server:
     # Configuring /grafana subpath
-    domain: monitoring.picluster.ricsanfre.com
+    domain: monitoring.${CLUSTER_DOMAIN}
     root_url: "https://%(domain)s/grafana/"
     # rewrite rules configured in nginx rules
     # https://grafana.com/tutorials/run-grafana-behind-a-proxy/
@@ -751,23 +751,31 @@ grafana.ini:
     login_attribute_path: username
     name_attribute_path: full_name
     # Auth endpoint
-    auth_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/auth
+    auth_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/auth
     # Token endpoint
-    token_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/token
+    token_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/token
     # User info endpoint
-    api_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/userinfo
+    api_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/userinfo
     # Configure role mappings from ID token claims
     role_attribute_path: contains(resource_access.grafana.roles[*], 'admin') && 'Admin' || contains(resource_access.grafana.roles[*], 'editor') && 'Editor' || (contains(resource_access.grafana.roles[*], 'viewer') && 'Viewer')
     # Enables single logout
-    signout_redirect_url: https://sso.picluster.ricsanfre.com/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.picluster.ricsanfre.com%2Fgrafana%2Flogin%2Fgeneric_oauth
+    signout_redirect_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.${CLUSTER_DOMAIN}%2Fgrafana%2Flogin%2Fgeneric_oauth
 ```
+
+{{site.data.alerts.note}}
+
+  Substitute variables (`${var}`) in the above yaml file before deploying manifest.
+  -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
+
+{{site.data.alerts.end}}
+
 
 -   `client_secret` is obtained from keycloak client configuration: step 3. It has to be configured as a secret 
 -   Single logout is configured: `signout_redirect_url`
 -   Roles mappings are configured (`role_attribute_path`) to use Grafana's client roles configured in Keycloak
 -   Refresh tokens use is enabled: `offline_access` scope has ben added to `auth.generic.oauth.scopes`  and `auth.generic.oauth.use_refresh_token` is set to true
 
-See configuration details about all options that can be provided in `grafana.ini` in https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/generic-oauth/#configure-generic-oauth-authentication-client-using-the-grafana-configuration-file
+See configuration details about all options that can be provided in `grafana.ini` in [Grafana Documentation - Configure Oauth authentication](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/generic-oauth/#configure-generic-oauth-authentication-client-using-the-grafana-configuration-file)
 
 
 ## Observability
@@ -791,7 +799,7 @@ The following Grafana Helm chart configuration should be added in this case, set
 ```yaml
 grafana.ini:
   server:
-    domain: monitoring.local.test
+    domain: monitoring.${CLUSTER_DOMAIN}
     root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
     # When serve_from_subpath is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
     # This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
@@ -807,17 +815,20 @@ ingress:
   annotations:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: ca-issuer
-    cert-manager.io/common-name: monitoring.local.test
+    cert-manager.io/common-name: monitoring.${CLUSTER_DOMAIN}
     # Nginx rewrite rule
     nginx.ingress.kubernetes.io/rewrite-target: /$1
   path: /grafana/?(.*)
   pathType: ImplementationSpecific
   hosts:
-    - monitoring.local.test
+    - monitoring.${CLUSTER_DOMAIN}
   tls:
     - hosts:
-      - monitoring.local.test
+      - monitoring.${CLUSTER_DOMAIN}
       secretName: monitoring-tls
 ```
+Substitute variables (`${var}`) in the above yaml file before deploying manifest.
+-   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
+
 
 {{site.data.alerts.end}}
