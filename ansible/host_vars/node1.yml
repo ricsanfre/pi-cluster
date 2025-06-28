@@ -111,3 +111,44 @@ bind9_zones:
 # restic backup role variables
 ############################
 restic_clean_service: true
+
+################################
+# Fluent-bit Agent configuration
+################################
+
+# Fluentbit_inputs
+fluentbit_inputs: |
+  [INPUT]
+      Name tail
+      Tag host.*
+      DB /run/fluentbit-state.db
+      Path /var/log/auth.log,/var/log/syslog
+      Parser syslog-rfc3164-nopri
+
+# Fluentbit output
+fluentbit_outputs: |
+  [OUTPUT]
+      Name forward
+      Match *
+      Host {{ fluentd_dns }}
+      Port 24224
+      Self_Hostname {{ ansible_hostname }}
+      Shared_Key {{ fluentd_shared_key }}
+      tls true
+      tls.verify false
+
+# Fluentbit custom parsers
+fluentbit_custom_parsers: |
+  [PARSER]
+      Name syslog-rfc3164-nopri
+      Format regex
+      Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+      Time_Key time
+      Time_Format %b %d %H:%M:%S
+      Time_Keep False
+
+################################
+# Node-exporter Agent configuration
+################################
+
+node_exporter_arch: 'arm64'

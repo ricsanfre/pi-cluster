@@ -26,6 +26,8 @@ roles:
     version: v1.1.3
   - name: ricsanfre.vault
     version: v1.0.4
+  - name: geerlingguy.node_exporter
+    version: 2.1.1
 collections:
   - name: community.general
     version: 11.0.0

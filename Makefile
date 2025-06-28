@@ -83,6 +83,10 @@ external-services-reset:
 openwrt-certbot-tls:
 	${RUNNER} ansible-playbook generate_gateway_tls_certificate.yml
 
+.PHONY: deploy-monitoring-agent
+deploy-monitoring-agent:
+	${RUNNER} ansible-playbook deploy_monitoring_agent.yml
+
 .PHONY: shutdown-k3s-worker
 shutdown-k3s-worker:
 	${RUNNER} ansible -b -m shell -a "shutdown -h 1 min" k3s_worker
