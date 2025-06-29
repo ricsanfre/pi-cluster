@@ -2,7 +2,7 @@
 title: External Services Node
 permalink: /docs/external/
 description: How to configure a Raspberry Pi to host external services needed in HomeLab, like DNS authoritative server, PXE server, SAN, HA Proxy.
-last_modified_at: "08-12-2024"
+last_modified_at: "29-06-2025"
 ---
 
 One of the Raspeberry Pi (4GB), `node1`, is used to run external services like authoritative DNS, PXE Server, Vault or external Kuberentes API Load Balancer (HA Proxy). 
@@ -254,9 +254,50 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
         - targets:
             - ${NODE_NAME}:9100
       metricsPath: /metrics
+      relabelings:
+        - action: replace
+          targetLabel: job
+          replacement: node-exporter
     ```
 
     Where ${NODE_NAME}, should be replaced by DNS or IP address of the external node (i.e.: `node1.homelab.ricsanfre.com`).
+
+
+#### Grafana Dashboard
+
+Node Exporter dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 1860](https://grafana.com/grafana/dashboards/1860).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    node-exporter-full:
+      # renovate: depName="Node Exporter Full"
+      gnetId: 1860
+      revision: 41
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
 
 
 ### Logs
