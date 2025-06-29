@@ -52,7 +52,7 @@ For those reasons, Service Mesh solution in the cluster has been migrated to Ist
 
   Istio new sidecarless mode, ambient, uses a new L4 proxy, ztunnel, which is coded in Rust and which is not deployed side-by-side with every single pod, but only deployed one per node.
 
-  This sidecarless new architecture is expected to use a lower footprint than Linkerd
+  This sidecarless new architecture is expected to use a lower footprint than Linkerd.
 
   Preliminary comparison, made by [solo-io](https://www.solo.io/), main contributor to Istio's new Ambient mode, shows reduced Istio footprint and better performance results than Likerd. See comparison analysis ["Istio in Ambient Mode - Doing More for Less!"](https://github.com/solo-io/service-mesh-for-less-blog)
 
@@ -391,36 +391,43 @@ Kiali will be installing using Kiali operator which is recommeded
 
 Installation using `Helm` (Release 3):
 
-- Step 1: Add the Kiali Helm repository:
+- Step 1: Create Kiali namespace
+
+  ```shell
+  kubectl create namespace kiali
+  ```
+
+- Step 2: Add the Kiali Helm repository:
 
   ```shell
   helm repo add kiali https://istio-release.storage.googleapis.com/charts
   ```
-- Step 2: Fetch the latest charts from the repository:
+- Step 3: Fetch the latest charts from the repository:
 
   ```shell
   helm repo update
   ```
 
-- Step 3: Create `kiali-operator-values.yaml`
+- Step 4: Create `kiali-operator-values.yaml`
 
   ```yaml
   cr:
     create: true
-    namespace: istio-system
+    namespace: kiali
     spec:
+        istio_namespace: "istio-system"
         auth:
           strategy: "anonymous"
         external_services:
           prometheus:
             # Prometheus service
-            url: "http://kube-prometheus-stack-prometheus.monitoring:9090/"
+            url: "http://kube-prometheus-stack-prometheus.monitoring:9090/prometheus"
           grafana:
             enabled: true
             # Grafana service name is "grafana" and is in the "monitoring" namespace.
-            in_cluster_url: 'http://grafana.monitoring.svc.cluster.local/grafana/'
+            internal_url: 'http://grafana.grafana.svc.cluster.local/grafana/'
             # Public facing URL of Grafana
-            url: 'https://monitoring.picluster.ricsanfre.com/grafana/'
+            external_url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
             auth:
               # Use same OAuth2.0 token used for accesing Kiali
               type: bearer
@@ -450,10 +457,11 @@ Installation using `Helm` (Release 3):
                   #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
                   #   * 'ca-issuer' (CA-signed certificate, not valid)
                   cert-manager.io/cluster-issuer: letsencrypt-issuer
-                  cert-manager.io/common-name: kiali.picluster.ricsanfre.com
+                  cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
               spec:
+                ingressClassName: nginx
                 rules:
-                - host: kiali.picluster.ricsanfre.com
+                - host: kiali.${CLUSTER_DOMAIN}
                   http:
                     paths:
                     - backend:
@@ -465,9 +473,16 @@ Installation using `Helm` (Release 3):
                       pathType: Prefix
                 tls:
                 - hosts:
-                  - kiali.picluster.ricsanfre.com
+                  - kiali.${CLUSTER_DOMAIN}
                   secretName: kiali-tls
   ```
+
+  {{site.data.alerts.note}}
+
+  Substitute variables (`${var}`) in the above yaml file before applying it.
+  -   Replace `${CLUSTER_DOMAIN}` by the domain used in the cluster. For example: `homelab.ricsanfre.com`
+
+  {{site.data.alerts.end}}
 
   With this configuration Kiali Server, Kiali Custom Resource, is created with the following config:
 
@@ -483,12 +498,11 @@ Installation using `Helm` (Release 3):
 
     See further details in [Kiali Configuring Prometheus Tracing Grafana](https://kiali.io/docs/configuration/p8s-jaeger-grafana/)
 
-- Step 4: Install Kiali Operator in istio-system namespace
+- Step 5: Install Kiali Operator in kiali namespace
 
   ```shell
-  helm install kiali-operator kiali/kiali-operator --namespace istio-system -f kiali-operator-values.yaml
+  helm install kiali-operator kiali/kiali-operator --namespace kiali -f kiali-operator-values.yaml
   ```
-
 
 ### Kiali OpenID Authentication configuration
 
@@ -497,7 +511,6 @@ Kiali can be configured to use as authentication mechanism Open Id Connect serve
 Kiali only supports the authorization code flow of the OpenId Connect spec.
 
 See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/configuration/authentication/openid/).
-
 
 - Step 1: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
   Clients -> Create client
@@ -523,8 +536,8 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
   ![kiali-keycloak-3](/assets/img/kiali-keycloak-3.png)
 
   - Provide the following 'Logging settings'
-    - Valid redirect URIs: https://kiali.picluster.ricsanfre.com/kiali/*
-    - Root URL: https://kiali.picluster.ricsanfre.com/kiali/
+    - Valid redirect URIs: `https://kiali.${CLUSTER_DOMAIN}/kiali/*`
+    - Root URL: `https://kiali.${CLUSTER_DOMAIN}/kiali/`
   - Save the configuration.
 
 - Step 2: Locate kiali client credentials
@@ -553,7 +566,7 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
         openid:
           client_id: "kiali"
           disable_rbac: true
-          issuer_uri: "https://sso.picluster.ricsanfre.com/realms/picluster"
+          issuer_uri: "https://sso.${CLUSTER_DOMAIN}/realms/picluster"
   ```
 
 ## Testing Istio installation
@@ -577,10 +590,14 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
     resources:
     - ns.yaml
       # https://istio.io/latest/docs/examples/bookinfo/
-    - https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo.yaml
-    - https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/platform/kube/bookinfo-versions.yaml
-    - https://raw.githubusercontent.com/istio/istio/release-1.24/samples/bookinfo/networking/bookinfo-gateway.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo-versions.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/networking/bookinfo-gateway.yaml
     ```
+
+    {{site.data.alerts.note}}
+    Book-app release version has to be aligned with Istio release.
+    {{site.data.alerts.end}}
 
   - Create book-info-app/ns.yaml file
 
@@ -590,7 +607,6 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
     metadata:
       name: book-info
     ```
-
 
 - Deploy book info app
 
@@ -607,7 +623,6 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
   ```
 
   Ambient mode can be seamlessly enabled (or disabled) completely transparently as far as the application pods are concerned. Unlike the sidecar data plane mode, there is no need to restart applications to add them to the mesh, and they will not show as having an extra container deployed in their pod.
-
 
  - Validate configuration
 
