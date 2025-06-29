@@ -241,8 +241,8 @@ Starting with MinIO Server [RELEASE.2024-07-15T19-02-30Z](https://github.com/min
 -   Metrics v3 description[^2]
 
 Grafana dashboards only available for v2:
--   It seems Minio is not going to maintain a official dashboard for v3. See https://github.com/minio/minio/issues/20678
--   There is a community maintained v3 dashboard at  https://github.com/FedericoAntoniazzi/minio-grafana-dashboard-metrics-v3
+-   It seems Minio is not going to maintain a official dashboard for v3. See [https://github.com/minio/minio/issues/20678](https://github.com/minio/minio/issues/20678)
+-   There is a community maintained v3 dashboard at [https://github.com/FedericoAntoniazzi/minio-grafana-dashboard-metrics-v3](https://github.com/FedericoAntoniazzi/minio-grafana-dashboard-metrics-v3)
 {{site.data.alerts.end}}
 
 For details see [Minio's documentation: "Collect MinIO Metrics Using Prometheus"](https://docs.min.io/minio/baremetal/monitoring/metrics-alerts/collect-minio-metrics-using-prometheus.html).
@@ -319,3 +319,8 @@ dashboards:
       revision: 5
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
+```
+---
+
+[^1]: [https://min.io/docs/minio/linux/operations/monitoring/metrics-v2.html](https://min.io/docs/minio/linux/operations/monitoring/metrics-v2.html)
+[^2]: [https://min.io/docs/minio/linux/operations/monitoring/metrics-and-alerts.html](https://min.io/docs/minio/linux/operations/monitoring/metrics-and-alerts.html)

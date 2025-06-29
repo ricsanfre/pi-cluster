@@ -260,7 +260,7 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
           replacement: node-exporter
     ```
 
-    Where ${NODE_NAME}, should be replaced by DNS or IP address of the external node (i.e.: `node1.homelab.ricsanfre.com`).
+    Where `${NODE_NAME}`, should be replaced by DNS or IP address of the external node (i.e.: `node1.homelab.ricsanfre.com`).
 
 
 #### Grafana Dashboard

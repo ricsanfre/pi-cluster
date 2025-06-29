@@ -562,7 +562,7 @@ For doing the installation [prometheus-elasticsearch-exporter official helm](htt
     
     ```
   
-  This config passes ElasticSearch API endpoint (`uri`) and the needed credentials through environement variables(`ES_USERNAME` and `ES_PASSWORD`). The `es-prometheus-user-file-realm` secret was created above when in [Elasticsearch authentication](#elasticsearch-authentication)
+  This config passes ElasticSearch API endpoint (`uri`) and the needed credentials through environement variables(`ES_USERNAME` and `ES_PASSWORD`). The `es-prometheus-user-file-realm` secret was created in section [Elasticsearch authentication](#elasticsearch-authentication).
 
 -   Step 3: Install prometheus-elasticsearh-exporter in the `elastic` namespace with the overriden values
 
