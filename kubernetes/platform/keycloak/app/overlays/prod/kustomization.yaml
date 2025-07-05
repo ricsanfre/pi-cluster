@@ -6,19 +6,5 @@ resources:
   - ../../base
 
 components:
-  - ../../components/external-db
   - ../../components/ingress
-  - ../../components/realm-config  
-
-configMapGenerator:
-  - name: keycloak-helm-values
-    behavior: merge
-    files:
-      - overlay-values.yaml=values.yaml
-
-patches:
-- target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: keycloak
-  path: helm-patch.yaml
+  - ../../components/monitor
