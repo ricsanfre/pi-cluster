@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: keycloak
+
+
+configMapGenerator:
+  # Generate keycloak config realm
+  - name: keycloak-realm-configmap
+    files:
+    - config/01-realm.json
+    - config/02-clients.json
+    - config/03-groups.json
+    - config/04-users.json
+
+resources:
+  - kc-config-cli-env-externalsecret.yaml
+  - job.yaml
