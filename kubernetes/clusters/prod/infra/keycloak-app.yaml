@@ -12,6 +12,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: cloudnative-pg-app
+    - name: keycloak-operator
   path: ./kubernetes/platform/keycloak/db/overlays/prod
   prune: true
   healthChecks:
@@ -19,6 +20,26 @@ spec:
       kind: Cluster
       name: keycloak-db
       namespace: keycloak
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak-operator
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 15m
+  targetNamespace: keycloak
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/keycloak/operator/overlays/prod
+  prune: true
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -39,12 +60,40 @@ spec:
     name: flux-system
   dependsOn:
     - name: keycloak-db
+    - name: keycloak-operator
   path: ./kubernetes/platform/keycloak/app/overlays/prod
   prune: true
   healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
+    - apiVersion: k8s.keycloak.org/v2alpha1
+      kind: Keycloak
       name: keycloak
+      namespace: keycloak
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 15m
+  targetNamespace: keycloak
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: keycloak-app
+  path: ./kubernetes/platform/keycloak/config/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: batch/v1
+      kind: Job
+      name: keycloak-import-realm
       namespace: keycloak
   postBuild:
     substituteFrom:

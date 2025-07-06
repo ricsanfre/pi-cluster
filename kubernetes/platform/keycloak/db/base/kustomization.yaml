@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: keycloak
 
 resources: 
-  - ns.yaml
   - keycloak-db-external-secret.yaml
   - keycloak-db-minio-external-secret.yaml
   - keycloak-db.yaml

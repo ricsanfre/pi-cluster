@@ -11,7 +11,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: keycloak-app
+    - name: keycloak-config
   path: ./kubernetes/platform/oauth2-proxy/app/overlays/prod
   prune: true
   healthChecks:
