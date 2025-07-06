@@ -12,11 +12,15 @@
       "matchStrings": [
 
         // # renovate: datasource=github-releases depName=k3s-io/k3s
-        // k3s_release_version: v1.29.0+k3s1
-        "(?m:# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( repository=(?<registryUrl>\\S+))?\\n.+?: \"?(?<currentValue>\\S+?)\"?$)",
+        // k3s_release_version: &version v1.29.0+k3s1
+        // # renovate: datasource=helm depName=cilium repository=https://helm.cilium.io
+        // version: 1.15.1
+        "datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( repository=(?<registryUrl>\\S+))?\\n.+(:\\s|=)(&\\S+\\s)?(?<currentValue>\\S+)"
         // # renovate: datasource=github-releases depName=rancher/system-upgrade-controller
         // https://github.com/rancher/system-upgrade-controller/releases/download/v0.13.2/crd.yaml
-        "(?m:# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n.+?\/(?<currentValue>(v|\\d)[^\/]+)\\S+$)",
+        // # renovate: datasource=docker depName=ghcr.io/prometheus-operator/prometheus-operator
+        // https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.80.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
+        "datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n.+/(?<currentValue>(v|\\d)[^/]+)"
       ],
       "datasourceTemplate": "{{#if datasource}}{{{datasource}}}{{else}}github-releases{{/if}}"
     },
@@ -31,6 +35,16 @@
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "redhat"
+    },
+    {
+      "description": "Ansible Helm chart",
+      "fileMatch": [
+        "(^|/)ansible/.+\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "chart_ref:\\s+(?<depName>.*?)\\s+chart_repo_url:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\"(?<currentValue>.*)\""
+      ],
+      "datasourceTemplate": "helm"
     }
   ]
 }

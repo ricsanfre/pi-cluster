@@ -39,4 +39,14 @@
       '/(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$/',
     ],
   },
+  ansible: {
+    managerFilePatterns: [
+      "ansible/[^/]+\\.ya?ml$"
+    ]
+  },
+  "ansible-galaxy": {
+    "fileMatch": [
+        "ansible/[^/]+\\.ya?ml$"
+    ]
+  },
 }
