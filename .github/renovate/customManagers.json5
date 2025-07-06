@@ -33,6 +33,18 @@
       "matchStrings": ["image(Name)?: (?<depName>\\S+):(?<currentValue>.*\\-.*)"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "redhat"
+    },
+    {
+      "customType": "regex",
+      "description": ["Process ansible kubernetes helm chart oci repo"],
+      "fileMatch": [
+        "(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$"
+      ],
+      "matchStrings": [
+        "name:\\s+(?<depName>.*?)\\s+chart_ref:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\"(?<currentValue>.*)\""
+      ],
+      "datasourceTemplate": "helm",
+      "versioningTemplate": "helm"
     }
   ]
 }
