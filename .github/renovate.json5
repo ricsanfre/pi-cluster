@@ -41,12 +41,12 @@
   },
   ansible: {
     managerFilePatterns: [
-      "ansible/[^/]+\\.ya?ml$"
-    ]
+      'ansible/[^/]+\\.ya?ml$',
+    ],
   },
-  "ansible-galaxy": {
-    "fileMatch": [
-        "ansible/[^/]+\\.ya?ml$"
-    ]
+  'ansible-galaxy': {
+    managerFilePatterns: [
+      '/ansible/[^/]+\\.ya?ml$/',
+    ],
   },
 }
