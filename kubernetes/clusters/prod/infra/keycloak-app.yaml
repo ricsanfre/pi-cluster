@@ -15,11 +15,12 @@ spec:
     - name: keycloak-operator
   path: ./kubernetes/platform/keycloak/db/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: postgresql.cnpg.io/v1
-      kind: Cluster
-      name: keycloak-db
-      namespace: keycloak
+  wait: true
+  # healthChecks:
+  #   - apiVersion: postgresql.cnpg.io/v1
+  #     kind: Cluster
+  #     name: keycloak-db
+  #     namespace: keycloak
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -40,6 +41,7 @@ spec:
     name: flux-system
   path: ./kubernetes/platform/keycloak/operator/overlays/prod
   prune: true
+  wait: true
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -63,11 +65,12 @@ spec:
     - name: keycloak-operator
   path: ./kubernetes/platform/keycloak/app/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: k8s.keycloak.org/v2alpha1
-      kind: Keycloak
-      name: keycloak
-      namespace: keycloak
+  wait: true
+  # healthChecks:
+  #   - apiVersion: k8s.keycloak.org/v2alpha1
+  #     kind: Keycloak
+  #     name: keycloak
+  #     namespace: keycloak
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -90,11 +93,12 @@ spec:
     - name: keycloak-app
   path: ./kubernetes/platform/keycloak/config/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: batch/v1
-      kind: Job
-      name: keycloak-import-realm
-      namespace: keycloak
+  wait: true
+  # healthChecks:
+  #   - apiVersion: batch/v1
+  #     kind: Job
+  #     name: keycloak-import-realm
+  #     namespace: keycloak
   postBuild:
     substituteFrom:
       - kind: ConfigMap
