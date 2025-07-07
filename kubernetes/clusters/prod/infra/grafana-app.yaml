@@ -17,11 +17,12 @@ spec:
     - name: external-secrets-config
   path: ./kubernetes/platform/grafana/app/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: grafana
-      namespace: grafana
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: grafana
+  #     namespace: grafana
   postBuild:
     substituteFrom:
       - kind: ConfigMap

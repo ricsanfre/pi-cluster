@@ -12,11 +12,12 @@ spec:
     name: flux-system
   path: ./kubernetes/platform/kube-prometheus-stack/prometheus-operator-crds/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: prometheus-operator-crds
-      namespace: kube-system
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: prometheus-operator-crds
+  #     namespace: kube-system
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -35,11 +36,12 @@ spec:
   dependsOn:
     - name: prometheus-operator-crds
     - name: longhorn-app
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: kube-prometheus-stack
-      namespace: kube-prom-stack
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: kube-prometheus-stack
+  #     namespace: kube-prom-stack
   postBuild:
     substituteFrom:
       - kind: ConfigMap

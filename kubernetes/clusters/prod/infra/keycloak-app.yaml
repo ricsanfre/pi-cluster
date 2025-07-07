@@ -16,6 +16,11 @@ spec:
   path: ./kubernetes/platform/keycloak/db/overlays/prod
   prune: true
   wait: true
+  healthCheckExprs:
+    - apiVersion: postgresql.cnpg.io/v1
+      kind: Cluster
+      failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   # healthChecks:
   #   - apiVersion: postgresql.cnpg.io/v1
   #     kind: Cluster
@@ -66,6 +71,11 @@ spec:
   path: ./kubernetes/platform/keycloak/app/overlays/prod
   prune: true
   wait: true
+  healthCheckExprs:
+    - apiVersion: k8s.keycloak.org/v2alpha1
+      kind: Keycloak
+      failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   # healthChecks:
   #   - apiVersion: k8s.keycloak.org/v2alpha1
   #     kind: Keycloak
@@ -75,6 +85,7 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
