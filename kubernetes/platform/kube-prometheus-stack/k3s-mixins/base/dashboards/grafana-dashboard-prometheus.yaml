@@ -404,7 +404,7 @@ data:
                             }
                         },
                         "min": 0,
-                        "unit": "ms"
+                        "unit": "short"
                     }
                 },
                 "gridPos": {
@@ -797,7 +797,8 @@ data:
             ]
         },
         "timezone": "utc",
-        "title": "Prometheus / Overview"
+        "title": "Prometheus / Overview",
+        "uid": "9fa0d141-d019-4ad7-8bc5-42196ee308bd"
     }
 kind: ConfigMap
 metadata:
