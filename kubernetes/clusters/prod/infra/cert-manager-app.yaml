@@ -13,11 +13,6 @@ spec:
   path: ./kubernetes/platform/cert-manager/app/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: cert-manager
-  #     namespace: cert-manager
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -36,11 +31,6 @@ spec:
   path: ./kubernetes/platform/cert-manager/webhook-ionos/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: cert-manager-webhook-ionos
-  #     namespace: cert-manager
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1

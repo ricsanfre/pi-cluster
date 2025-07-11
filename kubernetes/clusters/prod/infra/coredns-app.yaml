@@ -15,8 +15,3 @@ spec:
   path: ./kubernetes/platform/coredns/app/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: coredns
-  #     namespace: kube-system

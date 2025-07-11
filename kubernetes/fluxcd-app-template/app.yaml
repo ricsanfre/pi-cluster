@@ -12,11 +12,7 @@ spec:
     name: flux-system
   path: ./kubernetes/platform/{{ .app_name }}/app/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: {{ .app_name }}
-      namespace: {{ .app_namespace }}
+  wait: true
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -34,3 +30,4 @@ spec:
     - name: {{ .app_name }}-app
   path: ./kubernetes/platform/{{ .app_name }}/config/overlays/prod
   prune: true
+  wait: true

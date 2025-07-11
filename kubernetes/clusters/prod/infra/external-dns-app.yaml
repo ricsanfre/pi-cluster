@@ -15,11 +15,6 @@ spec:
   path: ./kubernetes/platform/external-dns/app/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: external-dns
-  #     namespace: external-dns
   postBuild:
     substituteFrom:
       - kind: ConfigMap

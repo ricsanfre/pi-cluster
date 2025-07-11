@@ -16,11 +16,6 @@ spec:
   path: ./kubernetes/platform/minio/app/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: minio
-  #     namespace: minio
   postBuild:
     substituteFrom:
       - kind: ConfigMap

@@ -43,11 +43,6 @@ spec:
     - name: loki-app
     - name: fluent-common-app
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: fluentd
-  #     namespace: fluent
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -71,11 +66,6 @@ spec:
     - name: fluentd-app
     - name: external-secrets-config
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: fluent-bit
-  #     namespace: fluent
   postBuild:
     substituteFrom:
       - kind: ConfigMap

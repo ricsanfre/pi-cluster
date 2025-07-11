@@ -18,11 +18,6 @@ spec:
   path: ./kubernetes/platform/longhorn/app/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: longhorn
-  #     namespace: longhorn-system
   postBuild:
     substituteFrom:
       - kind: ConfigMap

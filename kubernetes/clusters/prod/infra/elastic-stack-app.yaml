@@ -38,6 +38,7 @@ spec:
   path: ./kubernetes/platform/elastic-stack/app/overlays/prod
   prune: true
   wait: true
+  timeout: 15m
   healthCheckExprs:
     - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Elasticsearch
@@ -69,8 +70,3 @@ spec:
   path: ./kubernetes/platform/elastic-stack/prometheus-elasticsearch-exporter/overlays/prod
   prune: true
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: prometheus-elasticsearch-exporter
-  #     namespace: elastic

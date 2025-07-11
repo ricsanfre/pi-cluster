@@ -15,11 +15,6 @@ spec:
   dependsOn:
     - name: ingress-nginx-app
   wait: true
-  # healthChecks:
-  #   - apiVersion: helm.toolkit.fluxcd.io/v2
-  #     kind: HelmRelease
-  #     name: cilium
-  #     namespace: kube-system
   postBuild:
     substituteFrom:
       - kind: ConfigMap
