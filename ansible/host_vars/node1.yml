@@ -112,6 +112,12 @@ bind9_zones:
 ############################
 restic_clean_service: true
 
+
+############################
+# vault role variables
+############################
+vault_venv_path: "/opt/vault-venv"
+
 ################################
 # Fluent-bit Agent configuration
 ################################
