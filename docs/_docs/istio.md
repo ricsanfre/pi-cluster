@@ -566,7 +566,7 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
         openid:
           client_id: "kiali"
           disable_rbac: true
-          issuer_uri: "https://sso.${CLUSTER_DOMAIN}/realms/picluster"
+          issuer_uri: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
   ```
 
 ## Testing Istio installation

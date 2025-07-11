@@ -24,7 +24,7 @@ config:
     provider="keycloak-oidc"
     provider_display_name="Keycloak"
     redirect_url="https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
-    oidc_issuer_url="https://sso.${CLUSTER_DOMAIN}/realms/picluster"
+    oidc_issuer_url="https://iam.${CLUSTER_DOMAIN}/realms/picluster"
     code_challenge_method="S256"
     ssl_insecure_skip_verify=true
     # Upstream config

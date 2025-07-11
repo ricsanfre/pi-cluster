@@ -11,10 +11,10 @@ ingress:
     #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
     #   * 'ca-issuer' (CA-signed certificate, not valid)
     cert-manager.io/cluster-issuer: letsencrypt-issuer
-    cert-manager.io/common-name: sso.${CLUSTER_DOMAIN}
+    cert-manager.io/common-name: iam.${CLUSTER_DOMAIN}
     # Increasing proxy buffer size to avoid
     # https://stackoverflow.com/questions/57503590/upstream-sent-too-big-header-while-reading-response-header-from-upstream-in-keyc
     nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
     nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-  hostname: sso.${CLUSTER_DOMAIN}
+  hostname: iam.${CLUSTER_DOMAIN}
   tls: true

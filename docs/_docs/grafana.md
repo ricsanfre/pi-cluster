@@ -751,15 +751,15 @@ grafana.ini:
     login_attribute_path: username
     name_attribute_path: full_name
     # Auth endpoint
-    auth_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/auth
+    auth_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/auth
     # Token endpoint
-    token_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/token
+    token_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/token
     # User info endpoint
-    api_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/userinfo
+    api_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/userinfo
     # Configure role mappings from ID token claims
     role_attribute_path: contains(resource_access.grafana.roles[*], 'admin') && 'Admin' || contains(resource_access.grafana.roles[*], 'editor') && 'Editor' || (contains(resource_access.grafana.roles[*], 'viewer') && 'Viewer')
     # Enables single logout
-    signout_redirect_url: https://sso.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.${CLUSTER_DOMAIN}%2Fgrafana%2Flogin%2Fgeneric_oauth
+    signout_redirect_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.${CLUSTER_DOMAIN}%2Fgrafana%2Flogin%2Fgeneric_oauth
 ```
 
 {{site.data.alerts.note}}

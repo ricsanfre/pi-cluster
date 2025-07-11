@@ -17,10 +17,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-      - sso.${CLUSTER_DOMAIN}
+      - iam.${CLUSTER_DOMAIN}
       secretName: keycloak-tls-secret
   rules:
-  - host: sso.${CLUSTER_DOMAIN}
+  - host: iam.${CLUSTER_DOMAIN}
     http:
       paths:
       - backend:

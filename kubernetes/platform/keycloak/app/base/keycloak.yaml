@@ -28,7 +28,7 @@ spec:
     httpEnabled: true
   hostname:
     # Setting hostname
-    hostname: https://sso.${CLUSTER_DOMAIN}
+    hostname: https://iam.${CLUSTER_DOMAIN}
     strict: true
     # Enabling back channel
     backchannelDynamic: true

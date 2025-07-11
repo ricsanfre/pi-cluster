@@ -11,7 +11,7 @@ cr:
       openid:
         client_id: "kiali"
         disable_rbac: true
-        issuer_uri: "https://sso.${CLUSTER_DOMAIN}/realms/picluster"
+        issuer_uri: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
     external_services:
       prometheus:
         # Prometheus service
