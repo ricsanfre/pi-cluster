@@ -23,5 +23,3 @@
       data:
         ddns-key: "{{ bind9_ddns_key }}"
     body_format: json
-  vars:
-    ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
