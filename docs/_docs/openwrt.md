@@ -569,7 +569,7 @@ Configuration files can be edited:
 Upon changing a UCI configuration file, whether through a text editor or the command line, the services or executables that are affected must be (re)started (or, in some cases, simply reloaded) by an [init.d call](https://openwrt.org/docs/techref/initscripts "docs:techref:initscripts")
 
 
-## References
+---
 
 [^1]: [OpenWrt - Accessing LuCI web interface securely](https://openwrt.org/docs/guide-user/luci/luci.secure)
 [^2]: [OpenWrt - Connect Client Wifi](https://openwrt.org/docs/guide-user/network/wifi/connect_client_wifi)

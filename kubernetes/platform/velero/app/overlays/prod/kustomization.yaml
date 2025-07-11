@@ -5,6 +5,9 @@ namespace: velero
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: velero-helm-values
     behavior: merge

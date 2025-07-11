@@ -2,12 +2,11 @@ apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
   name: efk
-  namespace: elastic
   # annotations:
   #   "helm.sh/hook": post-install,post-upgrade
 spec:
   # renovate: datasource=github-releases depName=elastic/elasticsearch
-  version: 8.18.1
+  version: 8.18.3
   nodeSets:
     - name: default
       count: 1

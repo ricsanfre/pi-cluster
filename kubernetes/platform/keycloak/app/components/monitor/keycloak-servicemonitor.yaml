@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keycloak-service-monitor
+  namespace: keycloak
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: management
+  selector:
+    matchLabels:
+      app: keycloak

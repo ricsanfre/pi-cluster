@@ -7,7 +7,7 @@
 
 # k3s version
 # renovate: datasource=github-releases depName=k3s-io/k3s
-k3s_version: v1.33.0+k3s1
+k3s_version: v1.33.2+k3s1
 
 # k3s master node VIP (loadbalancer)
 k3s_api_vip: 10.0.0.11
@@ -100,7 +100,7 @@ k3s_registries:
 # FluxCD #
 ##########
 # renovate: datasource=github-releases depName=fluxcd/flux2
-fluxcd_version: "v2.5.1"
+fluxcd_version: "v2.6.3"
 
 ###########
 # Ingress #
@@ -273,7 +273,7 @@ restic_environment:
 
 vault_hostname: "vault.{{ dns_domain }}"
 # renovate: datasource=github-releases depName=hashicorp/vault
-vault_version: 1.19.4
+vault_version: 1.20.0
 
 vault_dns: "{{ vault_hostname }}"
 vault_enable_tls: true
@@ -321,7 +321,7 @@ velero_secret_content: |
 ##########################
 
 # renovate: datasource=github-releases depName=longhorn/longhorn
-longhorn_version: v1.8.1
+longhorn_version: v1.9.0
 
 # Minio user, key and bucket
 minio_longhorn_user: "{{ vault.minio.longhorn.user }}"
@@ -332,7 +332,7 @@ minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
 #######################
 
 # renovate: datasource=github-releases depName=istio/istio
-istio_version: 1.26.0
+istio_version: 1.26.2
 
 ###################
 # Logging Secrets #

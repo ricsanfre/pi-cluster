@@ -1,0 +1,11 @@
+# velero helm values (monitoring)
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+  # Enabling Service Monitor
+  serviceMonitor:
+    enabled: true
+  # Enabling Prometheus rule
+  prometheusRule:
+    enabled: true

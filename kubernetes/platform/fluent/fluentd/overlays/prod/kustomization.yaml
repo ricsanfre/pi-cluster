@@ -5,6 +5,8 @@ namespace: fluent
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
 
 configMapGenerator:
   - name: fluentd-helm-values

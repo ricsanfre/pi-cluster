@@ -13,11 +13,12 @@ spec:
     name: flux-system
   path: ./kubernetes/platform/nginx/app/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: ingress-nginx
-      namespace: nginx
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: ingress-nginx
+  #     namespace: nginx
   postBuild:
     substituteFrom:
       - kind: ConfigMap

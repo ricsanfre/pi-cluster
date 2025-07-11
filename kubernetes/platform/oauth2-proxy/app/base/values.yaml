@@ -54,5 +54,8 @@ redis:
   # Limit PVC size to 1Gi
   persistence:
     size: 1Gi
+  # Disabling network policy created by Bitnami Helm Chart
+  networkPolicy:
+   enabled: false
 
 

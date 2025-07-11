@@ -2,7 +2,7 @@
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kuberentes cluster.
-last_modified_at: "11-05-2024"
+last_modified_at: "26-06-2025"
 
 ---
 
@@ -126,7 +126,7 @@ Installation from helm chart. There are two alternatives:
   ```
 - Step 3: Create namespace
   ```shell
-  kubectl create namespace logging
+  kubectl create namespace loki
   ```
 - Step 4: Create file `loki-values.yml`
 
@@ -239,13 +239,13 @@ Installation from helm chart. There are two alternatives:
 
   - Disable self-monitoring (`monitoring.selfmonitoring`) and helm-test validation (`test.enabled`)
 
-- Step 5: Install Loki in `logging` namespace
+- Step 5: Install Loki in `loki` namespace
   ```shell
-  helm install loki grafana/loki -f loki-values.yml --namespace logging
+  helm install loki grafana/loki -f loki-values.yml --namespace loki
   ```
 - Step 6: Check status of Loki pods
   ```shell
-  kubectl get pods -l app.kubernetes.io/name=loki -n logging
+  kubectl get pods -l app.kubernetes.io/name=loki -n loki
   ```
 
 ### GitOps installation
@@ -259,7 +259,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: loki-minio-secret
-  namespace: logging
+  namespace: loki
 type: Opaque
 data:
   MINIO_ACCESS_KEY_ID: < minio_loki_user | b64encode >
@@ -418,5 +418,5 @@ grafana:
   additionalDataSources:
   - name: Loki
     type: loki
-    url: http://loki-gateway.logging.svc.cluster.local
+    url: http://loki-read-headless.loki.svc.cluster.local
 ```

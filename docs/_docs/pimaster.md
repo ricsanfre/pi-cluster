@@ -2,7 +2,7 @@
 title: Ansible Control Node
 permalink: /docs/pimaster/
 description: How to configure an Ansible Control node for our Raspberry Pi Kubernetes Cluster. Control node will be used for automating configuration tasks of the cluster using Ansible. How to create this control node using a docker container running on a Linux server or a VM.
-last_modified_at: "18-01-2025"
+last_modified_at: "23-03-2025"
 ---
 
 My laptop running Ubuntu desktop will be used as Ansible Control Node.
@@ -343,9 +343,9 @@ vault:
   # K3s secrets
   k3s:
     k3s_token: s1cret0
-  # traefik secrets
-  traefik:
-    basic_auth:
+  # ingress secrets
+  ingress:
+    admin:
       user: admin
       passwd: s1cret0
   # Minio S3 secrets

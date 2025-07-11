@@ -35,11 +35,12 @@ spec:
     - name: longhorn-app
   path: ./kubernetes/platform/kafka/cluster/overlays/prod
   prune: true
-  healthChecks:
+  wait: true
+  healthCheckExprs:
     - apiVersion: kafka.strimzi.io/v1beta2
       kind: Kafka
-      name: cluster
-      namespace: kafka
+      failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -57,11 +58,12 @@ spec:
   prune: true
   dependsOn:
     - name: kafka-cluster-app
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: schema-registry
-      namespace: kafka
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: schema-registry
+  #     namespace: kafka
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -80,11 +82,12 @@ spec:
   dependsOn:
     - name: schema-registry-app
     - name: kafka-cluster-app
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      namespace: kafka
-      name: kafdrop
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     namespace: kafka
+  #     name: kafdrop
   postBuild:
     substituteFrom:
       - kind: ConfigMap

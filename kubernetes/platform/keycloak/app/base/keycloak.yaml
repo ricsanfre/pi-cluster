@@ -1,0 +1,45 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  # Number of instances in the cluster
+  instances: 2
+  # External Database connection
+  db:
+    vendor: postgres
+    host: keycloak-db-rw
+    port: 5432
+    database: keycloak
+    usernameSecret:
+      name: keycloak-db-secret
+      key: username
+    passwordSecret:
+      name: keycloak-db-secret
+      key: password
+  # Bootstrap admin account
+  bootstrapAdmin:
+    user:
+      secret: keycloak-secret
+  # Enabling HTTP communications
+  # Keycloak behing HTTP Proxy closing TLS connections
+  http:
+    httpEnabled: true
+  hostname:
+    # Setting hostname
+    hostname: https://sso.${CLUSTER_DOMAIN}
+    strict: true
+    # Enabling back channel
+    backchannelDynamic: true
+  proxy:
+    headers: xforwarded # double check your reverse proxy sets and overwrites the X-Forwarded-* headers
+  # Do not create ingress
+  # TLS options are not supported. Ingress resource to be created separatedly.
+  ingress:
+    enabled: false
+  # Additional Options  
+  additionalOptions:
+      # Enable metrics endpoint
+    - name: metrics-enabled 
+      value: 'true'

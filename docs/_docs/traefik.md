@@ -2,7 +2,7 @@
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
 description: How to configure Ingress Contoller based on Traefik in our Pi Kuberentes cluster.
-last_modified_at: "04-11-2023"
+last_modified_at: "04-01-2024"
 ---
 
 {{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
@@ -30,381 +30,17 @@ K3s provides a mechanism to customize traefik chart once the installation is ove
 {{site.data.alerts.end}}
 
 
-## Traefik Installation
-
-Installation using `Helm` (Release 3):
-
-- Step 1: Add Traefik's Helm repository:
-
-    ```shell
-    helm repo add traefik https://helm.traefik.io/traefik
-    ```
-- Step2: Fetch the latest charts from the repository:
-
-    ```shell
-    helm repo update
-    ```
-- Step 3: Create namespace
-
-    ```shell
-    kubectl create namespace traefik
-    ```
-- Step 4: Create helm values file `traefik-values.yml`
-
-  ```yml
-  # Enabling prometheus metrics and access logs
-  # Enable access log
-  logs:
-    access:
-      enabled: true
-      format: json
-  # This is translated to traefik parameters
-  # "--metrics.prometheus=true"
-  # "--accesslog"
-  # "--accesslog.format=json"
-  
-  # Print access log to file instead of stdout
-  additionalArguments:
-    - "--accesslog.filepath=/data/access.log"
-  deployment:
-    # Adding access logs sidecar
-    additionalContainers:
-      - name: stream-accesslog
-        image: busybox
-        args:
-        - /bin/sh
-        - -c
-        - tail -n+1 -F /data/access.log
-        imagePullPolicy: Always
-        resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-        volumeMounts:
-        - mountPath: /data
-          name: data
-  service:
-    spec:
-      # Set load balancer external IP
-      loadBalancerIP: 10.0.0.111
-
-  providers:
-    # Enable cross namespace references
-    kubernetesCRD:
-      enabled: true
-      allowCrossNamespace: true
-    # Enable published service
-    kubernetesIngress:
-      publishedService:
-        enabled: true
-  ```
-
-- Step 5: Install Traefik
-
-    ```shell
-    helm -f traefik-values.yml install traefik traefik/traefik --namespace traefik
-    ```
-
-- Step 6: Confirm that the deployment succeeded, run:
-
-    ```shell
-    kubectl -n traefik get pod
-    ```
-
-### Helm chart configuration details
-
-
-#### Enabling Prometheus metrics
-
-By default helm installation does not enable Traefik's metrics for Prometheus. T
-
-To enable that the following configuration must be provided to Helm chart:
-
-```yml
-additionalArguments:
-  - "--metrics.prometheus=true"
-```
-This configuration makes traefik pod to open its metric port at TCP port 9100.
-
-
-#### Assign a static IP address from LoadBalancer pool to Ingress service
-
-Traefik service of type LoadBalancer created by Helm Chart does not specify any static external IP address. To assign a static IP address belonging to Metal LB pool, helm chart parameters shoud be specified:
-
-```yml
-service:
-  spec:
-    loadBalancerIP: 10.0.0.111
-```
-
-With this configuration ip 10.0.0.111 is assigned to Traefik proxy and so, for all services exposed by the cluster.
-
-#### Enabling Access log
-
-Traefik access logs contains detailed information about every request it handles. By default, these logs are not enabled. When they are enabled (throug parameter `--accesslog`), Traefik writes the logs to `stdout` by default, mixing the access logs with Traefik-generated application logs.
-
-To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`--accesslog.filepath`), adding to traekik deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
-
-Default access format need to be changed as well to use JSON format (`--accesslog.format=json`). That way those logs can be further parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
-
-Following Traefik helm chart values need to be provided:
-
-```yml
-additionalArguments:
-  - "--accesslog"
-  - "--accesslog.format=json"
-  - "--accesslog.filepath=/data/access.log"
-deployment:
-  additionalContainers:
-    - name: stream-accesslog
-      image: busybox
-      args:
-      - /bin/sh
-      - -c
-      - tail -n+1 -F /data/access.log
-      imagePullPolicy: Always
-      resources: {}
-      terminationMessagePath: /dev/termination-log
-      terminationMessagePolicy: File
-      volumeMounts:
-      - mountPath: /data
-        name: data
-```
-
-This configuration enables Traefik access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
-
-
-#### Enabling cross-namespaces references in IngressRoute resources
-
-As alternative to standard `Ingress` kuberentes resources, Traefik's specific CRD, `IngressRoute` can be used to define access to cluster services. This CRD allows advanced routing configurations not possible to do with `Ingress` available Traefik's annotations.
-
-`IngressRoute` and `Ingress` resources only can reference other Traefik's resources, i.e: `Middleware` located in the same namespace.
-To change this, and allow `Ingress/IngressRoute` resources to access other resources defined in other namespaces, [`allowCrossNamespace`](https://doc.traefik.io/traefik/providers/kubernetes-crd/#allowcrossnamespace) Traefik helm chart value must be set to true.
-
-
-The following values need to be specified within helm chart configuration.
-
-```yml
-# Enable cross namespace references
-providers:
-  kubernetesCRD:
-    enabled: true
-    allowCrossNamespace: true 
-```
-
-#### Enabling Published service
-
-Traefik by default, when using an external load balancer (Metal LB) does not update `status.loadbalancer` field in ingress resources. See [Traefik issue #3377](https://github.com/traefik/traefik/issues/3377).
-
-In argo-cd, this field is used to obtaing the ingress object health status ingress resource are not getting health status and so application gets stucked.
-
-Traefik need to be confgured [enabling published service](https://doc.traefik.io/traefik/providers/kubernetes-ingress/#publishedservice), and thus Traefik will copy Traefik's service loadbalancer.status (containing the service's external IPs, allocated by Metal-LB) to the ingresses.
-
-See more details in [Argo CD issue #968](https://github.com/argoproj/argo-cd/issues/968)
-
-The following values need to be specified within helm chart configuration.
-
-```yml
-providers:
-  # Enable published service
-  kubernetesIngress:
-    publishedService:
-      enabled: true
-```
-
-### Creating Traefik-metric Service
-
-A Kuberentes Service must be created for enabling the access to Prometheus metrics
-
-- Create Manfifest file for the dashboard service
-  
-  ```yml
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: traefik-metrics
-    namespace: traefik
-    labels:
-      app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik
-      app.kubernetes.io/component: traefik-metrics
-  spec:
-    type: ClusterIP
-    ports:
-      - name: metrics
-        port: 9100
-        targetPort: metrics
-        protocol: TCP
-    selector:
-      app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik
-  ```
-- Apply manifest files
-
-- Check metrics end-point is available
-
-  ```shell
-  curl http://<traefik-dashboard-service>:9100/metrics
-  ```
-{{site.data.alerts.note}}
-
-Latest versions of Traefik helm chart automatically create this metrics service. Tested with 20.6.0 version.
-The following additional values need to be provided:
-
-```yml
-# Enable prometheus metric service
-metrics:
-  prometheus:
-    service:
-      enabled: true
-```
-
-{{site.data.alerts.end}}
-
-
-### Enabling access to Traefik-Dashboard
-
-A Kuberentes Service must be created for enabling the access to UI Dashboard
-
-- Create Manfifest file for the dashboard service
-  
-  ```yml
-  ---
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: traefik-dashboard
-    namespace: traefik
-    labels:
-      app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik
-      app.kubernetes.io/component: traefik-dashboard
-  spec:
-    type: ClusterIP
-    ports:
-      - name: traefik
-        port: 9000
-        targetPort: traefik
-        protocol: TCP
-    selector:
-      app.kubernetes.io/instance: traefik
-      app.kubernetes.io/name: traefik
-  ```
-
-- Create Ingress rules for accesing through HTTPS dashboard UI, using certificates automatically created by certmanager and providing a basic authentication mechanism.
-  
-  ```yml
-  ---
-  # HTTPS Ingress
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: traefik-ingress
-    namespace: traefik
-    annotations:
-      # HTTPS as entry point
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      # Enable TLS
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      # Use Basic Auth Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-basic-auth@kubernetescrd
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: traefik.picluster.ricsanfre.com
-  spec:
-    tls:
-      - hosts:
-          - traefik.picluster.ricsanfre.com
-        secretName: traefik-tls
-    rules:
-      - host: traefik.picluster.ricsanfre.com
-        http:
-          paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: traefik-dashboard
-                  port:
-                    number: 9000
-  ---
-  # http ingress for http->https redirection
-  kind: Ingress
-  apiVersion: networking.k8s.io/v1
-  metadata:
-    name: traefik-redirect
-    namespace: traefik
-    annotations:
-      # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
-      # HTTP as entrypoint
-      traefik.ingress.kubernetes.io/router.entrypoints: web
-  spec:
-    rules:
-      - host: traefik.picluster.ricsanfre.com
-        http:
-          paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: traefik-dashboard
-                  port:
-                    number: 9000
-  ```
-
-  See section below to learn details about how to configure Traefik to access cluster services.
-
-- Apply manifests files
-
-- Acces UI through configured dns: `https://traefik.picluster.ricsanfre.com/dashboard/`
-
-{{site.data.alerts.note}}
-
-Instead of defining a Service and Ingress resource, Traefik's IngressRoute object can be created to access to Traefik internal service. It is not needed to expose traefik dashboard as a service
-
-```yml
-# IngressRoute https
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: traefik-dashboard
-  namespace: traefik
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - kind: Rule
-    match: Host(`{{ traefik.picluster.ricsanfre.com }}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
-    services:
-    - kind: TraefikService
-      name: api@internal
-  tls:
-    secretName: traefik-secret
-```
-
-For generating the TLS secret, `traefik-secret` containing the certificate, cert-manager can be used:
-
-```yml
-# Create certificate
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: traefik-cert
-  namespace: traefik
-spec:
-  secretName: traefik-secret
-  issuerRef:
-    name: ca-issuer
-    kind: ClusterIssuer
-  commonName: traefik.picluster.ricsanfre.com
-  dnsNames:
-  - traefik.picluster.ricsanfre.com
-  privateKey:
-    algorithm: ECDSA
-```
-
-{{site.data.alerts.end}}
-
+Traefik is able to manage access to Kubernetes Services by supporting the `Ingress` and `Gateway API` resource specs.
+It also extends Kubernetes API defining new custom resource types (Kubernetes Custom Resources Definition (CRD): `IngressRoute` and `Middleware` 
+
+- `IngressRoute` Traefik's custom resource is an extension of `Ingress` resources to provide an alternative way to configure access to a Kubernetes cluster.
+- `Middleware` resources make possible tweaking the requests before they are sent backend service (or before the answer from the services are sent to the clients).
+
+See detailed information in Traefik's documentation:
+- [Traefik's Kuberentes Ingress](https://doc.traefik.io/traefik/providers/kubernetes-ingress/)
+- [Traefik's Kuberentes IngressRoute](https://doc.traefik.io/traefik/providers/kubernetes-crd/)
+- [Traefik's Kubernetes Gateway API](https://doc.traefik.io/traefik/providers/kubernetes-gateway/)
+- [Traefik's Middelware](https://doc.traefik.io/traefik/middlewares/overview/)
 
 ## Configuring access to cluster services with Traefik
 
@@ -670,3 +306,444 @@ spec:
                   number: 80
 
 ```
+
+
+## Traefik Installation
+
+Installation using `Helm` (Release 3):
+
+- Step 1: Add Traefik's Helm repository:
+
+    ```shell
+    helm repo add traefik https://helm.traefik.io/traefik
+    ```
+- Step2: Fetch the latest charts from the repository:
+
+    ```shell
+    helm repo update
+    ```
+- Step 3: Create namespace
+
+    ```shell
+    kubectl create namespace traefik
+    ```
+- Step 4: Create helm values file `traefik-values.yml`
+
+  ```yml
+  # Enabling prometheus metrics and access logs
+  # Enable access log
+  logs:
+    access:
+      enabled: true
+      format: json
+      filePath: /data/access.log
+    # This is translated to traefik parameters
+    # "--metrics.prometheus=true"
+    # "--accesslog"
+    # "--accesslog.format=json"
+    # "--accesslog.filepath=/data/access.log"
+  deployment:
+    # Adding access logs sidecar
+    additionalContainers:
+      - name: stream-accesslog
+        image: busybox
+        args:
+        - /bin/sh
+        - -c
+        - tail -n+1 -F /data/access.log
+        imagePullPolicy: Always
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data
+          name: data
+  service:
+    annotations:
+      io.cilium/lb-ipam-ips: 10.0.0.111
+
+  providers:
+    # Enable cross namespace references
+    kubernetesCRD:
+      enabled: true
+      allowCrossNamespace: true
+    # Enable published service
+    kubernetesIngress:
+      publishedService:
+        enabled: true
+
+  # Enable prometheus metric service
+  # This is translated to traefik parameters
+  # --metrics.prometheus=true"
+  metrics:
+    prometheus:
+      service:
+        enabled: true
+        serviceMonitoring: true
+  ```
+
+- Step 5: Install Traefik
+
+    ```shell
+    helm -f traefik-values.yml install traefik traefik/traefik --namespace traefik
+    ```
+
+- Step 6: Confirm that the deployment succeeded, run:
+
+    ```shell
+    kubectl -n traefik get pod
+    ```
+
+## Configuration
+
+
+### Assign a static IP address from LoadBalancer pool to Ingress service
+
+Traefik service of type LoadBalancer created by Helm Chart does not specify any static external IP address. TTo assign a static IP address belonging to LB pool, helm chart parameters shoud be specified:
+
+In case of using Cilium LB-IPAM, the following configuration must be added to Helm Chart `traefik-values.yaml`
+
+```yml
+# Set specific LoadBalancer IP address for Ingress service
+service:
+  annotations:
+    io.cilium/lb-ipam-ips: 10.0.0.111
+```
+
+In case of using Metal LB, the following configuration must be added to Helm Chart `traefik-values.yaml`
+
+```yml
+# Set specific LoadBalancer IP address for Ingress service
+service:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 10.0.0.111
+```
+
+With this configuration ip 10.0.0.111 is assigned to Traefik proxy and so, for all services exposed by the cluster.
+
+
+### Enabling cross-namespaces references in IngressRoute resources
+
+As alternative to standard `Ingress` kuberentes resources, Traefik's specific CRD, `IngressRoute` can be used to define access to cluster services. This CRD allows advanced routing configurations not possible to do with `Ingress` available Traefik's annotations.
+
+`IngressRoute` and `Ingress` resources only can reference other Traefik's resources, i.e: `Middleware` located in the same namespace.
+To change this, and allow `Ingress/IngressRoute` resources to access other resources defined in other namespaces, [`allowCrossNamespace`](https://doc.traefik.io/traefik/providers/kubernetes-crd/#allowcrossnamespace) Traefik helm chart value must be set to true.
+
+
+The following values need to be specified within helm chart configuration.
+
+```yml
+# Enable cross namespace references
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true 
+```
+
+### Enabling Published service
+
+Traefik by default, when using an external load balancer (Metal LB) does not update `status.loadbalancer` field in ingress resources. See [Traefik issue #3377](https://github.com/traefik/traefik/issues/3377).
+
+When using Argo-cd, this field is used to obtaing the ingress object health status ingress resource are not getting health status and so application gets stucked.
+
+Traefik need to be confgured [enabling published service](https://doc.traefik.io/traefik/providers/kubernetes-ingress/#publishedservice), and thus Traefik will copy Traefik's service loadbalancer.status (containing the service's external IPs, allocated by Metal-LB) to the ingresses.
+
+See more details in [Argo CD issue #968](https://github.com/argoproj/argo-cd/issues/968)
+
+The following values need to be specified within helm chart configuration.
+
+```yml
+providers:
+  # Enable published service
+  kubernetesIngress:
+    publishedService:
+      enabled: true
+```
+
+
+### Enabling access to Traefik-Dashboard
+
+
+To provide HTTPS accesss to Traefik dashboard via HTTPS a `IngressRoute` need to be created linked to Traefik's websecure entrypoint
+
+This IngressRoute resource is automatically created by Helm Chart when providing the proper configuration.
+
+Before installing Traefik's Helm Chart, a secret containing TLS Certificate is required to configure TLS options in the `IngressRoute`.
+Cert-Manager can be used to automate its generation:
+
+```yml
+# Create certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-cert
+  namespace: traefik
+spec:
+  secretName: traefik-tls
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+  commonName: traefik.homelab.ricsanfre.com
+  dnsNames:
+  - traefik.homelab.ricsanfre.com
+  privateKey:
+    algorithm: ECDSA
+```
+
+To enable its automatic creation when deploying helm chart, add following lines to `values.yaml`:
+
+```yaml
+# Enable dashboard ingress-route
+ingressRoute:
+  dashboard:
+    enabled: true
+    entryPoints: ["websecure"]
+    matchRule: Host(`traefik.homelab.ricsanfre.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    tls: 
+      secretName: traefik-tls
+```
+
+With this configuration Traefik's dashboard is available at  https://traefik.homelab.ricsanfre.com/dashboard/
+
+#### Adding Authentication
+
+In order to activate any kind of authentication Traefik's `Middleware` resources need to be configured as described before
+Helm chart support the configuration of middlewares for the Ingress Route created for the dashboard: `ingressRoute.dashboard.middlewares`
+Middleware resources cannot be created if Traefik's CRDs are installed before deploying the HelmChart.
+
+As an alternative method to enable UI Dashboard  `IngressRoute` resource for enabling access to the Dashboard can be configured after deploying Helm Chart. 
+
+In this case we need to disable the creation of  dashboard `IngressRoute` when deploying the helm chart.
+```yaml
+ ingressRoute:
+    dashboard:
+     enabled: false
+```
+
+Method described in [[#Providing HTTP basic authentication]] need to be followed to create corresponding HTTP Basic Authentication `Secret` and `Middleware` objects
+
+```yaml
+# IngressRoute https
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`traefik.homelab.ricsanfre.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    services:
+    - kind: TraefikService
+      name: api@internal
+    middlewares:
+      - name: basic-auth
+        namespace: traefik
+  tls:
+    secretName: traefik-tls
+```
+
+## Observability
+
+### Metrics
+
+By default helm installation does not enable Traefik's metrics for Prometheus.
+
+To enable that the following configuration must be provided to Helm chart:
+
+```yml
+# Enable prometheus metric service
+metrics:
+  prometheus:
+    service:
+      enabled: true
+```
+This configuration makes traefik pod to open its metric port at TCP port 9100 and creates a service.
+
+#### Kube-Prometheus-Stack Integration
+
+Also `ServiceMonitoring` object, Prometheus Operator's CRD, can be automatically created so `kube-prometheus-stack is able to automatically start collecting metrics from Traefik
+
+```yaml
+metrics:
+  prometheus:
+    serviceMonitor: true
+```
+
+#### Grafana dashboard
+
+Traefik dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 17346](https://grafana.com/grafana/dashboards/17346-traefik-official-standalone-dashboard/).
+This dashboard has as prerequisite to have installed `grafana-piechart-panel` plugin.
+
+The list of plugins to be installed can be specified during grafana helm deployment as values (`plugins` variable), and the dashboard can be automatically added using dashboards providers in the list of automated provisioned dashboards.
+
+```yaml
+# Add grafana-piechart-panel to list of plugins
+plugins:
+  - grafana-piechart-panel
+
+
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  default:
+    traefik:
+      # https://grafana.com/grafana/dashboards/17346-traefik-official-standalone-dashboard/
+      gnetId: 17346
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+
+``` 
+
+### Logs
+
+#### Enabling Access log
+
+Traefik access logs contains detailed information about every request it handles. By default, these logs are not enabled. When they are enabled (throug parameter `--accesslog`), Traefik writes the logs to `stdout` by default, mixing the access logs with Traefik-generated application logs.
+
+To avoid this, the access log default configuration must be changed to write logs to a specific file `/data/access.log` (`--accesslog.filepath`), adding to traekik deployment a sidecar container to tail on the access.log file. This container will print access.log to `stdout` but not missing it with the rest of logs.
+
+Default access format need to be changed as well to use JSON format (`--accesslog.format=json`). That way those logs can be further parsed by Fluentbit and log JSON payload automatically decoded extracting all fields from the log. See Fluentbit's Kubernetes Filter `MergeLog` configuration option in the [documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).
+
+Following Traefik helm chart values need to be provided:
+
+```yml
+# Enable access log
+logs:
+  access:
+    enabled: true
+    format: json
+    filePath: /data/access.log
+  # This is translated to traefik parameters
+  # "--metrics.prometheus=true"
+  # "--accesslog"
+  # "--accesslog.format=json"
+  # "--accesslog.filepath=/data/access.log"
+deployment:
+  additionalContainers:
+    - name: stream-accesslog
+      image: busybox
+      args:
+      - /bin/sh
+      - -c
+      - tail -n+1 -F /data/access.log
+      imagePullPolicy: Always
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+```
+
+This configuration enables Traefik access log writing to `/data/acess.log` file in JSON format. It creates also the sidecar container `stream-access-log` tailing the log file.
+
+### Traces
+
+The ingress is a key component for distributed tracing solution because it is responsible for creating the root span of each trace and for deciding if that trace should be sampled or not.
+
+Distributed tracing systems all rely on propagate the trace context through the chain of involved services. This trace context is encoding in HTTP request headers. There is two key protocols used to propagate tracing context: W3C, used by OpenTelemetry, and B3, used by OpenTracing.
+
+Traefik 2.0 used OpenTracing to export traces to different backends. Since release 3.0, Traefik supports OpenTelemetry. See [Traefik 3.0 announcement](https://traefik.io/blog/announcing-traefik-proxy-v3-rc/)
+
+Procedure described below, to configure OpenTracing is not valid anymore.
+
+
+~~To activate tracing using B3 propagation protocol, the following options need to be provided~~
+  
+```
+--tracing.zipkin=true
+--tracing.zipkin.httpEndpoint=http://tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
+--tracing.zipkin.sameSpan=true
+--tracing.zipkin.id128Bit=true
+--tracing.zipkin.sampleRate=1
+```
+
+~~For more details see [Traefik tracing documentation](https://doc.traefik.io/traefik/observability/tracing/overview/)~~
+
+~~In order to be able to correlate logs with traces in Grafana, Traefik access log should be configured so, trace ID is also present as a field in the logs. Trace ID comes as a header field (`X-B3-Traceid`), that need to be included in the logs.~~
+
+~~By default no header is included in Traefik's access log. Additional parameters need to be added to include the traceID.~~
+
+```
+--accesslog.fields.headers.defaultmode=drop
+--accesslog.fields.headers.names.X-B3-Traceid=keep
+```
+
+~~See more details in [Traefik access log documentation](https://doc.traefik.io/traefik/observability/access-logs/#limiting-the-fieldsincluding-headers).~~
+
+~~When installing Traefik with Helm the following values.yml file achieve the above configuration~~
+
+```yml
+# Enable access log
+logs:
+  access:
+    enabled: true
+    format: json
+    fields:
+      general:
+        defaultmode: keep
+      headers:
+        defaultmode: drop
+        names:
+          X-B3-Traceid: keep
+# Enabling tracing
+tracing:
+  zipkin:
+    httpEndpoint: http://tempo-distributor.tracing.svc.cluster.local:9411/api/v2/spans
+    sameSpan: true
+    id128Bit: true
+    sampleRate: 1.0
+``` 
+
+~~In Traefik's access logs, a new field appear `request_X-B3-Traceid` containing trace id that can be used to extract Tempo traces information.~~
+
+#### ~~Loki and Tempo integration~~
+
+~~Grafana's  Loki data source can be configured to detect `traceID` automatically and providing a link in grafana to automatically opening the corresponding trace information from [[Grafana Tempo]].~~
+
+~~See [Loki data source - derived Fields](https://grafana.com/docs/grafana/latest/datasources/loki/#derived-fields).~~
+
+~~This can be done automatically when installing Grafana providing the following helm chart configuration:~~
+
+```yml
+additionalDataSources:
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki-gateway.logging.svc.cluster.local
+    jsonData:
+      derivedFields:
+        # Traefik traces integration
+        - datasourceUid: tempo
+          matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
+          name: TraceID
+          url: $${__value.raw}
+
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.tracing.svc.cluster.local:3100
+```
+
+~~A derived field `TraceID` is added to logs whose message contains field `request_X-B3-Traceid` which is added by Traefik to access logs.~~

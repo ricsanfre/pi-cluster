@@ -8,13 +8,13 @@ spec:
   chart:
     spec:
       chart: kiali-operator
-      version: 2.10.0
+      version: 2.12.0
       sourceRef:
         kind: HelmRepository
         name: kiali
         namespace: flux-system
   releaseName: kiali-operator
-  targetNamespace: kiali-operator
+  targetNamespace: kiali
   install:
     remediation:
       retries: 3

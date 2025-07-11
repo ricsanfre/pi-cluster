@@ -2,8 +2,9 @@
 
 cr:
   create: true
-  namespace: istio-system
+  namespace: kiali
   spec:
+    istio_namespace: "istio-system"
     auth:
       # strategy: "anonymous"
       strategy: openid
@@ -14,13 +15,13 @@ cr:
     external_services:
       prometheus:
         # Prometheus service
-        url: "http://kube-prometheus-stack-prometheus.kube-prom-stack:9090/"
+        url: "http://kube-prometheus-stack-prometheus.kube-prom-stack:9090/prometheus/"
       grafana:
         enabled: true
-        # Grafana service name is "grafana" and is in the "monitoring" namespace.
-        in_cluster_url: 'http://grafana.monitoring.svc.cluster.local/grafana/'
+        # Grafana service name is "grafana" and is in the "grafana" namespace.
+        internal_url: 'http://grafana.grafana.svc.cluster.local/grafana/'
         # Public facing URL of Grafana
-        url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
+        external_url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
         auth:
           # Use same OAuth2.0 token used for accesing Kiali
           type: bearer
@@ -30,7 +31,7 @@ cr:
         # Tempo is unreachable.
         enabled: true
         # Tempo service name is "query-frontend" and is in the "tempo" namespace.
-        in_cluster_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
+        internal_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
         provider: "tempo"
         tempo_config:
           org_id: "1"
@@ -52,6 +53,7 @@ cr:
               cert-manager.io/cluster-issuer: letsencrypt-issuer
               cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
           spec:
+            ingressClassName: nginx
             rules:
             - host: kiali.${CLUSTER_DOMAIN}
               http:

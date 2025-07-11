@@ -6,7 +6,8 @@ resources:
   - ../../base
 
 components:
-  - ../../components/componentX
+  - ../../components/monitoring
+  - ../../components/aggregator
 
 configMapGenerator:
   - name: fluent-bit-helm-values

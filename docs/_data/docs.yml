@@ -22,7 +22,6 @@
   - os-basic
 - title: External Services
   docs:
-  - s3-backup
   - vault
 - title: K3S Installation
   docs:
@@ -37,6 +36,7 @@
   - nginx
 - title: Certificate Management
   docs:
+  - certbot
   - certmanager
 - title: Single Sign-On
   docs:
@@ -45,18 +45,22 @@
   docs:
   - longhorn
   - minio
-- title: Monitoring
+- title: Observability
   docs:
   - metrics-server
   - observability
   - logging
   - loki
   - elasticsearch
-  - logging-forwarder-aggregator
+  - fluentbit
+  - fluentd
   - prometheus
   - tracing
+  - grafana
 - title: Backup
   docs:
+  - s3-backup
+  - restic
   - backup
 - title: GitOps
   docs:

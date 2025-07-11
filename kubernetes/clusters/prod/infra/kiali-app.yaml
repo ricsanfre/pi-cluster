@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
-  targetNamespace: kiali-operator
+  targetNamespace: kiali
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -18,11 +18,12 @@ spec:
     - name: grafana-app
     - name: tempo-app
     - name: kube-prometheus-stack-app
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: kiali-operator
-      namespace: kiali-operator
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: kiali-operator
+  #     namespace: kiali
   postBuild:
     substituteFrom:
       - kind: ConfigMap

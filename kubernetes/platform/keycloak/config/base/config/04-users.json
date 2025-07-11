@@ -1,0 +1,26 @@
+{
+    "enabled": true,
+    "realm": "picluster",
+    "users": [
+        {
+        "username": "$(env:PI_ADMIN_USERNAME)",
+        "firstName": "$(env:PI_ADMIN_FIRSTNAME)",
+        "lastName": "$(env:PI_ADMIN_LASTNAME)",
+        "email": "admin@$(env:CLUSTER_DOMAIN)",
+        "enabled": true,
+        "emailVerified": true,
+        "credentials": [
+            {
+            "type": "password",
+            "value": "$(env:PI_ADMIN_PASSWORD)"
+            }
+        ],
+        "realmRoles": [
+            "default-roles-picluster"
+        ],
+        "groups": [
+            "admin"
+        ]
+        }
+    ]
+}

@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
   - elasticsearch-exporter-externalsecret.yaml
   - helm.yaml
-  - servicemonitor.yaml
 
 configMapGenerator:
   - name: prometheus-elasticsearch-exporter-helm-values

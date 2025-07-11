@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "09-09-2024"
+last_modified_at: "29-06-2025"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -94,9 +94,16 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
       # https://stackoverflow.com/questions/57503590/upstream-sent-too-big-header-while-reading-response-header-from-upstream-in-keyc
       nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-    hostname: sso.picluster.ricsanfre.com
+    hostname: sso.${CLUSTER_DOMAIN}
     tls: true
   ```
+  {{site.data.alerts.note}}
+
+  Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+  -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
+      FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
+      External-DNS can be configured to automatically add that entry in your DNS service.
+  {{site.data.alerts.end}}
   
   With this configuration:
   - Keycloak is deployed to run behind NGINX proxy terminating TLS connections. `proxyHeaders` variable need to be used.
@@ -104,7 +111,7 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
   - Ingress resource is configured
 
   {{site.data.alerts.note}}
-  With this configuration all passwords (Keycloak's admin password and postgreSQL passwords are generated randomly. 
+  With this configuration all passwords Keycloak's admin password and postgreSQL passwords are generated randomly.
   If helm chart is upgraded, it might cause issues generating a new passwords if the existing ones are not provided when executing helm upgrade command.
   See details in [bitnami's keycloak helm chart documentation: How to manage passwords](https://github.com/bitnami/charts/tree/main/bitnami/keycloak#manage-secrets-and-passwords)
   {{site.data.alerts.end}}
@@ -126,7 +133,7 @@ This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend 
   ```
   
 - Step 8: connect to keycloak admin console
-  https://sso.picluster.ricsanfre.com
+  `https://sso.${CLUSTER_DOMAIN}`
 
   Log in using 'admin' user and password obtained in step 7.
 
@@ -237,7 +244,7 @@ For example, using CloudNative-PG a, keycload database cluster can be created. S
           compression: bzip2
           maxParallel: 8
         destinationPath: s3://k3s-barman/keycloak-db
-        endpointURL: https://s3.ricsanfre.com:9091
+        endpointURL: https://${S3_BACKUP_SERVER}:9091
         s3Credentials:
           accessKeyId:
             name: keycloak-minio-secret
@@ -247,6 +254,11 @@ For example, using CloudNative-PG a, keycload database cluster can be created. S
             key: AWS_SECRET_ACCESS_KEY
       retentionPolicy: "30d"
   ```
+
+  {{site.data.alerts.note}}
+  Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+  -   Replace `${S3_BACKUP_SERVER}` by  FQDN of the Minio Backup server to be used. For example: `s3.mydomain.com`
+  {{site.data.alerts.end}}
 
 - Step 3. Add external database configuration to helm values.yaml
 
@@ -275,7 +287,7 @@ For example, using CloudNative-PG a, keycload database cluster can be created. S
 
 - Step 1: Login as admin to Keycloak console
 
-  Open URL: https://sso.picluster.ricsanfre.com
+  Open URL: `https://sso.${CLUSTER_DOMAIN}`
 
 - Step 9: Create a new realm 'picluster'
   
@@ -312,7 +324,7 @@ Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](ht
   ![oauth2-proxy-client-3](/assets/img/oauth2-proxy-client-3.png)
   
   - Provide the following 'Logging settings'
-    - Valid redirect URIs: https://ouath2-proxy.picluster.ricsanfre.com/oauth2/callback
+    - Valid redirect URIs: `https://ouath2-proxy.${CLUSTER_DOMAIN}/oauth2/callback`
   - Save the configuration.
 
 - Step 2: Locate oauth2-proxy client credentials
@@ -437,18 +449,18 @@ New ConfigMap, containing the JSON files to be imported need to be mounted by ke
       # Provider config
       provider="keycloak-oidc"
       provider_display_name="Keycloak"
-      redirect_url="https://oauth2-proxy.picluster.ricsanfre.com/oauth2/callback"
-      oidc_issuer_url="https://sso.picluster.ricsanfre.com/realms/picluster"
+      redirect_url="https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
+      oidc_issuer_url="https://sso.${CLUSTER_DOMAIN}/realms/picluster"
       code_challenge_method="S256"
       ssl_insecure_skip_verify=true
       # Upstream config
       http_address="0.0.0.0:4180"
       upstreams="file:///dev/null"
       email_domains=["*"]
-      cookie_domains=["picluster.ricsanfre.com"]
+      cookie_domains=["${CLUSTER_DOMAIN}"]
       cookie_secure=false
       scope="openid"
-      whitelist_domains=[".picluster.ricsanfre.com"]
+      whitelist_domains=[".${CLUSTER_DOMAIN}"]
       insecure_oidc_allow_unverified_email="true"
 
   sessionStorage:
@@ -471,15 +483,22 @@ New ConfigMap, containing the JSON files to be imported need to be mounted by ke
       #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
       #   * 'ca-issuer' (CA-signed certificate, not valid)
       cert-manager.io/cluster-issuer: letsencrypt-issuer
-      cert-manager.io/common-name: oauth2-proxy.picluster.ricsanfre.com
+      cert-manager.io/common-name: oauth2-proxy.${CLUSTER_DOMAIN}
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
     hosts:
-      - oauth2-proxy.picluster.ricsanfre.com
+      - oauth2-proxy.${CLUSTER_DOMAIN}
     tls:
       - hosts:
-          - oauth2-proxy.picluster.ricsanfre.com
+          - oauth2-proxy.${CLUSTER_DOMAIN}
         secretName: oauth2-proxy-tls  
   ```
+  {{site.data.alerts.note}}
+
+  Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+  -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
+
+  {{site.data.alerts.end}}
+
 
   - Step 5: Install helm chart
     
@@ -556,8 +575,12 @@ As workaround, the issue can be solved providing the credentials in a external s
 Following annotations need to be added to any Ingress resource to use Oauth2-proxy authentication
 
 ```yaml
-nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.picluster.ricsanfre.com/oauth2/start?rd=https://$host$request_uri
+nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/start?rd=https://$host$request_uri
 nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
 nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
 nginx.ingress.kubernetes.io/auth-response-headers: Authorization
 ```
+
+{{site.data.alerts.note}}
+Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster.
+{{site.data.alerts.end}}

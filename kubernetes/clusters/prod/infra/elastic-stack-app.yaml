@@ -12,11 +12,12 @@ spec:
     name: flux-system
   path: ./kubernetes/platform/eck-operator/app/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: eck-operator
-      namespace: elastic
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: eck-operator
+  #     namespace: elastic
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -36,15 +37,16 @@ spec:
     - name: external-secrets-config
   path: ./kubernetes/platform/elastic-stack/app/overlays/prod
   prune: true
-  healthChecks:
+  wait: true
+  healthCheckExprs:
     - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Elasticsearch
-      name: efk
-      namespace: elastic
-    - apiVersion: kibana.k8s.elastic.co/v1
+      failed: status.health in ["yellow","red"]
+      current: status.health in ["green"]
+    - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Kibana
-      name: efk
-      namespace: elastic
+      failed: status.health in ["yellow","red"]
+      current: status.health in ["green"]
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -66,8 +68,9 @@ spec:
     - name: elastic-stack-app
   path: ./kubernetes/platform/elastic-stack/prometheus-elasticsearch-exporter/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: prometheus-elasticsearch-exporter
-      namespace: elastic
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: prometheus-elasticsearch-exporter
+  #     namespace: elastic

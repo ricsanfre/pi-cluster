@@ -46,6 +46,14 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/nginx-folder
+      - name: minio
+        orgId: 1
+        folder: Minio
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/minio-folder
 # Dashboards
 dashboards:
   kubernetes:
@@ -72,7 +80,7 @@ dashboards:
     kubernetes-nodes:
       # renovate: depName="Kubernetes / Views / Nodes"
       gnetId: 15759
-      revision: 35
+      revision: 37
       datasource: Prometheus
     kubernetes-pods:
       # renovate: depName="Kubernetes / Views / Pods"
@@ -85,18 +93,17 @@ dashboards:
       revision: 14
       datasource: Prometheus
   infrastructure:
+    node-exporter-full:
+      # renovate: depName="Node Exporter Full"
+      gnetId: 1860
+      revision: 41
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
     cert-manager:
       # renovate: depName="Cert-manager-Kubernetes"
       gnetId: 20842
       revision: 3
       datasource: Prometheus
-    minio:
-      # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
-      # renovate: depName="MinIO Dashboard"
-      gnetId: 13502
-      revision: 26
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
     longhorn:
       # https://grafana.com/grafana/dashboards/16888-longhorn/
       # renovate: depName="LongHorn Dashboard"
@@ -136,21 +143,21 @@ dashboards:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 7645
-      revision: 258
+      revision: 260
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-mesh:
       # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 7639
-      revision: 258
+      revision: 260
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-performance:
       # https://grafana.com/grafana/dashboards/11829-istio-performance-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 11829
-      revision: 258
+      revision: 260
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
   nginx:
@@ -160,3 +167,28 @@ dashboards:
     nginx-request-handling-performance:
       url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/request-handling-performance.json
       datasource: Prometheus
+  minio:
+    minio-server:
+      # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
+      # renovate: depName="MinIO Dashboard"
+      gnetId: 13502
+      revision: 26
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    minio-bucket:
+      # https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/
+      # renovate: depName="MinIO Dashboard"
+      gnetId: 19237
+      revision: 2
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    minio-node:
+      url: https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json
+      datasource: Prometheus
+    minio-replication:
+      # https://grafana.com/grafana/dashboards/15305-minio-replication-dashboard/
+      # renovate: depName="MinIO Dashboard"
+      gnetId: 15305
+      revision: 5
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }

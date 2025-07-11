@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  annotations:
+    # Disable variable substitution
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  fluent-bit.yaml: |-
+    service:
+      daemon: false
+      flush: 1
+      log_level: info
+      http_server: true
+      http_listen: 0.0.0.0
+      http_port: 2020
+      health_check: true
+      hot_reload: true
+      storage.path: /var/log/fluentbit/storage
+      storage.sync: full
+      storage.checksum: true
+      storage.backlog.mem_limit: 5M
+      storage.metrics: true
+    parsers:
+      - name: syslog-rfc3164-nopri
+        format: regex
+        regex: '/^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<log>.*)$/'
+        time_key: time
+        time_format: '%b %d %H:%M:%S'
+        time_keep: false
+    pipeline:
+      inputs:
+        - name: tail
+          alias: input.kube
+          path: /var/log/containers/*.log
+          path_key: filename
+          multiline.parser: docker, cri
+          tag: kube.*
+          db: /var/log/fluentbit/flb_kube.db
+          storage.type: filesystem
+          skip_long_lines: true
+        - name: tail
+          alias: input.host
+          path: /var/log/auth.log, /var/log/syslog
+          path_key: filename
+          parser: syslog-rfc3164-nopri
+          tag: host.*
+          db: /var/log/fluentbit/flb_host.db
+          storage.type: filesystem
+      filters:
+        - name: multiline
+          match: '*'
+          multiline.key_content: log
+          multiline.parser: go, java, python
+        - name: kubernetes
+          match: kube.*
+          buffer_size: 512k
+          kube_tag_prefix: kube.var.log.containers.
+          merge_log: false
+          k8s-logging.parser: true
+          k8s-logging.exclude: true
+          labels: true
+          annotations: false
+        - name: lua
+          match: kube.*
+          call: extract_app_name
+          code: |
+            function extract_app_name(tag, timestamp, record)
+                if record["kubernetes"] ~= nil then
+                  if record["kubernetes"]["labels"]["app.kubernetes.io/name"] ~= nil then
+                      record["app"] = record["kubernetes"]["labels"]["app.kubernetes.io/name"]
+                  end
+                  if record["kubernetes"]["labels"]["app"] ~= nil then
+                      record["app"] = record["kubernetes"]["labels"]["app"]
+                  end
+                end
+                return 1, timestamp, record
+            end
+        - name: nest
+          match: kube.*
+          operation: lift
+          nested_under: kubernetes
+          add_prefix: kubernetes_
+        - name: modify
+          match: kube.*
+          rename: kubernetes_pod_name pod
+          rename: kubernetes_namespace_name namespace
+          rename: kubernetes_container_name container
+          rename: kubernetes_host host
+          remove_wildcard: kubernetes_
+          remove: _p
+      outputs:
+        - name: forward
+          alias: output.aggregator
+          match: '*'
+          host: ${FLUENT_AGGREGATOR_HOST}
+          port: ${FLUENT_AGGREGATOR_PORT}
+          self_hostname: ${FLUENT_SELFHOSTNAME}
+          shared_key: ${FLUENT_AGGREGATOR_SHARED_KEY}
+          tls: true
+          tls.verify: false

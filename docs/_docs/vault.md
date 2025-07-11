@@ -2,7 +2,7 @@
 title: Secret Management (Vault)
 permalink: /docs/vault/
 description: How to deploy Hashicorp Vault as a Secret Manager for our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "02-03-2025"
+last_modified_at: "26-06-2025"
 ---
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
@@ -25,252 +25,282 @@ Vault installation and configuration tasks have been automated with Ansible deve
 
 Instead of installing Vault using official Ubuntu packages, installation will be done manually from binaries, so the version to be installed can be decided.
 
-- Step 1. Create vault's UNIX user/group
+-   Step 1. Create vault's UNIX user/group
 
-  vault user is a system user, not login allowed
-  ```shell
-  sudo groupadd vault 
-  sudo useradd vault -g vault -r -s /sbin/nologin
-  ```
-- Step 2. Create vault's storage directory
+    vault user is a system user, not login allowed
+    ```shell
+    sudo groupadd vault
+    sudo useradd vault -g vault -r -s /sbin/nologin
+    ```
+-   Step 2. Create vault's storage directory
 
-  ```shell
-  sudo mkdir /var/lib/vault
-  chown -R vault:vault /var/lib/vault
-  chmod -R 750 /var/lib/vault
-  ```
+    ```shell
+    sudo mkdir /var/lib/vault
+    chown -R vault:vault /var/lib/vault
+    chmod -R 750 /var/lib/vault
+    ```
 
-- Step 3. Create vault's config directories
+-   Step 3. Create vault's config directories
 
-  ```shell
-  sudo mkdir -p /etc/vault
-  sudo mkdir -p /etc/vault/tls
-  sudo mkdir -p /etc/vault/policy
-  sudo mkidr -p /etc/vault/plugin
-  chown -R vault:vault /etc/vault
-  chmod -R 750 /etc/vault
-  ```
+    ```shell
+    sudo mkdir -p /etc/vault
+    sudo mkdir -p /etc/vault/tls
+    sudo mkdir -p /etc/vault/policy
+    sudo mkidr -p /etc/vault/plugin
+    chown -R vault:vault /etc/vault
+    chmod -R 750 /etc/vault
+    ```
 
-- Step 4: Create vault's log directory
+-   Step 4: Create vault's log directory
 
-  ```shell
-  sudo mkdir /var/log/vault
-  chown -R vault:vault /var/log/vault
-  chmod -R 750 /var/log/vault
-  ```
-- Step 5. Download server binary (`vault`) and copy them to `/usr/local/bin`
+    ```shell
+    sudo mkdir /var/log/vault
+    chown -R vault:vault /var/log/vault
+    chmod -R 750 /var/log/vault
+    ```
+-   Step 5. Download server binary (`vault`) and copy them to `/usr/local/bin`
 
-  ```shell
-   wget https://releases.hashicorp.com/vault/<version>/vault_<version>_linux_<arch>.zip
-   unzip vault_<version>_linux_<arch>.zip
-   chmod +x vault
-   sudo mv vault /usr/local/bin/.
-  ```
-  where `<arch>` is amd64 or arm64, and `<version>` is vault version (for example: 1.12.2).
+    ```shell
+    wget https://releases.hashicorp.com/vault/<version>/vault_<version>_linux_<arch>.zip
+    unzip vault_<version>_linux_<arch>.zip
+    chmod +x vault
+    sudo mv vault /usr/local/bin/.
+    ```
+    where `<arch>` is amd64 or arm64, and `<version>` is vault version (for example: 1.12.2).
 
 
-- Step 6. Create Vault TLS certificate
+-   Step 6. Create Vault TLS certificate
 
-  In case you have your own domain, a valid TLS certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Vault server, using [Certbot](https://certbot.eff.org/).
+    In case you have your own domain, a trusted TLS certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Vault server, using [Certbot](https://certbot.eff.org/).
 
-  See certbot installation instructions in [CertManager - Letsencrypt Certificates Section](/docs/certmanager/#installing-certbot-ionos). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
+    See certbot installation instructions in [CertManager - Letsencrypt Certificates Section](/docs/certmanager/#installing-certbot-ionos). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
 
-  Letsencrypt using HTTP challenge is avoided for security reasons (cluster services are not exposed to public internet).
+    Letsencrypt using HTTP challenge is avoided for security reasons (cluster services are not exposed to public internet).
 
-  If generating valid TLS certificate is not possible, selfsigned certificates with a custom CA can be used instead.
+    If generating trusted TLS certificate is not possible, selfsigned certificates with a custom CA can be used instead.
 
-  Follow this procedure for creating a self-signed certificate for Vault Server
+    Follow this procedure for creating a self-signed certificate for Vault Server
 
-  1. Create a self-signed CA key and self-signed certificate
+    1.  Create a self-signed CA key and self-signed certificate
 
-     ```shell
-     openssl req -x509 \
-            -sha256 \
-            -nodes \
-            -newkey rsa:4096 \
-            -subj "/CN=Ricsanfre CA" \
-            -keyout rootCA.key -out rootCA.crt
-     ```
+        ```shell
+        openssl req -x509 \
+                -sha256 \
+                -nodes \
+                -newkey rsa:4096 \
+                -subj "/CN=My CA" \
+                -keyout rootCA.key -out rootCA.crt
+        ```
+
+        {{site.data.alerts.note}}
+
+        The one created during Minio installation can be re-used.
+
+        {{site.data.alerts.end}}
+
+    2.  Create a TLS certificate for Vault server signed using the custom CA
+
+        -   Create key
+
+            ```shell
+            openssl genrsa -out private.key 4096
+            ```
+        -   Create a file named `openssl.conf` with the content below. Set `IP.1` and/or `DNS.1` to point to the correct IP/DNS addresses:
+
+            ```sh
+            [req]
+            distinguished_name = req_distinguished_name
+            x509_extensions = v3_req
+            prompt = no
+
+            [req_distinguished_name]
+            C = ES
+            ST = Madrid
+            L = Somewhere
+            O = MyOrg
+            OU = MyOU
+            CN = MyServerName
+
+            [v3_req]
+            subjectAltName = @alt_names
+
+            [alt_names]
+            IP.1 = 127.0.0.1
+            DNS.1 = vault.mydomain.com
+            ```
+
+            Run `openssl` by specifying the configuration file and enter a passphrase if prompted:
+
+            ```shell
+            openssl req -new -x509 -nodes -days 730 -key private.key -out vault.csr -config openssl.conf
+            ```
+        -   Verify the csr's content
+
+            ```shell
+            openssl req -in public.csr -noout -text
+            ```
+        -   Generate the certificate using the vault csr and key along with the CA Root key
+
+            ```shell
+            openssl x509 -req -in vault.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out public.crt -days 500 -sha256
+            ```
+
+    Once the certificate is created, public certificate and private key need to be installed in Vault server following this procedure:
+
+
+    1.  Copy public certificate `vault.crt` as `/etc/vault/tls/vault.crt`
+
+        ```shell
+        sudo cp vault.crt /etc/vault/tls/public.crt
+        sudo chown vault:vault /etc/vault/tls/public.crt
+        ```
+    2.  Copy private key `vault.key` as `/etc/vault/tls/vault.key`
+
+        ```shell
+        cp vault.key /etc/vault/tls/vault.key
+        sudo chown vault:vault /etc/vault/tls/vault.key
+        ```
+    3.  Copy CA certificate `rootCA.crt` as `/etc/vault/tls/vault-ca.crt`
+
+        {{site.data.alerts.note}}
+
+        This step is only needed if using selfsigned certificate.
+
+        {{site.data.alerts.end}}
+
+        ```shell
+        cp rootCA.crt /etc/vault/tls/vault-ca.crt
+        sudo chown vault:vault /etc/vault/tls/vault-ca.crt
+      ```
+
+-   Step 7: Create vault config file `/etc/vault/vault_main.hcl`
+
+    ```
+    cluster_addr  = "https://<node_ip>:8201"
+    api_addr      = "https://<node_ip>:8200"
+
+    plugin_directory = "/etc/vault/plugin"
+
+    disable_mlock = true
+
+    listener "tcp" {
+      address     = "0.0.0.0:8200"
+      tls_cert_file      = "/etc/vault/tl/vault.crt"
+      tls_key_file       = "/etc/vault/tls/vault.key"
+
+      tls_disable_client_certs = true
+
+    }
+
+    storage "raft" {
+      path    = /var/lib/vault
+
+    }
+    ```
+
+    Vault is configured, as a single node of HA cluster, with the following parameters:
+
+    - Node's URL address to be used in internal communications between nodes of the cluster. (`cluster_addr` and `api_addr`)
+    - Vault server API listening in all node's addresses at port 8200: (`listener "tcp" address=0.0.0.0:8200`)
+    - TLS certifificates are stored in `/etc/vault/tls`
+    - Client TLS certificates validation is disabled (`tls_disable_client_certs`)
+    - Vault is configured to use integrated storage [Raft](https://developer.hashicorp.com/vault/docs/configuration/storage/raft) data dir `/var/lib/vault`
+    - Disables the server from executing the mlock syscall (`disable_mlock`) recommended when using Raft storage
+
+
+-   Step 8. Create systemd vault service file `/etc/systemd/system/vault.service`
+
+    ```
+    [Unit]
+    Description="HashiCorp Vault - A tool for managing secrets"
+    Documentation=https://www.vaultproject.io/docs/
+    Requires=network-online.target
+    After=network-online.target
+    ConditionPathExists=/etc/vault/vault_main.hcl
+
+    [Service]
+    User=vault
+    Group=vault
+    ProtectSystem=full
+    ProtectHome=read-only
+    PrivateTmp=yes
+    PrivateDevices=yes
+    SecureBits=keep-caps
+    Capabilities=CAP_IPC_LOCK+ep
+    AmbientCapabilities=CAP_SYSLOG CAP_IPC_LOCK
+    CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+    NoNewPrivileges=yes
+    ExecStart=/bin/sh -c 'exec {{ vault_bin_path }}/vault server -config=/etc/vault/vault_main.hcl -log-level=info'
+    ExecReload=/bin/kill --signal HUP $MAINPID
+    KillMode=process
+    KillSignal=SIGINT
+    Restart=on-failure
+    RestartSec=5
+    TimeoutStopSec=30
+    StartLimitInterval=60
+    StartLimitBurst=3
+    LimitNOFILE=524288
+    LimitNPROC=524288
+    LimitMEMLOCK=infinity
+    LimitCORE=0
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
 
     {{site.data.alerts.note}}
 
-    The one created during Minio installation can be re-used.
+    This systemd configuration is the one that official vault ubuntu's package installs.
 
     {{site.data.alerts.end}}
 
-  2. Create a TLS certificate for Vault server signed using the custom CA
-    
-     ```shell
-     openssl req -new -nodes -newkey rsa:4096 \
-                 -keyout vault.key \
-                 -out vault.csr \
-                 -batch \
-                 -subj "/C=ES/ST=Madrid/L=Madrid/O=Ricsanfre CA/OU=picluster/CN=vault.picluster.ricsanfre.com"
+    This service start vault server using vault UNIX group and executing the following startup command:
 
-      openssl x509 -req -days 365000 -set_serial 01 \
-            -extfile <(printf "subjectAltName=DNS:vault.picluster.ricsanfre.com") \
-            -in vault.csr \
-            -out vault.crt \
-            -CA rootCA.crt \
-            -CAkey rootCA.key
-     ```
+    ```shell
+    /usr/local/vault server -config=/etc/vault/vault_main.hcl -log-level=info
+    ```
 
-  Once the certificate is created, public certificate and private key need to be installed in Vault server following this procedure:
+-   Step 9. Enable vault systemd service and start it
 
+    ```shell
+    sudo systemctl enable vault.service
+    sudo systemctl start vault.service
+    ```
 
-  1. Copy public certificate `vault.crt` as `/etc/vault/tls/vault.crt`
+-   Step 10. Check vault server status
 
-     ```shell
-     sudo cp vault.crt /etc/vault/tls/public.crt
-     sudo chown vault:vault /etc/vault/tls/public.crt
-     ```
-  2. Copy private key `vault.key` as `/etc/vault/tls/vault.key`
+    ```shell
+    export VAULT_ADDR=https://<vault_ip>:8200
+    export VAULT_CACERT=/etc/vault/tls/vault-ca.crt
 
-     ```shell
-     cp vault.key /etc/vault/tls/vault.key
-     sudo chown vault:vault /etc/vault/tls/vault.key
-     ```
-  3. Copy CA certificate `rootCA.crt` as `/etc/vault/tls/vault-ca.crt`
+    vault status
+    ```
 
-     {{site.data.alerts.note}}
+    The output should be like the following
 
-     This step is only needed if using selfsigned certificate.
+    ```shell
+    Key                Value
+    ---                -----
+    Seal Type          shamir
+    Initialized        false
+    Sealed             true
+    Total Shares       0
+    Threshold          0
+    Unseal Progress    0/0
+    Unseal Nonce       n/a
+    Version            1.12.2
+    Build Date         2022-11-23T12:53:46Z
+    Storage Type       raft
+    HA Enabled         true
+    ```
 
-     {{site.data.alerts.end}}
+    It shows Vault server status as not initialized (Initialized = false) and sealed (Sealed = true).
 
-     ```shell
-     cp rootCA.crt /etc/vault/tls/vault-ca.crt
-     sudo chown vault:vault /etc/vault/tls/vault-ca.crt
-     ```
+    {{site.data.alerts.note}}
 
-- Step 7: Create vault config file `/etc/vault/vault_main.hcl`
+    VAULT_CACERT variable is only needed if Vault's TLS certificate is signed using custom CA. This will be used by vault client to validate Vault's certificate.
 
-  ```
-  cluster_addr  = "https://<node_ip>:8201"
-  api_addr      = "https://<node_ip>:8200"
-
-  plugin_directory = "/etc/vault/plugin"
-
-  disable_mlock = true
-
-  listener "tcp" {
-    address     = "0.0.0.0:8200"
-    tls_cert_file      = "/etc/vault/tl/vault.crt"
-    tls_key_file       = "/etc/vault/tls/vault.key"
-
-    tls_disable_client_certs = true
-
-  }
-
-  storage "raft" {
-    path    = /var/lib/vault
-
-  }
-  ```
-
-  Vault is configured, as a single node of HA cluster, with the following parameters:
-
-  - Node's URL address to be used in internal communications between nodes of the cluster. (`cluster_addr` and `api_addr`)
-  - Vault server API listening in all node's addresses at port 8200: (`listener "tcp" address=0.0.0.0:8200`)
-  - TLS certifificates are stored in `/etc/vault/tls`
-  - Client TLS certificates validation is disabled (`tls_disable_client_certs`)
-  - Vault is configured to use integrated storage [Raft](https://developer.hashicorp.com/vault/docs/configuration/storage/raft) data dir `/var/lib/vault`
-  - Disables the server from executing the mlock syscall (`disable_mlock`) recommended when using Raft storage
-
-
-- Step 8. Create systemd vault service file `/etc/systemd/system/vault.service`
-
-  ```
-  [Unit]
-  Description="HashiCorp Vault - A tool for managing secrets"
-  Documentation=https://www.vaultproject.io/docs/
-  Requires=network-online.target
-  After=network-online.target
-  ConditionPathExists=/etc/vault/vault_main.hcl
-
-  [Service]
-  User=vault
-  Group=vault
-  ProtectSystem=full
-  ProtectHome=read-only
-  PrivateTmp=yes
-  PrivateDevices=yes
-  SecureBits=keep-caps
-  Capabilities=CAP_IPC_LOCK+ep
-  AmbientCapabilities=CAP_SYSLOG CAP_IPC_LOCK
-  CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
-  NoNewPrivileges=yes
-  ExecStart=/bin/sh -c 'exec {{ vault_bin_path }}/vault server -config=/etc/vault/vault_main.hcl -log-level=info'
-  ExecReload=/bin/kill --signal HUP $MAINPID
-  KillMode=process
-  KillSignal=SIGINT
-  Restart=on-failure
-  RestartSec=5
-  TimeoutStopSec=30
-  StartLimitInterval=60
-  StartLimitBurst=3
-  LimitNOFILE=524288
-  LimitNPROC=524288
-  LimitMEMLOCK=infinity
-  LimitCORE=0
-
-  [Install]
-  WantedBy=multi-user.target
-  ```
-
-  {{site.data.alerts.note}}
-
-  This systemd configuration is the one that official vault ubuntu's package installs.
-
-  {{site.data.alerts.end}}
-
-  This service start vault server using vault UNIX group and executing the following startup command:
-
-  ```shell
-  /usr/local/vault server -config=/etc/vault/vault_main.hcl -log-level=info
-  ```
-
-- Step 9. Enable vault systemd service and start it
-
-  ```shell
-  sudo systemctl enable vault.service
-  sudo systemctl start vault.service
-  ```
-
-- Step 10. Check vault server status
-
-  ```shell
-  export VAULT_ADDR=https://<vault_ip>:8200
-  export VAULT_CACERT=/etc/vault/tls/vault-ca.crt
-
-  vault status
-  ```
-
-  The output should be like the following
-
-  ```shell
-  Key                Value
-  ---                -----
-  Seal Type          shamir
-  Initialized        false
-  Sealed             true
-  Total Shares       0
-  Threshold          0
-  Unseal Progress    0/0
-  Unseal Nonce       n/a
-  Version            1.12.2
-  Build Date         2022-11-23T12:53:46Z
-  Storage Type       raft
-  HA Enabled         true
-  ```
-
-  It shows Vault server status as not initialized (Initialized = false) and sealed (Sealed = true).
-
-  {{site.data.alerts.note}}
-
-  VAULT_CACERT variable is only needed if Vault's TLS certificate is signed using custom CA. This will be used by vault client to validate Vault's certificate.
-
-  {{site.data.alerts.end}}
+    {{site.data.alerts.end}}
 
 
 ### Vault initialization and useal
@@ -678,7 +708,7 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
   ```shell
   curl -k --header "X-Vault-Token:$VAULT_TOKEN" --request POST\
     --data '{"type":"kubernetes","description":"kubernetes auth"}' \
-    https://vault.picluster.ricsanfre.com:8200/v1/sys/auth/kubernetes
+    https://${VAULT_SERVER}:8200/v1/sys/auth/kubernetes
   ```
 
 - Step 8. Configure Vault kubernetes auth method
@@ -696,125 +726,130 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
   ```shell
   KUBERNETES_CA_CERT=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
 
-  curl --cacert /etc/vault/tls/vault_ca.pem --header "X-Vault-Token:$VAULT_TOKEN" --request POST --data '{"kubernetes_host": "'"$KUBERNETES_HOST"'", "kubernetes_ca_cert":"'"$KUBERNETES_CA_CERT"'", "token_reviewer_jwt":"'"$TOKEN_REVIEW_JWT"'"}' https://vault.picluster.ricsanfre.com:8200/v1/auth/kubernetes/config
+  curl --cacert /etc/vault/tls/vault_ca.pem --header "X-Vault-Token:$VAULT_TOKEN" --request POST --data '{"kubernetes_host": "'"$KUBERNETES_HOST"'", "kubernetes_ca_cert":"'"$KUBERNETES_CA_CERT"'", "token_reviewer_jwt":"'"$TOKEN_REVIEW_JWT"'"}' https://${VAULT_SERVER}:8200/v1/auth/kubernetes/config
   ```
 
 ## External Secrets Operator installation
 
 External Secrets Operator is installed through its helm chart.
 
--  Step 1: Add External sercrets repository:
-  ```shell
-  helm repo add external-secrets https://charts.external-secrets.io
-  ```
-- Step 2: Fetch the latest charts from the repository:
-  ```shell
-  helm repo update
-  ```
-- Step 3: Create namespace
-  ```shell
-  kubectl create namespace external-secrets
-  ```
-- Step 4: Install helm chart
-  ```shell
-  helm install external-secrets \
-     external-secrets/external-secrets \
-      -n external-secrets \
-      --set installCRDs=true
-  ```
-- Step 5: Create external secrets vault role. Applying read policy
+-   Step 1: Add External sercrets repository:
+    ```shell
+    helm repo add external-secrets https://charts.external-secrets.io
+    ```
+-   Step 2: Fetch the latest charts from the repository:
+    ```shell
+    helm repo update
+    ```
+-   Step 3: Create namespace
+    ```shell
+    kubectl create namespace external-secrets
+    ```
+-   Step 4: Install helm chart
+    ```shell
+    helm install external-secrets \
+      external-secrets/external-secrets \
+        -n external-secrets \
+        --set installCRDs=true
+    ```
+-   Step 5: Create external secrets vault role. Applying read policy
 
-  ```shell
-  vault write auth/kubernetes/role/external-secrets \
-    bound_service_account_names=external-secrets \
-    bound_service_account_namespaces=external-secrets \
-    policies=readonly \
-    ttl=24h
-  ```
+    ```shell
+    vault write auth/kubernetes/role/external-secrets \
+      bound_service_account_names=external-secrets \
+      bound_service_account_namespaces=external-secrets \
+      policies=readonly \
+      ttl=24h
+    ```
 
-  Or using the Vault API
+    Or using the Vault API
 
-  ```shell
-  curl -k --header "X-Vault-Token:$VAULT_TOKEN" --request POST \
-    --data '{ "bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "policies": ["readonly"], "ttl" : "24h"}' \
-    https://vault.picluster.ricsanfre.com:8200/v1/auth/kubernetes/role/external-secrets
-  ```
+    ```shell
+    curl -k --header "X-Vault-Token:$VAULT_TOKEN" --request POST \
+      --data '{ "bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "policies": ["readonly"], "ttl" : "24h"}' \
+      https://${VAULT_SERVER}:8200/v1/auth/kubernetes/role/external-secrets
+    ```
 
 
-- Step 6: Create Cluster Secret Store
+-   Step 6: Create Cluster Secret Store
 
-  ```yml
-  apiVersion: external-secrets.io/v1beta1
-   kind: ClusterSecretStore
-   metadata:
-     name: vault-backend
-     namespace: external-secrets
-   spec:
-     provider:
-       vault:
-         server: "https://vault.picluster.ricsanfre.com:8200"
-         # caBundle needed if vault TLS is signed using a custom CA.
-         # If Vault TLS is valid signed by Letsencrypt this is not needed?
-         # ca cert base64 encoded and remobed '\n' characteres"
-         # <vault-ca> =`cat vault-ca.pem | base64 | tr -d "\n"`
-         caBundle: <vault-ca>
-         path: "secret"
-         version: "v2"
-         auth:
-           kubernetes:
-             mountPath: "kubernetes"
-             role: "external-secrets"
-  ```
-  
-  Check ClusterSecretStore status
+    ```yml
+    apiVersion: external-secrets.io/v1beta1
+    kind: ClusterSecretStore
+    metadata:
+      name: vault-backend
+      namespace: external-secrets
+    spec:
+      provider:
+        vault:
+          server: "https://${VAULT_SERVER}:8200"
+          # caBundle needed if vault TLS is signed using a custom CA.
+          # If Vault TLS is valid signed by Letsencrypt this is not needed?
+          # ca cert base64 encoded and remobed '\n' characteres"
+          # <vault-ca> =`cat vault-ca.pem | base64 | tr -d "\n"`
+          # caBundle: <vault-ca>
+          path: "secret"
+          version: "v2"
+          auth:
+            kubernetes:
+              mountPath: "kubernetes"
+              role: "external-secrets"
+    ```
+    {{site.data.alerts.note}}
 
-  ```shell
-  kubectl get clustersecretstore -n external-secrets
-  NAME            AGE   STATUS   CAPABILITIES   READY
-  vault-backend   10m   Valid    ReadWrite      True
-  ```
+      Substitute variables (`${var}`) in the above yaml file before deploying mangifest file.
+      -   Replace `${VAULT_SERVER}` by FQDN of the vault server (i.e. `vault.homelab.com`)
 
-- Step 7: Create External secret
+    {{site.data.alerts.end}}
 
-  ```yml
-  apiVersion: external-secrets.io/v1beta1
-  kind: ExternalSecret
-  metadata:
-   name: vault-example
-  spec:
-   secretStoreRef:
-     name: vault-backend
-     kind: ClusterSecretStore
-   target:
-     name: mysecret
-   data:
-   - secretKey: password
-     remoteRef:
-       key: secret1
-       property: password
-   - secretKey: user
-     remoteRef:
-       key: secret1
-       property: user
-  ```
+    Check ClusterSecretStore status
 
-  Check ExternalSecret status
+    ```shell
+    kubectl get clustersecretstore -n external-secrets
+    NAME            AGE   STATUS   CAPABILITIES   READY
+    vault-backend   10m   Valid    ReadWrite      True
+    ```
 
-  ```shell
-  kubectl get externalsecret
-  NAME            STORE           REFRESH INTERVAL   STATUS         READY
-  vault-example   vault-backend   1h                 SecretSynced   True
-  ```
+-   Step 7: Create External secret
 
-  Check Secret created
+    ```yml
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: vault-example
+    spec:
+      secretStoreRef:
+        name: vault-backend
+        kind: ClusterSecretStore
+      target:
+        name: mysecret
+      data:
+      - secretKey: password
+        remoteRef:
+          key: secret1
+          property: password
+      - secretKey: user
+        remoteRef:
+          key: secret1
+          property: user
+    ```
 
-  ```shell
-  kubectl get secret mysecret -o yaml
-  ```
+    Check ExternalSecret status
+
+    ```shell
+    kubectl get externalsecret
+    NAME            STORE           REFRESH INTERVAL   STATUS         READY
+    vault-example   vault-backend   1h                 SecretSynced   True
+    ```
+
+    Check Secret created
+
+    ```shell
+    kubectl get secret mysecret -o yaml
+    ```
 
 ## References
 
 - [Vault - Kubernetes Auth Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes)
 - [External Vault configuriation guide](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-external-vault)
-
 - [Tutorial: How to Set External-Secrets with Hashicorp Vault](https://blog.container-solutions.com/tutorialexternal-secrets-with-hashicorp-vault)

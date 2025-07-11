@@ -2,7 +2,7 @@
 title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Pi Kubernetes Cluster.
-last_modified_at: "18-01-2025"
+last_modified_at: "23-03-2025"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won't be able to access the data.
@@ -160,7 +160,7 @@ Installation using `Helm` (Release 3):
     ingressClassName: nginx
 
     # ingress host
-    host: longhorn.picluster.ricsanfre.com
+    host: longhorn.${CLUSTER_DOMAIN}
 
     ## Set this to true in order to enable TLS on the ingress record
     tls: true
@@ -182,13 +182,21 @@ Installation using `Helm` (Release 3):
       #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
       #   * 'ca-issuer' (CA-signed certificate, not valid)
       cert-manager.io/cluster-issuer: letsencrypt-issuer
-      cert-manager.io/common-name: longhorn.picluster.ricsanfre.com
+      cert-manager.io/common-name: longhorn.${CLUSTER_DOMAIN}
   ```
+  {{site.data.alerts.note}}
+
+  Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+  -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
+      FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
+      External-DNS can be configured to automatically add that entry in your DNS service.
+  {{site.data.alerts.end}}
+
   With this configuration:
 
-  - Longhorn is configured to use `/storage` as default path for storing data (`defaultSettings.    defaultDataPath`)
+  - Longhorn is configured to use `/storage` as default path for storing data (`defaultSettings.defaultDataPath`)
 
-  - Ingress resource is created to make Longhorn front-end available through the URL `longhorn.picluster.ricsanfre.com`. Ingress resource for NGINX (`ingress`) is annotated so, basic authentication is used and a Valid TLS certificate is generated using Cert-Manager for `longhorn.picluster.ricsanfre.com` host
+  - Ingress resource is created to make Longhorn front-end available through the URL `longhorn.${CLUSTER_DOMAIN}`. Ingress resource for NGINX (`ingress`) is annotated so, basic authentication is used and a Valid TLS certificate is generated using Cert-Manager for `longhorn.${CLUSTER_DOMAIN}` host
 
 - Step 5: Install Longhorn in the longhorn-system namespace, using Helm:
 
@@ -208,99 +216,30 @@ Installation using `Helm` (Release 3):
   kubectl -n longhorn-system get pod
   ```
 
+### Longhorn CLI
 
-## Configuring acces to Longhorn UI (Only Traefik Ingress)
+`longhornctl` is a Command line interface (CLI) for Longhorn operations and troubleshooting.
 
-Create a Ingress rule to make Longhorn front-end available through the Ingress Controller (Traefik) using a specific URL (`longhorn.picluster.ricsanfre.com`), mapped by DNS to Traefik Load Balancer external IP.
+-   Step 1: Download binary
 
-Longhorn backend is providing not secure communications (HTTP traffic) and thus Ingress resource will be configured to enable HTTPS (Traefik TLS end-point) and redirect all HTTP traffic to HTTPS.
-Since Longhorn frontend does not provide any authentication mechanism, Traefik HTTP basic authentication will be configured.
+    ```shell
+    curl -LO "https://github.com/longhorn/cli/releases/download/${VERSION}/longhornctl-linux-${ARCH}"
+    ```
 
-There is a known issue with accessing Longhorn UI from Traefik 2.x that makes Longhorn APIs calls fail. Traefik 2.x ingress controller does not set the WebSocket headers and a specific middleware to route to the Longhorn UI must be specified. See [Longhorn documentation: "Troubleshooting Traefik 2.x as ingress controller"](https://longhorn.io/kb/troubleshooting-traefik-2.x-as-ingress-controller/) to know how to solve this particular issue.
+-   Step 2: Install binary
+
+    ```shell
+    sudo install longhornctl-linux-${ARCH} /usr/local/bin/longhornctl
+    ```
+-   Step 3: Verify Installation
+
+    ```shell
+    longhornctl version
+    ```
+
+See available commands in longhorn reporistory:[https://github.com/longhorn/cli/blob/master/docs/longhornctl.md](https://github.com/longhorn/cli/blob/master/docs/longhornctl.md)
 
 
-- Step 1. Create a manifest file `longhorn_ingress.yml`
-
-  Two Ingress resources will be created, one for HTTP and other for HTTPS. Traefik middlewares, HTTPS redirect, basic authentication and X-Forwareded-Proto headers will be used.
-  
-  ```yml
-  # Solving API issue. 
-  ---
-  apiVersion: traefik.containo.us/v1alpha1
-  kind: Middleware
-  metadata:
-    name: svc-longhorn-headers
-    namespace: longhorn-system
-  spec:
-    headers:
-      customRequestHeaders:
-        X-Forwarded-Proto: "https"
-  ---
-  # HTTPS Ingress
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: longhorn-ingress
-    namespace: longhorn-system
-    annotations:
-      # HTTPS as entry point
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      # Enable TLS
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      # Use Basic Auth Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: 
-        traefik-basic-auth@kubernetescrd,
-        longhorn-system-svc-longhorn-headers@kubernetescrd
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ca-issuer
-      cert-manager.io/common-name: longhorn.picluster.ricsanfre.com
-  spec:
-    tls:
-    - hosts:
-      - storage.picluster.ricsanfre.com
-      secretName: storage-tls
-    rules:
-    - host: longhorn.picluster.ricsanfre.com
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: longhorn-frontend
-              port:
-                number: 80
-  ---
-  # http ingress for http->https redirection
-  kind: Ingress
-  apiVersion: networking.k8s.io/v1
-  metadata:
-    name: longhorn-redirect
-    namespace: longhorn-system
-    annotations:
-      # Use redirect Midleware configured
-      traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
-      # HTTP as entrypoint
-      traefik.ingress.kubernetes.io/router.entrypoints: web
-  spec:
-    rules:
-      - host: longhorn.picluster.ricsanfre.com
-        http:
-          paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: longhorn-frontend
-                port:
-                  number: 80
-  ```
-
-- Step 2. Apply the manifest file
-
-  ```shell
-  kubectl apply -f longhorn_ingress.yml
-  ```
 
 ## Testing Longhorn
 
@@ -387,7 +326,9 @@ Ansible playbook has been developed for automatically create this testing POD `r
 ![longhorn-ui-replica](/assets/img/longhorn_volume_test_replicas.png)
 
 
-## Setting Longhorn as default Kubernetes StorageClass
+## LongHorn Configuration
+
+### Setting Longhorn as default Kubernetes StorageClass
 
 
 {{site.data.alerts.note}}
@@ -424,12 +365,370 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
 
+### Longhorn backup configuration
 
-## References
+Longhorn support snapshot capability. Snapshot in Longhorn is an object that represents content of a Longhorn volume at a particular moment. It is stored inside the cluster. A snapshot[^1] in Longhorn captures the state of a volume at the time the snapshot is created. Each snapshot only captures changes that overwrite data from earlier snapshots, so a sequence of snapshots is needed to fully represent the full state of the volume. Volumes can be restored from a snapshot.
 
+Snapshots are stored locally, as a part of each replica of a volume. They are stored on the disk of the nodes within the Kubernetes cluster. Snapshots are stored in the same location as the volume data on the host’s physical disk.
+
+Longhorn can also backup the Volume content to backupstore  (NFS or S3). A backup[^9] in longhorn is an object that represent the content of a Longhorn volume at a particular time but stored in a external storage (NFS or S3).
+
+Longhorn support two types of backup: incremental and full-backup
+
+-   Incremental backup: A backup of a snapshot is copied to the backupstore. With incremental backup, Longhorn backs up only data that was changed since the last backup. (delta backup)
+-   Full backup: Longhorn can perform full backups that upload all data blocks in the volume and overwrite existing data blocks in the backupstore.
+
+#### Minio as S3 Backupstore
+
+For configuring Longhorn's backup capability, it is needed to define a *backup target*, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets.
+
+[Minio](https://min.io) can be used as S3-compliant backend. See further details about installing external Minio Server for the cluster in: ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup)
+
+##### Install Minio backup server
+
+See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup).
+
+##### Configure Longhorn bucket and user
+
+| User | Bucket |
+|:--- |:--- |
+|longhorn | k3s-longhorn |
+{: .table .table-white .border-dark }
+
+-   Create bucket for storing Longhorn backups/snapshots
+
+    ```shell
+    mc mb ${MINIO_ALIAS}/k3s-longhorn
+    ```
+
+-   Add `longhorn` user using Minio's CLI
+    ```shell
+    mc admin user add ${MINIO_ALIAS} longhorn supersecret
+    ```
+
+-   Define user policy to grant `longhorn` user access to backups bucket
+    Create file `longhorn_policy.json` file:
+
+    ```json
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:DeleteObject",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::k3s-longhorn",
+                "arn:aws:s3:::k3s-longhorn/*"
+            ]
+        }
+      ]
+    }
+    ```
+
+    This policy grants read-write access to `k3s-longhorn` bucket
+
+-   Add access policy to `longhorn` user:
+    ```shell
+    mc admin policy add ${MINIO_ALIAS} longhorn longhorn_policy.json
+    ```
+
+
+#### Configure Longhorn backup target
+
+-   Create kuberentes `Secret` resource containing Minio end-point access information and credentials: `longhorn-minio-secret.yml`
+
+    ```yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: minio-secret
+      namespace: longhorn-system
+    type: Opaque
+    data:
+      AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
+      AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
+      AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
+      AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
+    ```
+
+    {{site.data.alerts.note}}
+
+    `AWS_CERT` parameter is only needed in case of using a self-signed certificate.
+
+    {{site.data.alerts.end}}
+
+    For encoding the different access paramenters the following commands can be used:
+
+    ```shell
+    echo -n minio_url | base64
+    echo -n minio_access_key_id | base64
+    echo -n minio_secret_access_key | base64
+    cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
+    ```
+
+    {{site.data.alerts.important}}
+    As the command shows, SSL certificates in the validation chain must be concatenated and `\n` characters from the base64 encoded SSL pem must be removed.
+    {{site.data.alerts.end}}
+
+-   Apply manifest file
+
+    ```shell
+    kubectl apply -f longhorn-s3-secret.yml
+    ```
+
+-   Go to the Longhorn UI. In the top navigation bar, click `Settings`. In the Backup section, set `Backup Target` to:
+
+    ```
+    s3://<bucket-name>@<minio-s3-region>/
+    ```
+
+    {{site.data.alerts.important}}
+    Make sure that you have `/` at the end, otherwise you will get an error.
+    {{site.data.alerts.end}}
+
+    In the Backup section set `Backup Target Credential Secret` to the secret resource created before
+
+    ```
+    minio-secret
+    ```
+
+    ![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
+
+    Backup Target can be automatically configured when deploying longhorn using helm chart
+
+    Additional values need to be provided to `values.yaml` to configure S3 target.
+
+    ```yaml
+    defaultSettings:
+      backupTarget: s3://longhorn@eu-west-1/
+      backupTargetCredentialSecret: minio-secret
+    ```
+
+#### Scheduling longhorn volumes backup
+
+A Longhorn recurring job can be created for scheduling periodic backups/snapshots of volumes.
+See details in [Longhorn - Scheduling backups and snapshots](https://longhorn.io/docs/latest/snapshots-and-backups/scheduling-backups-and-snapshots/).
+
+{{site.data.alerts.note}} **About Velero Integration**
+
+If Velero is used to perform full cluster backup, including Longhorn's Persistent Volumes using CSI Snapshots, configuring this job is not needed.
+
+See details about Velero installation and configuration in ["Pi Cluster - Backup and Restore with Velero"](/docs/backup/)
+
+{{site.data.alerts.end}}
+
+- Create `RecurringJob` manifest resource
+
+  ```yml
+  ---
+  apiVersion: longhorn.io/v1beta1
+  kind: RecurringJob
+  metadata:
+    name: backup
+    namespace: longhorn-system
+  spec:
+    cron: "0 5 * * *"
+    task: "backup"
+    groups:
+    - default
+    retain: 2
+    concurrency: 2
+    labels:
+      type: 'full'
+      schedule: 'daily'
+  ```
+
+  This will create  recurring backup job for `default`. Longhorn will automatically add a volume to the default group when the volume has no recurring job.
+
+- Apply manifest file
+
+  ```shell
+  kubectl apply -f recurring_job.yml
+  ```
+
+#### Configuring CSI Snapshot API
+
+Longhorn supports creating and restoring Longhorn snapshots/backups via the Kubernetes CSI snapshot mechanism.
+
+Longhorn does support, [Kubernetes CSI snapshot API](https://kubernetes.io/docs/concepts/storage/volume-snapshots/) to take snapshots/backups programmatically. See Longhorn documentation: [CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/).
+
+##### Enable CSI snapshots support in K3S
+
+K3S distribution currently does not come with a preintegrated Snapshot Controller that is needed to enable CSI Snapshot feature. An external snapshot controller need to be deployed. K3S can be configured to use [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter).
+
+To enable this feature, follow instructions in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
+
+{{site.data.alerts.note}}
+
+Each release of Longhorn is compatible with a specific version external-snapshotter. Do not install latest available version.
+
+For example, in Longhorn 1.9.0, CSI Snapshots support is compatible with [kubernetes-csi/external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter) release v8.2.0.
+
+Check which version to use in [Longhorn documentation - Enable CSI Snapshot Support](https://longhorn.io/docs/latest/snapshots-and-backups/csi-snapshot-support/enable-csi-snapshot-support/).
+
+{{site.data.alerts.end}}
+
+-   Step 1. Prepare kustomization yaml file to install external csi snaphotter (setting namespace to `kube-system`)
+
+    `tmp/kustomization.yaml`
+
+    ```yml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: kube-system
+    resources:
+    - https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v8.2.0
+    - https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v8.2.0
+    ```
+
+-   Step 2. Deploy Snapshot-Controller
+
+    ```shell
+    kubectl apply -k ./tmp
+    ```
+
+
+##### Configure Longhorn CSI Snapshots
+
+`VolumeSnapshotClass` objects from CSI Snapshot API need to be configured
+
+-   Create `VolumeSnapshotClass` to create Longhorn snapshots (in-cluster snapshots, not backed up to S3 backend), `volume_snapshotclass_snap.yml`
+
+    ```yml
+    # CSI VolumeSnapshot Associated With Longhorn Snapshot
+    kind: VolumeSnapshotClass
+    apiVersion: snapshot.storage.k8s.io/v1
+    metadata:
+      name: longhorn-snapshot-vsc
+    driver: driver.longhorn.io
+    deletionPolicy: Delete
+    parameters:
+      type: snap
+    ```
+
+-   Create `VolumeSnapshotClass` to create Longhorn backups (backed up to S3 backend), `volume_snapshotclass_bak.yml`
+
+    ```yml
+    # CSI VolumeSnapshot Associated With Longhorn Backup
+    kind: VolumeSnapshotClass
+    apiVersion: snapshot.storage.k8s.io/v1
+    metadata:
+      name: longhorn-backup-vsc
+    driver: driver.longhorn.io
+    deletionPolicy: Delete
+    parameters:
+      type: bak
+    ```
+
+-   Apply manifest file
+
+    ```shell
+    kubectl apply -f volume_snapshotclass_snap.yml volume_snapshotclass_bak.yml
+    ```
+
+##### Testing CSI
+
+-   Create a Longhorn Snapshot creation request
+
+    VolumeSnapshot can be requested applying following manifest file
+
+    ```yaml
+    apiVersion: snapshot.storage.k8s.io/v1
+    kind: VolumeSnapshot
+    metadata:
+      name: test-csi-volume-snapshot-longhorn-snapshot
+    spec:
+      volumeSnapshotClassName: longhorn-snapshot-vsc
+      source:
+        persistentVolumeClaimName: test-vol
+    ```
+    A Longhorn snapshot is created. The `VolumeSnapshot` object creation leads to the creation of a `VolumeSnapshotContent` Kubernetes object. The VolumeSnapshotContent refers to a Longhorn snapshot in its `VolumeSnapshotContent.snapshotHandle` field with the name `snap://volume-name/snapshot-name`
+
+-   Create a Longhorn Backup creation request
+
+    ```yaml
+    apiVersion: snapshot.storage.k8s.io/v1
+    kind: VolumeSnapshot
+    metadata:
+      name: test-csi-volume-snapshot-longhorn-backup
+    spec:
+      volumeSnapshotClassName: longhorn-backup-vsc
+      source:
+        persistentVolumeClaimName: test-vol
+    ```
+    A Longhorn backup is created. The `VolumeSnapshot` object creation leads to the creation of a `VolumeSnapshotContent` Kubernetes object. The `VolumeSnapshotContent` refers to a Longhorn backup in its `VolumeSnapshotContent.snapshotHandle` field with the name `bak://backup-volume/backup-name`
+
+
+## Observability
+
+### Metrics
+
+As stated by official documentation[^7], Longhorn natively exposes metrics in Prometheus text format[^8] at a REST endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`.
+
+Longhorn Backend kubernetes service is pointing to the set of Longhorn manager pods. Longhorn’s metrics are exposed in Longhorn manager pods at the endpoint `http://LONGHORN_MANAGER_IP:PORT/metrics`
+
+Backend endpoint is already exposing Prometheus metrics.
+
+#### Prometheus Integration
+
+`ServiceMonitoring`, Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from Longhorn
+
+```yaml
+metrics:
+  serviceMonitor:
+    enabled: true
+```
+
+#### Grafana Dashboards
+
+Longhorn dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13032](https://grafana.com/grafana/dashboards/13032).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    longhorn:
+      # https://grafana.com/grafana/dashboards/16888-longhorn/
+      gnetId: 16888
+      revision: 9
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
+
+
+---
 
 [^2]: [Mount Propagation](https://kubernetes.io/docs/concepts/storage/volumes/#mount-propagation) is a feature activated by defult since Kubernetes v1.14
 [^3]: [Longorn Requirements- Installing open-iscsi](https://longhorn.io/docs/latest/deploy/install/#installing-open-iscsi)
 [^4]: [Longorn Requirements- Installing NFSv4 Client](https://longhorn.io/docs/latest/deploy/install/#installing-nfsv4-client)
 [^5]: [Longorn Requirements- Installing Cryptsetup and Luks](https://longhorn.io/docs/latest/deploy/install/#installing-cryptsetup-and-luks)
 [^6]: [Longorn Requirements- Installing Device Mapper](https://longhorn.io/docs/latest/deploy/install/#installing-device-mapper-userspace-tool)
+[^1]: [Longhorn Concepts - Snapshots](https://longhorn.io/docs/latest/concepts/#24-snapshots)
+[^7]: [Longorn Monitoring- Prometheus and Grafana setup](https://longhorn.io/docs/1.8.0/monitoring/prometheus-and-grafana-setup/)
+[^8]: [Prometheus - Instrumenting - Exposition formats: Test-based-format](https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format)
+[^9]: [Longhorn Concepts - Backups](https://longhorn.io/docs/1.9.0/concepts/#3-backups-and-secondary-storage)

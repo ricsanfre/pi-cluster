@@ -15,23 +15,24 @@ spec:
     - name: coredns-app
   path: ./kubernetes/platform/istio/app/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: istio-base
-      namespace: istio-system
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: istio-cni
-      namespace: istio-system
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: istio-istiod
-      namespace: istio-system
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: istio-ztunnel
-      namespace: istio-system
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: istio-base
+  #     namespace: istio-system
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: istio-cni
+  #     namespace: istio-system
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: istio-istiod
+  #     namespace: istio-system
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: istio-ztunnel
+  #     namespace: istio-system
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -52,11 +53,12 @@ spec:
     - name: istio-app
   path: ./kubernetes/platform/istio/gateway/overlays/prod
   prune: true
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: istio-gateway
-      namespace: istio-ingress
+  wait: true
+  # healthChecks:
+  #   - apiVersion: helm.toolkit.fluxcd.io/v2
+  #     kind: HelmRelease
+  #     name: istio-gateway
+  #     namespace: istio-ingress
   postBuild:
     substituteFrom:
       - kind: ConfigMap

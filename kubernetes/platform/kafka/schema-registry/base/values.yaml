@@ -14,3 +14,6 @@ service:
   ports:
     client: {}
 
+# Disabling network policy created by Bitnami Helm Chart
+networkPolicy:
+  enabled: false

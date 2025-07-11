@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-import-realm
+  labels:
+    app.kubernetes.io/name: keycloak-config-cli
+  annotations:
+    # Update the Job manifest after it has been applied to the cluster is not allowed:
+    #  - changes to the Job spec.Completions, spec.Selector and spec.Template are not permitted by the Kubernetes API (inmutable fields)
+    # Force recreation of the Job
+    # Kubernetes does not allow to patch Jobs
+    # Ref: https://fluxcd.io/flux/use-cases/running-jobs/
+    # Ref: https://fluxcd.io/flux/components/kustomize/kustomizations/#force
+    kustomize.toolkit.fluxcd.io/force: enabled
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak-config-cli
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: keycloak-config-cli
+          image: "docker.io/adorsys/keycloak-config-cli:6.4.0-26.1.0"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "IMPORT_PATH"
+              value: "/config/"
+            - name: "KEYCLOAK_URL"
+              value: "http://keycloak-service:8080"
+            # Enable variable substitution
+            - name: "IMPORT_VARSUBSTITUTION_ENABLED"
+              value: "true"
+            - name: "CLUSTER_DOMAIN"
+              value: ${CLUSTER_DOMAIN}
+            - name: "PI_ADMIN_FIRSTNAME"
+              value: ${PI_ADMIN_FISTNAME}
+            - name: "PI_ADMIN_LASTNAME"
+              value: ${PI_ADMIN_LASTNAME}
+          # Additional environment variables in secret
+          envFrom:
+          - secretRef:
+              name: kc-config-cli-env
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          configMap:
+            name: "keycloak-realm-configmap"
+            defaultMode: 0555

@@ -1,0 +1,14 @@
+# fluentd helm values (monitoring)
+
+# Enable prometheus Service Monitor
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels: {}
+  prometheusRule:
+    enabled: false
+
+dashboards:
+  enabled: "true"
+  labels:
+    grafana_dashboard: '"1"'
