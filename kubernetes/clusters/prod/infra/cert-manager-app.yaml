@@ -51,6 +51,7 @@ spec:
   path: ./kubernetes/platform/cert-manager/config/overlays/prod
   prune: true
   wait: true
+  timeout: 15m
   healthCheckExprs:
     - apiVersion: cert-manager.io/v1
       kind: ClusterIssuer
