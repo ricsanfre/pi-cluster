@@ -54,7 +54,7 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/minio-folder
-      - name: keyclaok
+      - name: keycloak
         orgId: 1
         folder: Keycloak
         type: file
