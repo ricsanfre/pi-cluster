@@ -153,6 +153,9 @@ data:
             scheme http
             user "#{ENV['FLUENT_ELASTICSEARCH_USER'] || use_default}"
             password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD'] || use_default}"
+            # Verify ES version on startup
+            verify_es_version_at_startup true
+            default_elasticsearch_version 9
             # Reload and reconnect options
             reconnect_on_error true
             reload_on_failure true
