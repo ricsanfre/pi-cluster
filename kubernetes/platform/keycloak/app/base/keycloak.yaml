@@ -43,3 +43,12 @@ spec:
       # Enable metrics endpoint
     - name: metrics-enabled 
       value: 'true'
+      # Enable cache metrics histograms
+    - name: cache-metrics-histograms-enabled
+      value: 'true'
+      # Enable HTTP request histograms
+    - name: http-metrics-histograms-enabled
+      value: 'true'
+      # Enable user metrics
+    - name: event-metrics-user-enabled
+      value: 'true'
