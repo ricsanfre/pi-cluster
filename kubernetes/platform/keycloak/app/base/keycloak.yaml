@@ -2,7 +2,6 @@ apiVersion: k8s.keycloak.org/v2alpha1
 kind: Keycloak
 metadata:
   name: keycloak
-  namespace: keycloak
 spec:
   # Number of instances in the cluster
   instances: 2
@@ -39,16 +38,4 @@ spec:
   ingress:
     enabled: false
   # Additional Options  
-  additionalOptions:
-      # Enable metrics endpoint
-    - name: metrics-enabled 
-      value: 'true'
-      # Enable cache metrics histograms
-    - name: cache-metrics-histograms-enabled
-      value: 'true'
-      # Enable HTTP request histograms
-    - name: http-metrics-histograms-enabled
-      value: 'true'
-      # Enable user metrics
-    - name: event-metrics-user-enabled
-      value: 'true'
+  additionalOptions: []
