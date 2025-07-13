@@ -39,6 +39,7 @@ spec:
   prune: true
   wait: true
   timeout: 15m
+  retryInterval: 2m
   healthCheckExprs:
     - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Elasticsearch

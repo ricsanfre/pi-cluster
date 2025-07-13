@@ -22,6 +22,7 @@ spec:
       failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
       current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   timeout: 15m
+  retryInterval: 2m
   postBuild:
     substituteFrom:
       - kind: ConfigMap
