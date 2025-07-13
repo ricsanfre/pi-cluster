@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "09-07-2025"
+last_modified_at: "13-07-2025"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -936,7 +936,7 @@ To execute configuration import:
 kubectl kustomization keycloak-config-cli/overlays/prod | kubectl apply -f -
 ```
 
-{{site.data.alerts.note}} **Avout re-executing the import job**
+{{site.data.alerts.note}} **About re-executing the import job**
 
 Attempting to update the Job manifest after it has been applied to the cluster will not be allowed, as changes to the Job spec.Completions, `spec.Selector` and `spec.Template` are not permitted by the Kubernetes API. To be able to update a Kubernetes Job, the Job has to be recreated by first being removed and then reapplied to the cluster.
 
@@ -962,6 +962,120 @@ metadata:
 ```
 
 {{site.data.alerts.end}}
+
+## Keycloak Observability
+
+### Metrics
+
+Keycloak exposes Prometheus-format metrics at the following endpoint on the management interface (default TCP port 9000) at `/metrics`.
+
+See details on how to enable the metrics in [Keycloak documentation: Observability Configuring Metrics](https://www.keycloak.org/observability/configuration-metrics). Keycloak metrics description can be found in [Keycloak documentation: Observability Metrics for Troubleshooting](https://www.keycloak.org/observability/metrics-for-troubleshooting).
+
+To enable Prometheus' /metric endpoint (management interface) add the following additionalOptions to Keycloak resource
+```yaml
+spec:
+  additionalOptions:
+      # Enable metrics endpoint
+    - name: metrics-enabled
+      value: 'true'
+```
+
+{{site.data.alerts.important}}
+Management port (:9000) should not be exposed externally.
+{{site.data.alerts.end}}
+
+Additional options can be provided to enable additional metrics
+
+```yaml
+spec:
+  additionalOptions:
+      # Enable metrics endpoint
+    - name: metrics-enabled
+      value: 'true'
+      # Enable cache metrics histograms
+    - name: cache-metrics-histograms-enabled
+      value: 'true'
+      # Enable HTTP request histograms
+    - name: http-metrics-histograms-enabled
+      value: 'true'
+      # Enable user metrics
+    - name: event-metrics-user-enabled
+      value: 'true'
+```
+
+| parameter| VAR  | Description | value |
+|:--- |:--- |:---| :--- |
+| `metrics-enabled` | `KC_METRICS_ENABLE` | Enable metrics endpoint | true/false (default)
+| `cache-metrics-histograms-enabled` | `KC_CACHE_METRICS_HISTOGRAMS_ENABLED` | Enable histograms for metrics for the embedded caches.                             | true/false(default)                                    |
+| `http-metrics-histograms-enabled`  | `KC_HTTP_METRICS_HISTOGRAMS_ENABLED`  | Enables a histogram with default buckets for the duration of HTTP server requests. | true/false(default) |
+| `event-metrics-user-enabled` | `KC_EVENT_METRICS_USER_ENABLED` | Create metrics based on user events[^4].| `true`, `false` (default) |
+{: .table .border-dark }
+
+
+#### Prometheus Integration
+
+`ServiceMonitoring`, Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from Keycloak.
+
+Apply following manifest:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keycloak-service-monitor
+  namespace: keycloak
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: management
+  selector:
+    matchLabels:
+      app: keycloak
+```
+
+
+#### Grafana dashboards
+
+Keycloak provides Grafana Dashboards to display metrics collected by Prometheus. They are available at [keycloak/keycloak-grafana-dashboard](https://github.com/keycloak/keycloak-grafana-dashboard) Github repo.
+
+
+There are 2 Dashboards available:
+
+-   [Keycloak capacity planning dashboard](https://github.com/keycloak/keycloak-grafana-dashboard/blob/main/dashboards/keycloak-capacity-planning-dashboard.json)
+-   [Keycloak troubleshooting dashboard](https://github.com/keycloak/keycloak-grafana-dashboard/blob/main/dashboards/keycloak-troubleshooting-dashboard.json)
+
+Find further details in [Keycloak documentation: Observability Grafana Dashboards](https://www.keycloak.org/observability/grafana-dashboards)
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file, so a Keycloak's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+
+```yaml
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: keycloak
+        orgId: 1
+        folder: Keycloak
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/keycloak-folder
+# Dashboards
+dashboards:
+  keycloak:
+    keycloak-planning:
+      url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-capacity-planning-dashboard.json
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    keycloak-troubleshooting:
+      url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-troubleshooting-dashboard.json
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
 
 
 ## Proxy Oauth 2.0 
@@ -1215,3 +1329,4 @@ Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster.
 [^1]: [https://www.keycloak.org/server/bootstrap-admin-recovery](https://www.keycloak.org/server/bootstrap-admin-recovery)
 [^2]: [https://www.keycloak.org/operator/advanced-configuration#_additional_options](https://www.keycloak.org/operator/advanced-configuration#_additional_options)
 [^3]: [https://www.keycloak.org/operator/realm-import](https://www.keycloak.org/operator/realm-import)
+[^4]: [https://www.keycloak.org/observability/event-metrics](https://www.keycloak.org/observability/event-metrics)

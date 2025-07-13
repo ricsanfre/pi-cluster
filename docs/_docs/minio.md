@@ -251,7 +251,7 @@ For details see [Minio's documentation: "Collect MinIO Metrics Using Prometheus"
 
 By default, MinIO requires authentication to scrape the metrics endpoints, but Vanilla Minio Helm Chart, set `MINIO_PROMETHEUS_AUTH_TYPE` environment variable to `public`, and authentication is not needed.
 
-`ServiceMonitoring`, Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from cert-manager
+`ServiceMonitoring`, Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from Minio
 
 ```yaml
 # Service Monitor
