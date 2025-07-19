@@ -17,5 +17,5 @@ grafana.ini:
     auth_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/auth
     token_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/token
     api_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/userinfo
-    role_attribute_path: contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
+    role_attribute_path: contains(resource_access.grafana.roles[*], 'admin') && 'Admin' || contains(resource_access.grafana.roles[*], 'editor') && 'Editor' || (contains(resource_access.grafana.roles[*], 'viewer') && 'Viewer')
     signout_redirect_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fmonitoring.${CLUSTER_DOMAIN}%2Fgrafana%2Flogin%2Fgeneric_oauth
