@@ -57,7 +57,7 @@ datasources:
       uid: tempo
       type: tempo
       access: proxy
-      url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3100
+      url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3200
 ##
 ## Provisioning sidecars
 ##
