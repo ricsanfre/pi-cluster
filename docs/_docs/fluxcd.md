@@ -2,7 +2,7 @@
 title: GitOps (FluxCD)
 permalink: /docs/fluxcd/
 description: How to apply GitOps to Pi cluster configuration using FluxCD.
-last_modified_at: "20-02-2025"
+last_modified_at: "19-07-2025"
 ---
 
 ## What is Flux
@@ -198,7 +198,44 @@ kustomize.toolkit.fluxcd.io/prune: disabled
 
 #### Health checks
 
+Each `Kustomization` resource can be configured to perform health checks on the reconciled resources. This will be used to determine the rollout status of the deployed workloads. In addition it can check the ready status of custom resources.
+
+To enable health checking, set `spec.wait` to true (default value is false). This will enable the health check for all reconciled resources. Also `spec.timeout` (default 5 minutes) can be adjusted to configure a timeout for the health check operation
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-kustomization
+spec:
+  interval: 30m
+  targetNamespace: target-namespace
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/application/overlays/prod
+  prune: true
+  wait: true
+  timeout: 10m
+  retryInterval: 2m
+```
+
+With this configuration Kustomization controller will check the health of all reconciled resources (`wait: true`) and it will wait 10 minutes.
+
+`.spec.timeout` is an optional field to specify a timeout duration for any operation like building, applying, health checking, etc. performed during the reconciliation process. Also `.spec.retryInterval` can be set to retry any failed reconciliation.
+
+`.spec.retryInterval` is an optional field to specify the interval at which to retry a failed reconciliation. `restryInterval: 2m` means that Kustomization Controller will retry the reconciliation after 2 min if it detects any failure (failure during the deployment or while performing the health check)
+
+Alternatively, the list of reconciled resources to perform the health check can be limited using `spec.healthChecks`
+
 `.spec.healthChecks` is an optional list used to refer to resources for which the controller will perform health checks used to determine the roll-out status of [deployed workloads](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#deployment-status) and the `Ready` status of custom resources.
+
+{{site.data.alerts.note}}
+
+If `spec.wait` is set, `spec.healthChecks` field is ignored.
+
+{{site.data.alerts.end}}
+
 
 A health check entry can reference one of the following types:
 
@@ -206,11 +243,136 @@ A health check entry can reference one of the following types:
 - Flux kinds: HelmRelease, HelmRepository, GitRepository, etc.
 - Custom resources that are compatible with [kstatus](https://github.com/kubernetes-sigs/cli-utils/tree/master/pkg/kstatus)
 
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager
+spec:
+  interval: 30m
+  targetNamespace: cert-manager
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/cert-manager/overlays/prod
+  prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cert-manager
+      namespace: cert-manager
+```
+
+Kustomization controller will perform health check onlyt for `HelmRelease` resource named `cert-manager` in namespace `cert-manager`.
+
+##### Health Checks and CRDs
+
+For Custom Resource Definitions that are not compatible with [kstatus](https://github.com/kubernetes-sigs/cli-utils/tree/master/pkg/kstatus), [Common Expression Language (CEL)](https://cel.dev/) expressions can be used to define custom logic for performing health checks.
+
+`.spec.healthCheckExprs` has to be defined containing a list of resources to be checked and the CEL expressions that need to be used.
+
+The following attributes need to be specified per resource:
+-   `apiVersion`: The API version of the custom resource. Required.
+-   `kind`: The kind of the custom resource. Required.
+-   `current`: A required CEL expression that returns true if the resource is ready.
+-   `inProgress`: An optional CEL expression that returns true if the resource is still being reconciled.
+-   `failed`: An optional CEL expression that returns true if the resource failed to reconcile. This enable a early failure detection.
+
+
+```yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: cert-manager
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cert-manager-app
+    - name: cert-manager-webhook-ionos
+    - name: external-secrets-config
+  path: ./kubernetes/platform/cert-manager/config/overlays/prod
+  prune: true
+  wait: true
+  timeout: 15m
+  healthCheckExprs:
+    - apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+```
+
+In this case Cert-manager's `ClusterIssuer` custom resource does not follow `kstatus` and to perform the health check of the resource, we look for specific value in its status conditions.
+
+```shell
+kubectl get ClusterIssuer ca-issuer -o jsonpath={.status.conditions} | jq .
+```
+
+```json
+[
+  {
+    "lastTransitionTime": "2025-07-12T11:12:11Z",
+    "message": "Signing CA verified",
+    "observedGeneration": 1,
+    "reason": "KeyPairVerified",
+    "status": "True",
+    "type": "Ready"
+  }
+]
+
+```
+
 #### Dependencies
 `.spec.dependsOn` is an optional list used to refer to other Kustomization objects that the Kustomization depends on.
 The Kustomization is only applied after the referred Kustomizations are ready, i.e. have the `Ready` condition marked as `True`. The readiness state of a Kustomization is determined by its last applied status condition.
 
 It can be used jointly with Health checks in the depended objects to control when to start deployment of a specific Kustomization.
+
+```yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: cert-manager
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/cert-manager/app/overlays/prod
+  prune: true
+  wait: true
+  timeout: 5m
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-webhook-ionos
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: cert-manager
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cert-manager-app
+  path: ./kubernetes/platform/cert-manager/webhook-ionos/overlays/prod
+  prune: true
+  wait: true
+  timeout: 5m
+```
+
+In the previous example, `cert-manager-webhook-ionos` application is not deployed till all resources from `cert-manager-app` are ready.
+
 
 {{site.data.alerts.note}}
 Dependencies can be defined only across Kustomization resources. It is not possible to establish dependencies on HelmRelease resources.
@@ -1203,6 +1365,14 @@ Variable substitution can be disabled for certain resources by either labelling 
 kustomize.toolkit.fluxcd.io/substitute: disabled
 ```
 
+## Flux and Kubernetes Jobs
+
+Additional considerations have to be made when managing Kubernetes Jobs with Flux.
+
+By default, if you were to have Flux reconcile a Job resource, it would apply it once to the cluster, the Job would create a Pod that can either error or run to completion. Attempting to update the Job manifest after it has been applied to the cluster will not be allowed, as changes to the Job `spec.Completions`, `spec.Selector` and `spec.Template` are not permitted by the Kubernetes API. To be able to update a Kubernetes Job, the Job has to be recreated by first being removed and then reapplied to the cluster.[^3]
+
+Job resources annotated with `kustomize.toolkit.fluxcd.io/force: enabled` will be automatically recreated by FluxCD whenever there are changes to be applied.
+
 
 ---
 
@@ -1214,3 +1384,5 @@ kustomize.toolkit.fluxcd.io/substitute: disabled
     [**Managing Kubernetes the GitOps way with Flux by Jeff French**](https://www.youtube.com/embed/1DuxTlvmaNM)
 	
     [Reference Repo](https://github.com/moonswitch-workshops/terraform-eks-flux)
+
+[^3]: [Flux documentation: Running Jobs](https://fluxcd.io/flux/use-cases/running-jobs/)
