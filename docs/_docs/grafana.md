@@ -297,7 +297,7 @@ datasources:
       uid: tempo
       type: tempo
       access: proxy
-      url: http://tempo-query-frontend.tempo.svc.cluster.local:3100
+      url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
 ```
 
 #### Dynamic Provisioning of DataSources 
