@@ -494,14 +494,14 @@ mirrors:  "*":
 If no registries are enabled for mirroring on a node, that node does not participate in the distributed registry in any capacity.
 
 ### Verifying Spegel is working
+
 Verify if Spegel is working in K3s
 
 Check exposed metrics:
 
 ```shell
-kubectl get --raw /api/v1/nodes/<NODENAME>/proxy/metrics | grep -F 'spegel'
+kubectl get --raw /api/v1/nodes/${NODENAME}/proxy/metrics | grep -F 'spegel'
 ```
-
 
 ## K3S Packaged Components
 

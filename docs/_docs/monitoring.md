@@ -1292,6 +1292,18 @@ In case etcd is used as cluster database, the following argument has to be provi
 --etcd-expose-metrics=true
 ```
 
+#### Spegel Metrics
+
+If Spegel add-on is configured, its metrics are automatically exposed via all K3s metrics endpoint. The Spegel metrics are mixed in with the rest of the metrics, which are exposed via all metrics endpoints due to how K3s runs all the Kubernetes components in a single process. 
+
+Spegel metrics can be scrapped from kubelet metrics port which is the one used to avoid K3s metrics duplication collection. See section below.
+
+{{site.data.alerts.note}}
+Spegel provides a Grafana dashboard in json format available in Spegel github repo:[https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json](https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json)
+
+{{site.data.alerts.end}}
+
+
 ### K3S duplicate metrics issue
 
 K3S distribution has a special behavior related to metrics exposure.
