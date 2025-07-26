@@ -146,6 +146,9 @@ dashboards:
     elasticsearch:
       url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/elasticsearch-mixin/compiled/dashboards/cluster.json
       datasource: Prometheus
+    spegel:
+      url: https://raw.githubusercontent.com/spegel-org/spegel/refs/heads/main/charts/spegel/monitoring/grafana-dashboard.json
+      datasource: Prometheus
   istio:
     istio-control-plane:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
