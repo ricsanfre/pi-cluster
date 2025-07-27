@@ -496,7 +496,7 @@ Make accesible Kibana UI from outside the cluster through Ingress Controller
 
 {{site.data.alerts.note}}
 
-This configuration must be done once data from fluentd has been inserted in ES: A index (`fluentd-<date>`) containing  data has been created.
+This configuration must be done once data from fluentd has been inserted in ES: A index (`fluentd-*`) containing  data has been created.
 
 {{site.data.alerts.end}}
 
@@ -515,6 +515,101 @@ This configuration must be done once data from fluentd has been inserted in ES: 
 -   Step 4: Set index pattern to fluentd-* and timestamp field to @timestamp and click on "Create Index" 
 
     ![Kibana-setup-3](/assets/img/kibana-setup-3.png)
+
+#### Automation using API
+
+Kibana's dataview can be automatically creatred using [Kibana's API DataView endpoint](https://www.elastic.co/guide/en/kibana/current/data-views-api-create.html)).
+
+A Kubernetes Job can be created to automatically invoke API to create the required API.
+
+The following configMap contains two scripts to be executed by the Job:
+
+-  `wait-for-kibana.sh`: it test the connection to Kibana, and wait till Kibana is available
+-  `create-data-view.sh`: Create a Dataview using Kibana API.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-config-data
+data:
+  wait-for-kibana.sh: |
+    #!/bin/sh
+    # Wait for Kibana to be available & healthy
+    echo "Testing connection to Kibana"
+    until $(curl -k -X GET http://$KIBANA_URL:$KIBANA_PORT/_cluster/health); do sleep 5; done
+    until [ "$(curl -k -X GET http://$KIBANA_URL:$KIBANA_PORT/_cluster/health | wc -l)" == "0" ]
+    do sleep 5
+    done
+
+  create-data-view.sh: |
+    #!/bin/sh
+    #Import data view
+    echo "Importing data_view..."
+    curl -u elastic:$ELASTICSEARCH_PASSWORD \
+    -X POST http://$KIBANA_URL:$KIBANA_PORT/api/data_views/data_view \
+    -H 'Content-Type: application/json; Elastic-Api-Version=2023-10-31' \
+    -H 'kbn-xsrf: string' \
+    -d '
+    {
+      "data_view": {
+        "name": "fluentd",
+        "title": "fluentd-*",
+        "timeFieldName": "@timestamp"
+      }
+    }
+    '
+```
+
+The Job is the following:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kibana-config-job
+spec:
+  parallelism: 1
+  completions: 1
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-kibana
+          image: alpine/curl:latest
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: KIBANA_URL
+            value: efk-kb-http
+          - name: KIBANA_PORT
+            value: "5601"
+          command: ["/bin/sh","/kibana/wait-for-kibana.sh"]
+          volumeMounts:
+          - name: kibana-config-data
+            mountPath: /kibana/
+      containers:
+        - name: kibana-config-job
+          image: alpine/curl:latest
+          env:
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: efk-es-elastic-user
+                  key: elastic
+            - name: KIBANA_URL
+              value: efk-kb-http
+            - name: KIBANA_PORT
+              value: "5601"
+          command: ["/bin/sh","/kibana/create-data-view.sh"]
+          volumeMounts:
+          - name: kibana-config-data
+            mountPath: /kibana/
+      volumes:
+      - name: kibana-config-data
+        configMap:
+          name: kibana-config-data
+          defaultMode: 0777
+```
 
 ## Observability
 
