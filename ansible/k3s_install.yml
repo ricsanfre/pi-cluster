@@ -3,7 +3,7 @@
 - name: Install load balancer
   hosts: haproxy
   gather_facts: true
-  tags: [install]
+  tags: [haproxy, install]
   become: true
   roles:
     - role: haproxy

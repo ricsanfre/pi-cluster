@@ -1,0 +1,9 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: haproxy-exporter
+spec:
+  staticConfigs:
+    - targets:
+        - node1.${CLUSTER_DOMAIN}:8405
+  metricsPath: /metrics
