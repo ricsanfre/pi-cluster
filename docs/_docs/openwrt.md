@@ -146,7 +146,7 @@ ssh root@10.0.0.1 -i <ssh_private_key_file>
 
 - Go to System -> Administrator
 - Select "SSH Access" tab
-  - Unchek "Password Authentication" and "Allows root login with password"
+  - Uncheck "Password Authentication" and "Allows root login with password"
 
   ![openwrt-ssh-disable-password-access](/assets/img/openwrt-ssh-disable-password-access.png)
 
