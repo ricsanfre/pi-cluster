@@ -11,7 +11,7 @@ RUN apt-get update -qq && \
 
 # Intall basic Python packages
 RUN pip3 install --upgrade pip setuptools
-RUN pip3 install ansible-core ansible-runner
+# RUN pip3 install ansible-core ansible-runner
 
 ADD build /build
 WORKDIR /build
