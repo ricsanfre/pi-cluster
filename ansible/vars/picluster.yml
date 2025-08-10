@@ -300,6 +300,13 @@ policies:
         capabilities = [ "read" ]
       }
 
+# Enable Prometheus integration
+vault_custom_configuration: |
+  telemetry {
+    disable_hostname = true
+    prometheus_retention_time = "12h"
+  }
+
 #########################
 # Velero  Configuration #
 #########################
