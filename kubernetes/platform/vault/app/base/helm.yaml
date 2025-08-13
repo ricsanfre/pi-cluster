@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vault
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: hashicorp/vault
+      version: 0.30.1
+      sourceRef:
+        kind: HelmRepository
+        name: hashicorp
+        namespace: flux-system
+  releaseName: vault
+  targetNamespace: vault
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: vault-helm-values
+    valuesKey: base-values.yaml

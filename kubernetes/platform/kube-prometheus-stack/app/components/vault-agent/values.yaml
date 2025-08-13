@@ -1,0 +1,11 @@
+# kube-prom-stack helm values (vault-agent)
+prometheus:
+  prometheusSpec:
+    podMetadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-init-first: "true"
+        vault.hashicorp.com/agent-inject-token: "true"
+        vault.hashicorp.com/role: "prometheus"
+        # Run agent as group 2000, same group used by Prometheus process. Grant read access to token file.
+        vault.hashicorp.com/agent-run-as-group: "2000"

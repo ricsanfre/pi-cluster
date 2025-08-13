@@ -26,4 +26,5 @@ resources:
   - oauth2-proxy-app.yaml
   - system-upgrade-app.yaml
   - tempo-app.yaml
+  - vault-app.yaml
   - velero-app.yaml
