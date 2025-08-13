@@ -55,15 +55,18 @@
         overlay: "prod"
       when: overlay is undefined
 
-    - name: Install cilium and coreDNS
-      become: false
-      ansible.builtin.shell: |
-        set -o pipefail
-        helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff
-      args:
-        executable: /bin/bash
-      register: output
-      changed_when: true
+    # - name: Install cilium and coreDNS
+    #   become: false
+    #   ansible.builtin.shell: |
+    #     set -o pipefail
+    #     helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff --concurrency 1
+    #   args:
+    #     executable: /bin/bash
+    #   register: output
+    #   changed_when: true
+
+    - name: Install Cilium CNI and CoreDNS
+      ansible.builtin.include_tasks: tasks/install_cilium_coredns.yaml
 
     - name: Config Cilium CNI
       ansible.builtin.include_tasks: tasks/cilium_config.yml
