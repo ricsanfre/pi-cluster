@@ -13,20 +13,21 @@ spec:
     port: 8200
     protocol: TCP
     targetPort: 8200
-  type: ClusterIP
+  type: ExternalName
+  externalName: vault.${CLUSTER_DOMAIN}
 ---
-# Endpoint for the headless service without selector
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: vault-ext-service
-subsets:
-- addresses:
-  - ip: 10.0.0.11
-  ports:
-  - name: vaultport
-    port: 8200
-    protocol: TCP
+# # Endpoint for the headless service without selector
+# apiVersion: v1
+# kind: Endpoints
+# metadata:
+#   name: vault-ext-service
+# subsets:
+# - addresses:
+#   - ip: 10.0.0.11
+#   ports:
+#   - name: vaultport
+#     port: 8200
+#     protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
