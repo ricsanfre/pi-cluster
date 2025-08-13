@@ -30,9 +30,9 @@ roles:
     version: 2.1.2
 collections:
   - name: community.general
-    version: 11.1.2
+    version: 11.2.0
   - name: kubernetes.core
-    version: 6.0.0
+    version: 6.1.0
   - name: community.hashi_vault
     version: 7.0.0
   - name: ansible.posix
