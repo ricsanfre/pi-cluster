@@ -85,3 +85,36 @@
       - 200
       - 204
   delegate_to: node1
+
+- name: Create Prometheus Policy
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/sys/policy/prometheus-monitoring"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+    body:
+      policy: |
+        path "/sys/metrics" {
+          capabilities = ["read", "list"]
+        }
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  delegate_to: node1
+
+- name: Create Prometheus role
+  ansible.builtin.uri:
+    url: "https://{{ vault_dns }}:8200/v1/auth/kubernetes/role/prometheus"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+    body:
+      bound_service_account_names: prometheus-stack-prometheus
+      bound_service_account_namespaces: kube-prom-stack
+      policies: ["default", "prometheus-monitoring"]
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  delegate_to: node1

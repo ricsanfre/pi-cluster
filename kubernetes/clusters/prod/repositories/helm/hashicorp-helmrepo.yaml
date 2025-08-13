@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: hashicorp
+  namespace: flux-system
+spec:
+  url: https://helm.releases.hashicorp.com
+  interval: 1h

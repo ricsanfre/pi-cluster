@@ -11,6 +11,7 @@ resources:
   - external-secrets-helmrepo.yaml
   - fluent-helmrepo.yaml
   - grafana-helmrepo.yaml
+  - hashicorp-helmrepo.yaml
   - ingress-nginx-helmrepo.yaml
   - istio-helmrepo.yaml
   - jetstack-helmrepo.yaml
