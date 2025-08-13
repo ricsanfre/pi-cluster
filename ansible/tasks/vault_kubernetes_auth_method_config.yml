@@ -110,7 +110,7 @@
     headers:
       X-Vault-Token: "{{ vault_token }}"
     body:
-      bound_service_account_names: prometheus-stack-prometheus
+      bound_service_account_names: kube-prometheus-stack-prometheus
       bound_service_account_namespaces: kube-prom-stack
       policies: ["default", "prometheus-monitoring"]
     body_format: json
