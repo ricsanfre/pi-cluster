@@ -1,0 +1,49 @@
+---
+# - name: Add Prometheus Community Helm repo
+#   kubernetes.core.helm_repository:
+#     name: prometheus-community
+#     repo_url: https://prometheus-community.github.io/helm-charts
+
+# - name: Add Cilium Helm repo
+#   kubernetes.core.helm_repository:
+#     name: cilium
+#     repo_url: https://helm.cilium.io
+
+# - name: Add CoreDNS Helm repo
+#   kubernetes.core.helm_repository:
+#     name: coredns
+#     repo_url: https://coredns.github.io/helm
+
+- name: Deploy Prometheus Operator CRDs
+  kubernetes.core.helm:
+    name: prometheus-operator-crds
+    release_namespace: kube-system
+    chart_ref: prometheus-operator-crds
+    chart_repo_url: https://prometheus-community.github.io/helm-charts
+    chart_version: 21.0.0
+    wait: true
+
+- name: Deploy Cilium Helm Chart
+  kubernetes.core.helm:
+    name: cilium
+    release_namespace: kube-system
+    chart_ref: cilium
+    chart_repo_url: https://helm.cilium.io
+    chart_version: 1.17.6
+    values_files:
+      - ../../kubernetes/platform/cilium/app/base/values.yaml
+      - ../../kubernetes/platform/cilium/app/components/istio-config/values.yaml
+      - ../../kubernetes/platform/cilium/app/overlays/prod/values.yaml
+    wait: true
+    wait_timeout: 900s
+
+- name: Deploy Core DNS
+  kubernetes.core.helm:
+    name: coredns
+    chart_ref: coredns
+    chart_repo_url: https://coredns.github.io/helm
+    chart_version: 1.43.0
+    release_namespace: kube-system
+    values_files:
+      - ../../kubernetes/platform/coredns/app/base/values.yaml
+    wait: true

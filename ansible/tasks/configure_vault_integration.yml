@@ -11,15 +11,16 @@
 #   register: output
 #   changed_when: true
 
-- name: Add Hashicorp Helm repo
-  kubernetes.core.helm_repository:
-    name: hashicorp
-    repo_url: https://helm.releases.hashicorp.com
+# - name: Add Hashicorp Helm repo
+#   kubernetes.core.helm_repository:
+#     name: hashicorp
+#     repo_url: https://helm.releases.hashicorp.com
 
 - name: Deploy Vault
   kubernetes.core.helm:
     name: vault
-    chart_ref: hashicorp/vault
+    chart_ref: vault
+    chart_repo_url: https://helm.releases.hashicorp.com
     chart_version: 0.30.1
     release_namespace: vault
     create_namespace: true
@@ -32,6 +33,7 @@
 
 - name: Get Token review
   ansible.builtin.shell: |
+    set -o pipefail
     KUBERNETES_SA_SECRET_NAME=$(kubectl get secrets --output=json -n vault | jq -r '.items[].metadata | select(.name|startswith("vault-auth")).name')
     TOKEN_REVIEW_JWT=$(kubectl get secret $KUBERNETES_SA_SECRET_NAME -n vault -o jsonpath='{.data.token}' | base64 --decode)
     echo $TOKEN_REVIEW_JWT
@@ -44,6 +46,7 @@
 
 - name: Get Kubernetes CA cert
   ansible.builtin.shell: |
+    set -o pipefail
     KUBERNETES_CA_CERT=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' \
       | base64 --decode | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
     echo $KUBERNETES_CA_CERT
