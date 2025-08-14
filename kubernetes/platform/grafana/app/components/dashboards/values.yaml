@@ -156,6 +156,9 @@ dashboards:
       revision: 11
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
+    vault:
+      url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
+      datasource: Prometheus
   istio:
     istio-control-plane:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
