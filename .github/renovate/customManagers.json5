@@ -36,12 +36,12 @@
     },
     {
       "customType": "regex",
-      "description": ["Process ansible kubernetes helm chart oci repo"],
+      "description": ["Process ansible kubernetes helm chart repo"],
       "fileMatch": [
         "(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$"
       ],
       "matchStrings": [
-        "name:\\s+(?<depName>.*?)\\s+chart_ref:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\"(?<currentValue>.*)\""
+        "chart_ref:\\s+(?<depName>.*?)\\s+chart_repo_url:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\"(?<currentValue>.*)\""
       ],
       "datasourceTemplate": "helm",
       "versioningTemplate": "helm"
