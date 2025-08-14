@@ -17,7 +17,7 @@ releases:
   - name: prometheus-operator-crds
     namespace: kube-system
     chart: prometheus-community/prometheus-operator-crds
-    version: 21.0.0
+    version: 22.0.2
   - name: cilium
     namespace: kube-system
     chart: cilium/cilium
