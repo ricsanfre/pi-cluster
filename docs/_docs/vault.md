@@ -2,7 +2,7 @@
 title: Secret Management (Vault)
 permalink: /docs/vault/
 description: How to deploy Hashicorp Vault as a Secret Manager for our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "26-06-2025"
+last_modified_at: "14-08-2025"
 ---
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
@@ -620,11 +620,20 @@ Testing policies:
   user        user1
   ```
 
-### Kubernetes Auth Method
+
+###  External Vault - Kubernetes Integration
+
+Using Vault Agent Injector and Vault CSI Provider are two different ways to make secrets available to Pods running in a Kubernetes Cluster. See details in https://developer.hashicorp.com/vault/docs/deploy/kubernetes/injector-csi. This two components can be installed using Vault Helm chart. Using Vault helm chart, a Vault server running as a Kubernetes service can be deployed or only Vault Agent Injector and CSI Provider can be deployed using a external Vault Server.
+
+As an alternative External Secrets Operator can be used to automatically synchronize Vault secrets and Kubernetes Secrets.
+
+In both cases, [Vault kubernetes auth method](https://developer.hashicorp.com/vault/docs/auth/kubernetes) need to be configured so Kubernetes Service Accounts can be used to authenticate against Vault.
+
+For details about configuring External Vault see the guide [Integrate Kubernetes with an external Vault cluster](https://developer.hashicorp.com/vault/tutorials/kubernetes-introduction/kubernetes-external-vault)
+
+#### Configure Kubernetes Auth Method (Not using Vault Helm Chart)
 
 Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/docs/auth/kubernetes) to authenticate with Vault using a Kubernetes Service Account Token. This method of authentication makes it easy to introduce a Vault token into a Kubernetes Pod.
-
-
 
 - Step 1. Create `vault` namespace
 
@@ -728,6 +737,218 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
 
   curl --cacert /etc/vault/tls/vault_ca.pem --header "X-Vault-Token:$VAULT_TOKEN" --request POST --data '{"kubernetes_host": "'"$KUBERNETES_HOST"'", "kubernetes_ca_cert":"'"$KUBERNETES_CA_CERT"'", "token_reviewer_jwt":"'"$TOKEN_REVIEW_JWT"'"}' https://${VAULT_SERVER}:8200/v1/auth/kubernetes/config
   ```
+
+#### Configure Kubernetes Auth Method (Using Vault Helm Chart)
+
+The Vault Helm chart is able to install only the Vault Agent Injector service.
+
+-   Step 1: Add the HashiCorp Helm repository.
+
+    ```shell
+    $ helm repo add hashicorp https://helm.releases.hashicorp.com
+    "hashicorp" has been added to your repositories
+    ```
+
+-   Step 2: Update all the repositories to ensure `helm` is aware of the latest versions.
+
+    ```shell
+    $ helm repo update
+    Hang tight while we grab the latest from your chart repositories...
+    ...Successfully got an update from the "hashicorp" chart repository
+    Update Complete. ⎈Happy Helming!⎈
+    ```
+
+-   Step 3: Create vault namespace
+    ```shell
+    kubectl create namespace vault
+    ```
+
+-   Step 4: Create helm chart values file: `vault-values.yaml`
+    ```yaml
+    global:
+      # External vault server address for the injector and CSI provider to use.
+      # Setting this will disable deployment of a vault server.
+      externalVaultAddr: "${VAULT_ADDR}"
+    # Create Service Account an long-lived token for enabling Kubernetes Auth Method
+    server:
+      # authDelegator enables a cluster role binding to be attached to the service
+      # account.  This cluster role binding can be used to setup Kubernetes auth
+      # method. See https://developer.hashicorp.com/vault/docs/auth/kubernetes
+      authDelegator:
+        enabled: true
+      serviceAccount:
+        # Specifies whether a service account should be created
+        create: true
+        # The name of the service account to use.
+        # If not set and create is true, a name is generated using the fullname template
+        name: vault-auth
+        # Create a Secret API object to store a non-expiring token for the service account.
+        # Prior to v1.24.0, Kubernetes used to generate this secret for each service account by default.
+        # Kubernetes now recommends using short-lived tokens from the TokenRequest API or projected volumes instead if possible.
+        # For more details, see https://kubernetes.io/docs/concepts/configuration/secret/#service-account-token-secrets
+        # serviceAccount.create must be equal to 'true' in order to use this feature.
+        createSecret: true
+    ```
+    {{site.data.alerts.note}}
+    Substitute variables in the above yaml (`${var}`) file before deploying helm chart.
+    -   Replace `${VAULT_ADDR}` by the URL of the external Vault (i.e: https://vault.mydomain.com:8200)
+    {{site.data.alerts.end}}
+
+    With this configuration service account (`vault-auth`) and its long-lived token is created. Also ClusterRoleBinding is created. Resources created in Steps 2 to 4 in the previous procedure ([[#Configure Kubernetes Auth Method (Not using Vault Helm Chart)]]) are automatically created by Helm Chart.
+
+-   Step 5: Install the latest version of the Vault server running in external mode.
+
+    ```shell
+    $ helm upgrade --install --namespace=vault vault hashicorp/vault -f vault-values.yam
+    ```
+
+-   Step 6: Check Vault Agent injector has started
+    The Vault Agent Injector pod is deployed in `vault` namespace.
+
+    ```shell
+    kubectl get pods -n vault
+    NAME                                    READY   STATUS    RESTARTS   AGE
+    vault-agent-injector-64b5d5dc99-ppz9k   1/1     Running   0          13m
+    ```
+
+-   Step 7: Configure Kubernetes Auth method in external Vault, following steps 5 to 8 of [[#Configure Kubernetes Auth Method (Not using Vault Helm Chart)]]
+
+### Observability
+
+#### Metrics
+
+Vault provides rich operational [telemetry metrics](https://developer.hashicorp.com/vault/docs/internals/telemetry) that you can consume with popular solutions for monitoring and alerting on key operational conditions.
+
+##### Prometheus Integration
+
+Vault can be configured to expose Metrics in Prometheus-compliant format:
+
+Following lines need to be added to Vault config file
+
+```hcl
+telemetry {
+  disable_hostname = true
+  prometheus_retention_time = "12h"
+}
+```
+
+Querying `/v1/sys/metrics` with one of the following headers:
+
+- [`Accept: prometheus/telemetry`](https://developer.hashicorp.com/vault/docs/configuration/telemetry#accept-prometheus-telemetry)
+- [`Accept: application/openmetrics-text`](https://developer.hashicorp.com/vault/docs/configuration/telemetry#accept-application-openmetrics-text)
+
+will return Prometheus formatted results.
+
+A Vault token is required with `capabilities = ["read", "list"]` to /v1/sys/metrics. The Prometheus `bearer_token` or `bearer_token_file` options must be added to the scrape job.
+
+Vault does not use the default Prometheus path, so Prometheus must be configured to scrape `v1/sys/metrics` instead of the default scrape path.
+
+Following `curl` command can be used for testing Prometheus endpoint.
+
+```shell
+curl -k -H "X-Vault-Token: $VAULT_TOKEN" -H "Accept: prometheus/telemetry" https://vault.homelab.ricsanfre.com:8200/v1/sys/metrics
+```
+
+Before using it, valid token need to be extracted
+
+```shell
+export VAULT_TOKEN=$(jq -r '.root_token' /etc/vault/unseal.json)
+```
+
+-   Step 1: Deploy Vault Agent Injestor using Vault Helm chart and configure Kubernetes Vault auth. See above section [Configure Kubernetes Auth Method using Vault Helm Chart](#configure-kubernetes-auth-method-using-vault-helm-chart)
+
+    This will deploy Vault Agent Injector in `vault` namespace, which will inject Vault Agent into Prometheus pod.
+
+-   Step 2: Creating Vault policy for Prometheus, granting access to metrics endpoint
+
+    ```shell
+    vault policy write prometheus-monitoring - << EOF
+        path "/sys/metrics" {
+          capabilities = ["read", "list"]
+        }
+    EOF
+    ```
+
+-   Step 3: Attach the policy to the existing `kube-prometheus-stack-prometheus` ServiceAccount used by the Prometheus pod
+
+    ```shell
+    vault write auth/kubernetes/role/prometheus \
+          bound_service_account_names=kube-prometheus-stack-prometheus \
+          bound_service_account_namespaces=kube-prom-stack \
+          policies="default,prometheus-monitoring" \
+          ttl="15m"
+    ```
+
+-   Step 4: Annotate Prometheus Pod, add following values to Kube-prom-stack, so Prometheus POD is automatically injected with Vault Agent
+
+    ```yaml
+    prometheus:
+      prometheusSpec:
+        podMetadata:
+          annotations:
+            vault.hashicorp.com/agent-inject: "true"
+            vault.hashicorp.com/agent-init-first: "true"
+            vault.hashicorp.com/agent-inject-token: "true"
+            vault.hashicorp.com/role: "prometheus"
+            # Using self-signed certificates, so we need to skip TLS verification
+            vault.hashicorp.com/tls-skip-verify: "true"
+            # Run agent as group 2000, same group used by Prometheus process. Grant read access to token file.
+            vault.hashicorp.com/agent-run-as-group: "2000"
+     ```
+
+    Prometheus POD have access to Vault Token at path `/vault/secrets/token` file.
+
+-   Step 5: Configure Prometheus monitoring to Scrape Vault using token. Add following to Kube-prom-stack helm chart values file:
+
+    ```
+    prometheus:
+      prometheusSpec:
+        additionalScrapeConfigs:
+        - job_name: vault
+          metrics_path: /v1/sys/metrics
+          params:
+            format: ['prometheus']
+          scheme: https
+          authorization:
+            credentials_file: /vault/secrets/token
+          static_configs:
+          - targets: [vault.domain.com:8200]
+    ```
+
+    Prometheus Operator's ScrapeConfig CRD does not support to provide the credentials using a file (`credentials_file` option is not supported), so vault scrape configuration is hardcoded into Prometheus CRD as `additionalScrapeConfigs`
+
+##### Grafana Dashboards
+
+Vault dashboard sample can be downloaded from [Grafana jsonnet libraries repo: vault-mixin](https://github.com/grafana/jsonnet-libs/blob/master/vault-mixin/dashboards/vault.json).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    vault:
+      url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
+      datasource: Prometheus
+```
 
 ## External Secrets Operator installation
 
