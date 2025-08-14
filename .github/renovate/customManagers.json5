@@ -41,7 +41,8 @@
         "(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$"
       ],
       "matchStrings": [
-        "chart_ref:\\s+(?<depName>.*?)\\s+chart_repo_url:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\(?<currentValue>.*)"
+        "chart_ref:\\s+(?<depName>.*?)\\s+chart_repo_url:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\(?<currentValue>.*)",
+        "chart_ref: oci:\/\/(?<depName>.*?)\\s+chart_version:\\s+\(?<currentValue>.*)"
       ],
       "datasourceTemplate": "helm",
     }
