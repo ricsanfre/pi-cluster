@@ -44,7 +44,6 @@
         "chart_ref:\\s+(?<depName>.*?)\\s+chart_repo_url:\\s+(?<registryUrl>.*?)\\s+chart_version:\\s+\"(?<currentValue>.*)\""
       ],
       "datasourceTemplate": "helm",
-      "versioningTemplate": "helm"
     }
   ]
 }
