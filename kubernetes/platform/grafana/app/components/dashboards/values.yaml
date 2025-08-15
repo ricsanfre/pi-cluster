@@ -159,6 +159,13 @@ dashboards:
     vault:
       url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
       datasource: Prometheus
+    bind-exporter:
+      # https://grafana.com/grafana/dashboards/12309-bind9-exporter-dns/
+      # renovate: depName="Bind9 Exporter Dashboard"
+      gnetId: 12309
+      revision: 5
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
   istio:
     istio-control-plane:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
