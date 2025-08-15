@@ -5,5 +5,5 @@ metadata:
 spec:
   staticConfigs:
     - targets:
-        - dns.${CLUSTER_DOMAIN}:9119
+        - ns.${CLUSTER_DOMAIN}:9119
   metricsPath: /metrics
