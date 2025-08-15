@@ -4,6 +4,7 @@ namespace: monitoring
 
 resources:
 - external-nodes-scrapeconfig.yaml
+- external-bind-scrapeconfig.yaml
 - external-haproxy-scrapeconfig.yaml
 #- external-vault-monitoring.yaml
 - minio-bearer-externalsecret.yaml

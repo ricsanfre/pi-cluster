@@ -1,0 +1,9 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: bind-exporter
+spec:
+  staticConfigs:
+    - targets:
+        - dns.${CLUSTER_DOMAIN}:9119
+  metricsPath: /metrics
