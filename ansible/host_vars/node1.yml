@@ -10,6 +10,8 @@ bind9_forward: false
 bind9_recursor: false
 bind9_forward_servers: []
 bind9_generate_ddns_key: true
+bind9_named_statistics_channel_enable: true
+bind9_named_statistics_port: 8053
 bind9_zones:
   - name: "{{ dns_domain }}"
     type: primary

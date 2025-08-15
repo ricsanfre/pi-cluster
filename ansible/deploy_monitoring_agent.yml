@@ -3,7 +3,6 @@
 - name: Deploy fluentbit and node exporter agents on external nodes (node1)
   hosts: node1
   gather_facts: true
-  tags: [logging]
   become: true
   pre_tasks:
     # Include vault variables
@@ -14,6 +13,26 @@
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
       tags: ["always"]
+  collections:
+    - prometheus.prometheus
   roles:
     - role: ricsanfre.fluentbit
-    - role: geerlingguy.node_exporter
+    - role: prometheus.prometheus.node_exporter
+# Deploy bind exporter to get bind9 metrics
+- name: Deploy bind exporter agents on dns server (node1)
+  hosts: dns
+  gather_facts: true
+  become: true
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: "vars/vault.yml"
+      tags: ["always"]
+    # Include picluster variables
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+      tags: ["always"]
+  collections:
+    - prometheus.prometheus
+  roles:
+    - role: prometheus.prometheus.bind_exporter
