@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "21-02-2025"
+last_modified_at: "15-08-2025"
 ---
 
 
@@ -262,6 +262,8 @@ To install and configure HAProxy:
       bind *:6443
       mode tcp
       option tcplog
+      tcp-request inspect-delay 5s
+      tcp-request content accept if { req.ssl_hello_type 1 }
       default_backend k8s_controlplane
 
   #---------------------------------------------------------------------
@@ -272,15 +274,27 @@ To install and configure HAProxy:
       http-check expect status 200
       mode tcp
       option ssl-hello-chk
+      option tcp-check
+      default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
       balance     roundrobin
         server node2 10.0.0.12:6443 check
         server node3 10.0.0.13:6443 check
         server node4 10.0.0.14:6443 check
+  #---------------------------------------------------------------------
+  # Enable Prometheus metrics endpoint
+  #---------------------------------------------------------------------
+  frontend prometheus
+    bind *:8405
+    mode http
+    http-request use-service prometheus-exporter if { path /metrics }
+    no log
   ```
 
   With this configuration haproxy will balance requests to API server (TCP port 6443), following a round-robin balancing method, between the 3 master nodes configured.
 
-  IP address to be used for kubernetes API, will be gateway's IP address. 
+  IP address to be used for kubernetes API, will be gateway's IP address.
+
+  It also exposes a prometheus metrics endpoint on port 8405.
 
 - Step 3: Restart HAProxy
 

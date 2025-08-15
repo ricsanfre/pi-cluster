@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "23-06-2025"
+last_modified_at: "15-08-2025"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintained by the community.
@@ -1296,12 +1296,105 @@ In case etcd is used as cluster database, the following argument has to be provi
 
 If Spegel add-on is configured, its metrics are automatically exposed via all K3s metrics endpoint. The Spegel metrics are mixed in with the rest of the metrics, which are exposed via all metrics endpoints due to how K3s runs all the Kubernetes components in a single process. 
 
-Spegel metrics can be scrapped from kubelet metrics port which is the one used to avoid K3s metrics duplication collection. See section below.
+Spegel metrics are automatically recollected from kubelet metrics port. All K3s metrics are scrapped from kubelet metrics port to avoid K3s metrics duplication collection. See section below.
 
-{{site.data.alerts.note}}
 Spegel provides a Grafana dashboard in json format available in Spegel github repo:[https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json](https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json)
 
-{{site.data.alerts.end}}
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    spegel:
+      url: https://raw.githubusercontent.com/spegel-org/spegel/refs/heads/main/charts/spegel/monitoring/grafana-dashboard.json
+      datasource: Prometheus
+```
+
+
+#### HAProxy Metrics
+
+HAProxy exposes its metrics in `/metrics` endpoint, which is not enabled by default. To enable it, the following configuration needs to be added to the `haprox.cfg` file:
+
+```
+#---------------------------------------------------------------------
+# Enable Prometheus metrics endpoint
+#---------------------------------------------------------------------
+frontend prometheus
+  bind *:8405
+  mode http
+  http-request use-service prometheus-exporter if { path /metrics }
+  no log
+```
+
+Check out further details in [HAProxy Prometheus Metrics](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/alerts-and-monitoring/prometheus/) documentation.
+
+Kube-prometheus-stack can be configured to scrape HAproxy endpoint creating the following `ScrapeConfig` resource:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: haproxy-exporter
+spec:
+  staticConfigs:
+    - targets:
+        - node1.${CLUSTER_DOMAIN}:8405
+  metricsPath: /metrics
+```
+
+A Grafana dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 12693](https://grafana.com/grafana/dashboards/12693-haproxy/).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    haproxy:
+      # https://grafana.com/grafana/dashboards/12693-haproxy/
+      # renovate: depName="HAProxy Dashboard"
+      gnetId: 12693
+      revision: 11
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
 
 
 ### K3S duplicate metrics issue
