@@ -9,7 +9,7 @@ roles:
   - name: ricsanfre.dnsmasq
     version: v1.0.4
   - name: ricsanfre.bind9
-    version: v1.0.6
+    version: v1.0.7
   - name: ricsanfre.storage
     version: v1.0.0
   - name: ricsanfre.iscsi_target
