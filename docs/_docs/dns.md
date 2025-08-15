@@ -2,7 +2,7 @@
 title: DNS Homelab Architecture
 permalink: /docs/dns/
 description: DNS setup for homelab and Kubernetes cluster. 
-last_modified_at: "23-11-2024"
+last_modified_at: "15-08-2025"
 ---
 
 Split-horizon DNS architecture is used in my homelab so services can be accessed from my private network and also they can be accessed from external network.
@@ -246,6 +246,157 @@ Special symbols:
   `$TTL <default-ttl>`: This sets the default Time-To-Live (TTL) for subsequent records
   
 See further information about the Zone file structure in https://bind9.readthedocs.io/en/v9.18.30/chapter3.html#soa-rr
+
+### Observability
+
+#### Metrics
+
+The BIND 9 statistics can be retrieved from a running BIND 9 server via the HTTP protocol. BIND 9 has a tiny built-in web-server, which provides the statistics data in XML or JSON format.
+
+It is disabled by default but can be enabled easily with a single line of configuration. e.g.
+
+```
+statistics-channels {
+  inet 127.0.0.1 port 8053 allow { 127.0.0.1; };
+};
+```
+
+This enables metric port (TCP 8053) that is only accesible from localhost.
+Metrics are exposed in XML format. Prometheus bind exporter deployed in same node can be used to scrape these metrics and export them in Prometheus format.
+
+##### Bind Exporter installation
+
+[Bind Exporter](https://github.com/prometheus-community/bind_exporter) is a Prometheus exporter for Export BIND (named/dns) v9+ service metrics to Prometheus.
+
+Bind Exporter is deployed on same node as dns server, so it uses bind9 statistic channel to expose a Prometheus compliant metrics endpoint that can be used by Prometheus Server to collect metrics.
+
+The Prometheus Bind Exporter is a single static binary that can be installed via tarball that can be downloaded from [Prometheus download website](https://prometheus.io/download/#bind_exporter)
+
+-   Step 1: Add user for bind_exporter
+    ```
+    sudo useradd --no-create-home --shell /sbin/nologin bind_exporter
+    ```
+
+-   Step 2: Download tar file and untar it
+
+    ```shell
+    cd tmp
+    wget https://github.com/prometheus/bind_exporter/releases/download/v<VERSION>/bind_exporter-<VERSION>.linux-<ARCH>.tar.gz
+    tar -xvf bind_exporter-<VERSION>.linux-<ARCH>.tar.gz
+    ```
+
+    Where `<VERSION>` is the version of bind exporter to be installed and `<ARCH>` is the architecture of the system (i.e.: `amd64` for x86_64 systems).
+    ```
+
+-   Step 3: Copy bind_exporter binary to `/usr/local/bin`
+
+    ```shell
+    sudo cp /tmp/bind_exporter-<VERSION>.linux-<ARCH>/bind_exporter /usr/local/bin
+    ```
+
+-   Step 4: Create service file for systemd `/etc/systemd/system/bind_exporter.service`
+
+    ```
+    [Unit]
+    Description=Bind Exporter
+    Wants=network-online.target
+    After=network-online.target
+
+    [Service]
+    User=bind_exporter
+    Group=bind_exporter
+    Type=simple
+    ExecStart=/usr/local/bin/bind_exporter \
+        --bind.stats-url="http://localhost:8053/" \
+        --bind.timeout="10s" \
+        --bind.pid-file="/run/named/named.pid" \
+        --bind.stats-version=auto \
+        --web.listen-address=0.0.0.0:9119 \
+        --web.telemetry-path=/metrics
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+-   Step 4: Reload systemd daemon
+
+    ```shell
+    sudo systemctl daemon-reload
+    ```
+
+-   Step 5: Start and enable bind exporter service
+
+    ```shell
+    sudo systemctl enable bind_exporter
+    sudo systemctl start bind_exporter
+    ```
+
+-   Step 6: Check that bind_exporter has started
+
+    ```shell
+    sudo journalctl -f --unit bind_exporter
+    ```
+
+Bind Exporter installation and configuration can be automated with Ansible. Ansible role [**prometheus.bind-exporter**](https://github.com/prometheus-community/ansible/tree/main/roles/bind_exporter), which is part of Ansible Collection for Prometheus maintained by Prometehus Community, can be used to automate its deployment and configuration.
+
+##### Integration with Kube-Prom-Stack
+
+In case Prometheus server is deployed in Kuberentes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
+
+
+-   Create Prometheus Operator ScrapeConfig resources
+
+    ```yaml
+    apiVersion: monitoring.coreos.com/v1alpha1
+    kind: ScrapeConfig
+    metadata:
+      name: bind-exporter
+    spec:
+      staticConfigs:
+        - targets:
+            - ns.${CLUSTER_DOMAIN}:9119
+      metricsPath: /metrics
+    ```
+
+    Where `${CLUSTER_DOMAIN}` has to be replaced by the domain name used in the cluster. For example: `homelab.ricsanfre.com`. (i.e.: target = `ns.homelab.ricsanfre.com`).
+
+
+##### Grafana Dashboard
+
+Bind Exporter dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 12309](https://grafana.com/grafana/dashboards/12309).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    bind-exporter:
+      # https://grafana.com/grafana/dashboards/12309-bind9-exporter-dns/
+      # renovate: depName="Bind9 Exporter Dashboard"
+      gnetId: 12309
+      revision: 5
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
 
 
 ## DNS Resolver/Forwarder (Dnsmasq)
