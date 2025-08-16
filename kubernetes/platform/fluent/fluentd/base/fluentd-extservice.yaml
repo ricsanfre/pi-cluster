@@ -14,6 +14,10 @@ spec:
     port: 24224
     protocol: TCP
     targetPort: 24224
+  - name: syslog-ext
+    port: 5140
+    protocol: UDP
+    targetPort: 5140
   selector:
     app.kubernetes.io/instance: fluentd
     app.kubernetes.io/name: fluentd

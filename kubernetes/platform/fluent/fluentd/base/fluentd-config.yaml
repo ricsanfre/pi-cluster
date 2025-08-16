@@ -57,6 +57,19 @@ data:
         @type prometheus_output_monitor
         @id in_prometheus_output_monitor
     </source>
+    ## Enable syslog endpoint
+    <source>
+        @type syslog
+        @label @FORWARD
+        tag host
+        bind 0.0.0.0
+        port 5140
+        protocol_type udp
+        <parse>
+            message_format rfc5424
+        </parse>
+    <source>
+
   02_filters.conf: |-  
     ##
     ## Filters
