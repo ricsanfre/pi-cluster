@@ -68,7 +68,7 @@ data:
         <parse>
             message_format rfc5424
         </parse>
-    <source>
+    </source>
 
   02_filters.conf: |-  
     ##
