@@ -2,7 +2,7 @@
 title: Cluster Gateway (OpenWrt)
 permalink: /docs/openwrt/
 description: How to configure a router/firewall for our homelab Cluster, running OpenWRT OS and providing connectivity and basic networking services (DNS, DHCP, NTP). 
-last_modified_at: "16-01-2025"
+last_modified_at: "16-08-2025"
 ---
 
 To isolate my kubernetes cluster from my home network, a Router/Firewall running OpenWRT will be used, **gateway** node.
@@ -568,6 +568,160 @@ Configuration files can be edited:
 
 Upon changing a UCI configuration file, whether through a text editor or the command line, the services or executables that are affected must be (re)started (or, in some cases, simply reloaded) by an [init.d call](https://openwrt.org/docs/techref/initscripts "docs:techref:initscripts")
 
+## OpenWRT Observability
+
+### Metrics
+
+#### Prometheus Integration
+
+OpenWRT metrics can be exported deploying Prometheus node exporter packages
+
+-   Step 1: Connect via SSH
+
+    ```shell
+    ssh root@192.168.1.1
+    ```
+
+-   Step 2: Update packages
+
+    ```shell
+    opkg update
+    ```
+
+-  Step 3: Install prometheus node exporter packages
+
+    ```shell
+    opkg install prometheus-node-exporter-lua \
+    prometheus-node-exporter-lua-nat_traffic \
+    prometheus-node-exporter-lua-netstat \
+    prometheus-node-exporter-lua-openwrt \
+    prometheus-node-exporter-lua-wifi \
+    prometheus-node-exporter-lua-wifi_stations
+    ```
+
+-   Step 4: Check metrics are exposed
+
+    By default, the node exporter we installed will export data to localhost at port 9100 to /metrics.
+    To test that metrics are exposed execute the following command
+    ```shell
+    curl localhost:9100/metrics
+    ```
+    {{site.data.alerts.note}}
+
+    curl command might be not installed
+    Install curl command with
+    ```shell
+    opkg install curl
+    ```
+    {{site.data.alerts.end}}
+
+-   Step 4: Make metrics endpoint available through LAN interface
+
+    Edit `/etc/config/prometheus-node-exporter-lua` file.
+
+    ```
+    config prometheus-node-exporter-lua 'main'
+      option listen_interface 'lan'
+      option listen_port '9100'
+      option listen_ipv6 '0'
+      #option cert '/etc/uhttpd.crt'
+      #option key '/etc/uhttpd.key'
+    ```
+-   Step 5: Restart prometheus-node-exporter-lua service
+    ```shell
+    /etc/init.d/prometheus-node-exporter-lua restart
+    ```
+
+-   Step 6: Configure Prometheus to scrape openWRT node-exporter endpoint
+
+    In Prometheus you need to add a new job scrape config (at the end of the file) `/etc/prometheus/prometheus.yml`
+
+    ```
+    - job_name: "OpenWRT"
+      static_configs:
+        - targets: ["${ROUTER}:9100"]
+    ```
+    Replacing `${ROUTER}` by IP address/FQDN of the openWRT router.
+
+##### Integration with Kube-Prom-Stack
+
+In case Prometheus server is deployed in Kuberentes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
+
+
+-   Create Prometheus Operator ScrapeConfig resources
+
+    ```yaml
+    apiVersion: monitoring.coreos.com/v1alpha1
+    kind: ScrapeConfig
+    metadata:
+      name: openwrt-node-exporter
+    spec:
+      staticConfigs:
+        - targets:
+            - gateway.${CLUSTER_DOMAIN}:9100
+      metricsPath: /metrics
+      relabelings:
+        - action: replace
+          targetLabel: job
+          replacement: openwrt-exporter
+    ```
+
+    Where `${CLUSTER_DOMAIN}` has to be replaced by the domain name used in the cluster. For example: `homelab.ricsanfre.com`. (i.e.: target = `gateway.homelab.ricsanfre.com`).
+
+#### Grafana Dashboard
+
+OpenWRTr dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 18153](https://grafana.com/grafana/dashboards/18153).
+
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+
+Add following configuration to Grafana's helm chart values file:
+
+```yaml
+# Configure default Dashboard Provider
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: infrastructure
+        orgId: 1
+        folder: "Infrastructure"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/infrastructure-folder
+
+# Add dashboard
+# Dashboards
+dashboards:
+  infrastructure:
+    openWRT:
+      # https://grafana.com/grafana/dashboards/18153-asus-openwrt-router/
+      # renovate: depName="OpenWRT Exporter Dashboard"
+      gnetId: 18153
+      revision: 4
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+```
+
+### Logs
+
+OpenWRT can be configure to forward syslogs to external Syslog server
+
+- Go to "System" -> "System"
+- Select "Logging" tab
+- Update external syslog server and port and apply changes
+
+![openwrt-syslog-config](/assets/img/openwrt-syslog-config.png)
+
+Integration with syslog server can be tested generating a syslog message with the `logger` utility
+
+```shell
+logger "Testing syslog"
+```
+
+Fluentd service running in kubernetes cluster exposes a syslog endpoint to collect OpenWRT syslogs.
 
 ---
 

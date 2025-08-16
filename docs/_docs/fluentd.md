@@ -2,7 +2,7 @@
 title: Log aggregation and distribution (Fluentd)
 permalink: /docs/fluentd/
 description: How to deploy log distribution solution for Kubernetes Cluster using Fluentd.
-last_modified_at: "17-06-2025"
+last_modified_at: "16-08-2025"
 ---
 
 Fluentd is deploy as log aggregator, collecting all logs forwarded by Fluentbit agent and routing all logs to different backends (i.e ElasticSearch, Loki, Kafka, S3 bucket).
@@ -1023,12 +1023,12 @@ All these files should be put together into a ConfigMap. [TODO] Add reference to
   port 5140
   protocol_type udp
   <parse>
-    message_format rfc5424
+    message_format rfc3164
   </parse>
 <source>
 ```
 -  Fluentd to expose `syslog` protocol on port 5140
--  Input messages are parsed using embedded rfc5424 syslog parser (i.e. OpenWRT generates syslog messages following that format)
+-  Input messages are parsed using embedded rfc3164 syslog parser (i.e. OpenWRT generates syslog messages following that format)
 
 ### ElasticSearch Output Configuration
 
