@@ -66,7 +66,7 @@ data:
         port 5140
         protocol_type udp
         <parse>
-            message_format rfc5424
+            message_format rfc3164
         </parse>
     </source>
 
