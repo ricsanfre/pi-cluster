@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: openwrt-node-exporter
+spec:
+  staticConfigs:
+    - targets:
+        - gateway.${CLUSTER_DOMAIN}:9100
+  metricsPath: /metrics
+  relabelings:
+    - action: replace
+      targetLabel: job
+      replacement: openwrt-exporter

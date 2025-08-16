@@ -9,3 +9,4 @@ resources:
 #- external-vault-monitoring.yaml
 - minio-bearer-externalsecret.yaml
 - minio-ext-scrapeconfig.yaml
+- openwrt-scrapeconfig.yaml

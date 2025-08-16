@@ -166,6 +166,13 @@ dashboards:
       revision: 5
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
+    openWRT:
+      # https://grafana.com/grafana/dashboards/18153-asus-openwrt-router/
+      # renovate: depName="OpenWRT Exporter Dashboard"
+      gnetId: 18153
+      revision: 4
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
   istio:
     istio-control-plane:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
