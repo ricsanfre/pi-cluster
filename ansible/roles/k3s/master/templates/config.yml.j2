@@ -1,7 +1,9 @@
-{% if k3s_build_cluster and k3s_primary_control_node %}
+{% if k3s_build_cluster %}
+{% if k3s_primary_control_node %}
 cluster-init: true
-{% elif k3s_build_cluster %}
+{% else %}
 server: https://{{ k3s_registration_ip }}:6443
+{% endif %}
 {% endif %}
 token-file: {{ k3s_token_file }}
 {% if 'k3s_master' in group_names %}
