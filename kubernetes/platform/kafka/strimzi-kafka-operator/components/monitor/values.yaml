@@ -1,0 +1,10 @@
+# strimzi-kafka-operator helm values (dashboards)
+
+dashboards:
+  enabled: true
+  label: grafana_dashboard # this is the default value from the grafana chart
+  labelValue: "1" # this is the default value from the grafana chart
+  # Annotations to specify the Grafana folder
+  annotations:
+    grafana_folder: Strimzi
+  extraLabels: {}

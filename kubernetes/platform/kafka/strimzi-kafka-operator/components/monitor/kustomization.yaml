@@ -3,3 +3,16 @@ kind: Component
 
 resources:
   - strimzi-pods-monitor.yaml
+
+configMapGenerator:
+  - name: strimzi-kafka-operator-helm-values
+    behavior: merge
+    files:
+      - dashboards-values.yaml=values.yaml
+
+patches:
+- target:
+    group: helm.toolkit.fluxcd.io
+    kind: HelmRelease
+    name: strimzi-kafka-operator
+  path: helm-patch.yaml
