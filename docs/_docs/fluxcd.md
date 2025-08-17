@@ -2,7 +2,7 @@
 title: GitOps (FluxCD)
 permalink: /docs/fluxcd/
 description: How to apply GitOps to Pi cluster configuration using FluxCD.
-last_modified_at: "19-07-2025"
+last_modified_at: "17-08-2025"
 ---
 
 ## What is Flux
@@ -1373,6 +1373,83 @@ By default, if you were to have Flux reconcile a Job resource, it would apply it
 
 Job resources annotated with `kustomize.toolkit.fluxcd.io/force: enabled` will be automatically recreated by FluxCD whenever there are changes to be applied.
 
+## Observability
+
+### Metrics
+Flux has native support for [Prometheus](https://prometheus.io/) metrics to provide insights into the state of the Flux components. These can be used to set up monitoring for the Flux controllers. In addition, Flux Custom Resource metrics can also be collected leveraging tools like [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics).[^4]
+
+#### Prometheus Integration
+
+##### Flux Controllers Monitoring
+Flux Controllers expose Prometheus metrics at port 8080 in the standard /metrics path.
+
+When using Kube-Prometheus-Stack, Prometheus Operator's `PodMonitor` resource can be created to start scraping metrics from Flux Controllers components
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: flux-system
+  labels:
+    app.kubernetes.io/part-of: flux
+    app.kubernetes.io/component: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - flux-system
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - helm-controller
+          - source-controller
+          - kustomize-controller
+          - notification-controller
+          - image-automation-controller
+          - image-reflector-controller
+  podMetricsEndpoints:
+    - port: http-prom
+```
+
+##### Flux Custom Resources Monitoring
+
+Flux Custom Resources metrics can be monitored using `kube-state-metrics`, which it is installed as part of Kube-Prometheus-Stack.
+
+When using Kube-Prometheus-Stack, add values to helm chart configuration defined in [Flux monitoring example: `kube-state-metrics-config.yaml`](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/controllers/kube-prometheus-stack/kube-state-metrics-config.yaml)
+
+#### Grafana Dashboards
+
+Flux provides 2 Grafana Dashboards to display metrics collected by Prometheus available at [Flux monitoring example Github repo](https://github.com/fluxcd/flux2-monitoring-example)
+
+-   Control plane dashboard: [control-plane.json](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/configs/dashboards/control-plane.json)
+-   Cluster reconciliation dashboard: [cluster.json](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/configs/dashboards/cluster.json)
+
+The following configuration can be added to Grafana's Helm Chart so a FluxCD's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+
+```yaml
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: flux
+        orgId: 1
+        folder: Flux
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/flux-folder
+# Dashboards
+dashboards:
+  flux:
+    flux-cluster:
+      url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/cluster.json
+      datasource: Prometheus
+    flux-control-plane:
+      url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/control-plane.json
+      datasource: Prometheus
+```
 
 ---
 
@@ -1386,3 +1463,4 @@ Job resources annotated with `kustomize.toolkit.fluxcd.io/force: enabled` will b
     [Reference Repo](https://github.com/moonswitch-workshops/terraform-eks-flux)
 
 [^3]: [Flux documentation: Running Jobs](https://fluxcd.io/flux/use-cases/running-jobs/)
+[^4]: [Flux documentation: Flux Prometheus metrics](https://fluxcd.io/flux/monitoring/metrics/)
