@@ -5,6 +5,9 @@ namespace: kafka
 resources:
   - ../../base
 
+components:
+  - ../../components/monitor
+
 configMapGenerator:
   - name: strimzi-kafka-operator-helm-values
     behavior: merge
