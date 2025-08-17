@@ -62,6 +62,14 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/keycloak-folder
+      - name: flux
+        orgId: 1
+        folder: Flux
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/flux-folder
 # Dashboards
 dashboards:
   kubernetes:
@@ -236,3 +244,10 @@ dashboards:
       url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-troubleshooting-dashboard.json
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
+  flux:
+    flux-cluster:
+      url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/cluster.json
+      datasource: Prometheus
+    flux-control-plane:
+      url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/control-plane.json
+      datasource: Prometheus

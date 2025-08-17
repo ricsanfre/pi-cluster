@@ -10,6 +10,7 @@ components:
   - ../../components/k3s
   - ../../components/disable-grafana
   - ../../components/vault-agent
+  - ../../components/flux-monitoring
 
 configMapGenerator:
   - name: kube-prometheus-stack-helm-values
