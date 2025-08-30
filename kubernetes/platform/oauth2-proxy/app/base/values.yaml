@@ -44,18 +44,16 @@ sessionStorage:
     existingSecret: oauth2-proxy-secret
     passwordKey: redis-password
 # Enabling redis backend installation
+# Starting with OAuth2-Proxy v7, redis bitnami helm chart has been migrated to dandydeveloper
+# https://github.com/DandyDeveloper/charts/tree/master/charts/redis-ha
 redis:
   enabled: true
-  # standalone redis. No cluster
-  architecture: standalone
-  auth:
-    existingSecret: oauth2-proxy-secret
-    existingSecretPasswordKey: redis-password
+  replicas: 1
+  # Configuring redis auth
+  auth: true
+  existingSecret: oauth2-proxy-secret
+  authKey: redis-password
   # Limit PVC size to 1Gi
-  persistence:
+  persistentVolume:
+    enabled: true
     size: 1Gi
-  # Disabling network policy created by Bitnami Helm Chart
-  networkPolicy:
-   enabled: false
-
-
