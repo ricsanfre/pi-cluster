@@ -48,7 +48,6 @@ sessionStorage:
 # https://github.com/DandyDeveloper/charts/tree/master/charts/redis-ha
 redis:
   enabled: true
-  replicas: 1
   # Configuring redis auth
   auth: true
   existingSecret: oauth2-proxy-secret
