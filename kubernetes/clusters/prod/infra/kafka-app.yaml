@@ -34,6 +34,10 @@ spec:
   prune: true
   wait: true
   timeout: 15m
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
   healthCheckExprs:
     - apiVersion: kafka.strimzi.io/v1beta2
       kind: Kafka
