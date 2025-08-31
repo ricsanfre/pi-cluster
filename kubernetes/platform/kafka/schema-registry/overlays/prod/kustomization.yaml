@@ -4,16 +4,3 @@ namespace: kafka
 
 resources:
   - ../../base
-
-configMapGenerator:
-  - name: schema-registry-helm-values
-    behavior: merge
-    files:
-      - overlay-values.yaml=values.yaml
-
-patches:
-- target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: schema-registry
-  path: helm-patch.yaml

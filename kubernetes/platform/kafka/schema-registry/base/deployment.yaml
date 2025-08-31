@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schema-registry
+  labels:
+    app: schema-registry-schema-registry
+    app.kubernetes.io/name: schema-registry
+    app.kubernetes.io/instance: schema-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schema-registry-schema-registry
+      app.kubernetes.io/name: schema-registry
+      app.kubernetes.io/instance: schema-registry
+  template:
+    metadata:
+      labels:
+        app: schema-registry-schema-registry
+        app.kubernetes.io/name: schema-registry
+        app.kubernetes.io/instance: schema-registry
+    spec:
+      # enableServiceLings=false. Automatic ingestion of service environment variables is not desired
+      # schema-registry service injects SCHEMA_REGISTRY_PORT variable which makes the schema registry fail to start
+      # See https://github.com/confluentinc/schema-registry/issues/689#issuecomment-824769666
+      enableServiceLinks: false
+      serviceAccountName: schema-registry-sa
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: schema-registry
+          imagePullPolicy: IfNotPresent
+          image: "docker.io/confluentinc/cp-schema-registry:7.9.0"
+          env:
+            # Confluent Schema Registry configuration through environment variables that are translated to configuration options
+            # ref: https://docs.confluent.io/platform/current/installation/docker/config-reference.html#sr-long-configuration
+            # Complete set of configuration options in https://docs.confluent.io/platform/current/schema-registry/installation/config.html
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:8081"
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: SASL_PLAINTEXT://cluster-kafka-bootstrap:9092
+            # - name: SCHEMA_REGISTRY_KAFKASTORE_GROUP_ID
+            #   value: "schema-registry-schema-registry"
+            # - name: SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID
+            #   value: "schema-registry-schema-registry"
+              # Replace name of default topic _schemas 
+            - name: SCHEMA_REGISTRY_KAFKASTORE_TOPIC
+              value: "confluent-schemas"
+            - name: SCHEMA_REGISTRY_MASTER_ELIGIBILITY
+              value: "true"
+            # - name: SCHEMA_REGISTRY_HEAP_OPTS
+            #   value: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+            # - name: SCHEMA_REGISTRY_CONFLUENT_SUPPORT_METRICS_ENABLE
+            #   value: "false"
+            # - name: SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS
+            #   value: "GET,POST,PUT,OPTIONS"
+            # - name: SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN
+            #   value: "*"
+            - name: SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL
+              value: "backward"
+          ports:
+          - name: http
+            containerPort: 8081
+            protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: config
+            mountPath: /etc/schema-registry
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsUser: 1000
+          resources:
+            limits:
+              cpu: 200m
+              memory: 1400Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: config
+        emptyDir: {}
