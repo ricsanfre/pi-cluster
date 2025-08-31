@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "13-07-2025"
+last_modified_at: "31-08-2025"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -1205,12 +1205,13 @@ Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](ht
   sessionStorage:
     # Can be one of the supported session storage cookie|redis
     type: redis
+    password: s1cret0
   # Enabling redis backend installation
   redis:
     enabled: true
-    # standalone redis. No cluster
-    architecture: standalone
-
+    # Configuring redis auth
+    auth: true
+    redisPassword: s1cret0
   ingress:
     enabled: true
     className: "nginx"
@@ -1301,12 +1302,11 @@ As workaround, the issue can be solved providing the credentials in a external s
   
   redis:
     enabled: true
-    # standalone redis. No cluster
-    architecture: standalone
+    # Configuring redis auth
     # Get redis password from existing secret using key redis-password
-    auth:
-      existingSecret: oauth2-proxy-secret
-      existingSecretPasswordKey: redis-password
+    auth: true
+    existingSecret: oauth2-proxy-secret
+    authKey: redis-password
   ```
   
 ### Configuring Ingress external authentication
