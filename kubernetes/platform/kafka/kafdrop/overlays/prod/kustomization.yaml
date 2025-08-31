@@ -6,17 +6,4 @@ resources:
   - ../../base
 
 components:
-  - ../../components/componentX
-
-configMapGenerator:
-  - name: kafdrop-helm-values
-    behavior: merge
-    files:
-      - overlay-values.yaml=values.yaml
-
-patches:
-- target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: kafdrop
-  path: helm-patch.yaml
+  - ../../components/schemaRegistry

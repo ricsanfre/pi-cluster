@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: kafdrop.${CLUSTER_DOMAIN}
+  labels:
+    app.kubernetes.io/instance: kafdrop
+    app.kubernetes.io/name: kafdrop
+  name: kafdrop
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: kafdrop.${CLUSTER_DOMAIN}
+    http:
+      paths:
+      - backend:
+          service:
+            name: kafdrop
+            port:
+              name: kafdrop
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - kafdrop.l${CLUSTER_DOMAIN}
+    secretName: kafdrop-tls
