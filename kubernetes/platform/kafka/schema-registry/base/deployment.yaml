@@ -99,10 +99,10 @@ spec:
             runAsUser: 1000
           resources:
             limits:
-              cpu: 200m
-              memory: 1400Mi
+              cpu: 750m
+              memory: 768Mi
             requests:
-              cpu: 100m
+              cpu: 500m
               memory: 512Mi
       volumes:
       - name: tmp
