@@ -5,7 +5,7 @@ metadata:
 spec:
   secretName: kafka-tls
   issuerRef:
-    name: ca-letsencrypt-issuer
+    name: letsencrypt-issuer
     kind: ClusterIssuer
     group: cert-manager.io
   subject:
