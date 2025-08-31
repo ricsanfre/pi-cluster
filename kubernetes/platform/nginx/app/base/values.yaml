@@ -2,3 +2,7 @@
 
 controller:
   replicaCount: 1
+  # Extra arguments to be passed to the controller
+  extraArgs:
+    # Enable SSL passthrough
+    enable-ssl-passthrough: true
