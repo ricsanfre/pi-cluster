@@ -7,3 +7,4 @@ resources:
 
 components:
   - ../../components/schemaRegistry
+  - ../../components/kafka-security

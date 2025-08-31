@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kafka-cert
+spec:
+  secretName: kafka-tls
+  issuerRef:
+    name: ca-letsencrypt-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  subject:
+    organizations:
+      - ${CLUSTER_DOMAIN}
+  dnsNames:
+    - kafka-bootstrap.${CLUSTER_DOMAIN}
+    - kafka-broker-0.${CLUSTER_DOMAIN}
+    - kafka-broker-1.${CLUSTER_DOMAIN}
+    - kafka-broker-2.${CLUSTER_DOMAIN}

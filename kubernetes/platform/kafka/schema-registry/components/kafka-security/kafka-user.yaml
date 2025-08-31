@@ -1,0 +1,40 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: schema-registry
+  labels:
+    strimzi.io/cluster: cluster
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: schema-registry-kafka-secret
+          key: password
+  authorization:
+    type: simple # Authorization using ACLS
+    acls:
+      # Schema Registry ACLS
+      # ref: https://docs.confluent.io/platform/current/schema-registry/security/index.html#authorizing-access-to-the-schemas-topic
+      - resource:
+          type: topic
+          name: confluent-schemas
+          patternType: literal
+        operations:
+         - All
+        host: "*"
+      - resource:
+          type: topic
+          name: __consumer_offsets
+          patternType: literal
+        operations:
+          - Describe
+        host: "*"
+      - resource:
+          type: group
+          name: schema-registry
+          patternType: prefix
+        operations:
+          - All
+        host: "*"

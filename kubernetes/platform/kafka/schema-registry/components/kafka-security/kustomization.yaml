@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - external-secret.yaml
+  - kafka-topic.yaml
+  - kafka-user.yaml
+
+patches:
+- target:
+    group: apps
+    kind: Deployment
+    name: schema-registry
+  path: deployment-patch.yaml

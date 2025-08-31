@@ -1,0 +1,14 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaUser
+metadata:
+  name: admin
+  labels:
+    strimzi.io/cluster: cluster
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: kafka-superuser-secret
+          key: password

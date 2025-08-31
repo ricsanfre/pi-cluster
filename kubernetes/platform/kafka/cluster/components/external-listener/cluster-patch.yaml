@@ -1,0 +1,37 @@
+- op: add
+  path: /spec/kafka/listeners/-
+  value:
+    name: external # TLS listener for external access
+    port: 9094
+    type: ingress # Ingress Listener for external access
+    tls: true
+    authentication:
+      type: scram-sha-512 # Set authentication to scram-sha-512
+    configuration: # Configure Ingress resources created by Strimzi
+      bootstrap:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: kafka-bootstrap.${CLUSTER_DOMAIN}.
+          external-dns.alpha.kubernetes.io/ttl: "60"
+        host: kafka-bootstrap.${CLUSTER_DOMAIN}
+      brokers:
+        - broker: 0
+          annotations:
+            external-dns.alpha.kubernetes.io/hostname: kafa-broker-0.${CLUSTER_DOMAIN}.
+            external-dns.alpha.kubernetes.io/ttl: "60"
+          host: kafka-broker-0.${CLUSTER_DOMAIN}
+        - broker: 1
+          annotations:
+            external-dns.alpha.kubernetes.io/hostname: kafka-broker-1.${CLUSTER_DOMAIN}.
+            external-dns.alpha.kubernetes.io/ttl: "60"
+          host: kafka-broker-1.${CLUSTER_DOMAIN}
+        - broker: 2
+          annotations:
+            external-dns.alpha.kubernetes.io/hostname: broker-2.${CLUSTER_DOMAIN}.
+            external-dns.alpha.kubernetes.io/ttl: "60"
+          host: kafka-broker-2.${CLUSTER_DOMAIN}
+      # Use External Certificate
+      brokerCertChainAndKey:
+        secretName: kafka-tls
+        certificate: tls.crt
+        key: tls.key
+      class: nginx

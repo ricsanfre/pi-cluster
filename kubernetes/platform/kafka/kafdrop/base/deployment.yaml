@@ -58,6 +58,8 @@ spec:
           requests:
             cpu: 1m
             memory: 128Mi
+        volumeMounts: []
+      volumes: []
 
 
 

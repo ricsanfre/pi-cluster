@@ -1,0 +1,12 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: confluent-schemas
+  labels:
+    strimzi.io/cluster: cluster
+spec:
+  partitions: 1
+  replicas: 3
+  config:
+    # Schema Registry requires log compaction to ensure that the the latest version of each schema is always retained
+    cleanup.policy: compact

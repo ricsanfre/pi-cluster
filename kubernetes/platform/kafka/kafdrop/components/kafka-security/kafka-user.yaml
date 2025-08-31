@@ -1,0 +1,47 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: kafdrop
+  labels:
+    strimzi.io/cluster: cluster
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: kafka-kafdrop-secret
+          key: password
+  authorization:
+    type: simple # Authorization using ACLS
+    acls:
+      - resource:
+          type: topic
+          name: "*"
+          patternType: literal
+        operations:
+          - Read
+          - Describe
+        host: "*"
+      - resource:
+          type: group
+          name: "*"
+          patternType: literal
+        operations:
+          - Read
+          - Describe
+        host: "*"
+      - resource:
+          type: cluster
+        operations:
+          - Read
+          - Describe
+        host: "*"
+      - resource:
+          type: transactionalId
+          name: "*"
+          patternType: literal
+        operations:
+          - Read
+          - Describe
+        host: "*"

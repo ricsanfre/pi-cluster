@@ -6,4 +6,7 @@ resources:
   - ../../base
 
 components:
+  - ../../components/security
+  - ../../components/superuser
+  - ../../components/external-listener
   - ../../components/monitor

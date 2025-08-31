@@ -1,0 +1,28 @@
+  # Replace SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS enviroment variable
+- op: replace
+  path: /spec/template/spec/containers/0/env/2/value
+  value: SASL_PLAINTEXT://cluster-kafka-bootstrap:9092
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL
+    value: SASL_PLAINTEXT
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM
+    value: SCRAM-SHA-512
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG
+    valueFrom:
+      secretKeyRef:
+        name: schema-registry-jaas-config
+        key: plain-jaas.conf
+  # Replace name of default topic _schemas
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: SCHEMA_REGISTRY_KAFKASTORE_TOPIC
+    value: "confluent-schemas"

@@ -1,0 +1,13 @@
+
+- op: add
+  path: /spec/kafka/listeners/0/authentication
+  value:
+    type: scram-sha-512 # Set authentication to scram-sha-512
+- op: add
+  path: /spec/kafka/listeners/1/authentication
+  value:
+    type: scram-sha-512 # Set authentication to scram-sha-512
+- op: add
+  path: /spec/kafka/authorization
+  value:
+    type: simple # Authorization using ACLS

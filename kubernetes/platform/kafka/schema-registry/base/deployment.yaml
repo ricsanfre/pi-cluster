@@ -48,9 +48,6 @@ spec:
             #   value: "schema-registry-schema-registry"
             # - name: SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID
             #   value: "schema-registry-schema-registry"
-              # Replace name of default topic _schemas 
-            - name: SCHEMA_REGISTRY_KAFKASTORE_TOPIC
-              value: "confluent-schemas"
             - name: SCHEMA_REGISTRY_MASTER_ELIGIBILITY
               value: "true"
             # - name: SCHEMA_REGISTRY_HEAP_OPTS
