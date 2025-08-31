@@ -23,5 +23,5 @@ spec:
         pathType: ImplementationSpecific
   tls:
   - hosts:
-    - kafdrop.l${CLUSTER_DOMAIN}
+    - kafdrop.${CLUSTER_DOMAIN}
     secretName: kafdrop-tls
