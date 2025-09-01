@@ -8,3 +8,4 @@
   loop:
     - longhorn-util
     - velero-cli
+    - fluxcd-cli
