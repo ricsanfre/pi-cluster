@@ -1,15 +1,15 @@
 - op: add
   path: /spec/template/spec/containers/0/volumeMounts/-
   value:
-    name: kafka-config
+    name: kafdrop-config
     mountPath: /etc/kafdrop
 
 - op: add
   path: /spec/template/spec/volumes/-
   value:
-    name: kafka-config
+    name: kafdrop-config
     secret:
-      secretName: kafka-config
+      secretName: kafdrop-config
       defaultMode: 0644
 
 - op: add
