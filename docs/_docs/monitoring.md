@@ -607,9 +607,9 @@ grafana:
 {{site.data.alerts.note}}
 
 For Ingress resources, TLS certificates are generated automatically using Cert-Manager, through annotations `cert-manager.io/cluster-issuer` and `cert-manager.io/common-name`
-In the sample above, it is assumed that a `ClusterIssuer` resources has been configured, [Cert-Manager Documentation: Private PKI](/docs/certmanager#private-pki)
- or [Cert-Manager Documentation: Public PKI with Let's Encript](/docs/certmanager#public-pki-with-lets-encrypt) has been configured.
-See [Cert-Manager Documentation: Cert Manager Usage](/docs/certmanager#certmanager-usage)
+In the sample above, it is assumed that a `ClusterIssuer` resources has been configured, [Cert-Manager Documentation: Private PKI](/docs/certmanager/#private-pki)
+ or [Cert-Manager Documentation: Public PKI with Let's Encript](/docs/certmanager/#public-pki-with-lets-encrypt) has been configured.
+See [Cert-Manager Documentation: Cert Manager Usage](/docs/certmanager/#certmanager-usage)
 
 {{site.data.alerts.end}}
 

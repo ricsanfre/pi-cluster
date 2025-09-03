@@ -212,7 +212,7 @@ Installation using `Helm` (Release 3):
 
   - Minio PODs are deployed only on x86 nodes (`affinity`). Minio does not work properly when mixing nodes of different architectures. See [issue #137](https://github.com/ricsanfre/pi-cluster/issues/137)
 
-  - Buckets (`buckets`), users (`users`) and policies (`policies`) are created for Loki and Tempo. See [Pi Cluster Loki documentation](/docs/loki) and [Pi Cluster Tempo documentation](/docs/tempo/) for the details.
+  - Buckets (`buckets`), users (`users`) and policies (`policies`) are created for Loki and Tempo. See [Pi Cluster Loki documentation](/docs/loki/) and [Pi Cluster Tempo documentation](/docs/tracing/) for the details.
 
   - Ingress resource (`ingress`) for s3 service API available at `s3.${CLUSTER_DOMAIN}`. Annotated so Cert-Manager generate the TLS certificate automatically.
 

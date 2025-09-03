@@ -182,7 +182,7 @@ Alternatively, it can be provided in an external secret.
 #### Alternative installation using external database
 
 Instead of using Bitnami's PosgreSQL subchart, an external PosgreSQL database can be used.
-For example, using CloudNative-PG a, keycload database cluster can be created. See details on how to install CloudNative-PG in ["Databases"](/docs/databases).
+For example, using CloudNative-PG a, keycload database cluster can be created. See details on how to install CloudNative-PG in ["Databases"](/docs/databases/).
 
 - Step 1. Create secret for keycloak admin user
 

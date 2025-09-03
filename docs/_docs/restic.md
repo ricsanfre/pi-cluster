@@ -26,7 +26,7 @@ First S3 backupstore need to be configured
 
 ### Install Minio backup server
 
-See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup).
+See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/).
 
 ### Configure Restic bucket and user
 

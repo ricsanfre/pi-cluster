@@ -382,11 +382,11 @@ Longhorn support two types of backup: incremental and full-backup
 
 For configuring Longhorn's backup capability, it is needed to define a *backup target*, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets.
 
-[Minio](https://min.io) can be used as S3-compliant backend. See further details about installing external Minio Server for the cluster in: ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup)
+[Minio](https://min.io) can be used as S3-compliant backend. See further details about installing external Minio Server for the cluster in: ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/)
 
 ##### Install Minio backup server
 
-See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup).
+See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/).
 
 ##### Configure Longhorn bucket and user
 

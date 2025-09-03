@@ -295,9 +295,9 @@ Installation process is the following:
       es-password: <base64 encoded user name>
     ```
 
-    Elastic Search user, `fluentd` and its password should match the ones created when installing ElasticSearch. See ["ElasticSearch Installation: File-based authentication"](docs/elasticsearch/#file-based-authentication).
+    Elastic Search user, `fluentd` and its password should match the ones created when installing ElasticSearch. See ["ElasticSearch Installation: File-based authentication"](/docs/elasticsearch/#file-based-authentication).
 
--   Step 5. Create ConfigMap containing ElasticSearch index templates definitions. [ElasticSearch Index template]((https://www.elastic.co/guide/en/elasticsearch/reference/current/index-templates.html)) definitions are JSON files defining how ElasticSearch maps log's fields to ElasticSearch data types and the way ElasticSearch indexes these fields. See details in section below.
+-   Step 5. Create ConfigMap containing ElasticSearch index templates definitions. [ElasticSearch Index template](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-templates.html) definitions are JSON files defining how ElasticSearch maps log's fields to ElasticSearch data types and the way ElasticSearch indexes these fields. See details in section below.
 
     ```yaml
     # ES index template for fluentd logs

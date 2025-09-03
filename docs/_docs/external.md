@@ -153,13 +153,13 @@ Further details about iSCSI configurations and step-by-step manual instructions 
 
 ## DNS Installation
 
-As described in ["PiCluster - DNS Architecture"](/docs/dns), DNS authoritative server, based on bind9, is installed in `node1`
+As described in ["PiCluster - DNS Architecture"](/docs/dns/), DNS authoritative server, based on bind9, is installed in `node1`
 
 For automating configuration tasks, ansible role [**ricsanfre.bind9**](https://galaxy.ansible.com/ricsanfre/bind9) has been developed.
 
 ## PXE Server
 
-As described in ["PiCluster - PXE Server"](/docs/pxe-server), PXE server, to automate OS installation of x86 nodes, is installed in `node1`
+As described in ["PiCluster - PXE Server"](/docs/pxe-server/), PXE server, to automate OS installation of x86 nodes, is installed in `node1`
 
 
 ## Vault Installation
@@ -321,7 +321,7 @@ Fluentbit installation and configuration can be automated with Ansible. For exam
 
 #### Fluent bit configuration
 
-Configuration is quite similar to the one defined for the fluentbit (See ["Collecting logs with FluentBit"](/docs/fluent-bit/)), removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
+Configuration is quite similar to the one defined for the fluentbit (See ["Collecting logs with FluentBit"](/docs/fluentbit/)), removing kubernetes logs collection and filtering and maintaining only OS-level logs collection.
 
 `/etc/fluent-bit/fluent-bit.conf`
 ```

@@ -97,7 +97,7 @@ See how to enable CSI Snapshot using Longhorn in [PiCluster- Longhorn - Configur
 
 ### Minio Installation
 
-See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup).
+See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/).
 
 ### Configuring Minio bucket and user for Velero
 
