@@ -1,0 +1,19 @@
+services:
+  kafka-client:
+    image: quay.io/strimzi/kafka:0.47.0-kafka-4.0.0
+    container_name: kafka-client
+    volumes:
+      - ./properties:/tmp/properties
+      - ./certs:/tmp/certs
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - while [ true ]; do sleep 30; done;
+    # If using private CA issuer, use this command instead 
+    # command:
+    #   - sh
+    #   - -c
+    #   - | 
+    #     keytool -import -trustcacerts -alias root -file /tmp/certs/ca.crt -keystore /tmp/truststore.jks -storepass supers1cret0 -noprompt && 
+    #     while [ true ]; do sleep 30; done;

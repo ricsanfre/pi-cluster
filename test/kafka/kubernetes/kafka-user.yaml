@@ -1,0 +1,60 @@
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: producer
+  labels:
+    strimzi.io/cluster: cluster
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: kafka-secrets
+          key: producer-password
+  authorization:
+    type: simple # Authorization using ACLS
+    acls:
+      - resource:
+          type: topic
+          name: test-topic
+          patternType: prefixed
+        operations:
+          - Create
+          - Describe
+          - Write
+        host: "*"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: consumer
+  labels:
+    strimzi.io/cluster: cluster
+spec:
+  authentication:
+    type: scram-sha-512
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: kafka-secrets
+          key: consumer-password
+  authorization:
+    type: simple # Authorization using ACLS
+    acls:
+      - resource:
+          type: topic
+          name: test-topic
+          patternType: prefixed
+        operations:
+          - Describe
+          - Read
+        host: "*"
+      - resource:
+          type: group
+          name: test-consumer-group
+          patternType: prefixed
+        operations:
+          - Read
+        host: "*"
