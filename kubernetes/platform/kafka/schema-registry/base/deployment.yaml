@@ -30,7 +30,7 @@ spec:
       containers:
         - name: schema-registry
           imagePullPolicy: IfNotPresent
-          image: "docker.io/confluentinc/cp-schema-registry:7.9.0"
+          image: "docker.io/confluentinc/cp-schema-registry:7.9.2"
           env:
             # Confluent Schema Registry configuration through environment variables that are translated to configuration options
             # ref: https://docs.confluent.io/platform/current/installation/docker/config-reference.html#sr-long-configuration
