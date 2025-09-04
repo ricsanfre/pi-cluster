@@ -42,7 +42,7 @@
     name: coredns
     chart_ref: coredns
     chart_repo_url: https://coredns.github.io/helm
-    chart_version: 1.43.2
+    chart_version: 1.43.3
     release_namespace: kube-system
     values_files:
       - ../../kubernetes/platform/coredns/app/base/values.yaml
