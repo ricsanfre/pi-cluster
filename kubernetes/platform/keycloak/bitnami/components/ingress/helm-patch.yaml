@@ -1,6 +1,0 @@
-- op: add
-  path: /spec/valuesFrom/-
-  value:
-    kind: ConfigMap
-    name: keycloak-helm-values
-    valuesKey: ingress-values.yaml
