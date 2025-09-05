@@ -4,5 +4,6 @@ namespace: cert-manager
 
 resources:
   - ../../base
-  - ionos-externalsecret.yaml
-  - ionos-issuer.yaml
+
+components:
+  - ../../components/acme-ionos
