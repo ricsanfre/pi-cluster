@@ -98,3 +98,18 @@ vault:
     oauth2:
       client-id: kiali
       client-secret: {{ kiali_client_secret }}
+  # Kafka
+  kafka:
+    admin:
+      user: admin
+      password: {{ kafka_admin_password }}
+    kafdrop:
+      user: kafdrop
+      password: {{ kafka_kafdrop_password }}
+    schema-registry:
+      user: schema-registry
+      password: {{ kafka_schema_registry_password }}
+  schema-registry:
+    basic-auth:
+      user: sruser
+      password: {{ schema_registry_basic_auth_password }}
