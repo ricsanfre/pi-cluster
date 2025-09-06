@@ -19,7 +19,7 @@ spec:
       - resource:
           type: topic
           name: test-topic
-          patternType: prefixed
+          patternType: prefix
         operations:
           - Create
           - Describe
@@ -46,7 +46,7 @@ spec:
       - resource:
           type: topic
           name: test-topic
-          patternType: prefixed
+          patternType: prefix
         operations:
           - Describe
           - Read
@@ -54,7 +54,7 @@ spec:
       - resource:
           type: group
           name: test-consumer-group
-          patternType: prefixed
+          patternType: prefix
         operations:
           - Read
         host: "*"

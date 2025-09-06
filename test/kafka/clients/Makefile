@@ -1,6 +1,11 @@
-.PHONY: remote-kafka-client
+.EXPORT_ALL_VARIABLES:
 
-default: remote-kafka-client
+KAFKA_REMOTE_BOOTSTRAP=kafka-bootstrap.homelab.ricsanfre.com
+KAFKA_SCHEMA_REGISTRY=schema-registry.homelab.ricsanfre.com
+
+.PHONY: kafka-external-client kafka-avro-producer kafka-avro-consumer
+
+default: kafka-external-client
 
 # Uncomment this block if a private CA has been used to bootstrap Kafka instead Let's Encript certificate
 # It obtains Cert-Manager root CA certificate (`root-secret`) used for bootstrapping Private PKI
@@ -12,5 +17,36 @@ default: remote-kafka-client
 # 	docker compose up -d
 
 # If Let's encrypt certificate is used for Kafka, not need to include CA in Truststore 
-remote-kafka-client:
+kafka-external-client:
 	docker compose up -d
+
+
+# AVRO CLIENTS
+
+# Preparing Python VirtualEnv
+venv: .venv/touchfile
+.venv/touchfile: pyproject.toml
+	test -d .venv || uv venv
+	. .venv/bin/activate; uv sync
+	touch .venv/touchfile
+
+kafka-avro-producer: venv
+	. .venv/bin/activate; python3 avro_producer.py \
+	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	-s https://${KAFKA_SCHEMA_REGISTRY} \
+	-t test-topic-avro \
+	-m SCRAM-SHA-512 \
+	--tls true \
+	--user producer \
+	--password supers1cret0
+
+kafka-avro-consumer: venv
+	. .venv/bin/activate; python3 avro_consumer.py \
+	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	-s https://${KAFKA_SCHEMA_REGISTRY}  \
+	-t test-topic-avro \
+	-m SCRAM-SHA-512 \
+	-g test-consumer-group \
+	--tls true \
+	--user consumer \
+	--password s1cret0

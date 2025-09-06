@@ -8,10 +8,8 @@ KAFKA_SCHEMA_REGISTRY=schema-registry.homelab.ricsanfre.com
 default:
 	kafka-setup
 
-
 kafka-setup:
 	kubectl kustomize kubernetes | kubectl apply -f -
-
 
 kafka-k8s-client:
 	kubectl run kafka-clients --restart='Never' --image quay.io/strimzi/kafka:0.47.0-kafka-4.0.0 --namespace kafka --command -- sleep infinity
@@ -20,13 +18,13 @@ kafka-k8s-client:
 
 kafka-k8s-producer:
 	kubectl exec -it kafka-clients --namespace kafka -- bin/kafka-console-producer.sh \
-	--producer.config clients/tmp/producer.properties \
+	--producer.config /tmp/producer.properties \
 	--bootstrap-server cluster-kafka-bootstrap:9092 \
 	--topic test-topic
 
 kafka-k8s-consumer:
 	kubectl exec -it kafka-clients --namespace kafka -- bin/kafka-console-consumer.sh \
-	--consumer.config clients/tmp/consumer.properties \
+	--consumer.config /tmp/consumer.properties \
 	--bootstrap-server cluster-kafka-bootstrap:9092 \
 	--topic test-topic \
 	--group test-consumer-group --from-beginning
@@ -65,45 +63,7 @@ show-kafka-topics:
 	--list
 
 kafka-avro-producer:
-	docker exec -it kafka-client-avro python3 avro_producer.py \
-	-b kafka-bootstrap.local.test:443 \
-	-s http://apicurio-app.local.test/apis/ccompat/v7 \
-	-t test-topic-avro \
-	-m SCRAM-SHA-512 \
-	--tls true \
-	--cacert /tmp/certs/ca.crt \
-	--user producer \
-	--password supers1cret0
+	cd clients && $(MAKE) $@
 
 kafka-avro-consumer:
-	docker exec -it kafka-client-avro python3 avro_consumer.py \
-	-b kafka-bootstrap.local.test:443 \
-	-s http://apicurio-app.local.test/apis/ccompat/v7 \
-	-t test-topic-avro \
-	-m SCRAM-SHA-512 \
-	-g test-consumer-group \
-	--tls true \
-	--cacert /tmp/certs/ca.crt \
-	--user consumer \
-	--password s1cret0
-
-kafka-avro-producer-2:
-	docker exec -it kafka-client-avro python3 avro_producer.py \
-	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
-	-s https://${KAFKA_SCHEMA_REGISTRY} \
-	-t test-topic-avro \
-	-m SCRAM-SHA-512 \
-	--tls true \
-	--user producer \
-	--password supers1cret0
-
-kafka-avro-consumer-2:
-	docker exec -it kafka-client-avro python3 avro_consumer.py \
-	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
-	-s https://${KAFKA_SCHEMA_REGISTRY}  \
-	-t test-topic-avro \
-	-m SCRAM-SHA-512 \
-	-g test-consumer-group \
-	--tls true \
-	--user consumer \
-	--password s1cret0
+	cd clients && $(MAKE) $@
