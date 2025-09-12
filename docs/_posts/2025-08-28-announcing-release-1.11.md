@@ -20,7 +20,7 @@ Flux Operator is a Kubernetes controller for managing the lifecycle of Flux CD. 
 
 The Flux Operator is an open-source project developed by ControlPlane that offers an alternative to the Flux Bootstrap procedure, it removes the operational burden of managing Flux across fleets of clusters by fully automating the installation, configuration, and upgrade of the Flux controllers based on a declarative API.
 
-See details in [FluxCD- Bootstrap cluster using FluxCD Operator](docs/fluxcd/#fluxcd-operator).
+See details in [FluxCD- Bootstrap cluster using FluxCD Operator](/docs/fluxcd/#fluxcd-operator).
 
 ## Enabling Spegel Mirroring
 
@@ -51,7 +51,7 @@ Fluent-bit configuration has been updated to use new YAML configuration, extract
 
 Also, Fluentd configuration has been extracted to use external configMap instead of embedded helm chart configuration and all records manipulation rules have been moved to Fluent-bit to optimize logs processing. Documentation has been also updated accordingly.
 
-See further details in [Logs collection - Fluent-bit](/docs/fluent-bit) and [Logs aggregation and distribution - Fluentd](/docs/fluentd).
+See further details in [Logs collection - Fluent-bit](/docs/fluentbit/) and [Logs aggregation and distribution - Fluentd](/docs/fluentd/).
 
 ## Keycloak refactoring
 
@@ -95,7 +95,7 @@ Whole project documentation has been reviewed and updated.
         -  Grafana installation/configuration has been extracted to its own page. [Observability Visualization (Grafana)](/docs/grafana/)
         -  Monitoring configuration of each service has been extracted to Observability section to corresponding service document
     -  Fluentbit/Fluentd documentation
-        -  Fluent-bit and Fluentd documentation has been separated into two different documents. [Logs collection - Fluent-bit](/docs/fluent-bit) and [Logs aggregation and distribution - Fluentd](/docs/fluentd).
+        -  Fluent-bit and Fluentd documentation has been separated into two different documents. [Logs collection - Fluent-bit](/docs/fluentbit/) and [Logs aggregation and distribution - Fluentd](/docs/fluentd/).
     -  Cert-manager documentation
         -  Cert-bot documentation has been extracted to a separate document: [TLS Certificates (Certbot)](/docs/certbot/)
     -  Backup documentation

@@ -24,7 +24,7 @@ The project scope includes the automatic installation and configuration of a lig
 
 Also deployment of services for building a cloud-native microservices architecture are include as part of the scope:
 
-- Service mesh architecture, [Istio](https://Istio.io/)
+- Service mesh architecture, [Istio](https://istio.io/)
 - API security with Oauth2.0 and OpenId Connect, using IAM solution, [Keycloak](https://www.keycloak.org/)
 - Streaming platform, [Kafka](https://kafka.apache.org/)
 

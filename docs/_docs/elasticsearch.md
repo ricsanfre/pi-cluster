@@ -518,7 +518,7 @@ This configuration must be done once data from fluentd has been inserted in ES: 
 
 #### Automation using API
 
-Kibana's dataview can be automatically creatred using [Kibana's API DataView endpoint](https://www.elastic.co/guide/en/kibana/current/data-views-api-create.html)).
+Kibana's dataview can be automatically creatred using [Kibana's API DataView endpoint](https://www.elastic.co/guide/en/kibana/current/data-views-api-create.html).
 
 A Kubernetes Job can be created to automatically invoke API to create the required API.
 

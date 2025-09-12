@@ -80,7 +80,7 @@ API key is composed of two parts:  Public Prefix (public key) and Secret (privat
 
 To configure IONOS as DNS provider
 
--  Step 1: Install [cerbot-ionos-plugin]((https://github.com/helgeerbe/certbot-dns-ionos)
+-  Step 1: Install [cerbot-ionos-plugin](https://github.com/helgeerbe/certbot-dns-ionos)
    ```shell
    pip3 install certbot-dns-ionos
    ```
