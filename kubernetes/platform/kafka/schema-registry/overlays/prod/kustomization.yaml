@@ -4,6 +4,7 @@ namespace: kafka
 
 components:
   - ../../components/kafka-security
+  - ../../components/rest-api-security
 
 resources:
   - ../../base

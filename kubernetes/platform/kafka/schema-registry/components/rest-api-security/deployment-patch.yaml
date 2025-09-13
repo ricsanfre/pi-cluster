@@ -1,0 +1,67 @@
+  # Add REST API Basic Auth Configuraiton
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : SCHEMA_REGISTRY_OPTS
+    value: -Djava.security.auth.login.config=/etc/auth/registry-jaas.conf
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : SCHEMA_REGISTRY_AUTHENTICATION_REALM
+    value: SchemaRegistry-Props
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : SCHEMA_REGISTRY_AUTHENTICATION_METHOD
+    value: BASIC
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : SCHEMA_REGISTRY_AUTHENTICATION_ROLES
+    value: 'admin,user,developer'
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name : PROBE_USER
+    value: probe
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: PROBE_PASSWD
+    valueFrom:
+      secretKeyRef:
+        name: schema-registry-auth-secret
+        key: password
+# Update Readiness Probe
+- op: add
+  path: /spec/template/spec/containers/0/readinessProbe/exec
+  value:
+    command:
+      - /bin/sh
+      - -c
+      - |
+        curl -G --fail --silent --output /dev/null -u ${PROBE_USER}:${PROBE_PASSWD} localhost:8081
+- op: remove
+  path: /spec/template/spec/containers/0/readinessProbe/httpGet
+
+# Add new volume containing REST API auth files
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: config-auth
+    mountPath: /etc/auth
+    readOnly: true
+
+# Use projected volume to mount secret and confiMap to same mountPoint
+# ref: https://kubernetes.io/docs/concepts/storage/projected-volumes/
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: config-auth
+    projected:
+      sources:
+      - secret:
+          name: schema-registry-password
+      - configMap:
+          name: schema-registry-jaas
+

@@ -6,5 +6,5 @@ resources:
   - ../../base
 
 components:
-  - ../../components/schemaRegistry
+  - ../../components/schema-registry-secure
   - ../../components/kafka-security

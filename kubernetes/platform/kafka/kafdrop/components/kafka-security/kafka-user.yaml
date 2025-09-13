@@ -10,7 +10,7 @@ spec:
     password:
       valueFrom:
         secretKeyRef:
-          name: kafka-kafdrop-secret
+          name: kafdrop-kafka-secret
           key: password
   authorization:
     type: simple # Authorization using ACLS

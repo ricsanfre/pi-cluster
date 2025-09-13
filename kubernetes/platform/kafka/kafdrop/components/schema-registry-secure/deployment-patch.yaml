@@ -1,0 +1,14 @@
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: REGISTRY_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: kafdrop-schema-registry-secret
+        key: password
+
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: CMD_ARGS
+    value: --schemaregistry.connect=http://schema-registry:8081 --schemaregistry.auth=kafdrop:${REGISTRY_PASSWORD}
