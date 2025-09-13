@@ -40,7 +40,7 @@
       - /bin/sh
       - -c
       - |
-        curl -G --fail --silent --output /dev/null -u ${PROBE_USER}:${PROBE_PASSWD} localhost:8081
+        curl -G --fail --silent --output /dev/null -u $PROBE_USER:$PROBE_PASSWD localhost:8081
 - op: remove
   path: /spec/template/spec/containers/0/readinessProbe/httpGet
 
