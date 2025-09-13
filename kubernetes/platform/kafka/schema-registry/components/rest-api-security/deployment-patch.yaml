@@ -61,7 +61,7 @@
     projected:
       sources:
       - secret:
-          name: schema-registry-password
+          name: schema-registry-passwords
       - configMap:
           name: schema-registry-jaas
 
