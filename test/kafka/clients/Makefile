@@ -33,7 +33,7 @@ venv: .venv/touchfile
 	touch .venv/touchfile
 
 kafka-avro-producer: venv
-	@. .venv/bin/activate; python3 avro_producer.py \
+	@uv run avro_producer.py \
 	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
 	-s https://${KAFKA_SCHEMA_REGISTRY} \
 	-su client \
@@ -45,7 +45,7 @@ kafka-avro-producer: venv
 	--password supers1cret0
 
 kafka-avro-consumer: venv
-	@. .venv/bin/activate; python3 avro_consumer.py \
+	@uv run avro_consumer.py \
 	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
 	-su client \
 	-s https://${KAFKA_SCHEMA_REGISTRY}  \

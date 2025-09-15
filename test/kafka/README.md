@@ -49,14 +49,17 @@ kubectl kustomize kafka | kubectl apply -f -
     ```shell
     export KAFKA_REMOTE_BOOTSTRAP=kafka-bootstrap.homelab.ricsanfre.com
     export KAFKA_SCHEMA_REGISTRY=schema-registry.homelab.ricsanfre.com
+    export SCHEMA_REGISTRY_PASSWD=`kubectl get secret schema-registry-auth-secret -n kafka -o jsonpath='{.data.password}' | base64 --decode`
     ```
 
 -   Start AVRO Producer
 
     ```shell
-    python3 avro_producer.py \
+    uv run avro_producer.py \
         -b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
         -s https://${KAFKA_SCHEMA_REGISTRY} \
+        -su client \
+        -sp ${SCHEMA_REGISTRY_PASSWD} \
         -t test-topic-avro \
         -m SCRAM-SHA-512 \
         --tls true \
@@ -67,9 +70,11 @@ kubectl kustomize kafka | kubectl apply -f -
 -   Start AVRO Consumer
 
     ```shell
-    python3 avro_consumer.py \
+    uv run avro_consumer.py \
         -b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
         -s https://${KAFKA_SCHEMA_REGISTRY}  \
+        -su client \
+        -sp ${SCHEMA_REGISTRY_PASSWD} \
         -t test-topic-avro \
         -m SCRAM-SHA-512 \
         -g test-consumer-group \
