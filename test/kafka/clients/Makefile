@@ -1,7 +1,9 @@
 .EXPORT_ALL_VARIABLES:
 
+KUBECONFIG = $(shell pwd)/ansible-runner/runner/.kube/config
 KAFKA_REMOTE_BOOTSTRAP=kafka-bootstrap.homelab.ricsanfre.com
 KAFKA_SCHEMA_REGISTRY=schema-registry.homelab.ricsanfre.com
+SCHEMA_REGISTRY_PASSWORD=$(shell  kubectl get secret schema-registry-auth-secret -n kafka -o jsonpath='{.data.password}' | base64 --decode)
 
 .PHONY: kafka-external-client kafka-avro-producer kafka-avro-consumer
 
@@ -31,9 +33,11 @@ venv: .venv/touchfile
 	touch .venv/touchfile
 
 kafka-avro-producer: venv
-	. .venv/bin/activate; python3 avro_producer.py \
+	@. .venv/bin/activate; python3 avro_producer.py \
 	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
 	-s https://${KAFKA_SCHEMA_REGISTRY} \
+	-su client \
+	-sp ${SCHEMA_REGISTRY_PASSWORD} \
 	-t test-topic-avro \
 	-m SCRAM-SHA-512 \
 	--tls true \
@@ -41,9 +45,11 @@ kafka-avro-producer: venv
 	--password supers1cret0
 
 kafka-avro-consumer: venv
-	. .venv/bin/activate; python3 avro_consumer.py \
+	@. .venv/bin/activate; python3 avro_consumer.py \
 	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	-su client \
 	-s https://${KAFKA_SCHEMA_REGISTRY}  \
+	-sp ${SCHEMA_REGISTRY_PASSWORD} \
 	-t test-topic-avro \
 	-m SCRAM-SHA-512 \
 	-g test-consumer-group \

@@ -1,5 +1,7 @@
 .EXPORT_ALL_VARIABLES:
 
+KUBECONFIG = $(shell pwd)/ansible-runner/runner/.kube/config
+
 KAFKA_REMOTE_BOOTSTRAP=kafka-bootstrap.homelab.ricsanfre.com
 KAFKA_SCHEMA_REGISTRY=schema-registry.homelab.ricsanfre.com
 

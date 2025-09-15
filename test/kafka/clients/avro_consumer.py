@@ -85,6 +85,9 @@ def main(args):
         schema_str = f.read()
 
     sr_conf = {'url': args.schema_registry}
+    #Adding SchemaRegistry credentials
+    if args.registry_password is not None and args.registry_password is not None:
+        sr_conf.update({'basic.auth.user.info': f"{args.registry_user}:{args.registry_password}"})
     if 'https' in args.schema_registry and args.ca_cert is not None:
         sr_conf.update({'ssl.ca.location': args.ca_cert})
        
@@ -129,6 +132,10 @@ if __name__ == '__main__':
                         help="Bootstrap broker(s) (host[:port])")
     parser.add_argument('-s', dest="schema_registry", required=True,
                         help="Schema Registry (http(s)://host[:port]")
+    parser.add_argument('-su', dest="registry_user", default=None,
+                        help="Schema Registry user")
+    parser.add_argument('-sp', dest="registry_password", default=None,
+                        help="Schema Registry password")
     parser.add_argument('-t', dest="topic", default="example_serde_avro",
                         help="Topic name")
     parser.add_argument('-g', dest="group", default="example_serde_avro",
