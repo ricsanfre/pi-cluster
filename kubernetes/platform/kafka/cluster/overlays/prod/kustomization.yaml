@@ -10,3 +10,4 @@ components:
   - ../../components/superuser
   - ../../components/external-listener
   - ../../components/monitor
+  - ../../components/anti-affinity
