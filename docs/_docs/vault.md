@@ -73,7 +73,7 @@ Instead of installing Vault using official Ubuntu packages, installation will be
 
     In case you have your own domain, a trusted TLS certificate signed by [Letsencrypt](https://letsencrypt.org/) can be obtained for Vault server, using [Certbot](https://certbot.eff.org/).
 
-    See certbot installation instructions in [CertManager - Letsencrypt Certificates Section](/docs/certmanager/#installing-certbot-ionos). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
+    See certbot installation instructions in [TLS Certiciates (CertBot)](/docs/certbot/). Those instructions indicate how to install certbot using DNS challenge with IONOS DNS provider (my DNS provider). Similar procedures can be followed for other DNS providers.
 
     Letsencrypt using HTTP challenge is avoided for security reasons (cluster services are not exposed to public internet).
 
