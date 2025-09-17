@@ -29,7 +29,7 @@
     release_namespace: kube-system
     chart_ref: cilium
     chart_repo_url: https://helm.cilium.io
-    chart_version: 1.18.1
+    chart_version: 1.18.2
     values_files:
       - ../../kubernetes/platform/cilium/app/base/values.yaml
       - ../../kubernetes/platform/cilium/app/components/istio-config/values.yaml
