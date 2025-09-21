@@ -256,7 +256,7 @@ minio_users:
 ########################
 
 # renovate: datasource=github-releases depName=restic/restic
-restic_version: 0.18.0
+restic_version: 0.18.1
 
 # Restic S3 repository configuration
 restic_repository: "s3:{{ minio_url }}/restic"
