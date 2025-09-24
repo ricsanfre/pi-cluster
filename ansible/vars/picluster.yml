@@ -312,7 +312,7 @@ vault_custom_configuration: |
 #########################
 
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
-velero_version: v1.16.2
+velero_version: v1.17.0
 
 # Minio user, key and bucket
 minio_velero_user: "{{ vault.minio.velero.user }}"
