@@ -621,6 +621,11 @@ See more details in [K3S Automated Upgrades documentation](https://docs.k3s.io/u
       matchExpressions:
         - key: node-role.kubernetes.io/control-plane
           operator: DoesNotExist
+    # Enable plan deployment on master node (noSchedulable by installation)
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
     serviceAccountName: system-upgrade
     # Wait for k3s-server upgrade plan to complete before executing k3s-agent plan
     prepare:
