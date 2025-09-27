@@ -273,7 +273,7 @@ restic_environment:
 
 vault_hostname: "vault.{{ dns_domain }}"
 # renovate: datasource=github-releases depName=hashicorp/vault
-vault_version: 1.20.3
+vault_version: 1.20.4
 
 vault_dns: "{{ vault_hostname }}"
 vault_enable_tls: true
