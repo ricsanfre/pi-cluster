@@ -328,7 +328,7 @@ velero_secret_content: |
 ##########################
 
 # renovate: datasource=github-releases depName=longhorn/longhorn
-longhorn_version: v1.9.1
+longhorn_version: v1.10.0
 
 # Minio user, key and bucket
 minio_longhorn_user: "{{ vault.minio.longhorn.user }}"
