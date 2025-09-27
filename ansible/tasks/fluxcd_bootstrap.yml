@@ -4,7 +4,7 @@
   kubernetes.core.helm:
     name: flux-operator
     chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
-    chart_version: 0.28.0
+    chart_version: 0.29.0
     release_namespace: flux-system
     create_namespace: true
     values_files:
@@ -33,7 +33,7 @@
   kubernetes.core.helm:
     name: flux-instance
     chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
-    chart_version: 0.28.0
+    chart_version: 0.29.0
     release_namespace: flux-system
     create_namespace: true
     values_files:
