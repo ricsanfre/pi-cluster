@@ -1,0 +1,13 @@
+- op: add
+  path: /spec/template/spec/affinity
+  value:
+    # Add affinity rule to run pods only on amd64 nodes.
+    # Keycloak operator fails to run on arm64 nodes with Vertx timeouts exception
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
