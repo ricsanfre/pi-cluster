@@ -27,7 +27,7 @@ controller:
       emptyDir: {}
   extraContainers:
     - name: stream-accesslog
-      image: busybox
+      image: busybox:1.36.1
       args:
       - /bin/sh
       - -c
