@@ -258,7 +258,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
 1. Use a private PKI (custom CA to sign certificates).
 
-   Currently supported. Only minor changes are required. See details in [Doc: Quick Start instructions](https://picluster.ricsanfre.com/docs/ansible).
+   Currently supported. Only minor changes are required. See details in [Doc: Quick Start instructions](https://picluster.ricsanfre.com/docs/ansible/).
 
 2. Use other DNS provider.
 
