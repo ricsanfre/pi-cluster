@@ -144,6 +144,11 @@ minio_hostname: "s3.ricsanfre.com"
 minio_endpoint: "{{ minio_hostname }}:9091"
 minio_url: "https://{{ minio_hostname }}:9091"
 
+# renovate: datasource=github-releases depName=minio/minio
+minio_server_version: "RELEASE.2025-04-22T22-12-26Z"
+# renovate: datasource=github-releases depName=minio/minio
+minio_mc_version: "RELEASE.2025-04-16T18-13-26Z"
+
 # Minio data dirs
 minio_server_make_datadirs: true
 minio_server_datadirs:
