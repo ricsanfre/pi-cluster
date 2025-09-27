@@ -30,7 +30,7 @@
       "customType": "regex",
       "description": ["Process CloudnativePG Postgresql version"],
       "fileMatch": ["(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"],
-      "matchStrings": ["image(Name)?: (?<depName>\\S+):(?<currentValue>.*\\-.*)"],
+      "matchStrings": ["image(Name)?: (?<depName>\\S+):(?<currentValue>.*)"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "redhat"
     },
@@ -46,6 +46,7 @@
       "datasourceTemplate": "helm",
     },
     {
+      // OCI Helm Chart configuration following instructions of https://github.com/renovatebot/renovate/discussions/25056
       "customType": "regex",
       "description": ["Process ansible kubernetes oci chart repo"],
       "fileMatch": [
