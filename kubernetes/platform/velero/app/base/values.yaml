@@ -26,3 +26,10 @@ credentials:
 
 # Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
 snapshotsEnabled: false
+
+# Override kubectl image to avoid bitnami dependency
+# This should be updated when velero has a final solution to depending on bitnami images
+# https://github.com/vmware-tanzu/helm-charts/issues/698
+kubectl:
+  image:
+    repository: registry.k8s.io/kubectl
