@@ -1,0 +1,21 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  packageRules: [
+    {
+      description: "Separate PRs for prod cluster",
+      matchFileNames: [
+        "**/kubernetes/clusters/prod/**"
+      ],
+      additionalBranchPrefix: "prod-",
+      commitMessageSuffix: " [prod]"
+    },
+    {
+      description: "Separate PRs for dev cluster",
+      matchFileNames: [
+        "**/kubernetes/clusters/dev/**"
+      ],
+      additionalBranchPrefix: "dev-",
+      commitMessageSuffix: " [dev]"
+    }
+  ]
+}
