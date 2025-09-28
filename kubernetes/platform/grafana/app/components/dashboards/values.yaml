@@ -161,7 +161,7 @@ dashboards:
       # https://grafana.com/grafana/dashboards/12693-haproxy/
       # renovate: depName="HAProxy Dashboard"
       gnetId: 12693
-      revision: 11
+      revision: 12
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     vault:
