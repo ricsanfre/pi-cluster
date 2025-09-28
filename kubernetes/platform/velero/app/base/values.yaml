@@ -33,3 +33,4 @@ snapshotsEnabled: false
 kubectl:
   image:
     repository: registry.k8s.io/kubectl
+    tag: v1.34.1
