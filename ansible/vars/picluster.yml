@@ -100,7 +100,7 @@ k3s_registries:
 # FluxCD #
 ##########
 # renovate: datasource=github-releases depName=fluxcd/flux2
-fluxcd_version: v2.6.4
+fluxcd_version: v2.7.0
 
 ###########
 # Ingress #
