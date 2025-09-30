@@ -4,8 +4,8 @@ namespace: keycloak
 resources:
   - ns.yaml
   # renovate: datasource=github-tags depName=keycloak/keycloak-k8s-resources
-  - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.5/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
+  - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.4.0/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
   # renovate: datasource=github-tags depName=keycloak/keycloak-k8s-resources
-  - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.5/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
+  - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.4.0/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
   # renovate: datasource=github-tags depName=keycloak/keycloak-k8s-resources
-  - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.5/kubernetes/kubernetes.yml
+  - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.4.0/kubernetes/kubernetes.yml
