@@ -6,7 +6,7 @@ config:
     # See details on how to configure Prometheus with OTEL collector here:
     # https://github.com/prometheus-community/helm-charts/issues/5080
     otlphttp/prometheus:
-      endpoint: http://prometheus:9090/api/v1/otlp
+      endpoint: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc:9090/prometheus/api/v1/otlp
       tls:
         insecure: true
   service:
