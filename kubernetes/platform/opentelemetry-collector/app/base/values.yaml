@@ -77,7 +77,7 @@ config:
   service:
     pipelines:
       traces:
-        processors: [memory_limiter, resource, transform, batch]
+        processors: [memory_limiter, resource, batch]
         exporters: [debug, spanmetrics]
       metrics:
         receivers: [otlp, spanmetrics]
