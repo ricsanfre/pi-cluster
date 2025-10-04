@@ -11,6 +11,7 @@ components:
   - ../../components/disable-grafana
   - ../../components/vault-agent
   - ../../components/flux-monitoring
+  - ../../components/open-telemetry-receiver
 
 configMapGenerator:
   - name: kube-prometheus-stack-helm-values
