@@ -1,0 +1,101 @@
+# opentelemetry-collector helm values (base)
+image:
+  # Repo set to contrib directory to add community receivers and exporters
+  #  -  Redis receiver
+  #  -  OpenSearh Exporter
+  repository: "otel/opentelemetry-collector-contrib"
+fullnameOverride: otel-collector
+# OTEL deployed as Kubernetes Deployment
+mode: deployment
+# Presets: https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/#presets
+presets:
+  # Kubernetes Attribute Preset
+  # https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/#kubernetes-attributes-preset
+  # It add kubernetes attributes processor to each pipeline: https://opentelemetry.io/docs/platforms/kubernetes/collector/components/#kubernetes-attributes-processor
+  # The OpenTelemetry Collector can be configured to add Kubernetes metadata, such as `k8s.pod.name`, `k8s.namespace.name`, and `k8s.node.name`, to logs, metrics and traces.
+  kubernetesAttributes:
+    enabled: true
+resources:
+  limits:
+    memory: 200Mi
+service:
+  type: ClusterIP
+# Enable OTEL Collector Metrics Port  
+ports:
+  metrics:
+    enabled: true
+podAnnotations:
+  prometheus.io/scrape: "true"
+config:
+  # By Default helm chart enables all receivers: otlp, jaeger, zipkin, prometheus
+  # receivers:
+  #   jaeger:
+  #     protocols:
+  #       grpc:
+  #         endpoint: ${env:MY_POD_IP}:14250
+  #       thrift_compact:
+  #         endpoint: ${env:MY_POD_IP}:6831
+  #       thrift_http:
+  #         endpoint: ${env:MY_POD_IP}:14268
+  #   otlp:
+  #     protocols:
+  #       grpc:
+  #         endpoint: ${env:MY_POD_IP}:4317
+  #       http:
+  #         endpoint: ${env:MY_POD_IP}:4318
+  #   # if internalTelemetryViaOTLP.metrics.enabled = true, prometheus receiver will be removed
+  #   prometheus:
+  #     config:
+  #       scrape_configs:
+  #         - job_name: opentelemetry-collector
+  #           scrape_interval: 10s
+  #           static_configs:
+  #             - targets:
+  #                 - ${env:MY_POD_IP}:8888
+  #   zipkin:
+  #     endpoint: ${env:MY_POD_IP}:9411
+
+  # By Default helm chart enables debug exporter
+  # exporters:
+  #  debug: {}
+
+  processors:
+    # Add service instance id from k8s.pod.uid
+    resource:
+      attributes:
+      - key: service.instance.id
+        from_attribute: k8s.pod.uid
+        action: insert
+
+  # Spanmetrics Connector is a component in the OpenTelemetry Collector that allows you to derive metrics from span data. This is particularly useful when you have robust tracing but lack native metrics support in your language or framework.
+  # Converting traces to metrics offers valuable insights into system performance and health without requiring separate instrumentation
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/spanmetricsconnector
+  # The spanmetrics connector replaces spanmetrics processor with multiple improvements
+  connectors:
+    spanmetrics: {}
+  # Default pipelines just with debug exporter
+  service:
+    pipelines:
+      traces:
+        processors: [memory_limiter, resource, transform, batch]
+        exporters: [debug, spanmetrics]
+      metrics:
+        receivers: [otlp, spanmetrics]
+        processors: [memory_limiter, resource, batch]
+        exporters: [debug]
+      logs:
+        processors: [memory_limiter, resource, batch]
+        exporters: [debug]
+    # Export OTEL collector internal telemetry via OLTP
+    # https://opentelemetry.io/docs/collector/internal-telemetry/
+    telemetry:
+      metrics:
+        level: detailed
+        readers:
+          - periodic:
+              interval: 10000
+              timeout: 5000
+              exporter:
+                otlp:
+                  protocol: grpc
+                  endpoint: otel-collector:4318

@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: opentelemetry-collector
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: open-telemetry/opentelemetry-collector
+      version: 0.136.1
+      sourceRef:
+        kind: HelmRepository
+        name: opentelemetry
+        namespace: flux-system
+  releaseName: opentelemetry-collector
+  targetNamespace: otel
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: opentelemetry-collector-helm-values
+    valuesKey: base-values.yaml

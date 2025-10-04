@@ -1,0 +1,14 @@
+# opentelemetry-collector helm values (elasticsearch-exporter)
+config:
+  exporters:
+    elasticsearch:
+      endpoint: "http://elasticsearch-master:9200"
+      index: "otel-collector-%{+yyyy.MM.dd}"
+      username: "elastic"
+      password: "changeme"
+
+  service:
+    pipelines:
+      logs:
+        processors: [memory_limiter, resource, batch]
+        exporters: [elasticsearch, debug]

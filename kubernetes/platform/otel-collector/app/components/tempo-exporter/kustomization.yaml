@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# patch values.yaml?
+configMapGenerator:
+  - name: opentelemetry-collector-helm-values
+    behavior: merge
+    files:
+      - tempo-exporter-values.yaml=values.yaml
+
+patches:
+- target:
+    group: helm.toolkit.fluxcd.io
+    kind: HelmRelease
+    name: opentelemetry-collector
+  path: helm-patch.yaml

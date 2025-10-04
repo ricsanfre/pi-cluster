@@ -20,6 +20,7 @@ resources:
   - minio-helmrepo.yaml
   - mongodb-helmrepo.yaml
   - oauth2-proxy-helmrepo.yaml
+  - opentelemetry-helmrepo.yaml
   - prometheus-community-helmrepo.yaml
   - ricsanfre-helmrepo.yaml
   - strimzi-helmrepo.yaml

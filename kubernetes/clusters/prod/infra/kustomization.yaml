@@ -24,6 +24,7 @@ resources:
   - mongodb-operator-app.yaml
   - nginx-app.yaml
   - oauth2-proxy-app.yaml
+  - otel-collector-app.yaml
   - system-upgrade-app.yaml
   - tempo-app.yaml
   - vault-app.yaml

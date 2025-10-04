@@ -1,0 +1,14 @@
+# opentelemetry-collector helm values (tempo-exporter)
+config:
+  exporters:
+    ## Create an exporter to Tempo using the standard `otlp` export format
+    otlp:
+      endpoint: tempo-distributor-discovery.tempo.svc.cluster.local:4317
+      tls:
+        insecure: true
+  service:
+    pipelines:
+      traces:
+        processors: [memory_limiter, resource, transform, batch]
+        exporters: [debug, spanmetrics, otlp]
+

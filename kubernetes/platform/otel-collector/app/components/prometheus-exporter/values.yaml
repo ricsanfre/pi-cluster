@@ -1,0 +1,18 @@
+# opentelemetry-collector helm values (prometheus-exporter)
+config:
+  exporters:
+    # Create an exporter to Prometheus (metrics)
+    # It uses Prometheus OLTP endpoint: https://prometheus.io/blog/2024/03/14/commitment-to-opentelemetry/
+    # See details on how to configure Prometheus with OTEL collector here:
+    # https://github.com/prometheus-community/helm-charts/issues/5080
+    otlphttp/prometheus:
+      endpoint: http://prometheus:9090/api/v1/otlp
+      tls:
+        insecure: true
+  service:
+    pipelines:
+      metrics:
+        receivers: [otlp, spanmetrics]
+        processors: [memory_limiter, resource, batch]
+        exporters: [otlphttp/prometheus, debug]
+
