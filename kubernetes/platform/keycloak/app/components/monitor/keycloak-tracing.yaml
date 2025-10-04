@@ -5,5 +5,5 @@ metadata:
 spec:
   tracing:
     enabled: true
-    endpoint: http://tempo-distributor.tempo:4317
+    endpoint: http://otel-collector.otel:4317
  

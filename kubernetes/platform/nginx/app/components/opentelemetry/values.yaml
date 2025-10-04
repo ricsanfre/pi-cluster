@@ -11,7 +11,7 @@ controller:
   config:
     # Open Telemetry
     enable-opentelemetry: "true"
-    otlp-collector-host: ${otel_collector:=tempo-distributor.tempo.svc.cluster.local}
+    otlp-collector-host: ${otel_collector:=otel-collector.otel.svc.cluster.local}
     otlp-service-name: nginx-internal
     # Print access log to file instead of stdout
     # Separating acces logs from the rest
