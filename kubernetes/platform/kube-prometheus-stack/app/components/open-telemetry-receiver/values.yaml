@@ -25,7 +25,6 @@ prometheus:
         - k8s.pod.name
         - k8s.replicaset.name
         - k8s.statefulset.name
-        - k8s.statefulset.name
       translation_strategy: NoUTF8EscapingWithSuffixes
       keepIdentifyingResourceAttributes: true
     tsdb:
