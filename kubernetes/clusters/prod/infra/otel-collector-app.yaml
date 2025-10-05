@@ -10,6 +10,10 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+    - name: tempo-app
+    - name: kube-prometheus-stack-app
+    - name: elastic-stack-app
   path: ./kubernetes/platform/opentelemetry-collector/app/overlays/prod
   prune: true
   wait: true
