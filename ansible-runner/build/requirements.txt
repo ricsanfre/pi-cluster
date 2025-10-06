@@ -2,4 +2,4 @@ kubernetes==33.1.0
 hvac==2.3.0
 certbot==5.0.0
 certbot-dns-ionos==2024.11.9
-ansible-core==2.19.2
+ansible-core==2.19.3
