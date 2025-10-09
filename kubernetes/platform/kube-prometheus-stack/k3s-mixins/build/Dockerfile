@@ -1,4 +1,4 @@
-FROM golang:1.25.1-alpine AS build
+FROM golang:1.25.2-alpine AS build
 LABEL stage=builder
 
 WORKDIR /k3s-mixins
