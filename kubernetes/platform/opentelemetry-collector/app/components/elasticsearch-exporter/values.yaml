@@ -26,7 +26,9 @@ config:
         authenticator: basicauth
       logs_index: "otel"
   service:
-    extensions: [basicauth]
+    extensions:
+      - health_check
+      - basicauth
     pipelines:
       logs:
         processors: [memory_limiter, resource, batch]
