@@ -12,7 +12,6 @@ spec:
     name: flux-system
   dependsOn:
     - name: opentelemetry-collector-app
-    - name: 
   path: ./kubernetes/platform/opentelemetry-demo/app/overlays/prod
   prune: true
   wait: true
