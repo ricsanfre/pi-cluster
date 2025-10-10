@@ -1,5 +1,5 @@
 # opentelemetry-collector helm values (elasticsearch-exporter)
-extraVars:
+extraEnvs:
   - name: ELASTIC_USER
     valueFrom:
       secretKeyRef:
