@@ -147,7 +147,7 @@ minio_url: "https://{{ minio_hostname }}:9091"
 # renovate: datasource=github-releases depName=minio/minio versioning=regex:^RELEASE\.(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})T(?<build>\d{2}-\d{2}-\d{2})Z?$
 minio_server_version: RELEASE.2025-04-22T22-12-26Z
 # renovate: datasource=github-releases depName=minio/mc versioning=regex:^RELEASE\.(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})T(?<build>\d{2}-\d{2}-\d{2})Z?$
-minio_mc_version: RELEASE.2025-04-16T18-13-26Z
+minio_mc_version: RELEASE.2025-08-13T08-35-41Z
 
 # Minio data dirs
 minio_server_make_datadirs: true
