@@ -14,3 +14,5 @@ prometheus:
   enabled: false
 grafana:
   enabled: false
+opensearch:
+  enabled: false
