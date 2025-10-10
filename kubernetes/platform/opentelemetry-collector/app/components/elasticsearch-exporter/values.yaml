@@ -4,7 +4,7 @@ extraEnvs:
     valueFrom:
       secretKeyRef:
         name: otel-elasticsearch-exporter-secret
-        key: es-user
+        key: es-username
   - name: ELASTIC_PASSWORD
     valueFrom:
       secretKeyRef:
