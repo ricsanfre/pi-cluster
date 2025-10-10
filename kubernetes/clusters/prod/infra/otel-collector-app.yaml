@@ -11,6 +11,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
+    - name: external-secrets-config
     - name: tempo-app
     - name: kube-prometheus-stack-app
     - name: elastic-stack-app

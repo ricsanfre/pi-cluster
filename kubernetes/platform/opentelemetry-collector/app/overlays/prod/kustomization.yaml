@@ -8,7 +8,7 @@ resources:
 components:
   - ../../components/tempo-exporter
   - ../../components/prometheus-exporter
-  # - ../../components/elasticsearch-exporter
+  - ../../components/elasticsearch-exporter
 
 configMapGenerator:
   - name: opentelemetry-collector-helm-values
