@@ -17,7 +17,7 @@ ingress:
   annotations:
     # Enable cert-manager to create automatically the SSL certificate and store in Secret
     cert-manager.io/cluster-issuer: ${TLS_ISSUER:=letsencrypt-issuer}
-    cert-manager.io/common-name: otel-demo.${CLUSTER_DOMAIN}
+    cert-manager.io/common-name: otel-collector.${CLUSTER_DOMAIN}
   ingressClassName: nginx
   hosts:
     - host: otel-collector.${CLUSTER_DOMAIN}
