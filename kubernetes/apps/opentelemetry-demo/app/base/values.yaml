@@ -1,11 +1,12 @@
 # opentelemetry-demo helm values (base)
 
 default:
+  # Override OTEL collector environement variable in all components
   envOverrides:
     - name: OTEL_COLLECTOR_NAME
       value: otel-collector.otel
 
-# Disable observability components
+# Disable all observability components
 opentelemetry-collector:
   enabled: false
 jaeger:
@@ -16,3 +17,30 @@ grafana:
   enabled: false
 opensearch:
   enabled: false
+
+components:
+  frontend-proxy:
+    # Enable Front-end Ingress
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        # Enable cert-manager to create automatically the SSL certificate and store in Secret
+        cert-manager.io/cluster-issuer: ${TLS_ISSUER:=letsencrypt-issuer}
+        cert-manager.io/common-name: otel-demo.${CLUSTER_DOMAIN}
+      hosts:
+        - host: otel-demo.${CLUSTER_DOMAIN}
+          paths:
+            - path: /
+              pathType: Prefix
+              port: 8080
+      tls:
+        - hosts:
+          - otel-demo.${CLUSTER_DOMAIN}
+          secretName: otel-demo-tls
+
+  # Configure Browser Telemetry
+  frontend:
+    envOverrides:
+      - name: PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+        value: https://otel-collector.${CLUSTER_DOMAIN}/otlp-http/v1/traces
