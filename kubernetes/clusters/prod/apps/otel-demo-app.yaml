@@ -15,3 +15,7 @@ spec:
   path: ./kubernetes/apps/opentelemetry-demo/app/overlays/prod
   prune: true
   wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
