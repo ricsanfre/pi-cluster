@@ -9,6 +9,7 @@ components:
   - ../../components/tempo-exporter
   - ../../components/prometheus-exporter
   - ../../components/elasticsearch-exporter
+  - ../../components/ingress
 
 configMapGenerator:
   - name: opentelemetry-collector-helm-values

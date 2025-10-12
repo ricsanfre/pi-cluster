@@ -1,8 +1,6 @@
 # opentelemetry-collector helm values (base)
 image:
   # Repo set to contrib directory to add community receivers and exporters
-  #  -  Redis receiver
-  #  -  OpenSearh Exporter
   repository: "otel/opentelemetry-collector-contrib"
 fullnameOverride: otel-collector
 # OTEL deployed as Kubernetes Deployment
@@ -10,9 +8,9 @@ mode: deployment
 # Presets: https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/#presets
 presets:
   # Kubernetes Attribute Preset
-  # https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/#kubernetes-attributes-preset
-  # It add kubernetes attributes processor to each pipeline: https://opentelemetry.io/docs/platforms/kubernetes/collector/components/#kubernetes-attributes-processor
   # The OpenTelemetry Collector can be configured to add Kubernetes metadata, such as `k8s.pod.name`, `k8s.namespace.name`, and `k8s.node.name`, to logs, metrics and traces.
+  # https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/#kubernetes-attributes-preset
+  # It adds kubernetes attributes processor to each pipeline: https://opentelemetry.io/docs/platforms/kubernetes/collector/components/#kubernetes-attributes-processor
   kubernetesAttributes:
     enabled: true
 resources:
@@ -20,7 +18,7 @@ resources:
     memory: 200Mi
 service:
   type: ClusterIP
-# Enable OTEL Collector Metrics Port  
+# Enable OTEL Collector Metrics Port
 ports:
   metrics:
     enabled: true
