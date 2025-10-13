@@ -20,7 +20,7 @@
     release_namespace: kube-system
     chart_ref: prometheus-operator-crds
     chart_repo_url: https://prometheus-community.github.io/helm-charts
-    chart_version: 24.0.0
+    chart_version: 24.0.1
     wait: true
 
 - name: Deploy Cilium Helm Chart
