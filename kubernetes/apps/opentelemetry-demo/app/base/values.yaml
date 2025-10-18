@@ -5,16 +5,16 @@ default:
   envOverrides:
     - name: OTEL_COLLECTOR_NAME
       value: otel-collector.otel
-  schedulingRules:
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: kubernetes.io/arch
-              operator: In
-              values:
-              - amd64
+  # schedulingRules:
+  #   affinity:
+  #     nodeAffinity:
+  #       requiredDuringSchedulingIgnoredDuringExecution:
+  #         nodeSelectorTerms:
+  #         - matchExpressions:
+  #           - key: kubernetes.io/arch
+  #             operator: In
+  #             values:
+  #             - amd64
 
 # Disable all observability components
 opentelemetry-collector:
