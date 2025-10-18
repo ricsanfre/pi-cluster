@@ -145,7 +145,7 @@ minio_endpoint: "{{ minio_hostname }}:9091"
 minio_url: "https://{{ minio_hostname }}:9091"
 
 # renovate: datasource=github-releases depName=minio/minio versioning=regex:^RELEASE\.(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})T(?<build>\d{2}-\d{2}-\d{2})Z?$
-minio_server_version: RELEASE.2025-09-07T16-13-09Z
+minio_server_version: RELEASE.2025-10-15T17-29-55Z
 # renovate: datasource=github-releases depName=minio/mc versioning=regex:^RELEASE\.(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})T(?<build>\d{2}-\d{2}-\d{2})Z?$
 minio_mc_version: RELEASE.2025-08-13T08-35-41Z
 
