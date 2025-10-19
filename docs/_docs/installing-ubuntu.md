@@ -8,7 +8,7 @@ last_modified_at: "09-06-2023"
 Ubuntu Server 64 bits installation on Raspberry Pi is supported since release 20.04.
 Ubuntu images for Raspberry Pi can be downloaded from [Ubuntu's download page](https://ubuntu.com/download/raspberry-pi).
 
-Ubuntu Server 22.04.2 LTS for ARM64 image will be used.
+Ubuntu Server 24.04.3 LTS for ARM64 image will be used.
 
 
 ## Headless installation
@@ -22,7 +22,7 @@ Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/
 
   SDCard or USB 3.0 Flass Drive (or SSD disk connected through a USB3.0 to SATA adapter) can be used to hosts the OS.
 
-  [Raspberry PI Imager](https://www.raspberrypi.com/software/) can be used to burn Ubuntu 22.04 Server (64 bits) OS into a SD Card/USB Flash disk.
+  [Raspberry PI Imager](https://www.raspberrypi.com/software/) can be used to burn Ubuntu 24.04 Server (64 bits) OS into a SD Card/USB Flash disk.
 
 
 - Step 3: Mofify user-data network-config within /boot directory in the SDCard or USB Flash drive/SSD
@@ -95,13 +95,13 @@ Ubuntu cloud-init configuration files within the image (`/boot/user-data` and `/
 
 Using a Linux desktop, creation of booting USB SSD disk for different cluster nodes can be automated.
 
-- Step 1. Download Ubuntu 22.04 Raspberry PI 64 bits image
+- Step 1. Download Ubuntu 24.04 Raspberry PI 64 bits image
 
   https://cdimage.ubuntu.com/releases/22.04/release/ 
 
   ```shell
-  IMG=ubuntu-22.04.2-preinstalled-server-arm64+raspi.img.xz
-  URL_IMG=https://cdimage.ubuntu.com/releases/22.04/release/${IMG}
+  IMG=ubuntu-24.04.3-preinstalled-server-arm64+raspi.img.xz
+  URL_IMG=https://cdimage.ubuntu.com/releases/24.04/release/${IMG}
   mkdif img
   # Download Image
   wget ${URL_IMG} -O img/${IMG}

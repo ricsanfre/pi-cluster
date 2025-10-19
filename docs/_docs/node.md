@@ -33,7 +33,7 @@ Only ethernet interface (eth0) will be used connected to the lan switch. Wifi in
 
 Ubuntu can be installed on Raspbery PI using a preconfigurad cloud image that need to be copied to SDCard or USB Flashdisk/SSD.
 
-Raspberry Pis will be configured to boot Ubuntu OS from USB conected disk (Flash Disk or SSD disk). The initial Ubuntu 22.04 LTS configuration on a Raspberry Pi 4 will be automated using cloud-init.
+Raspberry Pis will be configured to boot Ubuntu OS from USB conected disk (Flash Disk or SSD disk). The initial Ubuntu 24.04 LTS configuration on a Raspberry Pi 4 will be automated using cloud-init.
 
 In order to enable boot from USB, Raspberry PI firmware might need to be updated. Follow the producedure indicated in ["Raspberry PI - Firmware Update"](/docs/firmware/).
 
@@ -218,7 +218,7 @@ Server autoinstallation can be done through network using PXE ([Preboot eXecutio
 
 See details in Ubuntu's documentation: ["Ubuntu Advance Installation - Netbooting the server installer in amd64"](https://ubuntu.com/server/docs/install/netboot-amd64)
 
-A PXE server need to be deployed in the Cluster for automatically autoinstall Ubuntu 22.04 in x86 nodes. To install PXE server follow the producedure indicated in ["PXE Server"](/docs/pxe-server/).
+A PXE server need to be deployed in the Cluster for automatically autoinstall Ubuntu 24.04 in x86 nodes. To install PXE server follow the producedure indicated in ["PXE Server"](/docs/pxe-server/).
 
 Follow the procedure indicated in ["Ubuntu OS Installation - x86 (PXE Server)"](/docs/ubuntu/x86/) to install Ubuntu on HP Elitedesk 800 G3 mini PCs.
 

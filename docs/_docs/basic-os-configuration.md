@@ -61,7 +61,7 @@ For solving this [`fake-hwclock`](http://manpages.ubuntu.com/manpages/focal/man8
 
 ### Installing Utility scripts
 
-Raspberry PI OS contains several specific utilities such as `vcgencmd` that are also available in Ubuntu 22.04 through the package [`libraspberrypi-bin`](https://packages.ubuntu.com/jammy/libraspberrypi-bin)
+Raspberry PI OS contains several specific utilities such as `vcgencmd` that are also available in Ubuntu 24.04 through the package [`libraspberrypi-bin`](https://packages.ubuntu.com/jammy/libraspberrypi-bin)
 
 ```shell
 sudo apt install libraspberrypi-bi
