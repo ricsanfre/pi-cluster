@@ -11,6 +11,8 @@ common_packages:
 
 rpi_packages:
   - libraspberrypi-bin
-  - linux-modules-extra-raspi
+#  linux-modules-extra-raspi not needed anynore as of Ubuntu 24.04
+#  ref: https://answers.launchpad.net/ubuntu/+source/linux-raspi/+question/817506
+#  - linux-modules-extra-raspi
   - fake-hwclock
   - bridge-utils
