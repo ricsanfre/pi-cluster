@@ -2,7 +2,7 @@
 title: PXE sever
 permalink: /docs/pxe-server/
 description: How to deploy a PXE server for netbooting server auntoinstall for x86 cluster nodes.
-last_modified_at: "04-12-2024"
+last_modified_at: "19-10-2025"
 ---
 
 Ubuntu server autoinstallation can be done through network using PXE ([Preboot eXecution Environment](https://en.wikipedia.org/wiki/Preboot_Execution_Environment)). x86-64 systems boot in either UEFI or legacy (“BIOS”) mode (many systems can be configured to boot in either mode). The precise details depend on the system firmware, but both modes supports the PXE specification, which allows the provisioning of a bootloader over the network.
@@ -80,7 +80,7 @@ Webserver will be used as kick-start server providing to the netboot installer, 
 - Step 2. Created a new file ks-server.conf under /etc/apache2/sites-available/ with the following content
 
   ```
-  <VirtualHost 10.0.0.10:80>
+  <VirtualHost 10.0.0.11:80>
       ServerAdmin root@server1.example.com
       DocumentRoot /
       ServerName server.example.com
@@ -125,16 +125,16 @@ Webserver will be used as kick-start server providing to the netboot installer, 
 
 Ubuntu live ISO need to be served by the HTTP server
 
-- Step 1. Download Ubuntu 22.04 server live ISO
+- Step 1. Download Ubuntu 24.03 server live ISO
 
   ```shell
-  wget https://releases.ubuntu.com/jammy/ubuntu-22.04.5-live-server-amd64.iso
+  wget https://releases.ubuntu.com/noble/ubuntu-24.04.3-live-server-amd64.iso
   ```
 
 - Step 2. Copy to images directory
 
   ```shell
-  cp ubuntu-22.04.5-live-server-amd64.iso /var/www/html/images/.
+  cp ubuntu-22.04.3-live-server-amd64.iso /var/www/html/images/.
   ```
 
 #### Serving cloud-init files via HTTP
@@ -160,7 +160,7 @@ auto-install cloud-init files are served by HTTP server
   #cloud-config
   autoinstall:
     identity:
-      hostname: jammy-minimal
+      hostname: ubuntu-minimal
       password: $6$gnqbMUzHhQzpDEw.$.cCNVVDsDfj5Feebh.5O4VbOmib7tyjmeI2ZsFP7VK2kWwgJFbfjvXo3chpeAqCgXWVIW9oNQ/Ag85PR0IsKD/
       username: ubuntu
     version: 1
@@ -237,16 +237,16 @@ TFTP server will be installed in external services node: `node1`
 
 ##### Copying kernel and initrd files
 
-- Step 1. Download Ubuntu 22.04 server live ISO
+- Step 1. Download Ubuntu 24.04 server live ISO
 
   ```shell
-  wget https://releases.ubuntu.com/jammy/ubuntu-22.04.5-live-server-amd64.iso
+  wget https://releases.ubuntu.com/noble/ubuntu-24.04.3-live-server-amd64.iso
   ```
 
 - Step 2. Mount the ISO file
 
   ```shell
-  mount ubuntu-22.04.5-live-server-amd64.iso /mnt
+  mount ubuntu-24.04.3-live-server-amd64.iso /mnt
   ```
 
 - Step 3. Copy linux kernel and initrd files to TFTP server root
@@ -312,7 +312,7 @@ TFTP server will be installed in external services node: `node1`
 
   menuentry 'Install Ubuntu 22.04' {
           gfxmode $linux_gfx_mode
-          linux vmlinuz ip=dhcp url=http://10.0.0.11/images/ubuntu-22.04.5-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/${net_default_mac}/ cloud-config-url=/dev/null
+          linux vmlinuz ip=dhcp url=http://10.0.0.11/images/ubuntu-24.04.3-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/${net_default_mac}/ cloud-config-url=/dev/null
           initrd initrd
   }
   ```
@@ -350,12 +350,12 @@ TFTP server will be installed in external services node: `node1`
   default menu.c32
   menu title Ubuntu installer
 
-  label jammy
-          menu label Install Ubuntu J^ammy (22.04)
+  label noble
+          menu label Install Ubuntu N^oble (24.04)
           menu default
           kernel vmlinuz
           initrd initrd
-          append ip=dhcp url=http://10.0.0.11/images/ubuntu-22.04.5-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.11/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
+          append ip=dhcp url=http://10.0.0.11/images/ubuntu-24.04.3-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.11/ks/10:e7:c6:16:54:10/ cloud-config-url=/dev/null
   prompt 0
   timeout 300
   ```
@@ -378,19 +378,19 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
 - Step 2: Make shared NFS directory
 
   ```shell
-  sudo mkdir -p /mnt/jammy-live-server-amd64-iso-nfs/
+  sudo mkdir -p /mnt/ubuntu-live-server-amd64-iso-nfs/
   ```
 - Step 3: Mount ubuntu ISO file
 
   ```shell
-  sudo mount /var/www/html/images/ubuntu-22.04.5-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs/
+  sudo mount /var/www/html/images/ubuntu-24.04.3-live-server-amd64.iso /mnt/ubuntu-live-server-amd64-iso-nfs/
   ```
 
   Configure mount on start
 
   Add to `/etc/fstab` file the following line
   ```
-  /var/www/html/images/ubuntu-22.04.5-live-server-amd64.iso /mnt/jammy-live-server-amd64-iso-nfs iso9660 loop 0 0
+  /var/www/html/images/ubuntu-24.04.3-live-server-amd64.iso /mnt/ubuntu-live-server-amd64-iso-nfs iso9660 loop 0 0
   ```
 
 - Step 4: Configure NFS
@@ -398,7 +398,7 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
   Edit `/etc/exports` file adding the following line:
 
   ```
-  /mnt/jammy-live-server-amd64-iso-nfs 10.0.0.0/24(ro,sync,no_subtree_check)
+  /mnt/ubuntu-live-server-amd64-iso-nfs 10.0.0.0/24(ro,sync,no_subtree_check)
   ```
 
 - Step 5: export NFS directory
@@ -453,7 +453,7 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
 
   menuentry 'Install Ubuntu 22.04' {
           gfxmode $linux_gfx_mode
-          linux vmlinuz netboot=nfs nfsroot=10.0.0.10:/mnt/jammy-live-server-amd64-iso-nfs ip=dhcp  autoinstall ds=nocloud-net\;s=http://10.0.0.10/ks/ cloud-config-url=/dev/null
+          linux vmlinuz netboot=nfs nfsroot=10.0.0.11:/mnt/ubuntu-live-server-amd64-iso-nfs ip=dhcp  autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/ cloud-config-url=/dev/null
           initrd initrd
   }
   ```
