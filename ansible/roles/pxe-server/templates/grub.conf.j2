@@ -27,7 +27,7 @@ set linux_gfx_mode=keep
 
 export linux_gfx_mode
 
-menuentry 'Install Ubuntu 22.04' {
+menuentry 'Install Ubuntu 24.04' {
         gfxmode $linux_gfx_mode
         linux vmlinuz ip=dhcp url=http://{{ kick_start_server }}/images/{{ ubuntu_live_server_iso_file }} autoinstall ds=nocloud-net\;s=http://{{ kick_start_server }}/ks/${net_default_mac}/ cloud-config-url=/dev/null
         initrd initrd
