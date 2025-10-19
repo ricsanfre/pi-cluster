@@ -1,11 +1,11 @@
-IMG=ubuntu-22.04.5-live-server-amd64.iso
-URL_IMG=https://releases.ubuntu.com/jammy/${IMG}
+IMG=ubuntu-24.04.3-live-server-amd64.iso
+URL_IMG=https://releases.ubuntu.com/noble/${IMG}
 ISO_MOUNT=/tmp/iso-disk
 OUT_BOOT_FILES=pxe-files/boot/
 
-BUILD_CONTAINER=$(shell docker create pxe-build)
-
 .EXPORT_ALL_VARIABLES:
+
+default: get-kernel-files get-uefi-files
 
 pxe-files/img/${IMG}:
 	wget ${URL_IMG} -O pxe-files/img/${IMG}
@@ -26,5 +26,6 @@ build/build-docker-helper-image:
 
 .PHONY: get-uefi-files
 get-uefi-files: build/build-docker-helper-image
+	$(eval BUILD_CONTAINER := $(shell docker create pxe-build))
 	docker cp ${BUILD_CONTAINER}:/build/. ${OUT_BOOT_FILES}
 	docker rm -v ${BUILD_CONTAINER}
