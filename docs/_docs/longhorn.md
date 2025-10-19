@@ -99,7 +99,7 @@ To use encrypted volumes, `dm_crypt` kernel module has to be loaded and that 
 
 The device mapper is a framework provided by the Linux kernel for mapping physical block devices onto higher-level virtual block devices. It forms the foundation of the `dm-crypt` disk encryption and provides the linear dm device on the top of v2 volume.[^6]
 
-Ubuntu 22.04 sever includes this package by default.
+Ubuntu 24.04 sever includes this package by default.
 
 To install the package:
 

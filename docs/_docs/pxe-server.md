@@ -9,7 +9,7 @@ Ubuntu server autoinstallation can be done through network using PXE ([Preboot e
 
 See details in Ubuntu's documentation: ["Ubuntu Advance Installation - Netbooting the server installer in amd64"](https://ubuntu.com/server/docs/install/netboot-amd64)
 
-A PXE server will be deployed in the Cluster for automatically autoinstall Ubuntu 22.04 in x86 nodes. This PXE server will be deployed in `node1` node, installing a TFTP server and a Kick-start web service to serve cloud-init files and ISO live image. DHCP service, running in `gateway`, has to be configured to provide the proper boot options.
+A PXE server will be deployed in the Cluster for automatically autoinstall Ubuntu 24.04 in x86 nodes. This PXE server will be deployed in `node1` node, installing a TFTP server and a Kick-start web service to serve cloud-init files and ISO live image. DHCP service, running in `gateway`, has to be configured to provide the proper boot options.
 
 ![gateway-dns-dhcp-config](/assets/img/gateway-dns-dhcp-config.png)
 
@@ -310,7 +310,7 @@ TFTP server will be installed in external services node: `node1`
 
   export linux_gfx_mode
 
-  menuentry 'Install Ubuntu 22.04' {
+  menuentry 'Install Ubuntu 24.04' {
           gfxmode $linux_gfx_mode
           linux vmlinuz ip=dhcp url=http://10.0.0.11/images/ubuntu-24.04.3-live-server-amd64.iso autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/${net_default_mac}/ cloud-config-url=/dev/null
           initrd initrd
@@ -451,7 +451,7 @@ Testing with servers with less than 5 GB of memory, for example for testing PXE 
 
   export linux_gfx_mode
 
-  menuentry 'Install Ubuntu 22.04' {
+  menuentry 'Install Ubuntu 24.04' {
           gfxmode $linux_gfx_mode
           linux vmlinuz netboot=nfs nfsroot=10.0.0.11:/mnt/ubuntu-live-server-amd64-iso-nfs ip=dhcp  autoinstall ds=nocloud-net\;s=http://10.0.0.11/ks/ cloud-config-url=/dev/null
           initrd initrd

@@ -15,7 +15,7 @@ It will also provide DNS, NTP and DHCP services to my lab network.
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
-In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster: Ubuntu 22.04 64 bits.
+In order to ease the automation with Ansible, OS installed on **gateway** is the same as the one installed in the nodes of the cluster: Ubuntu 24.04 64 bits.
 
 
 ## Storage Configuration
@@ -33,7 +33,7 @@ Static IP addres in home network, will enable the configuration of static routes
 
 Ubuntu can be installed on Raspbery PI using a preconfigurad cloud image that need to be copied to SDCard or USB Flashdisk/SSD.
 
-Raspberry Pis will be configured to boot Ubuntu OS from USB conected disk (Flash Disk or SSD disk). The initial Ubuntu 22.04 LTS configuration on a Raspberry Pi 4 will be automated using cloud-init.
+Raspberry Pis will be configured to boot Ubuntu OS from USB conected disk (Flash Disk or SSD disk). The initial Ubuntu 24.04 LTS configuration on a Raspberry Pi 4 will be automated using cloud-init.
 
 In order to enable boot from USB, Raspberry PI firmware might need to be updated. Follow the producedure indicated in ["Raspberry PI - Firmware Update"](/docs/firmware/).
 

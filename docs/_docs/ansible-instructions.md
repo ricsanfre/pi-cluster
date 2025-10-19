@@ -190,7 +190,7 @@ The installation and configuration process is described in ["Cluster Gateway (Op
 
 #### Option 2:  Ubuntu OS 
 
-`gateway` router/firewall can be implemented deploying Linux services on Ubuntu 22.04 OS
+`gateway` router/firewall can be implemented deploying Linux services on Ubuntu 24.04 OS
 The installation and configuration process is described in ["Cluster Gateway (Ubuntu)"](/docs/gateway/)
 
 ### Install external services node

@@ -13,7 +13,7 @@ Raspberry Pi’s bootloader has a 2020/09/03 version that just started supportin
 First step is to prepare Raspberry Pis to update its Firmware and enable boot from USB stick. 
 Firmware update and bootloader configuration is fully supported only using Raspberry Pi OS.
 
-Ubuntu 22.04 LTS for RaspberryPi also supports “out-of-the-box” booting from USB. This version is will be used within the cluster.
+Ubuntu 24.04 LTS for RaspberryPi also supports “out-of-the-box” booting from USB. This version is will be used within the cluster.
 
 {{site.data.alerts.note}}
 
