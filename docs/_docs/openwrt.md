@@ -436,11 +436,11 @@ UCI cli can be used instead[^3]
   uci set dhcp.@match[-1].networkid='efi64'
   uci set dhcp.@match[-1].match='60,PXEClient:Arch:00007'
   uci add dhcp boot
-  uci set dhcp.@boot[-1].filename='tag:bios,bios/pxelinux.0'
+  uci set dhcp.@boot[-1].filename='tag:bios,pxelinux.0'
   uci set dhcp.@boot[-1].serveraddress=10.0.0.11
   uci set dhcp.@boot[-1].servername=node1
   uci add dhcp boot
-  uci set dhcp.@boot[-1].filename='tag:efi64,efi64/bootx64.efi'
+  uci set dhcp.@boot[-1].filename='tag:efi64,bootx64.efi'
   uci set dhcp.@boot[-1].serveraddress=10.0.0.11
   uci set dhcp.@boot[-1].servername=node1
   uci commit dhcp

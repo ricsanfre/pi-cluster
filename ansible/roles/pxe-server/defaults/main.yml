@@ -1,6 +1,6 @@
 ---
 # ISO file
-ubuntu_live_server_iso_file: ubuntu-22.04.5-live-server-amd64.iso
+ubuntu_live_server_iso_file: ubuntu-24.04.3-live-server-amd64.iso
 
 # Kick-start server (http server)
 apache_package_list:
