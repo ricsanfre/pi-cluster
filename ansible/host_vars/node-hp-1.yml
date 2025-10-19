@@ -3,7 +3,7 @@ autoinstall:
   network:
     version: 2
     ethernets:
-      enp0s3:
+      eno1:
         dhcp4: false
         dhcp6: false
         addresses:
@@ -74,7 +74,7 @@ autoinstall:
         id: lvm_volgroup-0
       - name: ubuntu-lv
         volgroup: lvm_volgroup-0
-        size: 30G
+        size: 50G
         wipe: superblock
         preserve: false
         path: /dev/ubuntu-vg/ubuntu-lv
