@@ -110,3 +110,11 @@ Starting with Ubuntu 21.10, vxlan support on Raspberry Pi has been moved into a 
 ```shell
 sudo apt install linux-modules-extra-raspi & reboot
 ```
+
+{{site.data.alerts.note}}
+
+This step is not needed anynore for Ubuntu 24.04 since the 6.7.0 version of the kernel packages, there is no linux-modules-extra package any more and everything has been combined into the linux-modules package.
+
+See more details in this [Launchpad answer](https://answers.launchpad.net/ubuntu/+source/linux-raspi/+question/817506)
+
+{{site.data.alerts.end}}
