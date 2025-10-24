@@ -24,7 +24,7 @@ config:
       endpoint: "http://efk-es-http.elastic:9200"
       auth:
         authenticator: basicauth
-      logs_index: "otel"
+      # logs_index: "otel"
   service:
     extensions:
       - health_check
