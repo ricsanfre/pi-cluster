@@ -32,7 +32,7 @@ collections:
   - name: kubernetes.core
     version: 6.2.0
   - name: community.hashi_vault
-    version: 7.0.0
+    version: 7.1.0
   - name: ansible.posix
     version: 2.1.0
   - name: community.crypto
