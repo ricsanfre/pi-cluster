@@ -7,8 +7,8 @@ config:
     # https://github.com/prometheus-community/helm-charts/issues/5080
     otlphttp/prometheus:
       endpoint: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc:9090/prometheus/api/v1/otlp
-      # tls:
-      #   insecure: true
+      tls:
+        insecure: true
   service:
     pipelines:
       metrics:
