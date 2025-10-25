@@ -56,7 +56,7 @@ config:
   # By Default helm chart enables debug exporter
   exporters:
     debug:
-      verbosity: detailed
+      verbosity: basic
 
   processors:
     # Add service instance id from k8s.pod.uid
