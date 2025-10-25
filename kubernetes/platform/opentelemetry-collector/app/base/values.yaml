@@ -96,7 +96,5 @@ config:
               timeout: 5000
               exporter:
                 otlp:
-                  protocol: grpc
-                  # Add insecure label to avoid TLS handshake errors
-                  insecure: true
+                  protocol: http/protobuf
                   endpoint: otel-collector:4318
