@@ -97,4 +97,6 @@ config:
               exporter:
                 otlp:
                   protocol: grpc
+                  # Add insecure label to avoid TLS handshake errors
+                  insecure: true
                   endpoint: otel-collector:4318
