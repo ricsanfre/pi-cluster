@@ -43,8 +43,8 @@ spec:
   healthCheckExprs:
     - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Elasticsearch
-      failed: status.health in ["yellow","red"]
-      current: status.health in ["green"]
+      failed: status.health in ["red"]
+      current: status.health in ["green", "yellow"]
     - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Kibana
       failed: status.health in ["yellow","red"]
