@@ -97,4 +97,4 @@ config:
               exporter:
                 otlp:
                   protocol: http/protobuf
-                  endpoint: otel-collector:4318
+                  endpoint: http://otel-collector:4318
