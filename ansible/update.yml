@@ -1,11 +1,12 @@
 ---
-- hosts: all
+- name: Update all packages and reboot if needed
+  hosts: all
   become: true
   gather_facts: false
 
   tasks:
     - name: Update apt repo and cache on all Debian/Ubuntu boxes
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         # Run the equivalent of apt-get update command on all servers
         force_apt_get: true
@@ -16,14 +17,14 @@
         # This option is set in seconds
 
     - name: Upgrade all packages on servers
-      apt:
+      ansible.builtin.apt:
         upgrade: dist
         # Run the equivalent of ‘apt-get upgrade’
         force_apt_get: true
         # Use apt-get instead of aptitude
 
     - name: Check if a reboot is needed on all servers
-      stat:
+      ansible.builtin.stat:
         path: /var/run/reboot-required
         get_checksum: false
         # Algorithm to determine checksum of file
@@ -31,7 +32,7 @@
       # Save a result in and we are going to use it as follows to reboot the box
 
     - name: Reboot the box if kernel updated
-      reboot:
+      ansible.builtin.reboot:
         msg: "Reboot initiated by Ansible for kernel updates"
         connect_timeout: 5
         reboot_timeout: 300

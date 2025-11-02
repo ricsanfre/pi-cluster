@@ -1,26 +1,26 @@
 ---
 
 - name: Get K3s installation script
-  get_url:
+  ansible.builtin.get_url:
     url: https://get.k3s.io
     dest: /tmp/k3s_install.sh
     mode: '0766'
 
 - name: Install K3s
-  command: "/tmp/k3s_install.sh server"
+  ansible.builtin.command: "/tmp/k3s_install.sh server"
   environment:
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
   changed_when: true
 
 - name: Create directory .kube
-  file:
+  ansible.builtin.file:
     path: ~{{ ansible_user }}/.kube
     state: directory
     owner: "{{ ansible_user }}"
     mode: "u=rwx,g=rx,o="
 
 - name: Copy config file to user home directory
-  copy:
+  ansible.builtin.copy:
     src: /etc/rancher/k3s/k3s.yaml
     dest: ~{{ ansible_user }}/.kube/config
     remote_src: true

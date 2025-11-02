@@ -1,16 +1,18 @@
 ---
-- hosts: picluster
+- name: Shutdown Pi Cluster nodes
+  hosts: picluster
   become: true
   gather_facts: false
   tasks:
     - name: Shutdown
-      command: shutdown -h 1 min
+      ansible.builtin.command: shutdown -h 1 min
       ignore_errors: true
 
-- hosts: gateway
+- name: Shutdown Gateway node
+  hosts: gateway
   become: true
   gather_facts: false
   tasks:
     - name: Shutdown
-      command: shutdown -h 1 min
+      ansible.builtin.command: shutdown -h 1 min
       ignore_errors: true

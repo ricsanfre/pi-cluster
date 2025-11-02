@@ -15,24 +15,24 @@
   become: true
   pre_tasks:
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      ansible.builtin.include_vars: "vars/vault.yml"
       tags: ["always"]
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      ansible.builtin.include_vars: "vars/picluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/prereq
 
 - name: Install K3S master node
   hosts: k3s_master
-  tags: [install]
+  tags: [install, master]
   become: true
   pre_tasks:
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      ansible.builtin.include_vars: "vars/vault.yml"
       tags: ["always"]
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      ansible.builtin.include_vars: "vars/picluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/master
@@ -40,14 +40,14 @@
 
 - name: Install K3S worker nodes
   hosts: k3s_worker
-  tags: [install]
+  tags: [install, worker]
   become: true
   pre_tasks:
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      ansible.builtin.include_vars: "vars/vault.yml"
       tags: ["always"]
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      ansible.builtin.include_vars: "vars/picluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/worker
@@ -57,10 +57,10 @@
   tags: [config]
   pre_tasks:
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      ansible.builtin.include_vars: "vars/vault.yml"
       tags: ["always"]
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      ansible.builtin.include_vars: "vars/picluster.yml"
       tags: ["always"]
   tasks:
     # - name: "Wait for worker nodes to be ready"
@@ -73,8 +73,8 @@
     #   delay: 5
     #   with_items: "{{ groups['k3s_worker'] }}"
 
-    - name: label k3s worker nodes
-      command:
+    - name: Label k3s worker nodes
+      ansible.builtin.command:
         cmd: "kubectl label nodes {{ item }} kubernetes.io/role=worker"
       with_items: "{{ groups['k3s_worker'] }}"
 
@@ -90,8 +90,8 @@
 
     - name: Write Kubernetes config file with the correct cluster address
       ansible.builtin.copy:
-        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', k3s_api_vip ) }}"
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', k3s_api_vip) }}"
         dest: "~/.kube/config"
-        mode: 0600
+        mode: "0600"
       delegate_to: localhost
       run_once: true

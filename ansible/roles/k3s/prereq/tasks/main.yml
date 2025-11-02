@@ -1,14 +1,14 @@
 ---
 # Enable ip forwarding
 - name: Enable IPv4 forwarding
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: "1"
     state: present
     reload: true
 
 - name: Enable IPv6 forwarding
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv6.conf.all.forwarding
     value: "1"
     state: present
@@ -16,18 +16,18 @@
 
 # Enable iptables to see bridged traffic
 - name: Add br_netfilter to /etc/modules-load.d/
-  copy:
+  ansible.builtin.copy:
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
     mode: "u=rw,g=,o="
 
 - name: Load br_netfilter
-  modprobe:
+  community.general.modprobe:
     name: br_netfilter
     state: present
 
 - name: Set bridge-nf-call-iptables
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item }}"
     value: "1"
     state: present
@@ -37,14 +37,14 @@
     - net.bridge.bridge-nf-call-ip6tables
 
 - name: Disable swap memory
-  include_tasks: disable_swap.yml
+  ansible.builtin.include_tasks: disable_swap.yml
 
 # Enable cgroups RaspberryPi
 - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
     backrefs: true
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
     line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
   when: "'raspberrypi' in group_names"
-  notify: reboot
+  notify: Reboot

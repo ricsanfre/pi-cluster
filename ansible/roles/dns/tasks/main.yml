@@ -1,15 +1,15 @@
 ---
 - name: Update DNS servers.
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/systemd/resolved.conf
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: present
-    mode: 0644
+    mode: "0644"
     backup: true
   with_items:
     - regexp: "^DNS="
       line: "DNS={{ dns_server }}"
     - regexp: "^Domains"
       line: "Domains={{ dns_domain }}"
-  notify: restart systemd-resolved
+  notify: Restart systemd-resolved

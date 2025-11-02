@@ -23,4 +23,4 @@
     line: "gpu_mem=16"
     create: true
     mode: "0755"
-  notify: reboot
+  notify: Reboot

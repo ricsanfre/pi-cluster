@@ -1,11 +1,12 @@
 ---
 
 - name: "Wait for master node to be ready"
-  command:
+  ansible.builtin.command:
     cmd: "kubectl get nodes {{ item }}"
   register: nodes
   until:
     - '" Ready "  in nodes.stdout'
   retries: 10
   delay: 5
+  changed_when: false
   with_items: "{{ inventory_hostname }}"

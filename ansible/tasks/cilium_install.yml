@@ -2,17 +2,17 @@
 
 - name: Cilium installation
   become: false
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
-     ../kubernetes/infrastructure/cilium/overlays/"{{overlay}}" | kubectl apply -f -
+     ../kubernetes/infrastructure/cilium/overlays/"{{ overlay }}" | kubectl apply -f -
   args:
     executable: /bin/bash
   register: output
   changed_when: true
 
 - name: "Wait for K3S worker nodes to be ready. Nodes Ready status when Cilium has been installed"
-  command:
+  ansible.builtin.command:
     cmd: "kubectl get nodes {{ item }}"
   register: nodes
   until:
@@ -23,7 +23,7 @@
 
 - name: Wait for Cilium CRDs to be ready
   become: false
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     while ! kubectl wait --for condition=established --timeout=60s crd/ciliuml2announcementpolicies.cilium.io crd/ciliuml2announcementpolicies.cilium.io
     do
@@ -35,10 +35,10 @@
 
 - name: Cilium configuration
   become: false
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
-     ../kubernetes/infrastructure/cilium-config/overlays/"{{overlay}}" | kubectl apply -f -
+     ../kubernetes/infrastructure/cilium-config/overlays/"{{ overlay }}" | kubectl apply -f -
   args:
     executable: /bin/bash
   register: output

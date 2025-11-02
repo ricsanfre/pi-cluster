@@ -1,13 +1,13 @@
 ---
 - name: Create private key
-  openssl_privatekey:
+  community.crypto.openssl_privatekey:
     path: "certificates/{{ server_hostname }}.key"
     size: "{{ ssl_key_size | int }}"
     type: "{{ key_type }}"
-    mode: 0644
+    mode: "0644"
 
 - name: Create CSR
-  openssl_csr:
+  community.crypto.openssl_csr:
     path: "certificates/{{ server_hostname }}.csr"
     privatekey_path: "certificates/{{ server_hostname }}.key"
     country_name: "{{ country_name }}"
@@ -17,7 +17,7 @@
     subject_alt_name: "DNS:{{ server_hostname }}"
 
 - name: Self-signing CSR
-  openssl_certificate:
+  community.crypto.X509_certificate:
     csr_path: "certificates/{{ server_hostname }}.csr"
     path: "certificates/{{ server_hostname }}.pem"
     privatekey_path: "certificates/{{ server_hostname }}.key"

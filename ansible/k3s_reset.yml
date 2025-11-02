@@ -1,22 +1,32 @@
 ---
-- hosts: k3s_master
+- name: Reset k3s master nodes
+  hosts: k3s_master
   become: true
   gather_facts: false
   tasks:
-    - import_tasks: tasks/clean_cilium.yml
+    - name: Import clean_cilium tasks
+      ansible.builtin.import_tasks: tasks/clean_cilium.yml
+      tags: ['cilium']
     - name: Uninstall k3s
-      command: /usr/local/bin/k3s-uninstall.sh
+      ansible.builtin.command: /usr/local/bin/k3s-uninstall.sh
       changed_when: true
-    - import_tasks: tasks/cleaning.yml
+      tags: ['k3s']
+    - name: Import cleaning tasks
+      ansible.builtin.import_tasks: tasks/cleaning.yml
       tags: ['clean']
 
-- hosts: k3s_worker
+- name: Reset k3s worker nodes
+  hosts: k3s_worker
   become: true
   gather_facts: false
   tasks:
-    - import_tasks: tasks/clean_cilium.yml
+    - name: Import clean_cilium tasks
+      ansible.builtin.import_tasks: tasks/clean_cilium.yml
+      tags: ['cilium']
     - name: Uninstall k3s
-      command: /usr/local/bin/k3s-agent-uninstall.sh
+      ansible.builtin.command: /usr/local/bin/k3s-agent-uninstall.sh
       changed_when: true
-    - import_tasks: tasks/cleaning.yml
+      tags: ['k3s']
+    - name: Import cleaning tasks
+      ansible.builtin.import_tasks: tasks/cleaning.yml
       tags: ['clean']

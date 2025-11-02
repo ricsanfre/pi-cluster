@@ -1,11 +1,11 @@
 ---
 
-- name: Configure Vault
+- name: Configure Vault Server
   hosts: localhost
   gather_facts: false
 
-  collections:
-    - kubernetes.core
+  # collections:
+  #   - kubernetes.core
 
   environment:
     # The location of the kubeconfig file on the master.
@@ -14,7 +14,7 @@
   pre_tasks:
     # Install Python PIP and jq utility packages
     - name: Ensure required packages are installed.
-      package:
+      ansible.builtin.package:
         name:
           - python3-pip
           - python3-setuptools
@@ -23,28 +23,28 @@
       become: true
     # Install kubernetes python packages (Ansible kubernetes collection dependency)
     - name: Ensure kubernetes Python library is installed.
-      pip:
+      ansible.builtin.pip:
         name: kubernetes
         state: present
       become: true
     # Install Hashicorp python packages (Ansible hashi module dependency)
     - name: Ensure hashicorp vault python library is installed.
-      pip:
+      ansible.builtin.pip:
         name: hvac
         state: present
       become: true
 
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      ansible.builtin.include_vars: "vars/vault.yml"
 
     - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+      ansible.builtin.include_vars: "vars/picluster.yml"
 
   tasks:
     - name: Set overlay to prod in case not defined by an input argument
-      set_fact:
+      ansible.builtin.set_fact:
         overlay: "prod"
       when: overlay is undefined
 
     - name: Configure Vault integration
-      include_tasks: tasks/configure_vault_integration.yml
+      ansible.builtin.include_tasks: tasks/configure_vault_integration.yml

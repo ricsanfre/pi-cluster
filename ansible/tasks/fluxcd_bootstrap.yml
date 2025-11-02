@@ -24,6 +24,7 @@
 
 - name: Add cluster settings
   ansible.builtin.shell: |
+    set -o pipefail
     kubectl kustomize  \
       ../kubernetes/clusters/"{{ overlay }}"/config | kubectl apply -f -
   args:

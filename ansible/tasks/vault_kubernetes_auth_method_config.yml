@@ -21,7 +21,7 @@
   delegate_to: node1
 
 - name: Get vault token
-  set_fact:
+  ansible.builtin.set_fact:
     vault_token: "{{ vault_login.stdout | from_json | community.hashi_vault.vault_login_token }}"
 
 - name: Get status of kubernetes auth method

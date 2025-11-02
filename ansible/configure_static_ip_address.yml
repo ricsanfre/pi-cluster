@@ -27,7 +27,7 @@
         dest: "/etc/netplan/99-network-config.yaml"
         owner: root
         group: root
-        mode: 0600
+        mode: "0600"
         backup: true
       notify: Apply Netplan
   handlers:
@@ -46,7 +46,7 @@
         dest: "/etc/netplan/00-installer-config.yaml"
         owner: root
         group: root
-        mode: 0600
+        mode: "0600"
         backup: true
       notify: Apply Netplan
   handlers:

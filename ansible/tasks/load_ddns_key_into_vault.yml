@@ -2,7 +2,10 @@
 # DDNS key was created and stored in filesystem
 - name: Load ddns key from file in DNS node
   ansible.builtin.shell: |
+    set -o pipefail
     cat /etc/bind/keys/ddnskey.key | awk '/secret/ {print $2}' | sed 's/[";]//g'
+  args:
+    executable: /bin/bash
   register: ddns_key
   become: true
   changed_when: false

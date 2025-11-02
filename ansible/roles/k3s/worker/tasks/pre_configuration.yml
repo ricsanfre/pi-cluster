@@ -5,7 +5,7 @@
     k3s_registration_ip: "{{ k3s_api_vip | default(hostvars[groups['k3s_master'][0]].ansible_host) }}"
 
 - name: Create K3S configuration directory
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
   loop:
@@ -15,21 +15,22 @@
   ansible.builtin.copy:
     content: "{{ k3s_token }}"
     dest: "{{ k3s_token_file }}"
-    mode: 0600
+    mode: "0600"
 
 - name: Copy kubelet configuration file
-  copy:
+  ansible.builtin.copy:
     dest: "{{ k3s_config_directory }}/kubelet.config"
     content: "{{ k3s_kubelet_config }}"
+    mode: "0644"
 
 - name: Copy k3s configuration file
   ansible.builtin.template:
     src: "templates/config.yml.j2"
     dest: "{{ k3s_config_file }}"
-    mode: 0644
+    mode: "0644"
 
 - name: Ensure containerd registries file exists
   ansible.builtin.template:
     src: "templates/registry.yml.j2"
     dest: "{{ k3s_registries_file }}"
-    mode: 0600
+    mode: "0600"

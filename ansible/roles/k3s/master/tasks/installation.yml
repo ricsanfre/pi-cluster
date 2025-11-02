@@ -7,8 +7,8 @@
       when:
         - k3s_primary_control_node
       block:
-        - name: install master
-          include_tasks: k3s_install.yml
+        - name: Install master
+          ansible.builtin.include_tasks: k3s_install.yml
 
     - name: Install secondary masters in case of HA mode
       # Secondary masters need to be added sequentially
@@ -18,11 +18,11 @@
       throttle: 1
       block:
         - name: Wait for primary master
-          include_tasks: wait_for_primary_master.yml
+          ansible.builtin.include_tasks: wait_for_primary_master.yml
         - name: Install k3s
-          include_tasks: k3s_install.yml
+          ansible.builtin.include_tasks: k3s_install.yml
 
 - name: Install master non HA
   when:
     - not k3s_build_cluster
-  include_tasks: k3s_install.yml
+  ansible.builtin.include_tasks: k3s_install.yml

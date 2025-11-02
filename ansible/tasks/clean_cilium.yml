@@ -2,7 +2,7 @@
 
 - name: Clean Cilium installation
   become: true
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     ip link delete cilium_host
     ip link delete cilium_net
