@@ -124,7 +124,7 @@ dashboards:
       # https://grafana.com/grafana/dashboards/16888-longhorn/
       # renovate: depName="LongHorn Dashboard"
       gnetId: 16888
-      revision: 9
+      revision: 11
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     logging:
