@@ -23,13 +23,8 @@ timezone: Europe/Madrid
 # Enable matoma analytics
 matoma_analytics: true
 matoma:
-  url: matomo.ricsanfre.com
+  url: web-analytics.ricsanfre.com
   site_id: 1
-
-# remark42 comments
-remark42:
-  url: https://remark42.ricsanfre.com
-  site_id: picluster
 
 # giscus comments
 giscus:
