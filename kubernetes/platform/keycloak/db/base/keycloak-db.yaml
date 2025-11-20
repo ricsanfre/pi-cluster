@@ -4,7 +4,7 @@ metadata:
   name: keycloak-db
 spec:
   instances: 3
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.6
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.7
   storage:
     size: 1Gi
     storageClass: longhorn
