@@ -39,7 +39,7 @@ spec:
       - kind: ConfigMap
         name: cluster-settings
   healthCheckExprs:
-    - apiVersion: kafka.strimzi.io/v1beta2
+    - apiVersion: kafka.strimzi.io/v1
       kind: Kafka
       failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
       current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
