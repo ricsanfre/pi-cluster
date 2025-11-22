@@ -5,9 +5,9 @@ resources:
 - ns.yaml
   # https://istio.io/latest/docs/examples/bookinfo/
 # renovate: datasource=github-releases depName=istio/istio
-- https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo.yaml
+- https://raw.githubusercontent.com/istio/istio/release-1.28/samples/bookinfo/platform/kube/bookinfo.yaml
 # renovate: datasource=github-releases depName=istio/istio
-- https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo-versions.yaml
+- https://raw.githubusercontent.com/istio/istio/release-1.28/samples/bookinfo/platform/kube/bookinfo-versions.yaml
 # renovate: datasource=github-releases depName=istio/istio
-- https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/networking/bookinfo-gateway.yaml
+- https://raw.githubusercontent.com/istio/istio/release-1.28/samples/bookinfo/networking/bookinfo-gateway.yaml
 
