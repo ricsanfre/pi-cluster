@@ -140,7 +140,7 @@ acme_issuer_email: admin@ricsanfre.com
 ##########################
 
 # Minio S3 Server
-minio_hostname: "s3.ricsanfre.com"
+minio_hostname: "minio.homelab.ricsanfre.com"
 minio_endpoint: "{{ minio_hostname }}:9091"
 minio_url: "https://{{ minio_hostname }}:9091"
 
