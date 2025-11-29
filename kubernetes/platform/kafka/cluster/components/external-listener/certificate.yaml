@@ -3,6 +3,10 @@ kind: Certificate
 metadata:
   name: kafka-cert
 spec:
+  privateKey:
+    # Strimzi requires PKCS8 encoding for TLS certificates
+    # The private key referenced in brokerCertChainAndKey must be in an unencrypted PKCS #8 format
+    encoding: PKCS8
   secretName: kafka-tls
   issuerRef:
     name: letsencrypt-issuer
