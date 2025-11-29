@@ -46,7 +46,7 @@ data:
                                 }
                             ]
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -100,7 +100,7 @@ data:
                                 }
                             ]
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -140,7 +140,7 @@ data:
                             "properties": [
                                 {
                                     "id": "unit",
-                                    "value": "Bps"
+                                    "value": "bps"
                                 }
                             ]
                         },
@@ -299,7 +299,7 @@ data:
                         "custom": {
                             "showPoints": "never"
                         },
-                        "unit": "binBps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -345,7 +345,7 @@ data:
                         "custom": {
                             "showPoints": "never"
                         },
-                        "unit": "binBps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {

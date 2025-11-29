@@ -788,7 +788,8 @@ data:
             ]
         },
         "timezone": "utc",
-        "title": "Prometheus / Remote Write"
+        "title": "Prometheus / Remote Write",
+        "uid": "cb079f93-fde4-41f0-862b-d4301d7c1c56"
     }
 kind: ConfigMap
 metadata:

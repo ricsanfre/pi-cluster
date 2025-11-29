@@ -96,7 +96,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(scheduler_e2e_scheduling_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)",
+                        "expr": "sum(rate(scheduler_scheduling_attempt_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)",
                         "legendFormat": "{{cluster}} {{instance}} e2e"
                     },
                     {
@@ -104,7 +104,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(scheduler_binding_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)",
+                        "expr": "sum(rate(scheduler_pod_scheduling_sli_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)",
                         "legendFormat": "{{cluster}} {{instance}} binding"
                     },
                     {
@@ -171,7 +171,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))",
+                        "expr": "histogram_quantile(0.99, sum(rate(scheduler_scheduling_attempt_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))",
                         "legendFormat": "{{cluster}} {{instance}} e2e"
                     },
                     {
@@ -179,7 +179,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))",
+                        "expr": "histogram_quantile(0.99, sum(rate(scheduler_pod_scheduling_sli_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))",
                         "legendFormat": "{{cluster}} {{instance}} binding"
                     },
                     {

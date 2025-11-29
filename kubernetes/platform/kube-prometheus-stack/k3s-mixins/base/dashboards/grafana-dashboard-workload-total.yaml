@@ -28,7 +28,7 @@ data:
                             "fixedColor": "green",
                             "mode": "fixed"
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -50,7 +50,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -68,7 +68,7 @@ data:
                             "fixedColor": "green",
                             "mode": "fixed"
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -90,7 +90,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -108,7 +108,7 @@ data:
                             "fixedColor": "green",
                             "mode": "fixed"
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -130,7 +130,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(avg(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(avg(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -148,7 +148,7 @@ data:
                             "fixedColor": "green",
                             "mode": "fixed"
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -170,7 +170,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(avg(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(avg(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -189,7 +189,7 @@ data:
                             "showPoints": "never",
                             "spanNulls": true
                         },
-                        "unit": "binBps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -221,7 +221,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -240,7 +240,7 @@ data:
                             "showPoints": "never",
                             "spanNulls": true
                         },
-                        "unit": "binBps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -272,7 +272,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -323,7 +323,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_receive_packets_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_receive_packets_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -374,7 +374,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -425,7 +425,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -476,7 +476,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+                        "expr": "sort_desc(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                         "legendFormat": "__auto"
                     }
                 ],

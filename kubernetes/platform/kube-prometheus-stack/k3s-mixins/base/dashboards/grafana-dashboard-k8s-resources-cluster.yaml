@@ -270,7 +270,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -347,7 +347,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})) by (namespace)",
                         "format": "table",
                         "instant": true
                     },
@@ -365,7 +365,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
                         "format": "table",
                         "instant": true
                     },
@@ -383,7 +383,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
                         "format": "table",
                         "instant": true
                     }
@@ -486,7 +486,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"})) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -599,7 +599,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"})) by (namespace)",
                         "format": "table",
                         "instant": true
                     },
@@ -617,7 +617,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace) / sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"})) by (namespace) / sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
                         "format": "table",
                         "instant": true
                     },
@@ -635,7 +635,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace) / sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
+                        "expr": "sum(max by (cluster, namespace, pod, container)(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"})) by (namespace) / sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
                         "format": "table",
                         "instant": true
                     }
@@ -709,7 +709,7 @@ data:
                             "properties": [
                                 {
                                     "id": "unit",
-                                    "value": "Bps"
+                                    "value": "bps"
                                 }
                             ]
                         },
@@ -870,7 +870,7 @@ data:
                             "showPoints": "never",
                             "spanNulls": true
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -921,7 +921,7 @@ data:
                             "showPoints": "never",
                             "spanNulls": true
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -972,7 +972,7 @@ data:
                             "showPoints": "never",
                             "spanNulls": true
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -1023,7 +1023,7 @@ data:
                             "showPoints": "never",
                             "spanNulls": true
                         },
-                        "unit": "Bps"
+                        "unit": "bps"
                     }
                 },
                 "gridPos": {
@@ -1395,7 +1395,7 @@ data:
                             "properties": [
                                 {
                                     "id": "unit",
-                                    "value": "Bps"
+                                    "value": "bps"
                                 }
                             ]
                         },
