@@ -2,7 +2,7 @@
 title: Secret Management (Vault)
 permalink: /docs/vault/
 description: How to deploy Hashicorp Vault as a Secret Manager for our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "14-08-2025"
+last_modified_at: "01-12-2025"
 ---
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
@@ -132,7 +132,7 @@ Instead of installing Vault using official Ubuntu packages, installation will be
             Run `openssl` by specifying the configuration file and enter a passphrase if prompted:
 
             ```shell
-            openssl req -new -x509 -nodes -days 730 -key private.key -out vault.csr -config openssl.conf
+            openssl req -new -nodes -key private.key -out vault.csr -config openssl.conf
             ```
         -   Verify the csr's content
 
