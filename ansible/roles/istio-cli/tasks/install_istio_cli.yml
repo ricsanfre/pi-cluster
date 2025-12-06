@@ -4,4 +4,6 @@
   ansible.builtin.shell: |
     set -o pipefail
     ISTIO_VERSION={{ istio_version }} curl -sL https://istio.io/downloadIstioctl | sh -
+  args:
+    executable: /bin/bash
   changed_when: true
