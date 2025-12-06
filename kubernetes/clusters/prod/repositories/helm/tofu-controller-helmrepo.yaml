@@ -5,6 +5,5 @@ metadata:
   name: tofu-controller
   namespace: flux-system
 spec:
-  type: oci
-  url: oci://ghcr.io/flux-iac/charts
+  url: https://flux-iac.github.io/tofu-controller
   interval: 1h
