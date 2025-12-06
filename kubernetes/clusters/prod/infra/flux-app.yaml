@@ -46,6 +46,6 @@ spec:
     name: flux-system
   dependsOn:
     - name: flux-operator-instance
-  path: ./kubernetes/platform/flux-operator/tofu-contoller/overlays/prod
+  path: ./kubernetes/platform/flux-operator/tofu-controller/overlays/prod
   prune: true
   wait: true
