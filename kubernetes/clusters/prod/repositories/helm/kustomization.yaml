@@ -24,4 +24,5 @@ resources:
   - prometheus-community-helmrepo.yaml
   - ricsanfre-helmrepo.yaml
   - strimzi-helmrepo.yaml
+  - tofu-controller-helmrepo.yaml
   - vmware-tanzu-helmrepo.yaml

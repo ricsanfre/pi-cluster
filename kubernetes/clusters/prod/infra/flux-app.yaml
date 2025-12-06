@@ -31,3 +31,21 @@ spec:
   path: ./kubernetes/platform/flux-operator/instance/overlays/prod
   prune: true
   wait: true
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tofu-controller
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: flux-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: flux-operator-instance
+  path: ./kubernetes/platform/flux-operator/tofu-contoller/overlays/prod
+  prune: true
+  wait: true
