@@ -2,7 +2,7 @@
 title: Kafka
 permalink: /docs/kafka/
 description: How to deploy Kafka in a Kubernetes cluster. Using Strimzi Kafka Operator to streamline the deployment. How to configure external access and secure it using SASL/SCRAM authentication and ACL authorization. How to integrate Schema Registry and Kafka UI (Kafdrop)
-last_modified_at: "15-09-2025"
+last_modified_at: "29-11-2025"
 
 ---
 
@@ -50,7 +50,7 @@ Using Strimzi operator, Kafka cluster in KRaft mode can be deployed.
   
     ```yaml
     ---
-    apiVersion: kafka.strimzi.io/v1beta2
+    apiVersion: kafka.strimzi.io/v1
     kind: KafkaNodePool
     metadata:
       name: dual-role
@@ -71,7 +71,7 @@ Using Strimzi operator, Kafka cluster in KRaft mode can be deployed.
             deleteClaim: false
             kraftMetadata: shared
     ---
-    apiVersion: kafka.strimzi.io/v1beta2
+    apiVersion: kafka.strimzi.io/v1
     kind: Kafka
     metadata:
       name: cluster
@@ -80,8 +80,8 @@ Using Strimzi operator, Kafka cluster in KRaft mode can be deployed.
         strimzi.io/kraft: enabled
     spec:
       kafka:
-        version: 4.0.0
-        metadataVersion: 4.0-IV3
+        version: 4.1.1
+        metadataVersion: 4.1-IV1
         listeners:
           - name: plain
             port: 9092
@@ -122,7 +122,7 @@ Using Strimzi operator, Kafka cluster in KRaft mode can be deployed.
 - Step 1: Create a manifest file `topic.yaml`
 
   ```yml
-  apiVersion: kafka.strimzi.io/v1beta2
+  apiVersion: kafka.strimzi.io/v1
   kind: KafkaTopic
   metadata:
     name: my-topic
@@ -173,7 +173,7 @@ The following `Kafka` resource define a Kafka Cluster with two different `intern
 -   `tls` listener (TCP port 9093) with TLS enabled (`tls: true`), using TLS encrypted traffic between client and brokers.
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: cluster
@@ -299,6 +299,10 @@ metadata:
   name: kafka-cert
 spec:
   secretName: kafka-tls
+  # Strimzi requires PKCS8 encoding for TLS certificates
+  # The private key referenced in brokerCertChainAndKey must be in an unencrypted PKCS #8 format
+  privateKey:
+    encoding: PKCS8
   issuerRef:
     name: ca-issuer
     kind: ClusterIssuer
@@ -313,10 +317,12 @@ spec:
     - kafka-broker-2.mydomain.com
 ```
 
+The private key referenced in brokerCertChainAndKey must be in an unencrypted PKCS8 format.
+
 When deploying Kafka resource `spec.kafka.listener[].configuration.brokerCertChainAndKey` property need to be provided, so external TLS certificate is used.
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: my-cluster
@@ -355,7 +361,7 @@ If no `authentication` property is specified then the listener does not authenti
 The following example enables SCRAM-SHA-512 in port 9092 (plain communications) and mTLS in ports 9093 and 9094.
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: my-cluster
@@ -417,7 +423,7 @@ When `KafkaUser.spec.authentication.type` is configured with `scram-sha-512` the
 For example the following creates a user `producer`
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: producer
@@ -440,7 +446,7 @@ metadata:
 stringData:
   producer-password: "supers1cret0"
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: producer
@@ -474,7 +480,7 @@ Simple authorization in Strimzi uses the `AclAuthorizer` plugin, the default Acc
 Configure authorization for Kafka brokers using the `Kafka.spec.kafka.authorization` property in the `Kafka` resource. If the `authorization` property is missing, no authorization is enabled and clients have no restrictions.
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: cluster
@@ -499,7 +505,7 @@ For example the following creates two different users `producer` and `consumer`.
 
 ```yaml
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: producer
@@ -526,7 +532,7 @@ spec:
           - Write
         host: "*"
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: consumer
@@ -568,7 +574,7 @@ For example in case of using ACL-based authorization, `spec.kafka.authorization.
 
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: my-cluster
@@ -616,7 +622,7 @@ spec:
     organizations:
     - ${CLUSTER_DOMAIN}
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:
   labels:
@@ -637,7 +643,7 @@ spec:
       size: 5Gi
       type: persistent-claim
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: cluster
@@ -646,8 +652,8 @@ metadata:
     strimzi.io/kraft: enabled
 spec:
   kafka:
-    version: 4.0.0
-    metadataVersion: 4.0-IV3
+    version: 4.1.1
+    metadataVersion: 4.1-IV1
     listeners:
       - name: plain # Plain listener for internal access
         port: 9092
@@ -760,7 +766,7 @@ Apply the following manifets to:
 ```yaml
 # Kafka Topic
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: test-topic
@@ -775,7 +781,7 @@ spec:
     segment.bytes: 1073741824
 # Kafka Users
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: producer
@@ -803,7 +809,7 @@ spec:
           - Write
         host: "*"
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: consumer
@@ -862,7 +868,7 @@ Built-in `kafka-console-producer` and `kafka-console-consumer` CLI commands can 
 -   Step 2: Create POD using kafka image and copy the properties fiels
 
     ```shell
-    kubectl run kafka-clients --restart='Never' --image quay.io/strimzi/kafka:0.47.0-kafka-4.0.0 --namespace kafka --command -- sleep infinity
+    kubectl run kafka-clients --restart='Never' --image quay.io/strimzi/kafka:0.49.0-kafka-4.1.1 --namespace kafka --command -- sleep infinity
     kubectl cp producer_plain.properties kafka/kafka-clients:/tmp/producer.properties
     kubectl cp consumer_plain.properties kafka/kafka-clients:/tmp/consumer.properties
     ```
@@ -930,7 +936,7 @@ Testing Kafka clients running outside the cluster using exposed Kafka listener i
     ```yaml
     services:
       kafka-client:
-        image: quay.io/strimzi/kafka:0.47.0-kafka-4.0.0
+        image: quay.io/strimzi/kafka:0.49.0-kafka-4.1.1
         container_name: kafka-client
         volumes:
           - ./properties:/tmp/properties
@@ -1007,7 +1013,7 @@ When creating Kafka Cluster using Strimzi Operator, JMX Exporter and Kafka Expor
 
 
 ```yaml
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: cluster
@@ -1471,7 +1477,7 @@ The application can be defined using the following directory structure
 
     `base\kafka-topic.yaml`
     ```yaml
-    apiVersion: kafka.strimzi.io/v1beta2
+    apiVersion: kafka.strimzi.io/v1
     kind: KafkaTopic
     metadata:
       name: confluent-schemas
@@ -1917,7 +1923,7 @@ Apply the following manifets to:
 ```yaml
 # Kafka Topic
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: test-topic-avro
@@ -1931,7 +1937,7 @@ spec:
     segment.bytes: 1073741824
 # Kafka Users
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: producer
@@ -1958,7 +1964,7 @@ spec:
           - Write
         host: "*"
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: consumer
@@ -2183,7 +2189,7 @@ The application have the following directory structure
 
     `base\kafka-user.yaml`
     ```yaml
-    apiVersion: kafka.strimzi.io/v1beta2
+    apiVersion: kafka.strimzi.io/v1
     kind: KafkaUser
     metadata:
       name: kafdrop
