@@ -103,7 +103,7 @@ Instead of installing Vault using official Ubuntu packages, installation will be
         -   Create key
 
             ```shell
-            openssl genrsa -out private.key 4096
+            openssl genrsa -out vault.key 4096
             ```
         -   Create a file named `openssl.conf` with the content below. Set `IP.1` and/or `DNS.1` to point to the correct IP/DNS addresses:
 
@@ -132,17 +132,25 @@ Instead of installing Vault using official Ubuntu packages, installation will be
             Run `openssl` by specifying the configuration file and enter a passphrase if prompted:
 
             ```shell
-            openssl req -new -nodes -key private.key -out vault.csr -config openssl.conf
+            openssl req -new -nodes -key vault.key -out vault.csr -config openssl.conf
             ```
         -   Verify the csr's content
 
             ```shell
-            openssl req -in public.csr -noout -text
+            openssl req -in vault.csr -noout -text
             ```
         -   Generate the certificate using the vault csr and key along with the CA Root key
 
             ```shell
-            openssl x509 -req -in vault.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out public.crt -days 500 -sha256
+            openssl x509 -req -in vault.csr \
+	              -extfile openssl.conf -extensions v3_req \
+	              -CA rootCA.crt -CAkey rootCA.key -CAcreateserial \
+	              -out vault.crt -days 500 -sha256
+            ```
+        -  Verify the certificate
+
+            ```shell
+            openssl x509 -in vault.crt -text -noout
             ```
 
     Once the certificate is created, public certificate and private key need to be installed in Vault server following this procedure:
@@ -151,8 +159,8 @@ Instead of installing Vault using official Ubuntu packages, installation will be
     1.  Copy public certificate `vault.crt` as `/etc/vault/tls/vault.crt`
 
         ```shell
-        sudo cp vault.crt /etc/vault/tls/public.crt
-        sudo chown vault:vault /etc/vault/tls/public.crt
+        sudo cp vault.crt /etc/vault/tls/vault.crt
+        sudo chown vault:vault /etc/vault/tls/vault.crt
         ```
     2.  Copy private key `vault.key` as `/etc/vault/tls/vault.key`
 

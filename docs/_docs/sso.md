@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "31-08-2025"
+last_modified_at: "23-12-2025"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -1207,7 +1207,7 @@ Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](ht
     type: redis
     password: s1cret0
   # Enabling redis backend installation
-  redis:
+  redis-ha:
     enabled: true
     # Configuring redis auth
     auth: true
@@ -1300,7 +1300,7 @@ As workaround, the issue can be solved providing the credentials in a external s
       existingSecret: oauth2-proxy-secret
       passwordKey: redis-password
   
-  redis:
+  redis-ha:
     enabled: true
     # Configuring redis auth
     # Get redis password from existing secret using key redis-password

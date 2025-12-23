@@ -191,7 +191,7 @@ Where `user_policy.json`, contains the following AWS access policies definition:
 
 ### GitOps installation
 
-As an alternative, for GitOps deployments, instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Tempo's capability of using environment variables in config file](https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration)
+As an alternative, for GitOps deployments, instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Tempo's capability of using environment variables in config file](https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration).
 
 The following secret need to be created:
 ```yml
@@ -331,12 +331,21 @@ minio:
   enabled: false
 ```
 
+As tempo is running in distributed mode, extra arguments for each of the services that will be connecting to S3 storage service has to be configured. This means that we have to apply the configuration to the following services:
+-   distributor
+-   compactor
+-   ingester
+-   querier
+-   query-frontend
+
+
+
 ## Tempo Configuration
 
 
 ### Grafana Configuration
 
-Tempo need to be added to Grafana as DataSource
+Tempo need to be added to Grafana as DataSource. In Tempo distributed mode, the endpoint to be used is the `query-frontend` service.
 
 This can be done automatically when installing kube-prometheus-stack providing the following additional helm chart configuration:
 
