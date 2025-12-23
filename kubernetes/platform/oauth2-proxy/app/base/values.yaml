@@ -46,7 +46,7 @@ sessionStorage:
 # Enabling redis backend installation
 # Starting with OAuth2-Proxy v7, redis bitnami helm chart has been migrated to dandydeveloper
 # https://github.com/DandyDeveloper/charts/tree/master/charts/redis-ha
-redis:
+redis-ha:
   enabled: true
   # Configuring redis auth
   auth: true
