@@ -35,5 +35,5 @@ gem "wdm", "~> 0.2.0", :platforms => [:mingw, :x64_mingw, :mswin]
 # and https://github.com/github/pages-gem/issues/887
 install_if -> { ENV["GITHUB_ACTIONS"] != "true" } do
   gem "webrick", "~> 1.8"
-  gem 'faraday-retry', '~> 2.3.0'
+  gem 'faraday-retry', '~> 2.4.0'
 end
