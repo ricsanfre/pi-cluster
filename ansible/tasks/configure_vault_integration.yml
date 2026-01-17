@@ -21,7 +21,7 @@
     name: vault
     chart_ref: vault
     chart_repo_url: https://helm.releases.hashicorp.com
-    chart_version: 0.31.0
+    chart_version: 0.32.0
     release_namespace: vault
     create_namespace: true
     values_files:
