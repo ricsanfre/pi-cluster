@@ -1004,7 +1004,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "avg(irate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "avg(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1055,7 +1055,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "avg(irate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "avg(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1106,7 +1106,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(irate(container_network_receive_packets_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum(rate(container_network_receive_packets_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1157,7 +1157,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(irate(container_network_transmit_packets_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum(rate(container_network_transmit_packets_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1208,7 +1208,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(irate(container_network_receive_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1259,7 +1259,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(irate(container_network_transmit_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1558,10 +1558,10 @@ data:
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "hide": 2,
+                    "hide": 0,
                     "label": "cluster",
                     "name": "cluster",
-                    "query": "label_values(up{job=\"kubelet\"}, cluster)",
+                    "query": "label_values(up{job=\"kube-state-metrics\"}, cluster)",
                     "refresh": 2,
                     "sort": 1,
                     "type": "query"

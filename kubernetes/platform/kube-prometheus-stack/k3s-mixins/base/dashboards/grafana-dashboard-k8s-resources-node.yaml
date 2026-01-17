@@ -72,6 +72,49 @@ data:
                                     }
                                 }
                             ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "max allocatable"
+                            },
+                            "properties": [
+                                {
+                                    "id": "color",
+                                    "value": {
+                                        "fixedColor": "super-light-red",
+                                        "mode": "fixed"
+                                    }
+                                },
+                                {
+                                    "id": "custom.stacking",
+                                    "value": {
+                                        "mode": "none"
+                                    }
+                                },
+                                {
+                                    "id": "custom.hideFrom",
+                                    "value": {
+                                        "legend": false,
+                                        "tooltip": true,
+                                        "viz": false
+                                    }
+                                },
+                                {
+                                    "id": "custom.lineStyle",
+                                    "value": {
+                                        "dash": [
+                                            10,
+                                            10
+                                        ],
+                                        "fill": "dash"
+                                    }
+                                },
+                                {
+                                    "id": "custom.fillOpacity",
+                                    "value": 0
+                                }
+                            ]
                         }
                     ]
                 },
@@ -106,6 +149,14 @@ data:
                         },
                         "expr": "sum(kube_node_status_capacity{cluster=\"$cluster\", job=\"kube-state-metrics\", node=~\"$node\", resource=\"cpu\"})",
                         "legendFormat": "max capacity"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", node=~\"$node\", resource=\"cpu\"})",
+                        "legendFormat": "max allocatable"
                     },
                     {
                         "datasource": {
@@ -301,6 +352,49 @@ data:
                                     }
                                 }
                             ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "max allocatable"
+                            },
+                            "properties": [
+                                {
+                                    "id": "color",
+                                    "value": {
+                                        "fixedColor": "super-light-red",
+                                        "mode": "fixed"
+                                    }
+                                },
+                                {
+                                    "id": "custom.stacking",
+                                    "value": {
+                                        "mode": "none"
+                                    }
+                                },
+                                {
+                                    "id": "custom.hideFrom",
+                                    "value": {
+                                        "legend": false,
+                                        "tooltip": true,
+                                        "viz": false
+                                    }
+                                },
+                                {
+                                    "id": "custom.lineStyle",
+                                    "value": {
+                                        "dash": [
+                                            10,
+                                            10
+                                        ],
+                                        "fill": "dash"
+                                    }
+                                },
+                                {
+                                    "id": "custom.fillOpacity",
+                                    "value": 0
+                                }
+                            ]
                         }
                     ]
                 },
@@ -335,6 +429,14 @@ data:
                         },
                         "expr": "sum(kube_node_status_capacity{cluster=\"$cluster\", job=\"kube-state-metrics\", node=~\"$node\", resource=\"memory\"})",
                         "legendFormat": "max capacity"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", node=~\"$node\", resource=\"memory\"})",
+                        "legendFormat": "max allocatable"
                     },
                     {
                         "datasource": {
@@ -404,6 +506,49 @@ data:
                                     }
                                 }
                             ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "max allocatable"
+                            },
+                            "properties": [
+                                {
+                                    "id": "color",
+                                    "value": {
+                                        "fixedColor": "super-light-red",
+                                        "mode": "fixed"
+                                    }
+                                },
+                                {
+                                    "id": "custom.stacking",
+                                    "value": {
+                                        "mode": "none"
+                                    }
+                                },
+                                {
+                                    "id": "custom.hideFrom",
+                                    "value": {
+                                        "legend": false,
+                                        "tooltip": true,
+                                        "viz": false
+                                    }
+                                },
+                                {
+                                    "id": "custom.lineStyle",
+                                    "value": {
+                                        "dash": [
+                                            10,
+                                            10
+                                        ],
+                                        "fill": "dash"
+                                    }
+                                },
+                                {
+                                    "id": "custom.fillOpacity",
+                                    "value": 0
+                                }
+                            ]
                         }
                     ]
                 },
@@ -438,6 +583,14 @@ data:
                         },
                         "expr": "sum(kube_node_status_capacity{cluster=\"$cluster\", job=\"kube-state-metrics\", node=~\"$node\", resource=\"memory\"})",
                         "legendFormat": "max capacity"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", node=~\"$node\", resource=\"memory\"})",
+                        "legendFormat": "max allocatable"
                     },
                     {
                         "datasource": {

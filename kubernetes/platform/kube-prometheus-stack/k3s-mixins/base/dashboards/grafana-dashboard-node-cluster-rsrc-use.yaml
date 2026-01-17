@@ -59,7 +59,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "((\n  instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", cluster=\"$cluster\"}\n  *\n  instance:node_num_cpu:sum{job=\"node-exporter\", cluster=\"$cluster\"}\n) != 0 )\n/ scalar(sum(instance:node_num_cpu:sum{job=\"node-exporter\", cluster=\"$cluster\"}))\n",
+                        "expr": "((\n  instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"}\n  *\n  instance:node_num_cpu:sum{job=\"node-exporter\", cluster=~\"$cluster\"}\n) != 0 )\n/ scalar(sum(instance:node_num_cpu:sum{job=\"node-exporter\", cluster=~\"$cluster\"}))\n",
                         "legendFormat": "{{ instance }}"
                     }
                 ],
@@ -106,7 +106,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "(\n  instance:node_load1_per_cpu:ratio{job=\"node-exporter\", cluster=\"$cluster\"}\n  / scalar(count(instance:node_load1_per_cpu:ratio{job=\"node-exporter\", cluster=\"$cluster\"}))\n)  != 0\n",
+                        "expr": "(\n  instance:node_load1_per_cpu:ratio{job=\"node-exporter\", cluster=~\"$cluster\"}\n  / scalar(count(instance:node_load1_per_cpu:ratio{job=\"node-exporter\", cluster=~\"$cluster\"}))\n)  != 0\n",
                         "legendFormat": "{{ instance }}"
                     }
                 ],
@@ -168,7 +168,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "(\n  instance:node_memory_utilisation:ratio{job=\"node-exporter\", cluster=\"$cluster\"}\n  / scalar(count(instance:node_memory_utilisation:ratio{job=\"node-exporter\", cluster=\"$cluster\"}))\n) != 0\n",
+                        "expr": "(\n  instance:node_memory_utilisation:ratio{job=\"node-exporter\", cluster=~\"$cluster\"}\n  / scalar(count(instance:node_memory_utilisation:ratio{job=\"node-exporter\", cluster=~\"$cluster\"}))\n) != 0\n",
                         "legendFormat": "{{ instance }}"
                     }
                 ],
@@ -215,7 +215,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_vmstat_pgmajfault:rate5m{job=\"node-exporter\", cluster=\"$cluster\"}",
+                        "expr": "instance:node_vmstat_pgmajfault:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"}",
                         "legendFormat": "{{ instance }}"
                     }
                 ],
@@ -291,7 +291,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_receive_bytes_excluding_lo:rate5m{job=\"node-exporter\", cluster=\"$cluster\"} != 0",
+                        "expr": "instance:node_network_receive_bytes_excluding_lo:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "{{ instance }} Receive"
                     },
                     {
@@ -299,7 +299,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_transmit_bytes_excluding_lo:rate5m{job=\"node-exporter\", cluster=\"$cluster\"} != 0",
+                        "expr": "instance:node_network_transmit_bytes_excluding_lo:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "{{ instance }} Transmit"
                     }
                 ],
@@ -360,7 +360,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_receive_drop_excluding_lo:rate5m{job=\"node-exporter\", cluster=\"$cluster\"} != 0",
+                        "expr": "instance:node_network_receive_drop_excluding_lo:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "{{ instance }} Receive"
                     },
                     {
@@ -368,7 +368,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_transmit_drop_excluding_lo:rate5m{job=\"node-exporter\", cluster=\"$cluster\"} != 0",
+                        "expr": "instance:node_network_transmit_drop_excluding_lo:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "{{ instance }} Transmit"
                     }
                 ],
@@ -430,7 +430,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance_device:node_disk_io_time_seconds:rate5m{job=\"node-exporter\", cluster=\"$cluster\"}\n/ scalar(count(instance_device:node_disk_io_time_seconds:rate5m{job=\"node-exporter\", cluster=\"$cluster\"}))\n",
+                        "expr": "instance_device:node_disk_io_time_seconds:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"}\n/ scalar(count(instance_device:node_disk_io_time_seconds:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"}))\n",
                         "legendFormat": "{{ instance }} {{device}}"
                     }
                 ],
@@ -477,7 +477,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance_device:node_disk_io_time_weighted_seconds:rate5m{job=\"node-exporter\", cluster=\"$cluster\"}\n/ scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m{job=\"node-exporter\", cluster=\"$cluster\"}))\n",
+                        "expr": "instance_device:node_disk_io_time_weighted_seconds:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"}\n/ scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m{job=\"node-exporter\", cluster=~\"$cluster\"}))\n",
                         "legendFormat": "{{ instance }} {{device}}"
                     }
                 ],
@@ -539,7 +539,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "sum without (device) (\n  max without (fstype, mountpoint) ((\n    node_filesystem_size_bytes{job=\"node-exporter\", fstype!=\"\", mountpoint!=\"\", cluster=\"$cluster\"}\n    -\n    node_filesystem_avail_bytes{job=\"node-exporter\", fstype!=\"\", mountpoint!=\"\", cluster=\"$cluster\"}\n  ) != 0)\n)\n/ scalar(sum(max without (fstype, mountpoint) (node_filesystem_size_bytes{job=\"node-exporter\", fstype!=\"\", mountpoint!=\"\", cluster=\"$cluster\"})))\n",
+                        "expr": "sum without (device) (\n  max without (fstype, mountpoint) ((\n    node_filesystem_size_bytes{job=\"node-exporter\", fstype!=\"\", mountpoint!=\"\", cluster=~\"$cluster\"}\n    -\n    node_filesystem_avail_bytes{job=\"node-exporter\", fstype!=\"\", mountpoint!=\"\", cluster=~\"$cluster\"}\n  ) != 0)\n)\n/ scalar(sum(max without (fstype, mountpoint) (node_filesystem_size_bytes{job=\"node-exporter\", fstype!=\"\", mountpoint!=\"\", cluster=~\"$cluster\"})))\n",
                         "legendFormat": "{{ instance }}"
                     }
                 ],
@@ -560,12 +560,13 @@ data:
                     "type": "datasource"
                 },
                 {
+                    "allValue": ".*",
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
                     "hide": 2,
-                    "includeAll": false,
+                    "includeAll": true,
                     "name": "cluster",
                     "query": "label_values(node_time_seconds, cluster)",
                     "refresh": 2,

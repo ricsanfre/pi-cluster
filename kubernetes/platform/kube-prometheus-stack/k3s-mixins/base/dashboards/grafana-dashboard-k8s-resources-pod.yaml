@@ -1329,7 +1329,7 @@ data:
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "hide": 2,
+                    "hide": 0,
                     "label": "cluster",
                     "name": "cluster",
                     "query": "label_values(up{job=\"kube-state-metrics\"}, cluster)",
