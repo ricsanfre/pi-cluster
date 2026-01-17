@@ -9,9 +9,9 @@
     install_helm: true
     k8s_platform: linux
     k8s_arch: amd64
-    kubectl_version: "1.33.4"
-    # SHA512 checksum of the binary (see https://dl.k8s.io/release/v1.33.4/bin/linux/amd64/kubectl.sha512)
-    kubectl_checksum_binary: "sha512:b2b9d3ab3731f0b2a740d04f442e2c85c154ecf6fa65146d7a4d08297e8f08bc075eeda9bb0aad3de0a2ea432eaa40d8f20177208ef5eb84b1dac192129a21c5"
+    kubectl_version: "1.35.0"
+    # SHA512 checksum of the binary (see https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl.sha512)
+    kubectl_checksum_binary: "sha512:6e409beaa9bde9c2ad9f431b260a16c70ee9dee33377b33c4d9c39a36f2005955f0bfc2e8cdacf30646a50c236a30e6dabb4b7d9d4acf11ba16cc55f47ec7d67"
     # renovate: datasource=github-releases depName=helm/helm
     helm_version: 'v3.17.4'
   roles:
