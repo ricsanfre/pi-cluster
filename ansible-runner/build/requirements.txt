@@ -1,4 +1,4 @@
-kubernetes==34.1.0
+kubernetes==35.0.0
 hvac==2.4.0
 certbot==5.2.2
 certbot-dns-ionos==2024.11.9
