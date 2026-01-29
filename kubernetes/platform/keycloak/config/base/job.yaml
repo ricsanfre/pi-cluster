@@ -22,7 +22,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: keycloak-config-cli
-          image: "docker.io/adorsys/keycloak-config-cli:6.4.0-26.1.0"
+          image: "docker.io/adorsys/keycloak-config-cli:6.4.1-26.1.0"
           imagePullPolicy: IfNotPresent
           env:
             - name: "IMPORT_PATH"
