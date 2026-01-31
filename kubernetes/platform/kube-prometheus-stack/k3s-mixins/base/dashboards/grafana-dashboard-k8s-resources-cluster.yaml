@@ -758,7 +758,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval]))) by (namespace)",
                         "format": "table",
                         "instant": true
                     },
@@ -767,7 +767,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval]))) by (namespace)",
                         "format": "table",
                         "instant": true
                     },
@@ -902,7 +902,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval]))) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -953,7 +953,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval]))) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1004,7 +1004,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "avg(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "avg((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval]))) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -1055,7 +1055,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "avg(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval])) by (namespace)",
+                        "expr": "avg((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=~\".+\"}[$__rate_interval]))) by (namespace)",
                         "legendFormat": "__auto"
                     }
                 ],

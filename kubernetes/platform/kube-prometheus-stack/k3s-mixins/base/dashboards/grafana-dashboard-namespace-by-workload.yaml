@@ -50,11 +50,11 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+                        "expr": "sort_desc(sum((8 * rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
                         "legendFormat": "__auto"
                     }
                 ],
-                "title": "Current Rate of Bytes Received",
+                "title": "Current Rate of Bits Received",
                 "type": "bargauge"
             },
             {
@@ -90,11 +90,11 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+                        "expr": "sort_desc(sum((8 * rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
                         "legendFormat": "__auto"
                     }
                 ],
-                "title": "Current Rate of Bytes Transmitted",
+                "title": "Current Rate of Bits Transmitted",
                 "type": "bargauge"
             },
             {
@@ -107,7 +107,7 @@ data:
                         {
                             "matcher": {
                                 "id": "byRegexp",
-                                "options": "/Bytes/"
+                                "options": "/Bits/"
                             },
                             "properties": [
                                 {
@@ -161,7 +161,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    (8 * rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -170,7 +170,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    (8 * rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -179,7 +179,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  avg by (workload, workload_type) (\n    rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  avg by (workload, workload_type) (\n    (8 * rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -188,7 +188,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  avg by (workload, workload_type) (\n    rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  avg by (workload, workload_type) (\n    (8 * rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -197,7 +197,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    rate(container_network_receive_packets_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    (1 * rate(container_network_receive_packets_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -206,7 +206,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    rate(container_network_transmit_packets_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    (1 * rate(container_network_transmit_packets_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -215,7 +215,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    rate(container_network_receive_packets_dropped_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    (1 * rate(container_network_receive_packets_dropped_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     },
@@ -224,7 +224,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    rate(container_network_transmit_packets_dropped_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
+                        "expr": "sort_desc(\n  sum by (workload, workload_type) (\n    (1 * rate(container_network_transmit_packets_dropped_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n    * on (cluster, namespace, pod) group_left\n    kube_pod_info{cluster=\"$cluster\",namespace=\"$namespace\",host_network=\"false\"}\n    * on (cluster, namespace, pod) group_left (workload, workload_type)\n    namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}\n  )\n)\n",
                         "format": "table",
                         "instant": true
                     }
@@ -287,10 +287,10 @@ data:
                                 "workload_type 8": 24
                             },
                             "renameByName": {
-                                "Value #A": "Rx Bytes",
-                                "Value #B": "Tx Bytes",
-                                "Value #C": "Rx Bytes (Avg)",
-                                "Value #D": "Tx Bytes (Avg)",
+                                "Value #A": "Rx Bits",
+                                "Value #B": "Tx Bits",
+                                "Value #C": "Rx Bits (Avg)",
+                                "Value #D": "Tx Bits (Avg)",
                                 "Value #E": "Rx Packets",
                                 "Value #F": "Tx Packets",
                                 "Value #G": "Rx Packets Dropped",
@@ -347,7 +347,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+                        "expr": "sort_desc(sum((8 * rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -398,7 +398,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+                        "expr": "sort_desc(sum((8 * rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -449,7 +449,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(avg(rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+                        "expr": "sort_desc(avg((8 * rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -500,7 +500,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sort_desc(avg(rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+                        "expr": "sort_desc(avg((8 * rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n* on (cluster,namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
                         "legendFormat": "__auto"
                     }
                 ],

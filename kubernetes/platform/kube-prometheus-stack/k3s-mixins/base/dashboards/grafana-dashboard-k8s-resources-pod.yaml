@@ -674,7 +674,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(irate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (pod)",
+                        "expr": "sum((8 * irate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod=~\"$pod\"}[$__rate_interval]))) by (pod)",
                         "legendFormat": "__auto"
                     }
                 ],
@@ -725,7 +725,7 @@ data:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod=~\"$pod\"}[$__rate_interval])) by (pod)",
+                        "expr": "sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod=~\"$pod\"}[$__rate_interval]))) by (pod)",
                         "legendFormat": "__auto"
                     }
                 ],
