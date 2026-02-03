@@ -186,21 +186,21 @@ dashboards:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 7645
-      revision: 288
+      revision: 289
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-mesh:
       # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 7639
-      revision: 288
+      revision: 289
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-performance:
       # https://grafana.com/grafana/dashboards/11829-istio-performance-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 11829
-      revision: 288
+      revision: 289
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
   nginx:
