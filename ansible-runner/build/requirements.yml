@@ -38,4 +38,4 @@ collections:
   - name: community.crypto
     version: 3.1.0
   - name: prometheus.prometheus
-    version: 0.27.5
+    version: 0.27.6
