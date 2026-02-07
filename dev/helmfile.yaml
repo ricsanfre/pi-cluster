@@ -21,7 +21,7 @@ releases:
   - name: cilium
     namespace: kube-system
     chart: cilium/cilium
-    version: 1.18.6
+    version: 1.19.0
     values:
       - ../kubernetes/platform/cilium/app/base/values.yaml
       - ../kubernetes/platform/cilium/app/components/istio-config/values.yaml
