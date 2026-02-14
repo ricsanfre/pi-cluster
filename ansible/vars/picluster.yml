@@ -7,7 +7,7 @@
 
 # k3s version
 # renovate: datasource=github-releases depName=k3s-io/k3s
-k3s_version: v1.35.0+k3s1
+k3s_version: v1.35.1+k3s1
 
 # k3s master node VIP (loadbalancer)
 k3s_api_vip: 10.0.0.11
