@@ -1,0 +1,54 @@
+# Copy this file to terraform.tfvars and fill in actual values
+# DO NOT commit terraform.tfvars to git
+
+## Vault Server Configuration
+vault_address          = "https://vault.example.com:8200"
+vault_token            = ""  # Set from Ansible output or generate a token
+vault_skip_tls_verify  = false
+
+## Kubernetes Configuration
+kubernetes_config_path = "~/.kube/config"
+kubernetes_host        = "https://10.0.0.80:6443"
+
+## Directory Configuration (JSON files)
+# All JSON files are loaded from these directories
+secrets_directory    = "resources/secrets"       # Secrets JSON files
+policies_directory   = "resources/policies"      # Policies JSON files
+roles_directory      = "resources/roles"         # KV Roles JSON files
+
+## Secrets Management
+generated_password_length = 15
+
+## Vault Authentication Service Account
+vault_auth_sa_name      = "vault-auth-sa"
+vault_auth_sa_namespace = "default"
+
+## Kubernetes Auth Backend
+k8s_auth_backend_path = "kubernetes"
+
+# ============================================================================
+# FEATURE CONTROL FLAGS
+# ============================================================================
+# Set to false to disable specific configurations
+
+enable_kubernetes_auth = true  # Enable Kubernetes authentication setup
+enable_policies        = true  # Enable policy creation from JSON files
+enable_roles           = true  # Enable Kubernetes auth role creation
+enable_secrets         = true  # Enable secrets creation from JSON files
+
+# Example directory structure:
+# terraform/vault/
+# ├── resources/
+# │   ├── secrets/
+# │   │   ├── postgresql.json
+# │   │   ├── minio.json
+# │   │   └── config.json
+# │   ├── policies/
+# │   │   ├── readonly.json
+# │   │   ├── readwrite.json
+# │   │   ├── admin.json
+# │   │   └── ...
+# │   └── roles/
+# │       ├── external-secrets.json
+# │       └── tf-runner.json
+

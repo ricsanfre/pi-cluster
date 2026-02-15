@@ -1,0 +1,9 @@
+readwrite:
+  description: "Read-write access to all secrets"
+  policy: |
+    path "secret/*" {
+      capabilities = ["create", "read", "update", "delete", "list", "patch"]
+    }
+    path "secret/metadata/*" {
+      capabilities = ["list", "read", "delete"]
+    }

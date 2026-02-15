@@ -1,0 +1,9 @@
+readonly:
+  description: "Read-only access to all secrets"
+  policy: |
+    path "secret/*" {
+      capabilities = ["read", "list"]
+    }
+    path "secret/metadata/*" {
+      capabilities = ["list", "read"]
+    }
