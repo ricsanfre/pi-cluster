@@ -1,0 +1,15 @@
+create-child-token:
+  description: "Allow creating child tokens"
+  policy: |
+    path "auth/token/create" {
+      capabilities = ["update"]
+    }
+    path "auth/token/create-orphan" {
+      capabilities = ["update"]
+    }
+    path "auth/token/renew-self" {
+      capabilities = ["update"]
+    }
+    path "auth/token/lookup-self" {
+      capabilities = ["read"]
+    }

@@ -1,0 +1,19 @@
+# Common Terraform configuration for all Vault modules
+# This file is used as reference for backend configuration
+
+# Uncomment and configure for remote state management:
+# terraform {
+#   backend "s3" {
+#     bucket         = "your-terraform-state-bucket"
+#     key            = "vault/terraform.tfstate"
+#     region         = "us-east-1"
+#     encrypt        = true
+#     dynamodb_table = "terraform-lock"
+#   }
+# }
+
+# Alternative: Local state (default)
+# Each module maintains its own state file:
+# - kv-secrets-engine/terraform.tfstate
+# - policies-config/terraform.tfstate
+# - kubernetes-auth/terraform.tfstate

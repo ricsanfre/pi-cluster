@@ -1,0 +1,35 @@
+/.terraform/
+/.terraform.lock.hcl
+/terraform.tfstate
+/terraform.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.DS_Store
+**/.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.iml
+
+# Kubernetes config (if local)
+kubeconfig
+
+# Vault initialization data (from Ansible)
+vault_init.json
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
