@@ -95,3 +95,35 @@
         mode: "0600"
       delegate_to: localhost
       run_once: true
+
+- name: Install Cilium CNI and CoreDNS
+  hosts: localhost
+  tags: [install, cni]
+  gather_facts: false
+  become: false
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: "vars/vault.yml"
+      tags: ["always"]
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+      tags: ["always"]
+  tasks:
+
+    - name: Set overlay to prod in case not defined by an input argument
+      ansible.builtin.set_fact:
+        overlay: "prod"
+      when: overlay is undefined
+
+    - name: Install cilium and coreDNS
+      become: false
+      ansible.builtin.shell: |
+        set -o pipefail
+        helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff --concurrency 1
+      args:
+        executable: /bin/bash
+      register: output
+      changed_when: true
+
+    - name: Config Cilium CNI
+      ansible.builtin.include_tasks: tasks/cilium_config.yml
