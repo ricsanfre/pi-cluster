@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: gateway
-      version: 1.28.3
+      version: 1.29.0
       sourceRef:
         kind: HelmRepository
         name: istio
