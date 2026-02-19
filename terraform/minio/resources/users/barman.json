@@ -1,0 +1,5 @@
+{
+  "access_key": "barman",
+  "policies": ["barman"],
+  "description": "Barman PostgreSQL backup user"
+}

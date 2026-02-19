@@ -1,0 +1,6 @@
+{
+  "name": "restic",
+  "versioning": false,
+  "object_lock": false,
+  "description": "Restic backup storage"
+}

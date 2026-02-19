@@ -1,0 +1,21 @@
+{
+  "name": "tempo",
+  "description": "Tempo access policy",
+  "statements": [
+    {
+      "effect": "Allow",
+      "actions": [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:GetObjectTagging",
+        "s3:PutObjectTagging"
+      ],
+      "resources": [
+        "arn:aws:s3:::k3s-tempo",
+        "arn:aws:s3:::k3s-tempo/*"
+      ]
+    }
+  ]
+}

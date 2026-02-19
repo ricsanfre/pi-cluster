@@ -1,0 +1,28 @@
+{
+  "name": "velero",
+  "description": "Velero access policy",
+  "statements": [
+    {
+      "effect": "Allow",
+      "actions": [
+        "s3:ListBucket"
+      ],
+      "resources": [
+        "arn:aws:s3:::k3s-velero"
+      ]
+    },
+    {
+      "effect": "Allow",
+      "actions": [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts"
+      ],
+      "resources": [
+        "arn:aws:s3:::k3s-velero/*"
+      ]
+    }
+  ]
+}

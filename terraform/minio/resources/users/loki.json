@@ -1,0 +1,5 @@
+{
+  "access_key": "loki",
+  "policies": ["loki"],
+  "description": "Loki S3 user"
+}

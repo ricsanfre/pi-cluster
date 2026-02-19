@@ -1,0 +1,6 @@
+{
+  "name": "k3s-tempo",
+  "versioning": false,
+  "object_lock": false,
+  "description": "Tempo traces storage"
+}

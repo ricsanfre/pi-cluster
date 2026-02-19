@@ -1,0 +1,6 @@
+{
+  "name": "k3s-loki",
+  "versioning": false,
+  "object_lock": false,
+  "description": "Loki logs storage"
+}
