@@ -16,6 +16,10 @@ RUN pip3 install --upgrade pip setuptools
 ADD build /build
 WORKDIR /build
 
+# Install OpenTofu
+RUN chmod +x install_opentofu.sh
+RUN ./install_opentofu.sh
+
 # Install python dependencies
 RUN pip3 install -r requirements.txt
 

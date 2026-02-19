@@ -10,6 +10,7 @@ services:
     volumes:
       - ./../ansible:/runner
       - ./../kubernetes:/kubernetes
+      - ./../terraform:/terraform
       - ./../metal/x86/pxe-files:/metal/x86/pxe-files
       - ./runner/.gnupg:/home/runner/.gnupg
       - ./runner/.vault:/home/runner/.vault
