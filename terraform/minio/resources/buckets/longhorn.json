@@ -1,0 +1,6 @@
+{
+  "name": "k3s-longhorn",
+  "versioning": false,
+  "object_lock": false,
+  "description": "Longhorn backup storage"
+}

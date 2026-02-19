@@ -1,0 +1,19 @@
+{
+  "name": "longhorn",
+  "description": "Longhorn access policy",
+  "statements": [
+    {
+      "effect": "Allow",
+      "actions": [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutObject"
+      ],
+      "resources": [
+        "arn:aws:s3:::k3s-longhorn",
+        "arn:aws:s3:::k3s-longhorn/*"
+      ]
+    }
+  ]
+}

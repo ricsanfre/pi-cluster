@@ -1,0 +1,5 @@
+{
+  "access_key": "restic",
+  "policies": ["restic"],
+  "description": "Restic backup user"
+}

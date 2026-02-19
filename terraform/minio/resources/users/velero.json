@@ -1,0 +1,5 @@
+{
+  "access_key": "velero",
+  "policies": ["velero"],
+  "description": "Velero S3 user"
+}

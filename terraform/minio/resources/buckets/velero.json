@@ -1,0 +1,6 @@
+{
+  "name": "k3s-velero",
+  "versioning": false,
+  "object_lock": false,
+  "description": "Velero backup storage"
+}

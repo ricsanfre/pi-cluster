@@ -1,0 +1,5 @@
+{
+  "access_key": "tempo",
+  "policies": ["tempo"],
+  "description": "Tempo S3 user"
+}

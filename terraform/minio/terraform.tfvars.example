@@ -1,0 +1,71 @@
+# Minio Server Configuration
+# These values should be overridden with actual values from your environment
+
+# Minio endpoint (hostname:port)
+# minio_endpoint = "s3.picluster.ricsanfre.com:9000"
+
+# Minio region
+# minio_region = "eu-west-1"
+
+# Use SSL/TLS
+# minio_use_ssl = true
+
+# Verify SSL certificate (set to false for self-signed certificates)
+# minio_ssl_verify = false
+
+# Minio root user credentials (from vault secrets)
+# minio_admin_user = "root"
+# minio_admin_password = "your_root_password"
+
+# Resource Directory Paths (default to resources/ subdirectories)
+# Uncomment to use custom paths
+# buckets_dir = "${path.module}/resources/buckets"
+# users_dir = "${path.module}/resources/users"
+# policies_dir = "${path.module}/resources/policies"
+
+# Override Configurations (merges with individual JSON file configs)
+# Uncomment to add or override specific resources
+
+# Add a new bucket
+# minio_buckets_override = {
+#   "mimir" = {
+#     name        = "k3s-mimir"
+#     versioning  = false
+#     object_lock = false
+#     description = "Mimir metrics storage"
+#   }
+# }
+
+# Add a new user
+# minio_users_override = {
+#   "mimir" = {
+#     access_key  = "mimir"
+#     policies    = ["mimir"]
+#     description = "Mimir S3 user"
+#   }
+# }
+
+# Add a new policy
+# minio_policies_override = {
+#   "mimir" = {
+#     name        = "mimir"
+#     description = "Mimir access policy"
+#     statements = [
+#       {
+#         effect = "Allow"
+#         actions = [
+#           "s3:DeleteObject",
+#           "s3:GetObject",
+#           "s3:ListBucket",
+#           "s3:PutObject"
+#         ]
+#         resources = [
+#           "arn:aws:s3:::k3s-mimir",
+#           "arn:aws:s3:::k3s-mimir/*"
+#         ]
+#       }
+#     ]
+#   }
+# }
+
+
