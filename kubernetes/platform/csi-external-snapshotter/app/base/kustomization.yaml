@@ -5,5 +5,5 @@ resources:
 # Longhorn 1.8.1 is compatible with CSI Snapshot Controller 8.2.0
 # (https://github.com/kubernetes-csi/external-snapshotter)
 # In this version of CSI Snapshot Controller kustomization files are available
-- https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v8.4.0
-- https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v8.4.0
+- https://github.com/kubernetes-csi/external-snapshotter/client/config/crd/?ref=v8.5.0
+- https://github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller/?ref=v8.5.0
