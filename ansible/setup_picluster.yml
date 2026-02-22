@@ -1,50 +1,42 @@
 ---
 
-- name: Configure Pi Cluster Gateway (Ubuntu)
-  hosts: gateway
-  gather_facts: true
-  tags: [gateway]
-  become: true
-  pre_tasks:
-    - name: Include vault variables
-      include_vars: "vars/vault.yml"
-      tags: ["always"]
-  roles:
+# - name: Configure Pi Cluster Gateway (Ubuntu)
+#   hosts: gateway
+#   gather_facts: true
+#   tags: [gateway]
+#   become: true
+#   roles:
 
-    # OS basic setup tasks
-    - role: basic_setup
-      tags: [os]
+#     # OS basic setup tasks
+#     - role: basic_setup
+#       tags: [os]
 
-    # Security Hardening
-    - role: ricsanfre.security
-      tags: [security]
+#     # Security Hardening
+#     - role: ricsanfre.security
+#       tags: [security]
 
-    # DNS Resolver Forwarder configuration
-    # DHCP server configuration
-    - role: ricsanfre.dnsmasq
-      tags: [dns]
+#     # DNS Resolver Forwarder configuration
+#     # DHCP server configuration
+#     - role: ricsanfre.dnsmasq
+#       tags: [dns]
 
-    # Update DNS server to point to DNSmasq
-    - role: dns
-      tags: [dns]
+#     # Update DNS server to point to DNSmasq
+#     - role: dns
+#       tags: [dns]
 
-    # Firewall (nftables) configuration
-    - role: ricsanfre.firewall
-      tags: [firewall]
+#     # Firewall (nftables) configuration
+#     - role: ricsanfre.firewall
+#       tags: [firewall]
 
-    # NTP Server configuration
-    - role: ricsanfre.ntp
-      tags: [ntp]
+#     # NTP Server configuration
+#     - role: ricsanfre.ntp
+#       tags: [ntp]
 
 - name: Configure External Node
   hosts: node1
   gather_facts: true
   tags: [external]
   become: true
-  pre_tasks:
-    - name: Include vault variables
-      include_vars: "vars/vault.yml"
-      tags: ["always"]
   roles:
     # OS basic setup tasks
     - role: basic_setup
@@ -57,35 +49,12 @@
     # NTP Client configuration
     - role: ricsanfre.ntp
       tags: [ntp]
-
-  tasks:
-    # Aditional Tasks in case alternative architecture (centralized SAN)
-    - name: Centralized SAN
-      block:
-        # Include centralized san variables
-        - name: Include iSCSI variables
-          include_vars:
-            file: vars/centralized_san/iscsi_target.yml
-        # iSCSI LUNs: LVM Volumes configuration
-        - name: Configure iSCSI SAN Target
-          include_role:
-            name: ricsanfre.storage
-        # iSCSI LUNs: LVM Volumes configuration
-        - name: Configure iSCSI SAN Target
-          include_role:
-            name: ricsanfre.iscsi_target
-      when: centralized_san
-      tags: [iscsi]
 
 - name: Configure Pi Cluster Nodes
   hosts: k3s_cluster
   gather_facts: true
   tags: [node]
   become: true
-  pre_tasks:
-    - name: Include vault variables
-      include_vars: "vars/vault.yml"
-      tags: ["always"]
   roles:
     # OS basic setup tasks
     - role: basic_setup
@@ -100,25 +69,7 @@
       tags: [ntp]
 
   tasks:
-    # Aditional Tasks in case alternative architecture (centralized SAN)
-    - name: Centralized SAN
-      block:
-        # Include centralized san variables
-        - name: Include iSCSI variables
-          include_vars:
-            file: vars/centralized_san/iscsi_initiator.yml
-        # iSCSI client (initiator) configuration
-        - name: Configure iSCSI Initiator
-          include_role:
-            name: ricsanfre.iscsi_initiator
-        # Mounting iSCSI LUNs
-        - name: Configure iSCSI SAN Target
-          include_role:
-            name: ricsanfre.storage
-      when: centralized_san
-      tags: [iscsi]
-
-      # Local Storage configuration
+    # Local Storage configuration
     - name: Dedicated Disks
       block:
         # iSCSI client (initiator) configuration
@@ -129,5 +80,4 @@
           vars:
             open_iscsi_initiator_name: "iqn.2021-07.com.ricsanfre.homelab:{{ ansible_facts['nodename'] }}"
             open_iscsi_automatic_startup: true
-      when: not centralized_san
       tags: [storage]

@@ -44,9 +44,9 @@ output "user_service_mapping" {
   description = "Mapping of users to their services and required credentials"
   value = {
     for user_key, user_config in local.minio_users : user_config.access_key => {
-      access_key = user_config.access_key
-      buckets    = [for policy in user_config.policies : policy]
-      policies   = user_config.policies
+      access_key  = user_config.access_key
+      buckets     = [for policy in user_config.policies : policy]
+      policies    = user_config.policies
       description = user_config.description
     }
   }

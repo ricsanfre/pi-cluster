@@ -60,10 +60,10 @@ variable "policies_dir" {
 
 variable "minio_buckets_override" {
   type = map(object({
-    name          = string
-    versioning    = optional(bool, false)
-    object_lock   = optional(bool, false)
-    description   = optional(string, "")
+    name        = string
+    versioning  = optional(bool, false)
+    object_lock = optional(bool, false)
+    description = optional(string, "")
   }))
   description = "Override bucket configurations from files"
   default     = {}
@@ -81,7 +81,7 @@ variable "minio_users_override" {
 
 variable "minio_policies_override" {
   type = map(object({
-    name       = string
+    name = string
     statements = list(object({
       effect    = optional(string, "Allow")
       actions   = list(string)

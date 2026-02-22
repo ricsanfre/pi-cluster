@@ -1,4 +1,146 @@
 ---
+- name: Destroy Vault and MinIO Terraform Resources
+  hosts: localhost
+  gather_facts: false
+  tags: [terraform, vault, s3]
+  vars:
+    terraform_vault_dir: "../terraform/vault"
+    terraform_minio_dir: "../terraform/minio"
+    terraform_vault_state_dir: "{{ terraform_vault_dir }}/.terraform"
+    terraform_minio_state_dir: "{{ terraform_minio_dir }}/.terraform"
+    terraform_vault_state_file: "{{ terraform_vault_dir }}/terraform.tfstate"
+    terraform_minio_state_file: "{{ terraform_minio_dir }}/terraform.tfstate"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Validate Vault environment variables
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'VAULT_ADDR') != ""
+          - lookup('env', 'VAULT_TOKEN') != ""
+        fail_msg: |
+          ⚠️  Vault environment variables not set!
+          Please ensure VAULT_ADDR and VAULT_TOKEN are exported.
+
+    - name: Fetch MinIO credentials from Vault
+      ansible.builtin.command:
+        cmd: vault kv get -format=json secret/minio
+      register: minio_vault_secret
+      environment:
+        VAULT_ADDR: "{{ lookup('env', 'VAULT_ADDR') }}"
+        VAULT_TOKEN: "{{ lookup('env', 'VAULT_TOKEN') }}"
+        VAULT_CACERT: "{{ lookup('env', 'VAULT_CACERT') if (not enable_letsencrypt | default(false)) else '' }}"
+      changed_when: false
+      no_log: true
+
+    - name: Set MinIO credentials from Vault
+      ansible.builtin.set_fact:
+        minio_root_user: "{{ (minio_vault_secret.stdout | from_json).data.data.root_user }}"
+        minio_root_password: "{{ (minio_vault_secret.stdout | from_json).data.data.root_password }}"
+      no_log: true
+
+  tasks:
+    - name: Check Vault Terraform state directory
+      ansible.builtin.stat:
+        path: "{{ terraform_vault_state_dir }}"
+      register: vault_tf_state_dir
+
+    - name: Check MinIO Terraform state directory
+      ansible.builtin.stat:
+        path: "{{ terraform_minio_state_dir }}"
+      register: minio_tf_state_dir
+
+    - name: Check Vault Terraform state file
+      ansible.builtin.stat:
+        path: "{{ terraform_vault_state_file }}"
+      register: vault_tf_state_file
+
+    - name: Check MinIO Terraform state file
+      ansible.builtin.stat:
+        path: "{{ terraform_minio_state_file }}"
+      register: minio_tf_state_file
+
+    - name: Skip Vault Terraform destroy when state directory is missing
+      ansible.builtin.debug:
+        msg: "Skipping Vault Terraform destroy because {{ terraform_vault_state_dir }} does not exist"
+      when: not vault_tf_state_dir.stat.exists
+
+    - name: Skip Vault Terraform destroy when state file is missing
+      ansible.builtin.debug:
+        msg: "Skipping Vault Terraform destroy because {{ terraform_vault_state_file }} does not exist"
+      when: not vault_tf_state_file.stat.exists
+
+    - name: Initialize Vault Terraform project
+      ansible.builtin.command:
+        cmd: tofu init -no-color
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ lookup('env', 'VAULT_ADDR') }}"
+        VAULT_TOKEN: "{{ lookup('env', 'VAULT_TOKEN') }}"
+        VAULT_CACERT: "{{ lookup('env', 'VAULT_CACERT') if (not enable_letsencrypt | default(false)) else '' }}"
+      changed_when: false
+      when:
+        - vault_tf_state_dir.stat.exists
+        - vault_tf_state_file.stat.exists
+
+    - name: Destroy Vault Terraform resources
+      ansible.builtin.command:
+        cmd: >-
+          tofu destroy
+          -no-color
+          -auto-approve
+          -var="enable_kubernetes_auth=true"
+          -var="enable_policies=true"
+          -var="enable_roles=true"
+          -var="enable_secrets=true"
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ lookup('env', 'VAULT_ADDR') }}"
+        VAULT_TOKEN: "{{ lookup('env', 'VAULT_TOKEN') }}"
+        VAULT_CACERT: "{{ lookup('env', 'VAULT_CACERT') if (not enable_letsencrypt | default(false)) else '' }}"
+      register: terraform_vault_destroy
+      changed_when: "'Destroy complete!' in terraform_vault_destroy.stdout"
+      when:
+        - vault_tf_state_dir.stat.exists
+        - vault_tf_state_file.stat.exists
+
+    - name: Skip MinIO Terraform destroy when state directory is missing
+      ansible.builtin.debug:
+        msg: "Skipping MinIO Terraform destroy because {{ terraform_minio_state_dir }} does not exist"
+      when: not minio_tf_state_dir.stat.exists
+
+    - name: Skip MinIO Terraform destroy when state file is missing
+      ansible.builtin.debug:
+        msg: "Skipping MinIO Terraform destroy because {{ terraform_minio_state_file }} does not exist"
+      when: not minio_tf_state_file.stat.exists
+
+    - name: Initialize MinIO Terraform project
+      ansible.builtin.command:
+        cmd: tofu init -no-color
+        chdir: "{{ terraform_minio_dir }}"
+      changed_when: false
+      when:
+        - minio_tf_state_dir.stat.exists
+        - minio_tf_state_file.stat.exists
+
+    - name: Destroy MinIO Terraform resources
+      ansible.builtin.command:
+        cmd: tofu destroy -no-color -auto-approve
+        chdir: "{{ terraform_minio_dir }}"
+      environment:
+        TF_VAR_minio_endpoint: "{{ minio_hostname }}:9000"
+        TF_VAR_minio_admin_user: "{{ minio_root_user }}"
+        TF_VAR_minio_admin_password: "{{ minio_root_password }}"
+        TF_VAR_minio_ssl_verify: "false"
+      register: terraform_minio_destroy
+      changed_when: "'Destroy complete!' in terraform_minio_destroy.stdout"
+      no_log: true
+      when:
+        - minio_tf_state_dir.stat.exists
+        - minio_tf_state_file.stat.exists
+
 - name: Clean Minio Installation
   hosts: s3
   become: true
