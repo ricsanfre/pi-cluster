@@ -3,9 +3,9 @@
 resource "minio_s3_bucket" "buckets" {
   for_each = local.minio_buckets
 
-  bucket        = each.value.name
-  object_locking   = each.value.object_lock
-  force_destroy = true
+  bucket         = each.value.name
+  object_locking = each.value.object_lock
+  force_destroy  = true
 
   depends_on = [minio_iam_policy.policies]
 }
@@ -61,8 +61,8 @@ resource "minio_iam_user_policy_attachment" "user_policies" {
     for pair in flatten([
       for user_key, user_config in local.minio_users : [
         for policy in user_config.policies : {
-          user_key   = user_key
-          user_name  = user_config.access_key
+          user_key    = user_key
+          user_name   = user_config.access_key
           policy_name = policy
         }
       ]

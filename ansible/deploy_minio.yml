@@ -1,0 +1,342 @@
+---
+# Deploy MinIO S3 Storage Server
+#
+# This playbook handles:
+# 1. TLS certificate generation (Letsencrypt or self-signed)
+# 2. Fetches MinIO credentials from HashiCorp Vault using on-demand lookups
+# 3. MinIO server installation and configuration using ricsanfre.minio role
+#
+# Note:
+#   MinIO resources configuration (buckets, users, policies) is handled by
+#   configure_minio.yml.
+#
+# Prerequisites:
+#   - Vault server deployed and running
+#   - MinIO secrets loaded in Vault at 'secret/minio'
+#   - Vault environment file exists:
+#     * ~/.secrets/vault.env
+#   - inventory.yml configured with [s3] group
+#   - Terraform installed (>= 1.0)
+#
+# Usage:
+#   # Ensure Vault credentials file exists
+#   # ~/.secrets/vault.env with:
+#   # VAULT_ADDR=https://vault.example.com:8200
+#   # VAULT_TOKEN=s.xxxxxxxxxxxxx
+#   # VAULT_CACERT=/path/to/certificates/CA.pem
+#
+#   # Generate certificates
+#   ansible-playbook ansible/deploy_minio.yml --tags certificates
+#
+#   # Deploy MinIO server (certificates + MinIO service)
+#   ansible-playbook ansible/deploy_minio.yml
+
+#   # Configure MinIO resources (buckets/users/policies) after deployment
+#   ansible-playbook ansible/configure_minio.yml
+
+## Generate TLS certificates for MinIO
+- name: Generate TLS certificates for MinIO
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates, minio]
+  vars:
+    propagation_seconds: 300
+    selfsigned_certificates_path: "../certificates"
+    ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Check Ionos credentials file exists
+      ansible.builtin.stat:
+        path: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_stat
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file exists
+      ansible.builtin.assert:
+        that:
+          - ionos_credentials_stat.stat.exists
+          - ionos_credentials_stat.stat.isreg
+        fail_msg: |
+          ⚠️  Ionos credentials file not found!
+
+          Please create the credentials file before running this playbook:
+
+            {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+    - name: Load Ionos credentials file content
+      ansible.builtin.slurp:
+        src: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_raw
+      when: enable_letsencrypt
+
+    - name: Set Ionos credentials from file
+      ansible.builtin.set_fact:
+        ionos_public_prefix: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_prefix\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+        ionos_secret: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_secret\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+      vars:
+        ionos_credentials_content: "{{ ionos_credentials_raw.content | b64decode }}"
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file format
+      ansible.builtin.assert:
+        that:
+          - ionos_public_prefix != ""
+          - ionos_secret != ""
+        fail_msg: |
+          ⚠️  Invalid Ionos credentials file format!
+
+          File: {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+  tasks:
+    - name: Create Letsencrypt certificate for MinIO
+      ansible.builtin.command: |
+        certbot certonly \
+        --authenticator dns-ionos \
+        --dns-ionos-credentials {{ ionos_credentials_file }} \
+        --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --agree-tos \
+        --non-interactive \
+        --rsa-key-size 4096 \
+        -m {{ acme_issuer_email }} \
+        -d {{ minio_hostname }}
+      register: certbot_create
+      changed_when:
+        - certbot_create.rc == 0
+        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
+      when: enable_letsencrypt
+
+    - name: Create customCA-signed TLS certificate for MinIO
+      when: not enable_letsencrypt
+      block:
+        # Generate self-signed certificates directory
+        - name: Create certificates directory
+          ansible.builtin.file:
+            path: "{{ selfsigned_certificates_path }}"
+            state: directory
+            mode: "0750"
+
+        # Include selfsigned certificates variables
+        - name: Include selfsigned certificates variables
+          ansible.builtin.include_vars: "vars/selfsigned-certificates.yml"
+
+        # Generate custom CA (if needed)
+        - name: Generate custom CA
+          ansible.builtin.include_tasks: tasks/generate_custom_ca.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+
+        # Generate customCA-signed TLS certificate for MinIO
+        - name: Generate customCA-signed SSL certificate for MinIO
+          ansible.builtin.include_tasks: tasks/generate_ca_signed_cert.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+          vars:
+            server_hostname: "{{ minio_hostname }}"
+
+# Install and Configure MinIO with Vault Integration
+- name: Install MinIO S3 Storage Server
+  hosts: s3
+  gather_facts: true
+  tags: [minio]
+  become: true
+  vars:
+    server_hostname: "{{ minio_hostname }}"
+    selfsigned_certificates_path: "../certificates"
+    vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Check Vault secret file exists on controller
+      ansible.builtin.stat:
+        path: "{{ vault_secret_file }}"
+      register: vault_secret_file_stat
+      delegate_to: localhost
+      become: false
+
+    - name: Validate Vault secret file exists
+      ansible.builtin.assert:
+        that:
+          - vault_secret_file_stat.stat.exists
+          - vault_secret_file_stat.stat.isreg
+        fail_msg: |
+          Vault secret file not found: {{ vault_secret_file }}
+
+          Run external services stage 1 first to generate it, or create it with:
+
+            VAULT_ADDR=https://vault.example.com:8200
+            VAULT_TOKEN=s.xxxxxxxxxxxxx
+            VAULT_CACERT=/path/to/certificates/CA.pem
+
+    - name: Get Vault environment from secret file
+      ansible.builtin.set_fact:
+        vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
+        vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
+        vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
+
+    - name: Validate Vault variables loaded from secret file
+      ansible.builtin.assert:
+        that:
+          - vault_addr is defined and vault_addr != ""
+          - vault_token is defined and vault_token != ""
+        fail_msg: |
+          Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
+
+          Please configure Vault access before running this playbook.
+
+    - name: Display Vault configuration (self-signed certificates)
+      ansible.builtin.debug:
+        msg: |
+          Vault Configuration:
+             VAULT_ADDR: {{ vault_addr }}
+             VAULT_TOKEN: {{ vault_token[:20] }}...
+             VAULT_CACERT: {{ vault_cacert }}
+      when: not enable_letsencrypt
+
+    - name: Display Vault configuration (Let's Encrypt certificates)
+      ansible.builtin.debug:
+        msg: |
+          Vault Configuration:
+             VAULT_ADDR: {{ vault_addr }}
+             VAULT_TOKEN: {{ vault_token[:20] }}...
+      when: enable_letsencrypt
+
+    - name: Load customCA-signed TLS certificate for MinIO
+      ansible.builtin.set_fact:
+        minio_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        minio_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for MinIO
+      when: enable_letsencrypt
+      block:
+        - name: Check TLS certificate for MinIO exits
+          ansible.builtin.command: "certbot certificates -d {{ minio_hostname }}"
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + minio_hostname not in certbot_certificates.stdout'
+
+        - name: Get certificate and key paths for MinIO
+          ansible.builtin.set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1, '\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2, '\\1') }}"
+          vars:
+            regexp1: 'Certificate Path: (\S+)'
+            regexp2: 'Private Key Path: (\S+)'
+          when:
+            - certbot_certificates.rc == 0
+            - '"Certificate Name: " + minio_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          ansible.builtin.set_fact:
+            minio_key: "{{ lookup('file', cert_key_path[0]) }}"
+            minio_cert: "{{ lookup('file', cert_path[0]) }}"
+
+    # ON-DEMAND VAULT LOOKUP: Fetch MinIO secrets only when needed
+    - name: Fetch MinIO credentials from Vault (on-demand lookup)
+      community.hashi_vault.vault_kv2_get:
+        mount_point: "secret"
+        path: "minio"
+        validate_certs: "{{ (not enable_letsencrypt) and (vault_cacert != '') }}"
+      register: minio_vault_secret
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
+      no_log: true
+
+    - name: Set MinIO credentials from Vault
+      ansible.builtin.set_fact:
+        minio_root_user: "{{ minio_vault_secret.secret.root_user | default(minio_vault_secret.secret.data.data.root_user, true) }}"
+        minio_root_password: "{{ minio_vault_secret.secret.root_password | default(minio_vault_secret.secret.data.data.root_password, true) }}"
+      no_log: true
+
+    - name: Validate MinIO credentials were retrieved from Vault
+      ansible.builtin.assert:
+        that:
+          - minio_root_user is defined
+          - minio_root_user | length > 0
+          - minio_root_password is defined
+          - minio_root_password | length > 0
+        fail_msg: |
+          ⚠️  Failed to retrieve MinIO credentials from Vault!
+
+          The following credentials are missing or empty:
+          {% if minio_root_user is not defined or minio_root_user | length == 0 %}
+            - minio_root_user (root_user)
+          {% endif %}
+          {% if minio_root_password is not defined or minio_root_password | length == 0 %}
+            - minio_root_password (root_password)
+          {% endif %}
+
+          Please verify:
+          1. Vault is accessible at: {{ vault_addr }}
+          2. Secret exists at path: secret/minio
+          3. Secret contains keys: root_user, root_password
+
+          To check the secret:
+            vault kv get secret/minio
+        success_msg: "✓ MinIO credentials successfully retrieved from Vault"
+
+  roles:
+    - role: ricsanfre.minio
+
+  post_tasks:
+    - name: Display MinIO installation information
+      ansible.builtin.debug:
+        msg: |
+         ╔════════════════════════════════════════════════════════════╗
+         ║          MinIO Installed Successfully!                     ║
+         ╚════════════════════════════════════════════════════════════╝
+
+         🪣 Access Information:
+
+         API Server:
+           URL: https://{{ minio_hostname }}:9000
+
+         Console (Web UI):
+           URL: https://{{ minio_hostname }}:9001
+
+         🔐 Credentials:
+           Stored securely in Vault at: secret/minio
+
+         📋 Next: Configuring buckets, users, and policies via Terraform...
+
+
+         📚 Next Steps:
+           1. Verify MinIO status:
+             ansible minio -m ansible.builtin.command -a 'systemctl status minio'
+
+           2. Test connectivity:
+             mc alias set minio https://{{ minio_hostname }}:9000 <root_user> <root_password>
+             mc ls minio/
+
+           3. For Kubernetes integration, use the created service accounts

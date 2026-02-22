@@ -1,0 +1,28 @@
+---
+- name: Read GitHub PAT credentials file from localhost
+  ansible.builtin.set_fact:
+    github_pat_content: "{{ lookup('file', github_pat_file) }}"
+
+- name: Set GitHub PAT fact from file
+  ansible.builtin.set_fact:
+    github_pat: "{{ (github_pat_content | regex_search('(?m)^\\s*github_pat\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+
+- name: Validate GitHub PAT credentials file format
+  ansible.builtin.assert:
+    that:
+      - github_pat | length > 0
+    fail_msg: |
+      Invalid GitHub PAT credentials file format.
+
+      File: {{ github_pat_file }}
+      Required format:
+        github_pat = your-github-pat
+
+- name: Create/update flux/github credentials in Vault
+  community.hashi_vault.vault_kv_secret:
+    version: 2
+    path: secret/flux/github
+    data:
+      content:
+        pat: "{{ github_pat }}"
+  no_log: true

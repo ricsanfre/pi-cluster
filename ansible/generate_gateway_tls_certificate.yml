@@ -7,22 +7,68 @@
   tags: [certificates]
   vars:
     propagation_seconds: 300
+    ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
   pre_tasks:
-    # Include vault variables
-    - name: Include vault variables
-      ansible.builtin.include_vars: "vars/vault.yml"
     # Include picluster variables
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
 
-    - name: Copy ionos secret file
-      ansible.builtin.template:
-        src: "{{ item.template }}"
-        dest: "{{ item.dest }}"
-        mode: "0600"
-      with_items:
-        - template: ionos-credentials.ini.j2
-          dest: "~/.secrets/ionos-credentials.ini"
+    - name: Check Ionos credentials file exists
+      ansible.builtin.stat:
+        path: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_stat
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file exists
+      ansible.builtin.assert:
+        that:
+          - ionos_credentials_stat.stat.exists
+          - ionos_credentials_stat.stat.isreg
+        fail_msg: |
+          ⚠️  Ionos credentials file not found!
+
+          Please create the credentials file before running this playbook:
+
+            {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+    - name: Load Ionos credentials file content
+      ansible.builtin.slurp:
+        src: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_raw
+      when: enable_letsencrypt
+
+    - name: Set Ionos credentials from file
+      ansible.builtin.set_fact:
+        ionos_public_prefix: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_prefix\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+        ionos_secret: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_secret\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+      vars:
+        ionos_credentials_content: "{{ ionos_credentials_raw.content | b64decode }}"
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file format
+      ansible.builtin.assert:
+        that:
+          - ionos_public_prefix != ""
+          - ionos_secret != ""
+        fail_msg: |
+          ⚠️  Invalid Ionos credentials file format!
+
+          File: {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
       when: enable_letsencrypt
 
   tasks:
@@ -30,7 +76,7 @@
       ansible.builtin.command: |
         certbot certonly \
         --authenticator dns-ionos \
-        --dns-ionos-credentials ~/.secrets/ionos-credentials.ini \
+        --dns-ionos-credentials {{ ionos_credentials_file }} \
         --dns-ionos-propagation-seconds {{ propagation_seconds }} \
         --server https://acme-v02.api.letsencrypt.org/directory \
         --agree-tos \

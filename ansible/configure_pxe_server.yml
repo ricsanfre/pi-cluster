@@ -4,9 +4,5 @@
   gather_facts: true
   tags: [pxe]
   become: true
-  pre_tasks:
-    - name: Include vault variables
-      ansible.builtin.include_vars: "vars/vault.yml"
-      tags: ["always"]
   roles:
     - role: pxe-server

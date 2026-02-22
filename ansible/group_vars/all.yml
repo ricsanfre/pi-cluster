@@ -8,8 +8,9 @@ ansible_user: ricsanfre
 ansible_ssh_private_key_file: ~/.ssh/id_rsa
 
 # Cluster Lab Architecture
-# Whether to use centralized SAN architecture or not
-centralized_san: false
+# NOTE: Centralized SAN configuration has been removed to simplify deployment
+# All deployments now use local storage (iSCSI Initiator for Longhorn)
+# centralized_san: false
 
 # GitOps Repo
 # Whether the repo is private or not

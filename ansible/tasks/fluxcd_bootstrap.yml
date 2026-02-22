@@ -1,5 +1,42 @@
 ---
 
+- name: Validate Vault environment
+  ansible.builtin.assert:
+    that:
+      - lookup('env', 'VAULT_ADDR') | length > 0
+      - lookup('env', 'VAULT_TOKEN') | length > 0
+    fail_msg: |
+      Vault environment variables not set.
+      Please set VAULT_ADDR and VAULT_TOKEN:
+        export VAULT_ADDR='https://your-vault-server:8200'
+        export VAULT_TOKEN='your-vault-token'
+    success_msg: "Vault environment validated"
+  tags: ["always"]
+
+- name: Fetch FluxCD GitHub PAT from Vault
+  community.hashi_vault.vault_kv2_get:
+    mount_point: secret
+    path: flux/github
+  register: flux_vault_secret
+  tags: ["always"]
+
+- name: Set GitHub PAT from Vault
+  ansible.builtin.set_fact:
+    github_pat: "{{ flux_vault_secret.secret.pat | default(flux_vault_secret.secret.data.data.pat, true) }}"
+  tags: ["always"]
+  no_log: true
+
+- name: Validate GitHub PAT
+  ansible.builtin.assert:
+    that:
+      - github_pat is defined
+      - github_pat | length > 0
+    fail_msg: |
+      Failed to retrieve GitHub PAT from Vault at path secret/flux/github
+      Please ensure the secret exists with 'content.pat' field.
+    success_msg: "GitHub PAT retrieved and validated"
+  tags: ["always"]
+
 - name: Deploy Flux CD Operator
   kubernetes.core.helm:
     name: flux-operator
@@ -16,11 +53,12 @@
   ansible.builtin.shell: |
     kubectl create secret generic flux-system -n flux-system \
     --from-literal=username=git \
-    --from-literal=password="{{ vault.flux.github.pat }}"
+    --from-literal=password="{{ github_pat }}"
   when: git_private_repo
   args:
     executable: /bin/bash
   changed_when: false
+  no_log: true
 
 - name: Add cluster settings
   ansible.builtin.shell: |

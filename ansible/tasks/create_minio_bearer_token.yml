@@ -12,13 +12,13 @@
   ansible.builtin.set_fact:
     minio_prom_bearer_token: "{{ root_token.stdout }}"
 
-- name: Create/update minio/prometheus credentials
-  ansible.builtin.uri:
-    url: "https://{{ vault_dns }}:8200/v1/secret/data/minio/prometheus"
-    method: POST
-    headers:
-      X-Vault-Token: "{{ token_data | community.hashi_vault.vault_login_token }}"
-    body:
-      data:
-        bearer-token: "{{ minio_prom_bearer_token }}"
-    body_format: json
+- name: Create/update minio/prometheus credentials in Vault
+  community.hashi_vault.vault_write:
+    path: "minio/prometheus"
+    data:
+      bearer_token: "{{ minio_prom_bearer_token }}"
+  environment:
+    VAULT_ADDR: "{{ lookup('env', 'VAULT_ADDR') }}"
+    VAULT_TOKEN: "{{ lookup('env', 'VAULT_TOKEN') }}"
+    VAULT_CACERT: "{{ lookup('env', 'VAULT_CACERT') if (not enable_letsencrypt | default(false)) else '' }}"
+  no_log: true

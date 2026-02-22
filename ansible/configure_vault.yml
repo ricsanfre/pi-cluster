@@ -1,0 +1,235 @@
+---
+- name: "Stage 2: Configure Vault with Terraform"
+  hosts: localhost
+  gather_facts: true
+  tags: [terraform, stage2]
+
+  vars:
+    terraform_vault_dir: "../terraform/vault"
+    vault_host: "{{ groups['vault'][0] }}"
+    vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+  tasks:
+    - name: Display Stage 2 banner
+      ansible.builtin.debug:
+        msg: |
+          ╔════════════════════════════════════════════════════════════╗
+          ║      Stage 2: Terraform Vault Configuration                ║
+          ╚════════════════════════════════════════════════════════════╝
+
+          This stage will:
+          • Initialize Terraform state
+          • Enable KV secrets engine
+          • Configure Vault policies
+          • Load auto-generated secrets from JSON files
+          • Setup Kubernetes authentication method
+
+    - name: Check Vault secret file exists
+      ansible.builtin.stat:
+        path: "{{ vault_secret_file }}"
+      register: vault_secret_file_stat
+
+    - name: Validate Vault secret file exists
+      ansible.builtin.assert:
+        that:
+          - vault_secret_file_stat.stat.exists
+          - vault_secret_file_stat.stat.isreg
+        fail_msg: |
+          Vault secret file not found: {{ vault_secret_file }}
+
+          Run Stage 1 first to generate it, or create it with:
+            VAULT_ADDR=https://vault.example.com:8200
+            VAULT_TOKEN=s.xxxxxxxxxxxxx
+            VAULT_CACERT=/path/to/ca.pem
+
+    - name: Set Vault environment variables
+      ansible.builtin.set_fact:
+        vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
+        vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
+        vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
+
+    - name: Validate Vault variables loaded from secret file
+      ansible.builtin.assert:
+        that:
+          - vault_addr is defined and vault_addr != ""
+          - vault_token is defined and vault_token != ""
+        fail_msg: |
+          Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
+
+    - name: Display Vault configuration (self-signed certificates)
+      ansible.builtin.debug:
+        msg: |
+          Vault Configuration:
+             VAULT_ADDR: {{ vault_addr }}
+             VAULT_TOKEN: {{ vault_token[:20] }}...
+             VAULT_CACERT: {{ vault_cacert }}
+      when: not enable_letsencrypt
+
+    - name: Display Vault configuration (Let's Encrypt certificates)
+      ansible.builtin.debug:
+        msg: |
+          Vault Configuration:
+             VAULT_ADDR: {{ vault_addr }}
+             VAULT_TOKEN: {{ vault_token[:20] }}...
+      when: enable_letsencrypt
+
+    - name: Check if Terraform is installed
+      ansible.builtin.command: tofu version
+      register: terraform_check
+      changed_when: false
+      failed_when: false
+
+    - name: Validate Terraform installation
+      ansible.builtin.assert:
+        that:
+          - terraform_check.rc == 0
+        fail_msg: |
+          Terraform is not installed!
+
+          Please install OpenTofu first:
+
+          # For Debian/Ubuntu
+          wget -O- https://get.opentofu.org/install-opentofu.sh | sudo bash
+
+          # Or install Terraform:
+          wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor \
+            -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+            https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+            sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update && sudo apt install terraform
+
+    - name: Initialize Terraform
+      ansible.builtin.command:
+        cmd: tofu init -no-color
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_ADDRESS: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+      changed_when: true
+
+    - name: Validate Terraform configuration
+      ansible.builtin.command:
+        cmd: tofu validate -no-color
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_ADDRESS: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+      changed_when: false
+
+    - name: Display effective Terraform feature flags
+      ansible.builtin.debug:
+        msg: |
+          Terraform feature flags (enforced for plan/apply):
+             TF_VAR_enable_kubernetes_auth=false
+             TF_VAR_enable_policies=true
+             TF_VAR_enable_roles=true
+             TF_VAR_enable_secrets=true
+
+    - name: Plan Terraform changes
+      ansible.builtin.command:
+        cmd: >-
+          tofu plan
+          -no-color
+          -out=tfplan
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_ADDRESS: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+        TF_VAR_enable_kubernetes_auth: "false"
+        TF_VAR_enable_policies: "true"
+        TF_VAR_enable_roles: "true"
+        TF_VAR_enable_secrets: "true"
+      changed_when: false
+      register: terraform_plan
+
+    - name: Display Terraform plan summary
+      ansible.builtin.debug:
+        msg: "{{ terraform_plan.stdout_lines[-20:] | join('\n') }}"
+
+    - name: Apply Terraform configuration
+      ansible.builtin.command:
+        cmd: tofu apply -no-color -auto-approve tfplan
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_ADDRESS: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+        TF_VAR_enable_kubernetes_auth: "false"
+        TF_VAR_enable_policies: "true"
+        TF_VAR_enable_roles: "true"
+        TF_VAR_enable_secrets: "true"
+      changed_when: true
+      register: terraform_apply
+
+    - name: Display Terraform outputs
+      ansible.builtin.command:
+        cmd: tofu output -no-color -json
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_ADDRESS: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+      changed_when: false
+      register: terraform_outputs
+
+    - name: Store Terraform outputs
+      ansible.builtin.set_fact:
+        terraform_output_json: "{{ terraform_outputs.stdout | default('{}') | from_json }}"
+      when: terraform_outputs.stdout != ""
+
+    - name: Derive Terraform output summary values
+      ansible.builtin.set_fact:
+        vault_kv_path: "{{ terraform_output_json.get('kv_engine_path', {}).get('value') | default('secret/', true) }}"
+        vault_secrets_count: "{{ terraform_output_json.get('secrets_count', {}).get('value') | default(0, true) | int }}"
+        vault_policies_count: >-
+          {{
+            terraform_output_json.get('vault_configuration_summary', {}).get('value', {}).get('total_policies')
+            | default((terraform_output_json.get('policies_created', {}).get('value') | default([], true) | length), true)
+            | int
+          }}
+      when: terraform_outputs.stdout != ""
+
+    - name: Display Terraform results
+      ansible.builtin.debug:
+        msg: |
+          Terraform Configuration Complete!
+
+          Created Resources:
+             • KV Secrets Engine: {{ vault_kv_path | default('secret/') }}
+             • Secrets: {{ vault_secrets_count | default(0) }} configured
+             • Policies: {{ vault_policies_count | default(0) }} configured
+
+          Verify Secrets:
+             $ export VAULT_ADDR='{{ vault_addr }}'
+             $ export VAULT_TOKEN='{{ vault_token }}'
+             $ vault kv list secret/
+
+    - name: Export Vault environment for next stages
+      ansible.builtin.set_fact:
+        cacheable: true
+        vault_external_services_addr: "{{ vault_addr }}"
+        vault_external_services_token: "{{ vault_token }}"
+        vault_external_services_cacert: "{{ vault_cacert if not enable_letsencrypt else '' }}"

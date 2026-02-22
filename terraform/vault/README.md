@@ -128,13 +128,13 @@ enable_secrets         = true
 **Via command line:**
 ```bash
 # Deploy only Kubernetes authentication infrastructure
-terraform apply \
+tofu apply \
   -var="enable_policies=false" \
   -var="enable_roles=false" \
   -var="enable_secrets=false"
 
 # Deploy only policies (common for initial setup)
-terraform apply \
+tofu apply \
   -var="enable_secrets=false" \
   -var="enable_roles=false" \
   -var="enable_kubernetes_auth=false"
@@ -206,42 +206,42 @@ enable_secrets         = true  # Enable secrets creation from JSON files
 ### 3. Initialize Terraform
 
 ```bash
-terraform init
+tofu init
 ```
 
 ### 4. Plan Changes
 
 ```bash
-terraform plan -out=tfplan
+tofu plan -out=tfplan
 ```
 
 **Optional: Use feature control flags to deploy specific components:**
 
 ```bash
 # Deploy only policies and Kubernetes auth (no secrets or roles)
-terraform plan -var="enable_secrets=false" -var="enable_roles=false" -out=tfplan
+tofu plan -var="enable_secrets=false" -var="enable_roles=false" -out=tfplan
 
 # Deploy only secrets (no policies or Kubernetes auth)
-terraform plan -var="enable_policies=false" -var="enable_kubernetes_auth=false" -out=tfplan
+tofu plan -var="enable_policies=false" -var="enable_kubernetes_auth=false" -out=tfplan
 
 # Disable Kubernetes authentication entirely
-terraform plan -var="enable_kubernetes_auth=false" -out=tfplan
+tofu plan -var="enable_kubernetes_auth=false" -out=tfplan
 ```
 
 ### 5. Apply Configuration
 
 ```bash
-terraform apply tfplan
+tofu apply tfplan
 ```
 
 ### 6. Verify Deployment
 
 ```bash
 # View all outputs
-terraform output
+tofu output
 
 # View specific output
-terraform output vault_configuration_summary
+tofu output vault_configuration_summary
 ```
 
 ---
@@ -381,19 +381,19 @@ After `terraform apply`, view outputs:
 
 ```bash
 # All outputs
-terraform output
+tofu output
 
 # Configuration summary
-terraform output vault_configuration_summary
+tofu output vault_configuration_summary
 
 # KV engine info
-terraform output -json | jq '.kv_engine_path'
+tofu output -json | jq '.kv_engine_path'
 
 # Policies created
-terraform output policies_created
+tofu output policies_created
 
 # Kubernetes roles
-terraform output kubernetes_auth_roles
+tofu output kubernetes_auth_roles
 ```
 
 ---
@@ -425,7 +425,7 @@ output "policy_my_custom_policy_name" {
 
 Apply changes:
 ```bash
-terraform apply
+tofu apply
 ```
 
 ### Adding a New Kubernetes Role
@@ -461,22 +461,22 @@ kubernetes_roles = {
 
 Apply changes:
 ```bash
-terraform apply
+tofu apply
 ```
 
 ### Adding New Secrets
 
 1. Create JSON file in `secrets/` directory
-2. Run `terraform plan`
+2. Run `tofu plan`
 3. Review changes
-4. Run `terraform apply`
+4. Run `tofu apply`
 
 ### Modifying Existing Secrets
 
 Edit the JSON file in `secrets/` and run:
 
 ```bash
-terraform apply
+tofu apply
 ```
 
 Terraform will detect changes and update the secret.

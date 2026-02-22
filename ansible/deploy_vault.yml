@@ -1,0 +1,308 @@
+---
+# Deploy HashiCorp Vault Server
+#
+# This playbook handles:
+# 1. TLS certificate generation (Letsencrypt or self-signed)
+# 2. Vault server installation and configuration using ricsanfre.vault role
+# 3. Environment setup for Vault access
+#
+# Prerequisites:
+#   - inventory.yml configured with [vault] group
+#   - Terraform vault configuration in terraform/vault project
+#   - TLS dependencies (certbot if using Letsencrypt)
+#
+# Usage:
+#   # Generate certificates
+#   ansible-playbook ansible/deploy_vault.yml --tags certificates
+#
+#   # Install and configure Vault
+#   ansible-playbook ansible/deploy_vault.yml --tags vault
+#
+#   # Run full deployment
+#   ansible-playbook ansible/deploy_vault.yml
+
+## Generate TLS certificates for Vault
+- name: Generate TLS certificates for Vault
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates, vault]
+  vars:
+    propagation_seconds: 300
+    selfsigned_certificates_path: "./certificates"
+    ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Check Ionos credentials file exists
+      ansible.builtin.stat:
+        path: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_stat
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file exists
+      ansible.builtin.assert:
+        that:
+          - ionos_credentials_stat.stat.exists
+          - ionos_credentials_stat.stat.isreg
+        fail_msg: |
+          ⚠️  Ionos credentials file not found!
+
+          Please create the credentials file before running this playbook:
+
+            {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+    - name: Load Ionos credentials file content
+      ansible.builtin.slurp:
+        src: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_raw
+      when: enable_letsencrypt
+
+    - name: Set Ionos credentials from file
+      ansible.builtin.set_fact:
+        ionos_public_prefix: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_prefix\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+        ionos_secret: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_secret\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+      vars:
+        ionos_credentials_content: "{{ ionos_credentials_raw.content | b64decode }}"
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file format
+      ansible.builtin.assert:
+        that:
+          - ionos_public_prefix != ""
+          - ionos_secret != ""
+        fail_msg: |
+          ⚠️  Invalid Ionos credentials file format!
+
+          File: {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+  tasks:
+    - name: Create Letsencrypt certificate for Vault
+      ansible.builtin.command: |
+        certbot certonly \
+        --authenticator dns-ionos \
+        --dns-ionos-credentials {{ ionos_credentials_file }} \
+        --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --agree-tos \
+        --non-interactive \
+        --rsa-key-size 4096 \
+        -m {{ acme_issuer_email }} \
+        -d {{ vault_hostname }}
+      register: certbot_create
+      changed_when:
+        - certbot_create.rc == 0
+        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
+      when: enable_letsencrypt
+
+    - name: Create customCA-signed TLS certificate for Vault
+      when: not enable_letsencrypt
+      block:
+        # Generate self-signed certificates directory
+        - name: Create certificates directory
+          ansible.builtin.file:
+            path: "{{ selfsigned_certificates_path }}"
+            state: directory
+            mode: "0750"
+
+        # Include selfsigned certificates variables
+        - name: Include selfsigned certificates variables
+          ansible.builtin.include_vars: "vars/selfsigned-certificates.yml"
+
+        # Generate custom CA
+        - name: Generate custom CA
+          ansible.builtin.include_tasks: tasks/generate_custom_ca.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+
+        # Generate customCA-signed TLS certificate for Vault
+        - name: Generate customCA-signed SSL certificate for Vault
+          ansible.builtin.include_tasks: tasks/generate_ca_signed_cert.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+          vars:
+            server_hostname: "{{ vault_hostname }}"
+
+# Install and Configure Vault Server
+- name: Install Vault Server
+  hosts: vault
+  gather_facts: true
+  tags: [vault]
+  become: true
+  vars:
+    server_hostname: "{{ vault_hostname }}"
+    selfsigned_certificates_path: "../certificates"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Load customCA-signed TLS certificate for Vault
+      ansible.builtin.set_fact:
+        vault_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        vault_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+        vault_ca: "{{ lookup('file', selfsigned_certificates_path + '/CA.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for Vault
+      when: enable_letsencrypt
+      block:
+        - name: Check TLS certificate for Vault exits
+          ansible.builtin.command: "certbot certificates -d {{ vault_hostname }}"
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + vault_hostname not in certbot_certificates.stdout'
+
+        - name: Get certificate and key paths for Vault
+          ansible.builtin.set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1, '\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2, '\\1') }}"
+          vars:
+            regexp1: 'Certificate Path: (\S+)'
+            regexp2: 'Private Key Path: (\S+)'
+          when:
+            - certbot_certificates.rc == 0
+            - '"Certificate Name: " + vault_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          ansible.builtin.set_fact:
+            vault_key: "{{ lookup('file', cert_key_path[0]) }}"
+            vault_cert: "{{ lookup('file', cert_path[0]) }}"
+
+  roles:
+    - role: ricsanfre.vault
+
+  tasks:
+    - name: Configure Vault environment variables for ansible user
+      ansible.builtin.lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: "0644"
+        state: present
+      with_items:
+        - regexp: "^export VAULT_ADDR="
+          line: "export VAULT_ADDR='https://{{ vault_hostname }}:8200'"
+        - regexp: "^export VAULT_TOKEN="
+          line: "export VAULT_TOKEN=$(sudo jq -r '.root_token' /etc/vault/unseal.json)"
+
+    - name: Configure VAULT_CACERT for self-signed certificates
+      ansible.builtin.lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: "^export VAULT_CACERT="
+        line: "export VAULT_CACERT=/etc/vault/tls/vault-ca.crt"
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: "0644"
+        state: present
+      when: not enable_letsencrypt
+
+
+    - name: Display Vault initialization information (self-signed certificates)
+      ansible.builtin.debug:
+        msg: |
+         ╔════════════════════════════════════════════════════════════╗
+         ║          Vault Deployed Successfully!                      ║
+         ╚════════════════════════════════════════════════════════════╝
+
+         IMPORTANT: Store these credentials securely:
+
+         📋 Unseal Keys Location:
+           /etc/vault/unseal.json
+
+         🔐 Retrieve Root Token:
+           ssh {{ vault_hostname }}
+           sudo jq -r '.root_token' /etc/vault/unseal.json
+
+         🔧 Configure Your Local Environment:
+           export VAULT_ADDR='https://{{ vault_hostname }}:8200'
+           export VAULT_CACERT='{{ selfsigned_certificates_path }}/CA.pem'
+           export VAULT_TOKEN='s.xxxxxxxxxxxx'  # From unseal.json
+
+         ✅ Next Steps:
+           1. Extract and store the root token safely
+           2. Run: ansible-playbook ansible/load_external_services_keys.yml
+           3. Verify: vault token lookup
+      when: not enable_letsencrypt
+      no_log: true
+
+    - name: Display Vault initialization information (Let's Encrypt certificates)
+      ansible.builtin.debug:
+        msg: |
+         ╔════════════════════════════════════════════════════════════╗
+         ║          Vault Deployed Successfully!                      ║
+         ╚════════════════════════════════════════════════════════════╝
+
+         IMPORTANT: Store these credentials securely:
+
+         📋 Unseal Keys Location:
+           /etc/vault/unseal.json
+
+         🔐 Retrieve Root Token:
+           ssh {{ vault_hostname }}
+           sudo jq -r '.root_token' /etc/vault/unseal.json
+
+         🔧 Configure Your Local Environment:
+           export VAULT_ADDR='https://{{ vault_hostname }}:8200'
+           export VAULT_TOKEN='s.xxxxxxxxxxxx'  # From unseal.json
+
+         ✅ Next Steps:
+           1. Extract and store the root token safely
+           2. Run: ansible-playbook ansible/load_external_services_keys.yml
+           3. Verify: vault token lookup
+      when: enable_letsencrypt
+      no_log: true
+
+    - name: Read Vault root token from unseal file
+      ansible.builtin.command: "jq -r '.root_token' /etc/vault/unseal.json"
+      register: vault_root_token_cmd
+      changed_when: false
+      no_log: true
+
+    - name: Ensure .secrets directory exists for ansible user
+      ansible.builtin.file:
+        path: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+      become: false
+
+    - name: Create Vault secret environment file
+      ansible.builtin.copy:
+        dest: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+        content: |
+          VAULT_ADDR=https://{{ vault_hostname }}:8200
+          VAULT_TOKEN={{ vault_root_token_cmd.stdout }}
+          {% if not enable_letsencrypt %}
+          VAULT_CACERT={{ selfsigned_certificates_path }}/CA.pem
+          {% endif %}
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+      no_log: true
