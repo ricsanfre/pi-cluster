@@ -19,10 +19,13 @@
         github_pat = your-github-pat
 
 - name: Create/update flux/github credentials in Vault
-  community.hashi_vault.vault_kv_secret:
-    version: 2
-    path: secret/flux/github
+  community.hashi_vault.vault_write:
+    path: "secret/data/flux/github"
     data:
-      content:
+      data:
         pat: "{{ github_pat }}"
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+    VAULT_CACERT: "{{ (vault_cacert | default('', true)) if (not enable_letsencrypt | default(false)) else '' }}"
   no_log: true

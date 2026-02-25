@@ -14,11 +14,12 @@
 
 - name: Create/update minio/prometheus credentials in Vault
   community.hashi_vault.vault_write:
-    path: "minio/prometheus"
+    path: "secret/data/minio/prometheus"
     data:
-      bearer_token: "{{ minio_prom_bearer_token }}"
+      data:
+        bearer_token: "{{ minio_prom_bearer_token }}"
   environment:
-    VAULT_ADDR: "{{ lookup('env', 'VAULT_ADDR') }}"
-    VAULT_TOKEN: "{{ lookup('env', 'VAULT_TOKEN') }}"
-    VAULT_CACERT: "{{ lookup('env', 'VAULT_CACERT') if (not enable_letsencrypt | default(false)) else '' }}"
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+    VAULT_CACERT: "{{ (vault_cacert | default('', true)) if (not enable_letsencrypt | default(false)) else '' }}"
   no_log: true
