@@ -4,7 +4,7 @@ This Terraform module uses the [aminueza/terraform-provider-minio](https://githu
 
 - **S3 Buckets**: Create and manage Minio S3 buckets used by Kubernetes services (Loki, Tempo, Longhorn, Velero, Restic, Barman)
 - **IAM Policies**: Define access control policies for each service user
-- **IAM Users**: Create users with access keys (secret keys configured separately via Minio CLI or Ansible)
+- **IAM Users**: Create users with access keys and read secret keys from Vault KV
 - **Policy Attachments**: Bind policies to users for granular access control
 
 ## Project Structure
@@ -116,6 +116,8 @@ Configures the Minio provider with:
 - Region
 - SSL/TLS settings
 - Root credentials
+
+Also configures the Vault provider to read IAM user secrets from KV v2 paths.
 
 ### variables.tf
 Defines input variables for:
@@ -355,21 +357,21 @@ Similar minimal policies defined for Longhorn, Velero, Restic, and Barman.
 ## Credentials Management
 
 ### User Creation
-Terraform creates IAM users with their access key (username). Users are created without initial secret keys.
+Terraform creates IAM users with their access key (username) and reads each user secret key from Vault.
+
+Default lookup pattern:
+- Mount: `secret` (configurable via `vault_kv_mount`)
+- Path: `minio/<access_key>` (configurable via `vault_minio_users_path_prefix`)
+- Field: `key` (configurable via `vault_minio_user_secret_field`)
 
 ### Secret Key Configuration
-Secret keys must be set separately using one of these methods:
+Ensure the Vault secrets exist before running `terraform apply`.
 
-1. **Minio CLI** (post-deployment)
-   ```bash
-   mc admin user svcacct add <minio_alias> <username> <secretkey>
-   ```
+Example:
 
-2. **Ansible Role Integration** (ricsanfre.minio)
-   The role can set credentials using vault.yml.j2 variables after Terraform provisioning
-
-3. **Manual API Calls**
-   Use Minio's REST API with admin credentials to configure user secrets
+```bash
+vault kv put secret/minio/loki user=loki key=<loki-secret-key>
+```
 
 ### Admin Credentials
 Admin credentials (root access key/secret) are:
@@ -397,7 +399,7 @@ terraform validate
 
 ## Integration with Kubernetes
 
-Terraform creates users and policies. Secret keys must be provisioned separately and then used to create Kubernetes Secrets.
+Terraform creates users and policies using secrets already stored in Vault and then Kubernetes can consume the same Vault paths via External Secrets.
 
 ### Step 1: Get Created Users
 ```bash

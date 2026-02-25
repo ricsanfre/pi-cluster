@@ -17,6 +17,16 @@
 # minio_admin_user = "root"
 # minio_admin_password = "your_root_password"
 
+# Vault-backed Minio IAM user secrets
+# enable_vault_user_secrets = true
+# vault_address = "https://vault.homelab.ricsanfre.com:8200"
+# vault_token = "s.xxxxxxxxxxxxxxxxxxxxxxxx"
+# vault_skip_tls_verify = false
+# vault_kv_mount = "secret"
+# vault_minio_users_path_prefix = "minio"
+# vault_minio_user_secret_field = "key"
+# minio_user_default_secret = "mySuperSecretKey"
+
 # Resource Directory Paths (default to resources/ subdirectories)
 # Uncomment to use custom paths
 # buckets_dir = "${path.module}/resources/buckets"
