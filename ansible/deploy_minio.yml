@@ -12,7 +12,7 @@
 #
 # Prerequisites:
 #   - Vault server deployed and running
-#   - MinIO secrets loaded in Vault at 'secret/minio'
+#   - MinIO secrets loaded in Vault at 'secret/minio/root'
 #   - Vault environment file exists:
 #     * ~/.secrets/vault.env
 #   - inventory.yml configured with [s3] group
@@ -264,9 +264,11 @@
     - name: Fetch MinIO credentials from Vault (on-demand lookup)
       community.hashi_vault.vault_kv2_get:
         mount_point: "secret"
-        path: "minio"
+        path: "minio/root"
         validate_certs: "{{ (not enable_letsencrypt) and (vault_cacert != '') }}"
       register: minio_vault_secret
+      delegate_to: localhost
+      become: false
       environment:
         VAULT_ADDR: "{{ vault_addr }}"
         VAULT_TOKEN: "{{ vault_token }}"
@@ -275,8 +277,16 @@
 
     - name: Set MinIO credentials from Vault
       ansible.builtin.set_fact:
-        minio_root_user: "{{ minio_vault_secret.secret.root_user | default(minio_vault_secret.secret.data.data.root_user, true) }}"
-        minio_root_password: "{{ minio_vault_secret.secret.root_password | default(minio_vault_secret.secret.data.data.root_password, true) }}"
+        minio_root_user: >-
+          {{ minio_vault_secret.secret.username
+             | default(minio_vault_secret.secret.content.username, true)
+             | default(minio_vault_secret.secret.data.data.username, true)
+             | default(minio_vault_secret.secret.data.data.content.username, true) }}
+        minio_root_password: >-
+          {{ minio_vault_secret.secret.key
+             | default(minio_vault_secret.secret.content.key, true)
+             | default(minio_vault_secret.secret.data.data.key, true)
+             | default(minio_vault_secret.secret.data.data.content.key, true) }}
       no_log: true
 
     - name: Validate MinIO credentials were retrieved from Vault
@@ -299,11 +309,11 @@
 
           Please verify:
           1. Vault is accessible at: {{ vault_addr }}
-          2. Secret exists at path: secret/minio
-          3. Secret contains keys: root_user, root_password
+          2. Secret exists at path: secret/minio/root
+          3. Secret contains keys: username + key
 
           To check the secret:
-            vault kv get secret/minio
+            vault kv get secret/minio/root
         success_msg: "✓ MinIO credentials successfully retrieved from Vault"
 
   roles:
@@ -326,7 +336,7 @@
            URL: https://{{ minio_hostname }}:9001
 
          🔐 Credentials:
-           Stored securely in Vault at: secret/minio
+           Stored securely in Vault at: secret/minio/root
 
          📋 Next: Configuring buckets, users, and policies via Terraform...
 

@@ -6,7 +6,7 @@
 # 2. Configure Vault with Terraform (KV engine, policies, auto-generated secrets)
 # 3. Deploy MinIO server using Vault secrets
 # 4. Configure MinIO resources (buckets, users, policies)
-# 5. Load remaining credentials (DDNS, MinIO Prometheus bearer token)
+# 5. Load external services keys and credentials (DDNS, MinIO Prometheus bearer token)
 #
 # Stage delegation:
 #   - Stage 2 logic is implemented in configure_vault.yml
@@ -66,7 +66,7 @@
   ansible.builtin.import_playbook: configure_minio.yml
   tags: [minio, terraform, stage4]
 
-- name: "Stage 5: Load Remaining Credentials"
+- name: "Stage 5: Load External Services Keys and Credentials"
   ansible.builtin.import_playbook: load_external_services_keys.yml
   tags: [credentials, stage5]
 
