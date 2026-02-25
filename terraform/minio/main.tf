@@ -46,10 +46,26 @@ resource "minio_iam_policy" "policies" {
 
 # Minio IAM Users
 
+# NOTE: This uses the deprecated `data.vault_kv_secret_v2` on purpose because
+# the current `aminueza/minio` provider cannot consume ephemeral values in
+# `minio_iam_user.secret`.
+# Expected warning:
+# "Deprecated. Please use new Ephemeral KVV2 Secret resource `vault_kv_secret_v2` instead"
+data "vault_kv_secret_v2" "minio_user_secrets" {
+  for_each = var.enable_vault_user_secrets ? local.minio_users : {}
+
+  mount = var.vault_kv_mount
+  name  = "${var.vault_minio_users_path_prefix}/${each.value.access_key}"
+}
+
 resource "minio_iam_user" "users" {
   for_each = local.minio_users
-
-  name = each.value.access_key
+  name     = each.value.access_key
+  secret = var.enable_vault_user_secrets ? lookup(
+    data.vault_kv_secret_v2.minio_user_secrets[each.key].data,
+    var.vault_minio_user_secret_field,
+    var.minio_user_default_secret
+  ) : var.minio_user_default_secret
 
   depends_on = [minio_iam_policy.policies]
 }
@@ -77,3 +93,4 @@ resource "minio_iam_user_policy_attachment" "user_policies" {
     minio_iam_policy.policies
   ]
 }
+

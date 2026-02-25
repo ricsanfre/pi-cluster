@@ -18,9 +18,9 @@ variable "minio_use_ssl" {
   default     = true
 }
 
-variable "minio_ssl_verify" {
+variable "minio_insecure" {
   type        = bool
-  description = "Verify SSL certificate validity"
+  description = "Allow insecure SSL/TLS connections"
   default     = false
 }
 
@@ -34,6 +34,58 @@ variable "minio_admin_password" {
   type        = string
   description = "Minio root secret key"
   sensitive   = true
+}
+
+# Vault integration variables for user secrets
+
+variable "enable_vault_user_secrets" {
+  type        = bool
+  description = "Read Minio IAM user secrets from Vault"
+  default     = true
+}
+
+variable "vault_address" {
+  type        = string
+  description = "The address of the Vault server"
+  default     = "http://127.0.0.1:8200"
+}
+
+variable "vault_token" {
+  type        = string
+  description = "Vault token used to read Minio user secrets"
+  sensitive   = true
+  default     = ""
+}
+
+variable "vault_skip_tls_verify" {
+  type        = bool
+  description = "Skip TLS verification when connecting to Vault"
+  default     = false
+}
+
+variable "vault_kv_mount" {
+  type        = string
+  description = "Vault KV v2 mount containing Minio user secrets"
+  default     = "secret"
+}
+
+variable "vault_minio_users_path_prefix" {
+  type        = string
+  description = "Vault path prefix where Minio user secrets are stored"
+  default     = "minio"
+}
+
+variable "vault_minio_user_secret_field" {
+  type        = string
+  description = "Field name in each Vault secret used as Minio IAM user secret"
+  default     = "key"
+}
+
+variable "minio_user_default_secret" {
+  type        = string
+  description = "Fallback Minio IAM user secret when Vault is disabled or field is missing"
+  sensitive   = true
+  default     = "mySuperSecretKey"
 }
 
 # Resource Directory Paths
