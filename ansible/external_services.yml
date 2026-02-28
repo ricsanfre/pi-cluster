@@ -114,10 +114,10 @@
             - Auto-generated secrets: secret/* (from Terraform)
             - MinIO credentials: secret/minio
             - IONOS credentials: secret/certmanager/ionos
-            - GitHub credentials: secret/flux/github
+            - GitHub credentials: secret/flux/github-pat
             - Kubernetes config: secret/kubernetes/cluster
             - Bind9 DDNS: secret/bind9/ddns
-            - HTTP Auth: secret/ingress/basic_auth
+            - HTTP Auth: secret/ingress/basic-auth
             - MinIO monitoring: secret/minio/prometheus
 
           Next Steps:

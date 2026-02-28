@@ -53,7 +53,7 @@
     - name: Fetch Fluentd credentials from Vault (on-demand lookup)
       community.hashi_vault.vault_kv2_get:
         mount_point: "secret"
-        path: "fluent/shared_key"
+        path: "fluent/shared-key"
         validate_certs: "{{ (not enable_letsencrypt) and (vault_cacert != '') }}"
       register: fluentd_vault_secret
       environment:
@@ -64,7 +64,7 @@
 
     - name: Set Fluentd shared key from Vault
       ansible.builtin.set_fact:
-        fluentd_shared_key: "{{ fluentd_vault_secret.secret.shared_key | default(fluentd_vault_secret.secret.data.data.shared_key, true) }}"
+        fluentd_shared_key: "{{ (fluentd_vault_secret.secret | default({})).get('shared-key', '') | default('', true) }}"
       no_log: true
 
     - name: Validate Fluentd credentials were retrieved from Vault
@@ -79,11 +79,11 @@
 
           Please verify:
           1. Vault is accessible at: {{ vault_addr }}
-          2. Secret exists at path: secret/fluent/shared_key
-          3. Secret contains: shared_key
+          2. Secret exists at path: secret/fluent/shared-key
+          3. Secret contains: shared-key
 
           To check the secret:
-            vault kv get secret/fluent/shared_key
+            vault kv get secret/fluent/shared-key
         success_msg: "✓ Fluentd credentials successfully retrieved from Vault"
 
   collections:
