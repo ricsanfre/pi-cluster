@@ -75,7 +75,7 @@
       tags: ["always"]
     - name: Set k3s_token fact from Vault
       ansible.builtin.set_fact:
-        k3s_token: "{{ k3s_vault_secret.secret.token | default(k3s_vault_secret.secret.data.data.token, true) }}"
+        k3s_token: "{{ (k3s_vault_secret.secret | default({})).token | default('', true) }}"
       tags: ["always"]
     - name: Validate k3s cluster token
       ansible.builtin.assert:
@@ -148,7 +148,7 @@
       tags: ["always"]
     - name: Set k3s_token fact from Vault
       ansible.builtin.set_fact:
-        k3s_token: "{{ k3s_vault_secret.secret.token | default(k3s_vault_secret.secret.data.data.token, true) }}"
+        k3s_token: "{{ (k3s_vault_secret.secret | default({})).token | default('', true) }}"
       tags: ["always"]
     - name: Validate k3s cluster token
       ansible.builtin.assert:

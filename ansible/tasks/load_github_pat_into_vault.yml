@@ -18,9 +18,9 @@
       Required format:
         github_pat = your-github-pat
 
-- name: Create/update flux/github credentials in Vault
+- name: Create/update flux/github-pat credentials in Vault
   community.hashi_vault.vault_write:
-    path: "secret/data/flux/github"
+    path: "secret/data/flux/github-pat"
     data:
       data:
         pat: "{{ github_pat }}"

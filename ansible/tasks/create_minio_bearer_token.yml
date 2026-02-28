@@ -17,7 +17,7 @@
     path: "secret/data/minio/prometheus"
     data:
       data:
-        bearer_token: "{{ minio_prom_bearer_token }}"
+        bearer-token: "{{ minio_prom_bearer_token }}"
   environment:
     VAULT_ADDR: "{{ vault_addr }}"
     VAULT_TOKEN: "{{ vault_token }}"

@@ -80,15 +80,9 @@
     - name: Set MinIO credentials from Vault
       ansible.builtin.set_fact:
         minio_root_user: >-
-          {{ minio_vault_secret.secret.username
-             | default(minio_vault_secret.secret.content.username, true)
-             | default(minio_vault_secret.secret.data.data.username, true)
-             | default(minio_vault_secret.secret.data.data.content.username, true) }}
+          {{ (minio_vault_secret.secret | default({})).username | default('', true) }}
         minio_root_password: >-
-          {{ minio_vault_secret.secret.key
-             | default(minio_vault_secret.secret.content.key, true)
-             | default(minio_vault_secret.secret.data.data.key, true)
-             | default(minio_vault_secret.secret.data.data.content.key, true) }}
+          {{ (minio_vault_secret.secret | default({})).key | default('', true) }}
       no_log: true
 
     - name: Validate MinIO credentials were retrieved from Vault

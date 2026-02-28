@@ -16,13 +16,13 @@
 - name: Fetch FluxCD GitHub PAT from Vault
   community.hashi_vault.vault_kv2_get:
     mount_point: secret
-    path: flux/github
+    path: flux/github-pat
   register: flux_vault_secret
   tags: ["always"]
 
 - name: Set GitHub PAT from Vault
   ansible.builtin.set_fact:
-    github_pat: "{{ flux_vault_secret.secret.pat | default(flux_vault_secret.secret.data.data.pat, true) }}"
+    github_pat: "{{ (flux_vault_secret.secret | default({})).pat | default('', true) }}"
   tags: ["always"]
   no_log: true
 
@@ -32,8 +32,8 @@
       - github_pat is defined
       - github_pat | length > 0
     fail_msg: |
-      Failed to retrieve GitHub PAT from Vault at path secret/flux/github
-      Please ensure the secret exists with 'content.pat' field.
+      Failed to retrieve GitHub PAT from Vault at path secret/flux/github-pat
+        Please ensure the secret exists with 'pat' field.
     success_msg: "GitHub PAT retrieved and validated"
   tags: ["always"]
 

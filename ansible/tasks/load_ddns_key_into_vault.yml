@@ -21,7 +21,7 @@
     path: "secret/data/bind9/ddns"
     data:
       data:
-        ddns_key: "{{ bind9_ddns_key }}"
+        ddns-key: "{{ bind9_ddns_key }}"
   environment:
     VAULT_ADDR: "{{ vault_addr }}"
     VAULT_TOKEN: "{{ vault_token }}"
