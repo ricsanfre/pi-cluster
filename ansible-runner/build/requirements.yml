@@ -21,7 +21,7 @@ roles:
   - name: ricsanfre.fluentbit
     version: v1.0.5
   - name: ricsanfre.minio
-    version: v1.1.14
+    version: v1.1.15
   - name: ricsanfre.backup
     version: v1.1.3
   - name: ricsanfre.vault
