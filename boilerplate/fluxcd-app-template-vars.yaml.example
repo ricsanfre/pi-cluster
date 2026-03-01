@@ -1,0 +1,6 @@
+app_name: opentelemetry-demo
+app_namespace: otel-demo
+chart_repo_url: https://open-telemetry.github.io/opentelemetry-helm-charts
+chart_name: opentelemetry-demo
+chart_version: 0.136.1
+chart_release_name: opentelemetry-demo
