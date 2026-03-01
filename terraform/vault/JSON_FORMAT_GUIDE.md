@@ -70,6 +70,7 @@ terraform/vault/
 {
   "secret-name": {
     "secret_name": "field-to-generate-password",
+    "password_length": 32,
     "content": {
       "key1": "value1",
       "key2": "will-be-generated",
@@ -90,6 +91,11 @@ Secret paths include the JSON filename as a prefix: `<file_name>/<secret-name>` 
 - **secret_name** (optional) - Field name to auto-generate password for
   - If specified, Terraform generates a random password for this field
   - If omitted, all values are used as-is
+
+- **password_length** (optional) - Per-secret generated password length override
+  - Applies when `secret_name` is set
+  - Defaults to module variable `generated_password_length` when omitted
+  - Useful for integrations that require fixed lengths (for example 16/24/32-byte keys)
   
 - **content** - Dictionary of key-value pairs
   - All key-value pairs become the secret content
@@ -131,6 +137,20 @@ Path: secret/data/postgresql/database-prod (if file is `postgresql.json`)
     "content": {
       "api_key": "sk_live_placeholder",
       "secret_key": "placeholder"
+    }
+  }
+}
+```
+
+#### OAuth2 Proxy Cookie Secret (32-byte key)
+```json
+{
+  "cookie": {
+    "secret_name": "cookie-secret",
+    "password_length": 32,
+    "content": {
+      "type": "cookie_encryption",
+      "service": "oauth2-proxy"
     }
   }
 }

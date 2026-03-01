@@ -63,6 +63,7 @@ The JSON format guide includes examples for all configuration types, with specia
 - **Enables** KV Version 2 secrets engine at `secret/` path
 - **Loads** secrets from JSON files in `secrets/` directory and prefixes paths with the JSON filename
 - **Generates** random passwords for fields marked with `secret_name`
+- **Supports** per-secret password length override using optional `password_length`
 - **Manages** secret lifecycle (create, update, delete)
 
 **Key Features:**
@@ -272,6 +273,7 @@ Quick example structure:
 ```json
 {
   "secret-name": {
+    "password_length": 32,
     "content": {
       "field1": "value1",
       "field2": "will-be-generated"
@@ -284,6 +286,7 @@ Quick example structure:
 **Fields:**
 - `content` - Dictionary of secret key-value pairs
 - `secret_name` - Field name to auto-generate password for (optional)
+- `password_length` - Optional password length override for this secret (defaults to `generated_password_length`)
 
 **Examples:**
 
@@ -313,6 +316,20 @@ If this entry is in `postgresql.json`, the secret path is `secret/data/postgresq
       "secret_key": "generated-key"
     },
     "secret_name": "secret_key"
+  }
+}
+```
+
+**OAuth2 Proxy Cookie (32-byte key):**
+```json
+{
+  "cookie": {
+    "secret_name": "cookie-secret",
+    "password_length": 32,
+    "content": {
+      "type": "cookie_encryption",
+      "service": "oauth2-proxy"
+    }
   }
 }
 ```

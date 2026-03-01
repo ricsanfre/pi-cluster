@@ -46,6 +46,7 @@
 │  Step 2: Generate Passwords & Process Data                       │
 │  resource "random_string/random_password"                        │
 │  locals { secrets_with_passwords = ... }                        │
+│  uses secret.password_length or generated_password_length        │
 │                                                                   │
 │  Step 3: Create Vault Resources (for_each)                       │
 │  resource "vault_mount" "kv_engine_v2"                           │
@@ -459,6 +460,14 @@ local.secrets = {
       username = "minioadmin"
       password = "placeholder"
     }
+  },
+  "oauth2-proxy/cookie" = {
+    secret_name     = "cookie-secret"
+    password_length = 32
+    content = {
+      type    = "cookie_encryption"
+      service = "oauth2-proxy"
+    }
   }
 }
 ```
@@ -476,6 +485,13 @@ local.secrets_data = {
     content = {
       username = "minioadmin"
       password = "xM9pL5QwR2tB8kD" # Generated
+    }
+  },
+  "oauth2-proxy/cookie" = {
+    content = {
+      type          = "cookie_encryption"
+      service       = "oauth2-proxy"
+      cookie-secret = "A1b2C3d4E5f6G7h8J9k0L1m2N3p4Q5r6" # Generated (length 32)
     }
   }
 }

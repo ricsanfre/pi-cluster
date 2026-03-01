@@ -216,7 +216,7 @@ resource "vault_kubernetes_auth_backend_role" "roles" {
   bound_service_account_names      = each.value.service_account_names
   bound_service_account_namespaces = each.value.service_account_namespaces
   token_policies                   = each.value.policies
-  audience                         = lookup(each.value, "audience", "https://kubernetes.default.svc.cluster.local")
+  audience                         = lookup(each.value, "audience", null)
   token_ttl                        = lookup(each.value, "token_ttl", 3600)
   token_max_ttl                    = lookup(each.value, "token_max_ttl", 86400)
 
@@ -241,7 +241,14 @@ resource "random_string" "password_first_char" {
 resource "random_password" "password_remaining" {
   for_each = local.secrets
 
-  length  = var.generated_password_length - 1
+  length  = lookup(
+    {
+      for key, secret in local.secrets :
+      key => try(secret.password_length, var.generated_password_length)
+    },
+    each.key,
+    var.generated_password_length
+  ) - 1
   special = false
 }
 
