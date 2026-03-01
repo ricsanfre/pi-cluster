@@ -5,6 +5,14 @@ description: How to configure iSCSI storage for Raspberry PI cluster nodes deplo
 last_modified_at: "03-02-2024"
 ---
 
+{{site.data.alerts.warning}}
+
+**DEPRECATED**: Centralized SAN configuration has been removed from the standard deployment to simplify cluster setup. All deployments now use **Dedicated Disks** architecture where each node has its own local storage mounted at `/storage`, with Longhorn providing persistent volumes for Kubernetes applications.
+
+For historical reference or if you need to restore centralized SAN support, refer to the git history. The iSCSI Target/Initiator configuration described below is kept for reference only.
+
+{{site.data.alerts.end}}
+
 The idea is to configure one of the Raspberry PIs as a SAN for the lab cluster, connecting some SSD Disk to it (through USB 3.0 ports) and providing LUNs to all the cluster nodes through iSCSI.
 
 A storage on a SAN network is called iSCSI Target, a Client which connects to iSCSI Target is called iSCSI Initiator.

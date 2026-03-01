@@ -97,31 +97,6 @@ k3s_registries:
     "*":
 
 
-##########
-# FluxCD #
-##########
-# renovate: datasource=github-releases depName=fluxcd/flux2
-fluxcd_version: v2.7.5
-
-###########
-# Ingress #
-###########
-
-# HTTP Basic auth credentials
-# NOTE: Credentials are managed by Terraform (terraform/vault/resources/secrets/ingress.json)
-# and fetched on-demand from Vault in tasks/create_basic_auth_credentials.yml
-# ingress_basic_auth_user: "{{ vault.ingress.admin.user }}"
-# ingress_basic_auth_passwd: "{{ vault.ingress.admin.password }}"
-
-# DNS cluster service end-points
-# traefik_dashboard_dns: "traefik.{{ dns_domain }}"
-# longhorn_dashboard_dns: "storage.{{ dns_domain }}"
-# kibana_dashboard_dns: "kibana.{{ dns_domain }}"
-# elasticsearch_dns: "elasticsearch.{{ dns_domain }}"
-# fluentd_dns: "fluentd.{{ dns_domain }}"
-# monitoring_dns: "monitoring.{{ dns_domain }}"
-# linkerd_dashboard_dns: "linkerd.{{ dns_domain }}"
-
 #################################
 # TLS Certificates: LetsEncrypt #
 #################################
@@ -174,96 +149,6 @@ minio_validate_certificate: false
 # Create Prometheus bearer token
 minio_prometheus_bearer_token: true
 
-# Minio Buckets
-# NOTE: Buckets are now created via Terraform (terraform/minio)
-# minio_buckets:
-#   - name: restic
-#     policy: read-write
-#   - name: k3s-longhorn
-#     policy: read-write
-#   - name: k3s-velero
-#     policy: read-write
-#   - name: k3s-loki
-#     policy: read-write
-#   - name: k3s-tempo
-#     policy: read-write
-#   - name: k3s-barman
-#     policy: read-write
-
-# Minio users and ACLs
-# NOTE: Users and policies are now created via Terraform (terraform/minio)
-# minio_users:
-#   - name: "{{ vault.minio.restic.user }}"
-#     password: "{{ vault.minio.restic.key }}"
-#     buckets_acl:
-#       - name: restic
-#         policy: read-write
-#   - name: "{{ vault.minio.longhorn.user }}"
-#     password: "{{ vault.minio.longhorn.key }}"
-#     buckets_acl:
-#       - name: k3s-longhorn
-#         policy: read-write
-#   - name: "{{ vault.minio.velero.user }}"
-#     password: "{{ vault.minio.velero.key }}"
-#     buckets_acl:
-#       - name: k3s-velero
-#         policy: custom
-#         custom:
-#           - rule: |
-#               "Effect": "Allow",
-#               "Action": [
-#                   "s3:GetObject",
-#                   "s3:DeleteObject",
-#                   "s3:PutObject",
-#                   "s3:AbortMultipartUpload",
-#                   "s3:ListMultipartUploadParts"
-#               ],
-#               "Resource": [
-#                   "arn:aws:s3:::k3s-velero/*"
-#               ]
-#           - rule: |
-#               "Effect": "Allow",
-#               "Action": [
-#                   "s3:ListBucket"
-#               ],
-#               "Resource": [
-#                   "arn:aws:s3:::k3s-velero"
-#               ]
-#
-#   - name: "{{ vault.minio.loki.user }}"
-#     password: "{{ vault.minio.loki.key }}"
-#     buckets_acl:
-#       - name: k3s-loki
-#         policy: read-write
-#
-#   - name: "{{ vault.minio.tempo.user }}"
-#     password: "{{ vault.minio.tempo.key }}"
-#     buckets_acl:
-#       - name: k3s-tempo
-#         policy: custom
-#         custom:
-#           - rule: |
-#               "Effect": "Allow",
-#               "Action": [
-#                   "s3:PutObject",
-#                   "s3:GetObject",
-#                   "s3:ListBucket",
-#                   "s3:DeleteObject",
-#                   "s3:GetObjectTagging",
-#                   "s3:PutObjectTagging"
-#               ],
-#               "Resource": [
-#                   "arn:aws:s3:::k3s-tempo/*",
-#                   "arn:aws:s3:::k3s-tempo"
-#               ]
-#
-#   - name: "{{ vault.minio.barman.user }}"
-#     password: "{{ vault.minio.barman.key }}"
-#     buckets_acl:
-#       - name: k3s-barman
-#         policy: read-write
-
-
 ########################
 # Restic configuration #
 ########################
@@ -299,23 +184,6 @@ vault_unseal: true
 vault_unseal_service: true
 tls_skip_verify: "{{ not enable_letsencrypt }}"
 
-# TO-DO: Remove Vault ansible configuration. It will be done using Terraform.
-# vault_kv_secrets:
-#   path: secret
-
-# # Policies
-# policies:
-#   - name: write
-#     hcl: |
-#       path "secret/*" {
-#         capabilities = [ "create", "read", "update", "delete", "list", "patch" ]
-#       }
-#   - name: read
-#     hcl: |
-#       path "secret/*" {
-#         capabilities = [ "read" ]
-#       }
-
 # Enable Prometheus integration
 vault_custom_configuration: |
   ui = true
@@ -326,76 +194,20 @@ vault_custom_configuration: |
   }
 
 #########################
-# Velero  Configuration #
+# Utils/CLI versions    #
 #########################
+
+# renovate: datasource=github-releases depName=fluxcd/flux2
+fluxcd_version: v2.7.5
 
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
 velero_version: v1.17.1
 
-# Minio user, key and bucket
-# NOTE: Users and credentials are now managed by Terraform (terraform/minio)
-# minio_velero_user: "{{ vault.minio.velero.user }}"
-# minio_velero_key: "{{ vault.minio.velero.key }}"
-
-# velero_secret_content: |
-#   [default]
-#   aws_access_key_id: "{{ minio_velero_user }}"
-#   aws_secret_access_key: "{{ minio_velero_key }}"
-
-##########################
-# Longhorn Configuration #
-##########################
-
 # renovate: datasource=github-releases depName=longhorn/longhorn
 longhorn_version: v1.11.0
 
-# Minio user, key and bucket
-# NOTE: Users and credentials are now managed by Terraform (terraform/minio)
-# minio_longhorn_user: "{{ vault.minio.longhorn.user }}"
-# minio_longhorn_key: "{{ vault.minio.longhorn.key }}"
-
-#######################
-# Istio Configuration #
-#######################
-
 # renovate: datasource=github-releases depName=istio/istio
 istio_version: 1.28.3
-
-###################
-# Logging Secrets #
-###################
-
-# Fluentd-fluentbit shared key
-# NOTE: This is fetched on-demand from Vault in deploy_monitoring_agent.yml
-# fluentd_shared_key: "{{ vault.logging.fluentd.shared_key }}"
-
-# Elasticsearch 'elastic' user password
-# NOTE: This variable is not used anywhere in playbooks
-# efk_elasticsearch_passwd: "{{ vault.logging.elasticsearch.password }}"
-
-# Loki minio user, key and bucket
-# NOTE: Users and credentials are now managed by Terraform (terraform/minio)
-# minio_loki_user: "{{ vault.minio.loki.user }}"
-# minio_loki_key: "{{ vault.minio.loki.key }}"
-
-######################
-# Monitoring Secrets #
-######################
-
-# Grafana admin user password
-# NOTE: This variable is not used anywhere in playbooks
-# prometheus_grafana_password: "{{ vault.grafana.admin.password}}"
-
-
-#######################
-# Tracing Secrets     #
-#######################
-
-# Tempo minio user, key and bucket
-# NOTE: Users and credentials are now managed by Terraform (terraform/minio)
-# minio_tempo_user: "{{ vault.minio.tempo.user }}"
-# minio_tempo_key: "{{ vault.minio.tempo.key }}"
-# minio_tempo_bucket: k3s-tempo
 
 
 #######################

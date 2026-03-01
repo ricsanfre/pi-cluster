@@ -2,7 +2,7 @@
 title: Ansible Control Node
 permalink: /docs/pimaster/
 description: How to configure an Ansible Control node for our Raspberry Pi Kubernetes Cluster. Control node will be used for automating configuration tasks of the cluster using Ansible. How to create this control node using a docker container running on a Linux server or a VM.
-last_modified_at: "23-03-2025"
+last_modified_at: "01-03-2026"
 ---
 
 My laptop running Ubuntu desktop will be used as Ansible Control Node.
@@ -321,203 +321,30 @@ host_key_checking = false
 ```
 {{site.data.alerts.important}}
 
-All ansible commands (`ansible`, `ansible-galaxy`, `ansible-playbook`, `ansible-vault`) need to be executed within [`/ansible`] directory, so the configuration file [`/ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) can be used. Playbooks are configured to be launched from this directory.
+All ansible commands (`ansible`, `ansible-galaxy`, `ansible-playbook`) need to be executed within [`/ansible`] directory, so the configuration file [`/ansible/ansible.cfg`]({{ site.git_edit_address }}/ansible/ansible.cfg) can be used. Playbooks are configured to be launched from this directory.
 
 {{site.data.alerts.end}}
 
 
-### Encrypting secrets/key variables
+## Installing Terraform/Tofu
+
+Terraform is required to automate the configuration of HashiCorp Vault during the cluster external services deployment. [OpenTofu](https://opentofu.org/) (open-source Terraform fork) will be used instead.
 
 
-[Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html) can be used to encrypt secrets and keys stored in ansible variables. 
-
-To simplify the encryption/decryption, all secrets/key/passwords variables are stored in a dedicated file, `vars/vault.yml`, so this file can be encrypted using Ansible Vault
-
-`vault.yml` file is a Ansible vars file containing just a unique yaml variable, `vault`: a yaml dictionary containing all keys/passwords used by the different cluster components.
-
-vault.yml sample file is like this:
-
-```yml
----
-vault:
-  # K3s secrets
-  k3s:
-    k3s_token: s1cret0
-  # ingress secrets
-  ingress:
-    admin:
-      user: admin
-      passwd: s1cret0
-  # Minio S3 secrets
-  minio:
-    root:
-      user: root
-      key: supers1cret0
-    restic:
-      user: restic
-      key: supers1cret0
-....
-```
-
-The manual steps to encrypt passwords/keys used in all Playbooks is the following:
-
-1. Edit content `var/vault.yml` file specifying your own values for each of the key/password/secret specified.
-
-2. Encrypt file using ansible-vault
-
-   ```shell
-   ansible-vault encrypt vault.yml
-   ```
-   The command ask for a ansible vault password to encrypt the file.
-   After executing the command the file `vault.yml` is encrypted. Yaml content file is not readable.
-
-   {{site.data.alerts.note}}
-  
-   The file can be decrypted using the following command
-
-   ```shell
-   ansible-vault decrypt vault.yml
-   ```
-   The password using during encryption need to be provided to decrypt the file
-   After executing the command the file `vault.yml` is decrypted and show the content in plain text.
-
-   File can be viewed decrypted without modifiying the file using the command
-
-   ```shell
-   ansible-vault view vault.yaml 
-   ```
-   {{site.data.alerts.end}}
-
-
-### Automate Ansible Vault decryption with GPG
-
-When using encrypted vault.yaml file all playbooks executed with `ansible-playbook` command need the argument `--ask-vault-pass`, so the password used to encrypt vault file can be provided when starting the playbook.
-
-```shell
-ansible-playbook playbook.yml --ask-vault-pass
-```
-
-Ansible vault password decryption can be automated using `--vault-password-file` parameter , instead of manually providing the password with each execution (`--ask-vault-pass`).
-
-Ansible vault password file can contain the password in plain-text or a script able to obtain the password.
-
-vault-password-file location can be added to ansible.cfg file, so it is not needed to pass as parameter each time ansible-playbook command is executed
-
-Linux GPG will be used to encrypt Ansible Vault passphrase and automatically obtain the vault password using a vault-password-file script.
-
-- [GnuPG](https://gnupg.org/) Installation and configuration
-
-  In Linux GPG encryption can be used to encrypt/decrypt passwords and tokens data using a GPG key-pair
-
-  GnuPG package has to be installed and a GPG key pair need to be created for encrytion/decryption 
-
-  - Step 1. Install GnuPG packet
-
-    ```shell
-    sudo apt install gnupg 
-    ```
-
-    Check if it is installed
-    ```shell
-    gpg --help
-    ```
-
-  - Step 2. Generating Your GPG Key Pair
-
-    GPG key-pair consist on a public and private key used for encrypt/decrypt
-
-    ```shell
-    gpg --gen-key
-    ```
-
-    The process requires to provide a name, email-address and user-id which identify the recipient
-
-    The output of the command is like this:
-
-      ```
-      gpg (GnuPG) 2.2.4; Copyright (C) 2017 Free Software Foundation, Inc.
-      This is free software: you are free to change and redistribute it.
-      There is NO WARRANTY, to the extent permitted by law.
-
-      Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
-
-      GnuPG needs to construct a user ID to identify your key.
-
-      Real name: Ricardo
-      Email address: ricsanfre@gmail.com
-      You selected this USER-ID:
-          "Ricardo <ricsanfre@gmail.com>"
-
-      Change (N)ame, (E)mail, or (O)kay/(Q)uit? O
-      We need to generate a lot of random bytes. It is a good idea to perform
-      some other action (type on the keyboard, move the mouse, utilize the
-      disks) during the prime generation; this gives the random number
-      generator a better chance to gain enough entropy.
-      We need to generate a lot of random bytes. It is a good idea to perform
-      some other action (type on the keyboard, move the mouse, utilize the
-      disks) during the prime generation; this gives the random number
-      generator a better chance to gain enough entropy.
-      gpg: /home/ansible/.gnupg/trustdb.gpg: trustdb created
-      gpg: key D59E854B5DD93199 marked as ultimately trusted
-      gpg: directory '/home/ansible/.gnupg/openpgp-revocs.d' created
-      gpg: revocation certificate stored as '/home/ansible/.gnupg/openpgp-revocs.d/A4745167B84C8C9A227DC898D59E854B5DD93199.rev'
-      public and secret key created and signed.
-
-      pub   rsa3072 2021-08-13 [SC] [expires: 2023-08-13]
-            A4745167B84C8C9A227DC898D59E854B5DD93199
-      uid                      Ricardo <ricsanfre@gmail.com>
-      sub   rsa3072 2021-08-13 [E] [expires: 2023-08-13]
-
-      ```
-
-    During the generation process you will be prompted to provide a passphrase.
-
-    This passphrase is needed to decryp
-
-
-- Generate Vault password and store it in GPG
-
-  Generate the password to be used in ansible-vault encrypt/decrypt process and ecrypt it in using GPG
-
-  - Step 1. Install pwgen packet
-
-      ```shell
-      sudo apt install pwgen 
-      ```
-
-  - Step 2: Generate Vault password and encrypt it using GPG. Store the result as a file in $HOME/.vault
-
-    ```shell
-    mkdir -p $HOME/.vault
-    pwgen -n 71 -C | head -n1 | gpg --armor --recipient <recipient> -e -o $HOME/.vault/vault_passphrase.gpg
-    ```
-
-    where `<recipient>` must be the email address configured during GPG key creation. 
-
-  - Step 3: Generate a script `vault_pass.sh`
-
-    ```shell
-    #!/bin/sh
-    gpg --batch --use-agent --decrypt $HOME/.vault/vault_passphrase.gpg
-    ```
-  - Step 4: Modify `ansible.cfg` file, so you can omit the `--vault-password-file` argument.
-
-    ```
-    [defaults]
-    vault_password_file=vault_pass.sh
-    ```
-  
-  {{site.data.alerts.note}}
-  If this repository is clone steps 3 and 4 are not needed since the files are already there.
-  {{site.data.alerts.end}}  
-  
-- Encrypt vautl.yaml file using ansible-vault and GPG password
+- Step 1: Download and verify the latest release
 
   ```shell
-  ansible-vault encrypt vault.yaml
+  wget https://github.com/opentofu/opentofu/releases/download/v1.6.0/tofu_linux_amd64.zip
+  unzip tofu_linux_amd64.zip
+  sudo mv tofu /usr/local/bin/
+  sudo chmod +x /usr/local/bin/tofu
   ```
-  This time only your GPG key passphrase will be asked to automatically encrypt/decrypt the file
 
+- Step 2: Verify installation
+
+  ```shell
+  tofu --version
+  ```
 
 ## Installing Ansible Development Environment
 

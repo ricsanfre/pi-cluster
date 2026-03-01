@@ -2,7 +2,7 @@
 title: Cluster Nodes
 permalink: /docs/node/
 description: How to configure the nodes of our Pi Kubernetes Cluster. Ubuntu cloud-init configuration files, and basic OS configuration.
-last_modified_at: "22-11-2024"
+last_modified_at: "01-03-2026"
 ---
 
 A K3S cluster is composed of:
@@ -17,13 +17,11 @@ A K3S cluster is composed of:
 
 ### Storage Configuration
 
-`node2-6` are based on a Raspberry Pi 4B booting from a USB Flash Disk or SSD Disk depending on storage architectural option selected.
+`node2-6` are based on a Raspberry Pi 4B booting from SSD disk attached through USB 3.0.
 
 - **Dedicated disks storage architecture**: Kingston A400 480GB SSD Disk and a USB3.0 to SATA adapter will be used connected to `node1`. Kingston A400 240GB SSD Disk and USB3.0 to SATA adapter will be used connected to `node2-node6`.
 
   SSD disk is partitioned to separate  root filesystem (mountpoit `/`) from data storage destinated for Longhorn data (mountpoint `/storage`)
-
-- **Centralized SAN architecture**: A Samsung USB 3.1 32 GB Fit Plus Flash Disk will be used connected to one of the USB 3.0 ports of the Raspberry Pi.
 
 ### Network Configuration
 
@@ -39,11 +37,11 @@ In order to enable boot from USB, Raspberry PI firmware might need to be updated
 
 Follow the procedure indicated in ["Ubuntu OS Installation - Raspberry PI"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) described in the table below.
 
-`user-data` file to be used depends on the storage architectural option selected.
+`user-data` file for Raspberry Pi nodes:
 
-| Dedicated Disks | Centralized SAN  |
-|-----------------| ---------------- |
-| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data)| 
+| user-data |
+|---------- |
+| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) |
 {: .table .border-dark }
 
 {{site.data.alerts.note}}
@@ -52,7 +50,7 @@ In user-data file `hostname` field need to be changed for each node (node1-node6
 
 {{site.data.alerts.end}}
 
-`network-config` is the same in both architectures:
+`network-config` file for Raspberry Pi nodes:
 
 | Network configuration |
 |---------------------- |
@@ -396,25 +394,13 @@ See ["NTP Configuration instructions"](/docs/gateway/#ntp-server-configuration).
 
 NTP configuration in cluster nodes has been automated using ansible role **ricsanfre.ntp**
 
-### iSCSI configuration. 
+### iSCSI configuration.
 
-#### Raspberry Pi Dedicated Disks and x86 nodes
+#### Raspberry Pi and x86 nodes
 
 Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. All nodes of the cluster need to be configured as iSCSI initiators, When configurin iSCSI initiator, authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
 
 iSCSI initiator configuration in cluster nodes has been automated with Ansible developing the ansible role: **ricsanfre.iscsi_initiator**.
-
-#### Raspberry PI Centralized SAN
-
-In case of Raspberry PI nodes not using dedicated disks,`node1-node6` are configured as iSCSI Initiator to use iSCSI volumes exposed by `gateway`
-
-iSCSI configuration in `node1-node6`and iSCSI LUN mount and format tasks have been automated with Ansible developing a couple of ansible roles: **ricsanfre.storage** for managing LVM and **ricsanfre.iscsi_initiator** for configuring a iSCSI initiator.
-
-Further details about iSCSI configurations and step-by-step manual instructions are defined in ["Cluster SAN installation"](/docs/san/).
-
-Each node add the iSCSI LUN exposed by `gateway` to a LVM Volume Group and create a unique Logical Volume which formatted (ext4) and mounted as `/storage`.
-
-Specific `node1-node6` ansible variables to be used by these roles are stored in [`ansible/vars/centralized_san/centralized_san_initiator.yml`]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml)
 
 {{site.data.alerts.important}}
 
