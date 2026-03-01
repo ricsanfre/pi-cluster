@@ -1,18 +1,19 @@
 ---
-- name: Destroy Vault and MinIO Terraform Resources
+- name: Stage 1 - Destroy MinIO Terraform resources
   hosts: localhost
   gather_facts: false
-  tags: [terraform, vault, s3]
+  tags: [terraform, s3]
   vars:
-    terraform_vault_dir: "../terraform/vault"
     terraform_minio_dir: "../terraform/minio"
-    terraform_vault_state_dir: "{{ terraform_vault_dir }}/.terraform"
     terraform_minio_state_dir: "{{ terraform_minio_dir }}/.terraform"
-    terraform_vault_state_file: "{{ terraform_vault_dir }}/terraform.tfstate"
     terraform_minio_state_file: "{{ terraform_minio_dir }}/terraform.tfstate"
     vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
 
   pre_tasks:
+    - name: Stage 1 banner
+      ansible.builtin.debug:
+        msg: "===== Stage 1/5: Destroy MinIO Terraform resources ====="
+
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
 
@@ -78,69 +79,15 @@
           Please ensure the secret exists and contains keys: username, key
 
   tasks:
-    - name: Check Vault Terraform state directory
-      ansible.builtin.stat:
-        path: "{{ terraform_vault_state_dir }}"
-      register: vault_tf_state_dir
-
     - name: Check MinIO Terraform state directory
       ansible.builtin.stat:
         path: "{{ terraform_minio_state_dir }}"
       register: minio_tf_state_dir
 
-    - name: Check Vault Terraform state file
-      ansible.builtin.stat:
-        path: "{{ terraform_vault_state_file }}"
-      register: vault_tf_state_file
-
     - name: Check MinIO Terraform state file
       ansible.builtin.stat:
         path: "{{ terraform_minio_state_file }}"
       register: minio_tf_state_file
-
-    - name: Skip Vault Terraform destroy when state directory is missing
-      ansible.builtin.debug:
-        msg: "Skipping Vault Terraform destroy because {{ terraform_vault_state_dir }} does not exist"
-      when: not vault_tf_state_dir.stat.exists
-
-    - name: Skip Vault Terraform destroy when state file is missing
-      ansible.builtin.debug:
-        msg: "Skipping Vault Terraform destroy because {{ terraform_vault_state_file }} does not exist"
-      when: not vault_tf_state_file.stat.exists
-
-    - name: Initialize Vault Terraform project
-      ansible.builtin.command:
-        cmd: tofu init -no-color
-        chdir: "{{ terraform_vault_dir }}"
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
-      changed_when: false
-      when:
-        - vault_tf_state_dir.stat.exists
-        - vault_tf_state_file.stat.exists
-
-    - name: Destroy Vault Terraform resources
-      ansible.builtin.command:
-        cmd: >-
-          tofu destroy
-          -no-color
-          -auto-approve
-          -var="enable_kubernetes_auth=true"
-          -var="enable_policies=true"
-          -var="enable_roles=true"
-          -var="enable_secrets=true"
-        chdir: "{{ terraform_vault_dir }}"
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
-      register: terraform_vault_destroy
-      changed_when: "'Destroy complete!' in terraform_vault_destroy.stdout"
-      when:
-        - vault_tf_state_dir.stat.exists
-        - vault_tf_state_file.stat.exists
 
     - name: Skip MinIO Terraform destroy when state directory is missing
       ansible.builtin.debug:
@@ -183,12 +130,16 @@
         - minio_tf_state_dir.stat.exists
         - minio_tf_state_file.stat.exists
 
-- name: Clean Minio Installation
+- name: Stage 2 - Clean Minio Installation
   hosts: s3
   become: true
   gather_facts: false
   tags: [s3]
   tasks:
+    - name: Stage 2 banner
+      ansible.builtin.debug:
+        msg: "===== Stage 2/5: Clean MinIO installation ====="
+
     - name: Stop and disable Minio Server
       ansible.builtin.systemd:
         name: minio
@@ -211,12 +162,126 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
-- name: Clean Vault Installation
+- name: Stage 3 - Destroy Vault Terraform resources
+  hosts: localhost
+  gather_facts: false
+  tags: [terraform, vault]
+  vars:
+    terraform_vault_dir: "../terraform/vault"
+    terraform_vault_state_dir: "{{ terraform_vault_dir }}/.terraform"
+    terraform_vault_state_file: "{{ terraform_vault_dir }}/terraform.tfstate"
+    vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+
+  pre_tasks:
+    - name: Stage 3 banner
+      ansible.builtin.debug:
+        msg: "===== Stage 3/5: Destroy Vault Terraform resources ====="
+
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Check Vault secret file exists
+      ansible.builtin.stat:
+        path: "{{ vault_secret_file }}"
+      register: vault_secret_file_stat
+
+    - name: Validate Vault secret file exists
+      ansible.builtin.assert:
+        that:
+          - vault_secret_file_stat.stat.exists
+          - vault_secret_file_stat.stat.isreg
+        fail_msg: |
+          Vault secret file not found: {{ vault_secret_file }}
+
+          Run external services stage 1 first to generate it, or create it with:
+
+            VAULT_ADDR=https://vault.example.com:8200
+            VAULT_TOKEN=s.xxxxxxxxxxxxx
+            VAULT_CACERT=/path/to/certificates/CA.pem
+
+    - name: Get Vault environment from secret file
+      ansible.builtin.set_fact:
+        vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
+        vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
+        vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
+
+    - name: Validate Vault variables loaded from secret file
+      ansible.builtin.assert:
+        that:
+          - vault_addr is defined and vault_addr != ""
+          - vault_token is defined and vault_token != ""
+        fail_msg: |
+          Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
+
+  tasks:
+    - name: Check Vault Terraform state directory
+      ansible.builtin.stat:
+        path: "{{ terraform_vault_state_dir }}"
+      register: vault_tf_state_dir
+
+    - name: Check Vault Terraform state file
+      ansible.builtin.stat:
+        path: "{{ terraform_vault_state_file }}"
+      register: vault_tf_state_file
+
+    - name: Skip Vault Terraform destroy when state directory is missing
+      ansible.builtin.debug:
+        msg: "Skipping Vault Terraform destroy because {{ terraform_vault_state_dir }} does not exist"
+      when: not vault_tf_state_dir.stat.exists
+
+    - name: Skip Vault Terraform destroy when state file is missing
+      ansible.builtin.debug:
+        msg: "Skipping Vault Terraform destroy because {{ terraform_vault_state_file }} does not exist"
+      when: not vault_tf_state_file.stat.exists
+
+    - name: Initialize Vault Terraform project
+      ansible.builtin.command:
+        cmd: tofu init -no-color
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+      changed_when: false
+      when:
+        - vault_tf_state_dir.stat.exists
+        - vault_tf_state_file.stat.exists
+
+    - name: Destroy Vault Terraform resources
+      ansible.builtin.command:
+        cmd: >-
+          tofu destroy
+          -no-color
+          -auto-approve
+          -var="enable_kubernetes_auth=true"
+          -var="enable_policies=true"
+          -var="enable_roles=true"
+          -var="enable_secrets=true"
+        chdir: "{{ terraform_vault_dir }}"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_token }}"
+        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
+        TF_VAR_vault_address: "{{ vault_addr }}"
+        TF_VAR_vault_token: "{{ vault_token }}"
+      register: terraform_vault_destroy
+      changed_when: "'Destroy complete!' in terraform_vault_destroy.stdout"
+      when:
+        - vault_tf_state_dir.stat.exists
+        - vault_tf_state_file.stat.exists
+
+- name: Stage 4 - Clean Vault Installation
   hosts: vault
   become: true
   gather_facts: false
   tags: [vault]
   tasks:
+    - name: Stage 4 banner
+      ansible.builtin.debug:
+        msg: "===== Stage 4/5: Clean Vault installation ====="
+
     - name: Stop and disable Vault Server
       ansible.builtin.systemd:
         name: "{{ item }}"
@@ -242,12 +307,16 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
-- name: Clean Restic Installation
+- name: Stage 5 - Clean Restic Installation
   hosts: picluster
   become: true
   gather_facts: false
   tags: [restic]
   tasks:
+    - name: Stage 5 banner
+      ansible.builtin.debug:
+        msg: "===== Stage 5/5: Clean Restic installation ====="
+
     - name: Stop and disable restic backup service
       ansible.builtin.systemd:
         name: "{{ item }}"

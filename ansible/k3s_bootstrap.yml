@@ -42,7 +42,6 @@
       ansible.builtin.stat:
         path: "{{ vault_secret_file }}"
       register: vault_secret_file_stat
-      delegate_to: localhost
       become: false
 
     - name: Validate Vault secret file exists

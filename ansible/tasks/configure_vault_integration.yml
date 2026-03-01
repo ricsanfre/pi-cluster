@@ -55,6 +55,7 @@
              TF_VAR_enable_policies=true
              TF_VAR_enable_roles=true
              TF_VAR_enable_secrets=true
+             TF_VAR_kubernetes_host=https://{{ k3s_api_vip }}:6443
 
     - name: Plan Terraform Vault changes with all features
       ansible.builtin.command:
@@ -74,6 +75,7 @@
         VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
         TF_VAR_vault_address: "{{ vault_addr }}"
         TF_VAR_vault_token: "{{ vault_token }}"
+        TF_VAR_kubernetes_host: "https://{{ k3s_api_vip }}:6443"
         TF_VAR_enable_kubernetes_auth: "true"
         TF_VAR_enable_policies: "true"
         TF_VAR_enable_roles: "true"
@@ -91,6 +93,7 @@
         VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
         TF_VAR_vault_address: "{{ vault_addr }}"
         TF_VAR_vault_token: "{{ vault_token }}"
+        TF_VAR_kubernetes_host: "https://{{ k3s_api_vip }}:6443"
         TF_VAR_enable_kubernetes_auth: "true"
         TF_VAR_enable_policies: "true"
         TF_VAR_enable_roles: "true"
