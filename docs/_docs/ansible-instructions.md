@@ -2,7 +2,7 @@
 title: Quick Start Instructions
 permalink: /docs/ansible/
 description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and FluxCD
-last_modified_at: "16-01-2025"
+last_modified_at: "01-03-2026"
 ---
 
 This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
@@ -92,41 +92,26 @@ The following table shows the variable files defined at ansible's group and host
 {: .table .border-dark }
 
 
-The following table shows the variable files used for configuring the storage, backup server and K3S cluster and services.
+The following table shows the variable files used for configuring K3S cluster and external services.
 
 | Specific Variable File | Configuration |
 |----|----|
-| [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables |
-| [ansible/vars/centralized_san/centralized_san_target.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_target.yml) | Configuration iSCSI target  local storage and LUNs: Centralized SAN setup|
-| [ansible/vars/centralized_san/centralized_san_initiator.yml]({{ site.git_edit_address }}/ansible/vars/centralized_san/centralized_san_initiator.yml) | Configuration iSCSI Initiator: Centralized SAN setup|
+| [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables. Credentials are fetched on-demand from Vault during deployment. |
 {: .table .border-dark }
 
 
 {{site.data.alerts.important}}: **About Raspberry PI storage configuration**
 
-Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) is able to configure two different storage setups (dedicated disks or centralized SAN) depending on the value of the variable `centralized_san` located in [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_vars/all.yml). If `centralized_san` is `false` (default value) dedicated disk setup will be applied, otherwise centralized san setup will be configured.
+Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) configures storage with **Dedicated Disks** architecture where each cluster node (`node1-6`) has a SSD disk attached that is partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`.
 
-- **Centralized SAN** setup assumes `node1` node has a SSD disk attached (`/dev/sda`) that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for hosting the LUNs
-
-  Final `node1` disk configuration is:
-
-  - /dev/sda1: Boot partition
-  - /dev/sda2: Root Filesystem
-  - /dev/sda3: For being used for creating LUNS (LVM partition)
-  
-  <br>
-  LVM configuration is done by `setup_picluster.yml` Ansible's playbook and the variables used in the configuration can be found in `vars/centralized_san/centralized_san_target.yml`: `storage_volumegroups` and `storage_volumes` variables. Sizes of the different LUNs can be tweaked to fit the size of the SSD Disk used. I used a 480GB disk so, I was able to create LUNs of 100GB for each of the nodes.
-
-- **Dedicated disks** setup assumes that all cluster nodes (`node1-6`) have a SSD disk attached that has been partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`
-
-  Final `node1-6` disk configuration is:
+Final `node1-6` disk configuration is:
 
   - /dev/sda1: Boot partition
   - /dev/sda2: Root filesystem
   - /dev/sda3: /storage (linux partition)
   
   <br>
-  /dev/sda3 partition is created during first boot, formatted (ext4) and mounted as '/storage'. cloud-init configuration.
+  /dev/sda3 partition is created during first boot, formatted (ext4) and mounted as '/storage'. This local storage is used with Longhorn for persistent volumes and Velero for cluster backups.
 
 {{site.data.alerts.end}}
 
@@ -153,17 +138,6 @@ As an alternative, a private repository can be used.
 During Vault credentials generation process, see below, Github PAT will be required
 
 {{site.data.alerts.end}}
-
-
-### Vault credentials generation 
-
-Generate ansible vault variable file (`var/vault.yml`) containing all credentials/passwords. Random generated passwords will be generated for all cluster services.
-
-Execute the following command:
-```shell
-make ansible-credentials
-```
-Credentials for external cloud services (IONOS DNS API credentials) or Github PAT are asked during the execution of the playbook.
 
 ### Prepare PXE server
 
@@ -199,25 +173,14 @@ Once `gateway` node is up and running. External services node, `node1` can be co
 
 `node1` is used to install common services: DNS server, PXE server, Vault, etc.
 
-In crentralized SAN architecture `node1` can be configured as SAN server.
-
 Install Ubuntu Operating System on `node1` (Rapberry PI-4B 4GB).
    
 The installation procedure followed is the described in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using cloud-init configuration files (`user-data` and `network-config`) for `node1`.
 
-`user-data` depends on the storage architectural option selected:
 
-| Dedicated Disks | Centralized SAN    |
-|--------------------| ------------- |
-|  [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/user-data) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/user-data-centralizedSAN) |
-{: .table .border-dark }
-
-`network-config` is the same in both architectures:
-
-
-| Network configuration |
-|---------------------- |
-| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/network-config) |
+| User-Data Configuration | Network configuration |
+|-------|
+| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/user-data) | [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/node1/network-config) |
 {: .table .border-dark }
 
 
@@ -248,16 +211,24 @@ Once `node1` is up and running the rest of the nodes can be installed and connec
 
 Install Operating System on Raspberry Pi nodes `node2-6`
 
-Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using the corresponding cloud-init configuration files (`user-data` and `network-config`) depending on the storage setup selected. Since DHCP is used there is no need to change default `/boot/network-config` file located in the ubuntu image.
+Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using the corresponding cloud-init configuration files (`user-data` and `network-config`). IP addresses are assigned statically through node-specific `network-config` files.
 
 
-| Dedicated Disks | Centralized SAN  |
-|-----------------| ---------------- |
-| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data)| 
+| user-data |
+|---------- |
+| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) |
+{: .table .border-dark }
+
+
+| Network configuration |
+|---------------------- |
+| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/network-config) |
 {: .table .border-dark }
 
 
 In above user-data files, `hostname` field need to be changed for each node (node1-node6).
+
+In `network-config` file `addresses` field need to be updated for each node (node1-node6), assigning the proper static `10.0.0.X/24` address.
 
 {{site.data.alerts.warning}}**About SSH keys**
 
@@ -310,18 +281,67 @@ Homelab subdomain is specified in variable `dns_domain` configured in [ansible/g
 make dns-setup
 ```
 
-### Minio and Hashicorp Vault 
+### Create Secret Files
 
-Install and configure S3 Storage server (Minio), and Secret Manager (Hashicorp Vault) running the command:
+Generate secret files in `~/.secret` before deploying external services:
 
+- `ionos-credentials.ini` (for IONOS DNS / Let's Encrypt)
+- `github-pat.ini` (for FluxCD private repository when `git_private_repo=true`)
+
+```shell
+make secret-files
+```
+
+{{site.data.alerts.note}}
+
+During execution, you may be prompted for:
+- IONOS public prefix and secret
+- GitHub PAT (if using a private FluxCD Git repository)
+
+{{site.data.alerts.end}}
+
+### Deploy Minio and Hashicorp Vault 
+
+External services including HashiCorp Vault and MinIO are deployed together using the automated orchestration playbook. This process:
+
+1. Deploys and unseals HashiCorp Vault
+2. Configures Vault with Terraform (KV engine, policies, authentication)
+3. Terraform also generates random credentials used in the cluster and stores all cluster credentials in Vault
+4. Deploys MinIO using credentials from Vault
+5. Configures MinIO with Terraform (bucket and users needed for all backup cluster services)
+6. Loads non-randomized keys in Vault (GitHubPat, DDNS, IONOS, etc.)
+
+{{site.data.alerts.tip}}
+
+**Prerequisites for this step:**
+- Ensure `node1` is running and network-accessible
+- Terraform (or Tofu) installed on your Ansible control node
+- Secret files already generated (see **Create Secret Files** section above)
+
+{{site.data.alerts.end}}
+
+Execute the following command:
 ```shell
 make external-services
 ```
-Ansible Playbook assumes S3 server is installed in a external node `s3` and Hashicorp Vault in `node1` (node belonging to Ansible's host group `vault`).
 
 {{site.data.alerts.note}}
-All Ansible vault credentials (vault.yml) are also stored in Hashicorp Vault
+
+IONOS DNS API credentials and GitHub PAT are loaded from the secret files created in the previous section.
+
 {{site.data.alerts.end}}
+
+### Export Vault Access Credentials
+
+After successful deployment, export the following environment variables for subsequent playbook runs:
+
+```bash
+export VAULT_ADDR='https://vault.homelab.ricsanfre.com:8200'
+export VAULT_TOKEN='s.xxxxxxxxxxxxx'  # From /etc/vault/unseal.json on node1
+export VAULT_CACERT='../certificates/CA.pem'  # Path to Vault CA certificate
+```
+
+These variables will be used by Ansible playbooks to fetch credentials on-demand from Vault.
 
 ## Configuring OS level backup (restic)
 
