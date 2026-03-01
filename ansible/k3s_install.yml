@@ -46,12 +46,16 @@
           Vault secret file not found: {{ vault_secret_file }}
 
           Run external services stage 1 first to generate it.
+      delegate_to: localhost
+      become: false
 
     - name: Get Vault environment from secret file
       ansible.builtin.set_fact:
         vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
         vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
         vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
+      delegate_to: localhost
+      become: false
 
     - name: Validate Vault variables loaded from secret file
       ansible.builtin.assert:
@@ -61,6 +65,8 @@
         fail_msg: |
           Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
         success_msg: "Vault environment loaded and validated"
+      delegate_to: localhost
+      become: false
 
     - name: Fetch k3s cluster token on-demand from Vault
       community.hashi_vault.vault_kv2_get:
@@ -71,6 +77,8 @@
         mount_point: secret
         path: cluster/k3s
       register: k3s_vault_secret
+      delegate_to: localhost
+      become: false
 
     - name: Set k3s_token fact from Vault
       ansible.builtin.set_fact:
@@ -119,6 +127,7 @@
 
           Run external services stage 1 first to generate it.
       delegate_to: localhost
+      become: false
 
     - name: Get Vault environment from secret file
       ansible.builtin.set_fact:
@@ -126,6 +135,7 @@
         vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
         vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
       delegate_to: localhost
+      become: false
 
     - name: Validate Vault variables loaded from secret file
       ansible.builtin.assert:
@@ -135,6 +145,9 @@
         fail_msg: |
           Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
         success_msg: "Vault environment loaded and validated"
+      delegate_to: localhost
+      become: false
+
     - name: Fetch k3s cluster token on-demand from Vault
       community.hashi_vault.vault_kv2_get:
         url: "{{ vault_addr }}"
@@ -144,6 +157,9 @@
         mount_point: secret
         path: cluster/k3s
       register: k3s_vault_secret
+      delegate_to: localhost
+      become: false
+
     - name: Set k3s_token fact from Vault
       ansible.builtin.set_fact:
         k3s_token: "{{ (k3s_vault_secret.secret | default({})).token | default('', true) }}"
