@@ -3,9 +3,7 @@ instance:
   sync:
     kind: GitRepository
     url: https://github.com/ricsanfre/pi-cluster
-    # TODO: roll-back to master branch after testing
-    # ref: refs/heads/master
-    ref: refs/heads/feature/ansible-vault-refactor
+    ref: refs/heads/master
     path: kubernetes/clusters/prod
     interval: 1h
   kustomize:
