@@ -20,12 +20,12 @@
 
 - name: Create/update flux/github-pat credentials in Vault
   community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    token: "{{ vault_token }}"
+    validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+    ca_cert: "{{ vault_cacert | default(omit) }}"
     path: "secret/data/flux/github-pat"
     data:
       data:
         pat: "{{ github_pat }}"
-  environment:
-    VAULT_ADDR: "{{ vault_addr }}"
-    VAULT_TOKEN: "{{ vault_token }}"
-    VAULT_CACERT: "{{ (vault_cacert | default('', true)) if (not enable_letsencrypt | default(false)) else '' }}"
   no_log: true

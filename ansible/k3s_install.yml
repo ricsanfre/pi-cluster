@@ -16,7 +16,7 @@
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
-      tags: ["always"]
+
   roles:
     - role: k3s/prereq
 
@@ -29,7 +29,6 @@
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
-      tags: ["always"]
 
     - name: Check Vault secret file exists on controller
       ansible.builtin.stat:
@@ -62,21 +61,21 @@
         fail_msg: |
           Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
         success_msg: "Vault environment loaded and validated"
-      tags: ["always"]
+
     - name: Fetch k3s cluster token on-demand from Vault
       community.hashi_vault.vault_kv2_get:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+        ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: secret
         path: cluster/k3s
       register: k3s_vault_secret
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
-      tags: ["always"]
+
     - name: Set k3s_token fact from Vault
       ansible.builtin.set_fact:
         k3s_token: "{{ (k3s_vault_secret.secret | default({})).token | default('', true) }}"
-      tags: ["always"]
+
     - name: Validate k3s cluster token
       ansible.builtin.assert:
         that:
@@ -88,7 +87,7 @@
           You can create it with:
             vault kv put secret/cluster/k3s token='your-k3s-cluster-token'
         success_msg: "k3s cluster token retrieved and validated"
-      tags: ["always"]
+
   roles:
     - role: k3s/master
     - role: ricsanfre.k8s_cli
@@ -102,7 +101,6 @@
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
-      tags: ["always"]
 
     - name: Check Vault secret file exists on controller
       ansible.builtin.stat:
@@ -120,12 +118,14 @@
           Vault secret file not found: {{ vault_secret_file }}
 
           Run external services stage 1 first to generate it.
+      delegate_to: localhost
 
     - name: Get Vault environment from secret file
       ansible.builtin.set_fact:
         vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
         vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
         vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
+      delegate_to: localhost
 
     - name: Validate Vault variables loaded from secret file
       ansible.builtin.assert:
@@ -135,21 +135,18 @@
         fail_msg: |
           Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
         success_msg: "Vault environment loaded and validated"
-      tags: ["always"]
     - name: Fetch k3s cluster token on-demand from Vault
       community.hashi_vault.vault_kv2_get:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+        ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: secret
         path: cluster/k3s
       register: k3s_vault_secret
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
-      tags: ["always"]
     - name: Set k3s_token fact from Vault
       ansible.builtin.set_fact:
         k3s_token: "{{ (k3s_vault_secret.secret | default({})).token | default('', true) }}"
-      tags: ["always"]
     - name: Validate k3s cluster token
       ansible.builtin.assert:
         that:
@@ -161,7 +158,6 @@
           You can create it with:
             vault kv put secret/cluster/k3s token='your-k3s-cluster-token'
         success_msg: "k3s cluster token retrieved and validated"
-      tags: ["always"]
   roles:
     - role: k3s/worker
 
@@ -171,7 +167,6 @@
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
-      tags: ["always"]
   tasks:
     # - name: "Wait for worker nodes to be ready"
     #   command:
@@ -191,6 +186,9 @@
 - name: Get Kubernets config file
   hosts: k3s_master
   tags: [kube-config]
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
   tasks:
     - name: Get k3s config file
       run_once: true
@@ -214,7 +212,6 @@
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
-      tags: ["always"]
   tasks:
 
     - name: Set overlay to prod in case not defined by an input argument

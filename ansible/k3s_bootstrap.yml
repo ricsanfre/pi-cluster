@@ -85,25 +85,9 @@
       vars:
         rerun_terraform_vault_all_features: true
 
-    - name: Configure basic auth credentials
-      block:
-        - name: Include basic auth credential tasks
-          ansible.builtin.include_tasks:
-            file: tasks/create_basic_auth_credentials.yml
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
-
     - name: Flux bootstrap
-      block:
-        - name: Include Flux bootstrap tasks
-          ansible.builtin.include_tasks:
-            file: tasks/fluxcd_bootstrap.yml
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
+      ansible.builtin.include_tasks:
+        file: tasks/fluxcd_bootstrap.yml
 
     - name: Install cli utils.
       ansible.builtin.include_tasks: tasks/install_cli_utils.yml

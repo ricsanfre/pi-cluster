@@ -3,27 +3,30 @@
 - name: Validate Vault environment
   ansible.builtin.assert:
     that:
-      - lookup('env', 'VAULT_ADDR') | length > 0
-      - lookup('env', 'VAULT_TOKEN') | length > 0
+      - vault_addr is defined
+      - vault_addr | length > 0
+      - vault_token is defined
+      - vault_token | length > 0
     fail_msg: |
-      Vault environment variables not set.
-      Please set VAULT_ADDR and VAULT_TOKEN:
-        export VAULT_ADDR='https://your-vault-server:8200'
-        export VAULT_TOKEN='your-vault-token'
-    success_msg: "Vault environment validated"
+      Vault variables are not set.
+      Ensure `vault_addr` and `vault_token` are defined in the calling playbook
+      (for example in k3s_bootstrap.yml pre_tasks).
+    success_msg: "Vault variables validated"
   tags: ["always"]
 
 - name: Fetch FluxCD GitHub PAT from Vault
   community.hashi_vault.vault_kv2_get:
+    url: "{{ vault_addr }}"
+    token: "{{ vault_token }}"
+    validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+    ca_cert: "{{ vault_cacert | default(omit) }}"
     mount_point: secret
     path: flux/github-pat
   register: flux_vault_secret
-  tags: ["always"]
 
 - name: Set GitHub PAT from Vault
   ansible.builtin.set_fact:
     github_pat: "{{ (flux_vault_secret.secret | default({})).pat | default('', true) }}"
-  tags: ["always"]
   no_log: true
 
 - name: Validate GitHub PAT
@@ -35,7 +38,6 @@
       Failed to retrieve GitHub PAT from Vault at path secret/flux/github-pat
         Please ensure the secret exists with 'pat' field.
     success_msg: "GitHub PAT retrieved and validated"
-  tags: ["always"]
 
 - name: Deploy Flux CD Operator
   kubernetes.core.helm:
