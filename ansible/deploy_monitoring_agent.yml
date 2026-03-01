@@ -52,14 +52,13 @@
     # ON-DEMAND VAULT LOOKUP: Fetch Fluentd credentials
     - name: Fetch Fluentd credentials from Vault (on-demand lookup)
       community.hashi_vault.vault_kv2_get:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+        ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: "secret"
         path: "fluent/shared-key"
-        validate_certs: "{{ (not enable_letsencrypt) and (vault_cacert != '') }}"
       register: fluentd_vault_secret
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
       no_log: true
 
     - name: Set Fluentd shared key from Vault

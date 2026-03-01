@@ -263,16 +263,15 @@
     # ON-DEMAND VAULT LOOKUP: Fetch MinIO secrets only when needed
     - name: Fetch MinIO credentials from Vault (on-demand lookup)
       community.hashi_vault.vault_kv2_get:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+        ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: "secret"
         path: "minio/root"
-        validate_certs: "{{ (not enable_letsencrypt) and (vault_cacert != '') }}"
       register: minio_vault_secret
       delegate_to: localhost
       become: false
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_token }}"
-        VAULT_CACERT: "{{ vault_cacert if (not enable_letsencrypt | default(false)) else '' }}"
       no_log: true
 
     - name: Set MinIO credentials from Vault

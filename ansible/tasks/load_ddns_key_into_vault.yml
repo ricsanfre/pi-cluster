@@ -18,12 +18,12 @@
 
 - name: Create/update bind9/ddns credentials in Vault
   community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    token: "{{ vault_token }}"
+    validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+    ca_cert: "{{ vault_cacert | default(omit) }}"
     path: "secret/data/bind9/ddns"
     data:
       data:
         ddns-key: "{{ bind9_ddns_key }}"
-  environment:
-    VAULT_ADDR: "{{ vault_addr }}"
-    VAULT_TOKEN: "{{ vault_token }}"
-    VAULT_CACERT: "{{ (vault_cacert | default('', true)) if (not enable_letsencrypt | default(false)) else '' }}"
   no_log: true
