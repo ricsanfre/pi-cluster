@@ -2,7 +2,7 @@
 title: Secret Management (Vault)
 permalink: /docs/vault/
 description: How to deploy Hashicorp Vault as a Secret Manager for our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "01-12-2025"
+last_modified_at: "01-03-2026"
 ---
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
@@ -987,6 +987,7 @@ External Secrets Operator is installed through its helm chart.
     vault write auth/kubernetes/role/external-secrets \
       bound_service_account_names=external-secrets \
       bound_service_account_namespaces=external-secrets \
+      audience=https://kubernetes.default.svc.cluster.local \
       policies=readonly \
       ttl=24h
     ```
@@ -995,15 +996,21 @@ External Secrets Operator is installed through its helm chart.
 
     ```shell
     curl -k --header "X-Vault-Token:$VAULT_TOKEN" --request POST \
-      --data '{ "bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "policies": ["readonly"], "ttl" : "24h"}' \
+      --data '{ "bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "audience": "https://kubernetes.default.svc.cluster.local", "policies": ["readonly"], "ttl" : "24h"}' \
       https://${VAULT_SERVER}:8200/v1/auth/kubernetes/role/external-secrets
     ```
+
+    {{site.data.alerts.note}}
+
+    Vault 1.21+ requires roles to define an `audience`. The audience configured in the Vault role must match the audience requested by External Secrets Operator in `ClusterSecretStore`.
+
+    {{site.data.alerts.end}}
 
 
 -   Step 6: Create Cluster Secret Store
 
     ```yml
-    apiVersion: external-secrets.io/v1beta1
+    apiVersion: external-secrets.io/v1
     kind: ClusterSecretStore
     metadata:
       name: vault-backend
@@ -1023,6 +1030,11 @@ External Secrets Operator is installed through its helm chart.
             kubernetes:
               mountPath: "kubernetes"
               role: "external-secrets"
+              serviceAccountRef:
+                name: "external-secrets"
+                namespace: "external-secrets"
+                audiences:
+                  - "https://kubernetes.default.svc.cluster.local"
     ```
     {{site.data.alerts.note}}
 
@@ -1042,7 +1054,7 @@ External Secrets Operator is installed through its helm chart.
 -   Step 7: Create External secret
 
     ```yml
-    apiVersion: external-secrets.io/v1beta1
+    apiVersion: external-secrets.io/v1
     kind: ExternalSecret
     metadata:
       name: vault-example
