@@ -8,6 +8,9 @@
   vars:
     propagation_seconds: 300
     ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
   pre_tasks:
     # Include picluster variables
     - name: Include picluster variables
@@ -75,6 +78,9 @@
     - name: Create Letsencrytp certificate for gateway
       ansible.builtin.command: |
         certbot certonly \
+        --config-dir {{ certbot_config_dir }} \
+        --work-dir {{ certbot_work_dir }} \
+        --logs-dir {{ certbot_logs_dir }} \
         --authenticator dns-ionos \
         --dns-ionos-credentials {{ ionos_credentials_file }} \
         --dns-ionos-propagation-seconds {{ propagation_seconds }} \

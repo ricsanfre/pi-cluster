@@ -30,6 +30,9 @@
     propagation_seconds: 300
     selfsigned_certificates_path: "./certificates"
     ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
 
   pre_tasks:
     - name: Include picluster variables
@@ -97,6 +100,9 @@
     - name: Create Letsencrypt certificate for Vault
       ansible.builtin.command: |
         certbot certonly \
+        --config-dir {{ certbot_config_dir }} \
+        --work-dir {{ certbot_work_dir }} \
+        --logs-dir {{ certbot_logs_dir }} \
         --authenticator dns-ionos \
         --dns-ionos-credentials {{ ionos_credentials_file }} \
         --dns-ionos-propagation-seconds {{ propagation_seconds }} \
@@ -153,6 +159,9 @@
   vars:
     server_hostname: "{{ vault_hostname }}"
     selfsigned_certificates_path: "../certificates"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
 
   pre_tasks:
     - name: Include picluster variables
@@ -169,7 +178,7 @@
       when: enable_letsencrypt
       block:
         - name: Check TLS certificate for Vault exits
-          ansible.builtin.command: "certbot certificates -d {{ vault_hostname }}"
+          ansible.builtin.command: "certbot certificates --config-dir {{ certbot_config_dir }} --work-dir {{ certbot_work_dir }} --logs-dir {{ certbot_logs_dir }} -d {{ vault_hostname }}"
           register: certbot_certificates
           delegate_to: localhost
           become: false
