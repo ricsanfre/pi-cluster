@@ -13,11 +13,9 @@ services:
       - ./../kubernetes:/kubernetes
       - ./../terraform:/terraform
       - ./../metal/x86/pxe-files:/metal/x86/pxe-files
-      - ./runner/.secrets:/home/runner/.secrets
-      - ./runner/.ssh:/home/runner/.ssh
-      - ./runner/.kube:/home/runner/.kube
-      - ./certbot/log:/var/log/letsencrypt
-      - ./certbot/config:/etc/letsencrypt
-      - ./certbot/work:/var/lib/letsencrypt
-    env_file:
-      - ./runner/env
+      - ${HOME}/.secrets:/home/runner/.secrets
+      - ${HOME}/.ssh:/home/runner/.ssh:ro
+      - ${HOME}/.kube:/home/runner/.kube
+      - ${HOME}/.certbot/log:/home/runner/.certbot/log
+      - ${HOME}/.certbot/config:/home/runner/.certbot/config
+      - ${HOME}/.certbot/work:/home/runner/.certbot/work

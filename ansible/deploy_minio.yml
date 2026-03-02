@@ -43,6 +43,9 @@
     propagation_seconds: 300
     selfsigned_certificates_path: "../certificates"
     ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
 
   pre_tasks:
     - name: Include picluster variables
@@ -110,6 +113,9 @@
     - name: Create Letsencrypt certificate for MinIO
       ansible.builtin.command: |
         certbot certonly \
+        --config-dir {{ certbot_config_dir }} \
+        --work-dir {{ certbot_work_dir }} \
+        --logs-dir {{ certbot_logs_dir }} \
         --authenticator dns-ionos \
         --dns-ionos-credentials {{ ionos_credentials_file }} \
         --dns-ionos-propagation-seconds {{ propagation_seconds }} \
@@ -167,6 +173,9 @@
     server_hostname: "{{ minio_hostname }}"
     selfsigned_certificates_path: "../certificates"
     vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
 
   pre_tasks:
     - name: Include picluster variables
@@ -236,7 +245,7 @@
       when: enable_letsencrypt
       block:
         - name: Check TLS certificate for MinIO exits
-          ansible.builtin.command: "certbot certificates -d {{ minio_hostname }}"
+          ansible.builtin.command: "certbot certificates --config-dir {{ certbot_config_dir }} --work-dir {{ certbot_work_dir }} --logs-dir {{ certbot_logs_dir }} -d {{ minio_hostname }}"
           register: certbot_certificates
           delegate_to: localhost
           become: false
