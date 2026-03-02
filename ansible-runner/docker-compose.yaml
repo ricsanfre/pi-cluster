@@ -3,12 +3,13 @@ services:
   ansible-runner:
     image: ansible-runner
     build:
-      context: .
+      context: ..
+      dockerfile: ansible-runner/Dockerfile
     command: tail -f /dev/null
     container_name: ansible-runner
     restart: unless-stopped
     volumes:
-      - ./../ansible:/runner
+      - ./../ansible:/ansible
       - ./../kubernetes:/kubernetes
       - ./../terraform:/terraform
       - ./../metal/x86/pxe-files:/metal/x86/pxe-files

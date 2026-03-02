@@ -1,0 +1,19 @@
+[project]
+name = "pi-cluster-ansible"
+version = "0.1.0"
+description = "Ansible runtime environment for pi-cluster"
+readme = "../README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "ansible-core==2.20.2",
+    "ansible-lint>=25,<26",
+    "pathspec<1",
+    "yamllint==1.37.1",
+    "kubernetes==35.0.0",
+    "hvac==2.4.0",
+    "certbot==5.3.1",
+    "certbot-dns-ionos==2024.11.9",
+]
+
+[tool.uv]
+package = false
