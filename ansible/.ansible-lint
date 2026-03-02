@@ -1,0 +1,6 @@
+---
+profile: production
+exclude_paths:
+  - ".venv/"
+# skip_list:
+#  - var-naming[no-role-prefix]

@@ -1,7 +1,0 @@
-kubernetes==35.0.0
-hvac==2.4.0
-certbot==5.3.1
-certbot-dns-ionos==2024.11.9
-ansible-core==2.20.2
-ansible-lint==6.7.0
-yamllint==1.37.1

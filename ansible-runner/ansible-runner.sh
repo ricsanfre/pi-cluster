@@ -1,8 +1,18 @@
 #!/bin/bash
 
-# Execute ansible-runner command using bash shell with loging option
-# runner user profile is loaded
+set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+MODE="${ANSIBLE_RUNNER_MODE:-docker}"
+
+if [[ "${MODE}" == "local" ]]; then
+    cd "${REPO_ROOT}/ansible"
+    exec uv run "$@"
+fi
+
+# Execute ansible-runner command using bash shell with login option
+# runner user profile is loaded
 CMD="docker exec -it ansible-runner \
      /bin/bash -lic"
 
