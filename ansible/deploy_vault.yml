@@ -167,6 +167,24 @@
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
 
+    - name: Check jq command is installed on Vault host
+      ansible.builtin.command: jq --version
+      register: jq_check
+      changed_when: false
+      failed_when: false
+
+    - name: Validate jq command is available on Vault host
+      ansible.builtin.assert:
+        that:
+          - jq_check.rc == 0
+        fail_msg: |
+          jq command is not installed on Vault host {{ inventory_hostname }}.
+
+          Install jq and re-run this playbook, for example:
+            Debian/Ubuntu: sudo apt-get update && sudo apt-get install -y jq
+            RHEL/CentOS:  sudo dnf install -y jq
+        success_msg: "jq is installed on Vault host"
+
     - name: Load customCA-signed TLS certificate for Vault
       ansible.builtin.set_fact:
         vault_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
@@ -178,7 +196,12 @@
       when: enable_letsencrypt
       block:
         - name: Check TLS certificate for Vault exits
-          ansible.builtin.command: "certbot certificates --config-dir {{ certbot_config_dir }} --work-dir {{ certbot_work_dir }} --logs-dir {{ certbot_logs_dir }} -d {{ vault_hostname }}"
+          ansible.builtin.command: >-
+            certbot certificates
+            --config-dir {{ certbot_config_dir }}
+            --work-dir {{ certbot_work_dir }}
+            --logs-dir {{ certbot_logs_dir }}
+            -d {{ vault_hostname }}
           register: certbot_certificates
           delegate_to: localhost
           become: false
