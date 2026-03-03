@@ -23,7 +23,7 @@ jq() {
 count=0
 while [ "$count" -lt 30 ]
 do
-    # Functions and variables to calculate the number of resource to determine the success of the deployment    
+    # Functions and variables to calculate the number of resource to determine the success of the deployment
     DESIRED_RESORCE_NUMBER=0
     AVAILABLE_RESOURCE_NUMBER=0
 
@@ -35,7 +35,7 @@ do
         AVAILABLE_RESOURCE_NUMBER=$(($AVAILABLE_RESOURCE_NUMBER+$1))
     }
 
-    # Use check_replicas "resource_type" "resorce_name" 
+    # Use check_replicas "resource_type" "resorce_name"
     # Ex. check_replicas "deployment" "longhorn-ui"
     check_replicas() {
         AVAILABLE_REPLICAS=$(kubectl get ${1} ${2} --namespace longhorn-system -o json | jq -r '.status.availableReplicas')
@@ -54,7 +54,7 @@ do
     }
 
     ### Kubernetes nodes check
-    # Generate a list of nodes 
+    # Generate a list of nodes
     NODE_LIST=$(kubectl get nodes -o json | jq -r '.items[].metadata.name')
 
     # Iterate through nodes and determine if each node has Kubelet in Ready status

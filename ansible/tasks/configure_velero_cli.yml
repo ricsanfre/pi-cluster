@@ -1,4 +1,5 @@
 ---
+
 - name: Get CLI configured namespace
   ansible.builtin.command:
     cmd: "velero client config get namespace"
@@ -8,10 +9,10 @@
 
 - name: Configure velero CLI namespace
   ansible.builtin.command:
-    cmd: "velero client config set namespace={{ velero_namespace }}"
+    cmd: "velero client config set namespace={{ velero_namespace | default('velero') }}"
   when:
     - get_velero_namespace.rc==0
-    - '"namespace: <NOT SET>" in get_velero_namespace.stdout or "namespace: " + velero_namespace not in get_velero_namespace.stdout'
+    - '"namespace: <NOT SET>" in get_velero_namespace.stdout or "namespace: " + (velero_namespace | default("velero")) not in get_velero_namespace.stdout'
   changed_when: true
 
 - name: Get CLI configured colored

@@ -21,14 +21,27 @@
   hosts: localhost
   gather_facts: false
   become: true
+  vars:
+    velero_namespace: velero
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
       tags: ["always"]
-  roles:
-    - role: fluxcd-cli
-    - role: longhorn-cli
-    - role: velero-cli
-      vars:
-        velero_arch: amd64
-    - role: istio-cli
+  tasks:
+    - name: Install flux-cd cli
+      ansible.builtin.include_tasks: tasks/install_fluxcd_cli.yml
+
+    - name: Install longhorn cli
+      ansible.builtin.include_tasks: tasks/install_longhorn_cli.yml
+
+    - name: Install longhorn utilities
+      ansible.builtin.include_tasks: tasks/install_longhorn_util.yml
+
+    - name: Install istio cli
+      ansible.builtin.include_tasks: tasks/install_istio_cli.yml
+
+    - name: Install velero cli
+      ansible.builtin.include_tasks: tasks/install_velero_cli.yml
+
+    - name: Configure velero cli
+      ansible.builtin.include_tasks: tasks/configure_velero_cli.yml

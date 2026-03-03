@@ -1,0 +1,30 @@
+---
+
+- name: Gather architecture facts
+  ansible.builtin.setup:
+    gather_subset:
+      - min
+  when: ansible_facts.architecture is not defined
+
+- name: Set Velero CLI architecture
+  ansible.builtin.set_fact:
+    velero_cli_arch: "{{ {'x86_64': 'amd64', 'aarch64': 'arm64', 'arm64': 'arm64'}.get(ansible_facts.architecture, ansible_facts.architecture) }}"
+
+- name: Download Velero CLI
+  ansible.builtin.get_url:
+    url: "https://github.com/vmware-tanzu/velero/releases/download/{{ velero_version }}/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}.tar.gz"
+    dest: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}.tar.gz"
+    mode: '0766'
+
+- name: Extract archives
+  ansible.builtin.unarchive:
+    src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}.tar.gz"
+    dest: /tmp
+    remote_src: true
+
+- name: Copy binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}/velero"
+    dest: /usr/local/bin/velero
+    mode: '0755'
+    remote_src: true
