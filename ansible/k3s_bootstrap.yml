@@ -6,6 +6,7 @@
   become: false
   vars:
     vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
   environment:
     # The location of the kubeconfig file on the master.
@@ -13,27 +14,29 @@
 
   pre_tasks:
 
-    # Install Python PIP and jq utility packages
-    - name: Ensure required packages are installed.
-      ansible.builtin.package:
-        name:
-          - python3-pip
-          - python3-setuptools
-          - jq
-        state: present
-      become: true
-    # Install kubernetes python packages (Ansible kubernetes collection dependency)
-    - name: Ensure kubernetes Python library is installed.
-      ansible.builtin.pip:
-        name: kubernetes
-        state: present
-      become: true
-    # Install Hashicorp python packages (Ansible hashi module dependency)
-    - name: Ensure hashicorp vault python library is installed.
-      ansible.builtin.pip:
-        name: hvac
-        state: present
-      become: true
+    - name: Validate required Python libraries are available in playbook environment
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - -c
+          - "import kubernetes, hvac"
+      changed_when: false
+      failed_when: false
+      register: python_libs_check
+
+    - name: Fail if required Python libraries are missing
+      ansible.builtin.assert:
+        that:
+          - python_libs_check.rc == 0
+        fail_msg: |
+          Missing Python dependencies in playbook environment.
+
+          Required modules: kubernetes, hvac
+
+          Install using UV from repo root:
+            make ansible-local-setup
+          or run in docker mode:
+            make ansible-runner-setup
 
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
