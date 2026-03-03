@@ -4,7 +4,7 @@
 /ansible/ansible_collections
 /ansible/certificates
 /.ansible
-/ansible-runner/certbot
+
 /certs
 
 # Terraform
@@ -22,6 +22,8 @@
 /docs/vendor
 /docs/.bundle
 .venv
+/ansible/.venv
+/ansible/.uv-cache
 
 # Metal
 /metal/openwrt

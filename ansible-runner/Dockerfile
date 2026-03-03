@@ -33,7 +33,8 @@ RUN /usr/sbin/groupadd $USER && \
     echo $USER 'ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     echo 'case ":$PATH:" in *:/home/runner/.venv/bin:*) ;; *) export PATH="/home/runner/.venv/bin:$PATH" ;; esac' >> /home/runner/.bashrc && \
     echo 'case ":$PATH:" in *:/home/runner/.venv/bin:*) ;; *) export PATH="/home/runner/.venv/bin:$PATH" ;; esac' >> /home/runner/.profile && \
-    mkdir -p /home/runner/.ansible/roles /home/runner/.ansible/collections /home/runner/.local /home/runner/.cache /home/runner/.config && \
+    mkdir -p /home/runner/.ansible/roles /home/runner/.ansible/collections /home/runner/.local /home/runner/.cache /home/runner/.config /home/runner/.ssh && \
+    chmod 700 /home/runner/.ssh && \
     chown -R $USER:$USER /home/runner
 
 # Copy helmfile
