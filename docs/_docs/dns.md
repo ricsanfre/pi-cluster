@@ -19,11 +19,11 @@ Homelab DNS Architecture is composed of the following components:
 
   Potentially this external DNS can be used to access internal services from Internet through my home network firewall, implementing a VPN/Port Forwarding solution.
   
-  Initially all homelab services are not accesible from Internet, but that External DNS is needed for when generating valid TLS certificates with Let's Encrypt. DNS01 challenge used by Let's Encrypt to check ownership of the DNS domain before issuing the TLS certificate will be implemented using this external DNS service. 
+  Initially all homelab services are not accessible from Internet, but that External DNS is needed for when generating valid TLS certificates with Let's Encrypt. DNS01 challenge used by Let's Encrypt to check ownership of the DNS domain before issuing the TLS certificate will be implemented using this external DNS service. 
 
 - **Forwarder/Resolver DNS server**, based on `dnsmasq`, running in my homelab router (`gateway`), able to resolve recursive queries by forwarding the requests to the corresponding authoritative servers.
 
-  Configured as DNS server in all homelab nodes. It forwards request for `homelab.ricsanfre.com` domain to Authoritative Internal DNS server runing in `node1` and the rest of request to default DNS servers 1.1.1.1 (cloudflare) and 8.8.8.8 (google)
+  Configured as DNS server in all homelab nodes. It forwards request for `homelab.ricsanfre.com` domain to Authoritative Internal DNS server running in `node1` and the rest of request to default DNS servers 1.1.1.1 (cloudflare) and 8.8.8.8 (google)
 
 
 ![gateway-dns-dhcp-config](/assets/img/gateway-dns-dhcp-config.png)
@@ -49,7 +49,7 @@ Authoritative DNS server for homelab zone (`homlab.ricsanfre.com`) is deployed i
 
 ### Bind9 Installation
 
-Use apt package manager to install Bind9 in a Ubuntu server.
+Use apt package manager to install Bind9 in an Ubuntu server.
     
 ```shell
 sudo apt-get install bind9 bind9-doc dnsutils
@@ -261,7 +261,7 @@ statistics-channels {
 };
 ```
 
-This enables metric port (TCP 8053) that is only accesible from localhost.
+This enables metric port (TCP 8053) that is only accessible from localhost.
 Metrics are exposed in XML format. Prometheus bind exporter deployed in same node can be used to scrape these metrics and export them in Prometheus format.
 
 ##### Bind Exporter installation
@@ -341,7 +341,7 @@ Bind Exporter installation and configuration can be automated with Ansible. Ansi
 
 ##### Integration with Kube-Prom-Stack
 
-In case Prometheus server is deployed in Kuberentes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
+In case Prometheus server is deployed in Kubernetes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
 
 
 -   Create Prometheus Operator ScrapeConfig resources
@@ -365,7 +365,7 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
 
 Bind Exporter dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 12309](https://grafana.com/grafana/dashboards/12309).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 
@@ -445,7 +445,7 @@ DNS Resolver/Forwarding service, can be deployed in my linux laptop so DNS queri
 
 - Install bind9
 
-  Use apt package manager to install Bind9 in a Ubuntu server.
+  Use apt package manager to install Bind9 in an Ubuntu server.
     
   ```shell
   sudo apt-get install bind9 bind9-doc dnsutils

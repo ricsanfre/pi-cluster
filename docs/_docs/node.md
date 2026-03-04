@@ -74,7 +74,7 @@ As a reference of how cloud images partitions grow in boot time check this blog 
 
 {{site.data.alerts.end}}
 
-cloud-init partition SSD Disk will be partitioned during firt boot. cloud-init will be configured to reserve 30 GB for root filesystem (OS installation) and the rest will be used for creating a Linux partition (ext4) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kuberentes distributed storage solution and by backup solution.
+cloud-init partition SSD Disk will be partitioned during first boot. cloud-init will be configured to reserve 30 GB for root filesystem (OS installation) and the rest will be used for creating a Linux partition (ext4) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kubernetes distributed storage solution and by backup solution.
 
 
 `cloud-init` configuration (`user-data` file) includes commands to be executed once in boot time changing partition table and creating a new partition before the automatic growth of root partitions to fill the entire disk happens.
@@ -398,12 +398,12 @@ NTP configuration in cluster nodes has been automated using ansible role **ricsa
 
 #### Raspberry Pi and x86 nodes
 
-Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. All nodes of the cluster need to be configured as iSCSI initiators, When configurin iSCSI initiator, authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
+Open-iscsi is used by Longhorn as a mechanism to expose Volumes within Kubernetes cluster. All nodes of the cluster need to be configured as iSCSI initiators, When configuring iSCSI initiator, authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
 
 iSCSI initiator configuration in cluster nodes has been automated with Ansible developing the ansible role: **ricsanfre.iscsi_initiator**.
 
 {{site.data.alerts.important}}
 
-`open-iscsi` is used by Longhorn as a mechanism to expose Volumes within Kuberentes cluster. Authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
+`open-iscsi` is used by Longhorn as a mechanism to expose Volumes within Kubernetes cluster. Authentication default parameters should not be included in `iscsid.conf` file and per target authentication parameters need to be specified because Longhorn local iSCSI target is not using any authentication.
 
 {{site.data.alerts.end}}

@@ -143,7 +143,7 @@ There is another list of services that I have decided to run outside the kuberne
 
 Minio backup servive is hosted in a VM running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
 
-Vault service is running in one of the cluster nodes, `node1`, since Vault kubernetes authentication method need access to Kuberentes API, I won't host Vault service in Public Cloud.
+Vault service is running in one of the cluster nodes, `node1`, since Vault kubernetes authentication method needs access to Kubernetes API, I won't host Vault service in Public Cloud.
 
 
 ## What I have built so far
@@ -166,7 +166,7 @@ From hardware perspective I built two different versions of the cluster
 ## What I have developed so far
 
 {{site.data.alerts.important}}
-All source code can be found in the project's github repository [{{site.data.icons.github}}]({{site.git_address}}).
+All source code can be found in the project's GitHub repository [{{site.data.icons.github}}]({{site.git_address}}).
 
 {{site.data.alerts.end}}
 
@@ -179,15 +179,15 @@ From software perspective, I have developed the following:
 
 2. Automate initial OS installation in x86_64 nodes using PXE server and Ubuntu's **auto-install** template files.
 
-3. **Ansible** playbook and roles for configuring cluster nodes and installating and bootstraping K3S cluster  
+3. **Ansible** playbook and roles for configuring cluster nodes and installing and bootstrapping K3S cluster  
    
    Source code can be found in Pi Cluster Git repository under [`/ansible`]({{site.git_address}}/tree/master/ansible) directory.
 
    Aditionally several ansible roles have been developed to automate different configuration tasks on Ubuntu-based servers that can be reused in other projects. These roles are used by Pi-Cluster Ansible Playbooks
 
-   Each ansible role source code can be found in its dedicated Github repository and is published in Ansible-Galaxy to facilitate its installation with `ansible-galaxy` command.
+   Each ansible role source code can be found in its dedicated GitHub repository and is published in Ansible-Galaxy to facilitate its installation with `ansible-galaxy` command.
 
-   | Ansible role | Description | Github |
+   | Ansible role | Description | GitHub |
    | ---| --- | --- | 
    |  [ricsanfre.security](https://galaxy.ansible.com/ricsanfre/security) | Automate SSH hardening configuration tasks  | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-security)|
    | [ricsanfre.ntp](https://galaxy.ansible.com/ricsanfre/ntp)  | Chrony NTP service configuration | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-ntp) |
@@ -204,11 +204,11 @@ From software perspective, I have developed the following:
    | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
    {: .table .border-dark } 
 
-4. **Packaged Kuberentes applications** (Helm, Kustomize, manifest files) to be deployed using FluxCD
+4. **Packaged Kubernetes applications** (Helm, Kustomize, manifest files) to be deployed using FluxCD
 
    Source code can be found in Pi Cluster Git repository under [`/kubernetes`]({{site.git_address}}/tree/master/kubernetes) directory.
 
-5. This **documentation website**, *picluster.ricsanfre.com*, hosted in Github pages.
+5. This **documentation website**, *picluster.ricsanfre.com*, hosted in GitHub Pages.
 
    Static website generated with [Jekyll](https://jekyllrb.com/).
 

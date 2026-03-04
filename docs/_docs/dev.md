@@ -49,7 +49,7 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
   lsb-release
   ```
   
-- Step 3. Add docker´s official GPG key
+- Step 3. Add Docker's official GPG key
 
   ```shell
   sudo install -m 0755 -d /etc/apt/keyrings
@@ -71,7 +71,7 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
   sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   ```
 
-- Step 6: Enable docker management with non-priviledge user
+- Step 6: Enable Docker management with a non-privileged user
 
   - Create docker group
 

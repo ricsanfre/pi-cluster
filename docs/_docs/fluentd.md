@@ -63,7 +63,7 @@ Since I am currently dispatching logs to 2 different destinations (ElasticSearch
 
 [fluentd-kubernetes-daemonset images](https://github.com/fluent/fluentd-kubernetes-daemonset) should work for deploying fluentd as Deployment. For outputing to the ES you just need to select the adequate [fluentd-kubernetes-daemonset image tag](https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags).
 
-As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
+As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator GitHub repository](https://github.com/ricsanfre/fluentd-aggregator).
 The multi-architecture (amd64/arm64) image is available in docker hub:
 
 - `ricsanfre/fluentd-aggregator:v1.17.1-debian-1.0`
@@ -156,11 +156,11 @@ CMD ["fluentd"]
 
 Fluentd won't not be deployed as privileged daemonset, since it does not need to access to kubernetes logs/APIs. 
 
-[fluentd official helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluentd) also supports the deployment of fluentd as `Deployment` or `Statefulset` instead of default `Daemonset` (used when Fluentd collect Kuberentes logs). In case of deploying it as a `Deployment`, [Kubernetes HPA (Horizontal POD Autoscaler)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) is also supported.
+[fluentd official helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluentd) also supports the deployment of fluentd as `Deployment` or `Statefulset` instead of default `Daemonset` (used when Fluentd collect Kubernetes logs). In case of deploying it as a `Deployment`, [Kubernetes HPA (Horizontal POD Autoscaler)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) is also supported.
 
 Fluentd aggregator should be deployed in HA, Kubernetes deployment with several replicas. Additionally, [Kubernetes HPA (Horizontal POD Autoscaler)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) should be configured to automatically scale the number of replicas.
 
-Fluentd will be deployed as Kubernetes `Deployment` (not default as Daemonset), enabling multiple PODs service replicas, so it can be accesible by Fluentbit pods.
+Fluentd will be deployed as Kubernetes `Deployment` (not default as Daemonset), enabling multiple PODs service replicas, so it can be accessible by Fluentbit pods.
 
 Since it does not need to access neither host directories for collecting logs or Kubernetes API to enrich the collected logs, all default privileges when installing as a `DaemonSet`, will be removed.
 

@@ -7,11 +7,11 @@ last_modified_at: "01-03-2026"
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
 
-Vault will be deployed as a external service, not running as a Kuberentes service, so it can be used by GitOps solution, ArgoCD/FluxCD, to deploy automatically all cluster services.
+Vault will be deployed as an external service, not running as a Kubernetes service, so it can be used by GitOps solution, ArgoCD/FluxCD, to deploy automatically all cluster services.
 
-Vault could be installed as Kuberentes service, deploying it using an official Helm Chart or a community operator like [Banzai Bank-Vault](https://banzaicloud.com/products/bank-vaults/).
+Vault could be installed as Kubernetes service, deploying it using an official Helm Chart or a community operator like [Banzai Bank-Vault](https://banzaicloud.com/products/bank-vaults/).
 
-Installing Vault as Kubernetes service will drive us to a chicken/egg situation if we want to use Vault as only source of secrets/credentials for all Kuberentes services deployed. Vault requires to have Block storage solution (Longhorn) deployed first since its POD needs Perstistent Volumes, and to install Longhorn, a few secrets need to be provided to configure its backup (Minio credentials).
+Installing Vault as Kubernetes service will drive us to a chicken/egg situation if we want to use Vault as only source of secrets/credentials for all Kubernetes services deployed. Vault requires to have Block storage solution (Longhorn) deployed first since its POD needs Persistent Volumes, and to install Longhorn, a few secrets need to be provided to configure its backup (Minio credentials).
 
 [External Secrets Operator](https://external-secrets.io/) will be used to automatically generate the Kubernetes Secrets from Vault data that is needed to deploy the different services using FluxCD/ArgoCD.
 
@@ -365,7 +365,7 @@ Storage Type       raft
 HA Enabled         true
 ```
 
-To unseal vault `vault operator unseal` command need to be executed, providing unseal keys generated during initialization process.
+To unseal vault, the `vault operator unseal` command needs to be executed, providing unseal keys generated during initialization process.
 
 
 Using the key stored in `unseal.json` file the following command can be executed:
@@ -649,7 +649,7 @@ Enabling [Vault kubernetes auth method](https://developer.hashicorp.com/vault/do
   kubectl create namespace vault
   ```
 
-- Step 2. Create service account `vault-auth` to be used by Vault kuberentes authentication
+- Step 2. Create service account `vault-auth` to be used by Vault kubernetes authentication
  
   ```yml 
   ---
@@ -929,7 +929,7 @@ export VAULT_TOKEN=$(jq -r '.root_token' /etc/vault/unseal.json)
 
 Vault dashboard sample can be downloaded from [Grafana jsonnet libraries repo: vault-mixin](https://github.com/grafana/jsonnet-libs/blob/master/vault-mixin/dashboards/vault.json).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 

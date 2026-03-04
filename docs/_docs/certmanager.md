@@ -1,7 +1,7 @@
 ---
 title: TLS Certificates (Cert-Manager)
 permalink: /docs/certmanager/
-description: How to deploy a centralized TLS certificates management solution based on Cert-manager in Kuberentes cluster.
+description: How to deploy a centralized TLS certificates management solution based on Cert-manager in Kubernetes cluster.
 last_modified_at: "01-06-2025"
 ---
 
@@ -67,7 +67,7 @@ spec:
   secretName: example-test-com-tls
 ```
 
-Once the Certificate resource is created, Cert-manager signed the certificate issued by the specified issuer and stored it in a `kubernetes.io/tls Secret` resource, which is the one used to secure Ingress resource. See kuberentes [Ingress TLS documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
+Once the Certificate resource is created, Cert-manager signed the certificate issued by the specified issuer and stored it in a `kubernetes.io/tls Secret` resource, which is the one used to secure Ingress resource. See kubernetes [Ingress TLS documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
 
 ```yml
 apiVersion: v1
@@ -398,7 +398,7 @@ prometheus:
 
 cert-manager's Grafana dashboard can be downloaded from [grafana.com](https://grafana.com): [dashboard id: 20842](https://grafana.com/grafana/dashboards/20842-cert-manager-kubernetes/) 
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 

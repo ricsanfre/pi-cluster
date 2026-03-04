@@ -645,7 +645,7 @@ OpenWRT metrics can be exported deploying Prometheus node exporter packages
 
 ##### Integration with Kube-Prom-Stack
 
-In case Prometheus server is deployed in Kuberentes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
+In case Prometheus server is deployed in Kubernetes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
 
 
 -   Create Prometheus Operator ScrapeConfig resources
@@ -672,7 +672,7 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
 
 OpenWRTr dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 18153](https://grafana.com/grafana/dashboards/18153).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 

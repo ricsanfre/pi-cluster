@@ -30,7 +30,7 @@ CloudNative-PG offers a declarative way of deploying PostgreSQL databases, suppo
   - Support backup and restore to/from S3 Object Storage like Minio/AWS. See details in [CloudNative-PG Backup on Object Stores](https://cloudnative-pg.io/documentation/1.23/backup_barmanobjectstore/)
   - The operator can orchestrate a continuous backup infrastructure that is based on the [Barman Cloud](https://pgbarman.org/) tool. 
 - Monitoring:
-  - For each PostgreSQL instance, the operator provides an exporter of metrics for [Prometheus](https://prometheus.io/) via HTTP, on port 9187, named `metrics`. See detaisl in [CloudNative-PG Montiroring](https://cloudnative-pg.io/documentation/1.23/monitoring/)
+  - For each PostgreSQL instance, the operator provides an exporter of metrics for [Prometheus](https://prometheus.io/) via HTTP, on port 9187, named `metrics`. See details in [CloudNative-PG Montiroring](https://cloudnative-pg.io/documentation/1.23/monitoring/)
 
 
 ### CloudNative-PG operator installation
@@ -120,7 +120,7 @@ spec:
 
 #### Auto-generated secrets
 
-Bootstraping without specifying any secret, like in the previous example, cloudnative-pg generates a couple of secrets. 
+Bootstrapping without specifying any secret, like in the previous example, cloudnative-pg generates a couple of secrets. 
 
 - `[cluster name]-app` (unless you have provided an existing secret through .spec.bootstrap.initdb.secret.name)
 - `[cluster name]-superuser` (if .spec.enableSuperuserAccess is set to true and you have not specified a different secret using .spec.superuserSecret)

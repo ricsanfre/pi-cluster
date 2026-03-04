@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.9
+title:  Kubernetes Pi Cluster release v1.9
 date:   2024-10-07
 author: ricsanfre
 description: PiCluster News - announcing release v1.9
@@ -40,7 +40,7 @@ Git repo structure to store cluster configuration has been restructured and all 
 See further details in ["GitOps (FluxCD)"](/docs/fluxcd/)
 
 
-## Kuberentes CNI replacement: from Flannel to Cilium
+## Kubernetes CNI replacement: from Flannel to Cilium
 
 Migrate K3s default Kubernetes CNI, Flannel, to Cilium.
 

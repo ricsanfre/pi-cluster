@@ -726,7 +726,7 @@ There are two common ways to define a resource as meshed with Linkerd:
       linkerd.io/inject: enabled
   ```
 
-### Problems with Kuberentes Jobs and implicit annotation
+### Problems with Kubernetes Jobs and implicit annotation
 
 
 With `linkerd.io/inject: enabled` annotation at namespace level, [Kubernetes Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/) do not terminate after completion since the Pods created are injected with linkerd-proxy and it continues to run after the job container completes its work. 
@@ -973,7 +973,7 @@ In order to integrate Traefik with Linkerd the following must be done:
 
    Since Traefik needs to talk to Kubernetes API using HTTPS standard port, to implements its own routing and load balancing mechanism, this mode of execution breaks Traefik unless outbound communications using port 443 skips the linkerd-proxy.
 
-   For making Traefik works with its own loadbalancing/routing mechanism, the following command need to be executed.
+  For making Traefik work with its own loadbalancing/routing mechanism, the following command needs to be executed.
 
    ```shell
    kubectl get deployment traefik -o yaml -n kube-system | linkerd inject --ingress --skip-outbound-ports 443 - | kubectl apply -f - 

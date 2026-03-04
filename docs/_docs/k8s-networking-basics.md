@@ -12,13 +12,13 @@ To facilitate inter-container connectivity across nodes, any networking solution
 A CNI plugin is responsible for inserting a network interface into the container network namespace (e.g., one end of a virtual ethernet (veth) pair) and making any necessary changes on the host (e.g., attaching the other end of the veth into a bridge). It then assigns an IP address to the interface and sets up the routes consistent with the IP Address Management section by invoking the appropriate IP Address Management (IPAM) plugin.
 
 
-## Enabling Kuberentes Services load balancing
+## Enabling Kubernetes Services load balancing
 
 `Kubernetes Service` is an abstract way to expose an application running on a set of Pods as a network service. Kubernetes gives Pods their own IP addresses and a single DNS name (and single Virtual IP address) for a set of Pods, and can load-balance across them. Two components are key for this mechanism: `kube-proxy` in charge of implementing the Virtual IP address and load balance mechanism and `kube-dns` responsible for mapping DNS service name to virtual IP address.
 
 See details in [Kubernetes documentation - Service Concept](https://kubernetes.io/docs/concepts/services-networking/service/).
 
-### kube-proxy: Kuberentes Services internal Load-balancing
+### kube-proxy: Kubernetes Services internal Load-balancing
 
 kube-proxy is a key component of any Kubernetes deployment.  Its role is to load-balance traffic that is destined for services (via Cluster IPs and Node Ports) to the correct backend pods.
 
@@ -48,18 +48,18 @@ An Ingress may be configured to give Services externally-reachable URLs, load ba
 
 Every `Ingress` resource belong to `IngressClass` resource that contains information about the `Ingress Controller` implementing the class. This way Ingresses can be implemented by different controllers.
 
-See detailed information in [Kubernetes documentation - Ingress Contoller Concept](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+See detailed information in [Kubernetes documentation - Ingress Controller Concept](https://kubernetes.io/docs/concepts/services-networking/ingress/).
 
 
 ## Useful references
 
 - Desmitifying containers networking [[1]](https://blog.mbrt.dev/posts/container-network/)
 
-- Diving Deep into kuberentes networking (Rancher whitepaper) [[2]](https://more.suse.com/rs/937-DCH-261/images/Diving-Deep-Into-Kubernetes-Networking.pdf)
+- Diving Deep into kubernetes networking (Rancher whitepaper) [[2]](https://more.suse.com/rs/937-DCH-261/images/Diving-Deep-Into-Kubernetes-Networking.pdf)
 
 - How a Kubernetes Pod Gets an IP Address: [[3]](https://ronaknathani.com/blog/2020/08/how-a-kubernetes-pod-gets-an-ip-address/)
 
-- CNI github repository: [[4]](https://github.com/containernetworking/cni)
+- CNI GitHub repository: [[4]](https://github.com/containernetworking/cni)
 
 - How Flannel works: [[5]](https://msazure.club/flannel-networking-demystify/)
 

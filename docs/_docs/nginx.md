@@ -247,9 +247,9 @@ controller:
 ```
 
 #### Grafana Dashboard
-Ingress NGINX grafana dashboards in JSON format can be found here: [Kubernetes Ingress-nginx Github repository: `grafana`](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards).
+Ingress NGINX grafana dashboards in JSON format can be found here: [Kubernetes Ingress-nginx GitHub repository: `grafana`](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file, so a NGINX's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
 
@@ -280,7 +280,7 @@ dashboards:
 
 ### Traces
 
-Ingress Contoller is a key component for a distributed tracing solution because it is responsible for creating the root span of each trace and for deciding if that trace should be sampled or not.
+Ingress Controller is a key component for a distributed tracing solution because it is responsible for creating the root span of each trace and for deciding if that trace should be sampled or not.
 
 Distributed tracing systems all rely on propagate the trace context through the chain of involved services. This trace contex is encoding in HTTP request headers. There is two key protocols used to propagate tracing context: W3C, used by OpenTelemetry, and B3, used by OpenTracing.
 
@@ -313,7 +313,7 @@ OTEL collector need to be specified (`controller.config.otlp-collector-host`) an
 
 ## Ingress Resources Configuration
 
-Standard kuberentes resource, `Ingress` can be used to configure the access to cluster services through HTTP proxy capabilities provide by Ingress NGINX.
+Standard kubernetes resource, `Ingress` can be used to configure the access to cluster services through HTTP proxy capabilities provide by Ingress NGINX.
 
 Following instructions details how to configure access to cluster service using standard `Ingress` resources where Nginx configuration is specified using annotations.
 

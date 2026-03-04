@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.10
+title:  Kubernetes Pi Cluster release v1.10
 date:   2025-01-16
 author: ricsanfre
 description: PiCluster News - announcing release v1.10
@@ -40,11 +40,11 @@ Reconfigure complete DNS architecture of my homelab implementing a split-horizon
 
   Potentially this external DNS can be used to access internal services from Internet through my home network firewall, implementing a VPN/Port Forwarding solution.
   
-  Initially all homelab services are not accesible from Internet, but that External DNS is needed for when generating valid TLS certificates with Let's Encrypt. DNS01 challenge used by Let's Encrypt to check ownership of the DNS domain before issuing the TLS certificate will be implemented using this external DNS service. 
+  Initially all homelab services are not accessible from Internet, but that External DNS is needed for when generating valid TLS certificates with Let's Encrypt. DNS01 challenge used by Let's Encrypt to check ownership of the DNS domain before issuing the TLS certificate will be implemented using this external DNS service. 
 
 - **Forwarder/Resolver DNS server**, based on `dnsmasq`, running in my homelab router (`gateway`), able to resolve recursive queries by forwarding the requests to the corresponding authoritative servers.
 
-  Configured as DNS server in all homelab nodes. It forwards request for `homelab.ricsanfre.com` domain to Authoritative Internal DNS server runing in `node1` and the rest of request to default DNS servers 1.1.1.1 (cloudflare) and 8.8.8.8 (google)
+  Configured as DNS server in all homelab nodes. It forwards request for `homelab.ricsanfre.com` domain to Authoritative Internal DNS server running in `node1` and the rest of request to default DNS servers 1.1.1.1 (cloudflare) and 8.8.8.8 (google)
 
 
 This architecture is complemented with the following Kubernetes components:
@@ -98,7 +98,7 @@ Homelab/Kuberenes DNS rearchitecture, migration to OpenWRT based router/firewall
 
 - Migrate Homelab Gateway Ubuntu OS based to OpenWRT
   - Migrate firewall rules to OpenWrt router
-    - OpenWrt firewall is also using `nftables` to implemt its firewall functionallity.
+    - OpenWrt firewall is also using `nftables` to implement its firewall functionality.
   - Migrate DNS/DHCP services to OpenWrt
     - OpenWrt DNS/DCHP is also based on dnsmasq.
   - Migrate PXE boot services (TFTF server and Kick-start web servers) to other node in the cluster (node1). GL-A1300 does not have enough disk space to store boot and iso files.

@@ -1,7 +1,7 @@
 ---
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
-description: How to deploy kuberentes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
+description: How to deploy kubernetes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
 last_modified_at: "15-08-2025"
 ---
 
@@ -652,7 +652,7 @@ prometheus:
 
 ##### Kubernetes system metrics
 
-[Kuberentes Documentation - System Metrics](https://kubernetes.io/docs/concepts/cluster-administration/system-metrics/) details the Kubernetes components exposing metrics in Prometheus format:
+[Kubernetes Documentation - System Metrics](https://kubernetes.io/docs/concepts/cluster-administration/system-metrics/) details the Kubernetes components exposing metrics in Prometheus format:
 
 - kube-controller-manager (exposing `metrics` endpoint at TCP 10257)
 - kube-proxy (exposing `/metrics` endpoint at TCP 10249)
@@ -1300,7 +1300,7 @@ Spegel metrics are automatically recollected from kubelet metrics port. All K3s 
 
 Spegel provides a Grafana dashboard in json format available in Spegel github repo:[https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json](https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json)
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 
@@ -1363,7 +1363,7 @@ spec:
 
 A Grafana dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 12693](https://grafana.com/grafana/dashboards/12693-haproxy/).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 
@@ -1469,7 +1469,7 @@ Big shout out to [Adin Hodovic](https://hodovi.cc/) for describing the procedure
 
 The `kube-prometheus` project uses monitoring mixins to generate alerts and dashboards. Monitoring mixins are a collection of Jsonnet libraries that generate dashboards and alerts for Kubernetes. The [`kubernetes-mixin`](https://github.com/kubernetes-monitoring/kubernetes-mixin) is a mixin that generates dashboards and alerts for Kubernetes. The `node-exporter`, `coredns`, `grafana`, `prometheus` and `prometheus-operator` mixins are also used to generate dashboards and alerts for the Kubernetes cluster.
 
-Using [jsonnet](https://jsonnet.org/) the kuberentes dashboards and Prometheus rules can be generated from mixins
+Using [jsonnet](https://jsonnet.org/) the kubernetes dashboards and Prometheus rules can be generated from mixins
 
 Instead of installing go locally as described in the Adin's blog, we will generate a jsonnet development environment using docker to build everything and extract the required yaml files
 

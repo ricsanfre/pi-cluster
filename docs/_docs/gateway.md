@@ -1,7 +1,7 @@
 ---
 title: Cluster Gateway (Ubuntu OS)
 permalink: /docs/gateway/
-description: How to configure a Raspberry Pi as router/firewall for our Kubernetes Cluster, runing Ubuntu OS, providing connectivity and basic services (DNS, DHCP, NTP, SAN).
+description: How to configure a Raspberry Pi as router/firewall for our Kubernetes Cluster, running Ubuntu OS, providing connectivity and basic services (DNS, DHCP, NTP, SAN).
 last_modified_at: "16-01-2025"
 ---
 

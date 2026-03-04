@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.6
+title:  Kubernetes Pi Cluster release v1.6
 date:   2023-01-29
 author: ricsanfre
 description: PiCluster News - announcing release v1.6
@@ -14,14 +14,14 @@ Main features/enhancements of this release are:
 
 In previous releases Ansible were used not only to configure cluster nodes OS and install K3S, but also to deploy Kubernetes applications in an imperative way, through the sequiential execution of installation/configuration commands (`helm install` and `kubectl apply -f`) contained in Ansible playbooks/roles and all helm chart values files and manifests needed to be applied in form of jinja2 templates.
 
-In this new release, deployment of Kuberentes applications is completely managed by [Argo CD](https://argo-cd.readthedocs.io/), being Git repository the single source of truth for helm charts configuration files and kubernetes manifest. Kubernetes applications keep synch with manifest files stored in Git repository, enabling the implementation of a Continuous Delivery (CD) pipeline.
+In this new release, deployment of Kubernetes applications is completely managed by [Argo CD](https://argo-cd.readthedocs.io/), being Git repository the single source of truth for helm charts configuration files and kubernetes manifest. Kubernetes applications keep synch with manifest files stored in Git repository, enabling the implementation of a Continuous Delivery (CD) pipeline.
 
 ![picluster-cicd-gitops-architecture](/assets/img/cicd-gitops-architecture.png)
 
 The automation source code has been completely refactored:
 - New packaged Kubernetes applications, in form of  helm charts or sets of manifest files, have been developed, so they can be deployed with ArgoCD.
 - Changes in Ansible automation code to automatically boot the cluster using ArgoCD
-- Remove old ansible code to deploy Kuberentes applications
+- Remove old ansible code to deploy Kubernetes applications
 
 Check further details about [ArgoCD installation and configuration](/docs/argocd/) in the documentation and the new [Quick Start Instructions](/docs/ansible/).
 
@@ -31,7 +31,7 @@ Related to the previous feature, a Secret Management tool has been integrated in
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used now as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) are securely encrypted and stored in Vault.
 
-Vault is deployed as a external service, not runing as Kuberentes application. [External Secrets Operator](https://external-secrets.io/) is used to automatically generate the Kubernetes Secrets from Vault data that Kubernetes applications could need.
+Vault is deployed as an external service, not running as a Kubernetes application. [External Secrets Operator](https://external-secrets.io/) is used to automatically generate the Kubernetes Secrets from Vault data that Kubernetes applications could need.
 
 ![picluster-secretsmanagement-architecture](/assets/img/vault-externalsecrets.png)
 
@@ -104,12 +104,12 @@ Apply GitOps methodology using ArgoCD to deploy and manage Kubernetes Applicatio
   - GitOps methodology
     - Argo CD deployment
     - New packaged Kubernetes applications (helm charts and manifest files) to be deployed using ArgoCD
-    - Automate cluster bootstraping with ArgoCD using Ansible
+    - Automate cluster bootstrapping with ArgoCD using Ansible
     - Ansible playbooks/roles/vars refactoring
   
   - Integrate Secrets Management solution
     - Hashicorp Vault deployment
-    - Kuberentes authorization mechanism integration
+    - Kubernetes authorization mechanism integration
     - External Secrets Operator deployment
 
   - Observability platform

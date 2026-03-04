@@ -104,7 +104,7 @@ flux create secret git flux-system \
 See command reference: https://fluxcd.io/flux/cmd/flux_create_secret_git/
 
 {{site.data.alerts.note}}
-See details about Github HTTP authentication in [Git documentation - Authenticating to the REST API](https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api)
+See details about GitHub HTTP authentication in [Git documentation - Authenticating to the REST API](https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api)
 
 {{site.data.alerts.end}}
 
@@ -177,7 +177,7 @@ Where:
 
 - `spec.sourceRef`: Reference to the GitRepository where the application is located
 - `spec.path`: Path within GitRepository where the kubernetes manifest files or the kustomize application is located.
-- `spec.targetNamespace`: namespace where all the kuberentes manifest files will be deployed.
+- `spec.targetNamespace`: namespace where all the kubernetes manifest files will be deployed.
 - `spec.interval`: specifies the interval at which the Kustomization runs a a server-side apply dry-run to detect and correct drift inside the cluster.
 - `spec.prune`: It enables/disables garbage collection for a Kustomization. See details in [Prune resources (Garbage Collection)](#prune-resources-garbage-collection)
 - `spec.dependsOn`: List of other Kustomization objects the application depends on. See details in [Dependencies](#dependencies)
@@ -426,7 +426,7 @@ Where:
 
 ### Disabling K3S Add-Ons
 
-To have the control of any kuberentes configuration deployed in the cluster, K3s add-ons need to be disabled
+To have the control of any kubernetes configuration deployed in the cluster, K3s add-ons need to be disabled
 
 By default K3s install a HelmChart controller and configure basic Kubernetes networking packages and 
 
@@ -464,7 +464,7 @@ flux -v
 ```
 Flux version should be printed.
 
-#### Flux Bootstrap for Github
+#### Flux Bootstrap for GitHub
 
 The [flux bootstrap github](https://fluxcd.io/flux/cmd/flux_bootstrap_github/) command deploys the Flux controllers on a Kubernetes cluster and configures the controllers to sync the cluster state from a GitHub repository. Besides installing the controllers, the bootstrap command pushes the Flux manifests to the GitHub repository and configures Flux to update itself from Git.
 
@@ -481,7 +481,7 @@ flux bootstrap github \
 ```
 
 ##### GitHub access requirements
-During bootstrapping process, `flux bootstrap` command need to access the Github repo and perform commits containing flux installation and bootstrapping manifest files. 
+During bootstrapping process, `flux bootstrap` command needs to access the GitHub repo and perform commits containing flux installation and bootstrapping manifest files.
 For accessing the GitHub REST API, the bootstrap command requires a GitHub Personal Access Token (PAT) with administration permissions.
 
 {{site.data.alerts.note}}
@@ -520,7 +520,7 @@ the following actions are taken:
 1. Flux installation and bootstrap cluster manifest files are committed to Git repo. The following files are created under `kubernetes/cluster/dev` folder (`path`parameter in bootstrap command)
 
 	- `flux-system/gotk-components.yaml`: YAML file containing flux instalaltion manifest files
-	- `flux-system/gotk-sync.yaml`: Containing *GitRepository* definition and initial *Kustomization* application bootstraping
+  - `flux-system/gotk-sync.yaml`: Containing *GitRepository* definition and initial *Kustomization* application bootstrapping
 
 		```yaml
 		---
@@ -820,7 +820,7 @@ The report is update at regular intervals and contains information about the dep
 📁 kubernetes
 ├── 📁 clusters                   # clusters configuration
 │   ├── 📁 bootstrap      # Bootstrap configuration files to apply before installed flux
-|   |    ├── helmfile.yaml # Deploy Kuberentes CNI, DNS, etc.
+|   |    ├── helmfile.yaml # Deploy Kubernetes CNI, DNS, etc.
 |   |    ├── 📁 vault      # Configure external Vault (external-secrets)
 │   ├── 📁 dev            # Dev cluster bootstrap files
 │   └── 📁 prod           # Prod cluster bootstrap files
@@ -1420,7 +1420,7 @@ When using Kube-Prometheus-Stack, add values to helm chart configuration defined
 
 #### Grafana Dashboards
 
-Flux provides 2 Grafana Dashboards to display metrics collected by Prometheus available at [Flux monitoring example Github repo](https://github.com/fluxcd/flux2-monitoring-example)
+Flux provides 2 Grafana Dashboards to display metrics collected by Prometheus available at [Flux monitoring example GitHub repo](https://github.com/fluxcd/flux2-monitoring-example)
 
 -   Control plane dashboard: [control-plane.json](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/configs/dashboards/control-plane.json)
 -   Cluster reconciliation dashboard: [cluster.json](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/configs/dashboards/cluster.json)

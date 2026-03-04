@@ -1,7 +1,7 @@
 ---
 title: Kubernetes commands
 permalink: /docs/k8s-commands/
-description: Reference of kubectl/helm commands for our Kuberentes Raspberry Pi Cluster
+description: Reference of kubectl/helm commands for our Kubernetes Raspberry Pi Cluster
 last_modified_at: "03-04-2022"
 ---
 
@@ -173,14 +173,14 @@ Based on procedure described [in this post](https://alysivji.github.io/helm-post
 
   {{site.data.alerts.note}}
   
-  Ansible does not support yet --post-rendering option to helm module. There is [open issue in kubernetes core asible collection](https://github.com/ansible-collections/kubernetes.core/issues/30) for providing this functionallity.
+  Ansible does not support yet --post-rendering option to helm module. There is [open issue in kubernetes core ansible collection](https://github.com/ansible-collections/kubernetes.core/issues/30) for providing this functionality.
 
   {{site.data.alerts.end}}
 
 
 ## Move pods from one node to another
 
-In case one pods need to be executed in other node, maybe because it is pushig the node to its limits in terms of resources and there is another node less used.
+In case one pod needs to be executed in another node, maybe because it is pushing the node to its limits in terms of resources and there is another node less used.
 
 The procedure is the following:
 

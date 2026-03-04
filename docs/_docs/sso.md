@@ -341,7 +341,7 @@ Follow previous steps described in [Alternative Installation using External Data
 
 There is no official helm chart maintained by the community to install Keycloak Operator
 
-It can be installed via manifest files which are in [keycloak/keycloak-k8s-resources](https://github.com/keycloak/keycloak-k8s-resources) Github repository:
+It can be installed via manifest files which are in [keycloak/keycloak-k8s-resources](https://github.com/keycloak/keycloak-k8s-resources) GitHub repository:
 
 The installation process is the following:
 
@@ -429,7 +429,7 @@ Keycloak operator supports deployment of Keycloak in HA with several nodes of a 
 
 The following creates a Keycloak server with the following options
 
--   Initial admin bootstraping (`bootstrapAdmin`) from an external secret
+-   Initial admin bootstrapping (`bootstrapAdmin`) from an external secret
 -   Enabling HTTP endpoint (`http.httpEnabled`) and not configuring HTTPs. Keycloak running behind HTTP Proxy closing TLS sessions (Ingress Controller)
 -   Disable creation of Ingress resource (`ingress.enabled`). Ingress resource created by operator cannot be completely configured (TLS certificate cannot be added) 
 -   Keyclaok cluster of two instances (`instances`)
@@ -781,7 +781,7 @@ Where `base/config` directory stores the keycloak configuration files in json fo
 
     The following environment variables are configured
 
-    -   `KEYCLOAK_URL`: Endpoint where keycloak service is accesible
+    -   `KEYCLOAK_URL`: Endpoint where keycloak service is accessible
     -   `IMPORT_VARSIBSTITUTION_ENABLED`: So variables defined within json configuration files can be substituted before importing the files
     -   `IMPORT_PATH`: Path where the config files to be imported are located. Pointing to ConfigMap mount point.
 
@@ -1037,7 +1037,7 @@ spec:
 
 #### Grafana dashboards
 
-Keycloak provides Grafana Dashboards to display metrics collected by Prometheus. They are available at [keycloak/keycloak-grafana-dashboard](https://github.com/keycloak/keycloak-grafana-dashboard) Github repo.
+Keycloak provides Grafana Dashboards to display metrics collected by Prometheus. They are available at [keycloak/keycloak-grafana-dashboard](https://github.com/keycloak/keycloak-grafana-dashboard) GitHub repo.
 
 
 There are 2 Dashboards available:
@@ -1047,7 +1047,7 @@ There are 2 Dashboards available:
 
 Find further details in [Keycloak documentation: Observability Grafana Dashboards](https://www.keycloak.org/observability/grafana-dashboards)
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file, so a Keycloak's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
 

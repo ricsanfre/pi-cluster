@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.11
+title:  Kubernetes Pi Cluster release v1.11
 date:   2025-08-28
 author: ricsanfre
 description: PiCluster News - announcing release v1.11
@@ -73,7 +73,7 @@ Add monitoring of all External Services (services running out-side the Kubernete
 -  Monitoring of cluster external services has been improved
     -  OS level metrics and logs of external nodes (`node1`) using Prometheus NodeExporter integrated with Kube-Prometheus-stack and Fluent-bit agent for collecting logs integrated with Fluentd service running in the Kubernetes cluster. Further details in [External Service Node - Observability](/docs/external/#observability)
     -  Monitoring of external services running in `node1`: 
-        -   Kuberentes API load balancer (HAProxy). Further details in [K3s Monitoring - HA Proxy](/docs/prometheus/#haproxy-metrics)
+        -   Kubernetes API load balancer (HAProxy). Further details in [K3s Monitoring - HA Proxy](/docs/prometheus/#haproxy-metrics)
         -   Secret Management solution (Vault). Further details in [Vault - Observability](/docs/vault/#observability)
         -   Bind9 DNS using Prometheus Bind Exporter. Further details in [DNS Homelab Architecture - Observability](/docs/dns/#observability)
     -  Monitoring of external services running in Cloud: Minio backup service. Further details in [Minio - Observability](/docs/s3-backup/#observability)

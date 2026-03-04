@@ -1,7 +1,7 @@
 ---
 title: Hardware
 permalink: /docs/hardware/
-description: Hardware components used to build our Pi Kuberentes cluster. Raspberry Pi different storage options benchmarking.
+description: Hardware components used to build our Pi Kubernetes cluster. Raspberry Pi different storage options benchmarking.
 last_modified_at: "10-06-2023"
 
 ---

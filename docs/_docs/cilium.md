@@ -194,7 +194,7 @@ Installation using `Helm` (Release 3):
   k8sServiceHost: 127.0.0.1
   k8sServicePort: 6444
   ```
-  This variables should point to Kuberentes API listening in a Virtual IP configured in `haproxy` (10.0.0.11) and port 6443.
+  This variables should point to Kubernetes API listening in a Virtual IP configured in `haproxy` (10.0.0.11) and port 6443.
   K3s has an API server proxy listening in 127.0.0.1:6444 on all nodes in the cluster, so it is not needed to point to external virtual IP address.
 
 
@@ -410,7 +410,7 @@ See further details in [Cilium LB IPAM documentation](https://docs.cilium.io/en/
 
 ## Cilium and ArgoCD
 
-ArgoCD automatic synchornization and pruning of resources might might delete some of the Resources automatically created by Cilium. This is a well-known behaviour of ArgoCD. Check ["Argocd installation"](/docs/argocd/) document.
+ArgoCD automatic synchronization and pruning of resources might delete some of the Resources automatically created by Cilium. This is a well-known behaviour of ArgoCD. Check ["Argocd installation"](/docs/argocd/) document.
 
 
 ArgoCD need to be configured to exclude the synchronization of  CiliumIdentity resources:

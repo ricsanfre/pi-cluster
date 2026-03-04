@@ -1,7 +1,7 @@
 ---
 title: Log Analytics (Elasticsearch and Kibana)
 permalink: /docs/elasticsearch/
-description: How to deploy Elasticsearch and Kibana in our Pi Kuberentes cluster.
+description: How to deploy Elasticsearch and Kibana in our Pi Kubernetes cluster.
 last_modified_at: "20-06-2025"
 
 ---
@@ -307,7 +307,7 @@ In addition to the `elastic` user we can also create an super user account for u
 
 ### Accesing Elasticsearch from outside the cluster
 
-By default Elasticsearh HTTP service is accesible through Kubernetes `ClusterIP` service types (only available within the cluster). To make it available outside the cluster Ingress NGINX can be configured to enable external communication with Elasicsearh server.
+By default Elasticsearh HTTP service is accessible through Kubernetes `ClusterIP` service types (only available within the cluster). To make it available outside the cluster Ingress NGINX can be configured to enable external communication with Elasicsearh server.
 
 This exposure will be useful for doing remote configurations on Elasticsearch through its API from `pimaster` node. For example: to configure backup snapshots.
 
@@ -428,7 +428,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   
 ### Ingress rule for Kibana
 
-Make accesible Kibana UI from outside the cluster through Ingress Controller
+Make accessible Kibana UI from outside the cluster through Ingress Controller
 
 - Step 1. Create the ingress rule manifest
   
@@ -688,7 +688,7 @@ Providing `serviceMonitor.enabled: true` to the helm chart `values.yaml` file, c
 
 Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-exporter repo](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 
