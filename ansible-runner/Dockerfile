@@ -1,4 +1,4 @@
-FROM ghcr.io/helmfile/helmfile:v1.3.2 AS helmfile
+FROM ghcr.io/helmfile/helmfile:v1.4.1 AS helmfile
 
 FROM python:slim
 RUN apt-get update -qq && \
