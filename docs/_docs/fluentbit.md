@@ -38,7 +38,7 @@ Fluent Bit is a lightweight and extensible log processor with full support for K
 -   Enrich logs with Kubernetes Metadata.
 -   Forward enriched logs to destination systems like Elasticsearch, Loki, Kafka, HTTP, etc.
 
-Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
+Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluentbit documentation on how to install it on Kubernetes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
 
 ## How does Fluent-bit work?
 
@@ -178,7 +178,7 @@ Fluentbit includes built-in CRI log parser.
 
 ### Kubernetes logs
 
-In K3S all kuberentes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file has to be parsed in order to collect logs from Kubernetes (K3S) processes.
+In K3S all kubernetes componentes (API server, scheduler, controller, kubelet, kube-proxy, etc.) are running within a single process (k3s). This process when running with `systemd` writes all its logs to  `/var/log/syslog` file. This file has to be parsed in order to collect logs from Kubernetes (K3S) processes.
 
 K3S logs can be also viewed with `journactl` command
 
@@ -1236,7 +1236,7 @@ The new value is used by the filter to lookup the pod name and namespace, for th
 ```
 (?<pod_name>[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-(?<docker_id>[a-z0-9]{64})\.log$
 ```
-See [regex used to extract information from tag in kuberentes filter code](https://github.com/fluent/fluent-bit/blob/master/plugins/filter_kubernetes/kube_regex.h#L25)
+See [regex used to extract information from tag in kubernetes filter code](https://github.com/fluent/fluent-bit/blob/master/plugins/filter_kubernetes/kube_regex.h#L25)
 
 
 ##### Extracting labels/annotations from Kube API
@@ -1245,7 +1245,7 @@ Through filter boolean keys `labels` (POD labels), `annotations` (POD annotation
 
 By default, Kube API is only used to get POD Id.
 
-`kube_url`, `kube_ca_file` and `kube_token_file` need to be provided to grant `fluent-bit` POD access to Kubernetes API. Default value of those keys are enough to make Fluent-bit work in Kuberentes when using Fluent-bit Helm Chart. Helm chart generates the corresponding Kubernetes `ServiceAccount` and `CluterRole` and `ClusterRoleBinding` resources with enough privileges.
+`kube_url`, `kube_ca_file` and `kube_token_file` need to be provided to grant `fluent-bit` POD access to Kubernetes API. Default value of those keys are enough to make Fluent-bit work in Kubernetes when using Fluent-bit Helm Chart. Helm chart generates the corresponding Kubernetes `ServiceAccount` and `ClusterRole` and `ClusterRoleBinding` resources with enough privileges.
 
 Daemonset deployment generates 
 
@@ -1253,7 +1253,7 @@ All kubernetes metadata is stored within the processed log as a `kubernetes` map
 
 {{site.data.alerts.important}} **About Buffer_Size when connecting to Kuberenetes API**
 
-Kuberentes filter's `buffer_size` default value is set to 32K which it is not enough for getting all metadata of some of the PODs. With default value, Kubernetes filter was not able to get metadata information for some of the PODs (i.e.: elasticsearh). Increasing its value to 512k makes it work.
+Kubernetes filter's `buffer_size` default value is set to 32K which it is not enough for getting all metadata of some of the PODs. With default value, Kubernetes filter was not able to get metadata information for some of the PODs (i.e.: elasticsearh). Increasing its value to 512k makes it work.
 
 {{site.data.alerts.end}}
 
@@ -1289,7 +1289,7 @@ Output sample record from this filter in json format
 Setting option `merge_log_on` to true makes Kubernetes filter to parse`log` field extracted by default by CRI parser used in `tail` plugin. A different field name can be especified with (`merge_log_key`)
 By default it applies a JSON parser to log field. If `k8s_logging_parser` is set to true, parser name to be used can be specified through Kuberenetes POD annotation (`fluentbit.io/parser`).
 
-See further detais in [Fluent-bit kuberentes filter documentation: Processing log value](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes#processing-the-log-value).
+See further details in [Fluent-bit kubernetes filter documentation: Processing log value](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes#processing-the-log-value).
 
 ###### Excluding logs from a POD (optional)
 
@@ -1393,7 +1393,7 @@ Output sample record from this filter in json format:
 
 #### Nest Filter
 
-Since we want to extract fields from kubernetes metadata and `modify` filter does not work properly renaming keys within maps, `nest` filter is used to take a map by key and lift its records up, so all metadata keys generated by `kubernetes` filter are transformed into `kuberentes_` keys:
+Since we want to extract fields from kubernetes metadata and `modify` filter does not work properly renaming keys within maps, `nest` filter is used to take a map by key and lift its records up, so all metadata keys generated by `kubernetes` filter are transformed into `kubernetes_` keys:
 
 This can be done with the filter:
 
@@ -1557,7 +1557,7 @@ env:
         name: fluent-bit-env-secret
         key: FLUENT_ELASTICSEARCH_PASSWORD
 ```
-Where elasticsearch user and password are stored in a Kuberentes Secret (user/password)
+Where elasticsearch user and password are stored in a Kubernetes Secret (user/password)
 
 
 {{site.data.alerts.important}}
@@ -1695,7 +1695,7 @@ env:
       fieldRef:
         fieldPath: spec.nodeName
 ```
-Where fluent shared key is stored in a Kuberentes Secret
+Where fluent shared key is stored in a Kubernetes Secret
 
 
 

@@ -1,7 +1,7 @@
 ---
 title: Ingress Controller (Traefik)
 permalink: /docs/traefik/
-description: How to configure Ingress Contoller based on Traefik in our Pi Kuberentes cluster.
+description: How to configure Ingress Controller based on Traefik in our Pi Kubernetes cluster.
 last_modified_at: "04-01-2024"
 ---
 
@@ -17,7 +17,7 @@ See alternative Ingress Controller solution documentation: ["Ingress Controller 
 {{site.data.alerts.end}}
 
 All HTTP/HTTPS traffic comming to K3S exposed services should be handled by an Ingress Controller.
-K3S default installation comes with Traefik HTTP reverse proxy which is a Kuberentes compliant Ingress Controller.
+K3S default installation comes with Traefik HTTP reverse proxy which is a Kubernetes compliant Ingress Controller.
 
 Traefik is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease. It simplifies networking complexity while designing, deploying, and running applications.
 
@@ -37,14 +37,14 @@ It also extends Kubernetes API defining new custom resource types (Kubernetes Cu
 - `Middleware` resources make possible tweaking the requests before they are sent backend service (or before the answer from the services are sent to the clients).
 
 See detailed information in Traefik's documentation:
-- [Traefik's Kuberentes Ingress](https://doc.traefik.io/traefik/providers/kubernetes-ingress/)
-- [Traefik's Kuberentes IngressRoute](https://doc.traefik.io/traefik/providers/kubernetes-crd/)
+- [Traefik's Kubernetes Ingress](https://doc.traefik.io/traefik/providers/kubernetes-ingress/)
+- [Traefik's Kubernetes IngressRoute](https://doc.traefik.io/traefik/providers/kubernetes-crd/)
 - [Traefik's Kubernetes Gateway API](https://doc.traefik.io/traefik/providers/kubernetes-gateway/)
 - [Traefik's Middelware](https://doc.traefik.io/traefik/middlewares/overview/)
 
 ## Configuring access to cluster services with Traefik
 
-Standard kuberentes resource, `Ingress`, or specific Traefik resource, `IngressRoute` can be used to configure the access to cluster services through HTTP proxy capabilities provide by Traefik.
+Standard kubernetes resource, `Ingress`, or specific Traefik resource, `IngressRoute` can be used to configure the access to cluster services through HTTP proxy capabilities provide by Traefik.
 
 Following instructions details how to configure access to cluster service using standard `Ingress` resources where Traefik configuration is specified using annotations.
 
@@ -134,7 +134,7 @@ spec:
 
 This middleware can be inserted into a Ingress resource using HTTP entrypoint
 
-Ingress resource annotation `traefik.ingress.kubernetes.io/router.entrypoints: web` indicates the use of HTTP as entrypoint and `traefik.ingress.kubernetes.io/router.middlewares:<middleware_namespace>-<middleware_name>@kuberentescrd` indicates to use a middleware when routing the requests.
+Ingress resource annotation `traefik.ingress.kubernetes.io/router.entrypoints: web` indicates the use of HTTP as entrypoint and `traefik.ingress.kubernetes.io/router.middlewares:<middleware_namespace>-<middleware_name>@kubernetescrd` indicates to use a middleware when routing the requests.
 
 
 ```yml
@@ -274,7 +274,7 @@ In some cases, like linkerd-viz, where basic auth midleware is used. Integration
 #### Configuring Ingress resource
 
 Add middleware annotation to Ingress resource referencing the basic auth middleware.
-Annotation `traefik.ingress.kubernetes.io/router.middlewares:<middleware_namespace>-<middleware_name>@kuberentescrd` indicates to use a middleware when routing the requests.
+Annotation `traefik.ingress.kubernetes.io/router.middlewares:<middleware_namespace>-<middleware_name>@kubernetescrd` indicates to use a middleware when routing the requests.
 
 ```yml
 ---
@@ -424,7 +424,7 @@ With this configuration ip 10.0.0.111 is assigned to Traefik proxy and so, for a
 
 ### Enabling cross-namespaces references in IngressRoute resources
 
-As alternative to standard `Ingress` kuberentes resources, Traefik's specific CRD, `IngressRoute` can be used to define access to cluster services. This CRD allows advanced routing configurations not possible to do with `Ingress` available Traefik's annotations.
+As alternative to standard `Ingress` kubernetes resources, Traefik's specific CRD, `IngressRoute` can be used to define access to cluster services. This CRD allows advanced routing configurations not possible to do with `Ingress` available Traefik's annotations.
 
 `IngressRoute` and `Ingress` resources only can reference other Traefik's resources, i.e: `Middleware` located in the same namespace.
 To change this, and allow `Ingress/IngressRoute` resources to access other resources defined in other namespaces, [`allowCrossNamespace`](https://doc.traefik.io/traefik/providers/kubernetes-crd/#allowcrossnamespace) Traefik helm chart value must be set to true.

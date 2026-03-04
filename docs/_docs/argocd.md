@@ -19,7 +19,7 @@ See alternative GitOps solution documentation: ["GitOps (FluxCD)"](/docs/fluxcd/
 
 [Argo CD](https://argo-cd.readthedocs.io/) is a declarative, GitOps continuous delivery tool for Kubernetes.
 
-It can be integrated with Git repositories, and used jointly with CI tools, like [Jenkins](https://www.jenkins.io/) or [Github-actions](https://docs.github.com/en/actions) to define end-to-end CI/CD pipeline to automatically build and deploy applications in Kubernetes.
+It can be integrated with Git repositories, and used jointly with CI tools, like [Jenkins](https://www.jenkins.io/) or [GitHub Actions](https://docs.github.com/en/actions) to define end-to-end CI/CD pipeline to automatically build and deploy applications in Kubernetes.
 
 ![picluster-cicd-gitops-architecture](/assets/img/cicd-gitops-architecture.png)
 
@@ -179,9 +179,9 @@ See more details in [Argo-CD Ingress configuration doc](https://argo-cd.readthed
 
 ### Exclude synchronization of resources
 
-Using automatic synchornization and pruning of resources might cause side effects with some of the kubernetes resources that are not created by ArgoCD.
+Using automatic synchronization and pruning of resources might cause side effects with some of the kubernetes resources that are not created by ArgoCD.
 
-See an example of this wrong behavior in [issue #273](https://github.com/ricsanfre/pi-cluster/issues/273). ArgoCD auto-synch policy is pruning VolumeSnapshot and VolumeSnapshotContent resources that are created automatically by backup process, making backup process to fail.
+See an example of this wrong behavior in [issue #273](https://github.com/ricsanfre/pi-cluster/issues/273). ArgoCD auto-sync policy is pruning VolumeSnapshot and VolumeSnapshotContent resources that are created automatically by backup process, making backup process to fail.
 
 The way to solve this issue is to make ArgoCD to ignore the VolumeSnapshot and VolumeSnapshotContent resources during the synchronization process.
 
@@ -248,7 +248,7 @@ Different types of applications will be needed for the Pi Cluster
 
   Where:
   - `destination.namespace`: namespace to deploy the application
-  - `destination.server`: cluster to deploy the application (`https://kuberentes.default.svc` indicates local cluster)
+  - `destination.server`: cluster to deploy the application (`https://kubernetes.default.svc` indicates local cluster)
   - `source.repoURL` is the URL of the Git Repository
   - `sourcepath` is the path within the Git repository where the application is located
   - `source.targetRevision` is the Git tag, branch or commit to track
@@ -540,9 +540,9 @@ ArgoCD, is processing helm hooks annotated resources, and translate them into Ar
 {{site.data.alerts.end}}
 
 
-## Bootstraping the cluster using App of Apps pattern
+## Bootstrapping the cluster using App of Apps pattern
 
-For bootstraping the cluster [app of apps pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/) can be used. The App-of-Apps design is basically an Argo CD Application made up of other Argo CD Applications.
+For bootstrapping the cluster [app of apps pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/) can be used. The App-of-Apps design is basically an Argo CD Application made up of other Argo CD Applications.
 
 It consist of a ArgoCD application, (root application) containing a set of Application manifest files.
 
@@ -770,12 +770,12 @@ The Git repo structure containing all application manifest files is the followin
 ```shell
 kubernetes
 ├── apps # end user applications
-├── bootstrap # cluster bootstraping
+├── bootstrap # cluster bootstrapping
 │   ├── apps # argo-cd end-user applications (end-user Application resources)
-│   ├── argocd #  argoc-cd bootstraping (root-app app of apps definition)
+│   ├── argocd #  argoc-cd bootstrapping (root-app app of apps definition)
 │   ├── infra # argo-cd infraestructure apps (infrastructure Application resources).
 │   ├── root-app # argo-cd root application (infra and apps manifest files)
-│   └── vault # vault bootstraping manifest files
+│   └── vault # vault bootstrapping manifest files
 └── infrastructure # infrastructure applications
 ```
 {{site.data.alerts.tip}}

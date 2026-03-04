@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.8
+title:  Kubernetes Pi Cluster release v1.8
 date:   2024-01-04
 author: ricsanfre
 description: PiCluster News - announcing release v1.8
@@ -39,7 +39,7 @@ Migrate Ingress Controller, from Traefik to NGINX.
 Main reasons for this migration:
 
 - Use a more mature ingress controller with a broader installation base, so you could find easily how to configure it in almost any use case. As an example, I found some difficulties integrating Traefik with other components like Oauth2-proxy.
-- More portable configuration in case of future migration to another Ingress Controller. Use of standard Kuberentes resources, avoiding the use of Traefik's custom resoures (Middleware, IngressRoute, etc.), that are required whenever you need to implement a more complex configuration. 
+- More portable configuration in case of future migration to another Ingress Controller. Use of standard Kubernetes resources, avoiding the use of Traefik's custom resoures (Middleware, IngressRoute, etc.), that are required whenever you need to implement a more complex configuration. 
 
 
 All packaged applications are updated to use NGINX ingress controller instead of Traefik.

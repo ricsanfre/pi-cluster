@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.3
+title:  Kubernetes Pi Cluster release v1.3
 date:   2022-04-5
 author: ricsanfre
 description: PiCluster News - announcing release v1.3
@@ -67,7 +67,7 @@ Initial complete release. First cluster hardware architecture using USB Flash-dr
 
 #### Release Scope:
 
-- Kuberentes K3S deployment on Raspeberry-PI 4 based nodes
+- Kubernetes K3S deployment on Raspberry-Pi 4 based nodes
 - Centralized Storage Architecture using iSCSI SAN server.
 - Configuration of basic Kubernetes services
   - Traefik as Ingress Controller

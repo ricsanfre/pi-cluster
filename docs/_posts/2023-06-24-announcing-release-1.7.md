@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.7
+title:  Kubernetes Pi Cluster release v1.7
 date:   2023-06-24
 author: ricsanfre
 description: PiCluster News - announcing release v1.7
@@ -16,7 +16,7 @@ Main features/enhancements of this release are:
 
 Adding support for hybrid x86/ARM bare metal nodes, combining in the same cluster Raspberry PI nodes (ARM) and x86 mini PCs (HP Elitedesk 800 G3).
 
-Initially the intent of this project was to build a kuberentes cluster using only Raspberry PI nodes. Due to Raspberry shortage during last 2 years, which makes impossible to buy them at reasonable prices, I have decided to look for alternatives to be able to scale up my cluster.
+Initially the intent of this project was to build a kubernetes cluster using only Raspberry PI nodes. Due to Raspberry shortage during last 2 years, which makes impossible to buy them at reasonable prices, I have decided to look for alternatives to be able to scale up my cluster.
 
 Use old x86 refurbished mini PCs, with Intel i5 processors, has been the solution. These mini PCs provide similar performance to RaspberryPi's Quadcore ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
 
@@ -56,9 +56,9 @@ k3s software version upgrade automated using Rancher's system-upgrade-controller
 
 ArgoCD packaged application has been created to deploy system-upgrade-controller app and to generate upgrade plans. Just modifiying a couple of files in the github repository, K3s can be upgraded automatically.
 
-## New Kuberentes S3 Storage service based on Minio
+## New Kubernetes S3 Storage service based on Minio
 
-Deploy Minio as Kuberentes service, so it can be used as common long-term backend for Grafana's observability stack (Loki, Tempo and in the future Mimir).
+Deploy Minio as Kubernetes service, so it can be used as common long-term backend for Grafana's observability stack (Loki, Tempo and in the future Mimir).
 Previous Minio service, cluster external service, is maintained only as backend of the backup solution and it has been redeployed as a cluster offsite service, running in OCI (Oracle Cloud Infrastructure)
 
 Implementation details:

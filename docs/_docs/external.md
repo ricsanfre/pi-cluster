@@ -5,7 +5,7 @@ description: How to configure a Raspberry Pi to host external services needed in
 last_modified_at: "01-03-2026"
 ---
 
-One of the Raspeberry Pi (4GB), `node1`, is used to run external services like authoritative DNS, PXE Server, Vault or external Kuberentes API Load Balancer (HA Proxy).
+One of the Raspberry Pi (4GB), `node1`, is used to run external services like authoritative DNS, PXE Server, Vault or external Kubernetes API Load Balancer (HA Proxy).
 
 This Raspberry Pi (gateway), is connected to my home network using its WIFI interface (wlan0) and to the LAN Switch using the eth interface (eth0).
 
@@ -175,7 +175,7 @@ Node Exporter installation and configuration can be automated with Ansible. Ansi
 
 #### Integration with Kube-Prom-Stack
 
-In case Prometheus server is deployed in Kuberentes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
+In case Prometheus server is deployed in Kubernetes cluster using kube-prometheus-stack (i.e Prometheus Operator), Prometheus Operator CRD `ScrapeConfig` resource can be used to automatically add configuration for scrapping metrics from node exporter.
 
 
 -   Create Prometheus Operator ScrapeConfig resources
@@ -203,7 +203,7 @@ In case Prometheus server is deployed in Kuberentes cluster using kube-prometheu
 
 Node Exporter dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 1860](https://grafana.com/grafana/dashboards/1860).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 

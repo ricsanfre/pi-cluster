@@ -1,7 +1,7 @@
 ---
 title: Observability Visualization (Grafana)
 permalink: /docs/grafana/
-description: How to deploy Grafana as Observability Visualization tool in our Pi Kuberentes cluster.
+description: How to deploy Grafana as Observability Visualization tool in our Pi Kubernetes cluster.
 last_modified_at: "20-06-2025"
 ---
 

@@ -24,7 +24,7 @@ A distributed block storage is needed to handle this issue. With distributed blo
 
 LongHorn requires that `open-iscsi` package has been installed on all the nodes of the Kubernetes cluster, and `iscsid` daemon is running on all the nodes.[^3]
 
-Longhorn uses internally iSCSI to expose the block device presented by the Longhorn volume to the kuberentes pods. So the iSCSI initiator need to be setup on each node. Longhorn, acting as iSCSI Target, exposes Longhorn Volumes that are discovered by the iSCSI Initiator running on the node as `/dev/longhorn/` block devices. For implementation details see [Longhorn engine document](https://github.com/longhorn/longhorn-engine).
+Longhorn uses internally iSCSI to expose the block device presented by the Longhorn volume to the kubernetes pods. So the iSCSI initiator need to be setup on each node. Longhorn, acting as iSCSI Target, exposes Longhorn Volumes that are discovered by the iSCSI Initiator running on the node as `/dev/longhorn/` block devices. For implementation details see [Longhorn engine document](https://github.com/longhorn/longhorn-engine).
 
 ![longhorn](https://github.com/longhorn/longhorn-engine/raw/master/overview.png)
 
@@ -440,7 +440,7 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 
 #### Configure Longhorn backup target
 
--   Create kuberentes `Secret` resource containing Minio end-point access information and credentials: `longhorn-minio-secret.yml`
+-   Create kubernetes `Secret` resource containing Minio end-point access information and credentials: `longhorn-minio-secret.yml`
 
     ```yaml
     apiVersion: v1
@@ -688,7 +688,7 @@ metrics:
 
 Longhorn dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 13032](https://grafana.com/grafana/dashboards/13032).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dasbhoards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
+Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
 
 Add following configuration to Grafana's helm chart values file:
 

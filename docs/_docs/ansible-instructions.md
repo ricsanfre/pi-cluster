@@ -1,13 +1,13 @@
 ---
 title: Quick Start Instructions
 permalink: /docs/ansible/
-description: Quick Start guide to deploy our Raspberry Pi Kuberentes Cluster using cloud-init, ansible playbooks and FluxCD
+description: Quick Start guide to deploy our Raspberry Pi Kubernetes Cluster using cloud-init, ansible playbooks and FluxCD
 last_modified_at: "01-03-2026"
 ---
 
-This are the instructions to quickly deploy Kuberentes Pi-cluster using the following tools:
+These are the instructions to quickly deploy Kubernetes Pi-cluster using the following tools:
 - [cloud-init](https://cloudinit.readthedocs.io/en/latest/): to automate initial OS installation/configuration on each node of the cluster
-- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes,  install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vautl) install K3S, and bootstraping cluster through installation and configuration of FluxCD
+- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes, install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vault), install K3S, and bootstrap the cluster through installation and configuration of FluxCD
 - [Flux CD](https://fluxcd.io/): to automatically deploy Applications to Kuberenetes cluster from manifest files in Git repository.
 
 {{site.data.alerts.note}}
@@ -18,7 +18,7 @@ Step-by-step manual process to deploy and configure each component is also descr
 
 ## Ansible control node setup
 
-- Use your own Linux-based PC or set-up a Ubuntu Server VM to become ansible control node (`pimaster`)
+- Use your own Linux-based PC or set up an Ubuntu Server VM to become ansible control node (`pimaster`)
 
   In case of building a VM check out tip for automating its creation in ["Ansible Control Node"](/docs/pimaster/).
 
@@ -135,7 +135,7 @@ As an alternative, a private repository can be used.
 
 - Modify Ansible variable `git_private_repo` to true in `/ansible/group_vars/all.yml` file
 
-During Vault credentials generation process, see below, Github PAT will be required
+During Vault credentials generation process, see below, GitHub PAT will be required
 
 {{site.data.alerts.end}}
 

@@ -1,7 +1,7 @@
 ---
 title: Log collection and distribution (Fluentbit/Fluentd)
 permalink: /docs/logging-forwarder-aggregator/
-description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kuberentes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
+description: How to deploy logging collection, aggregation and distribution in our Raspberry Pi Kubernetes cluster. Deploy a forwarder/aggregator architecture using Fluentbit and Fluentd. Logs are routed to Elasticsearch and Loki, so log analysis can be done using Kibana and Grafana.
 last_modified_at: "18-09-2024"
 
 ---
@@ -40,7 +40,7 @@ In this deployment fluentbit is installed as forwarder (plugins available are en
 
 Fluentd is deploy as log aggregator, collecting all logs forwarded by Fluentbit agent and using ES as backend for routing all logs.
 
-Fluentd will be deployed as Kubernetes Deployment (not a daemonset), enabling multiple PODs service replicas, so it can be accesible by Fluentbit pods.
+Fluentd will be deployed as Kubernetes Deployment (not a daemonset), enabling multiple PODs service replicas, so it can be accessible by Fluentbit pods.
 
 ### Customized fluentd image
 
@@ -54,7 +54,7 @@ Since in the future I might configure the aggregator to dispath logs to another 
 
 [fluentd-kubernetes-daemonset images](https://github.com/fluent/fluentd-kubernetes-daemonset) should work for deploying fluentd as Deployment. For outputing to the ES you just need to select the adequate [fluentd-kubernetes-daemonset image tag](https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags).
 
-As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator github repository](https://github.com/ricsanfre/fluentd-aggregator).
+As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator GitHub repository](https://github.com/ricsanfre/fluentd-aggregator).
 The multi-architecture (amd64/arm64) image is available in docker hub:
 
 - `ricsanfre/fluentd-aggregator:v1.17.1-debian-1.0`
@@ -1260,7 +1260,7 @@ Storing logs from different applications in different indexes is an alternative 
 
 ## Fluentbit Forwarder installation
 
-Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluenbit documentation on how to install it on Kuberentes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
+Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluentbit documentation on how to install it on Kubernetes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
 
 For speed-up the installation there is available a [helm chart](https://github.com/fluent/helm-charts/tree/main/charts/fluent-bit). Fluentbit config file can be build probiding the proper helm chart values.
 
@@ -1690,12 +1690,12 @@ The file content has the following sections:
 
     Parsing log tag information (obtaining pod_name, container_name, container_id namespace) and querying the Kube API (obtaining pod_id, pod labels and annotations).
 
-    See [Fluent-bit kuberentes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).    Kubernetes labels are included in the enrichment process but annotations are not (`Annotations Off` and `Labels On`)
+    See [Fluent-bit kubernetes filter documentation](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes).    Kubernetes labels are included in the enrichment process but annotations are not (`Annotations Off` and `Labels On`)
     All kubernetes metadata is stored within the processed log as a `kubernetes` map.
 
     {{site.data.alerts.important}} **About Buffer_Size when connecting to Kuberenetes API**
 
-    Kuberentes filter's `Buffer_Size` default value is set to 32K which it is not enough for getting data of some of the PODs. With default value, Kubernetes filter was not able to get metadata information for some of the PODs (i.e.: elasticsearh). Increasing its value to 512k makes it work.
+    Kubernetes filter's `Buffer_Size` default value is set to 32K which it is not enough for getting data of some of the PODs. With default value, Kubernetes filter was not able to get metadata information for some of the PODs (i.e.: elasticsearh). Increasing its value to 512k makes it work.
 
     {{site.data.alerts.end}}
 
@@ -1703,7 +1703,7 @@ The file content has the following sections:
 
     It needs to be enabled (`Merge_Log On`), and, by default it applies a JSON parser to log content. Using specific Kuberenetes POD annotations (`fluentbit.io/parser`, a specific parser for `log` field can be specified at POD and container level (This annotation mechanism need to be activated (`K8sS_Logging.Parser On`).
 
-    See [Fluent-bit kuberentes filter documentation: Processing log value](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes#processing-the-log-value).
+    See [Fluent-bit kubernetes filter documentation: Processing log value](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes#processing-the-log-value).
 
     Parsed log field will be added to the processed log as a `log_processed` map (`Merge_Log_Key`).
 
@@ -1887,7 +1887,7 @@ where 10.42.2.28 is the IP of fluentbit POD (one of them)
 
 {{site.data.alerts.note}}
 
-To do troubleshooting of APIs with curl command in kuberentes a utility POD can be deployed. In this case [ricsanfre/docker-curl-jq](https://github.com/ricsanfre/docker-curl-jq) docker image is used (simple alpine image containing bash, curl and jq)
+To do troubleshooting of APIs with curl command in kubernetes a utility POD can be deployed. In this case [ricsanfre/docker-curl-jq](https://github.com/ricsanfre/docker-curl-jq) docker image is used (simple alpine image containing bash, curl and jq)
 
 It can deployed with command:
 

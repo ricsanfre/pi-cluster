@@ -6,7 +6,7 @@ last_modified_at: "24-04-2024"
 ---
 
 
-Distributed tracing solution for Kuberentes cluster is based on [Grafana Tempo](https://grafana.com/oss/tempo/).
+Distributed tracing solution for Kubernetes cluster is based on [Grafana Tempo](https://grafana.com/oss/tempo/).
 
 ![tracing-architecture](/assets/img/tracing-architecture.png)
 

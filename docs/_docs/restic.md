@@ -81,7 +81,7 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 
 ### Binary installation
 
-Ubuntu has as part of its distribution a `restic` package that can be installed with `apt` command. restic version is an old one, so it is better to install the latest version binary from github repository.
+Ubuntu has as part of its distribution a `restic` package that can be installed with `apt` command. restic version is an old one, so it is better to install the latest version binary from GitHub repository.
 
 
 -   Step 1. Download and install binary
@@ -121,13 +121,13 @@ Ubuntu has as part of its distribution a `restic` package that can be installed 
     -   `${MINIO_SERVER}` FQDN of the Minio Server
     -   `${RESTIC_REPOSITORY_PASSWORD}`: repository password to initialize and access the restic repository
 
--   Step 3: Export as enviroment variables, the content of the file
+-   Step 3: Export as environment variables, the content of the file
 
     ```shell
     export $(grep -v '^#' /etc/restic/restic.conf | xargs -d '\n')
     ```  
     {{site.data.alerts.important}}
-    This command need to be executed with any new SSH shell connection to the server before executing any `restic` command. As an alternative that command can be added to the bash profile of the user.
+    This command needs to be executed with any new SSH shell connection to the server before executing any `restic` command. As an alternative that command can be added to the bash profile of the user.
     {{site.data.alerts.end}}
 
 ### Copy CA SSL certificates

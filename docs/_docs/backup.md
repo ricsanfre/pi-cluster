@@ -30,7 +30,7 @@ The backup architecture for the Kubernetes cluster is the following:
 
   Velero can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports opensource S3 [Minio](https://min.io). 
 
-  Since Velero is a most generic way to backup any Kuberentes cluster (not just K3S) it will be used to implement my cluster K3S backup.
+  Since Velero is a most generic way to backup any Kubernetes cluster (not just K3S) it will be used to implement my cluster K3S backup.
 
 - PODs Persistent Volumes backup and restore.
 
@@ -166,8 +166,8 @@ See more details in [Velero plugin for aws](https://github.com/vmware-tanzu/vele
 
 ## Velero Installation
 
-Velero defines a set of Kuberentes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
-Velero also provides a CLI to execute backup/restore commands using Kuberentes API. More details in official documentation, [How Velero works](https://velero.io/docs/latest/how-velero-works/)
+Velero defines a set of Kubernetes' CRDs (Custom Resource Definition) and Controllers that process those CRDs to perform backups and restores.
+Velero also provides a CLI to execute backup/restore commands using Kubernetes API. More details in official documentation, [How Velero works](https://velero.io/docs/latest/how-velero-works/)
 
 The complete backup workflow is the following:
 
@@ -178,7 +178,7 @@ As storage provider, Minio will be used. See [Velero's installation documentatio
 
 ### Velero CLI
 
-Before installin Velero CLI, `kubectl` has to be installed. `velero` uses kubectl config file (`~/.kube/config`) to connect to Kuberentes API.
+Before installing Velero CLI, `kubectl` has to be installed. `velero` uses kubectl config file (`~/.kube/config`) to connect to Kubernetes API.
 
 {{site.data.alerts.important}} k3s config file is located in `/etc/rancher/k3s/k3s.yaml` and it need to be copied into `$HOME/kube/config` in the server where `kubectl` and `velero` is going to be executed.
 {{site.data.alerts.end}}

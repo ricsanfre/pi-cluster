@@ -1,7 +1,7 @@
 ---
 title: Lab Architecture
 permalink: /docs/architecture/
-description: Homelab architecture of our Pi Kuberentes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
+description: Homelab architecture of our Pi Kubernetes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
 last_modified_at: "07-12-2024"
 ---
 
@@ -88,7 +88,7 @@ For building the cluster, using bare metal servers instead of virtual machines, 
 
 {{site.data.alerts.note}}
 
-Initially the intent of this project was to build a kuberentes cluster using only Raspberry PI nodes. Due to Raspberry shortage happened during 2021-2023 period, which made impossible to buy them at reasonable prices, I decided to look for alternatives to be able to scale up my cluster.
+Initially the intent of this project was to build a kubernetes cluster using only Raspberry PI nodes. Due to Raspberry shortage happened during 2021-2023 period, which made impossible to buy them at reasonable prices, I decided to look for alternatives to be able to scale up my cluster.
 
 Use old x86 refurbished mini PCs, with Intel i5 processors, was the solution. These mini PCs provide similar performance to RaspberryPi 4B's Quadcore ARM Cortex-A72, but its memory can be expanded up to 32GB of RAM (Raspberry PI 4B higher model only supports 8GB RAM). As a drawback power consumption of those mini PCs are higher that Raspberry PIs.
 

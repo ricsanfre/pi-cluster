@@ -1,7 +1,7 @@
 ---
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
-description: How to deploy Grafana Loki in our Raspberry Pi Kuberentes cluster.
+description: How to deploy Grafana Loki in our Raspberry Pi Kubernetes cluster.
 last_modified_at: "26-06-2025"
 
 ---

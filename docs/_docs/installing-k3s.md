@@ -1,7 +1,7 @@
 ---
 title: K3S Installation
 permalink: /docs/k3s-installation/
-description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kuberentes cluster. Single master node and high availability deployment can be used.
+description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kubernetes cluster. Single master node and high availability deployment can be used.
 last_modified_at: "15-08-2025"
 ---
 
@@ -13,7 +13,7 @@ K3S is a lightweight kubernetes built for IoT and edge computing, provided by th
 In K3S all kubernetes processes are consolidated within one single binary. The binary is deployed on servers with two different k3s roles (k3s-server or k3s-agent).
 
 - k3s-server: starts all kubernetes control plane processes (API, Scheduler and Controller) and worker proceses (Kubelet and kube-proxy), so master node can be used also as worker node.
-- k3s-agent: consolidating all kuberentes worker processes (Kubelet and kube-proxy).
+- k3s-agent: consolidating all kubernetes worker processes (Kubelet and kube-proxy).
 
 Control-plane nodes will be configured so no load is deployed in it.
 
@@ -78,9 +78,9 @@ In this configuration, each agent node is registered to the same server node. A 
   shutdownGracePeriodCriticalPods: 10s
   ```
 
-  This kubelet configuration enables new kubernetes feature [Graceful node shutdown](https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/). This feature is available since Kuberentes 1.21, it is still in beta status, and it ensures that pods follow the normal [pod termination process](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) during the node shutdown.
+  This kubelet configuration enables new kubernetes feature [Graceful node shutdown](https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/). This feature is available since Kubernetes 1.21, it is still in beta status, and it ensures that pods follow the normal [pod termination process](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) during the node shutdown.
 
-  See further details in ["Kuberentes documentation: Graceful-shutdown"](https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown).
+  See further details in ["Kubernetes documentation: Graceful-shutdown"](https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown).
 
 
   {{site.data.alerts.note}}

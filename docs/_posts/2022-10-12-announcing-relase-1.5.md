@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Kubernetes Pi Cluster relase v1.5
+title:  Kubernetes Pi Cluster release v1.5
 date:   2022-10-12
 author: ricsanfre
 description: PiCluster News - announcing release v1.5
@@ -32,7 +32,7 @@ Enabling within K3S cluster the new Kubernetes CSI feature: [Volume Snapshots](h
 
 CSI  Snapshot feature is supported by Longhorn and Velero. See Longhorn documentation: [CSI Snapshot Support](https://longhorn.io/docs/1.2.2/snapshots-and-backups/csi-snapshot-support/create-a-backup-via-csi/) and [Velero CSI Snapshots documentation](https://velero.io/docs/v1.9/csi/).
 
-K3S currently does not come with a preintegrated Snapshot Controller, needed to enable CSI Snapshot functionallity. An [external snapshot controller](https://github.com/kubernetes-csi/external-snapshotter) has been deployed.
+K3S currently does not come with a preintegrated Snapshot Controller, needed to enable CSI Snapshot functionality. An [external snapshot controller](https://github.com/kubernetes-csi/external-snapshotter) has been deployed.
 
 ## Prometheus memory footprint optimization
 
