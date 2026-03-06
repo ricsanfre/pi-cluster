@@ -2,7 +2,7 @@
 - name: Stage 1 - Destroy MinIO Terraform resources
   hosts: localhost
   gather_facts: false
-  tags: [terraform, s3]
+  tags: [terraform, s3, stage1]
   vars:
     terraform_minio_dir: "../terraform/minio"
     terraform_minio_state_dir: "{{ terraform_minio_dir }}/.terraform"
@@ -134,7 +134,7 @@
   hosts: s3
   become: true
   gather_facts: false
-  tags: [s3]
+  tags: [s3, stage2]
   tasks:
     - name: Stage 2 banner
       ansible.builtin.debug:
@@ -165,7 +165,7 @@
 - name: Stage 3 - Destroy Vault Terraform resources
   hosts: localhost
   gather_facts: false
-  tags: [terraform, vault]
+  tags: [terraform, vault, stage3]
   vars:
     terraform_vault_dir: "../terraform/vault"
     terraform_vault_state_dir: "{{ terraform_vault_dir }}/.terraform"
@@ -276,7 +276,7 @@
   hosts: vault
   become: true
   gather_facts: false
-  tags: [vault]
+  tags: [vault, stage4]
   tasks:
     - name: Stage 4 banner
       ansible.builtin.debug:
@@ -311,7 +311,7 @@
   hosts: picluster
   become: true
   gather_facts: false
-  tags: [restic]
+  tags: [restic, stage5]
   tasks:
     - name: Stage 5 banner
       ansible.builtin.debug:
