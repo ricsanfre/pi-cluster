@@ -7,7 +7,8 @@ last_modified_at: "01-03-2026"
 
 These are the instructions to quickly deploy Kubernetes Pi-cluster using the following tools:
 - [cloud-init](https://cloudinit.readthedocs.io/en/latest/): to automate initial OS installation/configuration on each node of the cluster
-- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes, install and configure external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vault), install K3S, and bootstrap the cluster through installation and configuration of FluxCD
+- [Ansible](https://docs.ansible.com/): to automatically configure cluster nodes, and orchestrate the installation and configuration, via Terraform, of external services (DNS, DHCP, Firewall, S3 Storage server, Hashicorp Vault),  K3S, and bootstrapping the cluster through installation and configuration of FluxCD
+- Terraform/[OpenTofu](https://opentofu.io/): to configure external servies like Hashicorp Vault and MinIO S3 server.
 - [Flux CD](https://fluxcd.io/): to automatically deploy Applications to Kuberenetes cluster from manifest files in Git repository.
 
 {{site.data.alerts.note}}
@@ -38,7 +39,7 @@ Step-by-step manual process to deploy and configure each component is also descr
   make ansible-runner-setup
   ```
 
-  This will automatically build and start `ansible-runner` docker container (including all packages and its dependencies), generate GPG key for encrypting with ansible-vault and create SSH key for remote connections.
+  This will automatically build and start `ansible-runner` docker container (including all packages and its dependencies), create SSH key for remote connections if not already created (`~/.ssh/id_rsa`), and create local directories for Ansible inventory, playbooks, and other configuration files.
 
 
 ## Ansible configuration
@@ -73,7 +74,7 @@ Modify [`ansible/group_vars/all.yml`]({{ site.git_edit_address }}/ansible/group_
   ansible_ssh_private_key_file: ~/.ssh/id_rsa
   ```
 
-By default it uses the ssh key automatically created when initializing ansible-runner (`make ansible-runner-setup`) located at `ansible-runner/runner/.ssh` directory.
+By default it uses the ssh key automatically created when initializing ansible-runner (`make ansible-runner-setup`) located at `~/.ssh` directory.
 
 
 ### Modify Ansible Playbook variables
@@ -99,21 +100,6 @@ The following table shows the variable files used for configuring K3S cluster an
 | [ansible/vars/picluster.yml]({{ site.git_edit_address }}/ansible/vars/picluster.yml) | K3S cluster and external services configuration variables. Credentials are fetched on-demand from Vault during deployment. |
 {: .table .border-dark }
 
-
-{{site.data.alerts.important}}: **About Raspberry PI storage configuration**
-
-Ansible Playbook used for doing the basic OS configuration (`setup_picluster.yml`) configures storage with **Dedicated Disks** architecture where each cluster node (`node1-6`) has a SSD disk attached that is partitioned during server first boot (part of the cloud-init configuration) reserving 30Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`.
-
-Final `node1-6` disk configuration is:
-
-  - /dev/sda1: Boot partition
-  - /dev/sda2: Root filesystem
-  - /dev/sda3: /storage (linux partition)
-  
-  <br>
-  /dev/sda3 partition is created during first boot, formatted (ext4) and mounted as '/storage'. This local storage is used with Longhorn for persistent volumes and Velero for cluster backups.
-
-{{site.data.alerts.end}}
 
 {{site.data.alerts.important}}: **About TLS Certificates configuration**
 
@@ -195,6 +181,21 @@ Before applying the cloud-init files of the table above, remember to change the 
 
 {{site.data.alerts.end}}
 
+{{site.data.alerts.important}}: **About Raspberry PI storage configuration**
+
+`node1` has a SSD disk attached that is partitioned during server first boot (part of the cloud-init configuration) reserving 50Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`.
+
+Final `node1` disk configuration is:
+
+  - /dev/sda1: Boot partition
+  - /dev/sda2: Root filesystem
+  - /dev/sda3: /storage (linux partition)
+  
+  <br>
+  /dev/sda3 partition is created during first boot, formatted (ext4) and mounted as '/storage'. This local storage is used with Longhorn for persistent volumes and Velero for cluster backups.
+
+{{site.data.alerts.end}}
+
 #### Configure external-services node
 
 For automatically execute basic OS setup tasks and configuration of `node1`'s services (DNS, PXE Server, etc.), execute the command:
@@ -214,15 +215,9 @@ Install Operating System on Raspberry Pi nodes `node2-6`
 Follow the installation procedure indicated in ["Ubuntu OS Installation"](/docs/ubuntu/rpi/) using the corresponding cloud-init configuration files (`user-data` and `network-config`). IP addresses are assigned statically through node-specific `network-config` files.
 
 
-| user-data |
-|---------- |
-| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) |
-{: .table .border-dark }
-
-
-| Network configuration |
-|---------------------- |
-| [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/network-config) |
+| User-Data Configuration | Network configuration |
+|-------|
+| [user-data]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/user-data-SSD-partition) | [network-config]({{ site.git_edit_address }}/metal/rpi/cloud-init/nodes/network-config) |
 {: .table .border-dark }
 
 
@@ -238,6 +233,21 @@ Before applying the cloud-init files of the table above, remember to change the 
   - UNIX privileged user, `ricsanfre`, can be changed.
   - `ssh_authorized_keys` field for default user (`ricsanfre`). Your own ssh public keys, created during `pimaster` control node preparation, must be included.
   - `timezone` and `locale` can be changed as well to fit your environment.
+
+{{site.data.alerts.end}}
+
+{{site.data.alerts.important}}: **About Raspberry PI storage configuration**
+
+`node2-6` have a SSD disk attached that is partitioned during server first boot (part of the cloud-init configuration) reserving 50Gb for the root partition and the rest of available disk for creating a Linux partition mounted as `/storage`.
+
+Final `node2-6` disk configuration is:
+
+  - /dev/sda1: Boot partition
+  - /dev/sda2: Root filesystem
+  - /dev/sda3: /storage (linux partition)
+  
+  <br>
+  /dev/sda3 partition is created during first boot, formatted (ext4) and mounted as '/storage'. This local storage is used with Longhorn for persistent volumes and Velero for cluster backups.
 
 {{site.data.alerts.end}}
 
@@ -315,7 +325,6 @@ External services including HashiCorp Vault and MinIO are deployed together usin
 
 **Prerequisites for this step:**
 - Ensure `node1` is running and network-accessible
-- Terraform (or Tofu) installed on your Ansible control node
 - Secret files already generated (see **Create Secret Files** section above)
 
 {{site.data.alerts.end}}
@@ -330,18 +339,6 @@ make external-services
 IONOS DNS API credentials and GitHub PAT are loaded from the secret files created in the previous section.
 
 {{site.data.alerts.end}}
-
-### Export Vault Access Credentials
-
-After successful deployment, export the following environment variables for subsequent playbook runs:
-
-```bash
-export VAULT_ADDR='https://vault.homelab.ricsanfre.com:8200'
-export VAULT_TOKEN='s.xxxxxxxxxxxxx'  # From /etc/vault/unseal.json on node1
-export VAULT_CACERT='../certificates/CA.pem'  # Path to Vault CA certificate
-```
-
-These variables will be used by Ansible playbooks to fetch credentials on-demand from Vault.
 
 ## Configuring OS level backup (restic)
 
