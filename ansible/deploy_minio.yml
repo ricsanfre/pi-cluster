@@ -245,7 +245,12 @@
       when: enable_letsencrypt
       block:
         - name: Check TLS certificate for MinIO exits
-          ansible.builtin.command: "certbot certificates --config-dir {{ certbot_config_dir }} --work-dir {{ certbot_work_dir }} --logs-dir {{ certbot_logs_dir }} -d {{ minio_hostname }}"
+          ansible.builtin.command: >-
+            certbot certificates
+            --config-dir {{ certbot_config_dir }}
+            --work-dir {{ certbot_work_dir }}
+            --logs-dir {{ certbot_logs_dir }}
+            -d {{ minio_hostname }}
           register: certbot_certificates
           delegate_to: localhost
           become: false
