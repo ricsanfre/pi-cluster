@@ -1,5 +1,12 @@
 FROM ghcr.io/helmfile/helmfile:v1.2.3 AS helmfile
 
+FROM alpine/kubectl:1.35.1 AS kubectl
+
+FROM alpine/helm:3.18.5 AS helm
+
+FROM alpine:3.21 AS tofu
+COPY --from=ghcr.io/opentofu/opentofu:1.11.5 /usr/local/bin/tofu /usr/local/bin/tofu
+
 FROM ghcr.io/astral-sh/uv:0.10.4 AS uv
 
 
@@ -16,15 +23,19 @@ RUN apt-get update -qq && \
 COPY --from=uv /uv /uvx /usr/local/bin/
 
 WORKDIR /build
-COPY ansible-runner/build/install_opentofu.sh /build/install_opentofu.sh
-COPY ansible-runner/build/ansible_runner_setup.yml /build/ansible_runner_setup.yml
 COPY ansible/pyproject.toml /build/pyproject.toml
 COPY ansible/uv.lock /build/uv.lock
 COPY ansible/requirements.yml /build/requirements.yml
 
-# Install OpenTofu
-RUN chmod +x install_opentofu.sh
-RUN ./install_opentofu.sh
+# Install OpenTofu from dedicated image
+COPY --from=tofu /usr/local/bin/tofu /usr/local/bin/tofu
+
+# Install kubectl and Helm from dedicated images
+COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
+COPY --from=helm /usr/bin/helm /usr/local/bin/helm
+
+# Copy helmfile
+COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
 ENV USER=runner
 ENV FOLDER=/home/runner
@@ -36,9 +47,6 @@ RUN /usr/sbin/groupadd $USER && \
     mkdir -p /home/runner/.ansible/roles /home/runner/.ansible/collections /home/runner/.local /home/runner/.cache /home/runner/.config /home/runner/.ssh && \
     chmod 700 /home/runner/.ssh && \
     chown -R $USER:$USER /home/runner
-
-# Copy helmfile
-COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
 RUN for dir in \
       /runner \
@@ -66,11 +74,6 @@ RUN set -eux; \
             if [ "$attempt" -eq 3 ]; then exit 1; fi; \
             sleep 10; \
         done
-
-# Configure ansible-runner
-RUN ANSIBLE_ROLES_PATH="/home/runner/.ansible/roles:/usr/share/ansible/roles" \
-    ANSIBLE_COLLECTIONS_PATHS="/home/runner/.ansible/collections:/usr/share/ansible/collections" \
-    uv run ansible-playbook ansible_runner_setup.yml
 
 # Install helmfile required plugins
 RUN helm plugin install https://github.com/aslafy-z/helm-git
