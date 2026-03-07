@@ -1,7 +1,11 @@
 {
-  "index": {
-    "lifecycle": {
-      "name": "7-days-retention"
+  "template": {
+    "settings": {
+      "index": {
+        "lifecycle": {
+          "name": "7-days-retention"
+        }
+      }
     }
   }
 }

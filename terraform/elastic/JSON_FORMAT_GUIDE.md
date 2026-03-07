@@ -227,7 +227,7 @@ API payload alignment:
 ```
 
 Fields:
-- `template` object (supports `settings`, `mappings`, `aliases`)
+- `template` object required (supports `settings`, `mappings`, `aliases`)
 - `version` optional
 - `meta` optional
 

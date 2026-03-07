@@ -20,6 +20,13 @@ resource "elasticstack_elasticsearch_component_template" "components" {
 
   name = each.key
 
+  lifecycle {
+    precondition {
+      condition     = try(length(keys(each.value.template)) > 0, false)
+      error_message = "Component template '${each.key}' must define a non-empty top-level 'template' object (for example: template.settings, template.mappings, or template.aliases)."
+    }
+  }
+
   # Template settings (performance tuning, refresh interval, etc.)
   template {
     # Index settings
