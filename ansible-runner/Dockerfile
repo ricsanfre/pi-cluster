@@ -10,7 +10,7 @@ COPY --from=ghcr.io/opentofu/opentofu:1.11.5 /usr/local/bin/tofu /usr/local/bin/
 FROM ghcr.io/astral-sh/uv:0.10.4 AS uv
 
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--ignore-certs
 ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-certs
 ENV UV_LINK_MODE=copy
