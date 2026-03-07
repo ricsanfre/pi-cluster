@@ -1,1 +1,6 @@
 # tofu-controller helm values (base)
+# Increase the gRPC max message size to accommodate larger Terra
+# ref: https://github.com/flux-iac/tofu-controller/issues/511
+runner:
+  grpc:
+    maxMessageSize: 20
