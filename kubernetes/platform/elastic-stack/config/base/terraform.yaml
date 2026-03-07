@@ -21,9 +21,9 @@ spec:
   - name: vault_kubernetes_auth_role
     value: "tf-runner"
   - name: elasticsearch_endpoint
-    value: "https://efk-es-http.elastic.svc:9200"
+    value: "http://efk-es-http.elastic.svc:9200"
   - name: kibana_endpoint
-    value: "https://efk-kb-http.elastic.svc:5601"
+    value: "http://efk-kb-http.elastic.svc:5601"
   writeOutputsToSecret:
     name: tf-config-elastic-output
 
