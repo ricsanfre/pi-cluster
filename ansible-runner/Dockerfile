@@ -1,4 +1,4 @@
-FROM ghcr.io/helmfile/helmfile:v1.2.3 AS helmfile
+FROM ghcr.io/helmfile/helmfile:v1.4.1 AS helmfile
 
 FROM alpine/kubectl:1.35.2 AS kubectl
 
