@@ -2,7 +2,7 @@ FROM ghcr.io/helmfile/helmfile:v1.2.3 AS helmfile
 
 FROM alpine/kubectl:1.35.1 AS kubectl
 
-FROM alpine/helm:3.18.5 AS helm
+FROM alpine/helm:3.20.0 AS helm
 
 FROM alpine:3.21 AS tofu
 COPY --from=ghcr.io/opentofu/opentofu:1.11.5 /usr/local/bin/tofu /usr/local/bin/tofu
