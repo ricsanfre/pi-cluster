@@ -3,7 +3,7 @@ name = "pi-cluster-ansible"
 version = "0.1.0"
 description = "Ansible runtime environment for pi-cluster"
 readme = "../README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "ansible-core==2.20.2",
     "ansible-lint>=25,<26",
