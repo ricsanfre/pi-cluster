@@ -12,7 +12,7 @@ This guide documents the JSON file formats consumed by `terraform/elastic`.
   - `resources/template_components/*.json`
   - `resources/dataviews/*.json`
 - Resource name is derived from filename (without `.json`).
-- Recommended filename pattern: lowercase alphanumeric, `.`, `_`, `-`.
+- Recommended filename pattern: lowercase alphanumeric, `.`, `_`, `-`, `@`.
   - This is validated for role, user, template, and dataview names by the module.
 
 ---
@@ -194,6 +194,8 @@ Fields:
 ## 5) Component Templates (`resources/template_components/*.json`)
 
 Filename = component template name.
+
+Example: `logs@custom.json` creates component template `logs@custom`.
 
 API payload alignment:
 - Format is similar to Elasticsearch Component Template API payload.
