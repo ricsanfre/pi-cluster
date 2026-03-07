@@ -6,6 +6,13 @@ instance:
     ref: refs/heads/feature/elastic-terraform
     path: kubernetes/clusters/prod
     interval: 1h
+    ignore: |
+      /ansible/
+      /ansible-runner/
+      /design/
+      /docs/
+      /metal/
+      /test/
   kustomize:
     patches:
       - # Increase the number of workers

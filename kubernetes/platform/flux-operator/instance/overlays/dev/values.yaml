@@ -6,3 +6,10 @@ instance:
     ref: refs/heads/master
     path: kubernetes/cluster/dev
     interval: 1h
+    ignore: |
+      /ansible/
+      /ansible-runner/
+      /design/
+      /docs/
+      /metal/
+      /test/
