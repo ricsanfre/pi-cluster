@@ -62,7 +62,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
-  targetNamespace: elastic
+  targetNamespace: flux-system
   sourceRef:
     kind: GitRepository
     name: flux-system

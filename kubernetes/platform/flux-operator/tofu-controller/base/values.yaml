@@ -1,5 +1,1 @@
 # tofu-controller helm values (base)
-
-# Enable cross-namespace references to allow the Terraform CRD in this namespace to reference the GitRepository source in the flux-system namespace.
-# ref: https://flux-iac.github.io/tofu-controller/use-tf-controller/use-cross-namespace-refs/
-allowCrossNamespaceRefs: true
