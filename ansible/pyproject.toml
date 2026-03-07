@@ -7,7 +7,7 @@ requires-python = ">=3.14,<3.15"
 dependencies = [
     "ansible-core==2.20.3",
     "ansible-lint>=26,<27",
-    "pathspec<1",
+    "pathspec<2",
     "yamllint==1.37.1",
     "kubernetes==35.0.0",
     "hvac==2.4.0",

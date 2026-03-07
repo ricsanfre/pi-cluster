@@ -539,7 +539,7 @@ requires-dist = [
     { name = "certbot-dns-ionos", specifier = "==2024.11.9" },
     { name = "hvac", specifier = "==2.4.0" },
     { name = "kubernetes", specifier = "==35.0.0" },
-    { name = "pathspec", specifier = "<1" },
+    { name = "pathspec", specifier = "<2" },
     { name = "yamllint", specifier = "==1.37.1" },
 ]
 
