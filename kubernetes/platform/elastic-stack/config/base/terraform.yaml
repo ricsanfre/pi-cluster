@@ -3,7 +3,7 @@ kind: Terraform
 metadata:
   name: config-elastic
 spec:
-  interval: 1m
+  interval: 30m
   approvePlan: auto
   destroyResourcesOnDeletion: true
   path: ./terraform/elastic
