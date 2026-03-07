@@ -1,0 +1,33 @@
+{
+  "name": "Proxy OAuth 2.0",
+  "description": "Proxy OAuth 2.0",
+  "vault_secret_ref": "oauth2-proxy/oauth2",
+  "client_id_key": "client-id",
+  "client_secret_key": "client-secret",
+  "enabled": true,
+  "access_type": "CONFIDENTIAL",
+  "redirect_uris": [
+    "https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
+  ],
+  "web_origins": [
+    "https://oauth2-proxy.${CLUSTER_DOMAIN}"
+  ],
+  "standard_flow_enabled": true,
+  "direct_access_grants_enabled": false,
+  "implicit_flow_enabled": false,
+  "service_accounts_enabled": false,
+  "full_scope_allowed": true,
+  "default_scopes": [
+    "web-origins",
+    "acr",
+    "roles",
+    "profile",
+    "email"
+  ],
+  "optional_scopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ]
+}

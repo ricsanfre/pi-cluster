@@ -1,0 +1,38 @@
+# Copy this file to terraform.tfvars and fill in actual values
+# DO NOT commit terraform.tfvars to git
+
+# Execution mode
+# false = direct/local execution using Vault token
+# true  = in-cluster Tofu controller execution with Vault kubernetes auth-login
+tofu_controller_execution = false
+
+# Vault server configuration
+vault_address   = "https://vault.example.com:8200"
+vault_token     = "" # Required when tofu_controller_execution = false
+skip_tls_verify = true
+vault_kv2_path  = "secret"
+
+# Vault kubernetes auth-login (used when tofu_controller_execution = true)
+vault_kubernetes_auth_login_path = "auth/kubernetes/login"
+vault_kubernetes_auth_role       = ""
+kubernetes_token_file            = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+# Keycloak connection
+keycloak_url       = "http://keycloak-service.keycloak.svc:8080"
+keycloak_base_path = ""
+
+# Domain used to render redirect URIs and admin email
+cluster_domain = "example.com"
+
+# Vault secret with Keycloak admin credentials
+keycloak_admin_vault_secret  = "keycloak/admin"
+keycloak_admin_username_key  = "username"
+keycloak_admin_password_key  = "password"
+
+# Resource directories (relative to terraform/keycloak)
+realm_file             = "resources/realm/realm.json"
+clients_directory      = "resources/clients"
+client_roles_directory = "resources/client_roles"
+groups_directory       = "resources/groups"
+users_directory        = "resources/users"
+scopes_directory       = "resources/scopes"

@@ -1,0 +1,16 @@
+{
+  "roles": [
+    {
+      "name": "admin",
+      "description": "Grafana admin role"
+    },
+    {
+      "name": "editor",
+      "description": "Grafana editor role"
+    },
+    {
+      "name": "viewer",
+      "description": "Grafana viewer role"
+    }
+  ]
+}

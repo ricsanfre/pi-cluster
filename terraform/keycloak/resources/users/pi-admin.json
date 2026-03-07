@@ -1,0 +1,13 @@
+{
+  "vault_secret_ref": "keycloak/pi-admin",
+  "username_key": "username",
+  "password_key": "password",
+  "first_name": "Pi",
+  "last_name": "Admin",
+  "email": "admin@${CLUSTER_DOMAIN}",
+  "enabled": true,
+  "email_verified": true,
+  "groups": [
+    "admin"
+  ]
+}

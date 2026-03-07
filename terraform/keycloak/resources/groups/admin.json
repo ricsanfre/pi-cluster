@@ -1,0 +1,8 @@
+{
+  "name": "admin",
+  "client_roles": {
+    "grafana": [
+      "admin"
+    ]
+  }
+}
