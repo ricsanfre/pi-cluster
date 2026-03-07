@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "template": {
+    "settings": {
+      "index.lifecycle.name": "default-ilm",
+      "index.lifecycle.rollover_alias": "app-logs"
+    }
+  },
+  "meta": {
+    "description": "ILM policy component for application logs",
+    "created_by": "terraform",
+    "purpose": "Handles index rollover and lifecycle management"
+  }
+}

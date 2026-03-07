@@ -1,0 +1,14 @@
+{
+  "description": "Grants access to prometheus user. Only monitoring.",
+  "cluster": ["monitor", "monitor_snapshot"],
+  "indices": [
+    {
+      "names": [ "*" ],
+      "privileges": ["monitor", "view_index_metadata"]
+    }
+  ],
+  "applications": [],
+  "metadata": {
+    "version": 1
+  }
+}

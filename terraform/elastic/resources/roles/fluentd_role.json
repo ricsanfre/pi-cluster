@@ -1,0 +1,21 @@
+{
+  "description": "Grants access to fluentd user. Manage index templates and ILM policies, full access to specific indices.",
+  "cluster": ["manage_index_templates", "monitor", "manage_ilm"],
+  "indices": [
+    {
+      "names": [ "fluentd-*" ],
+      "privileges": [
+          "write",
+          "create",
+          "delete",
+          "create_index",
+          "manage",
+          "manage_ilm"
+       ]
+    }
+  ],
+  "applications": [],
+  "metadata": {
+    "version": 1
+  }
+}

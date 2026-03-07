@@ -1,0 +1,7 @@
+{
+  "vault_secret_key" : "elastic/prometheus",
+  "roles" : [ "prometheus_role" ],
+  "metadata" : {
+    "version" : 1
+  }
+}

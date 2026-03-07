@@ -1,0 +1,11 @@
+{
+  "name": "metrics",
+  "title": "metrics-*",
+  "time_field_name": "@timestamp",
+  "namespaces": ["default"],
+  "allow_no_index": true,
+  "_meta": {
+    "description": "Data view for metrics indices",
+    "created_by": "terraform"
+  }
+}

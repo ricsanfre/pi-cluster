@@ -1,0 +1,40 @@
+# Copy this file to terraform.tfvars and fill in actual values
+# DO NOT commit terraform.tfvars to git
+
+# Execution mode
+# false = direct/local execution using kubeconfig + vault_token
+# true  = in-cluster Tofu controller execution with Kubernetes auto-discovery + Vault kubernetes auth-login
+tofu_controller_execution = false
+
+# Vault server configuration
+vault_address    = "https://vault.example.com:8200"
+vault_token      = ""  # Required when tofu_controller_execution = false
+skip_tls_verify  = true
+vault_kv2_path   = "secret"
+
+# Vault kubernetes auth-login (used when tofu_controller_execution = true)
+vault_kubernetes_auth_login_path = "auth/kubernetes/login"
+vault_kubernetes_auth_role       = ""
+kubernetes_token_file            = "/var/run/secrets/kubernetes.io/serviceaccount/token" # Optional if using default SA token path
+
+# Kubernetes config (used when tofu_controller_execution = false)
+kubernetes_config_path       = "~/.kube/config"
+
+# Kubernetes provider in tofu_controller_execution=true mode uses in-cluster auto-discovery.
+# No extra Kubernetes provider variables are required for provider initialization.
+elastic_secret_name          = "efk-es-elastic-user"
+elastic_secret_namespace     = "elastic"
+elastic_secret_password_key  = "elastic"
+
+# Elastic/Kibana endpoints
+elasticsearch_endpoint = "https://elasticsearch.local.test"
+kibana_endpoint        = "https://kibana.local.test"
+elasticsearch_username = "elastic"
+
+# Resource directories (relative to terraform/elastic)
+roles_directory               = "resources/roles"
+users_directory               = "resources/users"
+policies_directory            = "resources/policies"
+templates_directory           = "resources/templates"
+template_components_directory = "resources/template_components"
+dataviews_directory           = "resources/dataviews"
