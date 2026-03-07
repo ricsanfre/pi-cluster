@@ -3,6 +3,19 @@ data:
   k8s-windows-node-rsrc-use.json: |-
     {
         "editable": false,
+        "links": [
+            {
+                "asDropdown": true,
+                "includeVars": true,
+                "keepTime": true,
+                "tags": [
+                    "kubernetes-mixin"
+                ],
+                "targetBlank": false,
+                "title": "Kubernetes",
+                "type": "dashboards"
+            }
+        ],
         "panels": [
             {
                 "datasource": {
@@ -612,7 +625,7 @@ data:
             "from": "now-1h",
             "to": "now"
         },
-        "timezone": "utc",
+        "timezone": "UTC",
         "title": "Kubernetes / USE Method / Node(Windows)",
         "uid": "96e7484b0bb53b74fbc2bcb7723cd40b"
     }

@@ -3,6 +3,19 @@ data:
   k8s-resources-windows-namespace.json: |-
     {
         "editable": false,
+        "links": [
+            {
+                "asDropdown": true,
+                "includeVars": true,
+                "keepTime": true,
+                "tags": [
+                    "kubernetes-mixin"
+                ],
+                "targetBlank": false,
+                "title": "Kubernetes",
+                "type": "dashboards"
+            }
+        ],
         "panels": [
             {
                 "datasource": {
@@ -439,7 +452,7 @@ data:
             "from": "now-1h",
             "to": "now"
         },
-        "timezone": "utc",
+        "timezone": "UTC",
         "title": "Kubernetes / Compute Resources / Namespace(Windows)",
         "uid": "490b402361724ab1d4c45666c1fa9b6f"
     }

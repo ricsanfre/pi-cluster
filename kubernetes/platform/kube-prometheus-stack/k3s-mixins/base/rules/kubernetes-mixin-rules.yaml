@@ -245,9 +245,16 @@ spec:
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubehpamaxedout
         summary: HPA is running at max replicas
       expr: |
-        kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics"}
-          ==
-        kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics"}
+        (
+          kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics"}
+            ==
+          kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics"}
+        )
+        and on(namespace, horizontalpodautoscaler) (
+          kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics"}
+            !=
+          kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics"}
+        )
       for: 15m
       labels:
         severity: warning
@@ -870,7 +877,9 @@ spec:
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeletdown
         summary: Target disappeared from Prometheus target discovery.
       expr: |
-        absent(up{job="kubelet"})
+        count by (cluster) (kube_node_info{job="kube-state-metrics"})
+        unless on (cluster)
+        count by (cluster) (up{job="kubelet"} == 1)
       for: 15m
       labels:
         severity: critical

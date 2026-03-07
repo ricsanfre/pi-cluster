@@ -291,7 +291,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_receive_bytes_excluding_lo:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+                        "expr": "instance:node_network_receive_bytes_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "Receive"
                     },
                     {
@@ -299,7 +299,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_transmit_bytes_excluding_lo:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+                        "expr": "instance:node_network_transmit_bytes_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "Transmit"
                     }
                 ],
@@ -360,7 +360,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_receive_drop_excluding_lo:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+                        "expr": "instance:node_network_receive_drop_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "Receive"
                     },
                     {
@@ -368,7 +368,7 @@ data:
                             "type": "prometheus",
                             "uid": "$datasource"
                         },
-                        "expr": "instance:node_network_transmit_drop_excluding_lo:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+                        "expr": "instance:node_network_transmit_drop_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
                         "legendFormat": "Transmit"
                     }
                 ],

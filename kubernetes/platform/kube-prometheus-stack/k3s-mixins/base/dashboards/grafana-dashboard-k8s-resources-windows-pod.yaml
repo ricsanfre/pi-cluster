@@ -3,6 +3,19 @@ data:
   k8s-resources-windows-pod.json: |-
     {
         "editable": false,
+        "links": [
+            {
+                "asDropdown": true,
+                "includeVars": true,
+                "keepTime": true,
+                "tags": [
+                    "kubernetes-mixin"
+                ],
+                "targetBlank": false,
+                "title": "Kubernetes",
+                "type": "dashboards"
+            }
+        ],
         "panels": [
             {
                 "datasource": {
@@ -494,7 +507,7 @@ data:
             "from": "now-1h",
             "to": "now"
         },
-        "timezone": "utc",
+        "timezone": "UTC",
         "title": "Kubernetes / Compute Resources / Pod(Windows)",
         "uid": "40597a704a610e936dc6ed374a7ce023"
     }

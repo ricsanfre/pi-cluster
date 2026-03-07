@@ -3,6 +3,19 @@ data:
   k8s-windows-cluster-rsrc-use.json: |-
     {
         "editable": false,
+        "links": [
+            {
+                "asDropdown": true,
+                "includeVars": true,
+                "keepTime": true,
+                "tags": [
+                    "kubernetes-mixin"
+                ],
+                "targetBlank": false,
+                "title": "Kubernetes",
+                "type": "dashboards"
+            }
+        ],
         "panels": [
             {
                 "datasource": {
@@ -401,7 +414,7 @@ data:
             "from": "now-1h",
             "to": "now"
         },
-        "timezone": "utc",
+        "timezone": "UTC",
         "title": "Kubernetes / USE Method / Cluster(Windows)",
         "uid": "53a43377ec9aaf2ff64dfc7a1f539334"
     }
