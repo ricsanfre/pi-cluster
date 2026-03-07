@@ -1,0 +1,17 @@
+{
+  "description": "Grants access to open telemetry collector",
+  "cluster": [ "monitor"],
+  "indices": [
+    {
+      "names": [ "logs-*.otel-*", "metrics-*.otel-*", "traces-*.otel-*" ],
+      "privileges": [
+          "create_doc",
+          "create_index"
+       ]
+    }
+  ],
+  "applications": [],
+  "metadata": {
+    "version": 1
+  }
+}

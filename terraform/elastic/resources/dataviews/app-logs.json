@@ -1,0 +1,11 @@
+{
+  "name": "app-logs",
+  "title": "app-*",
+  "time_field_name": "@timestamp",
+  "namespaces": ["default", "kibana"],
+  "allow_no_index": true,
+  "_meta": {
+    "description": "Data view for application logs",
+    "created_by": "terraform"
+  }
+}

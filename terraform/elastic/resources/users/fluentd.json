@@ -1,0 +1,7 @@
+{
+  "vault_secret_key" : "elastic/fluentd",
+  "roles" : [ "fluentd_role" ],
+  "metadata" : {
+    "version" : 1
+  }
+}

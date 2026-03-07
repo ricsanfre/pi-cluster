@@ -1,0 +1,9 @@
+{
+  "vault_secret_key" : "elastic/admin",
+  "roles" : [ "superuser" ],
+  "full_name" : "Jack Nicholson",
+  "email" : "jacknich@example.com",
+  "metadata" : {
+    "intelligence" : 7
+  }
+}

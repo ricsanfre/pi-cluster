@@ -3,10 +3,16 @@
 - name: Install flux-cd cli
   ansible.builtin.include_tasks: install_fluxcd_cli.yml
 
+- name: Install longhorn cli
+  become: true
+  ansible.builtin.include_tasks: install_longhorn_cli.yml
+
 - name: Install longhorn utilities
+  become: true
   ansible.builtin.include_tasks: install_longhorn_util.yml
 
 - name: Install velero cli
+  become: true
   ansible.builtin.include_tasks: install_velero_cli.yml
 
 - name: Configure velero cli

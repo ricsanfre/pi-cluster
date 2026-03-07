@@ -1,0 +1,38 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: config-elastic
+spec:
+  interval: 30m
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  path: ./terraform/elastic
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  vars:
+  - name: tofu_controller_execution
+    value: "true"
+  - name: vault_address
+    value: "https://vault.${CLUSTER_DOMAIN}:8200"
+  - name: vault_kubernetes_auth_login_path
+    value: "auth/kubernetes/login"
+  - name: vault_kubernetes_auth_role
+    value: "tf-runner"
+  - name: elasticsearch_endpoint
+    value: "http://efk-es-http.elastic.svc:9200"
+  - name: kibana_endpoint
+    value: "http://efk-kb-http.elastic.svc:5601"
+  writeOutputsToSecret:
+    name: tf-config-elastic-output
+
+  # TF_LOG debugging not supported
+  # ref: https://github.com/flux-iac/tofu-controller/issues/1373
+  # runnerPodTemplate:
+  #   spec:
+  #     env:
+  #     - name: TF_LOG
+  #       value: DEBUG
+  #     - name: TERRAFORM_VAULT_LOG_BODY
+  #       value: "true"

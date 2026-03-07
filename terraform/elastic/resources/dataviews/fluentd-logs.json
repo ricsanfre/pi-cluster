@@ -1,0 +1,11 @@
+{
+  "name": "fluentd-logs",
+  "title": "fluentd-*",
+  "time_field_name": "@timestamp",
+  "namespaces": ["default"],
+  "allow_no_index": true,
+  "_meta": {
+    "description": "Data view for Fluentd logs",
+    "created_by": "terraform"
+  }
+}

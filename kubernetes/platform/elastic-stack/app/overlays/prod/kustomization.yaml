@@ -6,7 +6,7 @@ resources:
   - ../../base
 
 components:
-  - ../../components/authentication
+#  - ../../components/authentication
   - ../../components/ingress
   - ../../components/istio
-  - ../../components/kibana-config
+#  - ../../components/kibana-config

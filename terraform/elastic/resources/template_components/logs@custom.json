@@ -1,0 +1,13 @@
+{
+  "template": {
+    "settings": {
+      "index": {
+        "lifecycle": {
+          "name": "7-days-retention"
+        },
+        "number_of_shards": 1,
+        "number_of_replicas": 0
+      }
+    }
+  }
+}

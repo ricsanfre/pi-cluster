@@ -15,7 +15,7 @@ spec:
   dependsOn:
     - name: cert-manager-config
     - name: external-secrets-config
-    - name: elastic-stack-app
+    - name: elastic-stack-config
     - name: loki-app
   postBuild:
     substituteFrom:
@@ -39,7 +39,7 @@ spec:
   dependsOn:
     - name: cert-manager-config
     - name: external-secrets-config
-    - name: elastic-stack-app
+    - name: elastic-stack-config
     - name: loki-app
     - name: fluent-common-app
   wait: true

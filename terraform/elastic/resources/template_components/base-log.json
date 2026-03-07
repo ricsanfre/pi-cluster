@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "refresh_interval": "30s",
+      "index.codec": "best_compression"
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "message": {
+          "type": "text",
+          "analyzer": "standard"
+        },
+        "level": {
+          "type": "keyword"
+        },
+        "host": {
+          "type": "keyword"
+        },
+        "service": {
+          "type": "keyword"
+        }
+      }
+    }
+  },
+  "meta": {
+    "description": "Base logging component template with common fields",
+    "created_by": "terraform",
+    "purpose": "Reusable component for ELK stack logs"
+  }
+}

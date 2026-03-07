@@ -14,7 +14,7 @@ spec:
     - name: external-secrets-config
     - name: tempo-app
     - name: kube-prometheus-stack-app
-    - name: elastic-stack-app
+    - name: elastic-stack-config
   path: ./kubernetes/platform/opentelemetry-collector/app/overlays/prod
   prune: true
   wait: true
