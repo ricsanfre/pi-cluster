@@ -1,0 +1,15 @@
+{
+  "name": "roles-id-token",
+  "description": "OpenID Connect scope for add user roles to the ID token",
+  "include_in_token_scope": true,
+  "user_client_role_mappers": {
+    "client-roles": {
+      "name": "client roles",
+      "claim_name": "resource_access.${client_id}.roles",
+      "add_to_id_token": true,
+      "add_to_access_token": true,
+      "add_to_userinfo": true,
+      "multivalued": true
+    }
+  }
+}

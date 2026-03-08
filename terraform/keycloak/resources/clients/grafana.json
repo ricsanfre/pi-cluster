@@ -1,0 +1,37 @@
+{
+  "name": "Grafana",
+  "description": "Grafana",
+  "vault_secret_ref": "grafana/oauth2",
+  "client_id_key": "client-id",
+  "client_secret_key": "client-secret",
+  "enabled": true,
+  "access_type": "CONFIDENTIAL",
+  "root_url": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
+  "admin_url": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
+  "base_url": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
+  "redirect_uris": [
+    "https://monitoring.${CLUSTER_DOMAIN}/grafana/login/generic_oauth"
+  ],
+  "web_origins": [
+    "https://monitoring.${CLUSTER_DOMAIN}/grafana"
+  ],
+  "standard_flow_enabled": true,
+  "direct_access_grants_enabled": true,
+  "implicit_flow_enabled": false,
+  "service_accounts_enabled": false,
+  "full_scope_allowed": true,
+  "default_scopes": [
+    "web-origins",
+    "acr",
+    "profile",
+    "roles",
+    "roles-id-token",
+    "email"
+  ],
+  "optional_scopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ]
+}

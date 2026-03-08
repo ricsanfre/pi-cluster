@@ -1,0 +1,6 @@
+vault-metrics:
+  description: "Read access to Vault metrics endpoint"
+  policy: |
+    path "sys/metrics" {
+      capabilities = ["read"]
+    }

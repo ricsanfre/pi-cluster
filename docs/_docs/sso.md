@@ -2,7 +2,7 @@
 title: SSO with KeyCloak and Oauth2-Proxy
 permalink: /docs/sso/
 description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "23-12-2025"
+last_modified_at: "08-03-2026"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -962,6 +962,94 @@ metadata:
 ```
 
 {{site.data.alerts.end}}
+
+### Automating configuration with Terraform and Flux Tofu Controller
+
+As an alternative to `keycloak-config-cli`, Keycloak realm configuration can be managed with OpenTofu/Terraform.
+
+The project repository [pi-cluster]({{ site.github.repository_url }}) already includes a Keycloak Terraform module to configure Keycloak realm, clients, groups and users in a declarative way. The module can be executed manually or automatically with Flux Tofu Controller:
+
+Module: [`terraform/keycloak/`]({{ site.github.repository_url }}/tree/master/terraform/keycloak) that uses the official Keycloak provider to manage Keycloak realm configuration in a declarative way and HashiCorp Vault provider to read credentials and secrets from Vault at runtime.
+
+Providers used in the module:
+- Keycloak provider: [keycloak/keycloak (OpenTofu Registry)](https://search.opentofu.org/provider/keycloak/keycloak/latest)
+- Vault provider: [hashicorp/vault (OpenTofu Registry)](https://search.opentofu.org/provider/hashicorp/vault/latest)
+
+The Terraform module manages realm resources from JSON files in `terraform/keycloak/resources/`:
+
+JSON schema and examples are documented in [`terraform/keycloak/JSON_FORMAT_GUIDE.md`]({{ site.github.repository_url }}/blob/master/terraform/keycloak/JSON_FORMAT_GUIDE.md).
+
+- `realm/realm.json`
+- `clients/*.json`
+- `client_roles/*.json`
+- `groups/*.json`
+- `users/*.json`
+- `scopes/*.json`
+
+For further details read README in the module directory: [`terraform/keycloak/README.md`]({{ site.github.repository_url }}/tree/master/terraform/keycloak).
+
+#### Automating with Tofu Controller
+
+The Terraform module can be automatically reconciled by Flux Tofu Controller, which executes the Terraform code and applies the configuration to Keycloak.
+
+For general controller installation and operational concepts, see [Flux Tofu Controller Usage](/docs/fluxcd/#flux-tofu-controller-usage).
+
+##### How it works
+
+1. Flux source-controller publishes the Git artifact.
+2. Tofu Controller reconciles the `Terraform` custom resource.
+3. The module logs in to Vault using Kubernetes auth role `tf-runner`.
+4. Credentials/secrets are read from Vault, then Keycloak realm objects are created/updated declaratively.
+
+Example `Terraform` custom resource (already present in this repo):
+
+```yaml
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: config-keycloak
+  namespace: flux-system
+spec:
+  interval: 30m
+  approvePlan: auto
+  path: ./terraform/keycloak
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  vars:
+    - name: tofu_controller_execution
+      value: "true"
+    - name: vault_address
+      value: "https://vault.${CLUSTER_DOMAIN}:8200"
+    - name: vault_kubernetes_auth_login_path
+      value: "auth/kubernetes/login"
+    - name: vault_kubernetes_auth_role
+      value: "tf-runner"
+    - name: keycloak_url
+      value: "http://keycloak-service.keycloak.svc:8080"
+    - name: cluster_domain
+      value: "${CLUSTER_DOMAIN}"
+```
+
+#### Operational workflow
+
+1. Edit realm/client/group/user/scope JSON files under `terraform/keycloak/resources/`.
+2. Commit and push changes to the Git branch watched by Flux.
+3. Reconcile and verify:
+
+```shell
+flux reconcile terraform config-keycloak -n flux-system
+kubectl -n flux-system get terraform config-keycloak
+kubectl -n flux-system describe terraform config-keycloak
+```
+
+{{site.data.alerts.note}}
+Prerequisite: Vault Kubernetes auth must include the `tf-runner` role bound to the Tofu runner service account in `flux-system`, and policies must allow reading all secrets required by the Keycloak Terraform module.
+
+For the actual `tf-runner` Vault role/policy configuration and CLI snippets, see [Flux Tofu Controller: Vault access from tf-runner (Kubernetes auth)](/docs/fluxcd/#vault-access-from-tf-runner-kubernetes-auth).
+{{site.data.alerts.end}}
+
 
 ## Keycloak Observability
 
