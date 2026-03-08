@@ -44,6 +44,7 @@ output "groups" {
 
 output "users" {
   description = "Created Keycloak users (non-sensitive summary)"
+  sensitive   = true
   value = {
     for k, v in keycloak_user.users :
     k => {
