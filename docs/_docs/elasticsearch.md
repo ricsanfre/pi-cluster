@@ -2,7 +2,7 @@
 title: Log Analytics (Elasticsearch and Kibana)
 permalink: /docs/elasticsearch/
 description: How to deploy Elasticsearch and Kibana in our Pi Kubernetes cluster.
-last_modified_at: "20-06-2025"
+last_modified_at: "08-03-2026"
 
 ---
 
@@ -610,6 +610,112 @@ spec:
           name: kibana-config-data
           defaultMode: 0777
 ```
+
+## Configuring ElasticStack
+
+### Automating configuration with Terraform and Flux Tofu Controller
+
+As an alternative to manual API calls, ElasticStack configuration can be managed with OpenTofu/Terraform.
+
+This repository already includes an Elastic Terraform module to configure Elasticsearch and Kibana resources (roles, users, ILM policies, templates, and dataviews) in a declarative way. The module can be executed manually or automatically with Flux Tofu Controller.
+
+Module: [`terraform/elastic/`]({{ site.github.repository_url }}/tree/master/terraform/elastic)
+
+Providers used in the module:
+
+- ElasticStack provider: [elastic/elasticstack (OpenTofu Registry)](https://search.opentofu.org/provider/elastic/elasticstack/latest)
+- Vault provider: [hashicorp/vault (OpenTofu Registry)](https://search.opentofu.org/provider/hashicorp/vault/latest)
+- Kubernetes provider: [hashicorp/kubernetes (OpenTofu Registry)](https://search.opentofu.org/provider/hashicorp/kubernetes/latest)
+
+The Terraform module manages ElasticStack resources from JSON files in `terraform/elastic/resources/`.
+
+JSON schema and examples are documented in [`terraform/elastic/JSON_FORMAT_GUIDE.md`]({{ site.github.repository_url }}/blob/master/terraform/elastic/JSON_FORMAT_GUIDE.md).
+
+- `roles/*.json`
+- `users/*.json`
+- `policies/*.json`
+- `template_components/*.json`
+- `templates/*.json`
+- `dataviews/*.json`
+
+#### Vault Provider
+
+The module authenticates to Vault using the [hashicorp/vault provider (OpenTofu Registry)](https://search.opentofu.org/provider/hashicorp/vault/latest) and supports two execution modes:
+
+1. Direct/local execution (`tofu_controller_execution=false`):
+   - Uses `vault_token`.
+2. In-cluster Tofu Controller execution (`tofu_controller_execution=true`):
+   - Uses Kubernetes auth login (`vault_kubernetes_auth_login_path`, default `auth/kubernetes/login`).
+   - Uses Vault role `vault_kubernetes_auth_role` (in this repo, `tf-runner`).
+   - Uses service account token from `kubernetes_token_file` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`).
+
+The module reads users credentials from Vault KV v2 (`vault_kv2_path`, default `secret`) using `vault_secret_key` in each file under `resources/users/*.json`.
+
+#### Automating with Tofu Controller
+
+The Terraform module can be automatically reconciled by Flux Tofu Controller, which executes the Terraform code and applies the configuration to Elasticsearch and Kibana.
+
+For general controller installation and operational concepts, see [Flux Tofu Controller Usage](/docs/fluxcd/#flux-tofu-controller-usage).
+
+Tofu Controller resource used in this repository:
+
+- Flux Terraform CR: `kubernetes/platform/elastic-stack/config/base/terraform.yaml`
+
+##### How it works
+
+1. Flux source-controller publishes the Git artifact.
+2. Tofu Controller reconciles the `Terraform` custom resource.
+3. The module authenticates to Vault using Kubernetes auth role `tf-runner`.
+4. The module reads user passwords from Vault and applies Elasticsearch/Kibana configuration declaratively.
+
+Example `Terraform` custom resource (already present in this repo):
+
+```yaml
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: config-elastic
+spec:
+  interval: 30m
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  path: ./terraform/elastic
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  vars:
+    - name: tofu_controller_execution
+      value: "true"
+    - name: vault_address
+      value: "https://vault.${CLUSTER_DOMAIN}:8200"
+    - name: vault_kubernetes_auth_login_path
+      value: "auth/kubernetes/login"
+    - name: vault_kubernetes_auth_role
+      value: "tf-runner"
+    - name: elasticsearch_endpoint
+      value: "http://efk-es-http.elastic.svc:9200"
+    - name: kibana_endpoint
+      value: "http://efk-kb-http.elastic.svc:5601"
+```
+
+#### Operational workflow
+
+1. Edit JSON files under `terraform/elastic/resources/`.
+2. Commit and push changes to the Git branch watched by Flux.
+3. Reconcile and verify:
+
+```shell
+flux reconcile terraform config-elastic -n flux-system
+kubectl -n flux-system get terraform config-elastic
+kubectl -n flux-system describe terraform config-elastic
+```
+
+{{site.data.alerts.note}}
+Prerequisite: Vault Kubernetes auth must include the `tf-runner` role bound to the Tofu runner service account in `flux-system`, and policies must allow reading all secrets required by the Elastic Terraform module.
+
+For the actual `tf-runner` Vault role/policy configuration and CLI snippets, see [Flux Tofu Controller: Vault access from tf-runner (Kubernetes auth)](/docs/fluxcd/#vault-access-from-tf-runner-kubernetes-auth).
+{{site.data.alerts.end}}
 
 ## Observability
 
