@@ -9,6 +9,7 @@ output "realm" {
 
 output "clients" {
   description = "Created OIDC clients"
+  sensitive   = true
   value = {
     for k, v in keycloak_openid_client.clients :
     k => {
