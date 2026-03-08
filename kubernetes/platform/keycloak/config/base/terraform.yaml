@@ -22,7 +22,7 @@ spec:
     - name: vault_kubernetes_auth_role
       value: "tf-runner"
     - name: keycloak_url
-      value: "http://keycloak-service:8080"
+      value: "http://keycloak-service.keycloak.svc:8080"
     - name: cluster_domain
       value: "${CLUSTER_DOMAIN}"
   writeOutputsToSecret:
