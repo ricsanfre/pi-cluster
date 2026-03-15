@@ -1,13 +1,5 @@
 ---
 
-- name: Install load balancer
-  hosts: haproxy
-  gather_facts: true
-  tags: [haproxy, install]
-  become: true
-  roles:
-    - role: haproxy
-
 - name: Install K3S prerequisites
   hosts: k3s_cluster
   gather_facts: true
@@ -98,7 +90,6 @@
 
   roles:
     - role: k3s/master
-    - role: ricsanfre.k8s_cli
 
 - name: Install K3S worker nodes
   hosts: k3s_worker
@@ -235,15 +226,15 @@
         overlay: "prod"
       when: overlay is undefined
 
-    - name: Install cilium and coreDNS
-      become: false
-      ansible.builtin.shell: |
-        set -o pipefail
-        helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff --concurrency 1
-      args:
-        executable: /bin/bash
-      register: output
-      changed_when: true
+    # - name: Install cilium and coreDNS
+    #   become: false
+    #   ansible.builtin.shell: |
+    #     set -o pipefail
+    #     helmfile --quiet --file ../kubernetes/clusters/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff --concurrency 1
+    #   args:
+    #     executable: /bin/bash
+    #   register: output
+    #   changed_when: true
 
     - name: Config Cilium CNI
       ansible.builtin.include_tasks: tasks/cilium_config.yml

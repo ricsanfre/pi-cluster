@@ -1,5 +1,11 @@
 ---
 
+- name: Install additional packages
+  ansible.builtin.apt:
+    name: "{{ k3s_master_additional_packages }}"
+    update_cache: true
+    state: present
+
 - name: Detect if multiple masters are defined
   ansible.builtin.set_fact:
     k3s_build_cluster: true
@@ -22,6 +28,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
+    mode: "0755"
   loop:
     - /etc/rancher/k3s
 
@@ -35,6 +42,7 @@
   ansible.builtin.copy:
     dest: "{{ k3s_config_directory }}/kubelet.config"
     content: "{{ k3s_kubelet_config }}"
+    mode: "0644"
 
 - name: Copy k3s configuration file
   ansible.builtin.template:

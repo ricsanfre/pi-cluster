@@ -1,0 +1,55 @@
+---
+# Variables required:
+# helm_bin_path: Path to install helm binary (default: /usr/local/bin/helm)
+# helm_version: Helm version (default: v3.13.2)
+# k8s_platform: Autodetected from ansible_system (linux, etc)
+# k8s_arch: Autodetected from ansible_architecture (amd64, arm64, etc)
+
+- name: Set platform and architecture facts
+  ansible.builtin.set_fact:
+    k8s_platform: "{{ ansible_facts['system'] | lower }}"
+    k8s_arch: >-
+      {{
+        'amd64' if ansible_facts['architecture'] in ['x86_64', 'amd64'] else
+        'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else
+        ansible_facts['architecture']
+      }}
+
+# Check if Helm binary exists and version matches
+- name: Check if Helm binary exists
+  ansible.builtin.stat:
+    path: "{{ helm_bin_path | default('/usr/local/bin/helm') }}"
+  register: helm_check
+
+- name: Get Helm version if binary exists
+  ansible.builtin.command: "{{ helm_bin_path | default('/usr/local/bin/helm') }} --template '{{'{{.Version}}'}}'"
+  register: helm_existing_version
+  changed_when: false
+  failed_when: false
+  when: helm_check.stat.exists
+
+
+# Only download/install if binary is missing or version does not match
+- name: Download and install helm.
+  block:
+    - name: Download and extract helm binary
+      ansible.builtin.unarchive:
+        src: "https://get.helm.sh/helm-{{ helm_version | default('v3.13.2') }}-{{ k8s_platform }}-{{ k8s_arch }}.tar.gz"
+        dest: /tmp
+        remote_src: true
+        mode: "0755"
+    - name: Copy helm binary to destination
+      ansible.builtin.copy:
+        src: "/tmp/{{ k8s_platform }}-{{ k8s_arch }}/helm"
+        dest: "{{ helm_bin_path }}"
+        mode: "0755"
+        remote_src: true
+  when: >
+    not helm_check.stat.exists
+    or (helm_check.stat.exists and (
+        helm_existing_version is not defined
+        or helm_existing_version.rc is not defined
+        or helm_existing_version.rc != 0
+        or helm_existing_version.stdout is not defined
+        or (helm_version | default('v3.13.2')) not in (helm_existing_version.stdout | string)
+    ))
