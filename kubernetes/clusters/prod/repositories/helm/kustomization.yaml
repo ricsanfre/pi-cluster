@@ -15,6 +15,7 @@ resources:
   - istio-helmrepo.yaml
   - jetstack-helmrepo.yaml
   - kiali-helmrepo.yaml
+  - kube-vip-helmrepo.yaml
   - longhorn-helmrepo.yaml
   - metrics-server-helmrepo.yaml
   - minio-helmrepo.yaml

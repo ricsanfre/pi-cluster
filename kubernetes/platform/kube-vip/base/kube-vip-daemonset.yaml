@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-vip
+spec:
+  selector:
+    matchLabels:
+      app: kube-vip
+  template:
+    metadata:
+      labels:
+        app: kube-vip
+    spec:
+      serviceAccountName: kube-vip
+      hostNetwork: true
+      containers:
+        - name: kube-vip
+          image: ghcr.io/kube-vip/kube-vip:v0.6.4
+          args:
+            - start
+          env:
+            - name: vip
+              value: "10.0.0.100"
+            - name: interface
+              value: "eth0"
+            - name: port
+              value: "6443"
+            - name: prometheus
+              value: "true"
+            - name: leaderElection
+              value: "true"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 500m
+              memory: 500Mi
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
