@@ -24,7 +24,7 @@ Since its deployment is completely automated, the cluster can be re-deployed in 
 
 ## Scope
 
-The scope of this project is to build a hybrid x86/ARM kubernetes cluster at home, using low cost Raspeberry PIs and old refurbished mini PCs, and automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Flux CD](https://fluxcd.io/).
+The scope of this project is to build a hybrid x86/ARM kubernetes cluster at home, using low cost Raspeberry PIs and old refurbished mini PCs, and automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [OpenTofu](https://opentofu.org/)/[Terraform](https://www.terraform.io/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Flux CD](https://fluxcd.io/).
 
 As part of the project, the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
@@ -70,6 +70,11 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>GitOps tool for deploying applications to Kubernetes</td>
     </tr>
     <tr>
+        <td><img width="32" src="docs/assets/img/logos/opentofu-icon.svg" alt="opentofu logo"></td>
+        <td><a href="https://opentofu.org/">OpenTofu</a></td>
+        <td>Automate the provisioning of external services (Vault, DNS, S3 buckets, etc) required for the cluster operation</td>
+    </tr>
+    <tr>
         <td><img width="32" src="docs/assets/img/logos/cloud-init.svg"></td>
         <td><a href="https://cloudinit.readthedocs.io/en/latest/">Cloud-init</a></td>
         <td>Automate OS initial installation</td>
@@ -110,8 +115,8 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>External DNS synchronization</td>
     </tr>
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/haproxy.svg"></td>
-        <td><a href="https://www.haproxy.org/">HA Proxy</a></td>
+        <td><img width="32" src="docs/assets/img/logos/kube-vip-icon.png"></td>
+        <td><a href="https://kube-vip.io/">Kube-VIP</a></td>
         <td>Kubernetes API Load-balancer</td>
     </tr>
     <tr>
@@ -238,6 +243,7 @@ The following technologies have been used in previous releases of PiCluster but 
 | <img width="32" src="docs/assets/img/logos/traefik.svg" > | [Traefik](https://traefik.io/traefik/)  | Kubernetes Ingress Controller. Replaced by NGINX Ingress Controller  |
 | <img width="32" src="docs/assets/img/logos/argocd.svg" >  | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)  | GitOps tool. Replaced by FluxCD |
 | <img width="20" src="docs/assets/img/logos/flannel.svg" > | [Flannel](https://github.com/flannel-io/flannel/) | Kubernetes CNI plugin. Embedded into K3s. Replaced by Cilium CNI |
+| <img width="32" src="docs/assets/img/logos/haproxy.svg" > | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer. Replaced by Kube-VIP |
 
 
 ## External Resources and Services

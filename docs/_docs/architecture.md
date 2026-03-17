@@ -31,7 +31,7 @@ A **LAN switch** (16 Gigabit ports) used to provide L2 connectivity to the clust
   - Secret Management (Vault)
   - DNS Authoritative (Bind9)
 
-A load balancer is also needed for providing Hight availability to Kubernetes API. In this cases a network load balancer, [HAProxy](https://www.haproxy.org/), will be deployed in `node1` server.
+A load balancer is also needed for providing Hight availability to Kubernetes API. A cloud-native load balancer [kube-vip](https://kube-vip.io/) will be deployed in control plane nodes.
 
 For automating the OS installation of x86 nodes, a **PXE server** will be deployed in `node1` node.
 
