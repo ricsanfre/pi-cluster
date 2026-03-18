@@ -15,10 +15,6 @@ env:
   vip_retryperiod: "2"
   vip_ddns: "false"
   vip_subnet: "32,128"
-  vip_nodename:
-    valueFrom:
-      fieldRef:
-        fieldPath: spec.nodeName
   cp_namespace: "kube-system"
   # ARP configuration
   enable_node_labeling: "true"
@@ -27,6 +23,13 @@ env:
   lb_port: "6443"
   # Enable Prometheus metrics
   prometheus_server: ":2112"
+
+envValueFrom:
+  # Explicitly use the k8s node name (kubectl get node) as the identifier for matching endpointslices.
+  # See https://github.com/kube-vip/kube-vip/pull/811
+  vip_nodename:
+    fieldRef:
+      fieldPath: spec.nodeName
 
 resources:
   limits:
