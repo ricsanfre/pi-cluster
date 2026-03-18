@@ -1,2 +1,6 @@
-# Example patch for prod overlay
-# Patch HelmRelease fields as needed for prod
+- op: add
+  path: /spec/valuesFrom/-
+  value:
+    kind: ConfigMap
+    name: kube-vip-helm-values
+    valuesKey: overlay-values.yaml

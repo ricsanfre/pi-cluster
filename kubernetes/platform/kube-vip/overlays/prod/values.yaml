@@ -1,9 +1,10 @@
+# kube-vip helm values (prod overlay)
 config:
   address: 10.0.0.10
 
 env:
   # See Installation flags: https://kube-vip.io/docs/installation/flags/
-  # Enable only kube-vip control plane functionality 
+  # Enable only kube-vip control plane functionality
   cp_enable: "true"
   svc_enable: "false"
   # VIP configuration
@@ -25,8 +26,6 @@ env:
   prometheus_server: ":2112"
 
 envValueFrom:
-  # Explicitly use the k8s node name (kubectl get node) as the identifier for matching endpointslices.
-  # See https://github.com/kube-vip/kube-vip/pull/811
   vip_nodename:
     fieldRef:
       fieldPath: spec.nodeName
