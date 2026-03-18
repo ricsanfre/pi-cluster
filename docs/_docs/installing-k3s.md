@@ -492,10 +492,6 @@ Installation using `Helm` (Release 3):
       vip_retryperiod: "2"
       vip_ddns: "false"
       vip_subnet: "32,128"
-      vip_nodename:
-        valueFrom:
-          fieldRef:
-            fieldPath: spec.nodeName
       cp_namespace: "kube-system"
       # ARP configuration
       enable_node_labeling: "true"
@@ -504,6 +500,11 @@ Installation using `Helm` (Release 3):
       lb_port: "6443"
       # Enable Prometheus metrics
       prometheus_server: ":2112"
+
+    envValueFrom:
+      vip_nodename:
+        fieldRef:
+          fieldPath: spec.nodeName
 
     resources:
       limits:
