@@ -198,7 +198,7 @@ vault_custom_configuration: |
 #########################
 
 # renovate: datasource=github-releases depName=fluxcd/flux2
-fluxcd_version: v2.8.1
+fluxcd_version: v2.8.3
 
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
 velero_version: v1.17.1
