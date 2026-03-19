@@ -42,6 +42,8 @@
             create_namespace: true
           environment:
             KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
           tags:
             - monitoring
 
@@ -94,6 +96,8 @@
             release_values: "{{ cilium_merged_values }}"
           environment:
             KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
           tags:
             - cni
 
@@ -174,6 +178,8 @@
             release_values: "{{ kubevip_merged_values }}"
           environment:
             KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
           tags:
             - kube-vip
 
