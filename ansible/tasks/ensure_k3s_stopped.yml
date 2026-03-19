@@ -1,0 +1,17 @@
+---
+
+- name: Ensure k3s service is stopped in master nodes
+  ansible.builtin.systemd:
+    name: k3s
+    state: stopped
+    enabled: true
+  become: true
+  when: inventory_hostname in groups['k3s_master']
+
+- name: Ensure k3s service is stopped is agent nodes
+  ansible.builtin.systemd:
+    name: k3s-agent
+    state: stopped
+    enabled: true
+  become: true
+  when: inventory_hostname in groups['k3s_worker']
