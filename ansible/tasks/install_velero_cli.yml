@@ -25,6 +25,7 @@
     remote_src: true
 
 - name: Copy binary to /usr/local/bin
+  become: true
   ansible.builtin.copy:
     src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}/velero"
     dest: /usr/local/bin/velero
