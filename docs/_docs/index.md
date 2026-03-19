@@ -1,14 +1,14 @@
 ---
 title: What is this project about?
 permalink: /docs/home/
-description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "23-12-2025"
+description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible, Terraform and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
+last_modified_at: "15-03-2026"
 ---
 
 
 ## Scope
 
-The main goal of  this project is to create a kubernetes cluster at home using ARM/x86 bare metal nodes (**Raspberry Pis** and low cost refurbished **mini PCs**) and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [cloud-init](https://cloudinit.readthedocs.io/en/latest/) and [Flux CD](https://fluxcd.io/).
+The main goal of  this project is to create a kubernetes cluster at home using ARM/x86 bare metal nodes (**Raspberry Pis** and low cost refurbished **mini PCs**) and to automate its deployment and configuration applying **IaC (infrastructure as a code)** and **GitOps** methodologies with tools like [Ansible](https://docs.ansible.com/), [OpenTofu](https://opentofu.org/)/[Terraform](https://www.terraform.io/) and [Flux CD](https://fluxcd.io/).
 
 The project scope includes the automatic installation and configuration of a lightweight Kubernetes flavor based on [K3S](https://k3s.io/), and deployment of cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
@@ -38,6 +38,7 @@ Also deployment of services for building a cloud-native microservices architectu
 - Automate deployment of cluster using IaC (infrastructure as a code) and GitOps methodologies with tools like:
   - [cloud-init](https://cloudinit.readthedocs.io/en/latest/) to automate the initial OS installation of the cluster nodes.
   - [Ansible](https://docs.ansible.com/) for automating the configuration of the cluster nodes, installation of kubernetes and external services, and triggering cluster bootstrap (FluxCD bootstrap).
+  - [OpenTofu](https://opentofu.org/)/[Terraform](https://www.terraform.io/) to automate the provisioning of exteral services (Vault, DNS, S3 buckets, etc) and and internal services (Keycloak, ElasticSearch, ect.).
   - [Flux CD](https://fluxcd.io/) to automatically provision Kubernetes applications from git repository.
 
 
@@ -52,6 +53,7 @@ The following picture shows the set of opensource solutions used for building th
 | -------------------- | ------------ |:----------------------------------------------------------------------------------------------------------------------- |
 | ![ansible-icon](/assets/img/logos/ansible.svg){:width="32"}      | [Ansible](https://www.ansible.com) | Automate OS configuration, external services installation and k3s installation and bootstrapping |
 | ![fluxcd-icon](/assets/img/logos/flux-cd.png){:width="32"}       | [FluxCD](https://fluxcd.io/) | GitOps tool for deploying applications to Kubernetes |
+| ![opentofu-icon](/assets/img/logos/opentofu-icon.svg){:width="32"}       | [OpenTofu](https://opentofu.org/) | Automate the provisioning of external services (Vault, DNS, S3 buckets, etc) required for the cluster operation |
 | ![cloudinit-icon](/assets/img/logos/cloud-init.svg){:width="32"} | [Cloud-init](https://cloudinit.readthedocs.io/en/latest/) | Automate OS initial installation |
 | ![ubuntu-icon](/assets/img/logos/ubuntu.svg){:width="32"}        | [Ubuntu](https://ubuntu.com/)                    | Cluster nodes  OS                          |
 | ![openwrt-icon](/assets/img/logos/openwrt-icon.png){:width="32"} | [OpenWrt](https://openwrt.org/)                   | Router/Firewall OS                        |
@@ -60,7 +62,7 @@ The following picture shows the set of opensource solutions used for building th
 | ![cilium-icon](/assets/img/logos/cilium.svg){:width="32"}        | [Cilium CNI](https://cilium.io)              | Kubernetes Networking (CNI) and Load Balancer  |
 | ![coredns-icon](/assets/img/logos/coredns.svg){:width="32"}      | [CoreDNS](https://coredns.io/)               | Kubernetes DNS                                 |
 | ![external-dns-icon](/assets/img/logos/external-dns.png){:width="32"} | [External-DNS](https://kubernetes-sigs.github.io/external-dns/) | External DNS synchronization   |
-| ![haproxy-icon](/assets/img/logos/haproxy.svg){:width="32"} | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer                                       |
+| ![kube-vip-icon](/assets/img/logos/kube-vip-icon.png){:width="32"} | [Kube-VIP](https://kube-vip.io/)   | Kubernetes API Load-balancer                                       |
 | ![nginx-icon](/assets/img/logos/nginx.svg){:width="32"}     | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)  | Kubernetes Ingress Controller   |
 | ![longhorn-icon](/assets/img/logos/longhorn.svg){:width="32"} | [Longhorn](https://longhorn.io/)    | Kubernetes distributed block storage |
 | ![minio-icon](/assets/img/logos/minio.svg){:width="20"}     | [Minio](https://min.io/)              | S3 Object Storage solutio            |
@@ -97,6 +99,7 @@ The following technologies have been used in previous releases of PiCluster but 
 | ![traefik-icon](/assets/img/logos/traefik.svg){:width="32"} | [Traefik](https://traefik.io/traefik/)  | Kubernetes Ingress Controller. Replaced by NGINX Ingress Controller  |
 | ![argocd-icon](/assets/img/logos/argocd.svg){:width="32"}  | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)  | GitOps tool. Replaced by FluxCD |
 | ![flannel-icon](/assets/img/logos/flannel.svg){:width="20"}  | [Flannel](https://github.com/flannel-io/flannel/) | Kubernetes CNI plugin. Embedded into K3s. Replaced by Cilium CNI |
+| ![haproxy-icon](/assets/img/logos/haproxy.svg){:width="32"} | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer. Replaced by Kube-VIP |
 {: .table .border-dark }
 
 
@@ -228,6 +231,7 @@ The software used and the latest version tested of each component
 | Kubernetes | Helm | v3.20.0 ||
 | Kubernetes | etcd | v3.6.7-k3s1 | version pre-integrated into K3S |
 | Computing | containerd | v2.1.5-k3s1 | version pre-integrated into K3S |
+| Networking | Kube-VIP | v0.4.0 | Kubernetes API Load-balancer |
 | Networking | Cilium | 1.19.1 | |
 | Networking | CoreDNS | v1.13.1 | Helm chart version: 1.45.2 |
 | Networking | External-DNS | 0.20.0 | Helm chart version: 1.20.0 |

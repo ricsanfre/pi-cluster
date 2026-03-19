@@ -184,129 +184,38 @@ In this configuration, each agent node is registered to the same server node. A 
 
 ## High-Availability K3s
 
-Three or more server nodes that will serve the Kubernetes API and run other control plane services
-An embedded etcd datastore (as opposed to the embedded SQLite datastore used in single-server setups).
+Three or more server nodes that will serve the Kubernetes API and run other control plane services, using an embedded etcd datastore (as opposed to the embedded SQLite datastore used in single-server setups).
 
-A load balancer is needed for providing High availability to Kubernetes API. In this case, a network load balancer, [HAProxy](https://www.haproxy.org/) , will be used.
+A load balancer is required to provide high availability (HA) for the Kubernetes API. 
 
 
 ![K3S Architecture](/assets/img/k3s-HA-configuration.png)
 
-{{site.data.alerts.note}}
 
-For the HA installation, instead of providing arguments/environment variables to K3s' installation script, installation parameters will be provide through [config files](https://docs.k3s.io/installation/configuration#configuration-file).
+For K3S there are two main options for the Kubernetes API load balancer in HA configuration:
 
-{{site.data.alerts.end}}
+**Option 1: External Load Balancer (HAProxy)**
 
+You can use a traditional network load balancer such as HAProxy to provide a highly available endpoint for the Kubernetes API. This approach is suitable for environments where you want to separate the load balancer from the cluster nodes.
 
-### Load Balancer (HAProxy)
+**Option 2: kube-vip (Recommended)**
 
-[HAProxy](https://www.haproxy.org/) need to be installed in one node. If it is possible select a node which is not part of the K3s cluster. In my case I will install it on `node1`.
+**kube-vip** is a modern, cloud-native solution that provides a virtual IP (VIP) managed directly by the Kubernetes control plane nodes, eliminating the need for an external load balancer like HAProxy.
 
-{{site.data.alerts.note}}
+**Why kube-vip?**
 
-In this configuration we will have a single point of failure, HAProxy is not deployed in HA mode. HAProxy combined with [Keepalived](https://www.keepalived.org/) provide HA configuration for a software network load balancer. More than one node need to be configured to run Keepalived and HAProxy.
+- Native Kubernetes integration (runs as a DaemonSet)
+- No external dependencies or single point of failure
+- Supports ARP and BGP modes for VIP advertisement
+- Recommended by the K3s project for HA clusters
 
-{{site.data.alerts.end}}
+### Reserve VIP address for Kubernetes API
 
-To install and configure HAProxy:
+In both cases, the Kubernetes API will be exposed through a highly available endpoint, ensuring that the cluster remains accessible even if one or more control plane nodes fail and a floating virtual IP address is used to access the cluster. 
 
+VIP address need to be part of the same subnet as the control plane nodes, and it should not be used by any other device on the network.
 
-- Step 1. Install haproxy
-
-  ```shell
-  sudo apt install haproxy
-  ```
-
-- Step 2. Configure haproxy
-
-  Edit file `/etc/haproxy/haproxy.cfg`
-
-  ```
-  global
-    log /dev/log  local0
-    log /dev/log  local1 notice
-    chroot /var/lib/haproxy
-    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
-    stats timeout 30s
-    user haproxy
-    group haproxy
-    daemon
-
-  defaults
-    log global
-    mode http
-    option httplog
-    option dontlognull
-    retries 3
-    timeout http-request 10s
-    timeout queue 20s
-    timeout connect 10s
-    timeout client 1h
-    timeout server 1h
-    timeout http-keep-alive 10s
-    timeout check 10s
-    errorfile 400 /etc/haproxy/errors/400.http
-    errorfile 403 /etc/haproxy/errors/403.http
-    errorfile 408 /etc/haproxy/errors/408.http
-    errorfile 500 /etc/haproxy/errors/500.http
-    errorfile 502 /etc/haproxy/errors/502.http
-    errorfile 503 /etc/haproxy/errors/503.http
-    errorfile 504 /etc/haproxy/errors/504.http
-
-
-  #---------------------------------------------------------------------
-  # apiserver frontend which proxys to the control plane nodes
-  #---------------------------------------------------------------------
-  frontend k8s_apiserver
-      bind *:6443
-      mode tcp
-      option tcplog
-      tcp-request inspect-delay 5s
-      tcp-request content accept if { req.ssl_hello_type 1 }
-      default_backend k8s_controlplane
-
-  #---------------------------------------------------------------------
-  # round robin balancing for apiserver
-  #---------------------------------------------------------------------
-  backend k8s_controlplane
-      option httpchk GET /healthz
-      http-check expect status 200
-      mode tcp
-      option ssl-hello-chk
-      option tcp-check
-      default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
-      balance     roundrobin
-        server node2 10.0.0.12:6443 check
-        server node3 10.0.0.13:6443 check
-        server node4 10.0.0.14:6443 check
-  #---------------------------------------------------------------------
-  # Enable Prometheus metrics endpoint
-  #---------------------------------------------------------------------
-  frontend prometheus
-    bind *:8405
-    mode http
-    http-request use-service prometheus-exporter if { path /metrics }
-    no log
-  ```
-
-  With this configuration haproxy will balance requests to API server (TCP port 6443), following a round-robin balancing method, between the 3 master nodes configured.
-
-  IP address to be used for kubernetes API, will be gateway's IP address.
-
-  It also exposes a prometheus metrics endpoint on port 8405.
-
-- Step 3: Restart HAProxy
-
-  ```shell
-  sudo systemctl restart haproxy
-  ```
-
-- Step 4: Enable haproxy to boot
-
-  ```shell
-  systemctl enable haproxy
-  ```
+That VIP address need to be included as Subject Alternative Name (SAN) in the TLS certificate used by K3S API, so it is important to include it in the `tls-san` parameter during installation of master nodes.
 
 ### Master nodes installation
 
@@ -366,7 +275,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   node-taint:
   - node-role.kubernetes.io/master=true:NoSchedule
   tls-san:
-  - 10.0.0.11
+  - 10.0.0.10
   write-kubeconfig-mode: 644
   ```
 
@@ -380,7 +289,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   --disable 'local-storage'
   --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
   --etcd-expose-metrics
-  --tls-san 10.0.0.11
+  --tls-san 10.0.0.10
   --kube-controller-manager-arg 'bind-address=0.0.0.0'
   --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
   --kube-scheduler-arg 'bind-address=0.0.0.0'
@@ -391,7 +300,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   Parameters are the same which have been configured during installation in single master node deployment, adding the following:
 
   - `token-file` parameter instead K3S_TOKEN environment variable
-  - `tls-san` parameter to add k3s api load balancer ip as Subject Alternative Names on TLS cert created by K3S.
+  - `tls-san` parameter to add k3s api VIP (Virtual IP) as Subject Alternative Names on TLS cert created by K3S.
   - `etcd-expose-metrics` to expose etcd metrics
 
 
@@ -404,8 +313,319 @@ Embedded etcd data store will be used. Installation procedure is described in K3
 - Step 6. Install secondary master nodes
 
   ```shell
-  curl -sfL https://get.k3s.io | sh -s - server --server https://<ip or hostname of first master node>:6443
+  curl -sfL https://get.k3s.io | sh -s - server --server https://<ip_hostname_first_primary_server>:6443
   ```
+
+
+### Kubernetes API Load Balancing
+
+#### HAProxy (External Load Balancer)
+
+A load balancer is needed for providing High availability to Kubernetes API. In this case, a network load balancer, [HAProxy](https://www.haproxy.org/), can be used.
+
+HAProxy is an open source option that provides a TCP load balancer. It also supports HA for the load balancer itself, ensuring redundancy at all levels.
+
+Additionally, [KeepAlived](https://www.keepalived.org/) can be used to generate a virtual IP (VIP) that will be used to access the cluster.
+
+In my cluster I decided use kube-vip based LoadBalancer because I only have one non-cluster node to be used (node1).
+
+##### Example HAProxy Configuration
+
+Install HAProxy and keep alive on external nodes (lb-1 and lb-2), so they can be configured in active-passive mode to avoid single point of failure on load balancer:
+
+-   Install HAProxy and KeepAlived
+
+    ```shell
+    sudo apt install haproxy keepalived
+    ```
+-   Add the following to `/etc/haproxy/haproxy.cfg` on all nodes:
+
+    ```
+    global
+      log /dev/log  local0
+      log /dev/log  local1 notice
+      chroot /var/lib/haproxy
+      stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+      stats timeout 30s
+      user haproxy
+      group haproxy
+      daemon
+
+    defaults
+      log global
+      mode http
+      option httplog
+      option dontlognull
+      retries 3
+      timeout http-request 10s
+      timeout queue 20s
+      timeout connect 10s
+      timeout client 1h
+      timeout server 1h
+      timeout http-keep-alive 10s
+      timeout check 10s
+      errorfile 400 /etc/haproxy/errors/400.http
+      errorfile 403 /etc/haproxy/errors/403.http
+      errorfile 408 /etc/haproxy/errors/408.http
+      errorfile 500 /etc/haproxy/errors/500.http
+      errorfile 502 /etc/haproxy/errors/502.http
+      errorfile 503 /etc/haproxy/errors/503.http
+      errorfile 504 /etc/haproxy/errors/504.http
+
+    #---------------------------------------------------------------------
+    # apiserver frontend which proxys to the control plane nodes
+    #---------------------------------------------------------------------
+    frontend k3s_apiserver
+        bind *:6443
+        mode tcp
+        option tcplog
+        tcp-request inspect-delay 5s
+        tcp-request content accept if { req.ssl_hello_type 1 }
+        default_backend k3s_controlplane
+
+    #---------------------------------------------------------------------
+    # round robin balancing for apiserver
+    #---------------------------------------------------------------------
+    backend k3s_controlplane
+        option httpchk GET /healthz
+        http-check expect status 200
+        mode tcp
+        option ssl-hello-chk
+        option tcp-check
+        default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+        balance     roundrobin
+          server node2 10.0.0.12:6443 check
+          server node3 10.0.0.13:6443 check
+          server node4 10.0.0.14:6443 check
+    #---------------------------------------------------------------------
+    # Enable Prometheus metrics endpoint
+    #---------------------------------------------------------------------
+    frontend prometheus
+      bind *:8405
+      mode http
+      http-request use-service prometheus-exporter if { path /metrics }
+      no log
+    ```
+
+-   Add the following to `/etc/keepalived/keepalived.conf` on lb-1 and lb-2:
+
+    ```
+    global_defs {
+      enable_script_security
+      script_user root
+    }
+
+    vrrp_script chk_haproxy {
+        script 'killall -0 haproxy' # faster than pidof
+        interval 2
+    }
+
+    vrrp_instance haproxy-vip {
+        interface eth1
+        state <STATE> # MASTER on lb-1, BACKUP on lb-2
+        priority <PRIORITY> # 200 on lb-1, 100 on lb-2
+
+        virtual_router_id 51
+
+        virtual_ipaddress {
+            10.0.0.10/24
+        }
+
+        track_script {
+            chk_haproxy
+        }
+    }
+    ```
+-   Restart and enable HAProxy and KeepAlived services on both load balancer nodes:
+
+    ```shell
+    sudo systemctl restart haproxy
+    sudo systemctl enable haproxy
+    sudo systemctl restart keepalived
+    sudo systemctl enable keepalived
+    ```
+
+
+#### Kube-vip
+
+**kube-vip** runs as a DaemonSet on all control-plane nodes and manages a floating virtual IP address for the Kubernetes API. This VIP automatically fails over between nodes, ensuring API availability even if a node goes down.
+
+Kube-VIP will be configured to manage a VIP for the Kubernetes API on the control-plane nodes. The VIP will be advertised using ARP and kube-vip will handle failover between control-plane nodes.
+
+LoadBalancer functionality will be disabled in this setup since we are only using kube-vip for the API VIP. The VIP will be bound to the specified network interface on the control-plane nodes (in my case, control plane runs on Raspberry PI nodes using `eth0` interface)
+
+IPVS load balancing will be enabled for the API port (6443) to ensure efficient traffic distribution to the active control-plane node.
+
+##### Kube-VIP Installation
+
+
+Installation using `Helm` (Release 3):
+
+-   Step 1: Add kube-vip Helm repository:
+
+    ```shell
+    helm repo add kube-vip https://kube-vip.github.io/helm-charts/
+    ```
+-   Step 2: Fetch the latest charts from the repository:
+
+    ```shell
+    helm repo update
+    ```
+
+-   Step 3: Create helm values file `kube-vip-values.yml`
+
+    ```yaml
+    config:
+      address: 10.0.0.10 # VIP address to be used for Kubernetes API
+
+    env:
+      # See Installation flags: https://kube-vip.io/docs/installation/flags/
+      # Enable only kube-vip control plane functionality 
+      cp_enable: "true"
+      svc_enable: "false"
+      # VIP configuration
+      vip_interface: "eth0"
+      vip_arp: "true"
+      vip_leaderelection: "true"
+      vip_leaseduration: "15"
+      vip_renewdeadline: "10"
+      vip_retryperiod: "2"
+      vip_ddns: "false"
+      vip_subnet: "32,128"
+      cp_namespace: "kube-system"
+      # ARP configuration
+      enable_node_labeling: "true"
+      # Enables IPVS LoadBalancer functionality
+      lb_enable: "true"
+      lb_port: "6443"
+      # Enable Prometheus metrics
+      prometheus_server: ":2112"
+
+    envValueFrom:
+      vip_nodename:
+        fieldRef:
+          fieldPath: spec.nodeName
+
+    resources:
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+    serviceAccount:
+      create: true
+      name: kube-vip
+
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+
+    podMonitor:
+      enabled: false
+    ```
+
+    where:
+
+    | Option                | Example Value         | Description |
+    |-----------------------|----------------------|-------------|
+    | `config.address`      | `10.0.0.10`          | The virtual IP (VIP) that kube-vip will manage for the Kubernetes API. |
+    | `env.cp_enable`       | `"true"`            | Enable control plane (API) VIP management. |
+    | `env.svc_enable`      | `"false"`           | Enable Service type LoadBalancer support (set to false for only API VIP). |
+    | `env.vip_interface`   | `"eth0"`            | Network interface to bind the VIP to. |
+    | `env.vip_arp`         | `"true"`            | Use ARP for VIP advertisement (default for most home labs). |
+    | `env.vip_leaderelection` | `"true"`         | Enable leader election for VIP failover. |
+    | `env.vip_leaseduration` | `"15"`            | Lease duration for leader election (seconds). |
+    | `env.vip_renewdeadline` | `"10"`            | Renew deadline for leader election (seconds). |
+    | `env.vip_retryperiod`   | `"2"`             | Retry period for leader election (seconds). |
+    | `env.vip_ddns`          | `"false"`         | Enable dynamic DNS updates for the VIP. |
+    | `env.vip_subnet`        | `"32,128"`        | Subnet mask(s) for the VIP. |
+    | `env.vip_nodename`      | `valueFrom: fieldRef: fieldPath: spec.nodeName` | Use the node's name for VIP configuration. |
+    | `env.cp_namespace`      | `"kube-system"`   | Namespace where kube-vip runs. |
+    | `env.enable_node_labeling` | `"true"`       | Enable automatic node labeling for VIP ownership. |
+    | `env.lb_enable`         | `"true"`          | Enable IPVS LoadBalancer functionality. |
+    | `env.lb_port`           | `"6443"`          | Port for the Kubernetes API. |
+    | `env.prometheus_server` | `":2112"`         | Expose Prometheus metrics on this port. |
+    | `resources.limits.cpu`  | `500m`             | CPU limit for the kube-vip pod. |
+    | `resources.limits.memory` | `500Mi`          | Memory limit for the kube-vip pod. |
+    | `resources.requests.cpu`  | `100m`            | CPU request for the kube-vip pod. |
+    | `resources.requests.memory` | `100Mi`         | Memory request for the kube-vip pod. |
+    | `serviceAccount.create` | `true`             | Create a dedicated service account for kube-vip. |
+    {: .table .border-dark }
+
+
+    For a full list of options and advanced flags, see the [kube-vip documentation](https://kube-vip.io/docs/installation/flags/)
+
+    Additionally DaemonSet is configured with toleration and node affinity to ensure it is only scheduled on control-plane nodes.
+
+-   Step 4: Install kube-vip in kube-system namespace
+
+    ```shell
+    helm install kube-vip kube-vip/kube-vip --namespace kube-system -f kube-vip-values.yaml
+    ```
+
+-   Step 5: Confirm that the deployment succeeded
+   
+    Check pods are running
+
+    ```shell
+    kubectl -n kube-system get pods -l app.kubernetes.io/name=kube-vip
+    ```
+
+    On a control-plane host, confirm the VIP is in the ARP/neighbor table
+    ```shell
+    ip neigh show | grep 10.0.0.10
+    ```
+-   Update K3s config in all control-plane nodes to use the VIP
+
+    -   In `/etc/rancher/k3s/config.yaml` on secondary control plane nodes, set:
+
+
+        ```yaml
+        server: https://10.0.0.10:6443
+        tls-san:
+          - 10.0.0.10
+        ```
+
+        This ensures all nodes and clients use the VIP for API access and that the VIP is included in the server certificate.
+
+-   Restart K3s on all nodes
+
+    ```shell
+    # control plane nodes
+    sudo systemctl restart k3s
+    ```
+
+-   Step 7. Renew TLS certificates
+
+    If K3s was installed before the VIP was added to the API server certificate SANs, kubelets and API clients will not trust the server certificate for the VIP. To include the VIP in control plane node certificates:
+
+    ```shell
+    # Stop K3s service
+    systemctl stop k3s
+
+    # Rotate server certificates to include the configured tls-san/VIP
+    k3s certificate rotate
+
+    # Start K3s service
+    systemctl start k3s
+    ```
+
+-   Step 8. Verify API access via VIP
+
+    ```shell
+    kubectl get nodes --server https://10.0.0.10:6443
+    ```
 
 
 ### Worker nodes installation
@@ -464,7 +684,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
 - Step 5. Install agent node
 
   ```shell
-  curl -sfL https://get.k3s.io | sh -s - agent --server https://<k3s_api_loadbalancer_ip>:6443
+  curl -sfL https://get.k3s.io | sh -s - agent --server https://<kube_api_vip>:6443
   ```
 
 ## Installing custom CNI

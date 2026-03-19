@@ -17,3 +17,6 @@ k3s_kubelet_config: ""
 
 # k3s server-config
 k3s_server_config: ""
+
+k3s_master_additional_packages:
+  - ipvsadm

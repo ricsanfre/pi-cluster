@@ -1,6 +1,8 @@
 ---
 
+
 - name: Copy longhorn health check script
+  become: true
   ansible.builtin.copy:
     src: files/check_lh.sh
     dest: /usr/local/bin/check_lh.sh

@@ -10,7 +10,7 @@
 k3s_version: v1.35.2+k3s1
 
 # k3s master node VIP (loadbalancer)
-k3s_api_vip: 10.0.0.11
+k3s_api_vip: 10.0.0.10
 
 # k3s shared token
 # NOTE: Token is fetched on-demand from Vault in k3s_install.yml
@@ -208,6 +208,9 @@ longhorn_version: v1.11.0
 
 # renovate: datasource=github-releases depName=istio/istio
 istio_version: 1.29.0
+
+# renovate: datasource=github-releases depName=helm/helm
+helm_version: v3.20.0
 
 
 #######################

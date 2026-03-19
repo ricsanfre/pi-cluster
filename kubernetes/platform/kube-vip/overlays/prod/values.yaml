@@ -1,0 +1,59 @@
+# kube-vip helm values (prod overlay)
+config:
+  address: 10.0.0.10
+
+env:
+  # See Installation flags: https://kube-vip.io/docs/installation/flags/
+  # Enable only kube-vip control plane functionality
+  cp_enable: "true"
+  svc_enable: "false"
+  # VIP configuration
+  vip_interface: "eth0"
+  vip_arp: "true"
+  vip_leaderelection: "true"
+  vip_leaseduration: "15"
+  vip_renewdeadline: "10"
+  vip_retryperiod: "2"
+  vip_ddns: "false"
+  vip_subnet: "32,128"
+  cp_namespace: "kube-system"
+  # ARP configuration
+  enable_node_labeling: "true"
+  # Enables IPVS LoadBalancer functionality
+  lb_enable: "true"
+  lb_port: "6443"
+  # Enable Prometheus metrics
+  prometheus_server: ":2112"
+
+envValueFrom:
+  vip_nodename:
+    fieldRef:
+      fieldPath: spec.nodeName
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+serviceAccount:
+  create: true
+  name: kube-vip
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+
+podMonitor:
+  enabled: false

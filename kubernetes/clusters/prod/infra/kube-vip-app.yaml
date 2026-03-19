@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kube-vip
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./kubernetes/platform/kube-vip/overlays/prod
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: kube-system
+  wait: true
+  timeout: 5m
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      name: kube-vip
+      namespace: kube-system

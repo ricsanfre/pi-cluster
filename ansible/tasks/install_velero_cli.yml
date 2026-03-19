@@ -11,18 +11,21 @@
     velero_cli_arch: "{{ {'x86_64': 'amd64', 'aarch64': 'arm64', 'arm64': 'arm64'}.get(ansible_facts.architecture, ansible_facts.architecture) }}"
 
 - name: Download Velero CLI
+  become: true
   ansible.builtin.get_url:
     url: "https://github.com/vmware-tanzu/velero/releases/download/{{ velero_version }}/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}.tar.gz"
     dest: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}.tar.gz"
     mode: '0766'
 
 - name: Extract archives
+  become: true
   ansible.builtin.unarchive:
     src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}.tar.gz"
     dest: /tmp
     remote_src: true
 
 - name: Copy binary to /usr/local/bin
+  become: true
   ansible.builtin.copy:
     src: "/tmp/velero-{{ velero_version }}-linux-{{ velero_cli_arch }}/velero"
     dest: /usr/local/bin/velero

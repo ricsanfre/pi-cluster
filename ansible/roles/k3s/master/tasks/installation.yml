@@ -7,8 +7,181 @@
       when:
         - k3s_primary_control_node
       block:
+        # Set overlay variable from picluster.yml (default to prod)
+        - name: Set overlay
+          ansible.builtin.set_fact:
+            overlay: "{{ overlay | default('prod') }}"
+
         - name: Install master
           ansible.builtin.include_tasks: k3s_install.yml
+
+        # Install helm binary using external task file
+        - name: Install helm binary
+          ansible.builtin.include_tasks: install_helm.yml
+          vars:
+            helm_bin_path: /usr/local/bin/helm
+
+        # Wait for Kubernetes API availability
+        - name: Wait for Kubernetes API
+          ansible.builtin.wait_for:
+            port: 6443
+            host: "localhost"
+            delay: 5
+            timeout: 120
+          tags:
+            - k8s-api
+
+        # Install prometheus-crd Helm chart (required by Cilium and others)
+        - name: Install prometheus-crd Helm chart
+          kubernetes.core.helm:
+            name: prometheus-operator-crd
+            chart_ref: prometheus-operator-crds
+            chart_repo_url: https://prometheus-community.github.io/helm-charts
+            chart_version: 27.0.0
+            release_namespace: kube-system
+            create_namespace: true
+          environment:
+            KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
+          tags:
+            - monitoring
+
+        # Install Cilium CNI and CoreDNS after primary master (delegated to localhost)
+
+        # Read and merge Cilium values.yaml files
+
+        - name: Read Cilium base values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/cilium/app/base/values.yaml
+          register: cilium_base_values
+          delegate_to: localhost
+
+        - name: Read Cilium component values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/cilium/app/components/istio-config/values.yaml
+          register: cilium_component_values
+          delegate_to: localhost
+
+        - name: Read Cilium overlay values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/cilium/app/overlays/{{ overlay }}/values.yaml
+          register: cilium_overlay_values
+          delegate_to: localhost
+
+        - name: Merge Cilium values
+          ansible.builtin.set_fact:
+            cilium_merged_values: >-
+              {{
+                (cilium_base_values.content | b64decode | from_yaml | default({}))
+                | combine(
+                    cilium_component_values.content | b64decode | from_yaml | default({}),
+                    recursive=True
+                  )
+                | combine(
+                    cilium_overlay_values.content | b64decode | from_yaml | default({}),
+                    recursive=True
+                  )
+              }}
+
+        # Install Cilium CNI Helm chart
+        - name: Install Cilium CNI Helm chart
+          kubernetes.core.helm:
+            name: cilium
+            chart_ref: cilium
+            chart_repo_url: https://helm.cilium.io
+            chart_version: 1.19.1
+            release_namespace: kube-system
+            create_namespace: false
+            release_values: "{{ cilium_merged_values }}"
+          environment:
+            KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
+          tags:
+            - cni
+
+
+        # Read and merge CoreDNS values.yaml files
+        - name: Read CoreDNS base values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/coredns/app/base/values.yaml
+          register: coredns_base_values
+          delegate_to: localhost
+
+        - name: Read CoreDNS overlay values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/coredns/app/overlays/{{ overlay }}/values.yaml
+          register: coredns_overlay_values
+          delegate_to: localhost
+
+        - name: Merge CoreDNS values
+          ansible.builtin.set_fact:
+            coredns_merged_values: >-
+              {{
+                (coredns_base_values.content | b64decode | from_yaml | default({}))
+                | combine(
+                    coredns_overlay_values.content | b64decode | from_yaml | default({}),
+                    recursive=True
+                  )
+              }}
+
+        # Install CoreDNS Helm chart
+        - name: Install CoreDNS Helm chart
+          kubernetes.core.helm:
+            name: coredns
+            chart_ref: coredns
+            chart_repo_url: https://coredns.github.io/helm
+            chart_version: 1.45.2
+            release_namespace: kube-system
+            create_namespace: false
+            release_values: "{{ coredns_merged_values }}"
+          environment:
+            KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          tags:
+            - cni
+
+
+        # Read and merge kube-vip values.yaml files
+        - name: Read kube-vip base values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/kube-vip/base/values.yaml
+          register: kubevip_base_values
+          delegate_to: localhost
+
+        - name: Read kube-vip overlay values.yaml
+          ansible.builtin.slurp:
+            src: ../../../../kubernetes/platform/kube-vip/overlays/{{ overlay }}/values.yaml
+          register: kubevip_overlay_values
+          delegate_to: localhost
+
+        - name: Merge kube-vip values
+          ansible.builtin.set_fact:
+            kubevip_merged_values: >-
+              {{
+                (kubevip_base_values.content | b64decode | from_yaml | default({}))
+                | combine(
+                    kubevip_overlay_values.content | b64decode | from_yaml | default({}),
+                    recursive=True
+                  )
+              }}
+
+        # Install kube-vip Helm chart
+        - name: Install kube-vip Helm chart
+          kubernetes.core.helm:
+            name: kube-vip
+            chart_ref: kube-vip
+            chart_repo_url: https://kube-vip.github.io/helm-charts
+            chart_version: 0.9.6
+            release_namespace: kube-system
+            create_namespace: false
+            release_values: "{{ kubevip_merged_values }}"
+          environment:
+            KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
+          tags:
+            - kube-vip
 
     - name: Install secondary masters in case of HA mode
       # Secondary masters need to be added sequentially

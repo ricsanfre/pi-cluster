@@ -1,0 +1,9 @@
+# kube-vip helm values (base)
+# Example:
+# vip:
+#   address: 10.0.0.100
+#   interface: eth0
+#   services:
+#     - name: kube-apiserver
+#       port: 6443
+#       type: LoadBalancer
