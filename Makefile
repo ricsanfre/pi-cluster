@@ -161,6 +161,7 @@ external-services-reset: ## Reset external services
 
 openwrt-certbot-tls: ## Generate gateway TLS certificate via certbot
 	$(RUNNER) ansible-playbook generate_gateway_tls_certificate.yml
+	./metal/openwrt/script/openwrt-deploy-tls.sh
 
 deploy-monitoring-agent: ## Deploy monitoring agent
 	$(RUNNER) ansible-playbook deploy_monitoring_agent.yml
