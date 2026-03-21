@@ -32,7 +32,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: envoy-proxy-app
-    - name: cert-manager
+    - name: cert-manager-config
   path: ./kubernetes/platform/envoy-proxy/config/overlays/prod
   prune: true
   wait: true
