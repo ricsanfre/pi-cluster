@@ -6,7 +6,7 @@ spec:
   clientIPDetection:
     xForwardedFor:
       trustedCIDRs:
-        - ${TRUSTED_INTERNAL_CIDRS}
+        - ${TRUSTED_INTERNAL_POD_CIDR}
   http2:
     onInvalidMessage: TerminateStream
   http3: {}
