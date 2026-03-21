@@ -4,8 +4,8 @@ metadata:
   name: pi-cluster-tls
 spec:
   dnsNames:
-    - ${PI_CLUSTER_DOMAIN}
-    - "*.${PI_CLUSTER_DOMAIN}"
+    - ${CLUSTER_DOMAIN}
+    - "*.${CLUSTER_DOMAIN}"
   duration: 160h
   issuerRef:
     kind: ClusterIssuer
