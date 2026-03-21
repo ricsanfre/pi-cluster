@@ -5,7 +5,7 @@ resources:
   - helm.yaml
 
 configMapGenerator:
-  - name: envoy-proxy-helm-values
+  - name: envoy-gateway-helm-values
     files:
       - base-values.yaml=values.yaml
 configurations:

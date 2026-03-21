@@ -2,14 +2,14 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: envoy-proxy
+  name: envoy-gateway
 spec:
   interval: 30m
   chartRef:
     kind: OCIRepository
-    name: envoy-proxy
+    name: envoy-gateway
     namespace: flux-system
-  releaseName: envoy-proxy
+  releaseName: envoy-gateway
   targetNamespace: envoy-gateway-system
   install:
     remediation:
@@ -21,5 +21,5 @@ spec:
       retries: 3
   valuesFrom:
   - kind: ConfigMap
-    name: envoy-proxy-helm-values
+    name: envoy-gateway-helm-values
     valuesKey: base-values.yaml

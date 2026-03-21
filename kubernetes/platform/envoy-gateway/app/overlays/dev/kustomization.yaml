@@ -6,7 +6,7 @@ resources:
   - ../../base
 
 configMapGenerator:
-  - name: envoy-proxy-helm-values
+  - name: envoy-gateway-helm-values
     behavior: merge
     files:
       - overlay-values.yaml=values.yaml
@@ -15,5 +15,5 @@ patches:
 - target:
     group: helm.toolkit.fluxcd.io
     kind: HelmRelease
-    name: envoy-proxy
+    name: envoy-gateway
   path: helm-patch.yaml

@@ -2,5 +2,5 @@
   path: /spec/valuesFrom/-
   value:
     kind: ConfigMap
-    name: envoy-proxy-helm-values
+    name: envoy-gateway-helm-values
     valuesKey: overlay-values.yaml
