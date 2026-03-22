@@ -4,7 +4,7 @@ grafana.ini:
   server:
     # Configuring grafana url
     domain: grafana.${CLUSTER_DOMAIN}
-    root_url: "https://%(domain)"
+    root_url: "https://%(domain)s/"
 
 # HTTPRoute config
 route:
