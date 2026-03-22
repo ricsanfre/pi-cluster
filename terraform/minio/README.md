@@ -321,10 +321,10 @@ The module creates users and buckets from `vault.yml.j2`:
 | Longhorn | longhorn | k3s-longhorn | vault.yml.j2: `minio.longhorn` |
 | Velero | velero | k3s-velero | vault.yml.j2: `minio.velero` |
 | Restic | restic | restic | vault.yml.j2: `minio.restic` |
-| Barman | barman | barman | vault.yml.j2: `minio.barman` |
+| Barman | barman | k3s-barman | vault.yml.j2: `minio.barman` |
 
 ## Service Users and Buckets
-| Barman | barman | barman | PostgreSQL backups |
+| Barman | barman | k3s-barman | PostgreSQL backups |
 
 ## Policy Definitions
 
