@@ -7,8 +7,8 @@ metadata:
     external-dns.alpha.kubernetes.io/controller: none
 spec:
   parentRefs:
-    - name: envoy-gatewway
-      namespace: networking
+    - name: envoy-gateway
+      namespace: envoy-gateway-system
       sectionName: http
   rules:
     - filters:
