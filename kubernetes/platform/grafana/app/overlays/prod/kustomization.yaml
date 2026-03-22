@@ -6,7 +6,7 @@ resources:
   - ../../base
 
 components:
-  - ../../components/ingress
+  - ../../components/route
   - ../../components/sso
   - ../../components/dashboards
 
