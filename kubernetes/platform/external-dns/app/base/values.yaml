@@ -30,7 +30,13 @@ sources:
   - crd
   - service
   - ingress
+  - gateway-httproute
+  - gateway-tcproute
+  - gateway-tlsroute
+  - gateway-grpcroute
+  - gateway-udproute
   - istio-gateway
+
 domainFilters: 
   - ${CLUSTER_DOMAIN}
 logLevel: debug
