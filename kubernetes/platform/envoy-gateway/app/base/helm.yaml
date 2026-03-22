@@ -7,7 +7,7 @@ spec:
   interval: 30m
   chartRef:
     kind: OCIRepository
-    name: envoy-proxy
+    name: envoy-gateway
     namespace: flux-system
   releaseName: envoy-gateway
   targetNamespace: envoy-gateway-system
