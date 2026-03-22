@@ -1,0 +1,6 @@
+# cert-manager helm values (monitoring)
+# Enabling Prometheus monitoring
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true

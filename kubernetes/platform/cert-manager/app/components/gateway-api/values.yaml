@@ -1,0 +1,5 @@
+# cert-manager helm values (gateway-api)
+# Enabling Gateway API support in cert-manager, which allows cert-manager to manage certificates for Gateways defined using the Gateway API (e.g., for Envoy Gateway).
+# ref: https://cert-manager.io/docs/usage/gateway/
+config:
+  enableGatewayAPI: true
