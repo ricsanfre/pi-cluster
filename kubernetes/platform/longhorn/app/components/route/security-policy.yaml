@@ -12,9 +12,7 @@ spec:
       issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
     clientIDRef:
       name: oauth-externalsecret
-      key: client-id
     clientSecret:
       name: oauth-externalsecret
-      key: client-secret
     redirectURL: "https://longhorn.${CLUSTER_DOMAIN}"
     logoutPath: "/longhorn/logout"
