@@ -5,6 +5,11 @@ cr:
   namespace: kiali
   spec:
     istio_namespace: "istio-system"
+    server:
+      web_fqdn: "kiali.${CLUSTER_DOMAIN}"
+      web_port: 443
+      web_schema: "https"
+      web_root: "/"
     auth:
       # strategy: "anonymous"
       strategy: openid
@@ -21,7 +26,7 @@ cr:
         # Grafana service name is "grafana" and is in the "grafana" namespace.
         internal_url: 'http://grafana.grafana.svc.cluster.local/grafana/'
         # Public facing URL of Grafana
-        external_url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
+        external_url: 'https://grafana.${CLUSTER_DOMAIN}'
         auth:
           # Use same OAuth2.0 token used for accesing Kiali
           type: bearer
