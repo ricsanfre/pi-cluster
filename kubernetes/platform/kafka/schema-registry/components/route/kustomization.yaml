@@ -3,5 +3,3 @@ kind: Component
 
 resources:
   - httproute.yaml
-  - oauth2-external-secret.yaml
-  - security-policy.yaml
