@@ -1,0 +1,18 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: kafdrop
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: kafdrop
+  oidc:
+    provider:
+      issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+    clientIDRef:
+      name: kafdrop-oauth2-externalsecret
+    clientSecret:
+      name: kafdrop-oauth2-externalsecret
+    redirectURL: "https://kafdrop.${CLUSTER_DOMAIN}/oauth2/callback"
+    logoutPath: "/kafdrop/logout"

@@ -1,0 +1,36 @@
+{
+  "name": "Kafdrop",
+  "description": "Kafdrop - Kafka Web UI",
+  "vault_secret_ref": "kafdrop/oauth2",
+  "client_id_key": "client-id",
+  "client_secret_key": "client-secret",
+  "enabled": true,
+  "access_type": "CONFIDENTIAL",
+  "root_url": "https://kafdrop.${CLUSTER_DOMAIN}",
+  "admin_url": "https://kafdrop.${CLUSTER_DOMAIN}",
+  "base_url": "",
+  "redirect_uris": [
+    "https://kafdrop.${CLUSTER_DOMAIN}/*"
+  ],
+  "web_origins": [
+    "https://kafdrop.${CLUSTER_DOMAIN}"
+  ],
+  "standard_flow_enabled": true,
+  "direct_access_grants_enabled": true,
+  "implicit_flow_enabled": true,
+  "service_accounts_enabled": true,
+  "full_scope_allowed": true,
+  "default_scopes": [
+    "web-origins",
+    "acr",
+    "profile",
+    "roles",
+    "email"
+  ],
+  "optional_scopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ]
+}
