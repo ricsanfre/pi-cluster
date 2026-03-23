@@ -1,0 +1,38 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: alertmanager-dashboard
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: kube-prometheus-stack-alertmanager
+  oidc:
+    provider:
+      issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+    clientIDRef:
+      name: oauth2-alertmanager-externalsecret
+    clientSecret:
+      name: oauth2-alertmanager-externalsecret
+    redirectURL: "https://alertmanager.${CLUSTER_DOMAIN}/oauth2/callback"
+    logoutPath: "/alertmanager/logout"
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: prometheus-dashboard
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: kube-prometheus-stack-prometheus
+  oidc:
+    provider:
+      issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+    clientIDRef:
+      name: oauth2-prometheus-externalsecret
+    clientSecret:
+      name: oauth2-prometheus-externalsecret
+    redirectURL: "https://prometheus.${CLUSTER_DOMAIN}/oauth2/callback"
+    logoutPath: "/prometheus/logout"
