@@ -13,8 +13,8 @@ spec:
     namespace: envoy-gateway-system
   rules:
   - backendRefs:
-      name: minio
-      port: 9000
+      - name: minio
+        port: 9000
     matches:
     - path:
         type: PathPrefix
@@ -35,8 +35,8 @@ spec:
     namespace: envoy-gateway-system
   rules:
   - backendRefs:
-      name: minio-console
-      port: 9001
+     - name: minio-console
+       port: 9001
     matches:
     - path:
         type: PathPrefix
