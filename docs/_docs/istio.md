@@ -590,9 +590,9 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
     resources:
     - ns.yaml
       # https://istio.io/latest/docs/examples/bookinfo/
-    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo.yaml
-    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo-versions.yaml
-    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/networking/bookinfo-gateway.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.29/samples/bookinfo/platform/kube/bookinfo.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.29/samples/bookinfo/platform/kube/bookinfo-versions.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.29/samples/bookinfo/gateway-api/bookinfo-gateway.yam
     ```
 
     {{site.data.alerts.note}}
