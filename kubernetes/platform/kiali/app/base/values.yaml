@@ -7,7 +7,7 @@ cr:
     istio_namespace: "istio-system"
     server:
       web_fqdn: "kiali.${CLUSTER_DOMAIN}"
-      web_port: 443
+      web_port: "443"
       web_schema: "https"
       web_root: "/"
     auth:
