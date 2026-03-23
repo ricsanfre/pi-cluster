@@ -6,14 +6,14 @@
   "client_secret_key": "client-secret",
   "enabled": true,
   "access_type": "CONFIDENTIAL",
-  "root_url": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
-  "admin_url": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
-  "base_url": "https://monitoring.${CLUSTER_DOMAIN}/grafana",
+  "root_url": "https://grafana.${CLUSTER_DOMAIN}",
+  "admin_url": "https://grafana.${CLUSTER_DOMAIN}",
+  "base_url": "https://grafana.${CLUSTER_DOMAIN}",
   "redirect_uris": [
-    "https://monitoring.${CLUSTER_DOMAIN}/grafana/login/generic_oauth"
+    "https://grafana.${CLUSTER_DOMAIN}/login/generic_oauth"
   ],
   "web_origins": [
-    "https://monitoring.${CLUSTER_DOMAIN}/grafana"
+    "https://grafana.${CLUSTER_DOMAIN}"
   ],
   "standard_flow_enabled": true,
   "direct_access_grants_enabled": true,
