@@ -12,8 +12,8 @@ spec:
     namespace: envoy-gateway-system
   rules:
   - backendRefs:
-     - name: schema-registry
-       port: 8081
+     - name: otel-collector
+       port: 4318
     matches:
     - path:
         type: PathPrefix
