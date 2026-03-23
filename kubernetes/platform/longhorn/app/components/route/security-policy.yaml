@@ -14,5 +14,5 @@ spec:
       name: oauth2-externalsecret
     clientSecret:
       name: oauth2-externalsecret
-    redirectURL: "https://longhorn.${CLUSTER_DOMAIN}"
+    redirectURL: "https://longhorn.${CLUSTER_DOMAIN}/oauth2/callback"
     logoutPath: "/longhorn/logout"
