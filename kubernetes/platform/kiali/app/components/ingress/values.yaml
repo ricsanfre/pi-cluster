@@ -1,0 +1,33 @@
+# kiali-operator helm values (ingress)
+cr:
+  spec:
+    deployment:
+      ingress:
+        class_name: "nginx"
+        enabled: true
+        override_yaml:
+          metadata:
+            annotations:
+              # Enable cert-manager to create automatically the SSL certificate and store in Secret
+              # Possible Cluster-Issuer values:
+              #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
+              #   * 'ca-issuer' (CA-signed certificate, not valid)
+              cert-manager.io/cluster-issuer: letsencrypt-issuer
+              cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
+          spec:
+            ingressClassName: nginx
+            rules:
+            - host: kiali.${CLUSTER_DOMAIN}
+              http:
+                paths:
+                - backend:
+                    service:
+                      name: kiali
+                      port:
+                        number: 20001
+                  path: /
+                  pathType: Prefix
+            tls:
+            - hosts:
+              - kiali.${CLUSTER_DOMAIN}
+              secretName: kiali-tls

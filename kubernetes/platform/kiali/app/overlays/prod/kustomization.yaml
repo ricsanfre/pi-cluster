@@ -5,6 +5,9 @@ namespace: kiali
 resources:
   - ../../base
 
+components:
+  - ../../components/route
+
 configMapGenerator:
   - name: kiali-operator-helm-values
     behavior: merge
