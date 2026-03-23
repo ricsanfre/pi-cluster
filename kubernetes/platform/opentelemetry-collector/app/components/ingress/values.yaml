@@ -1,16 +1,4 @@
 # opentelemetry-collector helm values (ingress)
-config:
-  receivers:
-    otlp:
-      protocols:
-        http:
-          # Since this collector needs to receive data from the web, enable cors for all origins
-          # `allowed_origins` can be refined for your deployment domain
-          cors:
-            allowed_origins:
-              - "http://*.${CLUSTER_DOMAIN}"
-              - "https://*.${CLUSTER_DOMAIN}"
-
 # Enabling Ingress for OTEL Collector
 ingress:
   enabled: true
