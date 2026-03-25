@@ -6,7 +6,7 @@ spec:
   gatewayClassName: envoy
   infrastructure:
     annotations:
-      io.cilium/lb-ipam-ips: ${ENVOY_GATEWAY_LOAD_BALANCER_IP}
+      io.cilium/lb-ipam-ips: ${HTTP_GATEWAY_LOAD_BALANCER_IP}
   listeners:
     # The http listener will only allow routes in the envoy namespace, to enable https redirect route
     - name: http

@@ -1,0 +1,79 @@
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-dual-role-0
+spec:
+  hostnames:
+  - kafka-broker-0.${CLUSTER_DOMAIN}
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: kafka-gateway
+    namespace: kafka
+    sectionName: kafka-listener
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: cluster-dual-role-0
+      port: 9094
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-dual-role-1
+spec:
+  hostnames:
+  - kafka-broker-1.${CLUSTER_DOMAIN}
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: kafka-gateway
+    namespace: kafka
+    sectionName: kafka-listener
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: cluster-dual-role-1
+      port: 9094
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-dual-role-2
+spec:
+  hostnames:
+  - kafka-broker-2.${CLUSTER_DOMAIN}
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: kafka-gateway
+    namespace: kafka
+    sectionName: kafka-listener
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: cluster-dual-role-2
+      port: 9094
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-kafka-external-bootstrap
+spec:
+  hostnames:
+  - kafka-bootstrap.${CLUSTER_DOMAIN}
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: kafka-gateway
+    namespace: kafka
+    sectionName: kafka-listener
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: cluster-kafka-external-bootstrap
+      port: 9094

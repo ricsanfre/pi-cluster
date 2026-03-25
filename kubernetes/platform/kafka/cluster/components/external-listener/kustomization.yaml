@@ -3,6 +3,8 @@ kind: Component
 
 resources:
   - certificate.yaml
+  - gateway.yaml
+  - tls-route.yaml
 
 patches:
 - target:
