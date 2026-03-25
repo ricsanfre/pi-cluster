@@ -90,7 +90,7 @@
             name: cilium
             chart_ref: cilium
             chart_repo_url: https://helm.cilium.io
-            chart_version: 1.19.1
+            chart_version: 1.19.2
             release_namespace: kube-system
             create_namespace: false
             release_values: "{{ cilium_merged_values }}"
