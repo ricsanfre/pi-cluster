@@ -1,7 +1,5 @@
 .EXPORT_ALL_VARIABLES:
 
-KUBECONFIG = $(shell pwd)/ansible-runner/runner/.kube/config
-
 KAFKA_REMOTE_BOOTSTRAP=kafka-bootstrap.homelab.ricsanfre.com
 KAFKA_SCHEMA_REGISTRY=schema-registry.homelab.ricsanfre.com
 
@@ -37,31 +35,31 @@ kafka-external-client:
 kafka-external-producer:
 	docker exec -it kafka-client bin/kafka-console-producer.sh \
 	--producer.config /tmp/properties/producer_ssl.properties \
-	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 	--topic test-topic
 
 kafka-external-consumer:
 	docker exec -it kafka-client bin/kafka-console-consumer.sh \
 	--consumer.config /tmp/properties/consumer_ssl.properties \
-	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 	--topic test-topic \
 	--group test-consumer-group --from-beginning
 
 remote-kafka-command:
 	docker exec -it kafka-client bin/command.sh \
 	--config /tmp/properties/admin_ssl.properties \
-	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 
 show-kafka-acls:
 	docker exec -it kafka-client bin/kafka-acls.sh \
 	--command-config /tmp/properties/admin_ssl.properties \
-	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 	--list	
 
 show-kafka-topics:
 	docker exec -it kafka-client bin/kafka-topics.sh \
 	--command-config /tmp/properties/admin_ssl.properties \
-	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	--bootstrap-server ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 	--list
 
 kafka-avro-producer:

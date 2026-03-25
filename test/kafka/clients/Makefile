@@ -34,7 +34,7 @@ venv: .venv/touchfile
 
 kafka-avro-producer: venv
 	@uv run avro_producer.py \
-	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	-b ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 	-s https://${KAFKA_SCHEMA_REGISTRY} \
 	-su client \
 	-sp ${SCHEMA_REGISTRY_PASSWORD} \
@@ -46,7 +46,7 @@ kafka-avro-producer: venv
 
 kafka-avro-consumer: venv
 	@uv run avro_consumer.py \
-	-b ${KAFKA_REMOTE_BOOTSTRAP}:443 \
+	-b ${KAFKA_REMOTE_BOOTSTRAP}:9094 \
 	-su client \
 	-s https://${KAFKA_SCHEMA_REGISTRY}  \
 	-sp ${SCHEMA_REGISTRY_PASSWORD} \
