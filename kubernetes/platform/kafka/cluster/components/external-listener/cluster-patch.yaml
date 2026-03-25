@@ -3,7 +3,7 @@
   value:
     name: external # TLS listener for external access
     port: 9094
-    type: clusterIP # Use ClusterIP to let the Gateway handle the routing
+    type: cluster-ip # Use cluster-ip to let the Gateway handle the routing
     tls: true
     authentication:
       type: scram-sha-512 # Set authentication to scram-sha-512
