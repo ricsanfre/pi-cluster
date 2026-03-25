@@ -21,8 +21,8 @@ spec:
       envoyService:
         type: LoadBalancer
         externalTrafficPolicy: Cluster
-        annotations:
-          io.cilium/lb-ipam-ips: ${ENVOY_GATEWAY_LOAD_BALANCER_IP}
+        # annotations:
+        #   io.cilium/lb-ipam-ips: ${ENVOY_GATEWAY_LOAD_BALANCER_IP}
   shutdown:
     drainTimeout: 180s
   telemetry:
