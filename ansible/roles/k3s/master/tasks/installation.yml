@@ -172,7 +172,7 @@
             name: kube-vip
             chart_ref: kube-vip
             chart_repo_url: https://kube-vip.github.io/helm-charts
-            chart_version: 0.9.7
+            chart_version: 0.9.8
             release_namespace: kube-system
             create_namespace: false
             release_values: "{{ kubevip_merged_values }}"
