@@ -46,6 +46,14 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/nginx-folder
+      - name: envoy-gateway
+        orgId: 1
+        folder: Envoy-Gateway
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/envoy-gateway-folder
       - name: minio
         orgId: 1
         folder: Minio
