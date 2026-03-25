@@ -4,3 +4,6 @@ namespace: envoy-gateway-system
 
 resources:
   - ../../base
+
+components:
+  - ../../components/monitoring
