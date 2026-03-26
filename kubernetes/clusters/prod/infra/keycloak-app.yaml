@@ -41,6 +41,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+    - name: external-secrets-app
   path: ./kubernetes/platform/keycloak/operator/overlays/prod
   prune: true
   wait: true

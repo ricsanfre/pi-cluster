@@ -1,0 +1,32 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: docker-mailserver
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: docker-mailserver
+      version: 5.1.1
+      sourceRef:
+        kind: HelmRepository
+        name: docker-mailserver
+        namespace: flux-system
+  releaseName: docker-mailserver
+  targetNamespace: docker-mailserver
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  dependsOn:
+    - name: longhorn
+      namespace: longhorn-system
+  valuesFrom:
+  - kind: ConfigMap
+    name: docker-mailserver-helm-values
+    valuesKey: base-values.yaml

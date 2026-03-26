@@ -1,0 +1,91 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: docker-mailserver-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/apps/docker-mailserver/config/overlays/prod
+  prune: true
+  dependsOn:
+    - name: external-secrets-app
+  wait: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: docker-mailserver
+      namespace: docker-mailserver
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+      - kind: ConfigMap
+        name: domain-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: docker-mailserver-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: docker-mailserver
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/apps/docker-mailserver/app/overlays/prod
+  prune: true
+  dependsOn:
+    - name: cert-manager-app
+    - name: cilium-app
+    - name: external-dns-app
+    - name: docker-mailserver-config
+  wait: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: docker-mailserver
+      namespace: docker-mailserver
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+      - kind: ConfigMap
+        name: domain-settings
+      - kind: Secret
+        name: docker-mailserver-config-secret
+        
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: docker-mailserver-mta-sts
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: docker-mailserver-mta-sts
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/apps/docker-mailserver/mta-sts/overlays/prod
+  prune: true
+  dependsOn:
+    - name: docker-mailserver-config
+    - name: docker-mailserver-app
+  wait: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: nginx-mta-sts
+      namespace: docker-mailserver-mta-sts
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+      - kind: ConfigMap
+        name: domain-settings

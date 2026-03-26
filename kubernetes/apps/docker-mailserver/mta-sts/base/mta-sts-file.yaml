@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mta-sts-file
+  namespace: docker-mailserver-mta-sts
+data:
+  mta-sts.txt: |
+    version: STSv1
+    mode: enforce
+    mx: *.${CLUSTER_DOMAIN}
+    max_age: 604800

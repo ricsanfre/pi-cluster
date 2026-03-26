@@ -17,3 +17,5 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+      - kind: ConfigMap
+        name: domain-settings

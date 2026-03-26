@@ -6,9 +6,9 @@
 ##################################
 
 install_helm: true
-helm_version: 'v3.18.2'
+helm_version: 'v4.1.1'
 install_kubectl: false
 
-# OS and hardware architectire
+# OS and hardware architecture
 k8s_platform: linux
 k8s_arch: arm64

@@ -18,4 +18,5 @@ prometheus:
         authorization:
           credentials_file: /vault/secrets/token
         static_configs:
-        - targets: [vault.${CLUSTER_DOMAIN}:8200]
+        - targets: 
+          - "vault.${CLUSTER_DOMAIN}:8200"

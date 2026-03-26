@@ -9,7 +9,7 @@
     create_namespace: true
     values_files:
       - ../../kubernetes/platform/vault/app/base/values.yaml
-    # Ovewrite values for the vault Helm chart setting vault dns name
+    # Overwrite values for the vault Helm chart setting vault dns name
     set_values:
       - value: "global.externalVaultAddr=https://{{ vault_hostname }}:8200"
         value_type: string

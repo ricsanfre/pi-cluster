@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-mta-sts-svc
+spec:
+  selector:
+    app.kubernetes.io/name: nginx-mta-sts
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: http

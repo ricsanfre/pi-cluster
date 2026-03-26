@@ -6,7 +6,7 @@ services:
       context: .
     # Clean up the old gpg-agents
     command: >
-      /bin/sh -c "rm /home/runner/.gnupg/S.gpg-agent* &&
+      /bin/sh -c "rm /home/runner/.gnupg/S.gpg-agent* || true &&
              tail -f /dev/null"
     container_name: ansible-runner
     restart: unless-stopped

@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    cert-manager.io/common-name: mta-sts.${CLUSTER_DOMAIN}
+  labels:
+    app.kubernetes.io/instance: mta-sts
+    app.kubernetes.io/name: mta-sts
+  name: mta-sts
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: mta-sts.${CLUSTER_DOMAIN}
+    http:
+      paths:
+      - backend:
+          service:
+            name: nginx-mta-sts-svc
+            port:
+              name: http
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - mta-sts.${CLUSTER_DOMAIN}
+    secretName: mta-sts-tls

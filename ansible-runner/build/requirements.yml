@@ -27,12 +27,14 @@ roles:
   - name: ricsanfre.backup
     version: v1.1.3
   - name: ricsanfre.vault
-    version: v1.0.5
+    src: https://github.com/olipinski/ansible-role-vault
+    version: main
 collections:
   - name: community.general
     version: 12.4.0
-  - name: kubernetes.core
-    version: 6.3.0
+  - name: https://github.com/ansible-collections/kubernetes.core
+    type:  git
+    version: main
   - name: community.hashi_vault
     version: 7.1.0
   - name: ansible.posix

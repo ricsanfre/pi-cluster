@@ -41,7 +41,7 @@ spec:
           # Additional environment variables in secret
           envFrom:
           - secretRef:
-              name: kc-config-cli-env
+              name: keycloak-config-cli-env
           volumeMounts:
             - name: config
               mountPath: /config

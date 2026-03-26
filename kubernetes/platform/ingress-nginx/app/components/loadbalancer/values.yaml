@@ -1,0 +1,5 @@
+controller:
+  # Set specific LoadBalancer IP address for Ingress service
+  service:
+    annotations:
+      lbipam.cilium.io/ips: ${NGINX_LOAD_BALANCER_IP}

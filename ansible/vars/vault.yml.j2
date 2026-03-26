@@ -41,8 +41,8 @@ vault:
     admin:
       user: admin
       password: {{ keycloak_admin_password }}
-    picluster-admin:
-      user: piadmin
+    rdxcluster-admin:
+      user: rdxadmin
       password: {{ keycloak_pi_password }}
     postgresql:
       user: keycloak
@@ -129,3 +129,16 @@ vault:
     basic-auth:
       user: sruser
       password: {{ schema_registry_basic_auth_password }}
+  # email configuration
+  dms:
+    admin:
+      user: admin
+      password: {{ docker_mailserver_password }}
+      hashed_password: {{ docker_mailserver_password_hashed }}
+  dms-dkim:
+    keys:
+      private: |
+        {{ dkim_private_key | indent(width=8, first=False) }} 
+      public: |
+        {{ dkim_public_key | indent(width=8, first=False) }}
+      dns: {{ dkim_public_key_dns }}

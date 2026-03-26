@@ -4,6 +4,9 @@ kind: ConfigMap
 metadata:
   name: fluentd-template
   namespace: fluent
+  annotations:
+    # Disable variable substitution
+    kustomize.toolkit.fluxcd.io/substitute: disabled
 data:
   fluentd-es-template.json: |-
     {

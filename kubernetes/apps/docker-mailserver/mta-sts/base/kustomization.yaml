@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ns.yaml
+  - mta-sts-file.yaml
+  - ingress-mta-sts.yaml
+  - nginx-mta-sts.yaml
+  - nginx-mta-sts-svc.yaml

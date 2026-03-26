@@ -133,7 +133,7 @@
   roles:
     - role: ricsanfre.minio
 
-## Install Hashicorp Vault Server
+## Install HashiCorp Vault Server
 
 - name: Install Vault Server
   hosts: vault
@@ -190,7 +190,7 @@
     - role: ricsanfre.vault
 
   tasks:
-    # Configure ansible user profile with VAULT environement variables
+    # Configure ansible user profile with VAULT environment variables
     - name: Insert http(s) export in dotfile
       become: true
       lineinfile:
@@ -221,7 +221,7 @@
         create: true
         mode: 0644
 
-## Load all credentials into Hashicorp Vault Server
+## Load all credentials into HashiCorp Vault Server
 - name: Load Vault Credentials
   hosts: vault
   gather_facts: true
@@ -236,7 +236,7 @@
     - name: Include picluster variables
       include_vars: "vars/picluster.yml"
 
-    # Install hashicorp vault collection dependencies (hvac python package) using PIP.
+    # Install HashiCorp vault collection dependencies (hvac python package) using PIP.
     - name: Ensure PIP is installed.
       package:
         name:
@@ -254,14 +254,13 @@
       become: true
 
   tasks:
-
-    # Vault Login using ansible environement variables for creating token file
+    # Vault Login using ansible environment variables for creating token file
     # token file will be usd in next commands
     - name: Vault login
       ansible.builtin.shell: bash -ilc 'vault login $VAULT_TOKEN'
       # Interactive bash so .bashrc is loaded
       # 'source ~/.bashrc && <command>' does not work because
-      # Ansible shell is not interactive and ~/.bashrc implementation by default ignores non interactive shell.
+      # Ansible shell is not interactive and ~/.bashrc implementation by default ignores non-interactive shell.
       # See lines at beginning of bashrc:
       #
       # If not running interactively, don't do anything
@@ -284,7 +283,7 @@
       become: false
       vars:
         ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
-    # Load ansible vault variables into Hashicorp Vault Server
+    # Load ansible vault variables into HashiCorp Vault Server
     - name: Load vault credentials
       include_tasks:
         file: tasks/load_vault_credentials.yml

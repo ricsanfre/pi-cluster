@@ -2,8 +2,9 @@
 instance:
   sync:
     kind: GitRepository
+    # Changeme!
     url: https://github.com/olipinski/rdx-cluster
-    ref: refs/heads/main
+    ref: refs/heads/docker-mailserver
     path: kubernetes/clusters/prod
     interval: 1h
   kustomize:

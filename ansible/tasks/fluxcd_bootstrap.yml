@@ -5,7 +5,7 @@
     name: flux-operator
     chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
     # renovate: datasource=docker depName=fluxcd ociRepository=oci://ghcr.io/controlplaneio-fluxcd/charts
-    chart_version: 0.37.1
+    chart_version: 0.43.0
     release_namespace: flux-system
     create_namespace: true
     values_files:
@@ -40,7 +40,7 @@
     name: flux-instance
     chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
     # renovate: datasource=helm depName=fluxcd ociRepository=oci://ghcr.io/controlplaneio-fluxcd/charts
-    chart_version: 0.37.1
+    chart_version: 0.43.0
     release_namespace: flux-system
     create_namespace: true
     values_files:

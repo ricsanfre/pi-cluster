@@ -21,8 +21,7 @@ resources:
   - longhorn-app.yaml
   - metrics-server-app.yaml
   - minio-app.yaml
-  - mongodb-operator-app.yaml
-  - nginx-app.yaml
+  - ingress-nginx-app.yaml
   - oauth2-proxy-app.yaml
   - system-upgrade-app.yaml
   - tempo-app.yaml

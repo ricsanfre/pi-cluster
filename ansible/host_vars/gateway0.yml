@@ -48,8 +48,9 @@ netplan_configuration:
           macaddress: 94:c6:91:1a:65:e8  # Changeme!
         set-name: enoInternal
         addresses:
-          - '10.20.0.1/24'
           - '10.0.0.1/24'
+          - '10.20.0.1/24'
+          - '10.128.0.1/24' # Cilium external IPs
         nameservers:
           search:
             - "maas.{{ vault.general.domains.dns }}"
@@ -203,9 +204,14 @@ nft_define_host:
   lan_network:
     name: lan_network
     value: '10.0.0.0/8'
-  lb_host:
-    name: lb_host
+  k8s_lb_host:
+    name: k8s_lb_host
     value: '10.20.0.8'
+  # This has to by in sync with cluster-settings.yaml
+  # TODO maybe there is an automated way?
+  ingress_lb_host:
+    name: ingress_lb_host
+    value: '10.128.0.100'
   forward_tcp_accepted:
     name: forward_tcp_accept
     value: '{{ forward_tcp_port }}'
@@ -253,31 +259,29 @@ nft_forward_host_rules:
     - type filter hook forward priority 0; policy drop;
   005_global:
     - jump global
-  200_lan_to_lan:
+  100_lan_to_lan:
     - iifname {$lan_interface, $wg_interface} ip saddr $lan_network oifname {$lan_interface, $wg_interface} ct state new accept
-  300_lan_to_wan:
+  200_lan_to_wan:
     - iifname {$lan_interface, $wg_interface} ip saddr $lan_network oifname $wan_interface ct state new accept
-  400_wan_to_lan_tcp:
+  300_wan_to_lan_tcp:
     - iifname $wan_interface ip daddr $lan_network oifname {$lan_interface, $wg_interface} tcp dport @forward_tcp_accept ct state new accept
-  410_wan_to_lan_udp:
+  310_wan_to_lan_udp:
     - iifname $wan_interface ip daddr $lan_network oifname {$lan_interface, $wg_interface} udp dport @forward_udp_accept ct state new accept
 
 # NAT pre-routing, including DNAT
 nft_nat_host_prerouting_rules:
   005_dnat_http:
-    - iifname $wan_interface tcp dport {80, 443} dnat $lb_host
+    - iifname $wan_interface tcp dport {80, 443} dnat $ingress_lb_host
   010_dnat_ssh:
-    - iifname $wan_interface tcp dport 22 dnat $lb_host
+    - iifname $wan_interface tcp dport 22 dnat $ingress_lb_host
   015_dnat_email:
-    - iifname $wan_interface tcp dport {143, 993, 25, 465} dnat $lb_host
+    - iifname $wan_interface tcp dport {143, 993, 25, 465} dnat $ingress_lb_host
   025_dnat_coturn:
-    - iifname $wan_interface tcp dport {3478, 5349} dnat $lb_host
+    - iifname $wan_interface tcp dport {3478, 5349} dnat $ingress_lb_host
   030_dnat_mqtt:
-    - iifname $wan_interface tcp dport {1883, 8883} dnat $lb_host
-  040_dnat_ham:
-    - iifname $wan_interface tcp dport 8123 dnat $lb_host
+    - iifname $wan_interface tcp dport {1883, 8883} dnat $ingress_lb_host
   500_dnat_minio:
-    - iifname $wan_interface tcp dport 9091 dnat $lb_host
+    - iifname $wan_interface tcp dport 9091 dnat $ingress_lb_host
 
 # NAT post-routing
 nft_nat_host_postrouting_rules:
@@ -335,10 +339,10 @@ bind9_zones:
       - label: service0
         type: A
         rdata: 10.20.0.8
-      - label: s3
+      - label: k8s-api
         type: A
         rdata: 10.20.0.8
-      - label: ham
+      - label: s3
         type: A
         rdata: 10.20.0.8
       - label: has

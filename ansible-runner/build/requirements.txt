@@ -3,3 +3,4 @@ hvac==2.4.0
 certbot==5.3.1
 certbot-dns-cloudflare==5.3.1
 ansible-core==2.20.3
+passlib==1.7.4

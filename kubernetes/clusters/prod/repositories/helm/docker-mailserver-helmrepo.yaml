@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: docker-mailserver
+  namespace: flux-system
+spec:
+  url: https://docker-mailserver.github.io/docker-mailserver-helm
+  interval: 1h

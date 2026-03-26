@@ -16,7 +16,7 @@
 
 - name: Ensure registration ip is defined
   ansible.builtin.set_fact:
-    k3s_registration_ip: "{{ hostvars[groups['k3s_master'][0]].ansible_hostname }}"
+    k3s_registration_ip: "{{ hostvars[groups['k3s_master'][0]].ansible_facts['hostname'] }}"
 
 - name: Create K3S configuration directory
   file:

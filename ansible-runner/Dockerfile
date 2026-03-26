@@ -2,7 +2,7 @@ FROM ghcr.io/helmfile/helmfile:v1.4.1 AS helmfile
 
 FROM python:slim
 RUN apt-get update -qq && \
-    apt-get install sudo git apt-utils python3-pip pwgen gnupg curl wireguard-tools vim -y && \
+    apt-get install sudo git apt-utils python3-pip pwgen gnupg curl wireguard-tools vim whois -y && \
     apt-get clean && \
     rm -rf /usr/share/doc/* /usr/share/man/* /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

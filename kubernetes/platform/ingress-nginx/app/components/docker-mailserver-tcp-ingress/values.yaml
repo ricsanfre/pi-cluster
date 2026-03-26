@@ -1,0 +1,7 @@
+# ingress-nginx TCP overlay
+
+tcp:
+  25: "docker-mailserver/docker-mailserver:12525::PROXY"
+  465: "docker-mailserver/docker-mailserver:10465::PROXY"
+  587: "docker-mailserver/docker-mailserver:10587::PROXY"
+  993: "docker-mailserver/docker-mailserver:10993::PROXY"
