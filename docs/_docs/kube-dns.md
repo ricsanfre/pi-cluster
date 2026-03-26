@@ -2,7 +2,7 @@
 title: DNS (CoreDNS and External-DNS)
 permalink: /docs/kube-dns/
 description: Kubernetes DNS setup. CoreDNS and External-DNS installation and configuration
-last_modified_at: "23-11-2024"
+last_modified_at: "26-03-2026"
 ---
 
 PODs within Kubernetes will use DNS service to discover Kubernetes services and external services. [CoreDNS](https://coredns.io/) is the default Kubernetes DNS service that need to be deployed in the cluster.
@@ -229,6 +229,12 @@ Details on how to configure rfc2136 provider, used for integrating Bind9, can be
       - crd
       - service
       - ingress
+      - gateway-httproute
+      - gateway-tcproute
+      - gateway-tlsroute
+      - gateway-grpcroute
+      - gateway-udproute
+      - istio-gateway
 
     domainFilters: 
       - homelab.ricsanfre.com
@@ -236,7 +242,7 @@ Details on how to configure rfc2136 provider, used for integrating Bind9, can be
       enabled: true
   ```
 
-  With this configuration External-DNS will listen to Ingress, Services, Istio-Gateway and external-dns specific DNSEndpoint Resources (`sources`) containing references to hostnames in domain `homelab.ricsanfre.com` (`domainFilter`), and it will create the corresponding DNS records in the DNS server specified by `EXTERNAL_DNS_RFC2136_HOST` environement variable using the TGSIG key speficied by `EXTERNAL_DNS_RFC2136_TSIG_*` environment variables.
+  With this configuration External-DNS will listen to Ingress, Services, Gateway API routes, Istio Gateway resources, and external-dns specific DNSEndpoint resources (`sources`) containing references to hostnames in domain `homelab.ricsanfre.com` (`domainFilter`), and it will create the corresponding DNS records in the DNS server specified by `EXTERNAL_DNS_RFC2136_HOST` environment variable using the TSIG key specified by `EXTERNAL_DNS_RFC2136_TSIG_*` environment variables.
 
   It also enables the Prometheus `serviceMonitor.enabled`
 
@@ -314,3 +320,43 @@ spec:
     targets:
     - 10.0.0.216
 ```
+
+#### Gateway API support
+
+External-DNS can also watch Gateway API route resources and publish DNS records from the hostnames declared in those routes.
+
+{{site.data.alerts.note}}
+
+Before enabling Gateway API route sources in External-DNS, the Gateway API CRDs must already be installed in the cluster. In practice this means installing the Gateway API manifests directly, or installing a controller that ships them, such as Envoy Gateway through its Helm chart.
+
+{{site.data.alerts.end}}
+
+In this repository, External-DNS is configured with the following Gateway API sources:
+
+```yaml
+sources:
+  - gateway-httproute
+  - gateway-tcproute
+  - gateway-tlsroute
+  - gateway-grpcroute
+  - gateway-udproute
+```
+
+These sources enable the following behavior:
+
+- `gateway-httproute` publishes automatically DNS records from `HTTPRoute` hostnames.
+- `gateway-tcproute` publishes automatically DNS records from `TCPRoute` hostnames.
+- `gateway-tlsroute` publishes automatically DNS records from `TLSRoute` hostnames.
+- `gateway-grpcroute` publishes automatically DNS records from `GRPCRoute` hostnames.
+- `gateway-udproute` publishes automatically DNS records from `UDPRoute` hostnames.
+
+
+The set of domain names from a *Route is sourced from the following places:
+ - If the *Route is a GRPCRoute, HTTPRoute, or TLSRoute, adds each of the `spec.hostnames`.
+ - Adds the hostnames from any `external-dns.alpha.kubernetes.io/hostname` annotation on the *Route.
+
+See further details on supported Gateway API resources in [External-DNS documentation- Gateway API Route Sources](https://kubernetes-sigs.github.io/external-dns/v0.20.0/docs/sources/gateway-api/).
+
+For example, when a `TLSRoute` contains a hostname like `kafka-bootstrap.${CLUSTER_DOMAIN}`, External-DNS can create the corresponding DNS record pointing to the Gateway load balancer IP, provided that route source support is enabled and the hostname matches the configured `domainFilters`.
+
+If Gateway API sources are not included in `sources`, External-DNS will ignore hostnames defined in Gateway API resources and DNS records for Envoy Gateway exposed services will not be created automatically.

@@ -34,6 +34,7 @@
   - metallb
   - traefik
   - nginx
+  - envoy-gateway
 - title: Certificate Management
   docs:
   - certbot

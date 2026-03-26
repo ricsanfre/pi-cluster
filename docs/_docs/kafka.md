@@ -216,7 +216,7 @@ In Kubernetes, clients uses Kafka Discovery Protocol to connect to proper Broker
 #### Enabling External Access
 
 External listener can be configured to provide access to clients outside the Kubernetes Cluster
-3 different types of external listeners (`nodeport`, `loadbalancer`, or  `ingress`) can be configured depending on the Kubernetes external connection mechanism used to access the service.
+3 different types of Strimzi external listeners (`nodeport`, `loadbalancer`, or `ingress`) can be configured depending on the Kubernetes external connection mechanism used to access the service. In this repository there is also an alternative approach based on Gateway API and Envoy Gateway, where Strimzi exposes Kafka using `cluster-ip` services and Envoy Gateway handles the external entry point.
 
 ##### Load balancer
 Strimzi operator generates a Kubernetes Service (type=LoadBalancer) for each broker. As a result, each broker will get a separate load balancer _(despite the Kubernetes service being of a load balancer type, the load balancer is still a separate entity managed by the infrastructure / cloud, i.e: Cilium or MetalLB in case of self-hosted cluster)_. A Kafka cluster with N brokers will need N+1 load balancers.
@@ -284,6 +284,117 @@ listeners:
           external-dns.alpha.kubernetes.io/ttl: "60"
       class: nginx
 ```
+
+##### Gateway API Listener with Envoy Gateway
+
+In Pi Cluster, Kafka external access is implemented through Gateway API using Envoy Gateway.
+
+Instead of using Strimzi `loadbalancer` or `ingress` listener types, Strimzi is configured with a `cluster-ip` external listener. This makes Strimzi create per-broker and bootstrap `ClusterIP` services, while Envoy Gateway exposes them externally using TLS passthrough and `TLSRoute` resources.
+
+|![Accessing Kafka using Gateway API](/assets/img/strimzi-kafka-gateway-access.png) |
+| :---: |
+| *Source: [https://strimzi.io/blog/2024/08/16/accessing-kafka-with-gateway-api/](https://strimzi.io/blog/2024/08/16/accessing-kafka-with-gateway-api/)* |
+{: .table .table-white }
+
+This approach keeps Kafka protocol handling in the brokers, preserves end-to-end TLS, and centralizes the external entry point in a single Gateway-backed load balancer.
+
+The Strimzi listener patch used in this repository is:
+
+```yaml
+listeners:
+  - name: external
+    port: 9094
+    type: cluster-ip
+    tls: true
+    authentication:
+      type: scram-sha-512
+    configuration:
+      createBootstrapService: true
+      brokers:
+        - broker: 0
+          advertisedHost: kafka-broker-0.${CLUSTER_DOMAIN}
+          advertisedPort: 9094
+        - broker: 1
+          advertisedHost: kafka-broker-1.${CLUSTER_DOMAIN}
+          advertisedPort: 9094
+        - broker: 2
+          advertisedHost: kafka-broker-2.${CLUSTER_DOMAIN}
+          advertisedPort: 9094
+      brokerCertChainAndKey:
+        secretName: kafka-tls
+        certificate: tls.crt
+        key: tls.key
+```
+
+Envoy Gateway exposes those services through a Gateway listener in TLS passthrough mode:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: kafka-gateway
+spec:
+  gatewayClassName: envoy
+  infrastructure:
+    annotations:
+      io.cilium/lb-ipam-ips: ${KAFKA_GATEWAY_LOAD_BALANCER_IP}
+  listeners:
+    - name: kafka-listener
+      protocol: TLS
+      port: 9094
+      tls:
+        mode: Passthrough
+```
+
+Each broker and the bootstrap service are then mapped with `TLSRoute` resources using SNI hostnames:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-kafka-external-bootstrap
+spec:
+  hostnames:
+    - kafka-bootstrap.${CLUSTER_DOMAIN}
+  parentRefs:
+    - kind: Gateway
+      name: kafka-gateway
+      sectionName: kafka-listener
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: cluster-kafka-external-bootstrap
+          port: 9094
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-dual-role-0
+spec:
+  hostnames:
+    - kafka-broker-0.${CLUSTER_DOMAIN}
+  parentRefs:
+    - kind: Gateway
+      name: kafka-gateway
+      sectionName: kafka-listener
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: cluster-dual-role-0
+          port: 9094
+```
+
+Equivalent `TLSRoute` resources are created for `kafka-broker-1.${CLUSTER_DOMAIN}` and `kafka-broker-2.${CLUSTER_DOMAIN}`.
+
+{{site.data.alerts.important}} **Requirements**
+
+- Envoy Gateway must be installed and the `envoy` `GatewayClass` must be available in the cluster.
+- DNS names `kafka-bootstrap.${CLUSTER_DOMAIN}` and `kafka-broker-{0..2}.${CLUSTER_DOMAIN}` must resolve to the Envoy Gateway load balancer IP. 
+  This can be achieved by configuring External-DNS to automatically create the corresponding DNS records in the DNS provider. TLSRoute sources need to be added to the External-DNS configuration to automatically add those entries in the DNS service. See details in [DNS (CoreDNS and External-DNS) - Gateway API support](/docs/kube-dns/#gateway-api-support).
+- Kafka brokers still require a TLS certificate valid for all advertised broker and bootstrap hostnames.
+- Because TLS is passed through by the Gateway, TLS termination and SASL/SCRAM authentication remain configured in Kafka, not in Envoy Gateway.
+
+{{site.data.alerts.end}}
 
 #### Using External TLS certificates
 
