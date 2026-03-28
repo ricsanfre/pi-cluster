@@ -25,8 +25,3 @@ spec:
         #   io.cilium/lb-ipam-ips: ${ENVOY_GATEWAY_LOAD_BALANCER_IP}
   shutdown:
     drainTimeout: 180s
-  telemetry:
-    metrics:
-      prometheus:
-        compression:
-          type: Gzip

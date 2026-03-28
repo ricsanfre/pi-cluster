@@ -1,0 +1,63 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy
+spec:
+  telemetry:
+    accessLog:
+      settings:
+        - sinks:
+            - type: OpenTelemetry
+              openTelemetry:
+                backendRefs:
+                  - name: otel-collector
+                    namespace: otel
+                    port: 4317
+                resourceAttributes:
+                  service.name: envoy-gateway-proxy
+                  service.namespace: envoy-gateway-system
+                  telemetry.source: envoy-accesslog
+          format:
+            type: JSON
+            json:
+              start_time: "%START_TIME%"
+              method: "%REQ(:METHOD)%"
+              authority: "%REQ(:AUTHORITY)%"
+              path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+              protocol: "%PROTOCOL%"
+              response_code: "%RESPONSE_CODE%"
+              response_flags: "%RESPONSE_FLAGS%"
+              bytes_received: "%BYTES_RECEIVED%"
+              bytes_sent: "%BYTES_SENT%"
+              duration_ms: "%DURATION%"
+              upstream_cluster: "%UPSTREAM_CLUSTER%"
+              upstream_host: "%UPSTREAM_HOST%"
+              route_name: "%ROUTE_NAME%"
+              x_request_id: "%REQ(X-REQUEST-ID)%"
+    tracing:
+      samplingRate: 100
+      provider:
+        type: OpenTelemetry
+        serviceName: envoy-gateway-proxy
+        backendRefs:
+          - name: otel-collector
+            namespace: otel
+            port: 4317
+        openTelemetry:
+          resourceAttributes:
+            service.name: envoy-gateway-proxy
+            service.namespace: envoy-gateway-system
+    metrics:
+      prometheus:
+        compression:
+          type: Gzip
+      sinks:
+        - type: OpenTelemetry
+          openTelemetry:
+            backendRefs:
+              - name: otel-collector
+                namespace: otel
+                port: 4317
+            resourceAttributes:
+              service.name: envoy-gateway-proxy
+              service.namespace: envoy-gateway-system

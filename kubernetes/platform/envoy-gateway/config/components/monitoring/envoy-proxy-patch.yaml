@@ -1,0 +1,10 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy
+spec:
+  telemetry:
+    metrics:
+      prometheus:
+        compression:
+          type: Gzip
