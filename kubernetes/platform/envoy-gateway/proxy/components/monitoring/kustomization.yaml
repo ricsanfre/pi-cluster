@@ -3,7 +3,7 @@ kind: Component
 
 resources:
   - podmonitor.yaml
-  - servicemonitor.yaml
+
 
 patches:
 - target:

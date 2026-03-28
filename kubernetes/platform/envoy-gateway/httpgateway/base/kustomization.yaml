@@ -4,7 +4,6 @@ namespace: envoy-gateway-system
 
 resources:
   - certificate.yaml
-  - envoy-proxy.yaml
   - gateway-class.yaml
   - gateway.yaml
   - client-traffic-policy.yaml
