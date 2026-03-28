@@ -12,7 +12,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: envoy-gateway-config
+    - name: envoy-gateway-httpgateway
     - name: csi-external-snapshotter-app
     - name: external-secrets-config
   path: ./kubernetes/platform/longhorn/app/overlays/prod
