@@ -56,6 +56,8 @@
 
 - name: "Stage 2: Configure Vault with Terraform"
   ansible.builtin.import_playbook: configure_vault.yml
+  vars:
+    enable_kubernetes_auth: false
   tags: [terraform, stage2]
 
 - name: "Stage 3: Deploy MinIO with Vault Secrets"

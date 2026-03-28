@@ -1,11 +1,15 @@
 ---
 
+- name: Configure Vault with Kubernetes auth
+  ansible.builtin.import_playbook: configure_vault.yml
+  vars:
+    enable_kubernetes_auth: true
+
 - name: Bootstrap Cluster
   hosts: localhost
   gather_facts: false
   become: false
   vars:
-    vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
   environment:
@@ -13,7 +17,6 @@
     K8S_AUTH_KUBECONFIG: ~/.kube/config
 
   pre_tasks:
-
     - name: Validate required Python libraries are available in playbook environment
       ansible.builtin.command:
         argv:
@@ -41,51 +44,11 @@
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
 
-    - name: Check Vault secret file exists on controller
-      ansible.builtin.stat:
-        path: "{{ vault_secret_file }}"
-      register: vault_secret_file_stat
-      become: false
-
-    - name: Validate Vault secret file exists
-      ansible.builtin.assert:
-        that:
-          - vault_secret_file_stat.stat.exists
-          - vault_secret_file_stat.stat.isreg
-        fail_msg: |
-          Vault secret file not found: {{ vault_secret_file }}
-
-          Run external services stage 1 first to generate it, or create it with:
-
-            VAULT_ADDR=https://vault.example.com:8200
-            VAULT_TOKEN=s.xxxxxxxxxxxxx
-            VAULT_CACERT=/path/to/certificates/CA.pem
-
-    - name: Get Vault environment from secret file
-      ansible.builtin.set_fact:
-        vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
-        vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
-        vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
-
-    - name: Validate Vault variables loaded from secret file
-      ansible.builtin.assert:
-        that:
-          - vault_addr is defined and vault_addr != ""
-          - vault_token is defined and vault_token != ""
-        fail_msg: |
-          Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
-
   tasks:
-
     - name: Set overlay to prod in case not defined by an input argument
       ansible.builtin.set_fact:
         overlay: "prod"
       when: overlay is undefined
-
-    - name: Configure Vault integration
-      ansible.builtin.include_tasks: tasks/configure_vault_integration.yml
-      vars:
-        rerun_terraform_vault_all_features: true
 
     - name: Flux bootstrap
       ansible.builtin.include_tasks:
