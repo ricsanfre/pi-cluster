@@ -35,11 +35,11 @@ spec:
   path: ./kubernetes/platform/envoy-gateway/proxy/overlays/prod
   prune: true
   wait: true
-  healthCheckExprs:
-    - apiVersion: gateway.envoyproxy.io/v1alpha1
-      kind: EnvoyProxy
-      failed: status.ancestors.exists(a, a.conditions.exists(c, c.type == 'Accepted') && a.conditions.filter(c, c.type == 'Accepted').all(c, c.status == 'False'))
-      current: '!has(status.ancestors) || status.ancestors.size() == 0 || status.ancestors.exists(a, a.conditions.exists(c, c.type == ''Accepted'') && a.conditions.filter(c, c.type == ''Accepted'').all(c, c.status == ''True''))'
+  # healthCheckExprs:
+  #   - apiVersion: gateway.envoyproxy.io/v1alpha1
+  #     kind: EnvoyProxy
+  #     failed: status.ancestors.exists(a, a.conditions.exists(c, c.type == 'Accepted') && a.conditions.filter(c, c.type == 'Accepted').all(c, c.status == 'False'))
+  #     current: '!has(status.ancestors) || status.ancestors.size() == 0 || status.ancestors.exists(a, a.conditions.exists(c, c.type == ''Accepted'') && a.conditions.filter(c, c.type == ''Accepted'').all(c, c.status == ''True''))'
   postBuild:
     substituteFrom:
       - kind: ConfigMap
