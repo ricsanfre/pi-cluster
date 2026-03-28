@@ -10,5 +10,5 @@ spec:
         - name: efk-es-http
           port: 9200
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system

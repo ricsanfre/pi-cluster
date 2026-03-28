@@ -6,7 +6,7 @@ metadata:
   name: kibana
 spec:
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system
   hostnames:
     - kibana.${CLUSTER_DOMAIN}

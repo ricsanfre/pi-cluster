@@ -21,7 +21,7 @@ route:
     hostnames:
      - grafana.${CLUSTER_DOMAIN}
     parentRefs:
-     - name: envoy-gateway
+     - name: public-gateway
        namespace: envoy-gateway-system
     matches:
       - path:

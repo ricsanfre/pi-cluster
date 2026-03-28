@@ -8,7 +8,7 @@ alertmanager:
       hostnames:
        - alertmanager.${CLUSTER_DOMAIN}
       parentRefs:
-       - name: envoy-gateway
+       - name: public-gateway
          namespace: envoy-gateway-system
 
 prometheus:
@@ -19,5 +19,5 @@ prometheus:
       hostnames:
         - prometheus.${CLUSTER_DOMAIN}
       parentRefs:
-        - name: envoy-gateway
+        - name: public-gateway
           namespace: envoy-gateway-system

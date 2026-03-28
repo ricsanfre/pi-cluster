@@ -5,7 +5,7 @@ metadata:
   namespace: keycloak
 spec:
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system
   hostnames:
     - iam.${CLUSTER_DOMAIN}
