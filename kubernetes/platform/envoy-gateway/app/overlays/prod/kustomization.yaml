@@ -5,9 +5,6 @@ namespace: envoy-gateway-system
 resources:
   - ../../base
 
-components:
-  - ../../components/opentelemetry
-
 configMapGenerator:
   - name: envoy-gateway-helm-values
     behavior: merge
