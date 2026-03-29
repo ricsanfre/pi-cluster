@@ -188,6 +188,7 @@
     - name: Label k3s worker nodes
       ansible.builtin.command:
         cmd: "kubectl label nodes {{ item }} kubernetes.io/role=worker"
+      run_once: true
       with_items: "{{ groups['k3s_worker'] }}"
 
 - name: Get Kubernets config file
