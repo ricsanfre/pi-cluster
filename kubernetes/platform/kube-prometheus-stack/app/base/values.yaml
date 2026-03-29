@@ -88,6 +88,9 @@ prometheus:
           resources:
             requests:
               storage: 10Gi
+    # Additional external labels to be added to all metrics
+    externalLabels:
+      cluster: ${CLUSTER_NAME:-pi-cluster}
     ##
 # Prometheus Node Exporter Configuration
 nodeExporter:
