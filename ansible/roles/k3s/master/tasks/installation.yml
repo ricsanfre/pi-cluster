@@ -138,6 +138,8 @@
             release_values: "{{ coredns_merged_values }}"
           environment:
             KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          retries: 5
+          delay: 15
           tags:
             - cni
 
