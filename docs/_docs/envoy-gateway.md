@@ -2,7 +2,7 @@
 title: API Gateway (Envoy Gateway)
 permalink: /docs/envoy-gateway/
 description: How to deploy and configure Envoy Gateway and Kubernetes Gateway API in the Pi Kubernetes cluster.
-last_modified_at: "26-03-2026"
+last_modified_at: "29-03-2026"
 ---
 
 Envoy Gateway is a Kubernetes gateway controller built on top of [Envoy Proxy](https://www.envoyproxy.io/) and the [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/). It provides a modern way to expose HTTP and L4/L7 services from the cluster without depending on controller-specific `Ingress` annotations.
@@ -41,6 +41,14 @@ Envoy Gateway has two main planes:
 
 - The **control plane**, implemented by the Envoy Gateway controller, watches Gateway API resources and translates them into Envoy configuration.
 - The **data plane**, implemented by one or more managed Envoy proxy deployments, receives the actual client traffic.
+
+
+![envoy-gateway-architecture](/assets/img/envoy-gateway-architecture.png)
+
+Envoy-Gateway architecture diagram.
+The data plane consists of Envoy proxy instances managed by the control plane. The control plane watches Gateway API resources and translates them into Envoy configuration for the data plane. It manages Envoy proxy deployments and services, and it also provides a policy model for authentication, traffic control, and security.
+
+Envoy Gateway extends the Kubernetes Gateway API with additional policy resources such as `ClientTrafficPolicy`, `BackendTrafficPolicy`, and `SecurityPolicy` that can be attached to `Gateway` and route resources for advanced traffic control and authentication.
 
 In this repository, the architecture is composed of the following resources:
 
@@ -90,6 +98,7 @@ The steps below describe the equivalent manual Helm installation flow.
   config:
     envoyGateway:
       provider:
+        type: Kubernetes
         kubernetes:
           deploy:
             type: GatewayNamespace
@@ -572,11 +581,12 @@ The request flow is the following:
 
 ## Observability
 
-Envoy Gateway exposes metrics from both the control plane and the managed Envoy proxies.
+Envoy Gateway exposes metrics from both the control plane and the managed Envoy proxies. Metrics are exposed in Prometheus format and can be scraped directly by Prometheus or exported to an OpenTelemetry Collector using the OpenTelemetry metrics sink.
+Envoy Gateway also provides operational logs from the control plane and supports integration with OpenTelemetry for proxy traces, access logs, and metrics.
 
-### Prometheus metrics
+### Prometheus Integration
 
-The current implementation configures:
+`ServiceMonitoring`, and `PodMonitor` Prometheus Operator's CRD,  resource can be automatically created so Kube-Prometheus-Stack is able to automatically start collecting metrics from Envoy Gateway control plane and data plane.
 
 - A `ServiceMonitor` for the Envoy Gateway control plane scraping `/metrics` on port `metrics`.
 - A `PodMonitor` for the managed Envoy proxy pods scraping `/stats/prometheus` on port `metrics`.
