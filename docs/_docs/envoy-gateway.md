@@ -47,7 +47,7 @@ In this repository, the architecture is composed of the following resources:
 - `HelmRelease` installs Envoy Gateway in namespace `envoy-gateway-system`.
 - `GatewayClass` named `envoy` binds the Kubernetes Gateway API resources to the Envoy Gateway controller.
 - `EnvoyProxy` named `envoy` defines provider-specific settings for managed Envoy deployments, such as replicas, service type, logging, and metrics.
-- `Gateway` named `envoy-gateway` defines the cluster entrypoint with one HTTP listener on port `80` and one HTTPS listener on port `443`.
+- `Gateway` named `public-gateway` defines the cluster entrypoint with one HTTP listener on port `80` and one HTTPS listener on port `443`.
 - `HTTPRoute` resources, created either manually or by Helm charts, attach application routes to that shared gateway.
 - Envoy Gateway specific policies, such as `ClientTrafficPolicy`, `BackendTrafficPolicy`, and `SecurityPolicy`, extend Gateway API with traffic and auth controls.
 
@@ -195,7 +195,7 @@ The shared `Gateway` defines two listeners:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: envoy-gateway
+  name: public-gateway
 spec:
   gatewayClassName: envoy
   infrastructure:
@@ -291,7 +291,7 @@ metadata:
     external-dns.alpha.kubernetes.io/controller: none
 spec:
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system
       sectionName: http
   rules:
@@ -322,7 +322,7 @@ spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: envoy-gateway
+      name: public-gateway
       namespace: envoy-gateway-system
   rules:
     - matches:
@@ -345,7 +345,7 @@ spec:
   hostnames:
     - s3.${CLUSTER_DOMAIN}
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system
   rules:
     - matches:
@@ -364,7 +364,7 @@ spec:
   hostnames:
     - minio.${CLUSTER_DOMAIN}
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system
   rules:
     - matches:
@@ -394,7 +394,7 @@ route:
     hostnames:
       - grafana.${CLUSTER_DOMAIN}
     parentRefs:
-      - name: envoy-gateway
+      - name: public-gateway
         namespace: envoy-gateway-system
     matches:
       - path:

@@ -321,7 +321,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
     namespace: elastic
   spec:
     parentRefs:
-      - name: envoy-gateway
+      - name: public-gateway
         namespace: envoy-gateway-system
     hostnames:
       - elasticsearch.${CLUSTER_DOMAIN}
@@ -336,7 +336,7 @@ This exposure will be useful for doing remote configurations on Elasticsearch th
   Substitute variables (`${var}`) in the above yaml file before deploying manifest.
   -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
 
-  Envoy Gateway exposes Elasticsearch as `elasticsearch.${CLUSTER_DOMAIN}` through the shared `envoy-gateway` `Gateway`. TLS is terminated at the Gateway using the wildcard certificate managed for Envoy Gateway.
+  Envoy Gateway exposes Elasticsearch as `elasticsearch.${CLUSTER_DOMAIN}` through the shared `public-gateway` `Gateway`. TLS is terminated at the Gateway using the wildcard certificate managed for Envoy Gateway.
 
   See ["Envoy Gateway - Gateway and TLS termination"](/docs/envoy-gateway/#gateway-and-tls-termination) for details.
 
@@ -427,7 +427,7 @@ Make Kibana UI accessible from outside the cluster through Envoy Gateway.
     namespace: elastic
   spec:
     parentRefs:
-      - name: envoy-gateway
+      - name: public-gateway
         namespace: envoy-gateway-system
     hostnames:
       - kibana.${CLUSTER_DOMAIN}
@@ -442,7 +442,7 @@ Make Kibana UI accessible from outside the cluster through Envoy Gateway.
   Substitute variables (`${var}`) in the above yaml file before deploying manifest.
   -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
 
-  Envoy Gateway exposes Kibana as `kibana.${CLUSTER_DOMAIN}` through the shared `envoy-gateway` `Gateway`. TLS is terminated at the Gateway using the wildcard certificate managed for Envoy Gateway.
+  Envoy Gateway exposes Kibana as `kibana.${CLUSTER_DOMAIN}` through the shared `public-gateway` `Gateway`. TLS is terminated at the Gateway using the wildcard certificate managed for Envoy Gateway.
 
   See ["Envoy Gateway - Gateway and TLS termination"](/docs/envoy-gateway/#gateway-and-tls-termination) for details.
 

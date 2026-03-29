@@ -151,7 +151,7 @@ Installation using `Helm` (Release 3):
     parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: envoy-gateway
+      name: public-gateway
       namespace: envoy-gateway-system
     rules:
     - backendRefs:
@@ -172,7 +172,7 @@ Installation using `Helm` (Release 3):
     parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: envoy-gateway
+      name: public-gateway
       namespace: envoy-gateway-system
     rules:
     - backendRefs:

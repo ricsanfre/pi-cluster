@@ -166,7 +166,7 @@ Example:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: envoy-gateway
+  name: public-gateway
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-issuer
 spec:

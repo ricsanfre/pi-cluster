@@ -101,7 +101,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           hostnames:
             - alertmanager.${CLUSTER_DOMAIN}
           parentRefs:
-            - name: envoy-gateway
+            - name: public-gateway
               namespace: envoy-gateway-system
     
     # Prometheus configuration
@@ -171,7 +171,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           hostnames:
             - prometheus.${CLUSTER_DOMAIN}
           parentRefs:
-            - name: envoy-gateway
+            - name: public-gateway
               namespace: envoy-gateway-system
     
     # Prometheus Node Exporter Configuration
@@ -227,7 +227,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
           hostnames:
             - grafana.${CLUSTER_DOMAIN}
           parentRefs:
-            - name: envoy-gateway
+            - name: public-gateway
               namespace: envoy-gateway-system
           matches:
             - path:
@@ -496,7 +496,7 @@ The following options are used to configure Grafana
 
 Pi Cluster exposes monitoring UIs through Envoy Gateway using Kubernetes Gateway API `HTTPRoute` resources. This is used as an alternative to Ingress resources, which are not used in this cluster, and allows to have a more flexible routing configuration and TLS management.
 
-Each UI is published on its own hostname, attached to the shared `envoy-gateway` `Gateway`:
+Each UI is published on its own hostname, attached to the shared `public-gateway` `Gateway`:
 
 | UI           | Endpoint                       |
 |:------------ |:------------------------------ |
@@ -517,7 +517,7 @@ alertmanager:
       hostnames:
         - alertmanager.${CLUSTER_DOMAIN}
       parentRefs:
-        - name: envoy-gateway
+        - name: public-gateway
           namespace: envoy-gateway-system
 prometheus:
   prometheusSpec:
@@ -529,7 +529,7 @@ prometheus:
       hostnames:
         - prometheus.${CLUSTER_DOMAIN}
       parentRefs:
-        - name: envoy-gateway
+        - name: public-gateway
           namespace: envoy-gateway-system
 grafana:
   grafana.ini:
@@ -544,7 +544,7 @@ grafana:
       hostnames:
         - grafana.${CLUSTER_DOMAIN}
       parentRefs:
-        - name: envoy-gateway
+        - name: public-gateway
           namespace: envoy-gateway-system
       matches:
         - path:

@@ -318,7 +318,7 @@ spec:
 
 #### Creating HTTPRoute
 
-Create an `HTTPRoute` resource for Keycloak so traffic is routed through Envoy Gateway. TLS is terminated at the shared `envoy-gateway` `Gateway`, using the certificate configured for Envoy Gateway.
+Create an `HTTPRoute` resource for Keycloak so traffic is routed through Envoy Gateway. TLS is terminated at the shared `public-gateway` `Gateway`, using the certificate configured for Envoy Gateway.
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -328,7 +328,7 @@ metadata:
   namespace: keycloak
 spec:
   parentRefs:
-    - name: envoy-gateway
+    - name: public-gateway
       namespace: envoy-gateway-system
   hostnames:
     - iam.${CLUSTER_DOMAIN}

@@ -1850,7 +1850,7 @@ The application can be defined using the following directory structure
       parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
-        name: envoy-gateway
+        name: public-gateway
         namespace: envoy-gateway-system
       rules:
       - backendRefs:
@@ -2479,7 +2479,7 @@ The application has the following directory structure
       parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
-        name: envoy-gateway
+        name: public-gateway
         namespace: envoy-gateway-system
       rules:
       - backendRefs:

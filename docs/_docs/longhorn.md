@@ -159,7 +159,7 @@ Installation using `Helm` (Release 3):
     hostnames:
       - longhorn.${CLUSTER_DOMAIN}
     parentRefs:
-      - name: envoy-gateway
+      - name: public-gateway
         namespace: envoy-gateway-system
   ```
   {{site.data.alerts.note}}

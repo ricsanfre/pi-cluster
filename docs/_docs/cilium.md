@@ -334,7 +334,7 @@ Finally, when installing kube-prometheus-stack helm chart, installation of the C
     parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
-        name: envoy-gateway
+        name: public-gateway
         namespace: envoy-gateway-system
     rules:
       - backendRefs:

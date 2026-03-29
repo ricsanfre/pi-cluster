@@ -201,7 +201,7 @@ route:
     hostnames:
       - grafana.${CLUSTER_DOMAIN}
     parentRefs:
-      - name: envoy-gateway
+      - name: public-gateway
         namespace: envoy-gateway-system
     matches:
       - path:
@@ -218,7 +218,7 @@ Substitute variables (`${var}`) in the above yaml file before deploying helm cha
 With this configuration, Grafana is exposed through Envoy Gateway with the following settings:
 
 - Public URL: `https://grafana.${CLUSTER_DOMAIN}/`
-- Envoy Gateway routes requests to Grafana service through an `HTTPRoute` attached to the shared `envoy-gateway` `Gateway`.
+- Envoy Gateway routes requests to Grafana service through an `HTTPRoute` attached to the shared `public-gateway` `Gateway`.
 
 
 ### Provisioning Data Sources

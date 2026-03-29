@@ -474,7 +474,7 @@ Installation using `Helm` (Release 3):
     parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
-        name: envoy-gateway
+        name: public-gateway
         namespace: envoy-gateway-system
     rules:
       - backendRefs:
@@ -491,7 +491,7 @@ Installation using `Helm` (Release 3):
   Substitute variables (`${var}`) in the above yaml file before applying it.
   -   Replace `${CLUSTER_DOMAIN}` by the domain used in the cluster. For example: `homelab.ricsanfre.com`
 
-  To expose Kiali using the `HTTPRoute`, Envoy Gateway and the shared `envoy-gateway` `Gateway` must already be installed in the cluster. See installation details in [Envoy Gateway documentation](/docs/envoy-gateway/).
+  To expose Kiali using the `HTTPRoute`, Envoy Gateway and the shared `public-gateway` `Gateway` must already be installed in the cluster. See installation details in [Envoy Gateway documentation](/docs/envoy-gateway/).
 
   {{site.data.alerts.end}}
 
