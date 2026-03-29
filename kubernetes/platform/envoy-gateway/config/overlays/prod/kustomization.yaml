@@ -7,3 +7,4 @@ resources:
 
 components:
   - ../../components/monitoring
+  - ../../components/opentelemetry
