@@ -1,8 +1,0 @@
-  # Disable TLS endpoints
-- op: add
-  path: /spec/http
-  value:
-    tls: 
-      selfSignedCertificate:
-        disabled: true
-       

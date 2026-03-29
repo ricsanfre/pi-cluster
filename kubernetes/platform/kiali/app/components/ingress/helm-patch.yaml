@@ -1,6 +1,0 @@
-- op: add
-  path: /spec/valuesFrom/-
-  value:
-    kind: ConfigMap
-    name: kiali-operator-helm-values
-    valuesKey: ingress-values.yaml
