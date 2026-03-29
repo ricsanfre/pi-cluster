@@ -28,12 +28,12 @@ datasources:
       type: prometheus
       uid: prometheus
       access: proxy
-      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090/prometheus
+      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090
       isDefault: true
     - name: Alertmanager
       type: alertmanager
       uid: alertmanager
-      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093/alertmanager
+      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
       jsonData:
         implementation: prometheus
     - name: Loki
