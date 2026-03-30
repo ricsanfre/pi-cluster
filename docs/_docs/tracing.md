@@ -15,6 +15,11 @@ Grafana Tempo is used as traces backend and Grafana as front-end. Tempo, integra
 
 Tempo requires only object storage backend to operate, and is integrated with Grafana, Prometheus, and Loki. Minio S3 Object Store will be used as Tempo backend.
 
+Instead of using embedded Tempo's collector, Pi Cluster uses the same OpenTelemetry Collector deployed in the cluster for receiving and processing telemetry from applications and platform components. That allows to centralize telemetry processing and exporting in a single component, while supporting multiple backends (Prometheus for metrics, Elasticsearch for logs, Tempo for traces) and multiple collection paths (OTLP for instrumented workloads, Prometheus scraping and Fluent Bit collection for non-instrumented workloads).
+
+See details in [Observability solution documentation](/docs/observability/) and instructions on how to configure OpenTelemetry Collector for Tempo in [OpenTelemetry Collector documentation](/docs/opentelemetry-collector/#configure-opentelemetry-collector-for-tempo).
+
+
 
 ## Tempo architecture
 
@@ -337,7 +342,6 @@ As tempo is running in distributed mode, extra arguments for each of the service
 -   ingester
 -   querier
 -   query-frontend
-
 
 
 ## Tempo Configuration

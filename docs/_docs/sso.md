@@ -847,6 +847,40 @@ For the actual `tf-runner` Vault role/policy configuration and CLI snippets, see
 
 ## Keycloak Observability
 
+### Traces
+
+Keycloak can export distributed tracing data directly to the OpenTelemetry Collector.
+
+In Pi Cluster, tracing is enabled in the `Keycloak` custom resource and the collector endpoint is set to the in-cluster OpenTelemetry Collector service:
+
+```yaml
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+spec:
+  tracing:
+    enabled: true
+    endpoint: http://otel-collector.otel:4317
+```
+
+This makes Keycloak send trace spans to the OpenTelemetry Collector, which then forwards them to Tempo through its OTLP exporter.
+
+The resulting trace flow is:
+
+1. Keycloak generates spans for incoming authentication and authorization requests.
+2. Keycloak exports those spans to the OpenTelemetry Collector at `otel-collector.otel:4317`.
+3. The collector processes the spans and exports them to Tempo.
+4. Traces can then be explored from Grafana.
+
+{{site.data.alerts.note}}
+
+The tracing endpoint must point to the OTLP gRPC port exposed by the OpenTelemetry Collector. In this cluster that is the internal service endpoint `otel-collector.otel:4317`.
+
+{{site.data.alerts.end}}
+
+See [Distributed Tracing (Tempo)](/docs/tracing/) for trace analysis, and [OpenTelemetry Collector](/docs/opentelemetry-collector/) for collector deployment and exporter configuration.
+
 ### Metrics
 
 Keycloak exposes Prometheus-format metrics at the following endpoint on the management interface (default TCP port 9000) at `/metrics`.
