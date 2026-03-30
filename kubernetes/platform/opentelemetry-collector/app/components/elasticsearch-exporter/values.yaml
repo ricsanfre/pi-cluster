@@ -30,6 +30,7 @@ config:
       - health_check
       - basicauth
     pipelines:
-      logs:
+      logs/elasticsearch:
+        receivers: [otlp]
         processors: [memory_limiter, resource, batch]
-        exporters: [elasticsearch, debug]
+        exporters: [elasticsearch]

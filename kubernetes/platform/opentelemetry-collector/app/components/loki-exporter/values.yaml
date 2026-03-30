@@ -1,0 +1,12 @@
+# opentelemetry-collector helm values (loki-exporter)
+config:
+  exporters:
+    # Loki recommends OTLP/HTTP ingestion through its /otlp endpoint.
+    otlphttp/loki:
+      endpoint: http://loki-gateway.loki/otlp
+  service:
+    pipelines:
+      logs/loki:
+        receivers: [otlp]
+        processors: [memory_limiter, resource, batch]
+        exporters: [otlphttp/loki]
