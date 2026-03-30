@@ -1,1 +1,5 @@
 # loki helm values (prod overlay)
+
+write:
+  persistence:
+    size: 2Gi
