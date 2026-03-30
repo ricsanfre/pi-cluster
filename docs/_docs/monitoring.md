@@ -163,6 +163,9 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
               resources:
                 requests:
                   storage: 5Gi
+        # Additional external labels to be added to all metrics
+        externalLabels:
+          cluster: ${CLUSTER_NAME:-pi-cluster}
         ##
       ## Configure HTTPRoute via Gateway API
       route:
@@ -351,6 +354,7 @@ Kube-prometheus stack can be installed using helm [kube-prometheus-stack](https:
     -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
       `prometheus.${CLUSTER_DOMAIN}`, `alertmanager.${CLUSTER_DOMAIN}` and `grafana.${CLUSTER_DOMAIN}` must resolve to Envoy Gateway's Load Balancer service external IP.
       External-DNS can be configured to publish those records automatically from `HTTPRoute` hostnames.
+    -   Replace `${CLUSTER_NAME}` by the cluster name to be used as an external label in Prometheus metrics. This is useful when multiple clusters are federated or scraped from a central Prometheus instance, allowing to identify the source cluster of each metric.
     -   Replace `${STORAGE_CLASS}` by storage class name used (i.e. `longhorn`, `local-path`, etc.)
     -   Replace `${K8S_CP_NODE_x}` by cluster's control node IP addresses.
     -   Replace `${K8S_WK_NODE_x}` by cluster's worker node IP addresses.
@@ -433,6 +437,9 @@ prometheus:
     enableFeatures:
       # Enable Memory snapshot on shutdown.
       - memory-snapshot-on-shutdown
+    # Additional external labels to be added to all metrics
+    externalLabels:
+      cluster: ${CLUSTER_NAME:-pi-cluster}
 ```
 
 {% endraw  %}
@@ -446,6 +453,7 @@ The following options are used to configure Prometheus Server
     -  Data retention configuration:  set by `prometheus.prometheusSpec.retention` and `prometheus.prometheusSpec.retentionSize`
 -   Experimental features enabled
     - Enable "Memory-snapshot-on-shutdown".
+-   Additional external labels to be added to all metrics, in this case, a `cluster` label with the cluster name is added to all metrics. This is useful when multiple clusters are federated or scraped from a central Prometheus instance, allowing to identify the source cluster of each metric.
 
 #### Grafana configuration
 
