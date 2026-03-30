@@ -9,6 +9,10 @@ loki:
 
   limits_config:
     allow_structured_metadata: true
+    max_query_lookback: 744h
+    # Retention period for logs in the store.
+    retention_period: 744h
+    # OLTP limit settings
     otlp_config:
       resource_attributes:
         ignore_defaults: true
@@ -18,6 +22,16 @@ loki:
               - service.name
               - service.namespace
               - k8s.namespace.name
+
+  # Compactor configuration
+  # Configure data retention and compaction. This is required when using the S3 storage backend, as S3 does not support object deletion. Loki's compactor will create new compacted blocks and mark old blocks for deletion, but the actual deletion of old blocks will be delayed until the retention period has passed.
+  # ref: https://grafana.com/docs/loki/latest/operations/storage/retention/
+  compactor:
+    compaction_interval: 10m
+    delete_request_store: s3
+    retention_delete_delay: 2h
+    retention_enabled: true
+    working_directory: /var/loki/retention
 
   # S3 backend storage configuration
   storage:
