@@ -10,5 +10,5 @@ config:
     pipelines:
       traces:
         processors: [memory_limiter, resource, batch]
-        exporters: [debug, spanmetrics, otlp]
+        exporters: [spanmetrics, otlp]
 

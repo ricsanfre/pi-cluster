@@ -14,5 +14,5 @@ config:
       metrics:
         receivers: [otlp, spanmetrics]
         processors: [memory_limiter, resource, batch]
-        exporters: [otlphttp/prometheus, debug]
+        exporters: [otlphttp/prometheus]
 
