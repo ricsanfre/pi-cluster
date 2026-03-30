@@ -116,6 +116,22 @@ queryFrontend:
         secretKeyRef:
           name: tempo-minio-secret
           key: MINIO_SECRET_ACCESS_KEY
+
+# Enable metrics-generator so TraceQL metrics queries such as rate() have a live ring.
+metricsGenerator:
+  enabled: true
+  config:
+    processor:
+      local_blocks:
+        filter_server_spans: false
+        flush_to_storage: true
+
+# Activate the local-blocks processor for all tenants.
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - local-blocks
 # Disable Minio server installation
 minio:
   enabled: false
