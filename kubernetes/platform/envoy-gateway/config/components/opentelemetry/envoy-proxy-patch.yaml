@@ -34,8 +34,6 @@ spec:
               upstream_host: "%UPSTREAM_HOST%"
               route_name: "%ROUTE_NAME%"
               x_request_id: "%REQ(X-REQUEST-ID)%"
-              trace_id: "%TRACE_ID%"
-              span_id: "%SPAN_ID%"
     tracing:
       samplingRate: 100
       provider:
