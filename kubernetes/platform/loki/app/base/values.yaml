@@ -9,9 +9,9 @@ loki:
 
   limits_config:
     allow_structured_metadata: true
-    max_query_lookback: 744h
+    max_query_lookback: 168h
     # Retention period for logs in the store.
-    retention_period: 744h
+    retention_period: 168h
     # OLTP limit settings
     otlp_config:
       resource_attributes:
@@ -40,11 +40,11 @@ loki:
       ruler: k3s-loki
     type: s3
     s3:
-      endpoint: minio.minio:9000
+      endpoint: "https://${S3_SERVER}:9091"
       secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
       accessKeyId: ${MINIO_ACCESS_KEY_ID}
       s3ForcePathStyle: true
-      insecure: true
+      insecure: false
       http_config:
         idle_conn_timeout: 90s
         response_header_timeout: 0s

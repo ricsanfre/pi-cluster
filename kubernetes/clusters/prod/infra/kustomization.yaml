@@ -21,9 +21,8 @@ resources:
   - loki-app.yaml
   - longhorn-app.yaml
   - metrics-server-app.yaml
-  - minio-app.yaml
+  # - minio-app.yaml
   - mongodb-operator-app.yaml
-  # - nginx-app.yaml
   - otel-collector-app.yaml
   - system-upgrade-app.yaml
   - tempo-app.yaml
