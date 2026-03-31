@@ -41,8 +41,8 @@ loki:
     type: s3
     s3:
       endpoint: "https://${S3_SERVER}:9091"
-      secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
-      accessKeyId: ${MINIO_ACCESS_KEY_ID}
+      secretAccessKey: $${MINIO_SECRET_ACCESS_KEY}
+      accessKeyId: $${MINIO_ACCESS_KEY_ID}
       s3ForcePathStyle: true
       insecure: false
       http_config:

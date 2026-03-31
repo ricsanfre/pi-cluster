@@ -17,3 +17,7 @@ spec:
   path: ./kubernetes/platform/loki/app/overlays/prod
   prune: true
   wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
