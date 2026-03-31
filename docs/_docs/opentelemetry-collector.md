@@ -2,7 +2,7 @@
 title: OpenTelemetry Collector
 permalink: /docs/opentelemetry-collector/
 description: How to deploy and configure the OpenTelemetry Collector in the Pi Kubernetes cluster.
-last_modified_at: "29-03-2026"
+last_modified_at: "30-03-2026"
 ---
 
 The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) is the central component of the OpenTelemetry-based observability architecture used in Pi Cluster.
@@ -37,20 +37,21 @@ The architecture implemented in this repository is the following:
 5. Telemetry is exported to the different backends:
    - traces to Tempo
    - metrics to Prometheus through the OTLP HTTP ingestion endpoint
-   - logs to Elasticsearch
-
-The effective collector configuration also keeps the `debug` exporter enabled, which is useful during validation and troubleshooting.
+  - logs to Elasticsearch and Loki
 
 
 ![otel-architecture](/assets/img/otel-collector-architecture.png)
 
 ### Pipeline layout
 
-The configuration used define three pipelines:
+The production configuration defines four active pipelines:
 
-- **Traces pipeline**: processors `memory_limiter`, `resource`, `batch`; exporters `debug`, `spanmetrics`
-- **Metrics pipeline**: receivers `otlp`, `spanmetrics`; processors `memory_limiter`, `resource`, `batch`; exporter `debug`
-- **Logs pipeline**: processors `memory_limiter`, `resource`, `batch`; exporters `elasticsearch`, `debug`
+- **Traces pipeline**: processors `memory_limiter`, `resource`, `batch`; exporters `spanmetrics`, `otlp`
+- **Metrics pipeline**: receivers `otlp`, `spanmetrics`; processors `memory_limiter`, `resource`, `batch`; exporter `otlphttp/prometheus`
+- **Logs Elasticsearch pipeline**: receivers `otlp`; processors `memory_limiter`, `resource`, `batch`; exporter `elasticsearch`
+- **Logs Loki pipeline**: receivers `otlp`; processors `memory_limiter`, `resource`, `batch`, `transform/loki`; exporter `otlphttp/loki`
+
+The two log pipelines use the names `logs/elasticsearch` and `logs/loki` so both exporters can coexist in the same collector configuration.
 
 ### Internal telemetry
 
@@ -62,7 +63,7 @@ In addition to the internal Kubernetes service, the production overlay creates a
 
 - `otel-collector.${CLUSTER_DOMAIN}`
 
-The overlay also enables CORS on the OTLP HTTP receiver so browser-based telemetry clients can send OTLP HTTP traffic from cluster domains.
+It also enables CORS on the OTLP HTTP receiver so browser-based telemetry clients can send OTLP HTTP traffic from cluster domains.
 
 ## OpenTelemetry Collector installation
 
@@ -136,8 +137,6 @@ Installation using `Helm` (Release 3):
           username: "$${env:ELASTIC_USER}"
           password: "$${env:ELASTIC_PASSWORD}"
     exporters:
-      debug:
-        verbosity: basic
       otlp:
         endpoint: tempo-distributor-discovery.tempo.svc.cluster.local:4317
         tls:
@@ -146,6 +145,8 @@ Installation using `Helm` (Release 3):
         endpoint: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc:9090/api/v1/otlp
         tls:
           insecure: true
+      otlphttp/loki:
+        endpoint: http://loki-gateway.loki/otlp
       elasticsearch:
         endpoint: http://efk-es-http.elastic:9200
         auth:
@@ -156,6 +157,13 @@ Installation using `Helm` (Release 3):
           - key: service.instance.id
             from_attribute: k8s.pod.uid
             action: insert
+      transform/loki:
+        log_statements:
+          - context: log
+            statements:
+              - set(resource.attributes["exporter"], "OTLP")
+              - set(resource.attributes["k8s.namespace.name"], log.attributes["k8s.namespace.name"])
+              - delete_key(log.attributes, "k8s.namespace.name")
     connectors:
       spanmetrics: {}
     service:
@@ -165,14 +173,19 @@ Installation using `Helm` (Release 3):
       pipelines:
         traces:
           processors: [memory_limiter, resource, batch]
-          exporters: [debug, spanmetrics, otlp]
+          exporters: [spanmetrics, otlp]
         metrics:
           receivers: [otlp, spanmetrics]
           processors: [memory_limiter, resource, batch]
-          exporters: [otlphttp/prometheus, debug]
-        logs:
+          exporters: [otlphttp/prometheus]
+        logs/elasticsearch:
+          receivers: [otlp]
           processors: [memory_limiter, resource, batch]
-          exporters: [elasticsearch, debug]
+          exporters: [elasticsearch]
+        logs/loki:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch, transform/loki]
+          exporters: [otlphttp/loki]
       telemetry:
         metrics:
           level: detailed
@@ -202,6 +215,29 @@ Installation using `Helm` (Release 3):
   ```
 
 ## OTEL Collector Configuration
+
+### Generic configuration
+
+#### Image
+
+The collector uses the `otel/opentelemetry-collector-contrib` image to have access to community receivers and exporters such as `elasticsearch` and `spanmetrics`.
+
+#### Deployment mode
+
+The collector is deployed as a Kubernetes Deployment, which provides better resource management and stability for production workloads compared to the DaemonSet mode.
+
+```yaml
+mode: deployment
+```
+
+#### Kubernetes attributes preset
+
+The `kubernetesAttributes` preset is enabled to automatically enrich telemetry with Kubernetes metadata such as `k8s.pod.name`, `k8s.namespace.name`, and `k8s.node.name`.
+
+See details in the [OpenTelemetry Helm chart documentation](https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/#kubernetes-attributes-preset).
+
+Activating this preset adds the Kubernetes attributes processor to each pipeline: [OpenTelemetry Kubernetes Attributes Processor](https://opentelemetry.io/docs/platforms/kubernetes/collector/components/#kubernetes-attributes-processor)
+
 
 ### OLTP Receiver configuration
 
@@ -240,7 +276,7 @@ config:
     pipelines:
       traces:
         processors: [memory_limiter, resource, batch]
-        exporters: [debug, spanmetrics, otlp]
+        exporters: [spanmetrics, otlp]
 ```
 
 This configuration makes the collector the central ingestion point for distributed tracing, while Tempo remains the traces backend.
@@ -261,7 +297,7 @@ config:
       metrics:
         receivers: [otlp, spanmetrics]
         processors: [memory_limiter, resource, batch]
-        exporters: [otlphttp/prometheus, debug]
+        exporters: [otlphttp/prometheus]
 ```
 
 This allows Prometheus to ingest OpenTelemetry metrics directly through its OTLP endpoint, while scrape-based Prometheus monitoring continues to coexist for traditional workloads.
@@ -344,7 +380,7 @@ The OTLP receiver must be enabled before the OpenTelemetry Collector starts expo
 
 ### Elasticsearch exporter
 
-Logs pipeline is configured with an `elasticsearch` exporter pointing to the Elasticsearch cluster:
+One of the log pipelines is configured with an `elasticsearch` exporter pointing to the Elasticsearch cluster:
 
 The `elasticsearch` exporter configuration includes the endpoint and the `basicauth` authenticator that references the credentials stored in environment variables.
 
@@ -377,9 +413,10 @@ config:
       - health_check
       - basicauth
     pipelines:
-      logs:
+      logs/elasticsearch:
+        receivers: [otlp]
         processors: [memory_limiter, resource, batch]
-        exporters: [elasticsearch, debug]
+        exporters: [elasticsearch]
 ```
 
 #### Prerequisites: create Elasticsearch user and role
@@ -599,11 +636,134 @@ In this project, the final approach is to manage the required users, roles, ILM 
 
 See the [Terraform Elastic configuration documentation](/docs/elastic/#automating-configuration-with-terraform-and-flux-tofu-controller) for details on how to manage Elasticsearch configuration through Terraform/OpenTofu.
 
+### Loki exporter
+
+https://grafana.com/docs/loki/latest/send-data/otel/
+
+
+#### Loki Prerequisites for OTLP ingestion
+
+When logs are ingested by Loki using an OpenTelemetry protocol (OTLP) ingestion endpoint, some of the data is stored as *Structured Metadata*.
+
+You must set **allow_structured_metadata** to true within your Loki config file. Otherwise, Loki will reject the log payload as malformed. Note that Structured Metadata is enabled by default in Loki 3.0 and later.
+
+The following configuration snippet shows how to enable Structured Metadata in Loki Helm chart values:
+```yaml
+loki:
+  limits_config:
+    allow_structured_metadata: true
+```
+The configuration above is required for Loki to accept OTLP log payloads because OTLP allows for arbitrary attributes that may not be indexed as labels.
+- `allow_structured_metadata: true` lets Loki persist non-indexed OTLP attributes as structured metadata.
+
+By the other hand  Loki should not index all OTLP resource attributes as labels. The default OTLP mapping can create too many active streams because attributes such as `k8s.pod.name` and `service.instance.id` are high cardinality.
+
+
+OpenTelemetry format will be mapped by default to the Loki data model during ingestion, but the default OTLP mapping can create too many active streams because attributes such as `k8s.pod.name` and `service.instance.id` are high cardinality.
+
+- Index labels: Resource attributes map well to index labels in Loki, since both usually identify the source of the logs. The default list of Resource Attributes to store as Index labels can be configured using *default_resource_attributes_as_index_labels*.
+
+- Structured Metadata: OTLP attributes that are not indexed as labels can be stored as structured metadata in Loki. This allows you to keep all the information from the OTLP payload without overloading Loki with high-cardinality labels.
+
+  By default, the following resource attributes will be stored as index labels, while the remaining attributes are stored as Structured Metadata with each log entry:
+
+    cloud.availability_zone
+    cloud.region
+    container.name
+    deployment.environment.name
+    k8s.cluster.name
+    k8s.container.name
+    k8s.cronjob.name
+    k8s.daemonset.name
+    k8s.deployment.name
+    k8s.job.name
+    k8s.namespace.name
+    k8s.pod.name
+    k8s.replicaset.name
+    k8s.statefulset.name
+    service.instance.id
+    service.name
+    service.namespace
+
+  {{ site.data.alerts.warning }}
+  Because Loki has a default limit of 15 index labels, only a subset of resource attributes should be stored as index labels to avoid `maximum active stream limit exceeded` errors. The default OTLP mapping includes many Kubernetes attributes that are high cardinality, such as `k8s.pod.name` and `service.instance.id`, which can easily lead to an explosion of active streams in Loki if indexed as labels.
+  {{ site.data.alerts.end }}
+
+-  Timestamp: One of *LogRecord.TimeUnixNano* or *LogRecord.ObservedTimestamp*, based on which one is set. If both are not set, the ingestion timestamp will be used.
+
+-  LogLine: *LogRecord.Body* holds the body of the log. However, since Loki only supports Log body in string format, we will stringify non-string values using the *AsString* method from the OTel collector lib.
+
+-  Structured Metadata: Anything which can’t be stored in Index labels and LogLine would be stored as Structured Metadata. Here is a non-exhaustive list of what will be stored in Structured Metadata to give a sense of what it will hold:
+
+    Resource Attributes not stored as Index labels is replicated and stored with each log entry.
+    Everything under InstrumentationScope is replicated and stored with each log entry.
+    Everything under LogRecord except *LogRecord.Body*, *LogRecord.TimeUnixNano* and sometimes *LogRecord.ObservedTimestamp*.
+
+#### Configuring Loki for OTLP ingestion
+
+Loki can be configured to keep only a small set of stable attributes as index labels and store the rest as structured metadata:
+
+```yaml
+loki:
+  limits_config:
+    otlp_config:
+      resource_attributes:
+        ignore_defaults: true
+        attributes_config:
+          - action: index_label
+            attributes:
+              - service.name
+              - service.namespace
+              - k8s.namespace.name
+```
+
+This configuration means:
+
+- `ignore_defaults: true` disables Loki's built-in default list of OTLP index labels.
+- `attributes_config` whitelists only low-cardinality resource attributes to be indexed.
+
+This is the recommended setup for OTLP log ingestion in the cluster because it prevents `maximum active stream limit exceeded` errors while still keeping useful service and namespace labels available for LogQL queries.
+
+
+See futher details in the [Loki documentation on OTLP ingestion](https://grafana.com/docs/loki/latest/send-data/otel/#configure-loki-for-otlp-ingestion).
+
+
+#### Configuring OTEL CollectorLogs pipeline with OTLP HTTP exporter to Loki
+
+The second log pipeline exports logs to Loki using OTLP HTTP through the Loki gateway `/otlp` endpoint:
+
+```yaml
+config:
+  processors:
+    transform/loki:
+      log_statements:
+        - context: log
+          statements:
+            - set(resource.attributes["exporter"], "OTLP")
+            - set(resource.attributes["k8s.namespace.name"], log.attributes["k8s.namespace.name"])
+            - delete_key(log.attributes, "k8s.namespace.name")
+  exporters:
+    otlphttp/loki:
+      endpoint: http://loki-gateway.loki/otlp
+  service:
+    pipelines:
+      logs/loki:
+        receivers: [otlp]
+        processors: [memory_limiter, resource, batch, transform/loki]
+        exporters: [otlphttp/loki]
+```
+
+This pipeline uses the `transform/loki` processor to move `k8s.namespace.name` into resource attributes before export, because Loki OTLP label mapping is based on resource attributes.
+
+On the Loki side, the cluster configuration keeps only low-cardinality resource attributes as index labels and stores the rest as structured metadata. This avoids the active-stream explosion caused by default OTLP label mappings such as `k8s.pod.name` or `service.instance.id`.
+
+
+
 
 
 ### HTTPRoute exposure
 
-OtelThe `route` component creates an `HTTPRoute` attached to Envoy Gateway:
+OTLP HTTP Port (tcp 4319)is exposed defining a `HTTPRoute` attached to Envoy Gateway:
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -612,15 +772,25 @@ metadata:
   name: otel-collector
 spec:
   hostnames:
-    - otel-collector.${CLUSTER_DOMAIN}
+  - otel-collector.${CLUSTER_DOMAIN}
   parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: public-gateway
-      namespace: envoy-gateway-system
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: public-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+     - name: otel-collector
+       port: 4318
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
 ```
 
 This exposes the collector through the shared Gateway API entry point already used by other platform services.
+
+This allows browser-based telemetry clients (SPA applications) to send OTLP HTTP traffic to `otel-collector.${CLUSTER_DOMAIN}` and have it routed to the collector service.
 
 ## Verification
 

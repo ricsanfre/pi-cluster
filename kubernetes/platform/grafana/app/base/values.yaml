@@ -47,7 +47,7 @@ datasources:
             matcherRegex: trace_id
             matcherType: label
             name: TraceID
-            url: "$${__value.raw}"
+            url: "$$${__value.raw}"
     - name: Tempo
       uid: tempo
       type: tempo
@@ -63,7 +63,7 @@ datasources:
           filterByTraceID: false
           filterBySpanID: false
           customQuery: true
-          query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+          query: '{$$${__tags}} | trace_id="$$${__span.traceId}"'
         tracesToMetrics:
           datasourceUid: 'prometheus'
           spanStartTimeShift: '-1h'

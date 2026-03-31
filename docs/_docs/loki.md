@@ -2,7 +2,7 @@
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kubernetes cluster.
-last_modified_at: "26-06-2025"
+last_modified_at: "30-03-2026"
 
 ---
 
@@ -138,6 +138,17 @@ Installation from helm chart. There are two alternatives:
     # Disable multi-tenant support
     auth_enabled: false
 
+    limits_config:
+      max_query_lookback: 168h
+      retention_period: 168h
+
+    compactor:
+      compaction_interval: 10m
+      delete_request_store: s3
+      retention_delete_delay: 2h
+      retention_enabled: true
+      working_directory: /var/loki/retention
+
     # S3 backend storage configuration
     storage:
       bucketNames:
@@ -231,6 +242,10 @@ Installation from helm chart. There are two alternatives:
 
   - Configure TSDB as storage schema (`loki.schemaConfig`). See [Loki Storage Schema doc](https://grafana.com/docs/loki/latest/operations/storage/schema/) and [TSDB Storage](https://grafana.com/docs/loki/latest/operations/storage/tsdb/)
 
+  - Configure log retention in `limits_config`, keeping logs for 7 days (`168h`) and limiting queries to the same time window.
+
+  - Enable the compactor so retention is actually enforced when using S3 object storage. The compactor runs every 10 minutes, stores delete requests in S3, and uses `/var/loki/retention` as local working directory.
+
   - Configure three replicas for write (`write`), read (`read`) and backend (`backend`)components and persistent volumes using Longhorn
 
   - Enable one replica for gateway component (`gateway`)
@@ -247,6 +262,36 @@ Installation from helm chart. There are two alternatives:
   ```shell
   kubectl get pods -l app.kubernetes.io/name=loki -n loki
   ```
+
+### Compactor and data retention
+
+When Loki uses TSDB with S3-compatible object storage, object storage alone does not enforce log retention. Retention only becomes effective when the compactor is enabled and `limits_config.retention_period` is set.
+
+In this repository, Loki keeps logs for 7 days:
+
+```yml
+loki:
+  limits_config:
+    max_query_lookback: 168h
+    retention_period: 168h
+
+  compactor:
+    compaction_interval: 10m
+    delete_request_store: s3
+    retention_delete_delay: 2h
+    retention_enabled: true
+    working_directory: /var/loki/retention
+```
+
+This configuration means:
+
+- `retention_period: 168h` keeps log data for 7 days.
+- `max_query_lookback: 168h` prevents queries from scanning data older than the retention window.
+- `retention_enabled: true` activates retention processing in the compactor.
+- `delete_request_store: s3` stores retention delete markers in the same S3 backend.
+- `working_directory: /var/loki/retention` is local disk used by the compactor while processing retention operations.
+
+Even when MinIO or another S3 backend is used for long-term storage, Loki still needs local persistent storage on write and backend pods for TSDB working data and compactor processing.
 
 ### GitOps installation
 
@@ -272,6 +317,17 @@ And the following Helm values has to be provided:
 loki:
   # Disable multi-tenant support
   auth_enabled: false
+
+  limits_config:
+    max_query_lookback: 168h
+    retention_period: 168h
+
+  compactor:
+    compaction_interval: 10m
+    delete_request_store: s3
+    retention_delete_delay: 2h
+    retention_enabled: true
+    working_directory: /var/loki/retention
 
   # S3 backend storage configuration
   storage:
