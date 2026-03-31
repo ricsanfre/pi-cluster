@@ -63,7 +63,7 @@ datasources:
           filterByTraceID: false
           filterBySpanID: false
           customQuery: true
-          query: 'method="$${__span.tags.method}"'
+          query: '{${__tags}} | trace_id="${__span.traceId}"'
         tracesToMetrics:
           datasourceUid: 'prometheus'
           spanStartTimeShift: '-1h'
