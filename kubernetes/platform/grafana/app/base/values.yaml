@@ -51,7 +51,7 @@ datasources:
       uid: tempo
       type: tempo
       access: proxy
-      url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3200
+      url: http://tempo-query-frontend.tempo.svc.cluster.local:3100
       basicAuth: false
       jsonData:
         tracesToLogsV2:
@@ -84,6 +84,8 @@ datasources:
         spanBar:
           type: 'Tag'
           tag: 'http.path'
+        streamingEnabled:
+          search: true
 ##
 ## Provisioning sidecars
 ##

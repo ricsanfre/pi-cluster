@@ -1,5 +1,7 @@
 # tempo helm values (base)
 
+streamOverHTTPEnabled: true
+
 # Enable trace ingestion
 traces:
   otlp:
