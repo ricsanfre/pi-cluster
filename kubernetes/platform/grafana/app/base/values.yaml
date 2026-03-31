@@ -43,16 +43,14 @@ datasources:
       url: http://loki-read-headless.loki.svc.cluster.local:3100
       jsonData:
         derivedFields:
-            # Traefik traces integration
-            # - datasourceUid: tempo
-            #   matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
-            #   name: TraceID
-            #   url: $${__value.raw}
-            # NGINX traces integration
           - datasourceUid: tempo
-            matcherRegex: '"trace_id": "(\w+)"'
+            matcherRegex: "trace_id=(\\w+)"
             name: TraceID
-            url: $${__value.raw}
+            url: "$${__value.raw}"
+          - datasourceUid: tempo
+            matcherRegex: '"trace_id":\\s*"(\\w+)"'
+            name: TraceID
+            url: "$${__value.raw}"
     - name: Tempo
       uid: tempo
       type: tempo
