@@ -17,7 +17,6 @@ resources:
   - kube-vip-helmrepo.yaml
   - longhorn-helmrepo.yaml
   - metrics-server-helmrepo.yaml
-  - minio-helmrepo.yaml
   - mongodb-helmrepo.yaml
   - opentelemetry-helmrepo.yaml
   - prometheus-community-helmrepo.yaml

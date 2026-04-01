@@ -16,7 +16,6 @@ resources:
   - kiali-helmrepo.yaml
   - longhorn-helmrepo.yaml
   - metrics-server-helmrepo.yaml
-  - minio-helmrepo.yaml
   - mongodb-helmrepo.yaml
   - prometheus-community-helmrepo.yaml
   - ricsanfre-helmrepo.yaml
