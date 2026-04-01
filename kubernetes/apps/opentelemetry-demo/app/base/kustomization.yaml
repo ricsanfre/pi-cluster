@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ns.yaml
   - helm.yaml
+  - httproute.yaml
 
 configMapGenerator:
   - name: opentelemetry-demo-helm-values

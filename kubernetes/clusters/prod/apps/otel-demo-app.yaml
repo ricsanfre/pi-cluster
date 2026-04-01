@@ -12,6 +12,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: opentelemetry-collector-app
+    - name: envoy-gateway-config
   path: ./kubernetes/apps/opentelemetry-demo/app/overlays/prod
   prune: true
   wait: true
