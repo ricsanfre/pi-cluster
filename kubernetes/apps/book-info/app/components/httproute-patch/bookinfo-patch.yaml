@@ -1,5 +1,0 @@
-  # Disable TLS endpoints
-- op: add
-  path: /spec/hostnames
-  value:
-    - book-info.${CLUSTER_DOMAIN}
