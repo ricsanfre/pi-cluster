@@ -643,25 +643,19 @@ That provides operational logs for the Envoy Gateway managed resources.
 
 Envoy Gateway also supports integration with OpenTelemetry for proxy traces, access logs, and metrics. In Pi Cluster, that integration can rely on the existing OpenTelemetry stack already deployed in the repository.
 
-The current repository deploys an OpenTelemetry Collector in namespace `otel` through:
+See OpenTelemetry integration details in the official documentation: [Envoy Gateway: Observability](https://gateway.envoyproxy.io/docs/tasks/observability).
 
-- `kubernetes/clusters/prod/infra/otel-collector-app.yaml`
-- `kubernetes/platform/opentelemetry-collector/app/overlays/prod`
+To enable that integration, Envoy Gateway needs to be configured to export telemetry data to an OpenTelemetry Collector. See [Open-Telemetry Collector](/docs/otel-collector/) for details on the collector deployed in the cluster.
 
-That collector is already integrated with the current observability backends:
+The following telemetry data can be exported to OpenTelemetry:
+- Traces from the Envoy proxy data plane.
+- Access logs from the Envoy proxy data plane.
+- Metrics from both the control plane and the data plane.
 
-- **Traces** exported to Tempo using OTLP gRPC.
-- **Metrics** exported to Prometheus using the Prometheus OTLP HTTP endpoint.
-- **Logs** exported to Elasticsearch.
 
-Envoy Gateway now enables that integration through two reusable prod components:
+To enable OpenTelemetry export, the `EnvoyProxy` and the control plane configuration need to be updated to include OpenTelemetry sinks. This can be done when installing the Helm chart or by applying updated `EnvoyProxy` and `Gateway` resources after installation.
 
-- `kubernetes/platform/envoy-gateway/app/components/opentelemetry`, which adds a Helm values fragment for control-plane OTLP metrics export.
-- `kubernetes/platform/envoy-gateway/config/components/opentelemetry`, which patches the shared `EnvoyProxy` to export proxy access logs, proxy metrics, and traces to the collector.
-
-The Flux `envoy-gateway-config` Kustomization also depends on `opentelemetry-collector-app` so the data-plane telemetry configuration is applied after the collector deployment exists.
-
-The control-plane component adds the equivalent of:
+To enable OpenTelemetry export for control plane metrics, add the following helm values when installing the chart: 
 
 ```yaml
 config:
@@ -678,7 +672,7 @@ config:
               exportTimeout: 30s
 ```
 
-The `EnvoyProxy` component adds the equivalent of:
+To enable OpenTelemetry export (metrics, traces, access logs) for data-plane, add the following to `EnvoyProxy` resource:
 
 ```yaml
 telemetry:
@@ -716,60 +710,8 @@ telemetry:
               namespace: otel
               port: 4317
 ```
+With that configuration, the Envoy proxy will export access logs, traces, and metrics to the OpenTelemetry Collector deployed in the cluster. The collector can then be configured to forward that telemetry data to a backend such as Prometheus, Tempo, or Elasticsearch. See details about Observability architecture in the Pi Cluster in [Observability Architecture](/docs/observability/).
 
-Current collector configuration in this repository includes:
-
-```yaml
-# opentelemetry-collector helm values (tempo-exporter)
-config:
-  exporters:
-    otlp:
-      endpoint: tempo-distributor-discovery.tempo.svc.cluster.local:4317
-      tls:
-        insecure: true
-  service:
-    pipelines:
-      traces:
-        processors: [memory_limiter, resource, batch]
-        exporters: [debug, spanmetrics, otlp]
-```
-
-```yaml
-# opentelemetry-collector helm values (prometheus-exporter)
-config:
-  exporters:
-    otlphttp/prometheus:
-      endpoint: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc:9090/prometheus/api/v1/otlp
-      tls:
-        insecure: true
-  service:
-    pipelines:
-      metrics:
-        receivers: [otlp, spanmetrics]
-        processors: [memory_limiter, resource, batch]
-        exporters: [otlphttp/prometheus, debug]
-```
-
-```yaml
-# opentelemetry-collector helm values (elasticsearch-exporter)
-config:
-  exporters:
-    elasticsearch:
-      endpoint: "http://efk-es-http.elastic:9200"
-  service:
-    pipelines:
-      logs:
-        processors: [memory_limiter, resource, batch]
-        exporters: [elasticsearch, debug]
-```
-
-This means Envoy Gateway proxy telemetry can be integrated with the existing platform observability services instead of requiring new backends.
-
-Typical use cases are:
-
-- **Proxy traces**: export distributed tracing spans from Envoy proxy instances to the OpenTelemetry Collector and from there to Tempo.
-- **Proxy access logs**: export structured access logs from Envoy proxies to the OpenTelemetry Collector and from there to Elasticsearch or another log backend.
-- **Proxy metrics**: export OpenTelemetry metrics to the collector and then forward them to Prometheus, while Prometheus scraping of Envoy metrics remains available for standard Prometheus-based monitoring.
 
 ### Grafana dashboards
 
@@ -780,7 +722,7 @@ Envoy Gateway Grafana dashboards can be found in the upstream Envoy Gateway proj
 
 Dashboards can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards"](/docs/grafana/#automating-installation-of-grafana-community-dashboards).
 
-In this repository the Grafana component at `kubernetes/platform/grafana/app/components/dashboards` adds a dedicated `Envoy-Gateway` provider and downloads the dashboards automatically. The following configuration is included in Grafana's Helm values:
+Add following configuration to Grafana's helm chart values file:
 
 ```yaml
 dashboardProviders:
@@ -881,7 +823,6 @@ sources:
   - gateway-tlsroute
   - gateway-grpcroute
   - gateway-udproute
-  - istio-gateway
 
 domainFilters:
   - ${CLUSTER_DOMAIN}

@@ -306,6 +306,10 @@ Before this exporter can be used, Prometheus itself must enable the OpenTelemetr
 
 #### Enabling the OpenTelemetry receiver in Prometheus
 
+|![prometheus-oltp](/assets/img/prometheus-oltp-support.webp) |
+| :---: |
+| *Source: [Prometheus and OpenTelemetry Finally Grew Up Together](https://medium.com/@simardeep.oberoi/prometheus-and-opentelemetry-finally-grew-up-together-fda5ef81d24a)* |
+
 Installation steps:
 
 - Step 1: Add the following options to the `kube-prometheus-stack` Helm values:
@@ -377,6 +381,9 @@ http://kube-prometheus-stack-prometheus.kube-prom-stack.svc:9090/api/v1/otlp
 The OTLP receiver must be enabled before the OpenTelemetry Collector starts exporting metrics to Prometheus. Otherwise metric export requests to `/api/v1/otlp` will fail.
 
 {{site.data.alerts.end}}
+
+
+See further details about using Prometheus as OpenTelemetry metrics backend in the [Prometheus documentation](https://prometheus.io/docs/guides/opentelemetry).
 
 ### Elasticsearch exporter
 
