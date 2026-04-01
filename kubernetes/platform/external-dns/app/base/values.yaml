@@ -35,7 +35,6 @@ sources:
   - gateway-tlsroute
   - gateway-grpcroute
   - gateway-udproute
-  - istio-gateway
 
 domainFilters: 
   - ${CLUSTER_DOMAIN}

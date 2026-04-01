@@ -11,9 +11,9 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: istio-app
-    - name: istio-gateway-app
-  path: ./kubernetes/apps/book-info/app/overlays/prod
+    - name: cert-manager-config
+    - name: envoy-gateway-config
+  path: ./kubernetes/apps/mongodb-cluster/app/overlays/prod
   prune: true
   postBuild:
     substituteFrom:
