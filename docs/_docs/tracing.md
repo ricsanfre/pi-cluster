@@ -137,6 +137,8 @@ Where `user_policy.json`, contains the following AWS access policies definition:
 - Step 4: Create file `tempo-values.yml`
 
   ```yml
+  streamOverHTTPEnabled: true
+
   # Enable trace ingestion
   traces:
     otlp:
@@ -159,9 +161,9 @@ Where `user_policy.json`, contains the following AWS access policies definition:
     trace:
       backend: s3
       s3:
-        bucket: <minio_tempo_bucket>
-        endpoint: <minio_endpoint>
-        region: <minio_site_region>
+        bucket: k3s-tempo
+        endpoint: <minio_endpoint>:<minio_port>
+        region: eu-west-1
         access_key: <minio_tempo_user>
         secret_key: <minio_tempo_key>
         insecure: false
@@ -172,6 +174,15 @@ Where `user_policy.json`, contains the following AWS access policies definition:
       log_received_spans:
         enabled: true
 
+  # Enable metrics-generator so TraceQL metrics queries such as rate() work
+  metricsGenerator:
+    enabled: true
+    config:
+      processor:
+        local_blocks:
+          filter_server_spans: false
+          flush_to_storage: true
+
   # Disable Minio server installation
   minio:
     enabled: false
@@ -181,7 +192,11 @@ Where `user_policy.json`, contains the following AWS access policies definition:
 
   - Enable S3 as storage backend, providing Minio credentials and bucket.
 
-  - Enalbe traces ingestion of different protocols.
+  - Enable traces ingestion of different protocols.
+
+  - Enable Tempo search streaming for Grafana (`streamOverHTTPEnabled: true`).
+
+  - Enable the metrics-generator so TraceQL metrics queries can use a live ring.
 
   - Disable minio server installation (`minio.enabled`)
 
@@ -214,6 +229,8 @@ data:
 And the following Helm values has to be provided:
 
 ```yml
+streamOverHTTPEnabled: true
+
 # Enable trace ingestion
 traces:
   otlp:
@@ -237,11 +254,11 @@ storage:
     backend: s3
     s3:
       bucket: k3s-tempo
-      endpoint: minio.minio:9091
+      endpoint: "${S3_SERVER}:9091"
       region: eu-west-1
       access_key: ${MINIO_ACCESS_KEY_ID}
       secret_key: ${MINIO_SECRET_ACCESS_KEY}
-      insecure: true
+      insecure: false
 
 # Configure distributor
 distributor:
@@ -331,6 +348,31 @@ queryFrontend:
         secretKeyRef:
           name: tempo-minio-secret
           key: MINIO_SECRET_ACCESS_KEY
+
+# Enable metrics-generator so TraceQL metrics queries such as rate() work
+metricsGenerator:
+  enabled: true
+  config:
+    processor:
+      local_blocks:
+        filter_server_spans: false
+        flush_to_storage: true
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+
 # Disable Minio server installation
 minio:
   enabled: false
@@ -340,6 +382,7 @@ As tempo is running in distributed mode, extra arguments for each of the service
 -   distributor
 -   compactor
 -   ingester
+-   metrics-generator
 -   querier
 -   query-frontend
 
