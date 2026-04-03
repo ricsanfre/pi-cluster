@@ -35,8 +35,7 @@
         - name: Install prometheus-crd Helm chart
           kubernetes.core.helm:
             name: prometheus-operator-crd
-            chart_ref: prometheus-operator-crds
-            chart_repo_url: https://prometheus-community.github.io/helm-charts
+            chart_ref: oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
             chart_version: 27.0.1
             release_namespace: kube-system
             create_namespace: true
@@ -88,8 +87,7 @@
         - name: Install Cilium CNI Helm chart
           kubernetes.core.helm:
             name: cilium
-            chart_ref: cilium
-            chart_repo_url: https://helm.cilium.io
+            chart_ref: oci://quay.io/cilium/charts/cilium
             chart_version: 1.19.2
             release_namespace: kube-system
             create_namespace: false
@@ -130,8 +128,7 @@
         - name: Install CoreDNS Helm chart
           kubernetes.core.helm:
             name: coredns
-            chart_ref: coredns
-            chart_repo_url: https://coredns.github.io/helm
+            chart_ref: oci://ghcr.io/coredns/charts/coredns
             chart_version: 1.45.2
             release_namespace: kube-system
             create_namespace: false

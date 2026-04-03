@@ -1,9 +1,0 @@
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: tofu-controller
-  namespace: flux-system
-spec:
-  url: https://flux-iac.github.io/tofu-controller
-  interval: 1h

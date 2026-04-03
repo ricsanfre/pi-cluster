@@ -271,7 +271,6 @@ Example of such tools used in Pi Cluster automation are:
 | OpenTofu | Automate Terraform workflows in Ansible playbooks. |
 | kubectl | Automate Kubernetes CLI operations in Ansible playbooks. |
 | Helm | Automate Helm chart operations in Ansible playbooks. |
-| Helmfile | Automate Helmfile release workflows in Ansible playbooks. |
 {: .table .border-dark } 
 
 
@@ -411,7 +410,7 @@ The runner image is defined in `ansible-runner/Dockerfile` and uses:
   - `ghcr.io/opentofu/opentofu:1.11.5` for `tofu` (copied through an Alpine intermediary stage)
   - `alpine/kubectl:1.35.1` for `kubectl`
   - `alpine/helm:3.18.5` for `helm`
-  - `ghcr.io/helmfile/helmfile:v1.2.3` for `helmfile`
+
 
 Build prerequisites checklist:
 
@@ -430,7 +429,7 @@ flowchart TD
     A["1) Prepare build sources<br/>base image + helper stages"]
     B["2) Install OS dependencies<br/>apt packages + cleanup"]
     C["3) Copy build inputs<br/>Docker and Ansible files"]
-    D["4) Install infrastructure tooling<br/>OpenTofu + kubectl + helm + helmfile"]
+    D["4) Install infrastructure tooling<br/>OpenTofu + kubectl + helm"]
     E["5) Prepare runner user environment<br/>user, PATH, directories"]
     F["6) Install Python + Galaxy dependencies<br/>uv sync + ansible-galaxy"]
     G["7) Finalize runtime tooling<br/>helm plugins"]
@@ -442,7 +441,7 @@ flowchart TD
 Steps/tasks performed when building the Docker image:
 
 1. Prepare build sources:
-  - Pull helper binaries from multi-stage images (`helmfile`, `uv`, `kubectl`, `helm`).
+  - Pull helper binaries from multi-stage images (`uv`, `kubectl`, `helm`).
   - Start from `python:3.12-slim` as the runtime base.
 
 2. Install OS-level runtime dependencies:
@@ -455,7 +454,6 @@ Steps/tasks performed when building the Docker image:
 4. Install infrastructure tooling:
   - Copy `tofu` from `ghcr.io/opentofu/opentofu:1.11.5` via an Alpine intermediary stage.
   - Copy `kubectl` and `helm` binaries from dedicated Alpine images.
-  - Copy `helmfile` binary from the build stage.
 
 5. Create and prepare the `runner` user environment:
   - Create non-root `runner` user and home directory.
@@ -475,8 +473,6 @@ Steps/tasks performed when building the Docker image:
 Current Dockerfile reference:
 
 ```dockerfile
-FROM ghcr.io/helmfile/helmfile:v1.2.3 AS helmfile
-
 FROM alpine/kubectl:1.35.1 AS kubectl
 
 FROM alpine/helm:3.18.5 AS helm
@@ -511,9 +507,6 @@ COPY --from=tofu /usr/local/bin/tofu /usr/local/bin/tofu
 # Install kubectl and Helm from dedicated images
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=helm /usr/bin/helm /usr/local/bin/helm
-
-# Copy helmfile
-COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
 ENV USER=runner
 ENV FOLDER=/home/runner
@@ -553,7 +546,7 @@ RUN set -eux; \
       sleep 10; \
     done
 
-# Install helmfile required plugins
+# Install helm required plugins
 RUN helm plugin install https://github.com/aslafy-z/helm-git
 RUN helm plugin install https://github.com/databus23/helm-diff
 

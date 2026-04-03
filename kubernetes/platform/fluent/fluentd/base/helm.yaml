@@ -1,4 +1,3 @@
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,7 +11,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: fluent
-        namespace: flux-system
   releaseName: fluentd
   targetNamespace: fluent
   install:

@@ -1,5 +1,3 @@
-FROM ghcr.io/helmfile/helmfile:v1.4.2 AS helmfile
-
 FROM alpine/kubectl:1.35.2 AS kubectl
 
 FROM alpine/helm:3.20.1 AS helm
@@ -33,9 +31,6 @@ COPY --from=tofu /usr/local/bin/tofu /usr/local/bin/tofu
 # Install kubectl and Helm from dedicated images
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=helm /usr/bin/helm /usr/local/bin/helm
-
-# Copy helmfile
-COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile
 
 ENV USER=runner
 ENV FOLDER=/home/runner
@@ -75,8 +70,7 @@ RUN set -eux; \
             sleep 10; \
         done
 
-# Install helmfile required plugins
-RUN helm plugin install https://github.com/aslafy-z/helm-git
+# Install helm required plugins
 RUN helm plugin install https://github.com/databus23/helm-diff
 
 WORKDIR /ansible

@@ -1,4 +1,12 @@
 ---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: kube-vip
+spec:
+  interval: 30m
+  url: https://kube-vip.github.io/helm-charts
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,7 +20,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: kube-vip
-        namespace: flux-system
   releaseName: kube-vip
   targetNamespace: kube-system
   install:

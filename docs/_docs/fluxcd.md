@@ -2,7 +2,7 @@
 title: GitOps (FluxCD)
 permalink: /docs/fluxcd/
 description: How to apply GitOps to Pi cluster configuration using FluxCD.
-last_modified_at: "08-03-2026"
+last_modified_at: "03-04-2026"
 ---
 
 ## What is Flux
@@ -15,7 +15,7 @@ Flux Controllers will take care of synchronize (reconcile) the manifest files st
 
 With Flux manifest files storing can be synchronize from different *Sources* (Git Repository, OCI Repository, Helm Repository or S3 Bucket)
 - [Source Controller](https://fluxcd.io/flux/components/source/) in charge of reconcile different Sources
-- Sources are defined declarative using specific Flux CRDs: `GitRepository`
+- Sources are defined declarative using specific Flux CRDs, for example: `GitRepository`, `OCIRepository`, and `HelmRepository`
 
 Kubernetes applications, to be deployed in Flux, can be defined using plain manifest kubernetes files (not packaged) or kubernetes applications packaged using: Kustomize and/or Helm
 - [Helm Controller](https://fluxcd.io/flux/components/helm/) in charge of reconcile Helm applications 
@@ -27,15 +27,16 @@ Kubernetes applications, to be deployed in Flux, can be defined using plain mani
 
 <pre class="mermaid">
 sequenceDiagram
-	participant HelmRepository
-	participant HelmController
-	participant Kubernetes API
+  participant Source as Source Controller
+  participant Artifact as OCIRepository/HelmRepository
+  participant HelmController
+  participant Kubernetes API
     alt Check & Update
-	    HelmController->>HelmRepository: Check new version
-	    HelmRepository->>HelmController: Download if new version
-	end
+      Source->>Artifact: Fetch chart artifact
+      Artifact->>HelmController: Provide chart artifact
+  end
     alt Rendering & Deployment
-	    HelmController->>HelmController: Render chart
+      HelmController->>HelmController: Render chart
         HelmController->>Kubernetes API: Apply manifests
     end
 </pre>
@@ -135,6 +136,34 @@ spec:
 Where:
 - `spec.url`: is the helm repo uri
 - `spec.interval`: It is a an optional field that specifies the interval which the Helm repository index must be consulted at. When not set, the default value is `1m`.
+
+### OCIRepository
+
+[Flux OCIRepository reference doc](https://fluxcd.io/flux/components/source/ocirepositories/)
+
+This repository uses `OCIRepository` as the default pattern for several Helm chart sources, including CoreDNS, Cilium, and Prometheus Operator CRDs.
+
+```yaml
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: coredns
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: oci://ghcr.io/coredns/charts/coredns
+  ref:
+    tag: 1.45.2
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
+```
+
+Where:
+- `spec.url`: is the OCI registry reference for the chart.
+- `spec.ref.tag`: pins the chart version to reconcile.
+- `spec.layerSelector`: selects the Helm chart layer from the OCI artifact.
 
 ### Kustomization
 
@@ -381,23 +410,20 @@ That dependency can be specified using a Health Check on HelmRelease object.
 
 ### HelmRelease
 
+Example using `OCIRepository`:
+
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: cert-manager
+  name: coredns
 spec:
   interval: 30m
-  chart:
-    spec:
-      chart: cert-manager
-      version: v1.15.1
-      sourceRef:
-        kind: HelmRepository
-        name: jetstack
-        namespace: flux-system
-  releaseName: cert-manager
-  targetNamespace: cert-manager    
+  chartRef:
+    kind: OCIRepository
+    name: coredns
+  releaseName: coredns
+  targetNamespace: kube-system
   install:
     remediation:
       retries: 3
@@ -414,13 +440,48 @@ spec:
 
 Where:
 
-- `spec.chart.spec`: Define the chart name (`spec.chart.spec.chart`) and version (`spec.chart.spec.version`) to install form the corresponding from HelmRepository object (`spec.chart.spec.sourceRef`)
+- `spec.chartRef`: references the source object containing the chart artifact. In this repository that is commonly an `OCIRepository`, though `HelmRepository` plus `spec.chart.spec.sourceRef` is also supported by Flux.
 - `spec.valuesFrom`: ConfigMap where `values.yaml` file is defined.
 - `spec.releaseName`: Helm release name
 - `spect.targetNamespace`: specify the namespace to which the Helm release is deployed. It defaults to the namespace of the HelmRelease.
-- `spec.interval`: 
-- `spec.timeout`:
+- `spec.interval`: specifies the interval at which the HelmRelease runs a a server-side apply dry-run to detect and correct drift inside the cluster.
+- `spec.timeout`: specifies a timeout duration for any operation like building, applying, health checking, etc. performed during the reconciliation process.
 - `spec.install` and `spec.upgrade`: define the installation and upgrade policies (retries and rollback strategies)
+
+Example using `HelmRepository`:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: cert-manager
+      version: v1.15.1
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: flux-system
+  releaseName: cert-manager
+  targetNamespace: cert-manager
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: cert-manager-helm-values
+    valuesKey: values.yaml
+```
+
+This style is still supported by Flux and is used when the chart source is declared as a `HelmRepository` instead of an `OCIRepository`.
 
 ## K3S Cluster Preparation
 
@@ -819,17 +880,10 @@ The report is update at regular intervals and contains information about the dep
 ```
 📁 kubernetes
 ├── 📁 clusters                   # clusters configuration
-│   ├── 📁 bootstrap      # Bootstrap configuration files to apply before installed flux
-|   |    ├── helmfile.yaml # Deploy Kubernetes CNI, DNS, etc.
-|   |    ├── 📁 vault      # Configure external Vault (external-secrets)
 │   ├── 📁 dev            # Dev cluster bootstrap files
+│   │   ├── 📁 config
+│   │   ├── 📁 infra
 │   └── 📁 prod           # Prod cluster bootstrap files
-|       ├── 📁 flux-system  # Flux controller installation
-|       ├── 📁 repositories  # Flux Source resources
-|       |    ├── kustomization.yaml
-|       |    └── 📁 helm  # Flux HelmRepository resources
-|       |        ├── jetstack-helmrepo.yaml
-|       |        └── ...
 |       ├── 📁 config
 |       |    ├── kustomization.yaml
 |       |    ├── cluster-settings.yaml # Cluster variables (Flux Templates)
@@ -878,21 +932,9 @@ Cluster specific configuration in `kubernetes/clusters/<environment>`
     S3_BACKUP_SERVER: s3.ricsanfre.com
   ```
 
-- Cluster repositories (helm, OCI, etc.): `kubernetes/clusters/<environment>/repositories
+- Source definitions for Helm workloads are documented together with the application manifests under `kubernetes/platform/...` or `kubernetes/apps/...`.
 
-  HelmRepository resources like (`kubernetes/clusters/<environment>/repositories/helm/jetstack-helmrepo.yaml)
-  
-  ```yaml
-  ---
-  apiVersion: source.toolkit.fluxcd.io/v1
-  kind: HelmRepository
-  metadata:
-    name: jetstack
-    namespace: flux-system
-  spec:
-    url: https://charts.jetstack.io
-    interval: 1h
-  ```
+  In the current repository layout, the common pattern is to keep the source object and the `HelmRelease` together in the application base, for example `kubernetes/platform/coredns/app/base/helm.yaml`.
 
 - Cluster infrastructure applications: `kubernetes/clusters/<environment>/infra`
    It contains Flux Kustomization resources linked to the Kustomize applications in `kubernetes/plaftorm`
