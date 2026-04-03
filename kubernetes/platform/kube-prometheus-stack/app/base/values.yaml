@@ -207,7 +207,7 @@ grafana:
       kubernetes-api-server:
         # renovate: depName="Kubernetes / System / API Server"
         gnetId: 15761
-        revision: 20
+        revision: 21
         datasource: Prometheus
       kubernetes-coredns:
         # renovate: depName="Kubernetes / System / CoreDNS"
