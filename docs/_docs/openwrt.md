@@ -2,7 +2,7 @@
 title: Cluster Gateway (OpenWrt)
 permalink: /docs/openwrt/
 description: How to configure a router/firewall for our homelab Cluster, running OpenWRT OS and providing connectivity and basic networking services (DNS, DHCP, NTP). 
-last_modified_at: "16-08-2025"
+last_modified_at: "03-04-2026"
 ---
 
 To isolate my kubernetes cluster from my home network, a Router/Firewall running OpenWRT will be used, **gateway** node.
@@ -320,7 +320,7 @@ Enabling SSH traffic (tcp port:22) to cluster nodes from WAN interface
 
 ##### Enabling HTTPs traffic to Kube API
 
-Enabling HTTPS traffic to Kube API (TCP 6443) running in 10.0.0.11 (HA Proxy load balancer)
+Enabling HTTPS traffic to Kube API (TCP 6443) running in 10.0.0.10 (Kube API VIP exposed by Kube-VIP load balancer)
 
 ![openwrt-firewall-kube-api-from-wan](/assets/img/openwrt-firewall-kube-api-from-wan.png)
 
@@ -342,6 +342,27 @@ Enable DNS traffic to OpenWRT router from WAN interface. Use Homelab DNS from my
 
 ![openwrt-allow-dns-traffic-to-device](/assets/img/openwrt-allow-dns-traffic-to-device.png)
 
+##### Enabling HTTPS Traffic to Vault Server
+Enable HTTPS traffic to Vault server (TCP 8200) running in node1 (10.0.0.11)
+
+![openwrt-firewall-vault-from-wan](/assets/img/openwrt-firewall-vault-from-wan.png)
+
+##### Enabling HTTPS Traffic to Minio Server
+
+Enable HTTPS traffic to Minio API (TCP 9091) and console (TCP 9092)running in node1 (10.0.0.11)
+
+![openwrt-firewall-minio-api-from-wan](/assets/img/openwrt-firewall-minio-api-from-wan.png)
+
+![openwrt-firewall-minio-console-from-wan](/assets/img/openwrt-firewall-minio-console-from-wan.png)
+
+
+##### Enabling Kafka traffic to Kafka cluster
+
+Enable Kafka traffic (TCP 9093) to Kafka cluster exposed through Envoy-gateway load balancer (10.0.0.69)
+
+![openwrt-firewall-kafka-from-wan](/assets/img/openwrt-firewall-kafka-from-wan.png)
+
+
 ##### Summary of firewall rules added
 
 ![openwrt-firewall-added-rules](/assets/img/openwrt-firewall-added-rules.png)
@@ -349,7 +370,7 @@ Enable DNS traffic to OpenWRT router from WAN interface. Use Homelab DNS from my
 ### DNS/DHCP service
 
 {{site.data.alerts.note}}
-OpenWRT DNS/DHCP service is based on [[Dnsmasq]], same DNS/DHCP solution used before when `gateway` node was running in Ubuntu OS (["PiCluster: Cluster Gateway (Ubuntu)"](/docs/gateway/))
+OpenWRT DNS/DHCP service is based on Dnsmasq, same DNS/DHCP solution used before when `gateway` node was running in Ubuntu OS (["PiCluster: Cluster Gateway (Ubuntu)"](/docs/gateway/))
 {{site.data.alerts.end}}
 
 Configuration is stored in `/etc/config/dhcp`/
