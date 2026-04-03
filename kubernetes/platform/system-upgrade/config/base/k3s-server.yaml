@@ -17,6 +17,7 @@ spec:
       effect: NoSchedule
   serviceAccountName: system-upgrade
   concurrency: 1
+  jobActiveDeadlineSecs: 1800
   # Cordon node before upgrade it
   cordon: true
   upgrade:

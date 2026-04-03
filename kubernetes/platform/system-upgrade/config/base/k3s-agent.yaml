@@ -18,6 +18,7 @@ spec:
       - prepare
       - k3s-server
   concurrency: 1
+  jobActiveDeadlineSecs: 1800
   # Cordon node before upgrade it
   cordon: true
   upgrade:
