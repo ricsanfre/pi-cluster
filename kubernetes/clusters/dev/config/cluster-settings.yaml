@@ -6,4 +6,4 @@ metadata:
   namespace: flux-system
 data:
   CLUSTER_DOMAIN: dev.homelab.ricsanfre.com
-  NGINX_LOAD_BALANCER_IP: 172.30.200.1
+  HTTP_GATEWAY_LOAD_BALANCER_IP: 172.30.200.1
