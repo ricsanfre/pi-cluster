@@ -1,12 +1,16 @@
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
+kind: OCIRepository
 metadata:
-  name: controlplane
+  name: flux-instance
 spec:
-  type: oci
-  url: oci://ghcr.io/controlplaneio-fluxcd/charts
   interval: 1h
+  url: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
+  ref:
+    tag: 0.45.1
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -14,13 +18,9 @@ metadata:
   name: flux-instance
 spec:
   interval: 30m
-  chart:
-    spec:
-      chart: flux-instance
-      version: 0.45.1
-      sourceRef:
-        kind: HelmRepository
-        name: controlplane
+  chartRef:
+    kind: OCIRepository
+    name: flux-instance
   releaseName: flux-instance
   targetNamespace: flux-system
   install:

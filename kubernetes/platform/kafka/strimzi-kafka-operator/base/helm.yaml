@@ -1,11 +1,16 @@
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
+kind: OCIRepository
 metadata:
   name: strimzi
 spec:
-  url: https://strimzi.io/charts/
   interval: 1h
+  url: oci://quay.io/strimzi-helm/strimzi-kafka-operator
+  ref:
+    tag: 0.51.0
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -13,13 +18,9 @@ metadata:
   name: strimzi-kafka-operator
 spec:
   interval: 30m
-  chart:
-    spec:
-      chart: strimzi-kafka-operator
-      version: 0.51.0
-      sourceRef:
-        kind: HelmRepository
-        name: strimzi
+  chartRef:
+    kind: OCIRepository
+    name: strimzi
   releaseName: strimzi-kafka-operator
   targetNamespace: kafka
   install:
