@@ -7,7 +7,7 @@ FROM alpine/helm:3.20.1 AS helm
 FROM alpine:3.23 AS tofu
 COPY --from=ghcr.io/opentofu/opentofu:1.11.5 /usr/local/bin/tofu /usr/local/bin/tofu
 
-FROM ghcr.io/astral-sh/uv:0.10.12 AS uv
+FROM ghcr.io/astral-sh/uv:0.11.3 AS uv
 
 
 FROM python:3.14-slim
