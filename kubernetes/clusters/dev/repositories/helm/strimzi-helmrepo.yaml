@@ -1,9 +1,0 @@
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: strimzi
-  namespace: flux-system
-spec:
-  url: https://strimzi.io/charts/
-  interval: 1h

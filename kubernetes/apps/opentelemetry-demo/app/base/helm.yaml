@@ -1,4 +1,12 @@
 ---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: open-telemetry
+spec:
+  url: https://open-telemetry.github.io/opentelemetry-helm-charts
+  interval: 1h
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -13,7 +21,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: open-telemetry
-        namespace: flux-system
   releaseName: opentelemetry-demo
   targetNamespace: otel-demo
   install:

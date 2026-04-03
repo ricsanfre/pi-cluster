@@ -20,7 +20,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: istio
-        namespace: flux-system
   releaseName: istio-base
   targetNamespace: istio-system
   upgrade:

@@ -1,4 +1,12 @@
 ---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: prometheus-community
+spec:
+  url: https://prometheus-community.github.io/helm-charts
+  interval: 1h
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,7 +20,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-        namespace: flux-system
   releaseName: prometheus-elasticsearch-exporter
   targetNamespace: elastic
   install:

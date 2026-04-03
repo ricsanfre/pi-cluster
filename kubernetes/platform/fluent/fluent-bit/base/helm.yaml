@@ -1,4 +1,12 @@
 ---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: fluent
+spec:
+  url: https://fluent.github.io/helm-charts
+  interval: 1h
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,7 +20,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: fluent
-        namespace: flux-system
   releaseName: fluent-bit
   targetNamespace: fluent
   install:

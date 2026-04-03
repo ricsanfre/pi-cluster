@@ -1,4 +1,17 @@
 ---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: envoy-gateway
+spec:
+  interval: 1h
+  url: oci://docker.io/envoyproxy/gateway-helm
+  ref:
+    tag: 1.7.1
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -8,7 +21,6 @@ spec:
   chartRef:
     kind: OCIRepository
     name: envoy-gateway
-    namespace: flux-system
   releaseName: envoy-gateway
   targetNamespace: envoy-gateway-system
   install:

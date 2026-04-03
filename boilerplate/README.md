@@ -80,7 +80,6 @@ The template generates a FluxCD-ready app structure like:
 ```text
 <output>/<app_name>/
 ├── app.yaml
-├── helmrepo.yaml
 ├── app/
 │   ├── base/
 │   │   ├── helm.yaml
@@ -117,15 +116,11 @@ The template generates a FluxCD-ready app structure like:
     - `<app_name>-config`: points to `./kubernetes/platform/<app_name>/config/overlays/prod`
   - `-config` depends on `-app` through `dependsOn`.
 
-- `helmrepo.yaml`
-  - Creates a Flux `HelmRepository` in `flux-system`.
-  - Uses `chart_repo_url` as repository URL.
-
 ### App manifests (`app/`)
 
 - `app/base/helm.yaml`
-  - Creates the Flux `HelmRelease` for `chart_name` and `chart_version`.
-  - Uses the `HelmRepository` created in `helmrepo.yaml`.
+  - Creates the Flux `HelmRepository` and `HelmRelease` together in the app namespace.
+  - Uses `chart_repo_url` as repository URL for the colocated source object.
   - Sets release name (`chart_release_name`) and namespace (`app_namespace`).
 
 - `app/base/ns.yaml`
@@ -156,10 +151,9 @@ The template generates a FluxCD-ready app structure like:
 
 ### Reconciliation flow in Flux
 
-1. Apply `helmrepo.yaml` so chart source is available.
-2. Apply `app.yaml` to register Flux `Kustomization` objects.
-3. Flux reconciles `<app_name>-app` (namespace + HelmRelease).
-4. Flux reconciles `<app_name>-config` after app reconciliation.
+1. Apply `app.yaml` to register Flux `Kustomization` objects.
+2. Flux reconciles `<app_name>-app`, which creates the namespace, chart source, and HelmRelease together.
+3. Flux reconciles `<app_name>-config` after app reconciliation.
 
 ## Example: copy generated app into this repo
 
@@ -178,9 +172,8 @@ mkdir -p "kubernetes/platform/${APP_NAME}"
 cp -r "boilerplate/output/${APP_NAME}/app" "kubernetes/platform/${APP_NAME}/"
 cp -r "boilerplate/output/${APP_NAME}/config" "kubernetes/platform/${APP_NAME}/"
 
-# 3) Copy Flux entry manifests (Kustomizations + HelmRepository)
+# 3) Copy Flux entry manifest
 cp "boilerplate/output/${APP_NAME}/app.yaml" "kubernetes/platform/${APP_NAME}/"
-cp "boilerplate/output/${APP_NAME}/helmrepo.yaml" "kubernetes/platform/${APP_NAME}/"
 
 # 4) Review and commit
 git add "kubernetes/platform/${APP_NAME}"
