@@ -1,0 +1,36 @@
+{
+  "name": "Hubble",
+  "description": "Hubble - Cilium UI",
+  "vault_secret_ref": "hubble/oauth2",
+  "client_id_key": "client-id",
+  "client_secret_key": "client-secret",
+  "enabled": true,
+  "access_type": "CONFIDENTIAL",
+  "root_url": "https://hubble.${CLUSTER_DOMAIN}",
+  "admin_url": "https://hubble.${CLUSTER_DOMAIN}",
+  "base_url": "",
+  "redirect_uris": [
+    "https://hubble.${CLUSTER_DOMAIN}/*"
+  ],
+  "web_origins": [
+    "https://hubble.${CLUSTER_DOMAIN}"
+  ],
+  "standard_flow_enabled": true,
+  "direct_access_grants_enabled": true,
+  "implicit_flow_enabled": true,
+  "service_accounts_enabled": true,
+  "full_scope_allowed": true,
+  "default_scopes": [
+    "web-origins",
+    "acr",
+    "profile",
+    "roles",
+    "email"
+  ],
+  "optional_scopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ]
+}

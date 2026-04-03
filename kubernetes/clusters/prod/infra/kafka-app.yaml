@@ -30,6 +30,7 @@ spec:
     - name: strimzi-kafka-operator-app
     - name: longhorn-app
     - name: external-secrets-config
+    - name: envoy-gateway-app
   path: ./kubernetes/platform/kafka/cluster/overlays/prod
   prune: true
   wait: true

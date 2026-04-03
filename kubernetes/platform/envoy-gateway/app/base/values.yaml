@@ -1,0 +1,10 @@
+# envoy-gateway helm values (base)
+config:
+  envoyGateway:
+    provider:
+      type: Kubernetes
+      kubernetes:
+        deploy:
+          # Ensures the Gateway is deployed in the namespace where the resource is created.
+          # rather than the default envoy-gateway-system.
+          type: GatewayNamespace

@@ -1,8 +1,8 @@
 ---
-title: SSO with KeyCloak and Oauth2-Proxy
+title: Identity Access Management with Keycloak
 permalink: /docs/sso/
-description: How to configure Single-Sign-On (SSO) in our Pi Kubernetes cluster.
-last_modified_at: "08-03-2026"
+description: How to configure Identity Access Management (IAM) based on Keycloak for our Pi Kubernetes cluster. IAM provides centralized authentication and Single-Sign On (SSO) capabilities for the applications running in the cluster. Keycloak is an open-source Identity Access Management solution, providing centralized authentication and authorization services based on standard protocols and provides support for OpenID Connect, OAuth 2.0, and SAML.
+last_modified_at: "27-03-2026"
 ---
 
 Centralized authentication and Single-Sign On can be implemented using [Keycloak](https://www.keycloak.org/).
@@ -34,155 +34,26 @@ sequenceDiagram
 
     {{site.data.alerts.end}}
 
--   For those applications not providing any authentication capability (i.e. Longhorn, Prometheus, etc.), Ingress controller-based External Authentication can be configured.
-    Ingress NGINX supports OAuth2-based external authentication mechanism using [Oauth2-Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
-    See [Ingress NGINX external Oauth authentication document](https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/)
-    Oauth2-proxy can be integrated with OpenId-Connect IAM, such us Keycloak.
+-   For those applications not providing their own authentication capability (i.e. Longhorn, Prometheus, Alertmanager, Hubble, Kafdrop), Pi Cluster uses Envoy Gateway native OpenID Connect authentication.
+  Authentication is enforced directly at the gateway through `SecurityPolicy` resources attached to the corresponding `HTTPRoute`, with Keycloak acting as the identity provider.
+  See [Envoy Gateway - OIDC Authentication](/docs/envoy-gateway/#oidc-authentication) for the detailed routing and policy model.
 
 ![picluster-sso](/assets/img/picluster-sso.png)
 
 ## Keycloak
 
-### Installation using Bitnami Helm Chart
+### Keycloak Operator
 
-For installing Keycloak Bitnami's helm chart will be used.
-This helm chart bootstraps a Keycloak deployment on Kubernetes using as backend a PostgreSQL database
+Keycloak is installed using Keycloak Operator.
+Keycloak Operator is an implementation of Kubernetes Operator design pattern enabling the definition of Keycloak deployment in a declarative way.
 
-- Step 1: Add Bitnami Helm repository:
+#### Keycloak DB
 
-  ```shell
-  helm repo add bitnami https://charts.bitnami.com/bitnami
-  ```
-- Step 2: Fetch the latest charts from the repository:
+Keycloak requires a database to store its configuration and data. PostgreSQL is the recommended database for Keycloak.
 
-  ```shell
-  helm repo update
-  ```
-- Step 3: Create namespace
+Deploy PosgreSQL database using [CloudNative-PG](https://cloudnative-pg.io/) operator and generate the secrets containing the database credentials
 
-  ```shell
-  kubectl create namespace keycloak
-  ```
-
-- Step 4: Create file `keycloak-values.yml`
-
-  ```yaml
-  global:
-    storageClass: longhorn
-
-  # Run in production mode behind NGINX proxy terminating TLS sessions
-  production: true
-  # ref: https://www.keycloak.org/server/reverseproxy
-  proxyHeaders: xforwarded
-
-  # Admin user
-  auth:
-    adminUser: admin
-  # postgresSQL
-  postgresql:
-    enabled: true
-    auth:
-      username: keycloak
-      database: keycloak
-  # Ingress config
-  ingress:
-    enabled: true
-    ingressClassName: "nginx"
-    pathType: Prefix
-    annotations:
-      cert-manager.io/cluster-issuer: ca-issuer
-      # Increasing proxy buffer size to avoid
-      # https://stackoverflow.com/questions/57503590/upstream-sent-too-big-header-while-reading-response-header-from-upstream-in-keyc
-      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
-      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-    hostname: iam.${CLUSTER_DOMAIN}
-    tls: true
-  ```
-  {{site.data.alerts.note}}
-
-  Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
-  -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
-      FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
-      External-DNS can be configured to automatically add that entry in your DNS service.
-  {{site.data.alerts.end}}
-  
-  With this configuration:
-  - Keycloak is deployed to run behind NGINX proxy terminating TLS connections. `proxyHeaders` variable need to be used.
-  - PostgreSQL is deployed in standalone mode.
-  - Ingress resource is configured
-
-  {{site.data.alerts.note}}
-  With this configuration all passwords Keycloak's admin password and postgreSQL passwords are generated randomly.
-  If helm chart is upgraded, it might cause issues generating a new passwords if the existing ones are not provided when executing helm upgrade command.
-  See details in [bitnami's keycloak helm chart documentation: How to manage passwords](https://github.com/bitnami/charts/tree/main/bitnami/keycloak#manage-secrets-and-passwords)
-  {{site.data.alerts.end}}
-  
-- Step 5: Install Keycloak in `keycloak` namespace
-  ```shell
-  helm install keycloak bitnami/keycloak -f keycloak-values.yml --namespace keycloak
-  ```
-  
-- Step 6: Check status of Keycloak pods
-  ```shell
-  kubectl get pods -n keycloak
-  ```
-
-- Step 7: Get keycloak `admin` user password
-
-  ```shell
-  kubectl get secret keycloak -o jsonpath='{.data.admin-password}' -n keycloak | base64 -d && echo
-  ```
-  
-- Step 8: connect to keycloak admin console
-  `https://iam.${CLUSTER_DOMAIN}`
-
-  Log in using 'admin' user and password obtained in step 7.
-
-#### Alternative installation using external secret (GitOps)
-
-Keycloak admin password and postgreSQL passwords can be provided during helm installation in values.yaml file. 
-Alternatively, it can be provided in an external secret.
-
-- Step 1: Create secret containing admin password and posgresql passwords:
-
-  ```yaml
-  apiVersion: v1
-  kind: Secret
-  metadata:
-      name: keycloak-secret
-      namespace: keycloak
-  type: kubernetes.io/basic-auth
-  data:
-      admin-password: <`echo -n 'supersecret1' | base64`>
-      postgresql-admin-password: <`echo -n 'supersecret2' | base64`>
-      password: <`echo -n 'supersecret3' | base64`>
-  ```
-
-- Step 2: Add externalSecret to keycloak-values.yaml
-
-  ```yaml
-  # Admin user
-  auth:
-      existingSecret: keycloak-secret
-      adminUser: admin
-  
-  # postgresSQL
-  postgresql:
-    enabled: true
-    auth:
-      username: keycloak
-      database: keycloak
-      existingSecret: keycloak-secret
-      secretKeys:
-        adminPasswordKey: postgresql-admin-password
-        userPasswordKey: password
-    architecture: standalone
-  ```
-
-#### Alternative installation using external database
-
-Instead of using Bitnami's PosgreSQL subchart, an external PosgreSQL database can be used.
-For example, using CloudNative-PG a, keycload database cluster can be created. See details on how to install CloudNative-PG in ["Databases"](/docs/databases/).
+Using CloudNative-PG a, keycload database cluster can be created. See details on how to install CloudNative-PG in ["Databases"](/docs/databases/).
 
 - Step 1. Create secret for keycloak admin user
 
@@ -190,8 +61,8 @@ For example, using CloudNative-PG a, keycload database cluster can be created. S
   apiVersion: v1
   kind: Secret
   metadata:
-      name: keycloak-secret
-      namespace: keycloak
+    name: keycloak
+    namespace: keycloak
   type: kubernetes.io/basic-auth
   data:
       admin-password: <`echo -n 'supersecret1' | base64`>
@@ -260,82 +131,6 @@ For example, using CloudNative-PG a, keycload database cluster can be created. S
   Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
   -   Replace `${S3_BACKUP_SERVER}` by  FQDN of the Minio Backup server to be used. For example: `s3.mydomain.com`
   {{site.data.alerts.end}}
-
-- Step 3. Add external database configuration to helm values.yaml
-
-  ```yaml
-  # Admin user
-  auth:
-      existingSecret: keycloak-secret
-      adminUser: admin
-  # External DB: https://github.com/bitnami/charts/tree/main/bitnami/keycloak#use-an-external-database
-  postgresql:
-    enabled: false
-
-  externalDatabase:
-    host: "keycloak-db-rw"
-    port: 5432
-    database: keycloak
-    existingSecret: "keycloak-db-secret"
-    existingSecretUserKey: "username"
-    existingSecretPasswordKey: "password"
-  ```
-
-#### Automatic import of Realm configuration on startup
-
-Realm configuration can be exported or imported to/from JSON files.
-
-Once realm and clients are configured manually configuration can be exported to JSON file.
-See [Keycloak export import configuration](https://www.keycloak.org/server/importExport).
-
-Realm configuration can be imported automatically from json file when deploying helm chart.
-See [Importing realm on start-up](https://www.keycloak.org/server/importExport#_importing_a_realm_during_startup)
-
-New ConfigMap, containing the JSON files to be imported need to be mounted by keycloak PODs as
-`/opt/bitnami/keycloak/data/import`. `--import-realm` also need to be provided as extra arguments when starting the PODs.
-
-- Step 1: Create realm config map containing realm json files to be imported
-
-  ```yaml
-  apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: keycloak-realm-configmap
-    namespace: keycloak
-  data:
-    picluster-realm.json: |  
-      # JSON file
-  ```
-
-- Step 3: Apply configMap
-  
-  ```shell
-  kubectl apply -f keycloak-realm-configmap.yaml
-  ```
-- Step 2: Add to keycloak-values.yaml the following configuration and install helm char
-
-  ```yml
-  # Importing realm on start-up
-  # https://www.keycloak.org/server/importExport#_importing_a_realm_during_startup
-  extraStartupArgs: "--import-realm"
-  extraVolumes:
-    - name: realm-config
-      configMap:
-        name: keycloak-realm-configmap
-  extraVolumeMounts:
-    - mountPath: /opt/bitnami/keycloak/data/import
-      name: realm-config
-  ```
-
-
-### Keycloak Operator
-
-As an alteranative to Bitnami's Helm Chart, Keycloak can be installed using Keycloak Operator.
-Keycloak Operator is an implementation of Kubernetes Operator design pattern enabling the definition of Keycloak deployment in a declarative way.
-
-#### External DB creation
-
-Follow previous steps described in [Alternative Installation using External Database](#alternative-installation-using-external-database) to deploy PosgreSQL database using CloudNative-PG operator and generate the secrets containing the database credentials
 
 #### Keycloak Operator Installation
 
@@ -430,8 +225,8 @@ Keycloak operator supports deployment of Keycloak in HA with several nodes of a 
 The following creates a Keycloak server with the following options
 
 -   Initial admin bootstrapping (`bootstrapAdmin`) from an external secret
--   Enabling HTTP endpoint (`http.httpEnabled`) and not configuring HTTPs. Keycloak running behind HTTP Proxy closing TLS sessions (Ingress Controller)
--   Disable creation of Ingress resource (`ingress.enabled`). Ingress resource created by operator cannot be completely configured (TLS certificate cannot be added) 
+-   Enabling HTTP endpoint (`http.httpEnabled`) and not configuring HTTPs. Keycloak runs behind Envoy Gateway, which terminates TLS sessions.
+-   Disable creation of Keycloak-managed Ingress resource (`ingress.enabled`). External exposure is configured separately with a Gateway API `HTTPRoute`.
 -   Keyclaok cluster of two instances (`instances`)
 
 and bootstrapping temporal admin user account
@@ -474,7 +269,7 @@ spec:
   proxy:
     headers: xforwarded # double check your reverse proxy sets and overwrites the X-Forwarded-* headers
   # Do not create ingress
-  # TLS options are not supported. Ingress resource to be created separatedly.
+  # External exposure is configured separately with a Gateway API HTTPRoute.
   ingress:
     enabled: false
 ```
@@ -521,40 +316,39 @@ spec:
       value: true # plain text value
 ```
 
-#### Creating Ingress
+#### Creating HTTPRoute
 
-Create Ingress resource for Keycloak so TLS sessions are closed in the Ingress Controller
-The following assumes NGINX Ingress Controller is used and TLS Certificate issue is automated with Cert-Manager
+Create an `HTTPRoute` resource for Keycloak so traffic is routed through Envoy Gateway. TLS is terminated at the shared `public-gateway` `Gateway`, using the certificate configured for Envoy Gateway.
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: keycloak
   namespace: keycloak
-  annotations:
-    cert-manager.io/cluster-issuer: ca-issuer
-    # Increasing proxy buffer size to avoid
-    # https://stackoverflow.com/questions/57503590/upstream-sent-too-big-header-while-reading-response-header-from-upstream-in-keyc
-    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-      - iam.${CLUSTER_DOMAIN}
-      secretName: keycloak-tls-secret
+  parentRefs:
+    - name: public-gateway
+      namespace: envoy-gateway-system
+  hostnames:
+    - iam.${CLUSTER_DOMAIN}
   rules:
-  - host: keycloak.localhost
-    http:
-      paths:
-      - backend:
-          service:
-            name: iam.${CLUSTER_DOMAIN}
-            port:
-              name: http
-        pathType: ImplementationSpecific 
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: keycloak-service
+          port: 8080
 ```
+
+{{site.data.alerts.note}}
+
+External-DNS can automatically create the DNS record for `iam.${CLUSTER_DOMAIN}` from the `HTTPRoute` hostname when Gateway API route sources are enabled. See [DNS (CoreDNS and External-DNS) - Gateway API support](/docs/kube-dns/#gateway-api-support).
+
+For Gateway listener and TLS configuration details, see [Envoy Gateway - Gateway and TLS termination](/docs/envoy-gateway/#gateway-and-tls-termination).
+
+{{site.data.alerts.end}}
 
 {{site.data.alerts.important}}
 Only `http` port (8080) is exposed. Management port (9000) is not exposed 
@@ -813,9 +607,9 @@ The following keycloak config files can be used to configure automatically Keycl
     }
     ```
 
--   `keycloak-config-cli/base/config/04-clients.json`. Containing configuration of different client applications (grafana, oauth-proxy, etc.)
+-   `keycloak-config-cli/base/config/04-clients.json`. Containing configuration of different client applications (grafana, longhorn, prometheus, alertmanager, etc.)
 
-    As example, oauth2-proxy application can be automatically imported with the following:
+  As example, a client for the Longhorn dashboard protected by Envoy Gateway can be automatically imported with the following:
 
     ```json
     {
@@ -823,18 +617,18 @@ The following keycloak config files can be used to configure automatically Keycl
         "realm": "picluster",
         "clients": [
           {
-            "clientId": "$(env:PROXY_OAUTH_CLIENT_ID)",
-            "name": "Proxy OAuth 2.0",
-            "description": "Proxy OAuth 2.0",
+            "clientId": "$(env:LONGHORN_CLIENT_ID)",
+            "name": "Longhorn Dashboard",
+            "description": "Longhorn Dashboard",
             "surrogateAuthRequired": false,
             "enabled": true,
             "clientAuthenticatorType": "client-secret",
-            "secret": "$(env:PROXY_OAUTH_CLIENT_SECRET)",
+            "secret": "$(env:LONGHORN_CLIENT_SECRET)",
             "redirectUris": [
-              "https://oauth2-proxy.$(env:CLUSTER_DOMAIN)/oauth2/callback"
+              "https://longhorn.$(env:CLUSTER_DOMAIN)/oauth2/callback"
             ],
             "webOrigins": [
-              "https://oauth2-proxy.$(env:CLUSTER_DOMAIN)"
+              "https://longhorn.$(env:CLUSTER_DOMAIN)"
             ],
             "standardFlowEnabled": true,
             "directAccessGrantsEnabled": false,
@@ -846,7 +640,7 @@ The following keycloak config files can be used to configure automatically Keycl
                 "protocolMapper": "oidc-audience-mapper",
                 "consentRequired": false,
                 "config": {
-                  "included.client.audience": "$(env:PROXY_OAUTH_CLIENT_ID)",
+                  "included.client.audience": "$(env:LONGHORN_CLIENT_ID)",
                   "id.token.claim": "true",
                   "access.token.claim": "true"
                 }
@@ -874,7 +668,7 @@ The following keycloak config files can be used to configure automatically Keycl
         ]
     }
     ```
-    keycloak-config-cli pod has to be executed with environment variables containing client application credentials (`PROXY_OAUTH_CLIENT_ID` and `PROXY_OAUTH_CLIENT_SECRET`) and cluster services base DNS domain (`CLUSTER_DOMAIN`)   
+      `keycloak-config-cli` pod has to be executed with environment variables containing client application credentials (`LONGHORN_CLIENT_ID` and `LONGHORN_CLIENT_SECRET`) and cluster services base DNS domain (`CLUSTER_DOMAIN`).
 
 -   `keycloak-config-cli/base/config/03-groups.json`. Used to create a `admin` of users, with roles in differente applications (example :grafana admins)
 
@@ -1053,6 +847,40 @@ For the actual `tf-runner` Vault role/policy configuration and CLI snippets, see
 
 ## Keycloak Observability
 
+### Traces
+
+Keycloak can export distributed tracing data directly to the OpenTelemetry Collector.
+
+In Pi Cluster, tracing is enabled in the `Keycloak` custom resource and the collector endpoint is set to the in-cluster OpenTelemetry Collector service:
+
+```yaml
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+spec:
+  tracing:
+    enabled: true
+    endpoint: http://otel-collector.otel:4317
+```
+
+This makes Keycloak send trace spans to the OpenTelemetry Collector, which then forwards them to Tempo through its OTLP exporter.
+
+The resulting trace flow is:
+
+1. Keycloak generates spans for incoming authentication and authorization requests.
+2. Keycloak exports those spans to the OpenTelemetry Collector at `otel-collector.otel:4317`.
+3. The collector processes the spans and exports them to Tempo.
+4. Traces can then be explored from Grafana.
+
+{{site.data.alerts.note}}
+
+The tracing endpoint must point to the OTLP gRPC port exposed by the OpenTelemetry Collector. In this cluster that is the internal service endpoint `otel-collector.otel:4317`.
+
+{{site.data.alerts.end}}
+
+See [Distributed Tracing (Tempo)](/docs/tracing/) for trace analysis, and [OpenTelemetry Collector](/docs/opentelemetry-collector/) for collector deployment and exporter configuration.
+
 ### Metrics
 
 Keycloak exposes Prometheus-format metrics at the following endpoint on the management interface (default TCP port 9000) at `/metrics`.
@@ -1165,252 +993,110 @@ dashboards:
         - { name: DS_PROMETHEUS, value: Prometheus }
 ```
 
+## Protecting Applications with Envoy Gateway
 
-## Proxy Oauth 2.0 
+For applications that do not implement their own authentication, Pi Cluster uses Envoy Gateway native OpenID Connect authentication instead of a separate oauth2-proxy deployment.
 
-### Configure Oauth2-Proxy Client in Keycloak
+The implementation has three building blocks:
 
-OAuth2-Proxy client application need to be configured within 'picluster' realm.
+1. A Keycloak OIDC client for each protected application.
+2. An `HTTPRoute` exposing the application through Envoy Gateway.
+3. A `SecurityPolicy` attached to that route, configured with the application's OIDC client credentials.
+
+The detailed Gateway-side flow and additional examples are documented in [Envoy Gateway - OIDC Authentication](/docs/envoy-gateway/#oidc-authentication).
+
+### Configure Keycloak clients for protected applications
+
+Each protected application needs its own OIDC client in the `picluster` realm.
 
 Procedure in Keycloak documentation: [Keycloak: Creating an OpenID Connect client](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-oidc-client_server_administration_guide)
 
-Follow procedure in [Oauth2-Proxy: Keycloak OIDC Auth Provider Configuration](https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/keycloak_oidc) to provide the proper configuration.
+For example, for Longhorn:
 
-- Step 1: Create a new OIDC client in 'picluster' Keycloak realm by navigating to:
-  Clients -> Create client
-  
-  ![oauth2-proxy-client-1](/assets/img/oauth2-proxy-client-1.png)
-  
-  - Provide the following basic configuration:
-    - Client Type: 'OpenID Connect'
-    - Client ID: 'oauth2-proxy'
-  - Click Next.
-  
-  ![oauth2-proxy-client-2](/assets/img/oauth2-proxy-client-2.png)
-  
-  - Provide the following 'Capability config'
-    - Client authentication: 'On'
-    - Authentication flow
-      - Standard flow 'selected'
-      - Direct access grants 'deselect'
-  - Click Next
-  
-  ![oauth2-proxy-client-3](/assets/img/oauth2-proxy-client-3.png)
-  
-  - Provide the following 'Logging settings'
-    - Valid redirect URIs: `https://ouath2-proxy.${CLUSTER_DOMAIN}/oauth2/callback`
-  - Save the configuration.
+- Client Type: `OpenID Connect`
+- Client ID: `longhorn`
+- Client authentication: `On`
+- Standard flow: `On`
+- Direct access grants: `Off`
+- Valid redirect URIs: `https://longhorn.${CLUSTER_DOMAIN}/oauth2/callback`
+- Root URL: `https://longhorn.${CLUSTER_DOMAIN}`
+- Home URL: `https://longhorn.${CLUSTER_DOMAIN}`
+- Web Origins: `https://longhorn.${CLUSTER_DOMAIN}`
 
-- Step 2: Locate oauth2-proxy client credentials
-  
-  Under the Credentials tab you will now be able to locate oauth2-proxy client's secret.
-  
-  ![oauth2-proxy-client-4](/assets/img/oauth2-proxy-client-4.png)
-  
-- Step 3: Configure a dedicated audience mapper for the client
+The same pattern applies to other protected dashboards such as Hubble, Kafdrop, Prometheus and Alertmanager, each one with its own hostname and callback URL.
 
-  - Navigate to Clients -> oauth2-proxy client -> Client scopes.
-    
-    ![oauth2-proxy-client-5](/assets/img/oauth2-proxy-client-5.png)
-    
-  - Access the dedicated mappers pane by clicking 'oauth2-proxy-dedicated', located under Assigned client scope.
-  (It should have a description of "Dedicated scope and mappers for this client")
-  - Click on 'Configure a new mapper' and select 'Audience'
-  
-    ![oauth2-proxy-client-6](/assets/img/oauth2-proxy-client-6.png)
-  
-    ![oauth2-proxy-client-7](/assets/img/oauth2-proxy-client-7.png)
-  
-    ![oauth2-proxy-client-8](/assets/img/oauth2-proxy-client-8.png)
-  
-  - Provide following data:
-    - Name 'aud-mapper-oauth2-proxy'
-    - Included Client Audience select oauth2-proxy client's id from the dropdown.
-    - Add to ID token 'On'
-    - Add to access token 'On'
-    OAuth2 proxy can be set up to pass both the access and ID JWT tokens to your upstream services. 
-  - Save the configuration.
+### Protect routes with SecurityPolicy
 
-### OAuth2 Proxy Installation
+After creating the Keycloak client and exposing the application through an `HTTPRoute`, attach an Envoy Gateway `SecurityPolicy` to that route.
 
-- Step 1: Add Helm repository:
-
-  ```shell
-  helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
-  ```
-- Step 2: Fetch the latest charts from the repository:
-
-  ```shell
-  helm repo update
-  ```
-- Step 3: Create namespace
-
-  ```shell
-  kubectl create namespace oauth2-proxy
-  ```
-
-- Step 4: Create file `oauth2-proxy-values.yml`
-
-  ```yaml
-  config:
-    # Add config annotations
-    annotations: {}
-    # OAuth client ID
-    # Follow instructions to configure Keycloak client
-    # https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/keycloak_oidc
-
-    # Oauth2 client configuration. From Keycloak configuration
-    clientID: "oauth2-proxy"
-    clientSecret: "supersecreto"
-    
-    # Cookie secret
-    # Create a new secret with the following command
-    # openssl rand -base64 32 | head -c 32 | base64
-    cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
-    # The name of the cookie that oauth2-proxy will create
-    # If left empty, it will default to the release name
-    cookieName: "oauth2-proxy"
-
-    # Config file
-    configFile: |-
-      # Provider config
-      provider="keycloak-oidc"
-      provider_display_name="Keycloak"
-      redirect_url="https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/callback"
-      oidc_issuer_url="https://iam.${CLUSTER_DOMAIN}/realms/picluster"
-      code_challenge_method="S256"
-      ssl_insecure_skip_verify=true
-      # Upstream config
-      http_address="0.0.0.0:4180"
-      upstreams="file:///dev/null"
-      email_domains=["*"]
-      cookie_domains=["${CLUSTER_DOMAIN}"]
-      cookie_secure=false
-      scope="openid"
-      whitelist_domains=[".${CLUSTER_DOMAIN}"]
-      insecure_oidc_allow_unverified_email="true"
-
-  sessionStorage:
-    # Can be one of the supported session storage cookie|redis
-    type: redis
-    password: s1cret0
-  # Enabling redis backend installation
-  redis-ha:
-    enabled: true
-    # Configuring redis auth
-    auth: true
-    redisPassword: s1cret0
-  ingress:
-    enabled: true
-    className: "nginx"
-    pathType: Prefix
-    path: /oauth2
-    annotations:
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      # Possible Cluster-Issuer values:
-      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
-      #   * 'ca-issuer' (CA-signed certificate, not valid)
-      cert-manager.io/cluster-issuer: letsencrypt-issuer
-      cert-manager.io/common-name: oauth2-proxy.${CLUSTER_DOMAIN}
-      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-    hosts:
-      - oauth2-proxy.${CLUSTER_DOMAIN}
-    tls:
-      - hosts:
-          - oauth2-proxy.${CLUSTER_DOMAIN}
-        secretName: oauth2-proxy-tls  
-  ```
-  {{site.data.alerts.note}}
-
-  Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
-  -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
-
-  {{site.data.alerts.end}}
-
-
-  - Step 5: Install helm chart
-    
-    ```shell
-    helm install oauth2-proxy oauth2-proxy/oauth2-proxy -f oauth2-proxy-values.yml --namespace oauth2-proxy
-    ```
-
-  - Step 6: Check status oauth2-proxy PODs 
-
-    ```shell
-    kubectl --namespace=oauth2-proxy get pods -l "app=oauth2-proxy"
-    ```
-
-#### Alternative installation using external secret (GitOps)
-
-OAuth credentials (clientID, client secret), cookie secret and redis password can be provided from external secret
-
-{{site.data.alerts.tip}} About ArgoCD and helm native commands
-
-Redis backend is installed using redis bitnami helm sub-chart. This helm chart creates a random credential for redis backend.
-When using ArgoCD, helm native commands, like `random` or `lookup`, used by the helm chart for generating this random secret are not supported and so oauth2-proxy fails to save any data to redis.
-See [issue bitnami@charts#18130](https://github.com/bitnami/charts/issues/18130) and [issue argocd@argocd#14944](https://github.com/argoproj/argo-cd/issues/14944)
-
-As workaround, the issue can be solved providing the credentials in a external secrets.
-
-{{site.data.alerts.end}}
-
-- Step 1: Create secret containing oauth2-proxy credentials:
-
-  ```yaml
-  apiVersion: v1
-  kind: Secret
-  metadata:
-      name: oauth2-proxy-secret
-      namespace: oauth2-proxy
-  type: kubernetes.io/basic-auth
-  data:
-    client-id: <`echo -n 'oauth2-proxy' | base64`> 
-    client-secret:  <`echo -n 'supersecret | base64`>
-    cookie-secret: <`openssl rand -base64 32 | head -c 32 | base64`>
-    redis-password: <`openssl rand -base64 32 | head -c 32 | base64`>
-  ```
-  
-  client-secret value should be taken from Oauth2-proxy client configuration
-
-- Step 2: Add existingSecret to oauth2-proxy-values.yaml and install helm chart
-
-  ```yaml
-  # Admin user
-  auth:
-    existingSecret: oauth2-proxy-secret
-    # clientID: "oauth2-proxy"
-    # clientSecret: "supersecreto"
-    # cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
-  
-  sessionStorage:
-    type: redis
-    redis:
-      existingSecret: oauth2-proxy-secret
-      passwordKey: redis-password
-  
-  redis-ha:
-    enabled: true
-    # Configuring redis auth
-    # Get redis password from existing secret using key redis-password
-    auth: true
-    existingSecret: oauth2-proxy-secret
-    authKey: redis-password
-  ```
-  
-### Configuring Ingress external authentication
-
-Following annotations need to be added to any Ingress resource to use Oauth2-proxy authentication
+Example for Longhorn:
 
 ```yaml
-nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/start?rd=https://$host$request_uri
-nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
-nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: longhorn-dashboard
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: longhorn-httproute
+  oidc:
+    provider:
+      issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+    clientIDRef:
+      name: oauth2-externalsecret
+    clientSecret:
+      name: oauth2-externalsecret
+    redirectURL: "https://longhorn.${CLUSTER_DOMAIN}/oauth2/callback"
+    logoutPath: "/longhorn/logout"
 ```
 
-{{site.data.alerts.note}}
-Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster.
-{{site.data.alerts.end}}
+The same pattern is used in this repository for:
+
+- Longhorn
+- Hubble
+- Kafdrop
+- Prometheus
+- Alertmanager
+
+### Supplying OIDC client credentials
+
+Client credentials are stored in Vault and synchronized into Kubernetes through `ExternalSecret` resources. The resulting Kubernetes Secret is referenced by `clientIDRef` and `clientSecret` in the `SecurityPolicy`.
+
+Example:
+
+```yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: oauth2-externalsecret
+spec:
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: oauth2-externalsecret
+  data:
+    - secretKey: client-id
+      remoteRef:
+        key: longhorn/oauth2
+        property: client-id
+    - secretKey: client-secret
+      remoteRef:
+        key: longhorn/oauth2
+        property: client-secret
+```
+
+This keeps OIDC credentials out of Git and aligns with the rest of the cluster secret-management model.
+
+### Request flow
+
+1. A user requests an application URL exposed by an `HTTPRoute`.
+2. Envoy Gateway evaluates the `SecurityPolicy` attached to that route.
+3. If the user is not authenticated, Envoy redirects the user to Keycloak.
+4. After a successful login, Keycloak redirects the user back to the configured callback URL.
+5. Envoy validates the OIDC response and forwards the request to the backend service.
 
 ---
 

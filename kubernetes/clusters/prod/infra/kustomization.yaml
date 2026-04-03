@@ -7,6 +7,7 @@ resources:
   - coredns-app.yaml
   - csi-external-snapshotter-app.yaml
   - elastic-stack-app.yaml
+  - envoy-gateway-app.yaml
   - external-dns-app.yaml
   - external-secrets-app.yaml
   - fluent-app.yaml
@@ -20,13 +21,11 @@ resources:
   - loki-app.yaml
   - longhorn-app.yaml
   - metrics-server-app.yaml
-  - minio-app.yaml
   - mongodb-operator-app.yaml
-  - nginx-app.yaml
-  - oauth2-proxy-app.yaml
   - otel-collector-app.yaml
   - system-upgrade-app.yaml
   - tempo-app.yaml
   - vault-app.yaml
   - velero-app.yaml
   - kube-vip-app.yaml
+

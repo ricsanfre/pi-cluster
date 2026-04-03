@@ -6,12 +6,14 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
+  timeout: 15m
   targetNamespace: otel-demo
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
     - name: opentelemetry-collector-app
+    - name: envoy-gateway-config
   path: ./kubernetes/apps/opentelemetry-demo/app/overlays/prod
   prune: true
   wait: true

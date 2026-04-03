@@ -1,5 +1,7 @@
 # tempo helm values (base)
 
+streamOverHTTPEnabled: true
+
 # Enable trace ingestion
 traces:
   otlp:
@@ -23,10 +25,11 @@ storage:
     backend: s3
     s3:
       bucket: k3s-tempo
-      endpoint: minio.minio:9000
-      access_key: ${MINIO_ACCESS_KEY_ID}
-      secret_key: ${MINIO_SECRET_ACCESS_KEY}
-      insecure: true
+      endpoint: "${S3_SERVER}:9091"
+      region: eu-west-1
+      access_key: $${MINIO_ACCESS_KEY_ID}
+      secret_key: $${MINIO_SECRET_ACCESS_KEY}
+      insecure: false
 
 # Configure distributor
 distributor:
@@ -116,6 +119,36 @@ queryFrontend:
         secretKeyRef:
           name: tempo-minio-secret
           key: MINIO_SECRET_ACCESS_KEY
+
+# Enable metrics-generator so TraceQL metrics queries such as rate() have a live ring.
+metricsGenerator:
+  enabled: true
+  config:
+    processor:
+      local_blocks:
+        filter_server_spans: false
+        flush_to_storage: true
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: MINIO_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_ACCESS_KEY_ID
+    - name: MINIO_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-minio-secret
+          key: MINIO_SECRET_ACCESS_KEY
+# Activate the local-blocks processor for all tenants.
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - local-blocks
 # Disable Minio server installation
 minio:
   enabled: false

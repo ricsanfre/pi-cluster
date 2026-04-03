@@ -23,9 +23,6 @@ spec:
     remediation:
       strategy: rollback
       retries: 3
-  dependsOn:
-    - name: minio
-      namespace: minio
   valuesFrom:
   - kind: ConfigMap
     name: tempo-helm-values

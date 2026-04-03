@@ -6,11 +6,11 @@
   "client_secret_key": "client-secret",
   "enabled": true,
   "access_type": "CONFIDENTIAL",
-  "root_url": "https://kiali.${CLUSTER_DOMAIN}/kiali/",
-  "admin_url": "https://kiali.${CLUSTER_DOMAIN}/kiali/",
+  "root_url": "https://kiali.${CLUSTER_DOMAIN}",
+  "admin_url": "https://kiali.${CLUSTER_DOMAIN}",
   "base_url": "",
   "redirect_uris": [
-    "https://kiali.${CLUSTER_DOMAIN}/kiali/*"
+    "https://kiali.${CLUSTER_DOMAIN}/*"
   ],
   "web_origins": [
     "https://kiali.${CLUSTER_DOMAIN}"

@@ -1,0 +1,25 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: envoy-gateway
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: envoy-gateway
+    namespace: flux-system
+  releaseName: envoy-gateway
+  targetNamespace: envoy-gateway-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+  - kind: ConfigMap
+    name: envoy-gateway-helm-values
+    valuesKey: base-values.yaml

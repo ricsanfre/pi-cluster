@@ -2,7 +2,7 @@
 title: TLS Certificates (Cert-Manager)
 permalink: /docs/certmanager/
 description: How to deploy a centralized TLS certificates management solution based on Cert-manager in Kubernetes cluster.
-last_modified_at: "01-06-2025"
+last_modified_at: "26-03-2026"
 ---
 
 In the Kubernetes cluster, [Cert-Manager](https://cert-manager.io/docs/) can be used to automate the certificate management tasks (issue certificate request, renewals, etc.). Cert-manager adds certificates and certificate issuers as resource types in Kubernetes clusters, and simplifies the process of obtaining, renewing and using those certificates.
@@ -121,6 +121,70 @@ spec:
     secretName: myingress-cert # < cert-manager will store the created certificate in this secret.
 ```
 
+### Securing Gateway resources
+
+cert-manager can also manage certificates for `Gateway` resources defined with Kubernetes Gateway API. This is the integration used in Pi Cluster for Envoy Gateway.
+
+{{site.data.alerts.note}}
+
+Before enabling cert-manager Gateway API support, the Gateway API CRDs must already be installed in the cluster. In practice this means installing the Gateway API manifests directly, or installing a controller that ships them, such as Envoy Gateway through its Helm chart.
+
+{{site.data.alerts.end}}
+
+To enable Gateway API support manually, follow these steps:
+
+- Step 1: Install the Gateway API bundle in the cluster
+
+  ```shell
+  kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
+  ```
+
+- Step 2: Enable Gateway API support in cert-manager Helm values
+
+  ```yaml
+  config:
+    enableGatewayAPI: true
+  ```
+
+- Step 3: Upgrade or install cert-manager with the updated values
+
+  ```shell
+  helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager -f cert-manager-values.yaml
+  ```
+
+- Step 4: If the Gateway API CRDs were installed after cert-manager was already running, restart the cert-manager controller so it detects the new CRDs
+
+  ```shell
+  kubectl rollout restart deployment cert-manager -n cert-manager
+  ```
+
+As described in the [cert-manager documentation](https://cert-manager.io/docs/usage/gateway/), cert-manager can watch Gateway listeners and reconcile the Secret referenced in `tls.certificateRefs` when the Gateway is annotated with the issuer to use.
+
+Example:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public-gateway
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+spec:
+  gatewayClassName: envoy
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: app.example.com
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: app-example-com-tls
+```
+
+In this example cert-manager creates and renews Secret `app-example-com-tls`, which is then used by the Gateway listener for TLS termination.
+
 ## Cert Manager Installation
 
 Installation using `Helm` (Release 3):
@@ -145,7 +209,13 @@ Installation using `Helm` (Release 3):
     ```yaml
     crds:
       enabled: true
+    config:
+      enableGatewayAPI: true
     ```
+
+    `config.enableGatewayAPI: true` enables Gateway API support so cert-manager can manage certificates referenced by `Gateway` listeners.
+
+    Gateway API support should only be enabled after the Gateway API CRDs are available in the cluster, either because the upstream Gateway API manifests were installed first or because a controller such as Envoy Gateway installed them as part of its Helm chart.
 
 -   Step 5: Install Cert-Manager
 

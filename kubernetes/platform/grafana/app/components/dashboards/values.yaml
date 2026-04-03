@@ -46,6 +46,14 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/nginx-folder
+      - name: envoy-gateway
+        orgId: 1
+        folder: Envoy-Gateway
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/envoy-gateway-folder
       - name: minio
         orgId: 1
         folder: Minio
@@ -201,6 +209,30 @@ dashboards:
       # renovate: depName="Istio Dashboard"
       gnetId: 11829
       revision: 298
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+  envoy-gateway:
+    envoy-proxy:
+      url: https://raw.githubusercontent.com/envoyproxy/gateway/refs/heads/main/charts/gateway-addons-helm/dashboards/envoy-proxy-global.json
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    envoy-gateway:
+      url: https://raw.githubusercontent.com/envoyproxy/gateway/refs/heads/main/charts/gateway-addons-helm/dashboards/envoy-gateway-global.json
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    envoy-overview:
+      gnetId: 24459
+      revision: 3
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    envoy-upstream:
+      gnetId: 24457
+      revision: 3
+      datasource:
+        - { name: DS_PROMETHEUS, value: Prometheus }
+    envoy-downstream:
+      gnetId: 24458
+      revision: 3
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
   nginx:

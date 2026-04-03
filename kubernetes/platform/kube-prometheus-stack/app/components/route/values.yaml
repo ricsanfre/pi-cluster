@@ -1,0 +1,23 @@
+# kube-prom-stack helm values (route)
+
+alertmanager:
+  ## Configure HTTPRoute for Alertmanager
+  route:
+    main:
+      enabled: true
+      hostnames:
+       - alertmanager.${CLUSTER_DOMAIN}
+      parentRefs:
+       - name: public-gateway
+         namespace: envoy-gateway-system
+
+prometheus:
+  ## Configuring HTTPRoute for Prometheus
+  route:
+    main:
+      enabled: true
+      hostnames:
+        - prometheus.${CLUSTER_DOMAIN}
+      parentRefs:
+        - name: public-gateway
+          namespace: envoy-gateway-system

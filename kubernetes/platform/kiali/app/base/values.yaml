@@ -5,6 +5,11 @@ cr:
   namespace: kiali
   spec:
     istio_namespace: "istio-system"
+    server:
+      web_fqdn: "kiali.${CLUSTER_DOMAIN}"
+      web_port: "443"
+      web_schema: "https"
+      web_root: "/"
     auth:
       # strategy: "anonymous"
       strategy: openid
@@ -21,7 +26,7 @@ cr:
         # Grafana service name is "grafana" and is in the "grafana" namespace.
         internal_url: 'http://grafana.grafana.svc.cluster.local/grafana/'
         # Public facing URL of Grafana
-        external_url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
+        external_url: 'https://grafana.${CLUSTER_DOMAIN}'
         auth:
           # Use same OAuth2.0 token used for accesing Kiali
           type: bearer
@@ -40,35 +45,6 @@ cr:
         use_grpc: true
         grpc_port: 9095
     deployment:
-      ingress:
-        class_name: "nginx"
-        enabled: true
-        override_yaml:
-          metadata:
-            annotations:
-              # Enable cert-manager to create automatically the SSL certificate and store in Secret
-              # Possible Cluster-Issuer values:
-              #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
-              #   * 'ca-issuer' (CA-signed certificate, not valid)
-              cert-manager.io/cluster-issuer: letsencrypt-issuer
-              cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
-          spec:
-            ingressClassName: nginx
-            rules:
-            - host: kiali.${CLUSTER_DOMAIN}
-              http:
-                paths:
-                - backend:
-                    service:
-                      name: kiali
-                      port:
-                        number: 20001
-                  path: /
-                  pathType: Prefix
-            tls:
-            - hosts:
-              - kiali.${CLUSTER_DOMAIN}
-              secretName: kiali-tls
       # Enabling debug logs
       logger:
         log_level: debug

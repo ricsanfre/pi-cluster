@@ -2,7 +2,7 @@
 title: Cilium (Kubernetes CNI)
 permalink: /docs/cilium/
 description: How to install Cilium CNI in the picluster.
-last_modified_at: "09-09-2024"
+last_modified_at: "27-03-2026"
 ---
 
 [Cilium](https://cilium.io/) is an open source, cloud native solution for providing, securing, and observing network connectivity between workloads, powered by [eBPF](https://ebpf.io/) Kernel technology.
@@ -316,31 +316,82 @@ Finally, when installing kube-prometheus-stack helm chart, installation of the C
     ui:
       enabled: true
       rollOutPods: true
-      # Enable Ingress
+      # Disable Ingress. External access is configured separately through Envoy Gateway.
       ingress:
-        enabled: true
-        annotations:
-          # Enable external authentication using Oauth2-proxy
-          nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.picluster.ricsanfre.com/oauth2/start?rd=https://$host$request_uri
-          nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
-          nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-          nginx.ingress.kubernetes.io/auth-response-headers: Authorization
-
-          # Enable cert-manager to create automatically the SSL certificate and store in Secret
-          # Possible Cluster-Issuer values:
-          #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
-          #   * 'ca-issuer' (CA-signed certificate, not valid)
-          cert-manager.io/cluster-issuer: letsencrypt-issuer
-          cert-manager.io/common-name: hubble.picluster.ricsanfre.com
-        className: nginx
-        hosts: ["hubble.picluster.ricsanfre.com"]
-        tls:
-          - hosts:
-            - hubble.picluster.ricsanfre.com
-            secretName: hubble-tls
+        enabled: false
   ```
 
-See further details in [Cilium Monitoring and Metrics](https://docs.cilium.io/en/stable/observability/metrics/) and [Cilium Hubble UI](https://docs.cilium.io/en/stable/gettingstarted/hubble/) and [Cilium Hubble Configuration](https://docs.cilium.io/en/latest/gettingstarted/hubble-configuration/).
+  Expose Hubble UI through Envoy Gateway with the following `HTTPRoute`:
+
+  ```yaml
+  apiVersion: gateway.networking.k8s.io/v1
+  kind: HTTPRoute
+  metadata:
+    name: hubble
+  spec:
+    hostnames:
+      - hubble.${CLUSTER_DOMAIN}
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: public-gateway
+        namespace: envoy-gateway-system
+    rules:
+      - backendRefs:
+          - name: hubble-ui
+            port: 80
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+  ```
+
+  Protect the route with Envoy Gateway native OIDC authentication:
+
+  ```yaml
+  apiVersion: external-secrets.io/v1
+  kind: ExternalSecret
+  metadata:
+    name: hubble-oauth2-externalsecret
+  spec:
+    secretStoreRef:
+      name: vault-backend
+      kind: ClusterSecretStore
+    target:
+      name: hubble-oauth2-externalsecret
+    data:
+      - secretKey: client-id
+        remoteRef:
+          key: hubble/oauth2
+          property: client-id
+      - secretKey: client-secret
+        remoteRef:
+          key: hubble/oauth2
+          property: client-secret
+  ---
+  apiVersion: gateway.envoyproxy.io/v1alpha1
+  kind: SecurityPolicy
+  metadata:
+    name: hubble
+  spec:
+    targetRefs:
+      - group: gateway.networking.k8s.io
+        kind: HTTPRoute
+        name: hubble
+    oidc:
+      provider:
+        issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+      clientIDRef:
+        name: hubble-oauth2-externalsecret
+      clientSecret:
+        name: hubble-oauth2-externalsecret
+      redirectURL: "https://hubble.${CLUSTER_DOMAIN}/oauth2/callback"
+      logoutPath: "/hubble/logout"
+  ```
+
+  Keycloak client configuration for Hubble and the generic OIDC flow are documented in [Identity Access Management with Keycloak](/docs/sso/#protecting-applications-with-envoy-gateway) and [Envoy Gateway - OIDC Authentication](/docs/envoy-gateway/#oidc-authentication).
+
+See further details in [Cilium Monitoring and Metrics](https://docs.cilium.io/en/stable/observability/metrics/), [Cilium Hubble UI](https://docs.cilium.io/en/stable/gettingstarted/hubble/) and [Cilium Hubble Configuration](https://docs.cilium.io/en/latest/gettingstarted/hubble-configuration/).
 
 ### Configure LB-IPAM
 

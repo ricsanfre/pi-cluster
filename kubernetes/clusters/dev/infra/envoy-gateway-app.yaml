@@ -1,0 +1,47 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: envoy-gateway-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: envoy-gateway-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/envoy-gateway/app/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: envoy-gateway-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: envoy-gateway-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: envoy-gateway-app
+    - name: cert-manager-config
+  path: ./kubernetes/platform/envoy-gateway/config/overlays/dev
+  prune: true
+  wait: true
+  # healthCheckExprs:
+  #   - apiVersion: gateway.envoyproxy.io/v1alpha1
+  #     kind: EnvoyProxy
+  #     failed: status.ancestors.exists(a, a.conditions.exists(c, c.type == 'Accepted') && a.conditions.filter(c, c.type == 'Accepted').all(c, c.status == 'False'))
+  #     current: '!has(status.ancestors) || status.ancestors.size() == 0 || status.ancestors.exists(a, a.conditions.exists(c, c.type == ''Accepted'') && a.conditions.filter(c, c.type == ''Accepted'').all(c, c.status == ''True''))'
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

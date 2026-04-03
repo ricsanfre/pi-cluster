@@ -2,7 +2,7 @@
 title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Pi Kubernetes Cluster.
-last_modified_at: "23-03-2025"
+last_modified_at: "27-03-2026"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won't be able to access the data.
@@ -152,51 +152,29 @@ Installation using `Helm` (Release 3):
   defaultSettings:
     defaultDataPath: "/storage"
 
-  # Ingress Resource. Longhorn dashboard.
-  ingress:
-    ## Enable creation of ingress resource
+  # HTTPRoute resource for Longhorn dashboard.
+  httproute:
+    ## Enable creation of HTTPRoute resource
     enabled: true
-    ## Add ingressClassName to the Ingress
-    ingressClassName: nginx
-
-    # ingress host
-    host: longhorn.${CLUSTER_DOMAIN}
-
-    ## Set this to true in order to enable TLS on the ingress record
-    tls: true
-
-    ## TLS Secret Name
-    tlsSecret: longhorn-tls
-
-    ## Default ingress path
-    path: /
-
-    ## Ingress annotations
-    annotations:
-      # Enable basic auth
-      nginx.ingress.kubernetes.io/auth-type: basic
-      # Secret defined in nginx namespace
-      nginx.ingress.kubernetes.io/auth-secret: nginx/basic-auth-secret
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      # Possible Cluster-Issuer values: 
-      #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API) 
-      #   * 'ca-issuer' (CA-signed certificate, not valid)
-      cert-manager.io/cluster-issuer: letsencrypt-issuer
-      cert-manager.io/common-name: longhorn.${CLUSTER_DOMAIN}
+    hostnames:
+      - longhorn.${CLUSTER_DOMAIN}
+    parentRefs:
+      - name: public-gateway
+        namespace: envoy-gateway-system
   ```
   {{site.data.alerts.note}}
 
   Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
   -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
-      FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
-      External-DNS can be configured to automatically add that entry in your DNS service.
+      `longhorn.${CLUSTER_DOMAIN}` must resolve to Envoy Gateway's Load Balancer service external IP.
+      External-DNS can be configured to publish that record automatically from the `HTTPRoute` hostname.
   {{site.data.alerts.end}}
 
   With this configuration:
 
   - Longhorn is configured to use `/storage` as default path for storing data (`defaultSettings.defaultDataPath`)
 
-  - Ingress resource is created to make Longhorn front-end available through the URL `longhorn.${CLUSTER_DOMAIN}`. Ingress resource for NGINX (`ingress`) is annotated so, basic authentication is used and a Valid TLS certificate is generated using Cert-Manager for `longhorn.${CLUSTER_DOMAIN}` host
+  - An `HTTPRoute` resource is created to make the Longhorn front-end available through the URL `https://longhorn.${CLUSTER_DOMAIN}`.
 
 - Step 5: Install Longhorn in the longhorn-system namespace, using Helm:
 
@@ -364,6 +342,15 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 ```
 
 Procedure is explained in kubernetes documentation: ["Change default Storage Class"](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/).
+
+### Securing Longhorn UI
+
+Longhorn dashboard is exposed through an `HTTPRoute` resource. Longhorn does not have any authentication mechanism configured, and the dashboard is accessible without authentication.
+
+Authentication can be enforced at the Envoy Gateway level using Security Policies. Different authentication mechanisms are supported, including HTTP Basic Auth and OIDC integration with Identity Providers like Keycloak.
+
+See [Envoy Gateway documentation](/docs/envoy-gateway/#oidc-authentication) where the example to secure Longhorn dashboard with OIDC authentication is provided.
+
 
 ### Longhorn backup configuration
 

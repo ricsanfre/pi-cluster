@@ -1,0 +1,50 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy
+spec:
+  telemetry:
+    accessLog:
+      settings:
+        - sinks:
+            - type: OpenTelemetry
+              openTelemetry:
+                backendRefs:
+                  - name: otel-collector
+                    namespace: otel
+                    port: 4317
+                resourceAttributes:
+                  service.name: envoy-gateway-proxy
+                  service.namespace: envoy-gateway-system
+                  telemetry.source: envoy-accesslog
+          format:
+            type: Text
+            text: |
+              [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT% %DURATION% "%REQ(X-FORWARDED-FOR)%" "%REQ(USER-AGENT)%" "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%" "%UPSTREAM_HOST%"
+    tracing:
+      samplingRate: 100
+      provider:
+        type: OpenTelemetry
+        serviceName: envoy-gateway-proxy
+        backendRefs:
+          - name: otel-collector
+            namespace: otel
+            port: 4317
+        openTelemetry:
+          resourceAttributes:
+            service.name: envoy-gateway-proxy
+            service.namespace: envoy-gateway-system
+    metrics:
+      prometheus:
+        compression:
+          type: Gzip
+      sinks:
+        - type: OpenTelemetry
+          openTelemetry:
+            backendRefs:
+              - name: otel-collector
+                namespace: otel
+                port: 4317
+            resourceAttributes:
+              service.name: envoy-gateway-proxy
+              service.namespace: envoy-gateway-system

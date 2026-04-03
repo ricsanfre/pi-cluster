@@ -6,10 +6,13 @@ metadata:
   namespace: flux-system
 data:
   CLUSTER_DOMAIN: homelab.ricsanfre.com
-  S3_BACKUP_SERVER: object-store.homelab.ricsanfre.com
+  S3_SERVER: object-store.homelab.ricsanfre.com
   EXTERNAL_DNS_SERVER: 10.0.0.11
   NGINX_LOAD_BALANCER_IP: 10.0.0.65
   FLUENTD_LOAD_BALANCER_IP: 10.0.0.66
   ISTIO_GATEWAY_LOAD_BALANCER_IP: 10.0.0.67
+  HTTP_GATEWAY_LOAD_BALANCER_IP: 10.0.0.68
+  KAFKA_GATEWAY_LOAD_BALANCER_IP: 10.0.0.69
+  TRUSTED_INTERNAL_POD_CIDR: 10.42.0.0/16
   PI_ADMIN_FISTNAME: Ricardo
   PI_ADMIN_LASTNAME: Sanchez

@@ -18,7 +18,7 @@ configuration:
       config:
         region: eu-west-1
         s3ForcePathStyle: true
-        s3Url: https://${S3_BACKUP_SERVER}:9091
+        s3Url: https://${S3_SERVER}:9091
   # Enable CSI snapshot support
   features: EnableCSI
 credentials:

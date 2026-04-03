@@ -7,8 +7,10 @@ alertmanager:
   alertmanagerSpec:
     ##
     ## Configure access to AlertManager via sub-path
-    externalUrl: http://monitoring.${CLUSTER_DOMAIN}/alertmanager/
-    routePrefix: /alertmanager
+    # externalUrl: http://monitoring.${CLUSTER_DOMAIN}/alertmanager/
+    # routePrefix: /alertmanager
+    ## Configure access to AlertManager via subdomain
+    externalUrl: http://alertmanager.${CLUSTER_DOMAIN}
     ##
     ## HA configuration: Replicas
     ## Number of Alertmanager POD replicas
@@ -46,8 +48,10 @@ prometheus:
     ##
     ## Configure access to Prometheus via sub-path
     ## --web.external-url and --web.route-prefix Prometheus command line parameters
-    externalUrl: http://monitoring.${CLUSTER_DOMAIN}/prometheus/
-    routePrefix: /prometheus
+    # externalUrl: http://monitoring.${CLUSTER_DOMAIN}/prometheus/
+    # routePrefix: /prometheus
+    ## Configure access to Prometheus via subdomain
+    externalUrl: http://prometheus.${CLUSTER_DOMAIN}
     ##
     ## HA configuration: Replicas & Shards
     ## Number of replicas of each shard to deploy for a Prometheus deployment.
@@ -84,6 +88,9 @@ prometheus:
           resources:
             requests:
               storage: 10Gi
+    # Additional external labels to be added to all metrics
+    externalLabels:
+      cluster: ${CLUSTER_NAME:-pi-cluster}
     ##
 # Prometheus Node Exporter Configuration
 nodeExporter:

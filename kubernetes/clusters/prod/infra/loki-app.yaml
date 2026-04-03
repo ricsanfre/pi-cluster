@@ -13,7 +13,11 @@ spec:
     name: flux-system
   dependsOn:
     - name: external-secrets-config
-    - name: minio-app
+    - name: longhorn-app
   path: ./kubernetes/platform/loki/app/overlays/prod
   prune: true
   wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

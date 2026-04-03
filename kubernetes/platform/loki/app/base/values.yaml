@@ -7,6 +7,32 @@ loki:
   # Disable multi-tenant support
   auth_enabled: false
 
+  limits_config:
+    allow_structured_metadata: true
+    max_query_lookback: 168h
+    # Retention period for logs in the store.
+    retention_period: 168h
+    # OLTP limit settings
+    otlp_config:
+      resource_attributes:
+        ignore_defaults: true
+        attributes_config:
+          - action: index_label
+            attributes:
+              - service.name
+              - service.namespace
+              - k8s.namespace.name
+
+  # Compactor configuration
+  # Configure data retention and compaction. This is required when using the S3 storage backend, as S3 does not support object deletion. Loki's compactor will create new compacted blocks and mark old blocks for deletion, but the actual deletion of old blocks will be delayed until the retention period has passed.
+  # ref: https://grafana.com/docs/loki/latest/operations/storage/retention/
+  compactor:
+    compaction_interval: 10m
+    delete_request_store: s3
+    retention_delete_delay: 2h
+    retention_enabled: true
+    working_directory: /var/loki/retention
+
   # S3 backend storage configuration
   storage:
     bucketNames:
@@ -14,11 +40,12 @@ loki:
       ruler: k3s-loki
     type: s3
     s3:
-      endpoint: minio.minio:9000
-      secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
-      accessKeyId: ${MINIO_ACCESS_KEY_ID}
+      endpoint: "https://${S3_SERVER}:9091"
+      region: eu-west-1
+      secretAccessKey: $${MINIO_SECRET_ACCESS_KEY}
+      accessKeyId: $${MINIO_ACCESS_KEY_ID}
       s3ForcePathStyle: true
-      insecure: true
+      insecure: false
       http_config:
         idle_conn_timeout: 90s
         response_header_timeout: 0s

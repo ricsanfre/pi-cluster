@@ -1,0 +1,21 @@
+# opentelemetry-collector helm values (loki-exporter)
+config:
+  processors:
+    # loki create index for resource attributes, so need to move k8s attributes from log to resource
+    transform/loki:
+      log_statements:
+        - context: log
+          statements:
+            - set(resource.attributes["exporter"], "OTLP")
+            - set(resource.attributes["k8s.namespace.name"], log.attributes["k8s.namespace.name"])
+            - delete_key(log.attributes, "k8s.namespace.name")
+  exporters:
+    # Loki recommends OTLP/HTTP ingestion through its /otlp endpoint.
+    otlphttp/loki:
+      endpoint: http://loki-gateway.loki/otlp
+  service:
+    pipelines:
+      logs/loki:
+        receivers: [otlp]
+        processors: [memory_limiter, resource, batch, transform/loki]
+        exporters: [otlphttp/loki]

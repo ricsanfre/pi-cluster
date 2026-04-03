@@ -1,0 +1,18 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: hubble
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: hubble
+  oidc:
+    provider:
+      issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+    clientIDRef:
+      name: hubble-oauth2-externalsecret
+    clientSecret:
+      name: hubble-oauth2-externalsecret
+    redirectURL: "https://hubble.${CLUSTER_DOMAIN}/oauth2/callback"
+    logoutPath: "/hubble/logout"

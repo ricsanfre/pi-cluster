@@ -1,0 +1,14 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: elasticsearch
+spec:
+  hostnames:
+    - elasticsearch.${CLUSTER_DOMAIN}
+  rules:
+    - backendRefs:
+        - name: efk-es-http
+          port: 9200
+  parentRefs:
+    - name: public-gateway
+      namespace: envoy-gateway-system

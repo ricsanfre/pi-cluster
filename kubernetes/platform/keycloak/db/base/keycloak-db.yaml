@@ -6,7 +6,7 @@ spec:
   instances: 3
   imageName: ghcr.io/cloudnative-pg/postgresql:18.3
   storage:
-    size: 1Gi
+    size: 10Gi
     storageClass: longhorn
   monitoring:
     enablePodMonitor: true
@@ -24,7 +24,7 @@ spec:
         compression: bzip2
         maxParallel: 8
       destinationPath: s3://k3s-barman/keycloak-db
-      endpointURL: https://${S3_BACKUP_SERVER}:9091
+      endpointURL: https://${S3_SERVER}:9091
       s3Credentials:
         accessKeyId:
           name: keycloak-db-minio-secret

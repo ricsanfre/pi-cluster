@@ -2,8 +2,23 @@
 title: Ingress Controller (NGINX)
 permalink: /docs/nginx/
 description: How to configure Nginx Ingress Controller in our Pi Kubernetes cluster.
-last_modified_at: "26-06-2025"
+last_modified_at: "27-03-2026"
 ---
+
+
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+NGINX Ingress Controller has been retired. See details in [https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/)
+
+By the other hand, Ingress API is not longer the recommended solution to expose services in Kubernetes. Ingress API is no being updated with new features and the recommended solution is to use Gateway API and a Gateway API Controller.
+
+PiCluster's Ingess Controller solution  has been migrated to a Gateway API Controller using Envoy Gateway in release 1.12.
+
+NGINX Ingress Controller technology has been deprecated and this documentation is not updated anymore.
+
+See alternative Gateway API Controller solution documentation: ["Envoy Gateway"](/docs/envoy-gateway/).
+
+{{site.data.alerts.end}}
 
 All HTTP/HTTPS traffic coming to K3S exposed services should be handled by a Ingress Controller.
 K3S default installation comes with Traefik HTTP reverse proxy which is a Kubernetes compliant Ingress Controller.

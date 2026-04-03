@@ -13,7 +13,8 @@ spec:
   path: ./kubernetes/platform/cilium/app/overlays/prod
   prune: true
   dependsOn:
-    - name: ingress-nginx-app
+    - name: envoy-gateway-app
+    - name: external-secrets-config
   wait: true
   postBuild:
     substituteFrom:

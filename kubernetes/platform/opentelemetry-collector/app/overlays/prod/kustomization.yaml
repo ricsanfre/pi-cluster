@@ -9,7 +9,9 @@ components:
   - ../../components/tempo-exporter
   - ../../components/prometheus-exporter
   - ../../components/elasticsearch-exporter
-  - ../../components/ingress
+  - ../../components/loki-exporter
+  - ../../components/route
+  - ../../components/oltp-http-cors
 
 configMapGenerator:
   - name: opentelemetry-collector-helm-values

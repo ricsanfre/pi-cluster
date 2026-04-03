@@ -120,9 +120,9 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes API Load-balancer</td>
     </tr>
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/nginx.svg"></td>
-        <td><a href="https://kubernetes.github.io/ingress-nginx/">Ingress NGINX</a></td>
-        <td>Kubernetes Ingress Controller</td>
+        <td><img width="32" src="docs/assets/img/logos/envoy.svg"></td>
+        <td><a href="https://gateway.envoyproxy.io/">Envoy Gateway</a></td>
+        <td>Kubernetes Gateway API Controller</td>
     </tr> 
     <tr>
         <td><img width="32" src="docs/assets/img/logos/longhorn.svg"></td>
@@ -244,6 +244,7 @@ The following technologies have been used in previous releases of PiCluster but 
 | <img width="32" src="docs/assets/img/logos/argocd.svg" >  | [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)  | GitOps tool. Replaced by FluxCD |
 | <img width="20" src="docs/assets/img/logos/flannel.svg" > | [Flannel](https://github.com/flannel-io/flannel/) | Kubernetes CNI plugin. Embedded into K3s. Replaced by Cilium CNI |
 | <img width="32" src="docs/assets/img/logos/haproxy.svg" > | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer. Replaced by Kube-VIP |
+| <img width="32" src="docs/assets/img/logos/nginx.svg" > | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)  | Kubernetes Ingress Controller. Replaced by Envoy Gateway |
 
 
 ## External Resources and Services

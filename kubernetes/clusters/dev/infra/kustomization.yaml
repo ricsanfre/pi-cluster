@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cilium-app.yaml
+  - coredns-app.yaml
+  - envoy-gateway-app.yaml
+  - flux-app.yaml
+  - metrics-server-app.yaml

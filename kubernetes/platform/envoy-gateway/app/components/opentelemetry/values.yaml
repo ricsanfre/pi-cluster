@@ -1,0 +1,13 @@
+# envoy-gateway helm values (opentelemetry)
+config:
+  envoyGateway:
+    telemetry:
+      metrics:
+        sinks:
+          - type: OpenTelemetry
+            openTelemetry:
+              host: otel-collector.otel.svc.cluster.local
+              port: 4317
+              protocol: grpc
+              exportInterval: 60s
+              exportTimeout: 30s

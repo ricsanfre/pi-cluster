@@ -383,11 +383,11 @@ Metrics from control plane (istiod) and proxies (ztunnel) can be extracted from 
 
 ## Kiali installation
 
-[Kiali](https://kiali.io/) is an observability console for Istio with service mesh configuration and validation capabilities. It helps you understand the structure and health of your service mesh by monitoring traffic flow to infer the topology and report errors. Kiali provides detailed metrics and a basic Grafana integration, which can be used for advanced queries. Distributed tracing is provided by integration with Jaeger.
+[Kiali](https://kiali.io/) is an observability console for Istio with service mesh configuration and validation capabilities. It helps you understand the structure and health of your service mesh by monitoring traffic flow to infer the topology and report errors. Kiali provides detailed metrics and a basic Grafana integration, which can be used for advanced queries. Distributed tracing is provided in this cluster by integration with Tempo.
 
 See details about installing Kiali using Helm in [Kiali's Quick Start Installation Guide](https://kiali.io/docs/installation/quick-start/)
 
-Kiali will be installing using Kiali operator which is recommeded
+Kiali is installed using the Kiali Operator.
 
 Installation using `Helm` (Release 3):
 
@@ -415,66 +415,75 @@ Installation using `Helm` (Release 3):
     create: true
     namespace: kiali
     spec:
-        istio_namespace: "istio-system"
-        auth:
-          strategy: "anonymous"
-        external_services:
-          prometheus:
-            # Prometheus service
-            url: "http://kube-prometheus-stack-prometheus.monitoring:9090/prometheus"
-          grafana:
-            enabled: true
-            # Grafana service name is "grafana" and is in the "monitoring" namespace.
-            internal_url: 'http://grafana.grafana.svc.cluster.local/grafana/'
-            # Public facing URL of Grafana
-            external_url: 'https://monitoring.${CLUSTER_DOMAIN}/grafana/'
-            auth:
-              # Use same OAuth2.0 token used for accesing Kiali
-              type: bearer
-              use_kiali_token: true
-          tracing:
-            # Enabled by default. Kiali will anyway fallback to disabled if
-            # Tempo is unreachable.
-            enabled: true
-            # Tempo service name is "query-frontend" and is in the "tempo" namespace.
-            in_cluster_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
-            provider: "tempo"
-            tempo_config:
-              org_id: "1"
-              datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
-            # Use grpc to speed up the download of metrics
-            use_grpc: true
-            grpc_port: 9095
-        deployment:
-          ingress:
-            class_name: "nginx"
-            enabled: true
-            override_yaml:
-              metadata:
-                annotations:
-                  # Enable cert-manager to create automatically the SSL certificate and store in Secret
-                  # Possible Cluster-Issuer values:
-                  #   * 'letsencrypt-issuer' (valid TLS certificate using IONOS API)
-                  #   * 'ca-issuer' (CA-signed certificate, not valid)
-                  cert-manager.io/cluster-issuer: letsencrypt-issuer
-                  cert-manager.io/common-name: kiali.${CLUSTER_DOMAIN}
-              spec:
-                ingressClassName: nginx
-                rules:
-                - host: kiali.${CLUSTER_DOMAIN}
-                  http:
-                    paths:
-                    - backend:
-                        service:
-                          name: kiali
-                          port:
-                            number: 20001
-                      path: /
-                      pathType: Prefix
-                tls:
-                - hosts:
-                  - kiali.${CLUSTER_DOMAIN}
-                  secretName: kiali-tls
+      istio_namespace: "istio-system"
+      server:
+        web_fqdn: "kiali.${CLUSTER_DOMAIN}"
+        web_port: "443"
+        web_schema: "https"
+        web_root: "/"
+      auth:
+        strategy: "anonymous"
+      external_services:
+        prometheus:
+          url: "http://kube-prometheus-stack-prometheus.kube-prom-stack:9090/prometheus/"
+        grafana:
+          enabled: true
+          internal_url: "http://grafana.grafana.svc.cluster.local/grafana/"
+          external_url: "https://grafana.${CLUSTER_DOMAIN}"
+          auth:
+            type: bearer
+            use_kiali_token: true
+        tracing:
+          enabled: true
+          internal_url: "http://tempo-query-frontend.tempo.svc.cluster.local:3100/"
+          provider: "tempo"
+          tempo_config:
+            org_id: "1"
+            datasource_uid: "a8d2ef1c-d31c-4de5-a90b-e7bc5252cd00"
+          use_grpc: true
+          grpc_port: 9095
+      deployment:
+        logger:
+          log_level: debug
+  ```
+
+- Step 5: Install Kiali Operator in kiali namespace
+
+  ```shell
+  helm install kiali-operator kiali/kiali-operator --namespace kiali -f kiali-operator-values.yaml
+  ```
+
+- Step 6: Check Kiali is up and running
+
+  ```shell
+  kubectl get pods -n kiali
+  kubectl get service kiali -n kiali
+  ```
+
+- Step 7: Expose Kiali through Envoy Gateway with an `HTTPRoute`
+
+  ```yaml
+  apiVersion: gateway.networking.k8s.io/v1
+  kind: HTTPRoute
+  metadata:
+    name: kiali-console
+    namespace: kiali
+  spec:
+    hostnames:
+      - kiali.${CLUSTER_DOMAIN}
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: public-gateway
+        namespace: envoy-gateway-system
+    rules:
+      - backendRefs:
+          - name: kiali
+            port: 20001
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
   ```
 
   {{site.data.alerts.note}}
@@ -482,27 +491,25 @@ Installation using `Helm` (Release 3):
   Substitute variables (`${var}`) in the above yaml file before applying it.
   -   Replace `${CLUSTER_DOMAIN}` by the domain used in the cluster. For example: `homelab.ricsanfre.com`
 
+  To expose Kiali using the `HTTPRoute`, Envoy Gateway and the shared `public-gateway` `Gateway` must already be installed in the cluster. See installation details in [Envoy Gateway documentation](/docs/envoy-gateway/).
+
   {{site.data.alerts.end}}
 
-  With this configuration Kiali Server, Kiali Custom Resource, is created with the following config:
+  With this configuration the Kiali Server custom resource is created with the following config:
+
+  - Server public URL settings are configured through `cr.spec.server`.
+
+    `web_fqdn`, `web_port`, `web_schema`, and `web_root` tell Kiali the external URL where it is published so redirects and generated links use `https://kiali.${CLUSTER_DOMAIN}/`.
 
   - No authentincation strategy (`cr.spec.auth.strategy: "anonymous"`).
 
-    See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/configuration/authentication/openid/)
+  - Kiali is exposed through Envoy Gateway using an external `HTTPRoute` resource instead of the Kiali ingress settings.
 
-  - Ingress resource is created (`cr.spec.deployment.ingress`)
-
-    See further details in [Kiali Ingress Documentation](https://kiali.io/docs/installation/installation-guide/accessing-kiali/)
+    See further details in [Kubernetes Gateway API HTTPRoute](https://gateway-api.sigs.k8s.io/api-types/httproute/)
 
   - External connection to Prometheus, Grafana and Tempo is configured (`cr.spec.external_services`)
 
     See further details in [Kiali Configuring Prometheus Tracing Grafana](https://kiali.io/docs/configuration/p8s-jaeger-grafana/)
-
-- Step 5: Install Kiali Operator in kiali namespace
-
-  ```shell
-  helm install kiali-operator kiali/kiali-operator --namespace kiali -f kiali-operator-values.yaml
-  ```
 
 ### Kiali OpenID Authentication configuration
 
@@ -536,24 +543,42 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
   ![kiali-keycloak-3](/assets/img/kiali-keycloak-3.png)
 
   - Provide the following 'Logging settings'
-    - Valid redirect URIs: `https://kiali.${CLUSTER_DOMAIN}/kiali/*`
-    - Root URL: `https://kiali.${CLUSTER_DOMAIN}/kiali/`
+    - Valid redirect URIs: `https://kiali.${CLUSTER_DOMAIN}/*`
+    - Root URL: `https://kiali.${CLUSTER_DOMAIN}/`
   - Save the configuration.
 
 - Step 2: Locate kiali client credentials
 
-  Under the Credentials tab you will now be able to locate kiali client's secret.
+  Under the Credentials tab you will now be able to locate Kiali client's secret.
 
   ![kiali-keycloak-4](/assets/img/kiali-keycloak-4.png)
 
-- Step 3: Create secret for kiali storing client secret
+- Step 3: Store Kiali client secret so it can be synchronized by External Secrets
 
-  ```shell
-  export CLIENT_SECRET=<kiali secret>
+  In this repository the Kiali secret is not created manually. Instead, an `ExternalSecret` named `kiali-externalsecret` reads the client secret from Vault key `kiali/oauth2` and materializes Kubernetes Secret `kiali` with key `oidc-secret`.
 
-  kubectl create secret generic kiali --from-literal="oidc-secret=$CLIENT_SECRET" -n istio-system
+  The equivalent manifest used in this repository is:
+
+  ```yaml
+  apiVersion: external-secrets.io/v1
+  kind: ExternalSecret
+  metadata:
+    name: kiali-externalsecret
+    namespace: kiali
+  spec:
+    secretStoreRef:
+      name: vault-backend
+      kind: ClusterSecretStore
+    target:
+      name: kiali
+    data:
+      - secretKey: oidc-secret
+        remoteRef:
+          key: kiali/oauth2
+          property: client-secret
   ```
-- Step 4: Configure's kiali openId Connect authentication
+
+- Step 4: Configure Kiali OpenID Connect authentication
 
   Add following to Kiali's helm chart operator values.yaml.
 
@@ -590,9 +615,9 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
     resources:
     - ns.yaml
       # https://istio.io/latest/docs/examples/bookinfo/
-    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo.yaml
-    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/platform/kube/bookinfo-versions.yaml
-    - https://raw.githubusercontent.com/istio/istio/release-1.26/samples/bookinfo/networking/bookinfo-gateway.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.29/samples/bookinfo/platform/kube/bookinfo.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.29/samples/bookinfo/platform/kube/bookinfo-versions.yaml
+    - https://raw.githubusercontent.com/istio/istio/release-1.29/samples/bookinfo/gateway-api/bookinfo-gateway.yam
     ```
 
     {{site.data.alerts.note}}

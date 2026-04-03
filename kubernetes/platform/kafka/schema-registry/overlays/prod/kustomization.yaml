@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: kafka
 
 components:
+  - ../../components/route
   - ../../components/kafka-security
   - ../../components/rest-api-security
 

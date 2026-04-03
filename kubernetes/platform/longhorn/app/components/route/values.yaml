@@ -1,0 +1,9 @@
+# longhorn helm values (route)
+httproute:
+  # Enable creation of HTTPRoute resource for Longhorn dashboard.
+  enabled: true
+  hostnames:
+    - longhorn.${CLUSTER_DOMAIN}
+  parentRefs:
+    - name: public-gateway
+      namespace: envoy-gateway-system

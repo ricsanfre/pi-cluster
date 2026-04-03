@@ -5,6 +5,11 @@ namespace: cert-manager
 resources:
   - ../../base
 
+components:
+  - ../../components/gateway-api
+  - ../../components/dns01
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: cert-manager-helm-values
     behavior: merge

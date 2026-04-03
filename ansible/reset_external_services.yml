@@ -255,7 +255,7 @@
           tofu destroy
           -no-color
           -auto-approve
-          -var="enable_kubernetes_auth=true"
+          -var="enable_kubernetes_auth=false"
           -var="enable_policies=true"
           -var="enable_roles=true"
           -var="enable_secrets=true"

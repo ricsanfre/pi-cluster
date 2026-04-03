@@ -8,6 +8,7 @@
     terraform_vault_dir: "../terraform/vault"
     vault_host: "{{ groups['vault'][0] }}"
     vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+    vault_enable_kubernetes_auth: "{{ enable_kubernetes_auth | default(false) | bool }}"
 
   pre_tasks:
     - name: Include picluster variables
@@ -129,14 +130,24 @@
         TF_VAR_vault_token: "{{ vault_token }}"
       changed_when: false
 
+    - name: Validate Kubernetes auth inputs when enabled
+      ansible.builtin.assert:
+        that:
+          - k3s_api_vip is defined
+          - k3s_api_vip | string | length > 0
+        fail_msg: |
+          enable_kubernetes_auth=true requires k3s_api_vip to be defined.
+      when: vault_enable_kubernetes_auth
+
     - name: Display effective Terraform feature flags
       ansible.builtin.debug:
         msg: |
           Terraform feature flags (enforced for plan/apply):
-             TF_VAR_enable_kubernetes_auth=false
+             TF_VAR_enable_kubernetes_auth={{ vault_enable_kubernetes_auth | lower }}
              TF_VAR_enable_policies=true
              TF_VAR_enable_roles=true
              TF_VAR_enable_secrets=true
+             TF_VAR_kubernetes_host={{ ('https://' ~ k3s_api_vip ~ ':6443') if vault_enable_kubernetes_auth else '(terraform default)' }}
 
     - name: Plan Terraform changes
       ansible.builtin.command:
@@ -152,7 +163,8 @@
         VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
         TF_VAR_vault_address: "{{ vault_addr }}"
         TF_VAR_vault_token: "{{ vault_token }}"
-        TF_VAR_enable_kubernetes_auth: "false"
+        TF_VAR_kubernetes_host: "{{ ('https://' ~ k3s_api_vip ~ ':6443') if vault_enable_kubernetes_auth else 'https://kubernetes.default.svc.cluster.local' }}"
+        TF_VAR_enable_kubernetes_auth: "{{ vault_enable_kubernetes_auth | lower }}"
         TF_VAR_enable_policies: "true"
         TF_VAR_enable_roles: "true"
         TF_VAR_enable_secrets: "true"
@@ -174,7 +186,8 @@
         VAULT_CACERT: "{{ vault_cacert if not enable_letsencrypt else '' }}"
         TF_VAR_vault_address: "{{ vault_addr }}"
         TF_VAR_vault_token: "{{ vault_token }}"
-        TF_VAR_enable_kubernetes_auth: "false"
+        TF_VAR_kubernetes_host: "{{ ('https://' ~ k3s_api_vip ~ ':6443') if vault_enable_kubernetes_auth else 'https://kubernetes.default.svc.cluster.local' }}"
+        TF_VAR_enable_kubernetes_auth: "{{ vault_enable_kubernetes_auth | lower }}"
         TF_VAR_enable_policies: "true"
         TF_VAR_enable_roles: "true"
         TF_VAR_enable_secrets: "true"

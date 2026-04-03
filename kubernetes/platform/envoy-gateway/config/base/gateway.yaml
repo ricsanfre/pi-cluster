@@ -1,0 +1,29 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public-gateway
+spec:
+  gatewayClassName: envoy
+  infrastructure:
+    annotations:
+      io.cilium/lb-ipam-ips: ${HTTP_GATEWAY_LOAD_BALANCER_IP}
+  listeners:
+    # The http listener will only allow routes in the envoy namespace, to enable https redirect route
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    # The https listener will allow routes from all namespaces
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          # include a list of certs for all domains/sub-domains going through this gateway - the gateway will figure out the mapping
+          - kind: Secret
+            name: pi-cluster-tls

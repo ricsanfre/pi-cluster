@@ -2,7 +2,7 @@
 title: Kafka
 permalink: /docs/kafka/
 description: How to deploy Kafka in a Kubernetes cluster. Using Strimzi Kafka Operator to streamline the deployment. How to configure external access and secure it using SASL/SCRAM authentication and ACL authorization. How to integrate Schema Registry and Kafka UI (Kafdrop)
-last_modified_at: "29-11-2025"
+last_modified_at: "27-03-2026"
 
 ---
 
@@ -216,7 +216,7 @@ In Kubernetes, clients uses Kafka Discovery Protocol to connect to proper Broker
 #### Enabling External Access
 
 External listener can be configured to provide access to clients outside the Kubernetes Cluster
-3 different types of external listeners (`nodeport`, `loadbalancer`, or  `ingress`) can be configured depending on the Kubernetes external connection mechanism used to access the service.
+3 different types of Strimzi external listeners (`nodeport`, `loadbalancer`, or `ingress`) can be configured depending on the Kubernetes external connection mechanism used to access the service. In this repository there is also an alternative approach based on Gateway API and Envoy Gateway, where Strimzi exposes Kafka using `cluster-ip` services and Envoy Gateway handles the external entry point.
 
 ##### Load balancer
 Strimzi operator generates a Kubernetes Service (type=LoadBalancer) for each broker. As a result, each broker will get a separate load balancer _(despite the Kubernetes service being of a load balancer type, the load balancer is still a separate entity managed by the infrastructure / cloud, i.e: Cilium or MetalLB in case of self-hosted cluster)_. A Kafka cluster with N brokers will need N+1 load balancers.
@@ -284,6 +284,117 @@ listeners:
           external-dns.alpha.kubernetes.io/ttl: "60"
       class: nginx
 ```
+
+##### Gateway API Listener with Envoy Gateway
+
+In Pi Cluster, Kafka external access is implemented through Gateway API using Envoy Gateway.
+
+Instead of using Strimzi `loadbalancer` or `ingress` listener types, Strimzi is configured with a `cluster-ip` external listener. This makes Strimzi create per-broker and bootstrap `ClusterIP` services, while Envoy Gateway exposes them externally using TLS passthrough and `TLSRoute` resources.
+
+|![Accessing Kafka using Gateway API](/assets/img/strimzi-kafka-gateway-access.png) |
+| :---: |
+| *Source: [https://strimzi.io/blog/2024/08/16/accessing-kafka-with-gateway-api/](https://strimzi.io/blog/2024/08/16/accessing-kafka-with-gateway-api/)* |
+{: .table .table-white }
+
+This approach keeps Kafka protocol handling in the brokers, preserves end-to-end TLS, and centralizes the external entry point in a single Gateway-backed load balancer.
+
+The Strimzi listener patch used in this repository is:
+
+```yaml
+listeners:
+  - name: external
+    port: 9094
+    type: cluster-ip
+    tls: true
+    authentication:
+      type: scram-sha-512
+    configuration:
+      createBootstrapService: true
+      brokers:
+        - broker: 0
+          advertisedHost: kafka-broker-0.${CLUSTER_DOMAIN}
+          advertisedPort: 9094
+        - broker: 1
+          advertisedHost: kafka-broker-1.${CLUSTER_DOMAIN}
+          advertisedPort: 9094
+        - broker: 2
+          advertisedHost: kafka-broker-2.${CLUSTER_DOMAIN}
+          advertisedPort: 9094
+      brokerCertChainAndKey:
+        secretName: kafka-tls
+        certificate: tls.crt
+        key: tls.key
+```
+
+Envoy Gateway exposes those services through a Gateway listener in TLS passthrough mode:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: kafka-gateway
+spec:
+  gatewayClassName: envoy
+  infrastructure:
+    annotations:
+      io.cilium/lb-ipam-ips: ${KAFKA_GATEWAY_LOAD_BALANCER_IP}
+  listeners:
+    - name: kafka-listener
+      protocol: TLS
+      port: 9094
+      tls:
+        mode: Passthrough
+```
+
+Each broker and the bootstrap service are then mapped with `TLSRoute` resources using SNI hostnames:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-kafka-external-bootstrap
+spec:
+  hostnames:
+    - kafka-bootstrap.${CLUSTER_DOMAIN}
+  parentRefs:
+    - kind: Gateway
+      name: kafka-gateway
+      sectionName: kafka-listener
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: cluster-kafka-external-bootstrap
+          port: 9094
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: cluster-dual-role-0
+spec:
+  hostnames:
+    - kafka-broker-0.${CLUSTER_DOMAIN}
+  parentRefs:
+    - kind: Gateway
+      name: kafka-gateway
+      sectionName: kafka-listener
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: cluster-dual-role-0
+          port: 9094
+```
+
+Equivalent `TLSRoute` resources are created for `kafka-broker-1.${CLUSTER_DOMAIN}` and `kafka-broker-2.${CLUSTER_DOMAIN}`.
+
+{{site.data.alerts.important}} **Requirements**
+
+- Envoy Gateway must be installed and the `envoy` `GatewayClass` must be available in the cluster.
+- DNS names `kafka-bootstrap.${CLUSTER_DOMAIN}` and `kafka-broker-{0..2}.${CLUSTER_DOMAIN}` must resolve to the Envoy Gateway load balancer IP. 
+  This can be achieved by configuring External-DNS to automatically create the corresponding DNS records in the DNS provider. TLSRoute sources need to be added to the External-DNS configuration to automatically add those entries in the DNS service. See details in [DNS (CoreDNS and External-DNS) - Gateway API support](/docs/kube-dns/#gateway-api-support).
+- Kafka brokers still require a TLS certificate valid for all advertised broker and bootstrap hostnames.
+- Because TLS is passed through by the Gateway, TLS termination and SASL/SCRAM authentication remain configured in Kafka, not in Envoy Gateway.
+
+{{site.data.alerts.end}}
 
 #### Using External TLS certificates
 
@@ -1398,7 +1509,7 @@ The application can be defined using the following directory structure
     │   ├── deployment.yaml
     │   ├── service.yaml
     │   ├── service-account.yaml
-    │   ├── ingress.yaml
+    │   ├── httproute.yaml
     │   ├── kafka-secrets.yaml
     │   ├── kafka-topic.yaml
     │   ├── kafka-user.yaml
@@ -1431,7 +1542,7 @@ The application can be defined using the following directory structure
       - service-account.yaml
       - deployment.yaml
       - service.yaml
-      - ingress.yaml
+      - httproute.yaml
       - kafka-topic.yaml
       - kafka-user.yaml
     configMapGenerator:
@@ -1725,49 +1836,44 @@ The application can be defined using the following directory structure
         app.kubernetes.io/instance: schema-registry
     ```
 
--   Ingress
+-   Gateway API route
 
-    `base/ingress.yaml`
+    `base/httproute.yaml`
     ```yaml
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
     metadata:
-      annotations:
-        # Enable cert-manager to create automatically the SSL certificate and store in Secret
-        cert-manager.io/cluster-issuer: letsencrypt-issuer
-        cert-manager.io/common-name: schema-registry.${CLUSTER_DOMAIN}
-      labels:
-        app.kubernetes.io/name: schema-registry
       name: schema-registry
     spec:
-      ingressClassName: nginx
+      hostnames:
+      - schema-registry.${CLUSTER_DOMAIN}
+      parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: public-gateway
+        namespace: envoy-gateway-system
       rules:
-      - host: schema-registry.${CLUSTER_DOMAIN}
-        http:
-          paths:
-          - backend:
-              service:
-                name: schema-registry
-                port:
-                  number: 8081
-            path: /
-            pathType: ImplementationSpecific
-      tls:
-      - hosts:
-        - schema-registry.${CLUSTER_DOMAIN}
-        secretName: schema-registry-cert
+      - backendRefs:
+         - name: schema-registry
+           port: 8081
+        matches:
+        - path:
+            type: PathPrefix
+            value: /
     ```
 
     {{site.data.alerts.note}}
-    Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+    Substitute variables (`${var}`) in the above yaml file before deploying the application.
     -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
-        FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
-        External-DNS can be configured to automatically add that entry in your DNS service.
+        `schema-registry.${CLUSTER_DOMAIN}` must resolve to the Envoy Gateway load balancer IP.
+        External-DNS can be configured to automatically publish the hostname from the `HTTPRoute`. See [DNS (CoreDNS and External-DNS) - Gateway API support](/docs/kube-dns/#gateway-api-support).
+
+    TLS is terminated at the shared Envoy Gateway listener. Unlike Kafdrop and other web UIs, Schema Registry is not protected by Envoy Gateway OIDC in this repository. Authentication remains enforced by Schema Registry itself through HTTP Basic Auth when the `rest-api-security` component is enabled.
     {{site.data.alerts.end}}
 
 -   Overlay Kustomization file
 
-    `overlays/proc/kustomization.yaml`
+    `overlays/prod/kustomization.yaml`
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
@@ -1779,9 +1885,12 @@ The application can be defined using the following directory structure
 
 {{site.data.alerts.important}}
 
-Kustomize packaged application for deploying Schema Registry using FluxCD can be found in Pi Cluster GitHub repo: [schema-registry-app]({{site.git_address}}/tree/master/kubernetes/platform/kafka/schema-registry). Its structure is slightly different from the one documented here:
--   It uses External Secrets to extract all passwords dynamically from Hashicorp Vault and generate the needed Kubernetes Secrets
--   It use [Kustomize Component](https://kubectl.docs.kubernetes.io/guides/config_management/components/) concept so, Schema Registry can be deployed without using Kafka Store security or REST API Security.
+Kustomize packaged application for deploying Schema Registry using FluxCD can be found in Pi Cluster GitHub repo: [schema-registry-app]({{site.git_address}}/tree/master/kubernetes/platform/kafka/schema-registry).
+
+The production overlay documented above is the one currently used in this repository:
+-   It uses External Secrets to extract Kafka and REST API credentials dynamically from Hashicorp Vault.
+-   It uses [Kustomize Component](https://kubectl.docs.kubernetes.io/guides/config_management/components/) concept to enable Kafka security, REST API security, and Gateway API exposure independently.
+-   It exposes Schema Registry through Envoy Gateway with a plain `HTTPRoute`; no Envoy Gateway OIDC `SecurityPolicy` is attached to this application.
 
 {{site.data.alerts.end}}
 
@@ -2119,18 +2228,18 @@ To execute python code, first a virtual environment needs to be configured
 
 [Kafdrop](https://github.com/obsidiandynamics/kafdrop) is a web UI for viewing Kafka topics and browsing consumer groups. The tool displays information such as brokers, topics, partitions, consumers, and lets you view messages.
 
-Even when helm chart source code is available in Kafdrop's repository, it is not hosted in any official helm repository. Instead of self-hosting that helm chart, since the Kafdrop installation helm chart contains simple templates for a Deployment, Service and Ingress resources, I have decided to createa packaged kustomize application.
+Even when helm chart source code is available in Kafdrop's repository, it is not hosted in any official helm repository. Instead of self-hosting that chart, Pi Cluster deploys Kafdrop as a packaged Kustomize application. The production overlay combines a base `Deployment` and `Service` with optional components for Kafka security, Schema Registry integration, and Gateway API exposure through Envoy Gateway.
 
 ### Kustomize Kafdrop application
 
-The application have the following directory structure
+The application has the following directory structure
 
 ```shell
 └── kafdrop
     ├── base
     │   ├── deployment.yaml
     │   ├── service.yaml
-    │   ├── ingress.yaml
+    │   ├── route.yaml
     │   ├── kafka-secrets.yaml
     │   ├── kafka-user.yaml
     │   └── kustomization.yaml
@@ -2240,7 +2349,7 @@ The application have the following directory structure
 
 -   Deployment
 
-    `base\deployment.yaml`
+    `base/deployment.yaml`
     ```yaml
     apiVersion: apps/v1
     kind: Deployment
@@ -2333,7 +2442,7 @@ The application have the following directory structure
 
 -   Service
 
-    `base/service.yaml`
+  `base/service.yaml`
     ```yaml
     apiVersion: v1
     kind: Service
@@ -2354,58 +2463,97 @@ The application have the following directory structure
       type: ClusterIP
     ```
 
+-   Gateway API route component
 
--   Ingress
+    Kafdrop is exposed through Envoy Gateway using a dedicated hostname. The following `HTTPRoute` resource is used to route traffic from Envoy Gateway to Kafdrop service.
 
-    `base/ingress.yaml`
+    `base/route.yaml`
     ```yaml
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
     metadata:
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-issuer
-        cert-manager.io/common-name: kafdrop.${CLUSTER_DOMAIN}
-      labels:
-        app.kubernetes.io/instance: kafdrop
-        app.kubernetes.io/name: kafdrop
       name: kafdrop
     spec:
-      ingressClassName: nginx
+      hostnames:
+      - kafdrop.${CLUSTER_DOMAIN}
+      parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: public-gateway
+        namespace: envoy-gateway-system
       rules:
-      - host: kafdrop.${CLUSTER_DOMAIN}
-        http:
-          paths:
-          - backend:
-              service:
-                name: kafdrop
-                port:
-                  name: kafdrop
-            path: /
-            pathType: ImplementationSpecific
-      tls:
-      - hosts:
-        - kafdrop.${CLUSTER_DOMAIN}
-        secretName: kafdrop-tls
+      - backendRefs:
+         - name: kafdrop
+           port: 9000
+        matches:
+        - path:
+            type: PathPrefix
+            value: /
+    ```
+
+    Optionally authentication can be enforced by Envoy Gateway using OIDC and Keycloak. In that case, the following additional resources need to be applied:
+
+    `components/route/oauth2-external-secret.yaml`
+    ```yaml
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: kafdrop-oauth2-externalsecret
+    spec:
+      secretStoreRef:
+        name: vault-backend
+        kind: ClusterSecretStore
+      target:
+        name: kafdrop-oauth2-externalsecret
+      data:
+      - secretKey: client-id
+        remoteRef:
+          key: kafdrop/oauth2
+          property: client-id
+      - secretKey: client-secret
+        remoteRef:
+          key: kafdrop/oauth2
+          property: client-secret
+    ```
+
+    `components/route/security-policy.yaml`
+    ```yaml
+    apiVersion: gateway.envoyproxy.io/v1alpha1
+    kind: SecurityPolicy
+    metadata:
+      name: kafdrop
+    spec:
+      targetRefs:
+        - group: gateway.networking.k8s.io
+          kind: HTTPRoute
+          name: kafdrop
+      oidc:
+        provider:
+          issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+        clientIDRef:
+          name: kafdrop-oauth2-externalsecret
+        clientSecret:
+          name: kafdrop-oauth2-externalsecret
+        redirectURL: "https://kafdrop.${CLUSTER_DOMAIN}/oauth2/callback"
+        logoutPath: "/kafdrop/logout"
     ```
 
     {{site.data.alerts.note}}
 
-    Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
+    Substitute variables (`${var}`) in the above yaml files before deploying the application.
     -   Replace `${CLUSTER_DOMAIN}` by  the domain name used in the cluster. For example: `homelab.ricsanfre.com`
-        FQDN must be mapped, in cluster DNS server configuration, to NGINX Ingress Controller's Load Balancer service external IP.
-        External-DNS can be configured to automatically add that entry in your DNS service.
+        `kafdrop.${CLUSTER_DOMAIN}` must resolve to the Envoy Gateway load balancer IP.
+        External-DNS can be configured to automatically publish the hostname from the `HTTPRoute`. See [DNS (CoreDNS and External-DNS) - Gateway API support](/docs/kube-dns/#gateway-api-support).
 
-    Ingress Controller NGINX exposes kafdrop server as `kafdrop.${CLUSTER_DOMAIN}` virtual host, routing rules are configured for redirecting all incoming HTTP traffic to HTTPS and TLS is enabled using a certificate generated by Cert-manager.
+    TLS is terminated at the shared Envoy Gateway listener. Authentication is enforced by the `SecurityPolicy`, which redirects unauthenticated users to Keycloak and forwards them back to `https://kafdrop.${CLUSTER_DOMAIN}` after login.
 
-    See ["Ingress NGINX Controller - Ingress Resources Configuration"](/docs/nginx/#ingress-resources-configuration) for furher details.
-
-    ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP assigned to Ingress Controller, making kafdrop service available at `kafdrop.{$CLUSTER_DOMAIN}. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+    See [Envoy Gateway - OIDC authentication](/docs/envoy-gateway/#oidc-authentication) and [Identity and Access Management - Protecting Applications with Envoy Gateway](/docs/sso/#protecting-applications-with-envoy-gateway) for the detailed OIDC flow.
 
     {{site.data.alerts.end}}
 
 -   Overlay Kustomization file
 
-    `overlays/proc/kustomization.yaml`
+    `overlays/dev/kustomization.yaml`
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
@@ -2437,7 +2585,7 @@ Kafdrop has to be configured to use Kafka authentication/authorization mechanism
     `KAFKA_BROKERCONNECT` pointing to Strimzi's Kafka bootstrap service (`cluster-kafka-bootstrap:9092`)
     `KAFKA_PROPERTIES_FILE` pointing to `kafka.properties` file containing Kafka access details (SASL protocol, mechanism and credentials)
 
-    Where `kafka.properties` file is mounted as POD volume from a ConfigMap:
+    Where `kafka.properties` file is mounted as POD volume from a Secret:
 
     ```properties
     security.protocol=SASL_PLAINTEXT
@@ -2458,6 +2606,22 @@ If HTTP Basic Auth is configured in Schema Registry additional:
 
 Both options are provided to Kafdrop Docker image via environment variable `CMD_ARGS`
 
+In the production overlay, the `schema-registry-secure` component retrieves the password from Vault and patches the deployment with:
+
+```shell
+--schemaregistry.connect=http://schema-registry:8081 --schemaregistry.auth=kafdrop:$REGISTRY_PASSWORD
+```
+
+#### External Access Configuration
+
+Kafdrop external access is implemented using Envoy Gateway instead of NGINX Ingress.
+
+-   The `HTTPRoute` named `kafdrop` exposes `https://kafdrop.${CLUSTER_DOMAIN}` and forwards traffic to the `kafdrop` service on port `9000`.
+-   The Envoy Gateway `SecurityPolicy` named `kafdrop` protects that route with Keycloak OIDC authentication.
+-   The `kafdrop-oauth2-externalsecret` resource retrieves the Keycloak client id and secret from Vault path `kafdrop/oauth2`.
+
+This dedicated-hostname approach avoids path rewrite issues and keeps TLS termination and authentication centralized at Envoy Gateway.
+
 
 ### Kafdrop Installation
 
@@ -2467,13 +2631,13 @@ Both options are provided to Kafdrop Docker image via environment variable `CMD_
     kubectl kustomize kafdrop | kubectl apply -f -
     ```
 
--   Step 2: Check schema registry started
+-   Step 2: Check Kafdrop started
 
     ```shell
     kubectl logs kafdrop-<podid> -n kafka
     ```
 
--   Step 4: Confirm that the deployment succeeded, opening UI:
+-   Step 3: Confirm that the deployment succeeded by opening UI:
 
     `https://kafdrop.${CLUSTER_DOMAIN}`
 

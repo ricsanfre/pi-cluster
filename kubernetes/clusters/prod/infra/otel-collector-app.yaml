@@ -15,6 +15,7 @@ spec:
     - name: tempo-app
     - name: kube-prometheus-stack-app
     - name: elastic-stack-config
+    - name: loki-app
   path: ./kubernetes/platform/opentelemetry-collector/app/overlays/prod
   prune: true
   wait: true

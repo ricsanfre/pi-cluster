@@ -1,0 +1,29 @@
+# grafana helm values (proute)
+
+grafana.ini:
+  server:
+    # Configuring grafana url
+    domain: grafana.${CLUSTER_DOMAIN}
+    root_url: "https://%(domain)s/"
+
+# HTTPRoute config
+route:
+  main:
+    # -- Enables or disables the route
+    enabled: true
+    # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2
+    apiVersion: gateway.networking.k8s.io/v1
+    # -- Set the route kind
+    # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+    kind: HTTPRoute
+    annotations: {}
+    labels: {}
+    hostnames:
+     - grafana.${CLUSTER_DOMAIN}
+    parentRefs:
+     - name: public-gateway
+       namespace: envoy-gateway-system
+    matches:
+      - path:
+          type: PathPrefix
+          value: /

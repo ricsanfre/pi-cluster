@@ -5,6 +5,7 @@
     {
       "names": [ "logs-*.otel-*", "metrics-*.otel-*", "traces-*.otel-*" ],
       "privileges": [
+          "auto_configure",
           "create_doc",
           "create_index"
        ]

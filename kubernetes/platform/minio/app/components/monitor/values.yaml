@@ -1,7 +1,0 @@
-# minio helm values (ingress)
-
-# Service Monitor
-metrics:
-  serviceMonitor:
-    enabled: true
-    includeNode: true

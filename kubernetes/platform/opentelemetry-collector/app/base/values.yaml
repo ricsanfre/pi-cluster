@@ -72,19 +72,9 @@ config:
   # The spanmetrics connector replaces spanmetrics processor with multiple improvements
   connectors:
     spanmetrics: {}
-  # Default pipelines just with debug exporter
   service:
-    pipelines:
-      traces:
-        processors: [memory_limiter, resource, batch]
-        exporters: [debug, spanmetrics]
-      metrics:
-        receivers: [otlp, spanmetrics]
-        processors: [memory_limiter, resource, batch]
-        exporters: [debug]
-      logs:
-        processors: [memory_limiter, resource, batch]
-        exporters: [debug]
+    # Remove default debug exporter pipelines
+    pipelines: {}
     # Export OTEL collector internal telemetry via OLTP
     # https://opentelemetry.io/docs/collector/internal-telemetry/
     telemetry:

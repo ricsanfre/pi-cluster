@@ -10,6 +10,9 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+      # Ensure Gateway API CRDs are installed before deploying cert-manager, as cert-manager's HelmRelease may depend on them when enabling Gateway API support.
+    - name: envoy-gateway-app
   path: ./kubernetes/platform/cert-manager/app/overlays/prod
   prune: true
   wait: true

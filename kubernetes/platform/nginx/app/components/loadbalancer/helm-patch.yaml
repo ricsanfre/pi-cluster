@@ -1,6 +1,0 @@
-- op: add
-  path: /spec/valuesFrom/-
-  value:
-    kind: ConfigMap
-    name: ingress-nginx-helm-values
-    valuesKey: loadbalancer-values.yaml

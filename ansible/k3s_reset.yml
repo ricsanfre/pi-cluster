@@ -26,6 +26,20 @@
       ansible.builtin.pause:
         seconds: 5
   tasks:
+    - name: Remove Vault Kubernetes auth resources
+      ansible.builtin.command:
+        cmd: >-
+          ansible-playbook configure_vault.yml
+          -e enable_kubernetes_auth=false
+        chdir: "{{ playbook_dir }}"
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: vault_kubernetes_auth_cleanup
+      changed_when: >-
+        'No changes. Your infrastructure matches the configuration.'
+        not in vault_kubernetes_auth_cleanup.stdout
+
     - name: Stop Kubernetes # noqa: ignore-errors
       ignore_errors: true
       block:
@@ -42,8 +56,10 @@
             name: "{{ inventory_hostname }}"
             # kubeconfig: "/home/{{ ansible_user }}/.kube/config"
             state: drain
+            disable_eviction: true
             delete_options:
               delete_emptydir_data: true
+              force: true
               ignore_daemonsets: true
               terminate_grace_period: 60
               wait_timeout: 90

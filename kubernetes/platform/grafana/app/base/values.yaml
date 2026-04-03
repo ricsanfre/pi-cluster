@@ -28,12 +28,12 @@ datasources:
       type: prometheus
       uid: prometheus
       access: proxy
-      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090/prometheus
+      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090
       isDefault: true
     - name: Alertmanager
       type: alertmanager
       uid: alertmanager
-      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093/alertmanager
+      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
       jsonData:
         implementation: prometheus
     - name: Loki
@@ -43,21 +43,50 @@ datasources:
       url: http://loki-read-headless.loki.svc.cluster.local:3100
       jsonData:
         derivedFields:
-            # Traefik traces integration
-            # - datasourceUid: tempo
-            #   matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
-            #   name: TraceID
-            #   url: $${__value.raw}
-            # NGINX traces integration
           - datasourceUid: tempo
-            matcherRegex: '"trace_id": "(\w+)"'
+            matcherRegex: trace_id
+            matcherType: label
             name: TraceID
-            url: $${__value.raw}
+            url: "$$$${__value.raw}"
     - name: Tempo
       uid: tempo
       type: tempo
       access: proxy
-      url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3200
+      url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+      basicAuth: false
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: 'loki'
+          spanStartTimeShift: '-1h'
+          spanEndTimeShift: '1h'
+          # tags: ['job', 'instance', 'pod', 'namespace']
+          filterByTraceID: false
+          filterBySpanID: false
+          customQuery: true
+          query: '{$$$${__tags}} | trace_id="$$$${__span.traceId}"'
+        tracesToMetrics:
+          datasourceUid: 'prometheus'
+          spanStartTimeShift: '-1h'
+          spanEndTimeShift: '1h'
+          tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+          queries:
+            - name: 'Sample query'
+              query: 'sum(rate(traces_spanmetrics_latency_bucket{$$$$__tags}[5m]))'
+        serviceMap:
+          datasourceUid: 'prometheus'
+        nodeGraph:
+          enabled: true
+        search:
+          hide: false
+        traceQuery:
+          timeShiftEnabled: true
+          spanStartTimeShift: '-1h'
+          spanEndTimeShift: '1h'
+        spanBar:
+          type: 'Tag'
+          tag: 'http.path'
+        streamingEnabled:
+          search: true
 ##
 ## Provisioning sidecars
 ##

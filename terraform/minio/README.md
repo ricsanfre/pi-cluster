@@ -310,21 +310,18 @@ This Terraform module migrates the Ansible role configuration from [ricsanfre.mi
 - Repeatable and idempotent deployments
 - Easy to version control and audit
 
-### Mapping from vault.yml.j2
-
-The module creates users and buckets from `vault.yml.j2`:
-
-| Service | User | Bucket | Source |
-|---------|------|--------|--------|
-| Loki | loki | k3s-loki | vault.yml.j2: `minio.loki` |
-| Tempo | tempo | k3s-tempo | vault.yml.j2: `minio.tempo` |
-| Longhorn | longhorn | k3s-longhorn | vault.yml.j2: `minio.longhorn` |
-| Velero | velero | k3s-velero | vault.yml.j2: `minio.velero` |
-| Restic | restic | restic | vault.yml.j2: `minio.restic` |
-| Barman | barman | barman | vault.yml.j2: `minio.barman` |
 
 ## Service Users and Buckets
-| Barman | barman | barman | PostgreSQL backups |
+
+| Service | User | Bucket | Description |
+|---------|------|--------|-------------|
+| Loki | loki | k3s-loki | Loki logs storage |
+| Tempo | tempo | k3s-tempo | Tempo metrics storage |
+| Longhorn | longhorn | k3s-longhorn | Longhorn volume snapshots |
+| Velero | velero | k3s-velero | Velero backup storage |
+| Restic | restic | restic | Restic backup storage |
+| Barman | barman | k3s-barman | PostgreSQL backups |
+
 
 ## Policy Definitions
 

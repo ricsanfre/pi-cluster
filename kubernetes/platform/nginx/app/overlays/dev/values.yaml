@@ -1,4 +1,0 @@
-# nginx helm values (dev patch)
-controller:
-  autoscaling:
-    maxReplicas: 5

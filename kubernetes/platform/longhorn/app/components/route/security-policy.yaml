@@ -1,0 +1,18 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: longhorn-dashboard
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: longhorn-httproute
+  oidc:
+    provider:
+      issuer: "https://iam.${CLUSTER_DOMAIN}/realms/picluster"
+    clientIDRef:
+      name: oauth2-externalsecret
+    clientSecret:
+      name: oauth2-externalsecret
+    redirectURL: "https://longhorn.${CLUSTER_DOMAIN}/oauth2/callback"
+    logoutPath: "/longhorn/logout"

@@ -11,8 +11,8 @@
         "s3:PutObject"
       ],
       "resources": [
-        "arn:aws:s3:::barman",
-        "arn:aws:s3:::barman/*"
+        "arn:aws:s3:::k3s-barman",
+        "arn:aws:s3:::k3s-barman/*"
       ]
     }
   ]
