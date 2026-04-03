@@ -30,6 +30,7 @@ A **LAN switch** (16 Gigabit ports) used to provide L2 connectivity to the clust
 `node1`, running on Raspberry Pi 4B (4GB), for providing **kubernetes external services**:
   - Secret Management (Vault)
   - DNS Authoritative (Bind9)
+  - Object Storage (MinIO)
 
 A load balancer is also needed for providing Hight availability to Kubernetes API. A cloud-native load balancer [kube-vip](https://kube-vip.io/) will be deployed in control plane nodes.
 
