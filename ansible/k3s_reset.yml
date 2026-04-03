@@ -56,8 +56,10 @@
             name: "{{ inventory_hostname }}"
             # kubeconfig: "/home/{{ ansible_user }}/.kube/config"
             state: drain
+            disable_eviction: true
             delete_options:
               delete_emptydir_data: true
+              force: true
               ignore_daemonsets: true
               terminate_grace_period: 60
               wait_timeout: 90
