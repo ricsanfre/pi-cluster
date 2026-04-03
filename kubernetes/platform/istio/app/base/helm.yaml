@@ -1,16 +1,11 @@
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
+kind: HelmRepository
 metadata:
-  name: istio-base
+  name: istio
 spec:
   interval: 10m
-  url: oci://registry.istio.io/release/charts/base
-  ref:
-    tag: 1.29.1
-  layerSelector:
-    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
-    operation: copy
+  url: https://istio-release.storage.googleapis.com/charts
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -18,9 +13,13 @@ metadata:
   name: istio-base
 spec:
   interval: 5m
-  chartRef:
-    kind: OCIRepository
-    name: istio-base
+  chart:
+    spec:
+      chart: base
+      version: 1.29.1
+      sourceRef:
+        kind: HelmRepository
+        name: istio
   releaseName: istio-base
   targetNamespace: istio-system
   upgrade:
@@ -39,28 +38,19 @@ spec:
     optional: true
 
 ---
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
-metadata:
-  name: istio-cni
-spec:
-  interval: 10m
-  url: oci://registry.istio.io/release/charts/cni
-  ref:
-    tag: 1.29.1
-  layerSelector:
-    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
-    operation: copy
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istio-cni
 spec:
   interval: 5m
-  chartRef:
-    kind: OCIRepository
-    name: istio-cni
+  chart:
+    spec:
+      chart: cni
+      version: 1.29.1
+      sourceRef:
+        kind: HelmRepository
+        name: istio
   releaseName: istio-cni
   targetNamespace: istio-system
   dependsOn:
@@ -81,28 +71,19 @@ spec:
     optional: true
 
 ---
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
-metadata:
-  name: istio-istiod
-spec:
-  interval: 10m
-  url: oci://registry.istio.io/release/charts/istiod
-  ref:
-    tag: 1.29.1
-  layerSelector:
-    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
-    operation: copy
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istio-istiod
 spec:
   interval: 5m
-  chartRef:
-    kind: OCIRepository
-    name: istio-istiod
+  chart:
+    spec:
+      chart: istiod
+      version: 1.29.1
+      sourceRef:
+        kind: HelmRepository
+        name: istio
   releaseName: istio-istiod
   targetNamespace: istio-system
   dependsOn:
@@ -124,28 +105,19 @@ spec:
     optional: true
 
 ---
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
-metadata:
-  name: istio-ztunnel
-spec:
-  interval: 10m
-  url: oci://registry.istio.io/release/charts/ztunnel
-  ref:
-    tag: 1.29.1
-  layerSelector:
-    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
-    operation: copy
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istio-ztunnel
 spec:
   interval: 5m
-  chartRef:
-    kind: OCIRepository
-    name: istio-ztunnel
+  chart:
+    spec:
+      chart: ztunnel
+      version: 1.29.1
+      sourceRef:
+        kind: HelmRepository
+        name: istio
   releaseName: istio-ztunnel
   targetNamespace: istio-system
   dependsOn:
