@@ -641,7 +641,7 @@ curl -u "${ES_ADMIN_USER}:${ES_ADMIN_PASSWORD}" \
 
 In this project, the final approach is to manage the required users, roles, ILM policies and component templates through OpenTofu-based Elastic configuration, including custom templates such as `logs@custom` to override the built-in OpenTelemetry defaults. 
 
-See the [Terraform Elastic configuration documentation](/docs/elastic/#automating-configuration-with-terraform-and-flux-tofu-controller) for details on how to manage Elasticsearch configuration through Terraform/OpenTofu.
+See the [Terraform Elastic configuration documentation](/docs/elasticsearch/#automating-configuration-with-terraform-and-flux-tofu-controller) for details on how to manage Elasticsearch configuration through Terraform/OpenTofu.
 
 ### Loki exporter
 

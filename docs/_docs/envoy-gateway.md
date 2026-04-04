@@ -645,7 +645,7 @@ Envoy Gateway also supports integration with OpenTelemetry for proxy traces, acc
 
 See OpenTelemetry integration details in the official documentation: [Envoy Gateway: Observability](https://gateway.envoyproxy.io/docs/tasks/observability).
 
-To enable that integration, Envoy Gateway needs to be configured to export telemetry data to an OpenTelemetry Collector. See [Open-Telemetry Collector](/docs/otel-collector/) for details on the collector deployed in the cluster.
+To enable that integration, Envoy Gateway needs to be configured to export telemetry data to an OpenTelemetry Collector. See [Open-Telemetry Collector](/docs/opentelemetry-collector/) for details on the collector deployed in the cluster.
 
 The following telemetry data can be exported to OpenTelemetry:
 - Traces from the Envoy proxy data plane.
