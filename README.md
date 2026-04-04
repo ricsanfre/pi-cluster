@@ -155,11 +155,6 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Identity Access Management</td>
     </tr>
     <tr>
-        <td><img width="32" src="docs/assets/img/logos/OAuth2-proxy.svg" alt="oauth2-proxy logo"></td>
-        <td><a href="https://oauth2-proxy.github.io/oauth2-proxy/">OAuth2.0 Proxy</a></td>
-        <td>OAuth2.0 Proxy</td>
-    </tr>
-    <tr>
         <td><img width="32" src="docs/assets/img/logos/velero.svg"></td>
         <td><a href="https://velero.io/">Velero</a></td>
         <td>Kubernetes Backup and Restore solution</td>
@@ -245,6 +240,8 @@ The following technologies have been used in previous releases of PiCluster but 
 | <img width="20" src="docs/assets/img/logos/flannel.svg" > | [Flannel](https://github.com/flannel-io/flannel/) | Kubernetes CNI plugin. Embedded into K3s. Replaced by Cilium CNI |
 | <img width="32" src="docs/assets/img/logos/haproxy.svg" > | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer. Replaced by Kube-VIP |
 | <img width="32" src="docs/assets/img/logos/nginx.svg" > | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)  | Kubernetes Ingress Controller. Replaced by Envoy Gateway |
+| <img width="32" src="docs/assets/img/logos/OAuth2-proxy.svg" > | [OAuth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/)  | OAuth2.0 Proxy. Replaced by Envoy Gateway with OIDC integration with Keycloak |
+
 
 
 ## External Resources and Services
@@ -282,9 +279,7 @@ There is another list of services that I have decided to run outside the kuberne
 | <img width="60" src="docs/assets/img/logos/minio.svg"> |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
 | <img width="32" src="docs/assets/img/logos/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 
-Minio backup servive is hosted in a VM running in Public Cloud, using [Oracle Cloud Infrastructure (OCI) free tier](https://www.oracle.com/es/cloud/free/).
-
-Vault service is running in `node1` node, since Vault kubernetes authentication method needs access to Kubernetes API, I won't host Vault service in Public Cloud.
+Vault and Minio services are running in one of the cluster nodes, `node1`, to keep them locally accessible to the cluster and to avoid exposing them to the public internet.
 
 ## Cluster architecture and hardware
 
