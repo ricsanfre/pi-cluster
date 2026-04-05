@@ -4,8 +4,6 @@ metadata:
   name: grafana
 spec:
   httpRoute:
-    metadata:
-      name: grafana
     spec:
       hostnames:
         - grafana.${CLUSTER_DOMAIN}
