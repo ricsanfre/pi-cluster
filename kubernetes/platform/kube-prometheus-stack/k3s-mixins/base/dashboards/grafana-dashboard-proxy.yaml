@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  proxy.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-proxy
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -644,9 +652,3 @@ data:
         "title": "Kubernetes / Proxy",
         "uid": "632e265de029684c40b21cb76bca4f94"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-proxy
-  namespace: kube-prom-stack

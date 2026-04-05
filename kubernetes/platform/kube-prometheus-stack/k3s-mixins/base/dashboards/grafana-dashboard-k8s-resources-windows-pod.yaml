@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  k8s-resources-windows-pod.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-k8s-resources-windows-pod
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -511,9 +519,3 @@ data:
         "title": "Kubernetes / Compute Resources / Pod(Windows)",
         "uid": "40597a704a610e936dc6ed374a7ce023"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-k8s-resources-windows-pod
-  namespace: kube-prom-stack

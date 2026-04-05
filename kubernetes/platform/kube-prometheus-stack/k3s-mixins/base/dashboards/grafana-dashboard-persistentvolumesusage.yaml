@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  persistentvolumesusage.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-persistentvolumesusage
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -311,9 +319,3 @@ data:
         "title": "Kubernetes / Persistent Volumes",
         "uid": "919b92a8e8041bd567af9edab12c840c"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-persistentvolumesusage
-  namespace: kube-prom-stack

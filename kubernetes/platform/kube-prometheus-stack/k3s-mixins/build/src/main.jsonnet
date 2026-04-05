@@ -79,34 +79,37 @@ local stripJsonExtension(name) =
   local n = if std.length(extensionIndex) < 1 then name else std.substr(name, 0, extensionIndex[0]);
   n;
 
-local grafanaDashboardConfigMap(folder, name, json) = {
-  apiVersion: 'v1',
-  kind: 'ConfigMap',
+local grafanaDashboardResource(folder, name, json) = {
+  apiVersion: 'grafana.integreatly.org/v1beta1',
+  kind: 'GrafanaDashboard',
   metadata: {
     name: 'grafana-dashboard-%s' % stripJsonExtension(name),
-    namespace: 'kube-prom-stack',
-    labels: {
-      grafana_dashboard: '1',
-    },
   },
-  data: {
-    [name]: std.manifestJsonEx(json, '    '),
+  spec: {
+    allowCrossNamespaceImport: true,
+    folder: folder,
+    instanceSelector: {
+      matchLabels: {
+        dashboards: 'grafana',
+      },
+    },
+    json: std.manifestJsonEx(json, '    '),
   },
 };
 
-local generateGrafanaDashboardConfigMaps(mixin) = if std.objectHas(mixin, 'grafanaDashboards') && mixin.grafanaDashboards != null then {
-  ['grafana-dashboard-' + stripJsonExtension(name)]: grafanaDashboardConfigMap(folder, name, mixin.grafanaDashboards[folder][name])
+local generateGrafanaDashboardResources(mixin) = if std.objectHas(mixin, 'grafanaDashboards') && mixin.grafanaDashboards != null then {
+  ['grafana-dashboard-' + stripJsonExtension(name)]: grafanaDashboardResource(folder, name, mixin.grafanaDashboards[folder][name])
   for folder in std.objectFields(mixin.grafanaDashboards)
   for name in std.objectFields(mixin.grafanaDashboards[folder])
 } else {};
 
-local nodeExporterMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(nodeExporterMixin);
-local kubernetesMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(kubernetesMixin);
-local corednsMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(corednsMixin);
-local etcdMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(etcdMixin);
-local grafanaMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(grafanaMixin);
-local prometheusMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(prometheusMixin);
-local prometheusOperatorMixinHelmGrafanaDashboards = generateGrafanaDashboardConfigMaps(prometheusOperatorMixin);
+local nodeExporterMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(nodeExporterMixin);
+local kubernetesMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(kubernetesMixin);
+local corednsMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(corednsMixin);
+local etcdMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(etcdMixin);
+local grafanaMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(grafanaMixin);
+local prometheusMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(prometheusMixin);
+local prometheusOperatorMixinHelmGrafanaDashboards = generateGrafanaDashboardResources(prometheusOperatorMixin);
 
 local grafanaDashboards =
   kubernetesMixinHelmGrafanaDashboards +

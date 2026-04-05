@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  node-rsrc-use.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-node-rsrc-use
+spec:
+  allowCrossNamespaceImport: true
+  folder: General
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "graphTooltip": 1,
         "panels": [
@@ -594,9 +602,3 @@ data:
         "title": "Node Exporter / USE Method / Node",
         "uid": "fac67cfbe174d3ef53eb473d73d9212f"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-node-rsrc-use
-  namespace: kube-prom-stack

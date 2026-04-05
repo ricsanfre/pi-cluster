@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  pod-total.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-pod-total
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -483,9 +491,3 @@ data:
         "title": "Kubernetes / Networking / Pod",
         "uid": "7a18067ce943a40ae25454675c19ff5c"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-pod-total
-  namespace: kube-prom-stack

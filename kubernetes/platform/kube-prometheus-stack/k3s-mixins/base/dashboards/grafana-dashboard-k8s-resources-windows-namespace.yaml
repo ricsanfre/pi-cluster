@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  k8s-resources-windows-namespace.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-k8s-resources-windows-namespace
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -456,9 +464,3 @@ data:
         "title": "Kubernetes / Compute Resources / Namespace(Windows)",
         "uid": "490b402361724ab1d4c45666c1fa9b6f"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-k8s-resources-windows-namespace
-  namespace: kube-prom-stack

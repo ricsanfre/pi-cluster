@@ -17,7 +17,6 @@ resources:
   - ./grafana-dashboard-scheduler.yaml
   - ./grafana-dashboard-k8s-windows-cluster-rsrc-use.yaml
   - ./grafana-dashboard-workload-total.yaml
-
   - ./grafana-dashboard-node-rsrc-use.yaml
   - ./grafana-dashboard-k8s-resources-windows-pod.yaml
   - ./grafana-dashboard-controller-manager.yaml
