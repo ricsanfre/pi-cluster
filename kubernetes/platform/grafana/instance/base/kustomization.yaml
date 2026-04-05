@@ -6,5 +6,5 @@ resources:
   - grafana-externalsecret.yaml
   - grafana.yaml
   - grafana-servicemonitor.yaml
-  - grafana-folders.yaml
+#  - grafana-folders.yaml
   - grafana-datasources.yaml
