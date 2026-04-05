@@ -3,7 +3,7 @@ instance:
   sync:
     kind: GitRepository
     url: https://github.com/ricsanfre/pi-cluster
-    ref: refs/heads/master
+    ref: refs/heads/feature/observability
     path: kubernetes/clusters/prod
     interval: 1h
     ignore: |
