@@ -3,8 +3,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-cruise-control
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -22,8 +20,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kafka-bridge
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -41,8 +37,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kafka-connect
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -60,8 +54,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kafka-exporter
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -79,8 +71,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kafka-mirror-maker-2
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -98,8 +88,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kafka-oauth
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -117,8 +105,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kafka
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -136,8 +122,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-kraft
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -155,8 +139,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: strimzi-operators
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:

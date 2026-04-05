@@ -7,4 +7,5 @@ dashboards:
   # Annotations to specify the Grafana folder
   annotations:
     grafana_folder: Strimzi
-  extraLabels: {}
+  extraLabels:
+    app.kubernetes.io/managed-by: grafana-operator

@@ -3,8 +3,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: cilium
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
@@ -22,8 +20,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: cilium-operator
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:

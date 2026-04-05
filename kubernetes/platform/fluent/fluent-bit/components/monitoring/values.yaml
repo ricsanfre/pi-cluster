@@ -7,7 +7,7 @@ serviceMonitor:
 # Enable Grafana dashboard
 dashboards:
   enabled: true
-  labelKey: grafana_dashboard
-  labelValue: 1
+  labelKey: app.kubernetes.io/managed-by
+  labelValue: grafana-operator
   annotations:
     grafana_folder: "Logging"

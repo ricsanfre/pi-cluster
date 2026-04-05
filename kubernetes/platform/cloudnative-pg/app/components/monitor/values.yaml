@@ -4,3 +4,5 @@ monitoring:
   podMonitorEnabled: false
   grafanaDashboard:
     create: true
+    labels:
+      app.kubernetes.io/managed-by: grafana-operator

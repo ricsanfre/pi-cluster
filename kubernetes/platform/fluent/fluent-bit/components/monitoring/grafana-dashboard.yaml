@@ -2,8 +2,6 @@ apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
   name: fluent-bit
-  labels:
-    app.kubernetes.io/managed-by: grafana-operator
 spec:
   allowCrossNamespaceImport: true
   instanceSelector:
