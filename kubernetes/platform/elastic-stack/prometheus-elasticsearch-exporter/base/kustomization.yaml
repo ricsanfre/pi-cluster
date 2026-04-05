@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - elasticsearch-exporter-externalsecret.yaml
   - helm.yaml
+  - grafana-dashboards.yaml
 
 configMapGenerator:
   - name: prometheus-elasticsearch-exporter-helm-values

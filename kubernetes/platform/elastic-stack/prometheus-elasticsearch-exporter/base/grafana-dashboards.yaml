@@ -1,0 +1,11 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: elasticsearch
+spec:
+  allowCrossNamespaceImport: true
+  folder: Infrastructure
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/elasticsearch-mixin/compiled/dashboards/cluster.json

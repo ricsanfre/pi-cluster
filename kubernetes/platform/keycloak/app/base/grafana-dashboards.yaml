@@ -1,0 +1,29 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: keycloak-planning
+spec:
+  allowCrossNamespaceImport: true
+  folder: Keycloak
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-capacity-planning-dashboard.json
+  plugins:
+    - name: grafana-piechart-panel
+      version: 1.6.4
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: keycloak-troubleshooting
+spec:
+  allowCrossNamespaceImport: true
+  folder: Keycloak
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-troubleshooting-dashboard.json
+  plugins:
+    - name: grafana-piechart-panel
+      version: 1.6.4

@@ -4,6 +4,7 @@ resources:
   - ns.yaml
   - external-dns-externalsecret.yaml
   - helm.yaml
+  - grafana-dashboards.yaml
 
 configMapGenerator:
   - name: external-dns-helm-values
