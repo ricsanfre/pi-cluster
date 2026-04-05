@@ -15,7 +15,7 @@ spec:
   dependsOn:
     - name: istio-app
     - name: keycloak-app
-    - name: grafana-app
+    - name: grafana-instance
     - name: tempo-app
     - name: kube-prometheus-stack-app
   wait: true

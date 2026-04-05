@@ -1,0 +1,104 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: prometheus
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090
+    isDefault: true
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: alertmanager
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Alertmanager
+    uid: alertmanager
+    type: alertmanager
+    url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
+    jsonData:
+      implementation: prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki-read-headless.loki.svc.cluster.local:3100
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: trace_id
+          matcherType: label
+          name: TraceID
+          url: $${__value.raw}
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+    basicAuth: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        tags:
+          - key: service.name
+            value: service
+          - key: job
+        queries:
+          - name: Sample query
+            query: sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+      spanBar:
+        type: Tag
+        tag: http.path
+      streamingEnabled:
+        search: true

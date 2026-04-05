@@ -1,0 +1,8 @@
+# grafana-operator helm values (base)
+# Enable Service Monitor
+serviceMonitor:
+  enabled: true
+  interval: 30s
+# Create Grafana-operator dashboard ConfigMap
+dashboard:
+  enabled: true
