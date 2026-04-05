@@ -1,0 +1,27 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+spec:
+  persistentVolumeClaim:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ${STORAGE_CLASS:=longhorn}
+      resources:
+        requests:
+          storage: 5Gi
+  deployment:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: grafana
+              readinessProbe:
+                failureThreshold: 3
+          volumes:
+            - name: grafana-data
+              persistentVolumeClaim:
+                claimName: grafana-pvc
+      strategy:
+        type: Recreate

@@ -7,48 +7,18 @@ metadata:
 spec:
   version: 12.3.1
   disableDefaultAdminSecret: true
-  httpRoute:
-    metadata:
-      name: grafana
-    spec:
-      hostnames:
-        - grafana.${CLUSTER_DOMAIN}
-      parentRefs:
-        - name: public-gateway
-          namespace: envoy-gateway-system
-      rules:
-        - backendRefs:
-            - name: grafana-service
-              port: 3000
-          matches:
-            - path:
-                type: PathPrefix
-                value: /
   config:
+    analytics:
+      check_for_updates: "false"
+      check_for_plugin_updates: "false"
+      feedback_links_enabled: "false"
+      reporting_enabled: "false"
     log:
       mode: console
     metrics:
       enabled: "true"
     auth:
       disable_login_form: "false"
-    auth.generic_oauth:
-      enabled: "true"
-      name: Keycloak-OAuth
-      allow_sign_up: "true"
-      client_id: $${GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
-      client_secret: $${GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
-      scopes: openid email profile offline_access roles
-      email_attribute_path: email
-      login_attribute_path: username
-      name_attribute_path: full_name
-      auth_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/auth
-      token_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/token
-      api_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/userinfo
-      role_attribute_path: contains(resource_access.grafana.roles[*], 'admin') && 'Admin' || contains(resource_access.grafana.roles[*], 'editor') && 'Editor' || (contains(resource_access.grafana.roles[*], 'viewer') && 'Viewer')
-      signout_redirect_url: https://iam.${CLUSTER_DOMAIN}/realms/picluster/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fgrafana.${CLUSTER_DOMAIN}%2Flogin%2Fgeneric_oauth
-    server:
-      domain: grafana.${CLUSTER_DOMAIN}
-      root_url: https://%(domain)s/
   deployment:
     spec:
       template:
@@ -69,15 +39,5 @@ spec:
                     secretKeyRef:
                       name: grafana
                       key: admin-password
-                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: grafana-env-secret
-                      key: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
-                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: grafana-env-secret
-                      key: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
                 - name: GF_INSTALL_PLUGINS
                   value: grafana-piechart-panel

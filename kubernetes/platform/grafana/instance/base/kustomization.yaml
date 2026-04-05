@@ -4,7 +4,6 @@ namespace: grafana
 
 resources:
   - grafana-externalsecret.yaml
-  - grafana-env-externalsecret.yaml
   - grafana.yaml
   - grafana-servicemonitor.yaml
   - grafana-folders.yaml

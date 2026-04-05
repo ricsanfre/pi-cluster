@@ -4,3 +4,8 @@ namespace: grafana
 
 resources:
   - ../../base
+
+components:
+  - ../../components/persistence
+  - ../../components/route
+  - ../../components/sso
