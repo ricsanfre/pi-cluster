@@ -102,7 +102,7 @@ metadata:
   name: node-exporter-full
 spec:
   allowCrossNamespaceImport: true
-  folder: Infrastructure
+  folder: Kubernetes
   instanceSelector:
     matchLabels:
       dashboards: grafana
@@ -119,7 +119,7 @@ metadata:
   name: spegel
 spec:
   allowCrossNamespaceImport: true
-  folder: Infrastructure
+  folder: Kubernetes
   instanceSelector:
     matchLabels:
       dashboards: grafana

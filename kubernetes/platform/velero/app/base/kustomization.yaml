@@ -4,7 +4,6 @@ resources:
   - ns.yaml
   - velero-external-secret.yaml
   - helm.yaml
-  - grafana-dashboards.yaml
 
 configMapGenerator:
   - name: velero-helm-values
