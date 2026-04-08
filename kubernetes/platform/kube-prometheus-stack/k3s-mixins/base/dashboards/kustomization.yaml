@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ./grafana-dashboard-curated.yaml
+  - ./grafana-dashboards-curated.yaml
   - ./grafana-dashboard-namespace-by-workload.yaml
   # - ./grafana-dashboard-nodes-aix.yaml
   - ./grafana-dashboard-proxy.yaml
