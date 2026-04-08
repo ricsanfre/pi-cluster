@@ -1,0 +1,52 @@
+---
+# Headless service for Vault metrics. No selector
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-ext-service
+  labels:
+    app.kubernetes.io/name: vault
+spec:
+  clusterIP: None
+  ports:
+  - name: vaultport
+    port: 8200
+    protocol: TCP
+    targetPort: 8200
+  type: ClusterIP
+---
+# Endpoint for the headless service without selector
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: vault-ext-service
+subsets:
+- addresses:
+  - ip: 10.0.0.11
+  ports:
+  - name: vaultport
+    port: 8200
+    protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vault
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+  namespaceSelector:
+    matchNames:
+      - kube-prom-stack
+  endpoints:
+    - interval: 30s
+      path: /v1/sys/metrics
+      params:
+        format: 
+          - prometheus
+      port: vaultport
+      scheme: https
+      scrapeTimeout: 30s
+      bearerTokenFile: /vault/secrets/token
+
