@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
   - ns.yaml
   - helm.yaml
-  - grafana-dashboards.yaml
 
 configMapGenerator:
   - name: cert-manager-helm-values
