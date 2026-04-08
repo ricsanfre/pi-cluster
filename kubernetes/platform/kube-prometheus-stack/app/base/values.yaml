@@ -88,9 +88,21 @@ prometheus:
           resources:
             requests:
               storage: 10Gi
+    ## Default cluster label configuration for all metrics.
+    ## This is needed to add cluster label to all metrics, so we can distinguish metrics from different clusters in a multi-cluster setup.
+    ## Without cluster label, kuberentes Dashboards do not work.
+    ## ref: https://github.com/prometheus-community/helm-charts/issues/4961#issuecomment-2732503634
+    scrapeClasses:
+      - name: cluster-relabeling
+        default: true
+        relabelings:
+          - action: replace
+            targetLabel: cluster
+            replacement: ${CLUSTER_NAME:-pi-cluster}
     # Additional external labels to be added to all metrics
-    externalLabels:
-      cluster: ${CLUSTER_NAME:-pi-cluster}
+    # External labels applied only when Prometheus is connected to a remote storage or in a federation setup, but not applied to metrics scraped by Prometheus itself.
+    # externalLabels:
+    #  cluster: ${CLUSTER_NAME:-pi-cluster}
     ##
 # Prometheus Node Exporter Configuration
 nodeExporter:
@@ -129,135 +141,10 @@ kube-state-metrics:
           replacement: $1
           sourceLabels: ["__meta_kubernetes_pod_node_name"]
           targetLabel: kubernetes_node
-# Grafana Configuration
-grafana:
-  fullnameOverride: grafana
-  # Admin user password
-  adminPassword: "s1cret0"
-  # grafana configuration
-  grafana.ini:
-    server:
-      domain: monitoring.${CLUSTER_DOMAIN}
-      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
-      # When serve_from_subpath is enabled, internal requests from e.g. prometheus get redirected to the defined root_url.
-      # This is causing prometheus to not be able to scrape metrics because it accesses grafana via the kubernetes service name and is then redirected to the public url
-      # To make Prometheus work, disable server_from_sub_path and add rewrite rule in NGINX proxy
-      # ref: https://github.com/grafana/grafana/issues/72577#issuecomment-1682277779
-      serve_from_sub_path: false
-  ##
-  ## Provisioning sidecars
-  ##
-  sidecar:
-    dashboards:
-      # Enable dashboard sidecar
-      enabled: true
-      # Enable discovery in all namespaces
-      searchNamespace: ALL
-      # Search for ConfigMaps containing `grafana_dashboard` label
-      label: grafana_dashboard
-      # Annotation containing the folder where sidecar will place the dashboard.
-      folderAnnotation: grafana_folder
-      provider:
-        # disableDelete to activate a import-only behaviour
-        disableDelete: true
-        # allow Grafana to replicate dashboard structure from filesystem
-        foldersFromFilesStructure: true
-    datasources:
-      # Enable datasource sidecar
-      enabled: true
-      # Enable discovery in all namespaces
-      searchNamespace: ALL
-      # Search for ConfigMaps containing `grafana_datasource` label
-      label: grafana_datasource
-      labelValue: "1"
 
-  ## Provisioning Dashboards
-  # Dashboard Providers
-  dashboardProviders:
-    dashboardproviders.yaml:
-      apiVersion: 1
-      providers:
-        - name: default
-          orgId: 1
-          folder: ""
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/default-folder
-        - name: infrastructure
-          orgId: 1
-          folder: "Infrastructure"
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/infrastructure-folder
-        - name: kubernetes
-          orgId: 1
-          folder: Kubernetes
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/kubernetes-folder
-  # Dashboards
-  dashboards:
-    kubernetes:
-      kubernetes-api-server:
-        # renovate: depName="Kubernetes / System / API Server"
-        gnetId: 15761
-        revision: 21
-        datasource: Prometheus
-      kubernetes-coredns:
-        # renovate: depName="Kubernetes / System / CoreDNS"
-        gnetId: 15762
-        revision: 22
-        datasource: Prometheus
-      kubernetes-global:
-        # renovate: depName="Kubernetes / Views / Global"
-        gnetId: 15757
-        revision: 43
-        datasource: Prometheus
-      kubernetes-namespaces:
-        # renovate: depName="Kubernetes / Views / Namespaces"
-        gnetId: 15758
-        revision: 46
-        datasource: Prometheus
-      kubernetes-nodes:
-        # renovate: depName="Kubernetes / Views / Nodes"
-        gnetId: 15759
-        revision: 40
-        datasource: Prometheus
-      kubernetes-pods:
-        # renovate: depName="Kubernetes / Views / Pods"
-        gnetId: 15760
-        revision: 39
-        datasource: Prometheus
-      kubernetes-volumes:
-        # renovate: depName="K8s / Storage / Volumes / Cluster"
-        gnetId: 11454
-        revision: 14
-        datasource: Prometheus
-  # Grafana Ingress configuration
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    # Values can be templated
-    annotations:
-      # Enable cert-manager to create automatically the SSL certificate and store in Secret
-      cert-manager.io/cluster-issuer: ${TLS_ISSUER:=letsencrypt-issuer}
-      cert-manager.io/common-name: monitoring.${CLUSTER_DOMAIN}
-      # Nginx rewrite rule
-      nginx.ingress.kubernetes.io/rewrite-target: /$1
-    path: /grafana/?(.*)
-    pathType: ImplementationSpecific
-    hosts:
-      - monitoring.${CLUSTER_DOMAIN}
-    tls:
-      - hosts:
-        - monitoring.${CLUSTER_DOMAIN}
-        secretName: monitoring-tls
+# Disabling instalation of Grafana sub-chart
+grafana:
+  enabled: false
 
 ## Kubernetes metrics
 
@@ -321,6 +208,8 @@ kubeEtcd:
     enabled: true
     port: 2381
     targetPort: 2381
+  serviceMonitor:
+    enabled: true
 
 ## Kube Scheduler
 kubeScheduler:
