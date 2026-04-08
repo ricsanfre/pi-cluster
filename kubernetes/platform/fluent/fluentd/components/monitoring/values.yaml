@@ -12,4 +12,3 @@ dashboards:
   enabled: "true"
   labels:
     grafana_dashboard: '"1"'
-    app.kubernetes.io/managed-by: grafana-operator
