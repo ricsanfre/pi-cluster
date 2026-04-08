@@ -4,7 +4,7 @@ metadata:
   name: grafana-dashboard-prometheus-remote-write
 spec:
   allowCrossNamespaceImport: true
-  folder: Prometheus
+  folder: Observability
   instanceSelector:
     matchLabels:
       dashboards: grafana

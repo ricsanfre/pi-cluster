@@ -4,7 +4,7 @@ metadata:
   name: grafana-dashboard-coredns
 spec:
   allowCrossNamespaceImport: true
-  folder: DNS
+  folder: Kubernetes
   instanceSelector:
     matchLabels:
       dashboards: grafana

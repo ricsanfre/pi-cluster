@@ -4,7 +4,7 @@ metadata:
   name: external-dns
 spec:
   allowCrossNamespaceImport: true
-  folder: Infrastructure
+  folder: DNS
   instanceSelector:
     matchLabels:
       dashboards: grafana

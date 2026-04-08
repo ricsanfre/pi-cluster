@@ -4,7 +4,7 @@ metadata:
   name: grafana-dashboard-nodes
 spec:
   allowCrossNamespaceImport: true
-  folder: General
+  folder: Node Exporter
   instanceSelector:
     matchLabels:
       dashboards: grafana

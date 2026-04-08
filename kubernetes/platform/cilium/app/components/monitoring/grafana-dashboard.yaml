@@ -5,6 +5,7 @@ metadata:
   name: cilium
 spec:
   allowCrossNamespaceImport: true
+  folder: Cilium
   instanceSelector:
     matchLabels:
       dashboards: grafana
@@ -22,6 +23,7 @@ metadata:
   name: cilium-operator
 spec:
   allowCrossNamespaceImport: true
+  folder: Cilium
   instanceSelector:
     matchLabels:
       dashboards: grafana

@@ -19,7 +19,7 @@ local kubernetesMixin = addMixin({
 
 local nodeExporterMixin = addMixin({
   name: 'node-exporter',
-  dashboardFolder: 'General',
+  dashboardFolder: 'Node Exporter',
   mixin: (import 'node-mixin/mixin.libsonnet') + {
     _config+:: {
       nodeExporterSelector: 'job="node-exporter"',
@@ -30,7 +30,7 @@ local nodeExporterMixin = addMixin({
 
 local corednsMixin = addMixin({
   name: 'coredns',
-  dashboardFolder: 'DNS',
+  dashboardFolder: 'Kubernetes',
   mixin: (import 'coredns-mixin/mixin.libsonnet') + {
     _config+:: {
       corednsSelector: 'job="coredns"',
@@ -50,7 +50,7 @@ local etcdMixin = addMixin({
 
 local grafanaMixin = addMixin({
   name: 'grafana',
-  dashboardFolder: 'Grafana',
+  dashboardFolder: 'Observability',
   mixin: (import 'grafana-mixin/mixin.libsonnet') + {
     _config+:: {},
   },
@@ -58,7 +58,7 @@ local grafanaMixin = addMixin({
 
 local prometheusMixin = addMixin({
   name: 'prometheus',
-  dashboardFolder: 'Prometheus',
+  dashboardFolder: 'Observability',
   mixin: (import 'prometheus/mixin.libsonnet') + {
     _config+:: {
       showMultiCluster: false,
@@ -68,7 +68,7 @@ local prometheusMixin = addMixin({
 
 local prometheusOperatorMixin = addMixin({
   name: 'prometheus-operator',
-  dashboardFolder: 'Prometheus Operator',
+  dashboardFolder: 'Observability',
   mixin: (import 'prometheus-operator-mixin/mixin.libsonnet') + {
     _config+:: {},
   },

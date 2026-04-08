@@ -4,7 +4,7 @@ metadata:
   name: vault
 spec:
   allowCrossNamespaceImport: true
-  folder: Infrastructure
+  folder: Secret Management
   instanceSelector:
     matchLabels:
       dashboards: grafana

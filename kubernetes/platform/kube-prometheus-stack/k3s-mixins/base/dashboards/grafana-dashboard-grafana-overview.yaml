@@ -4,7 +4,7 @@ metadata:
   name: grafana-dashboard-grafana-overview
 spec:
   allowCrossNamespaceImport: true
-  folder: Grafana
+  folder: Observability
   instanceSelector:
     matchLabels:
       dashboards: grafana

@@ -10,7 +10,7 @@ spec:
   datasources:
     - datasourceName: prometheus
       inputName: DS_PROMETHEUS
-  folder: Logging
+  folder: Observability
   configMapRef:
     name: fluent-bit-dashboard-fluent-bit
     key: fluent-bit-fluent-bit.json
