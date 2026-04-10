@@ -54,10 +54,13 @@
       '/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/',
     ],
   },
+  // https://github.com/ThomasSteinbach/deleteme-renovate-test/blob/main/renovate.json
   customManagers: [
     {
       customType: 'regex',
       managerFilePatterns: [
+        '/ansible-runner/build/requirements.yml/',
+        '/ansible/requirements.yml/',
         '/requirements.yml/',
       ],
       matchStrings: [

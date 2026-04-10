@@ -29,6 +29,7 @@ roles:
   - name: ricsanfre.vault
     src: https://github.com/olipinski/ansible-role-vault
     version: main
+
 collections:
   - name: community.general
     version: 12.5.0
