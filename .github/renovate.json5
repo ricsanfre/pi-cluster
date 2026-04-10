@@ -54,20 +54,4 @@
       '/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/',
     ],
   },
-  // https://github.com/ThomasSteinbach/deleteme-renovate-test/blob/main/renovate.json
-  customManagers: [
-    {
-      customType: 'regex',
-      managerFilePatterns: [
-        '/ansible-runner/build/requirements.yml/',
-        '/ansible/requirements.yml/',
-        '/requirements.yml/',
-      ],
-      matchStrings: [
-        '- name:\\s*(?<depName>https://github.com/(?<packageName>[a-zA-Z][\\w\\-/]+))\\.git\\n.*?type:\\s*git\\n.*?version:\\s*(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+)',
-      ],
-      datasourceTemplate: 'github-tags',
-      depNameTemplate: '{{ packageName }}',
-    },
-  ],
 }
