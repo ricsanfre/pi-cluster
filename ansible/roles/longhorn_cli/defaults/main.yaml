@@ -1,4 +1,4 @@
 ---
 # renovate: datasource=github-releases depName=longhorn/longhorn
-longhorn_cli_longhorn_version: v1.11.0
+longhorn_cli_longhorn_version: v1.11.1
 longhorn_cli_longhorn_arch: amd64
