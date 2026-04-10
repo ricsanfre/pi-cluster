@@ -32,7 +32,7 @@ roles:
 
 collections:
   - name: community.general
-    version: 12.4.0
+    version: 12.5.0
   - name: https://github.com/ansible-collections/kubernetes.core
     type: git
     version: main
