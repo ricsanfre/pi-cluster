@@ -55,5 +55,16 @@
       depNameTemplate: "{{product}}",
       packageNameTemplate: "{{package}}",
     },
+    {
+      // https://github.com/ThomasSteinbach/deleteme-renovate-test/blob/main/renovate.json
+      customType: 'regex',
+      description: ["Process GitHub Ansible collections."],
+      fileMatch: ["(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$"],
+      matchStrings: [
+        'name:\\s*(?<depName>https://github.com/(?<packageName>[a-zA-Z][\\w\\-/]+))\\n.*?type:\\s*git\\n.*?version:\\s*(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+)',
+      ],
+      datasourceTemplate: 'github-tags',
+      depNameTemplate: '{{ packageName }}',
+    }
   ],
 }
