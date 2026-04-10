@@ -1,10 +1,11 @@
+---
 kind: Secret
 apiVersion: v1
 metadata:
   name: es-fluentd-roles-secret
   namespace: elastic
 stringData:
-  roles.yml: |-
+  roles.yaml: |-
     fluentd_role:
       cluster: ['manage_index_templates', 'monitor', 'manage_ilm']
       indices:

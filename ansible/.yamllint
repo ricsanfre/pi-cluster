@@ -3,7 +3,7 @@ extends: default
 
 ignore: |
   ansible_collections/
-  vars/vault.yml
+  vars/vault.yaml
   roles/ricsanfre.*/
   docs/
 

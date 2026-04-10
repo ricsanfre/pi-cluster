@@ -1,8 +1,9 @@
+---
 # minio helm values (ingress)
 
 # Ingress resource
 ingress:
-  ## Enable creation of ingress resource
+  # # Enable creation of ingress resource
   enabled: true
   ## Add ingressClassName to the Ingress
   ingressClassName: nginx
@@ -27,7 +28,7 @@ ingress:
 
 # console Ingress
 consoleIngress:
-  ## Enable creation of ingress resource
+  # # Enable creation of ingress resource
   enabled: true
   ## Add ingressClassName to the Ingress
   ingressClassName: nginx

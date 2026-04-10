@@ -1,3 +1,4 @@
+---
 # cilium helm values (dev overlay)
 
 # cgroup v2 filesystem is already mounted by k3d entrypoint script

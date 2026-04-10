@@ -1,28 +1,29 @@
-  # Add REST API Basic Auth Configuraiton
+---
+# Add REST API Basic Auth Configuration
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name : SCHEMA_REGISTRY_OPTS
+    name: SCHEMA_REGISTRY_OPTS
     value: -Djava.security.auth.login.config=/etc/auth/registry-jaas.conf
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name : SCHEMA_REGISTRY_AUTHENTICATION_REALM
+    name: SCHEMA_REGISTRY_AUTHENTICATION_REALM
     value: SchemaRegistry-Props
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name : SCHEMA_REGISTRY_AUTHENTICATION_METHOD
+    name: SCHEMA_REGISTRY_AUTHENTICATION_METHOD
     value: BASIC
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name : SCHEMA_REGISTRY_AUTHENTICATION_ROLES
-    value: 'admin,user,developer'
+    name: SCHEMA_REGISTRY_AUTHENTICATION_ROLES
+    value: admin,user,developer
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name : PROBE_USER
+    name: PROBE_USER
     value: probe
 - op: add
   path: /spec/template/spec/containers/0/env/-
@@ -60,8 +61,7 @@
     name: config-auth
     projected:
       sources:
-      - secret:
-          name: schema-registry-passwords
-      - configMap:
-          name: schema-registry-jaas
-
+        - secret:
+            name: schema-registry-passwords
+        - configMap:
+            name: schema-registry-jaas

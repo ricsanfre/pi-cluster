@@ -14,4 +14,4 @@ spec:
     - name: cilium-app
   path: ./kubernetes/platform/coredns/app/overlays/prod
   prune: true
-  wait: true 
+  wait: true

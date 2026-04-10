@@ -1,0 +1,32 @@
+---
+- name: Reboot k3s agents
+  hosts: k3s_agent
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Reboot agents
+      ansible.builtin.reboot:
+
+- name: Reboot k3s servers
+  hosts: k3s_server
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Reboot servers
+      ansible.builtin.reboot:
+
+- name: Reboot the service node
+  hosts: service0
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Reboot service node
+      ansible.builtin.reboot:
+
+- name: Reboot gateways
+  hosts: gateways
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Reboot gateways
+      ansible.builtin.reboot:

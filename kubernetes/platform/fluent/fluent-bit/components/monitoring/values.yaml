@@ -1,3 +1,4 @@
+---
 # fluent-bit helm values (monitoring)
 
 # Enable Prometheus operator service monitor
@@ -10,4 +11,4 @@ dashboards:
   labelKey: grafana_dashboard
   labelValue: 1
   annotations:
-    grafana_folder: "Logging"
+    grafana_folder: Logging

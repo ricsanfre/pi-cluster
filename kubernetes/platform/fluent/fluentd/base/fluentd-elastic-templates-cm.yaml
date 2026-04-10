@@ -1,3 +1,4 @@
+---
 # ES index template for fluentd logs
 apiVersion: v1
 kind: ConfigMap
@@ -52,4 +53,3 @@ data:
         }
       }
     }
-

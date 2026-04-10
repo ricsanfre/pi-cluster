@@ -1,3 +1,4 @@
+---
 # velero helm values (base)
 
 # AWS backend and CSI plugins configuration

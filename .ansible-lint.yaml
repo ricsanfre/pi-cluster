@@ -1,0 +1,12 @@
+---
+profile: production
+exclude_paths:
+  - .cache/
+  - .ansible/
+  - .github/
+  - .pixi/
+  - design/
+  - docs/
+  - kubernetes/
+  - scripts/
+  - tests/

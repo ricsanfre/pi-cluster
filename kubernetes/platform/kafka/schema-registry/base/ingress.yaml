@@ -1,3 +1,4 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -11,17 +12,17 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: schema-registry.${CLUSTER_DOMAIN}
-    http:
-      paths:
-      - backend:
-          service:
-            name: schema-registry
-            port:
-              number: 8081
-        path: /
-        pathType: ImplementationSpecific
+    - host: schema-registry.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - backend:
+              service:
+                name: schema-registry
+                port:
+                  number: 8081
+            path: /
+            pathType: ImplementationSpecific
   tls:
-  - hosts:
-    - schema-registry.${CLUSTER_DOMAIN}
-    secretName: schema-registry-cert
+    - hosts:
+        - schema-registry.${CLUSTER_DOMAIN}
+      secretName: schema-registry-cert

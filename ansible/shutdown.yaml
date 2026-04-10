@@ -1,0 +1,36 @@
+---
+- name: Shutdown k3s agents
+  hosts: k3s_agent
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Shutdown agents
+      community.general.shutdown:
+        delay: 60 # in seconds
+
+- name: Shutdown k3s servers
+  hosts: k3s_server
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Shutdown servers
+      community.general.shutdown:
+        delay: 80 # in seconds
+
+- name: Shutdown service node
+  hosts: service0
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Shutdown service node
+      community.general.shutdown:
+        delay: 80 # in seconds
+
+- name: Shutdown gateways
+  hosts: gateways
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Shutdown gateway
+      community.general.shutdown:
+        delay: 80 # in seconds

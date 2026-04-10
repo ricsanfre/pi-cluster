@@ -1,9 +1,9 @@
+---
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
 resources:
   - external-secret.yaml
-
 
 configMapGenerator:
   - name: schema-registry-jaas
@@ -11,8 +11,8 @@ configMapGenerator:
       - registry-jaas.conf=registry-jaas.conf
 
 patches:
-- target:
-    group: apps
-    kind: Deployment
-    name: schema-registry
-  path: deployment-patch.yaml
+  - target:
+      group: apps
+      kind: Deployment
+      name: schema-registry
+    path: deployment-patch.yaml

@@ -1,0 +1,5 @@
+---
+- name: Restart ddclient
+  ansible.builtin.service:
+    name: ddclient
+    state: restarted

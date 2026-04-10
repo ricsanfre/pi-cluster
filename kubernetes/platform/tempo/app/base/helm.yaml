@@ -27,6 +27,6 @@ spec:
     - name: minio
       namespace: minio
   valuesFrom:
-  - kind: ConfigMap
-    name: tempo-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: tempo-helm-values
+      valuesKey: base-values.yaml

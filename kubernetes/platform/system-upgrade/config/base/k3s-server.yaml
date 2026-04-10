@@ -1,3 +1,4 @@
+---
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
@@ -10,14 +11,14 @@ spec:
     matchExpressions:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
-  # Enable plan deployment on master node (noSchedulable by installation)
+  # Enable plan deployment on server node (noSchedulable by installation)
   tolerations:
     - key: node-role.kubernetes.io/control-plane
       operator: Exists
       effect: NoSchedule
   serviceAccountName: system-upgrade
   concurrency: 1
-  # Cordon node before upgrade it
+  # Cordon node before upgrading it
   cordon: true
   upgrade:
     image: rancher/k3s-upgrade

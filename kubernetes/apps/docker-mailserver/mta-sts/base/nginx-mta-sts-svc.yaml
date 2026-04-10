@@ -1,10 +1,15 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: nginx-mta-sts-svc
+  annotations:
+    ignore-check.kube-linter.io/dangling-service: |
+      "PyCharm can see the selectors correctly, kube-linter does not want to pick them up"
 spec:
   selector:
     app.kubernetes.io/name: nginx-mta-sts
+    app.kubernetes.io/instance: nginx-mta-sts
   ports:
     - name: http
       protocol: TCP

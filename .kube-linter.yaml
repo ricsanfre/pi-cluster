@@ -1,0 +1,11 @@
+---
+checks:
+  ignorePaths:
+    - kubernetes/fluxcd-app-template/** # Template, invalid manifests anyway
+    # The below use remote sources, so no point in linting
+    - kubernetes/platform/keycloak/operator/base/** # Remote source
+    - kubernetes/platform/keycloak/operator/overlays/** # Remote source
+    - kubernetes/platform/csi-external-snapshotter/app/base/** # Remote source
+    - kubernetes/platform/csi-external-snapshotter/app/overlays/** # Remote source
+    - kubernetes/platform/system-upgrade/app/base/** # Remote source
+    - kubernetes/platform/system-upgrade/app/overlays/** # Remote source

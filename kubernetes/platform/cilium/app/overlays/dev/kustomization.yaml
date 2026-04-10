@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: kube-system
@@ -6,8 +7,8 @@ resources:
   - ../../base
 
 components:
-#  - ../../components/monitoring
-#  - ../../components/hubble
+  #  - ../../components/monitoring
+  #  - ../../components/hubble
   - ../../components/istio-config
 
 configMapGenerator:

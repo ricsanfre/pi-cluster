@@ -1,0 +1,42 @@
+---
+- name: Update all nodes
+  hosts: rdxcluster:gateways
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Update apt repo and cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      ansible.builtin.apt:
+        upgrade: full
+
+    - name: Autoclean and autoremove
+      ansible.builtin.apt:
+        autoclean: true
+        autoremove: true
+
+    - name: Check if a reboot is needed
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+        get_checksum: false
+        # Algorithm to determine checksum of file
+      register: reboot_required_file
+
+    - name: Reboot if kernel updated
+      ansible.builtin.reboot:
+        msg: Reboot initiated by Ansible for kernel updates.
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 120
+        post_reboot_delay: 30
+        test_command: uptime
+        # Execute uptime command on the rebooted server and expect success from
+        # to determine the machine is ready for further tasks
+      when: reboot_required_file.stat.exists
+      # First, check that the file named /var/run/reboot-required exists using a
+      # variable named reboot_required_file.
+      # The reboot module will only work if that file exists and it is enforced
+      # using ‘when: reboot_required_file.stat.exists’ Ansible condition.

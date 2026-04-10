@@ -1,0 +1,10 @@
+---
+- name: CRDs installation # noqa: no-changed-when
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      kubectl kustomize --enable-helm --load-restrictor=LoadRestrictionsNone \
+       ../kubernetes/infrastructure/crds/overlays/"{{ overlay }}" | kubectl apply --server-side -f -
+    executable: /bin/bash
+  register: output

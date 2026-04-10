@@ -1,13 +1,14 @@
+---
 # ip-pool.yaml
 apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:
-  name: "first-pool"
+  name: first-pool
   namespace: kube-system
 spec:
   # Do not allow the .0 and .255 IPs to be allocated
-  allowFirstLastIPs: No
+  allowFirstLastIPs: "No"
   blocks:
-    # - cidr: "fd00:5620:ba1e:803a::/64" # IPv6 
+    # - cidr: "fd00:5620:ba1e:803a::/64" # IPv6
     - start: 10.128.0.2 # Reserve the .1 for gateway
       stop: 10.128.0.254

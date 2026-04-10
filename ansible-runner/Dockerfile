@@ -6,7 +6,7 @@ RUN apt-get update -qq && \
     apt-get clean && \
     rm -rf /usr/share/doc/* /usr/share/man/* /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Intall basic Python packages
+# Install basic Python packages
 RUN pip3 install --upgrade pip setuptools
 
 ADD build /build
@@ -16,11 +16,11 @@ WORKDIR /build
 RUN pip3 install -r requirements.txt
 
 # Install ansible roles/collections dependencies
-RUN ansible-galaxy role install -r requirements.yml --roles-path "/usr/share/ansible/roles" --timeout 120
-RUN ansible-galaxy collection install -r requirements.yml --collections-path "/usr/share/ansible/collections"
+RUN ansible-galaxy role install -r requirements.yaml --roles-path "/usr/share/ansible/roles" --timeout 120
+RUN ansible-galaxy collection install -r requirements.yaml --collections-path "/usr/share/ansible/collections"
 
 # Configure ansible-runner
-RUN ansible-playbook ansible_runner_setup.yml
+RUN ansible-playbook ansible_runner_setup.yaml
 
 # Copy helmfile
 COPY --from=helmfile /usr/local/bin/helmfile /usr/local/bin/helmfile

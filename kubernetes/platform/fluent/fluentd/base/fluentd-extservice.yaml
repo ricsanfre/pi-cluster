@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,14 +7,16 @@ metadata:
   annotations:
     lbipam.cilium.io/ips: ${FLUENTD_LOAD_BALANCER_IP}
     external-dns.alpha.kubernetes.io/hostname: fluentd.${CLUSTER_DOMAIN}
+    ignore-check.kube-linter.io/dangling-service: |
+      "PyCharm can see the selectors correctly, kube-linter does not want to pick them up"
   name: fluentd-ext
   namespace: fluent
 spec:
   ports:
-  - name: forward-ext
-    port: 24224
-    protocol: TCP
-    targetPort: 24224
+    - name: forward-ext
+      port: 24224
+      protocol: TCP
+      targetPort: 24224
   selector:
     app.kubernetes.io/instance: fluentd
     app.kubernetes.io/name: fluentd

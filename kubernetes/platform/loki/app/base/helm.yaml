@@ -28,6 +28,6 @@ spec:
     - name: minio
       namespace: minio
   valuesFrom:
-  - kind: ConfigMap
-    name: loki-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: loki-helm-values
+      valuesKey: base-values.yaml

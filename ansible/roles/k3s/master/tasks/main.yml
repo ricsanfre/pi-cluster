@@ -1,7 +1,0 @@
----
-
-- name: Run pre-configuration tasks
-  include_tasks: pre_configuration.yml
-
-- name: Run installation tasks
-  include_tasks: installation.yml

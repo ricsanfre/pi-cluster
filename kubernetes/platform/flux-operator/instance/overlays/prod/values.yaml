@@ -1,3 +1,4 @@
+---
 # flux-instance helm values (prod overlay)
 instance:
   sync:
@@ -9,8 +10,8 @@ instance:
     interval: 1h
   kustomize:
     patches:
-      - # Increase the number of workers
-        patch: |
+      # Increase the number of workers
+      - patch: |
           - op: add
             path: /spec/template/spec/containers/0/args/-
             value: --concurrent=10
@@ -20,8 +21,8 @@ instance:
         target:
           kind: Deployment
           name: (kustomize-controller|helm-controller|source-controller)
-      - # Increase the memory limits
-        patch: |
+      # Increase the memory limits
+      - patch: |
           apiVersion: apps/v1
           kind: Deployment
           metadata:
@@ -37,8 +38,8 @@ instance:
         target:
           kind: Deployment
           name: (kustomize-controller|helm-controller|source-controller)
-      - # Enable in-memory kustomize builds
-        patch: |
+      # Enable in-memory kustomize builds
+      - patch: |
           - op: add
             path: /spec/template/spec/containers/0/args/-
             value: --concurrent=20
@@ -51,8 +52,8 @@ instance:
         target:
           kind: Deployment
           name: kustomize-controller
-      - # Enable Helm repositories caching
-        patch: |
+      # Enable Helm repositories caching
+      - patch: |
           - op: add
             path: /spec/template/spec/containers/0/args/-
             value: --helm-cache-max-size=10
@@ -65,8 +66,8 @@ instance:
         target:
           kind: Deployment
           name: source-controller
-      - # Flux near OOM detection for Helm
-        patch: |
+      # Flux near OOM detection for Helm
+      - patch: |
           - op: add
             path: /spec/template/spec/containers/0/args/-
             value: --feature-gates=OOMWatch=true

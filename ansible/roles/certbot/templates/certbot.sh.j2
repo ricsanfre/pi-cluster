@@ -11,7 +11,7 @@ $BASEDIR/certbot certonly \
   --logs-dir $BASEDIR/../logs \
   --dns-cloudflare \
   --dns-cloudflare-credentials $BASEDIR/../.secrets/cloudflare-credentials.ini \
-  --dns-cloudflare-propagation-seconds {{ propagation_seconds }} \
+  --dns-cloudflare-propagation-seconds {{ certbot_propagation_seconds }} \
   --server https://acme-v02.api.letsencrypt.org/directory \
   --agree-tos \
   --non-interactive \

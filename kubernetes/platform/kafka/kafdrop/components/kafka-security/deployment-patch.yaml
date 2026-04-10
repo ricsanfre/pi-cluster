@@ -1,3 +1,4 @@
+---
 - op: add
   path: /spec/template/spec/containers/0/volumeMounts/-
   value:
@@ -10,7 +11,7 @@
     name: kafdrop-config
     secret:
       secretName: kafdrop-config
-      defaultMode: 0644
+      defaultMode: "0644"
 
 - op: add
   path: /spec/template/spec/containers/0/env/-

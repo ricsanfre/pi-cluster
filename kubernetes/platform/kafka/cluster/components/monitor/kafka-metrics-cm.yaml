@@ -1,3 +1,4 @@
+---
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -5,7 +6,7 @@ metadata:
   labels:
     app: strimzi
 data:
-  kafka-metrics-config.yml: |
+  kafka-metrics-config.yaml: |-
     # See https://github.com/prometheus/jmx_exporter for more info about JMX Prometheus Exporter metrics
     lowercaseOutputName: true
     rules:
@@ -31,7 +32,12 @@ data:
         protocol: "$3"
         listener: "$4"
         networkProcessor: "$5"
-    - pattern: kafka.server<type=(.+), clientSoftwareName=(.+), clientSoftwareVersion=(.+), listener=(.+), networkProcessor=(.+)><>connections
+    - pattern: >
+        kafka.server<type=(.+),
+        clientSoftwareName=(.+),
+        clientSoftwareVersion=(.+),
+        listener=(.+),
+        networkProcessor=(.+)><>connections
       name: kafka_server_$1_connections_software
       type: GAUGE
       labels:

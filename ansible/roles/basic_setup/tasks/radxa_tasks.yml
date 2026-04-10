@@ -1,7 +1,0 @@
----
-
-- name: Install Rock 5B+ specific packages
-  ansible.builtin.apt:
-    name: "{{ radxa_packages }}"
-    update_cache: true
-    state: present

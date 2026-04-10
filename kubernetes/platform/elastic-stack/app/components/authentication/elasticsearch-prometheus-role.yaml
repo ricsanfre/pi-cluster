@@ -1,10 +1,11 @@
+---
 kind: Secret
 apiVersion: v1
 metadata:
   name: es-prometheus-roles-secret
   namespace: elastic
 stringData:
-  roles.yml: |-
+  roles.yaml: |-
     prometheus_role:
       cluster: [
         'cluster:monitor/health',
@@ -12,7 +13,7 @@ stringData:
         'cluster:monitor/state',
         'cluster:monitor/nodes/info',
         'cluster:monitor/prometheus/metrics'
-      ] 
+      ]
       indices:
       - names: [ '*' ]
         privileges: [ 'indices:admin/aliases/get', 'indices:admin/mappings/get', 'indices:monitor/stats', 'indices:data/read/search' ]

@@ -1,5 +1,5 @@
+---
 # grafana helm values (dashboards)
-
 
 # Dashboard Providers
 dashboardProviders:
@@ -16,7 +16,7 @@ dashboardProviders:
           path: /var/lib/grafana/dashboards/default-folder
       - name: istio
         orgId: 1
-        folder: "Istio"
+        folder: Istio
         type: file
         disableDeletion: false
         editable: true
@@ -24,7 +24,7 @@ dashboardProviders:
           path: /var/lib/grafana/dashboards/istio
       - name: infrastructure
         orgId: 1
-        folder: "Infrastructure"
+        folder: Infrastructure
         type: file
         disableDeletion: false
         editable: true
@@ -62,6 +62,7 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/keycloak-folder
+
 # Dashboards
 dashboards:
   kubernetes:
@@ -106,7 +107,7 @@ dashboards:
       gnetId: 1860
       revision: 42
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     cert-manager:
       # renovate: depName="Cert-manager-Kubernetes"
       gnetId: 20842
@@ -118,28 +119,28 @@ dashboards:
       gnetId: 16888
       revision: 11
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     logging:
       # https://grafana.com/grafana/dashboards/7752-logging-dashboard/
       # renovate: depName="Logging Dashboard"
       gnetId: 7752
       revision: 6
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     velero:
       # https://grafana.com/grafana/dashboards/11055-kubernetes-addons-velero-stats/
       # renovate: depName="Velero Dashboard"
       gnetId: 11055
       revision: 2
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     external-dns:
       # https://grafana.com/grafana/dashboards/15038-external-dns/
       # renovate: depName="ExternalDNS Dashboard"
       gnetId: 15038
       revision: 3
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     external-secrets:
       url: https://raw.githubusercontent.com/external-secrets/external-secrets/main/docs/snippets/dashboard.json
       datasource: Prometheus
@@ -155,7 +156,7 @@ dashboards:
       gnetId: 12693
       revision: 12
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     vault:
       url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
       datasource: Prometheus
@@ -165,7 +166,7 @@ dashboards:
       gnetId: 12309
       revision: 5
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
   istio:
     istio-control-plane:
       # https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard/
@@ -173,21 +174,21 @@ dashboards:
       gnetId: 7645
       revision: 298
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     istio-mesh:
       # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 7639
       revision: 298
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     istio-performance:
       # https://grafana.com/grafana/dashboards/11829-istio-performance-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 11829
       revision: 298
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
   nginx:
     nginx:
       url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/nginx.json
@@ -202,14 +203,14 @@ dashboards:
       gnetId: 13502
       revision: 26
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     minio-bucket:
       # https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/
       # renovate: depName="MinIO Dashboard"
       gnetId: 19237
       revision: 2
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     minio-node:
       url: https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json
       datasource: Prometheus
@@ -219,13 +220,13 @@ dashboards:
       gnetId: 15305
       revision: 5
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
   keycloak:
     keycloak-planning:
       url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-capacity-planning-dashboard.json
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}
     keycloak-troubleshooting:
       url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-troubleshooting-dashboard.json
       datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+        - {name: DS_PROMETHEUS, value: Prometheus}

@@ -5,26 +5,33 @@ kind: Service
 metadata:
   name: vault-ext-service
   labels:
-    app.kubernetes.io/name: vault
+    app.kubernetes.io/name: vault-ext-service
+  annotations:
+    ignore-check.kube-linter.io/dangling-service: This is a headless service, and so has no selectors.
+
 spec:
   clusterIP: None
   ports:
-  - name: vaultport
-    port: 8200
-    protocol: TCP
-    targetPort: 8200
+    - name: vaultport
+      port: 8200
+      protocol: TCP
+      targetPort: 8200
   type: ClusterIP
-
 ---
 # Endpoint for the headless service without selector
-apiVersion: v1
-kind: Endpoints
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
 metadata:
   name: vault-ext-service
-subsets:
-- addresses:
-  - ip: 10.20.0.8
-  ports:
+  labels:
+    kubernetes.io/service-name: vault-ext-service
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 10.20.0.8
+    conditions:
+      ready: true
+ports:
   - name: vaultport
     port: 8200
     protocol: TCP
@@ -44,7 +51,7 @@ spec:
     - interval: 30s
       path: /v1/sys/metrics
       params:
-        format: 
+        format:
           - prometheus
       port: vaultport
       scheme: https

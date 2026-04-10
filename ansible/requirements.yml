@@ -27,14 +27,15 @@ roles:
   - name: ricsanfre.backup
     version: v1.1.3
   - name: ricsanfre.vault
-    version: v1.0.5
-  - name: geerlingguy.node_exporter
-    version: 2.2.0
+    src: https://github.com/olipinski/ansible-role-vault
+    version: main
+
 collections:
   - name: community.general
     version: 12.4.0
-  - name: kubernetes.core
-    version: 6.3.0
+  - name: https://github.com/ansible-collections/kubernetes.core
+    type: git
+    version: main
   - name: community.hashi_vault
     version: 7.1.0
   - name: ansible.posix
@@ -43,3 +44,8 @@ collections:
     version: 3.1.1
   - name: kpfleming.systemd_networkd
     version: 26.1.0
+  - name: prometheus.prometheus
+    version: 0.28.0
+  - name: https://github.com/k3s-io/k3s-ansible.git
+    type: git
+    version: 1.2.0

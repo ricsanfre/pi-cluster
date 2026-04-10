@@ -1,3 +1,4 @@
+---
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:

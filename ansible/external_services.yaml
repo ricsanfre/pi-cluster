@@ -1,0 +1,312 @@
+---
+# Generate TLS certificates for external services
+# Generated using certbot (letsencrypt) or selfsigned certificates
+- name: Generate external services certificates
+  hosts: localhost
+  gather_facts: true
+  tags:
+    - certificates
+  vars:
+    certbot_propagation_seconds: 300
+    selfsigned_certificates_path: ../certificates
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+    - name: Copy Cloudflare secret file
+      ansible.builtin.template:
+        src: "{{ item.template }}"
+        dest: "{{ item.dest }}"
+        mode: "0600"
+      with_items:
+        - template: cloudflare-credentials.ini.j2
+          dest: ~/.secrets/cloudflare-credentials.ini
+      when: enable_letsencrypt
+
+  tasks:
+    - name: Create LetsEncrypt certificate for external services
+      ansible.builtin.command: |
+        certbot certonly \
+        --dns-cloudflare \
+        --dns-cloudflare-credentials ~/.secrets/cloudflare-credentials.ini \
+        --dns-cloudflare-propagation-seconds {{ certbot_propagation_seconds }} \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --agree-tos \
+        --non-interactive \
+        --rsa-key-size 4096 \
+        -m {{ acme_issuer_email }} \
+        -d {{ item }}
+      register: certbot_create
+      changed_when:
+        - certbot_create.rc==0
+        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
+      when: enable_letsencrypt
+      with_items:
+        - "{{ minio_hostname }}"
+        - "{{ vault_hostname }}"
+
+    - name: Create customCA-signed TLS certificate for minio
+      when: not enable_letsencrypt
+      block:
+        # Generate self-signed certificates directory
+        - name: Create certificates directory
+          ansible.builtin.file:
+            path: "{{ selfsigned_certificates_path }}"
+            state: directory
+            mode: "0750"
+        # Include selfsigned certificates variables
+        - name: Include selfsigned certificates variables
+          ansible.builtin.include_vars: vars/selfsigned-certificates.yaml
+        - name: Generate custom CA
+          ansible.builtin.include_tasks: tasks/generate_custom_ca.yaml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+        # Generate selfsigned TLS certificate
+        - name: Generate customCA-signed SSL certificates
+          ansible.builtin.include_tasks: tasks/generate_ca_signed_cert.yaml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+          loop:
+            - "{{ minio_hostname }}"
+            - "{{ vault_hostname }}"
+          loop_control:
+            loop_var: server_hostname
+
+## Install Minio S3 Storage Server
+
+- name: Install Minio S3 Storage Server
+  hosts: s3
+  gather_facts: true
+  tags:
+    - s3
+  become: true
+  vars:
+    server_hostname: "{{ minio_hostname }}"
+    selfsigned_certificates_path: ../certificates
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+    - name: Load customCA-signed TLS certificate for minio
+      ansible.builtin.set_fact:
+        minio_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        minio_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for minio
+      when: enable_letsencrypt
+      block:
+        - name: Check TLS certificate for minio exits
+          ansible.builtin.command: "certbot certificates -d {{ minio_hostname }}"
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + minio_hostname not in certbot_certificates.stdout'
+        - name: Get certificate and key paths for minio
+          ansible.builtin.set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1, '\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2, '\\1') }}"
+          vars:
+            regexp1: "Certificate Path: (\\S+)"
+            regexp2: "Private Key Path: (\\S+)"
+          when:
+            - certbot_certificates.rc==0
+            - '"Certificate Name: " + minio_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          ansible.builtin.set_fact:
+            minio_key: "{{ lookup('file', cert_key_path[0]) }}"
+            minio_cert: "{{ lookup('file', cert_path[0]) }}"
+  roles:
+    - role: ricsanfre.minio
+
+## Install HashiCorp Vault Server
+
+- name: Install Vault Server
+  hosts: vault
+  gather_facts: true
+  tags:
+    - vault
+  become: true
+  vars:
+    server_hostname: "{{ vault_hostname }}"
+    selfsigned_certificates_path: ../certificates
+
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+    - name: Load customCA-signed TLS certificate for minio
+      ansible.builtin.set_fact:
+        vault_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        vault_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+        vault_ca: "{{ lookup('file', selfsigned_certificates_path + '/CA.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for vault
+      when: enable_letsencrypt
+      block:
+        - name: Check TLS certificate for vault exits
+          ansible.builtin.command: "certbot certificates -d {{ vault_hostname }}"
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + vault_hostname not in certbot_certificates.stdout'
+        - name: Get certificate and key paths for minio
+          ansible.builtin.set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1, '\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2, '\\1') }}"
+          vars:
+            regexp1: "Certificate Path: (\\S+)"
+            regexp2: "Private Key Path: (\\S+)"
+          when:
+            - certbot_certificates.rc==0
+            - '"Certificate Name: " + vault_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          ansible.builtin.set_fact:
+            vault_key: "{{ lookup('file', cert_key_path[0]) }}"
+            vault_cert: "{{ lookup('file', cert_path[0]) }}"
+  roles:
+    - role: ricsanfre.vault
+
+  tasks:
+    # Configure ansible user profile with VAULT environment variables
+    - name: Insert http(s) export in dotfile
+      become: true
+      ansible.builtin.lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: ^export VAULT_ADDR=
+        line: export VAULT_ADDR='https://{{ vault_hostname }}:8200'
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: "0644"
+    - name: Insert CA cert export in dotfile
+      become: true
+      ansible.builtin.lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: ^export VAULT_CACERT=
+        line: export VAULT_CACERT=/etc/vault/tls/vault-ca.crt
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: "0644"
+      when: custom_ca
+    - name: Insert VAULT_TOKEN in dotfile
+      become: true
+      ansible.builtin.lineinfile:
+        path: ~{{ ansible_user }}/.bashrc
+        regexp: ^export VAULT_TOKEN=
+        line: export VAULT_TOKEN=$(sudo jq -r '.root_token' /etc/vault/unseal.json)
+        owner: "{{ ansible_user }}"
+        create: true
+        mode: "0644"
+
+## Load all credentials into HashiCorp Vault Server
+- name: Load Vault Credentials
+  hosts: vault
+  gather_facts: true
+  tags:
+    - vault
+    - credentials
+  become: false
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+    - name: Ensure PIP is installed.
+      ansible.builtin.package:
+        name:
+          - python3-pip
+          - python3-virtualenv
+          - python3-setuptools
+        state: present
+      become: true
+
+    # Install HashiCorp vault collection dependencies (hvac python package) using PIP.
+    - name: Ensure hvac Python library is installed.
+      ansible.builtin.pip:
+        name: hvac
+        state: present
+        virtualenv: "{{ vault_venv_path }}"
+      become: true
+
+  tasks:
+    # Vault Login using ansible environment variables for creating the token file used in the next tasks.
+    - name: Vault login # noqa: no-changed-when
+      ansible.builtin.shell: bash -ilc 'echo $VAULT_TOKEN'
+      become: false
+      register: vault_login
+
+    - name: Get vault token
+      ansible.builtin.set_fact:
+        vault_token: "{{ vault_login.stdout }}"
+
+    # Create write token
+    - name: Create KV write token
+      community.hashi_vault.vault_token_create:
+        url: https://{{ vault_dns }}:8200
+        policies:
+          - write
+        auth_method: token
+        token: "{{ vault_token }}"
+      register: token_data
+      become: false
+      vars:
+        ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
+
+    - name: Create/update credentials for all Ansible credentials
+      community.hashi_vault.vault_kv2_write:
+        url: "https://{{ vault_dns }}:8200"
+        auth_method: token
+        token: "{{ token_data | community.hashi_vault.vault_login_token }}"
+        read_before_write: true
+        path: "{{ item.group }}/{{ item.key }}"
+        data: "{{ item.data }}"
+      no_log: true
+      vars:
+        ansible_python_interpreter: "{{ vault_venv_path }}/bin/python"
+      loop: >-
+        {%- set results = [] -%}
+        	{%- for secret_group in vault  -%}
+        		{%- for secret in vault[secret_group] -%}
+        			{%- set _ = results.append({
+        			"group": secret_group,
+        			"key": secret,
+        			"data": vault[secret_group][secret]
+        			}) %}
+        		{%- endfor -%}
+        	{%- endfor -%}
+        {{ results }}
+      loop_control:
+        label: "Creating/updating credentials for {{ item.group }}"
+
+    - name: Load http auth_basic credentials
+      ansible.builtin.include_tasks:
+        file: tasks/create_basic_auth_credentials.yaml
+      no_log: true
+
+    - name: Load minio prometheus bearer credentials
+      ansible.builtin.include_tasks:
+        file: tasks/create_minio_bearer_token.yaml
+      no_log: true
+
+    - name: Load bind9 DDNS key
+      ansible.builtin.include_tasks:
+        file: tasks/load_ddns_key_into_vault.yaml
+      no_log: true

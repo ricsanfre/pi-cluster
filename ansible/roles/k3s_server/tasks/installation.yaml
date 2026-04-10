@@ -1,0 +1,25 @@
+---
+- name: Install HA k3s servers
+  when: k3s_server_k3s_build_cluster
+  block:
+    - name: Install primary server in case of HA mode
+      when:
+        - k3s_server_k3s_primary_control_node
+      block:
+        - name: Install server
+          ansible.builtin.include_tasks: k3s_install.yaml
+    - name: Install secondary servers in case of HA mode
+      # Secondary servers need to be added sequentially
+      # otherwise, "ETCD join failed: etcdserver: too many learner members in cluster" appears.
+      when:
+        - not k3s_server_k3s_primary_control_node
+      throttle: 1
+      block:
+        - name: Wait for primary server
+          ansible.builtin.include_tasks: wait_for_primary_server.yaml
+        - name: Install k3s
+          ansible.builtin.include_tasks: k3s_install.yaml
+- name: Install server non HA
+  ansible.builtin.include_tasks: k3s_install.yaml
+  when:
+    - not k3s_server_k3s_build_cluster

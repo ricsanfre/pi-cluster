@@ -1,0 +1,55 @@
+---
+- name: Ensure python virtualenv is installed.
+  ansible.builtin.package:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+  become: true
+  when: certbot_install_python_packages
+
+- name: Install certbot and Cloudflare plugin in a virtual Python environment
+  ansible.builtin.pip:
+    name:
+      - certbot
+      - certbot-dns-cloudflare
+    virtualenv: "{{ certbot_venv }}"
+    virtualenv_command: python3 -m venv
+    state: present
+
+- name: Create working directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+  with_items:
+    - "{{ certbot_venv }}/logs"
+    - "{{ certbot_venv }}/config"
+
+- name: Create secret directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+  with_items:
+    - "{{ certbot_venv }}/.secrets"
+
+- name: Copy Cloudflare secret file
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "{{ item.dest }}"
+    mode: "0600"
+  with_items:
+    - template: cloudflare-credentials.ini.j2
+      dest: "{{ certbot_venv }}/.secrets/cloudflare-credentials.ini"
+
+- name: Copy certbot wrapper script
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "{{ item.dest }}"
+    mode: "0755"
+  with_items:
+    - template: certbot.sh.j2
+      dest: "{{ certbot_venv }}/bin/certbot-create-cert.sh"
+    - template: certbot-wrapper.sh.j2
+      dest: "{{ certbot_venv }}/bin/certbot-wrapper.sh"

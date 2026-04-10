@@ -1,3 +1,4 @@
+---
 # loki helm values (base)
 
 # Setting simple scalable deployment mode
@@ -26,13 +27,13 @@ loki:
   # Storage Schema
   schemaConfig:
     configs:
-    - from: 2024-04-01
-      store: tsdb
-      index:
-        prefix: loki_index_
-        period: 24h
-      object_store: s3
-      schema: v13
+      - from: 2024-04-01
+        store: tsdb
+        index:
+          prefix: loki_index_
+          period: 24h
+        object_store: s3
+        schema: v13
 
 # Configuration for the write
 write:
@@ -47,7 +48,7 @@ write:
   # Enable environment variables in config file
   # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -73,7 +74,7 @@ read:
   # Enable environment variables in config file
   # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -99,7 +100,7 @@ backend:
   # Enable environment variables in config file
   # https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -134,7 +135,7 @@ monitoring:
     grafanaAgent:
       installOperator: false
   lokiCanary:
-      enabled: false
+    enabled: false
 
 # Disable helm-test
 test:

@@ -1,3 +1,4 @@
+---
 # kube-prom-stack helm values (vault-agent)
 prometheus:
   prometheusSpec:
@@ -6,17 +7,18 @@ prometheus:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/agent-init-first: "true"
         vault.hashicorp.com/agent-inject-token: "true"
-        vault.hashicorp.com/role: "prometheus"
+        vault.hashicorp.com/role: prometheus
         # Run agent as group 2000, same group used by Prometheus process. Grant read access to token file.
         vault.hashicorp.com/agent-run-as-group: "2000"
     additionalScrapeConfigs:
       - job_name: vault
         metrics_path: /v1/sys/metrics
         params:
-          format: ['prometheus']
+          format:
+            - prometheus
         scheme: https
         authorization:
           credentials_file: /vault/secrets/token
         static_configs:
-        - targets: 
-          - "vault.${CLUSTER_DOMAIN}:8200"
+          - targets:
+              - "vault.${CLUSTER_DOMAIN}:8200"

@@ -1,0 +1,6 @@
+---
+- name: Install RaspberryPi 5 specific packages
+  ansible.builtin.apt:
+    name: "{{ basic_setup_raspberrypi_packages }}"
+    update_cache: true
+    state: present

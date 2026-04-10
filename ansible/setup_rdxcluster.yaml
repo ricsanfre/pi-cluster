@@ -1,0 +1,185 @@
+---
+- name: Get host vars for the firewall DNAT setup
+  hosts:
+    - haproxy
+    - s3
+  gather_facts: false
+  tasks: []
+
+- name: Configure Rdx Cluster Gateway (Ubuntu)
+  hosts: gateway0
+  gather_facts: true
+  tags:
+    - gateway
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+  tasks:
+    # OS basic setup tasks
+    - name: Run basic setup
+      ansible.builtin.include_role:
+        name: basic_setup
+      tags:
+        - os
+    # Monitor the hard drives
+    - name: Monitor the hard drives
+      ansible.builtin.include_role:
+        name: olipinski.smartd
+      tags:
+        - os
+    # Make sure wpa_supplicant is installed
+    - name: Ensure wpa_supplicant is installed
+      ansible.builtin.apt:
+        name: wpasupplicant
+        update_cache: true
+        state: present
+    # WLAN interface configuration
+    - name: Configure WLAN link name using systemd-networkd
+      ansible.builtin.include_role:
+        name: kpfleming.systemd_networkd.link
+      tags:
+        - networking
+      register: networkd_result
+    # Reboot for WLAN to take effect
+    # This needs to run right here, so that netplan can use the correct interface names
+    # Therefore we ignore ansible-lint.
+    - name: Reboot to apply WLAN naming # noqa: no-handler
+      ansible.builtin.reboot:
+        msg: Rebooting to install systemd-networkd links.
+      tags:
+        - networking
+      when: networkd_result.changed
+    # SSH configuration and hardening
+    - name: SSH configuration
+      ansible.builtin.include_role:
+        name: willshersystems.sshd
+      tags:
+        - security
+    # Setup the authoritative DNS
+    - name: DNS setup
+      ansible.builtin.include_role:
+        name: ricsanfre.bind9
+      tags:
+        - dns
+    # Interface and routing configuration
+    - name: Netplan config
+      ansible.builtin.include_role:
+        name: mrlesmithjr.netplan
+      tags:
+        - networking
+    # Firewall (nftables) configuration
+    - name: Firewall config
+      ansible.builtin.include_role:
+        name: ricsanfre.firewall
+      tags:
+        - firewall
+    # NTP Server configuration
+    - name: NTP setup
+      ansible.builtin.include_role:
+        name: ricsanfre.ntp
+      tags:
+        - ntp
+    # Setup main DDNS
+    - name: Setup DDNS on main gateway
+      ansible.builtin.include_role:
+        name: ddclient
+      tags:
+        - dns
+
+- name: Configure secondary gateways
+  hosts: gateways:!gateway0
+  gather_facts: true
+  tags:
+    - gateways
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+  roles:
+    # OS basic setup tasks
+    - role: basic_setup
+      tags:
+        - os
+    # Monitor the hard drives
+    - role: olipinski.smartd
+      tags:
+        - os
+    # SSH configuration and hardening
+    - role: willshersystems.sshd
+      tags:
+        - security
+
+- name: Configure External Node
+  hosts: service0
+  gather_facts: true
+  tags:
+    - external
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+  roles:
+    # OS basic setup tasks
+    - role: basic_setup
+      tags:
+        - os
+    # Monitor the hard drives
+    - role: olipinski.smartd
+      tags:
+        - os
+    # SSH configuration and hardening
+    - role: willshersystems.sshd
+      tags:
+        - security
+
+- name: Configure Pi Cluster Nodes
+  hosts: k3s_cluster
+  gather_facts: true
+  tags:
+    - node
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+  roles:
+    # OS basic setup tasks
+    - role: basic_setup
+      tags:
+        - os
+    # Monitor the hard drives
+    - role: olipinski.smartd
+      tags:
+        - os
+    # SSH configuration and hardening
+    - role: willshersystems.sshd
+      tags:
+        - security
+    # NTP Client configuration
+    - role: ricsanfre.ntp
+      tags:
+        - ntp
+
+  tasks:
+    # Local Storage configuration
+    - name: Dedicated Disks
+      tags:
+        - storage
+      block:
+        # iSCSI client (initiator) configuration
+        # iSCSI initiator needs to be configured for Longhorn
+        - name: Configure iSCSI Initiator
+          ansible.builtin.include_role:
+            name: ricsanfre.iscsi_initiator
+          vars:
+            open_iscsi_initiator_name: >
+              iqn.2026-04.com.{{ vault.general.domains.dns }}.longhorn:{{ ansible_facts['nodename'] }}
+            open_iscsi_automatic_startup: true

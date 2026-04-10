@@ -1,3 +1,4 @@
+---
 # Docker mailserver helm values (base)
 
 certificate: docker-mailserver-tls
@@ -18,40 +19,40 @@ deployment:
 
   resources:
     requests:
-      cpu: "1"
-      memory: "1536Mi"
-      ephemeral-storage: "100Mi"
+      cpu: 1
+      memory: 1536Mi
+      ephemeral-storage: 100Mi
     limits:
-      cpu: "2"
-      memory: "2048Mi"
-      ephemeral-storage: "500Mi"
+      cpu: 2
+      memory: 2048Mi
+      ephemeral-storage: 500Mi
 
 service:
-  type: "ClusterIP"
-  #externalTrafficPolicy: "Local"
+  type: ClusterIP
+  # externalTrafficPolicy: "Local"
   annotations:
     external-dns.alpha.kubernetes.io/hostname: mail.${CLUSTER_DOMAIN}
-    external-dns.alpha.kubernetes.io/ttl: "120"
+    external-dns.alpha.kubernetes.io/ttl: 120
     external-dns.alpha.kubernetes.io/target: ${NGINX_LOAD_BALANCER_IP} # Uses nginx for now
 
 monitoring:
   service:
-    ## monitoring should be configured to only scrape services that have a value of "true"
+    # monitoring should be configured to only scrape services that have a value of "true"
     scrape: "true"
-    ## monitoring should be configured to only probe services that have a value of "true"
+    # monitoring should be configured to only probe services that have a value of "true"
     probe: "false"
-    ## Path on which metrics are exposed
+    # Path on which metrics are exposed
     path: "/metrics"
-    ## Port on which HTTP server is served
+    # Port on which HTTP server is served
     port: "9102"
   pod:
-    ## monitoring should be configured to only scrape pods that have a value of `true`
+    # monitoring should be configured to only scrape pods that have a value of `true`
     scrape: "true"
-    ## monitoring should be configured to only probe services that have a value of "true"
+    # monitoring should be configured to only probe services that have a value of "true"
     probe: "false"
-    ## Path on which metrics are exposed
+    # Path on which metrics are exposed
     path: "/metrics"
-    ## Port on which HTTP server is served
+    # Port on which HTTP server is served
     port: "9102"
 
 dovecot:
@@ -61,9 +62,9 @@ dovecot:
     resources:
       memory: 2GB
     cron:
-      enabled: true       # Optimise index every day
+      enabled: true # Optimise index every day
       schedule: 0 4 * * * # Every day at 4am
-      
+
 rspamd:
   ingress:
     enabled: false
@@ -74,10 +75,9 @@ rspamd:
     tls:
       enabled: false
       secret:
-
 proxyProtocol:
   enabled: true
-  trustedNetworks: "10.128.0.0/16"
+  trustedNetworks: 10.128.0.0/16
 
 # Note this is a dictionary and not a list so individual keys can be overridden by --set or --value helm parameters
 persistent_volume_claims:
@@ -89,9 +89,8 @@ persistent_volume_claims:
     annotations: {}
     accessModes:
       - ReadWriteOnce
-    storageClass: "longhorn"
+    storageClass: longhorn
     selector: {}
-
   # Stores emails
   mail-data:
     enabled: true
@@ -100,9 +99,8 @@ persistent_volume_claims:
     annotations: {}
     accessModes:
       - ReadWriteOnce
-    storageClass: "longhorn"
+    storageClass: longhorn
     selector: {}
-
   # Stores state for Postfix, Dovecot, Fail2Ban, Amavis, PostGrey, ClamAV, SpamAssassin, Rspamd & Redis
   mail-state:
     enabled: true
@@ -111,9 +109,8 @@ persistent_volume_claims:
     annotations: {}
     accessModes:
       - ReadWriteOnce
-    storageClass: "longhorn"
+    storageClass: longhorn
     selector: {}
-
   # Store mail logs
   mail-log:
     enabled: true
@@ -122,29 +119,28 @@ persistent_volume_claims:
     annotations: {}
     accessModes:
       - ReadWriteOnce
-    storageClass: "longhorn"
+    storageClass: longhorn
     selector: {}
-  
 configMaps:
   postfix-accounts.cf:
     create: true
     path: postfix-accounts.cf
     data: |
       ${DMS_ADMIN_USER}@${CLUSTER_DOMAIN}|{SHA512-CRYPT}${DMS_ADMIN_HASHED_PASSWORD}
-      
+
   postfix-virtual.cf:
     create: true
     path: postfix-virtual.cf
     data: |
       abuse@${CLUSTER_DOMAIN} {DMS_ADMIN_USER}@${CLUSTER_DOMAIN}
       postmaster@${CLUSTER_DOMAIN} {DMS_ADMIN_USER}@${CLUSTER_DOMAIN}
-      
+
   dovecot-quotas.cf:
     create: true
     path: dovecot-quotas.cf
     data: |
       ${DMS_ADMIN_USER}@${CLUSTER_DOMAIN}:10G
-  
+
   # documentation: https://rspamd.com/doc/modules/dkim_signing.html
   dkim-signing.conf:
     create: true
@@ -154,18 +150,18 @@ configMaps:
 
       sign_authenticated = true;
       sign_local = true;
-      
+
       use_domain = "header";
       use_redis = false; # don't change unless Redis also provides the DKIM keys
       use_esld = true;
       check_pubkey = false;
-      
+
       selector = "mail";
       # The path location is searched for a DKIM key with these variables:
       # - `$domain` is sourced from the MIME mail message `From` header
       # - `$selector` is configured for `mail` (as a default fallback)
       path = "/tmp/docker-mailserver/dkim/keys/$domain/$selector.private";
-      
+
       # domain specific configurations can be provided below:
       domain {
           ${CLUSTER_DOMAIN} {
@@ -173,13 +169,12 @@ configMaps:
               selector = "mail";
           }
       }
-      
-## The secrets key works the same way as the configs key. Use secrets to store sensitive information,
-## such as DKIM signing keys.
+
+# The secrets key works the same way as the configs key. Use secrets to store sensitive information,
+# such as DKIM signing keys.
 secrets:
   docker-mailserver-app-secret:
     name: docker-mailserver-app-secret
     key: DMS_DKIM_KEYS_PRIVATE
     create: false
     path: rspamd/dkim/mail.private
-      

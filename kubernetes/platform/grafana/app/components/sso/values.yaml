@@ -1,3 +1,4 @@
+---
 # grafana helm values (sso)
 # configure OATUH client credentials using environment variables loaded from secret
 envFromSecret: grafana-env-secret

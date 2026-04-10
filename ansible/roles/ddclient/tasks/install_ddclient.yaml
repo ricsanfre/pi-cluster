@@ -1,0 +1,6 @@
+---
+- name: Ensure ddclient is installed
+  ansible.builtin.apt:
+    name: ddclient
+    update_cache: true
+    state: present

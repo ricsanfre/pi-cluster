@@ -1,3 +1,4 @@
+---
 - op: add
   path: /spec/kafka/authorization/superUsers
   value:

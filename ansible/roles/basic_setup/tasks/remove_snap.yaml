@@ -1,6 +1,6 @@
 ---
 - name: Remove Snap Packages
-  ansible.builtin.include_tasks: remove_snap_packages.yml
+  ansible.builtin.include_tasks: remove_snap_packages.yaml
 
 - name: Remove snapd package
   ansible.builtin.apt:

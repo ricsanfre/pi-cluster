@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: domain-settings
+  namespace: flux-system
+data:
+  CLUSTER_DOMAIN: {{ vault.general.domains.dns if overlay == "prod" else "dev." ~ vault.general.domains.dns }}
+  S3_BACKUP_SERVER: s3.{{ vault.general.domains.dns }}

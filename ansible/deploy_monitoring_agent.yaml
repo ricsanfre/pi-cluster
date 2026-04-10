@@ -1,0 +1,39 @@
+---
+# Deploy fluentbit to get logs and prometheus metrics
+- name: Deploy fluentbit and node exporter agents on external nodes (service0)
+  hosts: service0
+  gather_facts: true
+  become: true
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    # Include rdxcluster variables
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  roles:
+    - role: ricsanfre.fluentbit
+    - role: prometheus.prometheus.node_exporter
+
+# Deploy bind exporter to get bind9 metrics
+- name: Deploy bind exporter agents on dns server (gateway0)
+  hosts: gateway0
+  gather_facts: true
+  become: true
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    # Include rdxcluster variables
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  roles:
+    - role: prometheus.prometheus.bind_exporter

@@ -1,0 +1,70 @@
+---
+exclude: docs|design
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+        exclude: j2|kubernetes/
+      - id: detect-private-key
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell
+        args:
+          - --builtin
+          - clear,rare,informal # Add 'usage' if mixins can be rephrased
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black
+        args:
+          - --wrap=120
+        types: [markdown]
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v26.4.0
+    hooks:
+      - id: ansible-lint
+        args:
+          - --strict # https://github.com/ansible/ansible-lint/issues/4997
+          - --format=brief
+          - -q
+          - -q
+        additional_dependencies:
+          - ansible
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        types: [yaml]
+        # Ansible-lint already uses yamllint
+        exclude: ansible|ansible-runner|fluxcd-app-template
+  - repo: https://github.com/stackrox/kube-linter
+    rev: v0.8.3
+    hooks:
+      - id: kube-linter
+        files: kubernetes/
+#  - repo: https://github.com/olipinski/kubeconform
+#    rev: ee83d9c3ca41ed11023cb6f9cf47eaabda232b56
+#    hooks:
+#      - id: kubeconform
+#        args:
+#          - "-strict"
+#          - "-schema-location"
+#          - "default"
+#          - "-schema-location"
+#          - "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+#          - "-schema-location"
+#          - "https://json.schemastore.org/{{.ResourceKind}}.json"
+#        files: "kubernetes/"

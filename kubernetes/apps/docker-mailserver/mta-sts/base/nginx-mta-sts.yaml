@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,41 +18,56 @@ spec:
         app.kubernetes.io/instance: nginx-mta-sts
         app.kubernetes.io/name: nginx-mta-sts
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: nginx-mta-sts
+                    app.kubernetes.io/name: nginx-mta-sts
+              weight: 100
       containers:
-      - name: nginx-mta-sts
-        image: nginx:alpine
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 80
-          name: http
-          protocol: TCP
-        volumeMounts:
-          - mountPath: /usr/share/nginx/html/.well-known
-            name: mta-sts-file
-      readinessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /.well-known/mta-sts.txt
-          port: http
-          scheme: HTTP
-        initialDelaySeconds: 20
-        periodSeconds: 5
-        successThreshold: 1
-        timeoutSeconds: 10
-      livenessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /.well-known/mta-sts.txt
-          port: http
-          scheme: HTTP
-        initialDelaySeconds: 180
-        periodSeconds: 30
-        successThreshold: 1
-        timeoutSeconds: 10
-      resources:
-        requests:
-          cpu: 1m
-          memory: 128Mi
+        - name: nginx-mta-sts
+          image: nginx:alpine
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/.well-known
+              name: mta-sts-file
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /.well-known/mta-sts.txt
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 10
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /.well-known/mta-sts.txt
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 180
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          resources:
+            requests:
+              cpu: 1m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
       volumes:
         - name: mta-sts-file
           configMap:

@@ -1,0 +1,19 @@
+---
+- name: Start K3s servers
+  hosts: k3s_server
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Start K3s Service
+      ansible.builtin.service:
+        name: k3s
+        state: started
+- name: Start K3s agents
+  hosts: k3s_agent
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Start K3s Service
+      ansible.builtin.service:
+        name: k3s-agent
+        state: started

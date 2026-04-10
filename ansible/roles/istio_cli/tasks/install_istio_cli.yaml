@@ -1,0 +1,7 @@
+---
+- name: Install istio cli # noqa: no-changed-when
+  ansible.builtin.shell: |
+    set -o pipefail
+    ISTIO_VERSION={{ istio_cli_istio_version }} curl -sL https://istio.io/downloadIstioctl | sh -
+  args:
+    executable: /bin/bash

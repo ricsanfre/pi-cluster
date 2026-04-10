@@ -1,3 +1,4 @@
+---
 # velero helm values (monitoring)
 metrics:
   enabled: true

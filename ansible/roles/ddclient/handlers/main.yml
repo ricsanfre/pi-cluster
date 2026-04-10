@@ -1,5 +1,0 @@
----
-- name: restart ddclient
-  service:
-    name: ddclient
-    state: restarted

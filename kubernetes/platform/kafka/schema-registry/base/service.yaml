@@ -1,19 +1,21 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: schema-registry
   labels:
-    app: schema-registry-schema-registry
     app.kubernetes.io/name: schema-registry
     app.kubernetes.io/instance: schema-registry
+  annotations:
+    ignore-check.kube-linter.io/dangling-service: |
+      "PyCharm can see the selectors correctly, kube-linter does not want to pick them up"
 spec:
   type: ClusterIP
   ports:
-  - name: http
-    port: 8081
-    protocol: TCP
-    targetPort: http
+    - name: http
+      port: 8081
+      protocol: TCP
+      targetPort: http
   selector:
-    app: schema-registry-schema-registry
     app.kubernetes.io/name: schema-registry
     app.kubernetes.io/instance: schema-registry

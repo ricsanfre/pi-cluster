@@ -1,3 +1,4 @@
+---
 # CSI VolumeSnapshot Associated With Longhorn Backup
 kind: VolumeSnapshotClass
 apiVersion: snapshot.storage.k8s.io/v1

@@ -1,9 +1,10 @@
+---
 # vault helm values (base)
 global:
   # External vault server address for the injector and CSI provider to use.
   # Setting this will disable deployment of a vault server.
-  externalVaultAddr: "https://vault.${CLUSTER_DOMAIN}:8200"
-    
+  externalVaultAddr: https://vault.${CLUSTER_DOMAIN}:8200
+
 # Create Service Account an long-lived token for enabling Kubernetes Auth Method
 server:
   # authDelegator enables a cluster role binding to be attached to the service

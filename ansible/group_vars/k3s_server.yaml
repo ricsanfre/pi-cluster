@@ -1,0 +1,15 @@
+---
+# k3s_server group variables
+
+# #################################
+# ricsanfre.k8s_cli role variables
+# #################################
+
+install_helm: true
+# renovate: datasource=github-releases depName=helm/helm
+helm_version: v4.1.1
+install_kubectl: false
+
+# OS and hardware architecture
+k8s_platform: linux
+k8s_arch: arm64

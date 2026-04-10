@@ -1,0 +1,10 @@
+---
+# HA configuration
+k3s_server_k3s_build_cluster: false
+k3s_server_k3s_primary_control_node: false
+
+# Config directory location for k3s
+k3s_server_k3s_config_dir: /etc/rancher/k3s
+
+# Directory for gathering the k3s token for clustering.
+k3s_server_k3s_token_file: "{{ k3s_server_k3s_config_dir }}/cluster-token"

@@ -1,0 +1,12 @@
+[workspace]
+authors = ["Olaf Lipinski <5785856+olipinski@users.noreply.github.com>"]
+channels = ["conda-forge"]
+name = "rdx-cluster"
+platforms = ["osx-arm64"]
+version = "0.0.1"
+
+[tasks]
+
+[dependencies]
+pixi-pycharm = ">=0.0.10,<0.0.11"
+prek = ">=0.3.8,<0.4"

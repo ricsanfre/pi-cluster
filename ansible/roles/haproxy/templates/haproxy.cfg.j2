@@ -31,7 +31,7 @@ defaults
 
 
 #---------------------------------------------------------------------
-# apiserver frontend which proxys to the control plane nodes
+# apiserver frontend which proxies to the control plane nodes
 #---------------------------------------------------------------------
 frontend k8s_apiserver
     bind *:6443
@@ -52,7 +52,7 @@ backend k8s_controlplane
     balance roundrobin
     option tcp-check
     default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
-{% for host in groups['k3s_master'] %}
+{% for host in groups['k3s_server'] %}
       server {{ hostvars[host].ansible_facts["hostname"] }} {{ hostvars[host].ansible_facts["hostname"] }}.maas.{{ vault.general.domains.dns }}:6443 check
 {% endfor %}
 

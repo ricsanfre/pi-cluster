@@ -1,3 +1,4 @@
+---
 apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
@@ -15,4 +16,4 @@ spec:
                       operator: In
                       values:
                         - cluster-kafka
-                topologyKey: "kubernetes.io/hostname"
+                topologyKey: kubernetes.io/hostname

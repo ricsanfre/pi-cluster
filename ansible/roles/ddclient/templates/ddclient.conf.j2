@@ -1,5 +1,5 @@
 # General config
-daemon={{ run_interval }}
+daemon={{ ddclient_run_interval }}
 ssl=yes
 
 # Router
@@ -7,8 +7,8 @@ use=web, web=ipify-ipv4
 
 # Protocol
 protocol=cloudflare
-zone={{ cloudflare_zone }}
+zone={{ ddclient_cloudflare_zone }}
 ttl=60
 login=token
-password={{ cloudflare_token }}
-{{ ddns_domain }}
+password={{ ddclient_cloudflare_token }}
+{{ ddclient_ddns_domain }}

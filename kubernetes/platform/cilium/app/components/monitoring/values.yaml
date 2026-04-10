@@ -1,3 +1,4 @@
+---
 # cilium helm values (monitoring)
 
 operator:
@@ -18,7 +19,7 @@ prometheus:
   serviceMonitor:
     enabled: true
     # scrape interval
-    interval: "10s"
+    interval: 10s
     # -- Relabeling configs for the ServiceMonitor hubble
     relabelings:
       - action: replace

@@ -19,8 +19,12 @@ spec:
   healthCheckExprs:
     - apiVersion: postgresql.cnpg.io/v1
       kind: Cluster
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
-      current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+      failed: >
+        status.conditions.exists(e, e.type == 'Ready')
+        && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: >
+        status.conditions.exists(e, e.type == 'Ready')
+        && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   postBuild:
     substituteFrom:
       - kind: ConfigMap
@@ -75,15 +79,18 @@ spec:
   healthCheckExprs:
     - apiVersion: k8s.keycloak.org/v2alpha1
       kind: Keycloak
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
-      current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+      failed: >
+        status.conditions.exists(e, e.type == 'Ready')
+        && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: >
+        status.conditions.exists(e, e.type == 'Ready')
+        && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   postBuild:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
       - kind: ConfigMap
         name: domain-settings
-
 
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1

@@ -1,3 +1,4 @@
+---
 # fluentd helm values (monitoring)
 
 # Enable prometheus Service Monitor

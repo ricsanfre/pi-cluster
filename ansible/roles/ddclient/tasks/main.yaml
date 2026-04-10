@@ -1,0 +1,15 @@
+---
+- name: Install ddclient
+  ansible.builtin.include_tasks: install_ddclient.yaml
+  args:
+    apply:
+      become: true
+
+- name: Configure ddclient
+  ansible.builtin.include_tasks: configure_ddclient.yaml
+
+- name: Verify ddclient is enabled and running
+  ansible.builtin.service:
+    name: ddclient
+    enabled: true
+    state: started

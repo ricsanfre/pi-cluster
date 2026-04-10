@@ -1,7 +1,0 @@
----
-
-- name: Install Istio CLI
-  ansible.builtin.include_tasks: install_istio_cli.yml
-  args:
-    apply:
-      become: true

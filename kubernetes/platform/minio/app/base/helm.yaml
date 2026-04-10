@@ -25,6 +25,6 @@ spec:
     - name: longhorn
       namespace: longhorn-system
   valuesFrom:
-  - kind: ConfigMap
-    name: minio-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: minio-helm-values
+      valuesKey: base-values.yaml

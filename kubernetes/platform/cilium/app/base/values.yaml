@@ -1,19 +1,19 @@
+---
 # cilium helm values (base)
 
-# Increase the k8s api client rate limit to avoid being limited due to increased API usage 
+# Increase the k8s api client rate limit to avoid being limited due to increased API usage
 k8sClientRateLimit:
   qps: 50
   burst: 200
 
-
-# Avoid having to manually restart the Cilium pods on config changes 
+# Avoid having to manually restart the Cilium pods on config changes
 operator:
-  replicas: 1  # Uncomment this if you only have one node
+  replicas: 1 # Uncomment this if you only have one node
   rollOutPods: true
-  
+
   # Install operator on control-plane node
   nodeSelector:
-    node-role.kubernetes.io/control-plane: "true"
+    node-role.kubernetes.io/control-plane: true
 
 rollOutCiliumPods: true
 
@@ -29,11 +29,10 @@ kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
 # ref: https://docs.cilium.io/en/stable/network/concepts/ipam/
 ipam:
   operator:
-    clusterPoolIPv4PodCIDRList: "10.42.0.0/16"
+    clusterPoolIPv4PodCIDRList: 10.42.0.0/16
 
 l2announcements:
   enabled: true
 
 externalIPs:
   enabled: true
-

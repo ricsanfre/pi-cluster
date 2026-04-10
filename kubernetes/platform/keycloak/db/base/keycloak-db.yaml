@@ -1,3 +1,4 @@
+---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -32,4 +33,4 @@ spec:
         secretAccessKey:
           name: keycloak-db-minio-secret
           key: AWS_SECRET_ACCESS_KEY
-    retentionPolicy: "30d"
+    retentionPolicy: 30d

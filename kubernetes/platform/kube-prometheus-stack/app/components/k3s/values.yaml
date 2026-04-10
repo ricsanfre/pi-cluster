@@ -1,3 +1,4 @@
+---
 grafana:
   # The default dashboards are not working for `k3s`, so we disable them.
   defaultDashboardsEnabled: false

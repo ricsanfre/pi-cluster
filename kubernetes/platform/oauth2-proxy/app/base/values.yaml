@@ -1,3 +1,4 @@
+---
 # oauth2-proxy helm values (base)
 config:
   # Add config annotations
@@ -16,7 +17,7 @@ config:
   #  cookieSecret: "bG5pRDBvL0VaWis3dksrZ05vYnJLclRFb2VNcVZJYkg="
   # The name of the cookie that oauth2-proxy will create
   # If left empty, it will default to the release name
-  cookieName: "oauth2-proxy"
+  cookieName: oauth2-proxy
 
   # Config file
   configFile: |-
@@ -44,8 +45,8 @@ sessionStorage:
     existingSecret: oauth2-proxy-secret
     passwordKey: redis-password
 # Enabling redis backend installation
-# Starting with OAuth2-Proxy v7, redis bitnami helm chart has been migrated to dandydeveloper
-# https://github.com/DandyDeveloper/charts/tree/master/charts/redis-ha
+# Starting with OAuth2-Proxy v7, redis Bitnami helm chart has been migrated to dandydeveloper
+# https://github.com/DandyDeveloper/charts/
 redis-ha:
   enabled: true
   # Configuring redis auth

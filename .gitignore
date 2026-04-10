@@ -1,8 +1,15 @@
 /ansible/roles/ricsanfre.*
 /ansible/ansible_collections
-/ansible/vars/vault.yml
+/ansible/vars/vault.yaml
 /docs/_site
 /docs/Gemfile.lock
 
 # PyCharm
 .idea
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# Ansible lint
+.ansible

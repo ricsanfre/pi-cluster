@@ -1,3 +1,4 @@
+---
 helmDefaults:
   wait: true
   waitForJobs: true
@@ -27,7 +28,7 @@ releases:
       - ../../platform/cilium/app/components/istio-config/values.yaml
       - ../../platform/cilium/app/overlays/prod/values.yaml
     needs:
-     - kube-system/prometheus-operator-crds
+      - kube-system/prometheus-operator-crds
   - name: coredns
     namespace: kube-system
     chart: coredns/coredns
@@ -35,5 +36,5 @@ releases:
     values:
       - ../../platform/coredns/app/base/values.yaml
     needs:
-     - kube-system/prometheus-operator-crds
-     - kube-system/cilium
+      - kube-system/prometheus-operator-crds
+      - kube-system/cilium

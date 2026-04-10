@@ -1,0 +1,67 @@
+---
+# Group all variables.
+
+# Remote username
+ansible_user: ubuntu
+
+# Ansible ssh private key
+ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+
+# GitOps Repo
+# Whether the repo is private or not
+git_private_repo: false
+
+###################
+# Default Gateway
+###################
+default_gateway: 10.20.0.1
+
+#######################
+# DNS configuration
+#######################
+# DNS server
+dns_server: 10.20.0.1
+dns_domain: "{{ vault.general.domains.dns }}"
+
+############################
+# restic backup role variables
+############################
+# Deactivate clean service. Only enabled in one node
+restic_clean_service: false
+restic_backups_dirs:
+  - path: "/etc"
+  - path: "/root"
+    exclude:
+      - pattern: ".cache"
+  - path: "/home/{{ ansible_user }}"
+    exclude:
+      - pattern: ".cache"
+      - pattern: ".ansible"
+
+##########################
+## ssh role variables
+##########################
+sshd_config:
+  UseDNS: false
+  PasswordAuthentication: false
+  PermitRootLogin: false
+  PermitEmptyPasswords: false
+  ChallengeResponseAuthentication: false
+  GSSAPIAuthentication: false
+  KerberosAuthentication: false
+  X11Forwarding: false
+  Protocol: 2
+  DebianBanner: false
+  PubkeyAuthentication: false
+  Match:
+    - Condition: "Address 10.30.0.*"
+      PubkeyAuthentication: true
+    - Condition: "Address 10.20.0.*"
+      PubkeyAuthentication: true
+
+##########################
+## smartd role variables
+##########################
+smartmontools_notification_format: telegram
+smartmontools_telegram_chat_id: "{{ vault.notifications.telegram.chat_id }}"
+smartmontools_telegram_token: "{{ vault.notifications.telegram.bot_token }}"

@@ -87,7 +87,7 @@ The following table shows the variable files defined at ansible's group and host
 | [ansible/group_vars/all.yml]({{ site.git_edit_address }}/ansible/group_vars/all.yml) | all nodes of cluster + pimaster |
 | [ansible/group_vars/control.yml]({{ site.git_edit_address }}/ansible/group_vars/control.yml) | control group: pimaster |
 | [ansible/group_vars/k3s_cluster.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_cluster.yml) | all kubernetes nodes (master and workers) of the cluster |
-| [ansible/group_vars/k3s_master.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_master.yml) | K3s master nodes |
+| [ansible/group_vars/k3s_server.yml]({{ site.git_edit_address }}/ansible/group_vars/k3s_server.yml) | K3s master nodes |
 | [ansible/host_vars/node1.yml]({{ site.git_edit_address }}/ansible/host_vars/node1.yml) | external services node specific variables|
 {: .table .border-dark }
 

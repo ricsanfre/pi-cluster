@@ -1,0 +1,6 @@
+---
+- name: Install Radxa Rock 5B+ specific packages
+  ansible.builtin.apt:
+    name: "{{ basic_setup_radxa_packages }}"
+    update_cache: true
+    state: present

@@ -1,0 +1,107 @@
+---
+- name: Get host vars for the firewall DNAT setup
+  hosts:
+    - haproxy
+    - s3
+  gather_facts: false
+  tasks: []
+
+- name: Initialise Rdx Cluster Gateway (Ubuntu)
+  hosts: gateway0i
+  gather_facts: true
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    - name: Include gateway variables
+      ansible.builtin.include_vars: host_vars/gateway0.yaml
+      tags:
+        - always
+  tasks:
+    # OS basic setup tasks
+    - name: Run basic setup
+      ansible.builtin.include_role:
+        name: basic_setup
+      tags:
+        - os
+      register: basic_setup_result
+    # Make sure wpa_supplicant is installed
+    - name: Ensure wpa_supplicant is installed
+      ansible.builtin.apt:
+        name: wpasupplicant
+        update_cache: true
+        state: present
+    # WLAN interface configuration
+    - name: Configure WLAN link name using systemd-networkd
+      ansible.builtin.include_role:
+        name: kpfleming.systemd_networkd.link
+      tags:
+        - networking
+      register: networkd_result
+    # Reboot for WLAN to take effect
+    # This needs to run right here, so that netplan can use the correct interface names
+    # Therefore we ignore ansible-lint.
+    - name: Reboot to apply WLAN naming # noqa: no-handler
+      ansible.builtin.reboot:
+        msg: Rebooting to install systemd-networkd links.
+      tags:
+        - networking
+      when: networkd_result.changed
+    # SSH configuration and hardening
+    - name: SSH configuration
+      ansible.builtin.include_role:
+        name: willshersystems.sshd
+      tags:
+        - security
+      register: ssh_result
+      vars:
+        sshd_allow_reload: false # Don't apply new SSH config, might also kill the connection
+        sshd_allow_restart: false # Same as above.
+    # Setup the authoritative DNS
+    - name: DNS setup
+      ansible.builtin.include_role:
+        name: ricsanfre.bind9
+      tags:
+        - dns
+      register: dns_result
+    # Interface and routing configuration
+    - name: Netplan config
+      ansible.builtin.include_role:
+        name: mrlesmithjr.netplan
+      tags:
+        - networking
+      register: netplan_result
+      vars:
+        netplan_apply: false # Don't apply netplan, it will kill this connection
+    # Firewall (nftables) configuration
+    - name: Firewall config
+      ansible.builtin.include_role:
+        name: ricsanfre.firewall
+      tags:
+        - firewall
+      register: firewall_result
+      vars:
+        firewall_apply: false # Don't apply firewall, only stage
+    # NTP Server configuration
+    - name: NTP setup
+      ansible.builtin.include_role:
+        name: ricsanfre.ntp
+      tags:
+        - ntp
+      register: ntp_result
+    # This reboot does not use ansible because we need to ignore the reconnecting to the node.
+    # The gateway node will never be back under this IP address.
+    # Now we can continue to setup_rdxcluster.yaml
+    # We also cannot use handlers, as include_role does not have a notify attribute.
+    - name: Reboot if required # noqa: no-handler no-changed-when
+      ansible.builtin.command: sleep 5 && reboot
+      async: 1
+      poll: 0
+      when: >
+        ssh_result.changed or
+        dns_result.changed or
+        netplan_result.changed or
+        firewall_result.changed or
+        ntp_result.changed

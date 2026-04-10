@@ -1,7 +1,8 @@
+---
 # kube-prom-stack helm values (ingress)
 
 alertmanager:
-  ## Configure Ingress
+  # Configure Ingress
   ingress:
     enabled: true
     ingressClassName: nginx
@@ -12,7 +13,7 @@ alertmanager:
       # Oauth2-proxy
       nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/start?rd=https://$host$request_uri
       nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
-      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: 16k
       nginx.ingress.kubernetes.io/auth-response-headers: Authorization
     path: /alertmanager
     pathType: Prefix
@@ -20,11 +21,11 @@ alertmanager:
       - monitoring.${CLUSTER_DOMAIN}
     tls:
       - hosts:
-        - monitoring.${CLUSTER_DOMAIN}
+          - monitoring.${CLUSTER_DOMAIN}
         secretName: monitoring-tls
 
 prometheus:
-  ## Configuring Ingress
+  # Configuring Ingress
   ingress:
     enabled: true
     ingressClassName: nginx
@@ -35,7 +36,7 @@ prometheus:
       # Oauth2-proxy
       nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.${CLUSTER_DOMAIN}/oauth2/start?rd=https://$host$request_uri
       nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
-      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: 16k
       nginx.ingress.kubernetes.io/auth-response-headers: Authorization
 
     path: /prometheus
@@ -44,5 +45,5 @@ prometheus:
       - monitoring.${CLUSTER_DOMAIN}
     tls:
       - hosts:
-        - monitoring.${CLUSTER_DOMAIN}
+          - monitoring.${CLUSTER_DOMAIN}
         secretName: monitoring-tls

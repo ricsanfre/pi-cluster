@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Execute ansible-runner command using bash shell with loging option
+# Execute ansible-runner command using bash shell with logging option
 # runner user profile is loaded
 
 CMD="docker exec -it ansible-runner \

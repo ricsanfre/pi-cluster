@@ -1,0 +1,50 @@
+---
+- name: Deploy Vault
+  kubernetes.core.helm:
+    name: vault
+    chart_ref: vault
+    chart_repo_url: https://helm.releases.hashicorp.com
+    chart_version: 0.32.0
+    release_namespace: vault
+    create_namespace: true
+    values_files:
+      - ../../kubernetes/platform/vault/app/base/values.yaml
+    # Overwrite values for the vault Helm chart setting vault dns name
+    set_values:
+      - value: "global.externalVaultAddr=https://{{ vault_hostname }}:8200"
+        value_type: string
+
+- name: Get reviewer token # noqa: no-changed-when
+  ansible.builtin.shell: |
+    set -o pipefail
+    KUBERNETES_SA_SECRET_NAME=$(kubectl get secrets --output=json -n vault \
+    | jq -r '.items[].metadata \
+    | select(.name|startswith("vault-auth")).name')
+    TOKEN_REVIEW_JWT=$(kubectl get secret $KUBERNETES_SA_SECRET_NAME -n vault -o jsonpath='{.data.token}' \
+    | base64 --decode)
+    echo $TOKEN_REVIEW_JWT
+  register: get_reviewer_token
+
+- name: Set reviewer token
+  ansible.builtin.set_fact:
+    vault_reviewer_token: "{{ get_reviewer_token.stdout }}"
+
+- name: Get Kubernetes CA cert # noqa: no-changed-when
+  ansible.builtin.shell: |
+    set -o pipefail
+    KUBERNETES_CA_CERT=$(kubectl config view --raw --minify --flatten \
+      --output='jsonpath={.clusters[].cluster.certificate-authority-data}' \
+      | base64 --decode | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+    echo $KUBERNETES_CA_CERT
+  register: get_kubernetes_ca
+
+- name: Set CA cert
+  ansible.builtin.set_fact:
+    kubernetes_ca_cert: "{{ get_kubernetes_ca.stdout }}"
+
+- name: Set kubernetes_host
+  ansible.builtin.set_fact:
+    kubernetes_host: "https://{{ k3s_api_vip }}:6443"
+
+- name: Configure vault-kubernetes-auth
+  ansible.builtin.include_tasks: tasks/vault_kubernetes_auth_method_config.yaml

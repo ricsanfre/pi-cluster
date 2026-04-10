@@ -12,8 +12,8 @@ spec:
   metricsPath: /minio/v2/metrics/cluster
   scheme: HTTPS
   staticConfigs:
-  - targets:
-    - ${S3_BACKUP_SERVER}:9091
+    - targets:
+        - ${S3_BACKUP_SERVER}:9091
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
@@ -28,8 +28,8 @@ spec:
   metricsPath: /minio/v2/metrics/node
   scheme: HTTPS
   staticConfigs:
-  - targets:
-    - ${S3_BACKUP_SERVER}:9091
+    - targets:
+        - ${S3_BACKUP_SERVER}:9091
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
@@ -44,8 +44,8 @@ spec:
   metricsPath: /minio/v2/metrics/bucket
   scheme: HTTPS
   staticConfigs:
-  - targets:
-    - ${S3_BACKUP_SERVER}:9091
+    - targets:
+        - ${S3_BACKUP_SERVER}:9091
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
@@ -60,5 +60,5 @@ spec:
   metricsPath: /minio/v2/metrics/resource
   scheme: HTTPS
   staticConfigs:
-  - targets:
-    - ${S3_BACKUP_SERVER}:9091
+    - targets:
+        - ${S3_BACKUP_SERVER}:9091

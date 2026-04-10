@@ -1,0 +1,11 @@
+---
+- name: Copy longhorn health check script
+  ansible.builtin.copy:
+    src: "files/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx
+  become: true
+  with_items:
+    - check_lh.sh

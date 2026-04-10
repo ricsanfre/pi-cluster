@@ -57,7 +57,7 @@ data:
         @type prometheus_output_monitor
         @id in_prometheus_output_monitor
     </source>
-  02_filters.conf: |-  
+  02_filters.conf: |-
     ##
     ## Filters
     ##
@@ -118,7 +118,7 @@ data:
             <store>
                 @type relabel
                 @label @OUTPUT_LOKI
-            </store>  
+            </store>
         </match>
     </label>
   04_output.conf: |-

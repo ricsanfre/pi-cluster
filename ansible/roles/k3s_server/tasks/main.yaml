@@ -1,0 +1,5 @@
+---
+- name: Run pre-configuration tasks
+  ansible.builtin.include_tasks: pre_configuration.yaml
+- name: Run installation tasks
+  ansible.builtin.include_tasks: installation.yaml

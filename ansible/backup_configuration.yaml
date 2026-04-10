@@ -1,0 +1,24 @@
+---
+- name: Configure rdxcluster nodes backup
+  hosts: rdxcluster
+  gather_facts: true
+  tags:
+    - backup
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+    - name: Load CA certificate for restic
+      ansible.builtin.set_fact:
+        restic_ca_cert: "{{ lookup('file', 'certificates/CA.pem') }}"
+      when: not enable_letsencrypt
+    - name: Do not use CA certificate
+      ansible.builtin.set_fact:
+        restic_use_ca_cert: false
+      when: enable_letsencrypt
+  roles:
+    - role: ricsanfre.backup
+      tags:
+        - backup

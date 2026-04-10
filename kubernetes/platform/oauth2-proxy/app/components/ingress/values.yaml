@@ -1,7 +1,8 @@
+---
 # oauth2-proxy helm values (ingress)
 ingress:
   enabled: true
-  className: "nginx"
+  className: nginx
   pathType: Prefix
   path: /oauth2
   annotations:
@@ -11,7 +12,7 @@ ingress:
     #   * 'ca-issuer' (CA-signed certificate, not valid)
     cert-manager.io/cluster-issuer: letsencrypt-issuer
     cert-manager.io/common-name: oauth2-proxy.${CLUSTER_DOMAIN}
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 16k
   hosts:
     - oauth2-proxy.${CLUSTER_DOMAIN}
   tls:

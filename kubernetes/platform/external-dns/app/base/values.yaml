@@ -1,3 +1,4 @@
+---
 # external-dns helm values (base)
 
 provider:
@@ -26,12 +27,12 @@ policy: sync
 registry: txt
 txtOwnerId: k8s
 txtPrefix: external-dns-
-sources: 
+sources:
   - crd
   - service
   - ingress
   - istio-gateway
-domainFilters: 
+domainFilters:
   - ${CLUSTER_DOMAIN}
 logLevel: debug
 serviceMonitor:

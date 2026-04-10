@@ -1,3 +1,4 @@
+---
 # flux-instance helm values (base)
 instance:
   distribution:
@@ -13,4 +14,3 @@ instance:
   commonMetadata:
     labels:
       app.kubernetes.io/name: flux
-  

@@ -1,6 +1,7 @@
+---
 # prometheus-elasticsearch-exporter helm values (base)
 
-# Elastic search passord from secret
+# Elastic search password from secret
 extraEnvSecrets:
   ES_USERNAME:
     secret: elasticsearch-exporter-secrets

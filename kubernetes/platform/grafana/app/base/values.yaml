@@ -1,3 +1,4 @@
+---
 # grafana helm values (base)
 # Use an existing secret for the admin user.
 adminUser: ""
@@ -10,6 +11,7 @@ admin:
 # Install required plugins
 plugins:
   - grafana-piechart-panel
+
 # Relabel job name of Grafana's metrics
 serviceMonitor:
   enabled: true
@@ -19,45 +21,46 @@ datasources:
   datasources.yaml:
     apiVersion: 1
     deleteDatasources:
-      - { name: Alertmanager, orgId: 1 }
-      - { name: Loki, orgId: 1 }
-      - { name: Prometheus, orgId: 1 }
-      - { name: Tempo, orgId: 1 }
+      - {name: Alertmanager, orgId: 1}
+      - {name: Loki, orgId: 1}
+      - {name: Prometheus, orgId: 1}
+      - {name: Tempo, orgId: 1}
     datasources:
-    - name: Prometheus
-      type: prometheus
-      uid: prometheus
-      access: proxy
-      url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090/prometheus
-      isDefault: true
-    - name: Alertmanager
-      type: alertmanager
-      uid: alertmanager
-      url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093/alertmanager
-      jsonData:
-        implementation: prometheus
-    - name: Loki
-      type: loki
-      uid: loki
-      access: proxy
-      url: http://loki-read-headless.loki.svc.cluster.local:3200
-      jsonData:
-        derivedFields:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        access: proxy
+        url: http://kube-prometheus-stack-prometheus.kube-prom-stack.svc.cluster.local:9090/prometheus
+        isDefault: true
+      - name: Alertmanager
+        type: alertmanager
+        uid: alertmanager
+        url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093/alertmanager
+        jsonData:
+          implementation: prometheus
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        url: http://loki-read-headless.loki.svc.cluster.local:3200
+        jsonData:
+          derivedFields:
             # Traefik traces integration
             # - datasourceUid: tempo
             #   matcherRegex: '"request_X-B3-Traceid":"(\w+)"'
             #   name: TraceID
             #   url: $${__value.raw}
             # NGINX traces integration
-          - datasourceUid: tempo
-            matcherRegex: '"trace_id": "(\w+)"'
-            name: TraceID
-            url: $${__value.raw}
-    - name: Tempo
-      uid: tempo
-      type: tempo
-      access: proxy
-      url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3100
+            - datasourceUid: tempo
+              matcherRegex: '"trace_id": "(\w+)"'
+              name: TraceID
+              url: $${__value.raw}
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://tempo-query-frontend-discovery.tempo.svc.cluster.local:3100
+
 ##
 ## Provisioning sidecars
 ##

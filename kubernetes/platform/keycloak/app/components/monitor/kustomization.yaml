@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
@@ -5,13 +6,13 @@ resources:
   - keycloak-servicemonitor.yaml
 
 patches:
-- path: keycloak-tracing.yaml
-  target:
-    group: k8s.keycloak.org
-    kind: Keycloak
-    name: keycloak
-- path: keycloak-additionalOptions.yaml
-  target:
-    group: k8s.keycloak.org
-    kind: Keycloak
-    name: keycloak
+  - path: keycloak-tracing.yaml
+    target:
+      group: k8s.keycloak.org
+      kind: Keycloak
+      name: keycloak
+  - path: keycloak-additionalOptions.yaml
+    target:
+      group: k8s.keycloak.org
+      kind: Keycloak
+      name: keycloak

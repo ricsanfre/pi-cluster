@@ -26,11 +26,11 @@ spec:
       strategy: rollback
       retries: 3
   dependsOn:
-  - name: prometheus-operator-crds
-    namespace: kube-system
-  - name: longhorn
-    namespace: longhorn-system
+    - name: prometheus-operator-crds
+      namespace: kube-system
+    - name: longhorn
+      namespace: longhorn-system
   valuesFrom:
-  - kind: ConfigMap
-    name: kube-prometheus-stack-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: kube-prometheus-stack-helm-values
+      valuesKey: base-values.yaml

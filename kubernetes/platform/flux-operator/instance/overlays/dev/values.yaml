@@ -1,3 +1,4 @@
+---
 # flux-instance helm values (dev overlay)
 instance:
   sync:

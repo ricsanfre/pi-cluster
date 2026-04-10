@@ -1,3 +1,4 @@
+---
 # minio helm values (base)
 # Get root user/password from secret
 existingSecret: minio-root-secret
@@ -12,7 +13,7 @@ pools: 1
 # Persistence
 persistence:
   enabled: true
-  storageClass: "longhorn"
+  storageClass: longhorn
   accessMode: ReadWriteOnce
   size: 10Gi
 

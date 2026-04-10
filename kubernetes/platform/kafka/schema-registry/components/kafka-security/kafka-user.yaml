@@ -1,3 +1,4 @@
+---
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
@@ -22,7 +23,7 @@ spec:
           name: confluent-schemas
           patternType: literal
         operations:
-         - All
+          - All
         host: "*"
       - resource:
           type: topic

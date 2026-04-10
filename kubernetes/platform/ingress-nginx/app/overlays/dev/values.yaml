@@ -1,3 +1,4 @@
+---
 # nginx helm values (dev patch)
 controller:
   autoscaling:

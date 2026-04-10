@@ -1,12 +1,4 @@
 ---
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: istio
-spec:
-  url: https://istio-release.storage.googleapis.com/charts
-  interval: 10m
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -32,11 +24,11 @@ spec:
       retries: 3
       remediateLastFailure: true
   valuesFrom:
-  - kind: ConfigMap
-    name: istio-base-base-values
-  - kind: ConfigMap
-    name: istio-base-overlay-values
-    optional: true
+    - kind: ConfigMap
+      name: istio-base-base-values
+    - kind: ConfigMap
+      name: istio-base-overlay-values
+      optional: true
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -65,11 +57,11 @@ spec:
       retries: 3
       remediateLastFailure: true
   valuesFrom:
-  - kind: ConfigMap
-    name: istio-cni-base-values
-  - kind: ConfigMap
-    name: istio-cni-overlay-values
-    optional: true
+    - kind: ConfigMap
+      name: istio-cni-base-values
+    - kind: ConfigMap
+      name: istio-cni-overlay-values
+      optional: true
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -99,11 +91,11 @@ spec:
       retries: 3
       remediateLastFailure: true
   valuesFrom:
-  - kind: ConfigMap
-    name: istio-istiod-base-values
-  - kind: ConfigMap
-    name: istio-istiod-overlay-values
-    optional: true
+    - kind: ConfigMap
+      name: istio-istiod-base-values
+    - kind: ConfigMap
+      name: istio-istiod-overlay-values
+      optional: true
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -134,8 +126,8 @@ spec:
       retries: 3
       remediateLastFailure: true
   valuesFrom:
-  - kind: ConfigMap
-    name: istio-ztunnel-base-values
-  - kind: ConfigMap
-    name: istio-ztunnel-overlay-values
-    optional: true
+    - kind: ConfigMap
+      name: istio-ztunnel-base-values
+    - kind: ConfigMap
+      name: istio-ztunnel-overlay-values
+      optional: true

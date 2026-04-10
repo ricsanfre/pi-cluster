@@ -1,3 +1,4 @@
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -6,7 +7,8 @@ metadata:
     app.kubernetes.io/name: keycloak-config-cli
   annotations:
     # Update the Job manifest after it has been applied to the cluster is not allowed:
-    #  - changes to the Job spec.Completions, spec.Selector and spec.Template are not permitted by the Kubernetes API (inmutable fields)
+    #  - changes to the Job spec.Completions, spec.Selector and spec.Template are not permitted by
+    #    the Kubernetes API (immutable fields)
     # Force recreation of the Job
     # Kubernetes does not allow to patch Jobs
     # Ref: https://fluxcd.io/flux/use-cases/running-jobs/
@@ -14,6 +16,7 @@ metadata:
     kustomize.toolkit.fluxcd.io/force: enabled
 spec:
   backoffLimit: 1
+  ttlSecondsAfterFinished: 3600 # Delete the job once done, if needed 1h to inspect logs
   template:
     metadata:
       labels:
@@ -25,28 +28,37 @@ spec:
           image: "docker.io/adorsys/keycloak-config-cli:6.5.0-26.1.0"
           imagePullPolicy: IfNotPresent
           env:
-            - name: "IMPORT_PATH"
-              value: "/config/"
-            - name: "KEYCLOAK_URL"
+            - name: IMPORT_PATH
+              value: /config/
+            - name: KEYCLOAK_URL
               value: "http://keycloak-service:8080"
             # Enable variable substitution
-            - name: "IMPORT_VARSUBSTITUTION_ENABLED"
+            - name: IMPORT_VARSUBSTITUTION_ENABLED
               value: "true"
-            - name: "CLUSTER_DOMAIN"
-              value: ${CLUSTER_DOMAIN}
-            - name: "PI_ADMIN_FIRSTNAME"
-              value: ${PI_ADMIN_FIRSTNAME}
-            - name: "PI_ADMIN_LASTNAME"
-              value: ${PI_ADMIN_LASTNAME}
+            - name: CLUSTER_DOMAIN
+              value: "${CLUSTER_DOMAIN}"
+            - name: PI_ADMIN_FIRSTNAME
+              value: "${PI_ADMIN_FIRSTNAME}"
+            - name: PI_ADMIN_LASTNAME
+              value: "${PI_ADMIN_LASTNAME}"
           # Additional environment variables in secret
           envFrom:
-          - secretRef:
-              name: keycloak-config-cli-env
+            - secretRef:
+                name: keycloak-config-cli-env
           volumeMounts:
             - name: config
               mountPath: /config
+          resources:
+            requests:
+              cpu: 1m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
       volumes:
         - name: config
           configMap:
-            name: "keycloak-realm-configmap"
-            defaultMode: 0555
+            name: keycloak-realm-configmap
+            defaultMode: 0555 # yamllint disable-line rule:octal-values

@@ -1,0 +1,8 @@
+---
+- name: Install certbot
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - role: certbot
+      vars:
+        - certbot_venv: /home/ansible/letsencrypt

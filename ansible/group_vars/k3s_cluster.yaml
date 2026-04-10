@@ -1,0 +1,10 @@
+---
+# k3s_cluster group variables
+
+# ###################
+# ntp role variables
+# ###################
+
+ntp_servers:
+  - server: 10.20.0.1
+    type: server

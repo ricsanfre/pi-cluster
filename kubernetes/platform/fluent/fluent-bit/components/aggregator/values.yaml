@@ -1,3 +1,4 @@
+---
 # fluent-bit helm values (forwarding)
 
 # Environment variables used by Fluent Config files

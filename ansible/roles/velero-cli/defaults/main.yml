@@ -1,5 +1,0 @@
----
-velero_version: v1.16.1
-velero_arch: amd64
-
-velero_namespace: velero

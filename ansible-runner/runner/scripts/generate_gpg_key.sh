@@ -2,8 +2,8 @@
 
 # GPG_EMAIL and GPG_NAME expected as environment variables
 
-if [[ -n "$(gpg --list-secret-keys ${GPG_EMAIL})" ]] 
-then 
+if [[ -n "$(gpg --list-secret-keys ${GPG_EMAIL})" ]]
+then
   echo "GPG key already exits"
 else
   echo "Generating GPG key"

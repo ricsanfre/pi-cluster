@@ -1,0 +1,130 @@
+---
+- name: Gather facts from the whole cluster
+  hosts: k3s_cluster
+  gather_facts: true
+
+- name: Install load balancer
+  hosts: haproxy
+  gather_facts: true
+  tags:
+    - haproxy
+    - install
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  roles:
+    - role: haproxy
+
+- name: Install K3S prerequisites
+  hosts: k3s_cluster
+  gather_facts: true
+  tags:
+    - install
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  roles:
+    - role: k3s_prereq
+
+- name: Install K3s server node
+  hosts: k3s_server
+  tags:
+    - install
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  roles:
+    - role: k3s_server
+    - role: ricsanfre.k8s_cli
+
+- name: Install K3s agent nodes
+  hosts: k3s_agent
+  tags:
+    - install
+  become: true
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  roles:
+    - role: k3s_agent
+
+- name: Get Kubernetes config file
+  hosts: k3s_server
+  tags:
+    - kube-config
+  tasks:
+    - name: Get k3s config file
+      run_once: true
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_base64
+
+    - name: Write Kubernetes config file with the correct cluster address
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', k3s_api_vip) }}"
+        dest: ~/.kube/config
+        mode: "0600"
+      delegate_to: localhost
+      run_once: true
+
+- name: Label K3S worker nodes
+  hosts: localhost
+  tags:
+    - config
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars: vars/vault.yaml
+      tags:
+        - always
+    - name: Include rdxcluster variables
+      ansible.builtin.include_vars: vars/rdxcluster.yaml
+      tags:
+        - always
+  tasks:
+    # - name: "Wait for worker nodes to be ready"
+    #   command:
+    #     cmd: "kubectl get nodes {{ item }}"
+    #   register: nodes
+    #   until:
+    #     - '" Ready "  in nodes.stdout'
+    #   retries: 10
+    #   delay: 5
+    #   with_items: "{{ groups['k3s_agent'] }}"
+
+    - name: Label k3s agent nodes
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Node
+          metadata:
+            name: "{{ item }}"
+            labels:
+              node-role.kubernetes.io/agent:
+      with_items: "{{ groups['k3s_agent'] }}"

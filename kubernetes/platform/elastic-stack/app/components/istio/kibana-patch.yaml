@@ -1,12 +1,12 @@
-  # Disable TLS endpoints
+---
+# Disable TLS endpoints
 - op: add
   path: /spec/http
   value:
-    tls: 
+    tls:
       selfSignedCertificate:
         disabled: true
-  # Enabling service account token
+# Enabling service account token
 - op: add
   path: /spec/podTemplate/spec/automountServiceAccountToken
-  value:
-    true
+  value: true

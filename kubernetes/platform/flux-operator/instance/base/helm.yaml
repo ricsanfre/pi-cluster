@@ -27,6 +27,6 @@ spec:
     - name: flux-operator
       namespace: flux-system
   valuesFrom:
-  - kind: ConfigMap
-    name: flux-instance-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: flux-instance-helm-values
+      valuesKey: base-values.yaml

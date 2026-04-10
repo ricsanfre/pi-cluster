@@ -1,3 +1,4 @@
+---
 # tempo helm values (base)
 
 # Enable trace ingestion
@@ -36,7 +37,7 @@ distributor:
   # Enable environment variables in config file
   # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -53,7 +54,7 @@ ingester:
   # Enable environment variables in config file
   # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -70,7 +71,7 @@ compactor:
   # Enable environment variables in config file
   # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -87,7 +88,7 @@ querier:
   # Enable environment variables in config file
   # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:
@@ -104,7 +105,7 @@ queryFrontend:
   # Enable environment variables in config file
   # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
   extraArgs:
-    - '-config.expand-env=true'
+    - -config.expand-env=true
   extraEnv:
     - name: MINIO_ACCESS_KEY_ID
       valueFrom:

@@ -1,6 +1,0 @@
----
-run_interval: 43200 # 12h, the IP is quite stable
-
-cloudflare_zone: "{{ vault.general.domains.dns }}"
-cloudflare_token: "{{ vault.ddns.cloudflare.token }}"
-ddns_domain: "{{ vault.general.domains.dns }}"

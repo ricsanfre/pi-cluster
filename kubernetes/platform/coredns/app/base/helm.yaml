@@ -22,6 +22,6 @@ spec:
       strategy: rollback
       retries: 3
   valuesFrom:
-  - kind: ConfigMap
-    name: coredns-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: coredns-helm-values
+      valuesKey: base-values.yaml

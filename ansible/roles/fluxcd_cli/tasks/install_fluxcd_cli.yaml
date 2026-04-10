@@ -1,0 +1,7 @@
+---
+- name: Install flux-cd cli # noqa: no-changed-when
+  ansible.builtin.shell: |
+    set -o pipefail
+    FLUX_VERSION={{ fluxcd_cli_fluxcd_version }} curl -s https://fluxcd.io/install.sh | sudo bash
+  args:
+    executable: /bin/bash

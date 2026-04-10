@@ -27,6 +27,6 @@ spec:
     - name: longhorn
       namespace: longhorn-system
   valuesFrom:
-  - kind: ConfigMap
-    name: docker-mailserver-helm-values
-    valuesKey: base-values.yaml
+    - kind: ConfigMap
+      name: docker-mailserver-helm-values
+      valuesKey: base-values.yaml

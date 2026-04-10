@@ -1,0 +1,20 @@
+---
+# Blocklist devices in multipath configuration
+# Avoid conflicts with Longhorn.
+# See: https://longhorn.io/kb/troubleshooting-volume-with-multipath/
+- name: Check that the multipath.conf exists
+  ansible.builtin.stat:
+    path: /etc/multipath.conf
+  register: basic_setup_multipath_file_exist
+
+- name: Copy blocklisted multipath.conf file
+  ansible.builtin.copy:
+    dest: /etc/multipath.conf
+    src: files/multipath.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  when: basic_setup_multipath_file_exist.stat.exists
+  notify:
+    - Restart multipath

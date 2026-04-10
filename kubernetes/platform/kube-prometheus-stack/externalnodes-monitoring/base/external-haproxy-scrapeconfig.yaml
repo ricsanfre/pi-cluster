@@ -1,3 +1,4 @@
+---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
@@ -5,5 +6,5 @@ metadata:
 spec:
   staticConfigs:
     - targets:
-        - service0.${CLUSTER_DOMAIN}:8405
+        - "service0.${CLUSTER_DOMAIN}:8405"
   metricsPath: /metrics

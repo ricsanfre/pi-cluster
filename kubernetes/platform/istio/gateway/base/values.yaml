@@ -1,3 +1,4 @@
+---
 # istio-gateway helm values (base)
 service:
   annotations:

@@ -1,0 +1,9 @@
+---
+- name: Install velero client
+  ansible.builtin.include_tasks: install_velero_cli.yaml
+  args:
+    apply:
+      become: true
+
+- name: Configure velero CLI
+  ansible.builtin.include_tasks: configure_velero_cli.yaml

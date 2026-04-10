@@ -33,7 +33,7 @@ collections:
   - name: community.general
     version: 12.4.0
   - name: https://github.com/ansible-collections/kubernetes.core
-    type:  git
+    type: git
     version: main
   - name: community.hashi_vault
     version: 7.1.0
@@ -45,3 +45,6 @@ collections:
     version: 26.1.0
   - name: prometheus.prometheus
     version: 0.28.0
+  - name: https://github.com/k3s-io/k3s-ansible.git
+    type: git
+    version: 1.2.0

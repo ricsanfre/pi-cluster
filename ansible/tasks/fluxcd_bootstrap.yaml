@@ -1,0 +1,51 @@
+---
+- name: Deploy Flux CD Operator
+  kubernetes.core.helm:
+    name: flux-operator
+    chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
+    # renovate: datasource=docker depName=fluxcd ociRepository=oci://ghcr.io/controlplaneio-fluxcd/charts
+    chart_version: 0.43.0
+    release_namespace: flux-system
+    create_namespace: true
+    values_files:
+      - ../kubernetes/platform/flux-operator/operator/base/values.yaml
+      - ../kubernetes/platform/flux-operator/operator/components/monitoring/values.yaml
+      - ../kubernetes/platform/flux-operator/operator/overlays/prod/values.yaml
+
+- name: Create Github secret # noqa: no-changed-when
+  ansible.builtin.shell:
+    cmd: |
+      kubectl create secret generic flux-system -n flux-system \
+      --from-literal=username=git \
+      --from-literal=password="{{ vault.flux.github.pat }}"
+    executable: /bin/bash
+  when: git_private_repo
+
+# - name: Add cluster settings
+#  ansible.builtin.shell:
+#    cmd: |
+#      set -o pipefail
+#      kubectl kustomize ../kubernetes/clusters/"{{ overlay }}"/config | kubectl apply -f -
+#    executable: /bin/bash
+
+- name: Add cluster settings
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../kubernetes/clusters/{{ overlay }}/config') }}"
+    state: present
+
+- name: Set the domain names in a ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    template: templates/domain-config.yaml.j2
+
+- name: Bootstrap Flux
+  kubernetes.core.helm:
+    name: flux-instance
+    chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
+    # renovate: datasource=helm depName=fluxcd ociRepository=oci://ghcr.io/controlplaneio-fluxcd/charts
+    chart_version: 0.43.0
+    release_namespace: flux-system
+    create_namespace: true
+    values_files:
+      - ../kubernetes/platform/flux-operator/instance/base/values.yaml
+      - ../kubernetes/platform/flux-operator/instance/overlays/prod/values.yaml

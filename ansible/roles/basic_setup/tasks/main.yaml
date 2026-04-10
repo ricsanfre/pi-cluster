@@ -1,5 +1,4 @@
 ---
-
 # Get list of packages installed
 - name: Get list of packages
   ansible.builtin.package_facts:
@@ -8,21 +7,25 @@
 - name: Remove snap package
   ansible.builtin.include_tasks: remove_snap.yaml
   when: >
-     'snapd' in ansible_facts.packages
-     and 'maas' not in group_names
+    'snapd' in ansible_facts.packages
+    and 'maas' not in group_names
 
 - name: Install common packages
   ansible.builtin.apt:
-    name: "{{ common_packages }}"
+    name: "{{ basic_setup_common_packages }}"
     update_cache: true
     state: present
 
 - name: Execute Radxa Rock 5B+ specific setup tasks
-  ansible.builtin.include_tasks: radxa_tasks.yml
+  ansible.builtin.include_tasks: radxa_tasks.yaml
   when: "'radxa' in group_names"
 
-- name: Load required Kernel modules
-  ansible.builtin.include_tasks: load_kernel_modules.yml
+- name: Execute RaspberryPi 5 specific setup tasks
+  ansible.builtin.include_tasks: raspberrypi_tasks.yaml
+  when: "'raspberrypi' in group_names"
 
-- name: Blacklist storage devices in multipath configuration
-  ansible.builtin.include_tasks: multipath_blacklist.yml
+- name: Load required Kernel modules
+  ansible.builtin.include_tasks: load_kernel_modules.yaml
+
+- name: Blocklist storage devices in multipath configuration
+  ansible.builtin.include_tasks: multipath_blocklist.yaml

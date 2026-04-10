@@ -1,3 +1,4 @@
+---
 helmDefaults:
   wait: true
   waitForJobs: true
@@ -10,18 +11,18 @@ releases:
     namespace: flux-system
     chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
     version: 0.43.0
-    values: 
+    values:
       - ../../platform/flux-operator/operator/base/values.yaml
       - ../../platform/flux-operator/operator/components/monitoring/values.yaml
       - ../../platform/flux-operator/operator/overlays/prod/values.yaml
-     
+
   - name: flux-instance
     namespace: flux-system
     chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
     version: 0.43.0
-    values: 
+    values:
       - ../../platform/flux-operator/instance/base/values.yaml
       - ../../platform/flux-operator/instance/overlays/prod/values.yaml
-    needs: 
+    needs:
       - flux-system/flux-operator
     wait: false

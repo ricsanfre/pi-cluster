@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
@@ -5,8 +6,8 @@ resources:
   - certificate.yaml
 
 patches:
-- target:
-    group: kafka.strimzi.io
-    kind: Kafka
-    name: cluster
-  path: cluster-patch.yaml
+  - target:
+      group: kafka.strimzi.io
+      kind: Kafka
+      name: cluster
+    path: cluster-patch.yaml

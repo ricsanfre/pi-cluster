@@ -1,0 +1,61 @@
+---
+all:
+  children:
+    gateway_init:
+      hosts:
+        gateway0i:
+          ansible_host: 192.168.10.68 # Changeme!
+          ansible_port: 22
+    control:
+      hosts:
+        prime:
+          hostname: prime
+          ansible_host: localhost
+          ansible_connection: local
+    gateways:
+      hosts:
+        gateway0:
+          ansible_host: 10.30.0.1
+          ansible_port: 24
+        gateway1:
+    rdxcluster:
+      hosts:
+        service0:
+          ansible_host: 10.20.0.8
+        rock000:
+        rock001:
+        red000:
+        silver000:
+    radxa:
+      hosts:
+        rock00[0:1]:
+    raspberrypi:
+      hosts:
+        service0:
+    x86:
+      hosts:
+        red000:
+        silver000:
+    k3s_cluster:
+      children:
+        k3s_server:
+          hosts:
+            silver000:
+        k3s_agent:
+          hosts:
+            rock000:
+            red000:
+            rock001:
+    vault:
+      hosts:
+        service0:
+    haproxy:
+      hosts:
+        service0:
+    maas:
+      hosts:
+        service0:
+    s3:
+      hosts:
+        service0:
+          ansible_host: 10.20.0.8

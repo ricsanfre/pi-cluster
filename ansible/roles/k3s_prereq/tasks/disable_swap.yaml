@@ -1,0 +1,13 @@
+---
+- name: Disable swap at runtime # noqa: no-changed-when
+  ansible.builtin.command: swapoff -a
+  when: ansible_facts["swaptotal_mb"] > 0
+
+- name: Disable swap at boot
+  ansible.posix.mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  loop:
+    - none
+    - swap

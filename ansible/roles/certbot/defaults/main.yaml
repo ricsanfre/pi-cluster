@@ -1,0 +1,14 @@
+---
+# Install python3 pip and virtualenv packages
+certbot_install_python_packages: true
+
+# Set certbot python virtual environment
+certbot_venv: /letsencrypt
+
+# DNS Cloudflare token
+certbot_cloudflare_api_token: "{{ certmanager_cloudflare_token }}"
+
+certbot_email: "admin@{{ vault.general.domains.dns }}"
+
+# DNS propagation in seconds
+certbot_propagation_seconds: 300

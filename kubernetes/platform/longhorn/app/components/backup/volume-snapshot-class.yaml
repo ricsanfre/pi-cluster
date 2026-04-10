@@ -1,14 +1,13 @@
+---
 # VolumeSnapshotClasses
 
 # Default VolumeSnapshotClass
-
 kind: VolumeSnapshotClass
 apiVersion: snapshot.storage.k8s.io/v1
 metadata:
   name: longhorn
 driver: driver.longhorn.io
 deletionPolicy: Delete
-
 ---
 # CSI VolumeSnapshot Associated With Longhorn Snapshot
 kind: VolumeSnapshotClass
@@ -19,7 +18,6 @@ driver: driver.longhorn.io
 deletionPolicy: Delete
 parameters:
   type: snap
-
 ---
 # CSI VolumeSnapshot Associated With Longhorn Backup
 kind: VolumeSnapshotClass

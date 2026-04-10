@@ -1,22 +1,24 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: schema-registry
+  namespace: kafka
   labels:
-    app: schema-registry-schema-registry
     app.kubernetes.io/name: schema-registry
     app.kubernetes.io/instance: schema-registry
+  annotations:
+    ignore-check.kube-linter.io/non-existent-service-account: |
+      "Service account is defined in ../service-account.yaml. Uncertain why it is not picked up."
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: schema-registry-schema-registry
       app.kubernetes.io/name: schema-registry
       app.kubernetes.io/instance: schema-registry
   template:
     metadata:
       labels:
-        app: schema-registry-schema-registry
         app.kubernetes.io/name: schema-registry
         app.kubernetes.io/instance: schema-registry
     spec:
@@ -59,11 +61,11 @@ spec:
             # - name: SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN
             #   value: "*"
             - name: SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL
-              value: "backward"
+              value: backward
           ports:
-          - name: http
-            containerPort: 8081
-            protocol: TCP
+            - name: http
+              containerPort: 8081
+              protocol: TCP
           livenessProbe:
             tcpSocket:
               port: http
@@ -82,15 +84,15 @@ spec:
             successThreshold: 1
             failureThreshold: 6
           volumeMounts:
-          - name: tmp
-            mountPath: /tmp
-          - name: config
-            mountPath: /etc/schema-registry
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /etc/schema-registry
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
             readOnlyRootFilesystem: true
             runAsGroup: 1000
             runAsUser: 1000
@@ -102,7 +104,7 @@ spec:
               cpu: 500m
               memory: 512Mi
       volumes:
-      - name: tmp
-        emptyDir: {}
-      - name: config
-        emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          emptyDir: {}

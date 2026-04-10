@@ -1,0 +1,31 @@
+---
+- name: Remove list of snap packages. Retry several times. It might fail because of package dependencies
+  block:
+    - name: Increment the retry count
+      ansible.builtin.set_fact:
+        basic_setup_retry_count: >
+          {{ 0 if basic_setup_retry_count is undefined else basic_setup_retry_count | int + 1 }}
+    - name: List snap packages # noqa: no-changed-when
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          for i in `snap list | awk '!/Name/{print $1}'`;
+          do echo $i;
+          done
+        executable: /bin/bash
+      register: basic_setup_snap_packages
+    - name: "Remove snap package {{ item }}"
+      community.general.snap:
+        name: "{{ item }}"
+        state: absent
+      with_items: "{{ basic_setup_snap_packages.stdout_lines }}"
+  rescue:
+    - name: Check number of retries and fail if greater that 3
+      ansible.builtin.fail:
+        msg: Maximum retries of grouped tasks reached
+      when: basic_setup_retry_count | int == 3
+    - name: Printing retry message
+      ansible.builtin.debug:
+        msg: Removing snap package failed, retrying.
+    - name: Retrying deletion
+      ansible.builtin.include_tasks: remove_snap_packages.yaml

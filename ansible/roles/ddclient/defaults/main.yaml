@@ -1,0 +1,6 @@
+---
+ddclient_run_interval: 43200 # 12h, the IP is quite stable
+
+ddclient_cloudflare_zone: "{{ vault.general.domains.dns }}"
+ddclient_cloudflare_token: "{{ vault.ddns.cloudflare.token }}"
+ddclient_ddns_domain: "{{ vault.general.domains.dns }}"

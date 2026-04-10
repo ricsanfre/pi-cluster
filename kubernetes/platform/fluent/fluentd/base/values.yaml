@@ -1,13 +1,14 @@
+---
 # fluentd helm values (base)
 
 # Fluentd image
 image:
-  repository: "ricsanfre/fluentd-aggregator"
-  pullPolicy: "IfNotPresent"
-  tag: "v1.17.1-debian-1.0"
+  repository: ricsanfre/fluentd-aggregator
+  pullPolicy: IfNotPresent
+  tag: v1.17.1-debian-1.0
 
 # Deploy fluentd as deployment
-kind: "Deployment"
+kind: Deployment
 # Number of replicas
 replicaCount: 1
 # Enabling HPA
@@ -25,12 +26,12 @@ rbac:
 
 # Setting security context. Fluentd is running as non root user
 securityContext:
-   capabilities:
-     drop:
-     - ALL
-   readOnlyRootFilesystem: false
-   runAsNonRoot: true
-   runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
 
 # Do not mount logs directories
 mountVarLogDirectory: false
@@ -39,14 +40,14 @@ mountDockerContainersDirectory: false
 ## Additional environment variables to set for fluentd pods
 env:
   # Elastic operator creates elastic service name with format cluster_name-es-http
-  - name:  FLUENT_ELASTICSEARCH_HOST
+  - name: FLUENT_ELASTICSEARCH_HOST
     valueFrom:
       configMapKeyRef:
         name: fluentd-env
         key: elasticsearchHost
-    # value: efk-es-http
-    # Default elasticsearch default port
-  - name:  FLUENT_ELASTICSEARCH_PORT
+  # value: efk-es-http
+  # Default elasticsearch default port
+  - name: FLUENT_ELASTICSEARCH_PORT
     value: "9200"
   # Elasticsearch user
   - name: FLUENT_ELASTICSEARCH_USER
@@ -72,7 +73,7 @@ env:
       configMapKeyRef:
         name: fluentd-env
         key: lokiURL
-    # value: "http://loki-gateway"
+  # value: "http://loki-gateway"
   # Loki username
   - name: LOKI_USERNAME
     value: ""
@@ -91,7 +92,6 @@ extraFilesConfigMapNameOverride: fluentd-extra-files
 ## Do not create additional config maps
 ##
 configMapConfigs: []
-
 # Volumes and VolumeMounts (only template and and certificates)
 volumes:
   - name: fluentd-tls
@@ -100,7 +100,7 @@ volumes:
   - name: etcfluentd-template
     configMap:
       name: fluentd-template
-      defaultMode: 0777
+      defaultMode: "0777"
 
 volumeMounts:
   - name: etcfluentd-template
@@ -111,12 +111,12 @@ volumeMounts:
 
 # Service. Exporting forwarder port (Metric already exposed by chart)
 service:
-  type: "ClusterIP"
+  type: ClusterIP
   annotations: {}
   ports:
-  - name: forwarder
-    protocol: TCP
-    containerPort: 24224
+    - name: forwarder
+      protocol: TCP
+      containerPort: 24224
 
 ## Fluentd list of plugins to install
 ##
