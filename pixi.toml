@@ -8,5 +8,5 @@ version = "0.0.1"
 [tasks]
 
 [dependencies]
-pixi-pycharm = ">=0.0.10,<0.0.11"
+pixi-pycharm = ">=0.0.11,<0.0.12"
 prek = ">=0.3.8,<0.4"
