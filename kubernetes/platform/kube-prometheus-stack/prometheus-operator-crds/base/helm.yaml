@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: prometheus-operator-crds
-      version: 27.0.1
+      version: 28.0.1
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
