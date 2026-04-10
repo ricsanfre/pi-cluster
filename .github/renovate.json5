@@ -1,56 +1,70 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:best-practices",
-    ":automergeLinters",
-    ":automergeTesters",
-    ":enablePreCommit",
-    ":enableVulnerabilityAlerts",
-    ":automergeRequireAllStatusChecks",
-    ":dependencyDashboard",
-    "github>olipinski/rdx-cluster//.github/renovate/customManagers.json5",
-    "github>olipinski/rdx-cluster//.github/renovate/grafanaDashboards.json5",
-    "github>olipinski/rdx-cluster//.github/renovate/groups.json5",
-    "github>olipinski/rdx-cluster//.github/renovate/labels.json5",
+    'config:best-practices',
+    ':automergeLinters',
+    ':automergeTesters',
+    ':enablePreCommit',
+    ':enableVulnerabilityAlerts',
+    ':automergeRequireAllStatusChecks',
+    ':dependencyDashboard',
+    'github>olipinski/rdx-cluster//.github/renovate/customManagers.json5',
+    'github>olipinski/rdx-cluster//.github/renovate/grafanaDashboards.json5',
+    'github>olipinski/rdx-cluster//.github/renovate/groups.json5',
+    'github>olipinski/rdx-cluster//.github/renovate/labels.json5',
   ],
-  dependencyDashboardTitle: "Renovate Dashboard 🤖",
+  dependencyDashboardTitle: 'Renovate Dashboard 🤖',
   flux: {
-    managerFilePatterns: ["/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/"],
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
-  "helm-values": {
-    managerFilePatterns: ["/(^|/)kubernetes/.+\\.ya?ml$/"],
+  'helm-values': {
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml$/',
+    ],
   },
   helmfile: {
-    managerFilePatterns: ["/(^|/)helmfile\\.ya?ml(?:\\.j2)?$/"],
+    managerFilePatterns: [
+      '/(^|/)helmfile\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
   kubernetes: {
-    managerFilePatterns: ["/(^|/)kubernetes/.+\\.ya?ml$/"],
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml$/',
+    ],
   },
   kustomize: {
-    managerFilePatterns: ["/(^|/)kustomization\\.ya?ml(?:\\.j2)?$/"],
+    managerFilePatterns: [
+      '/(^|/)kustomization\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
   pip_requirements: {
     managerFilePatterns: [
-      "/(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$/",
+      '/(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$/',
     ],
   },
   ansible: {
-    managerFilePatterns: ["/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/"],
+    managerFilePatterns: [
+      '/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
-  "ansible-galaxy": {
-    managerFilePatterns: ["/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/"],
+  'ansible-galaxy': {
+    managerFilePatterns: [
+      '/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/',
+    ],
   },
-  // https://github.com/ThomasSteinbach/deleteme-renovate-test/blob/main/renovate.json
-  "regexManagers": [
-        {
-            "fileMatch": [
-                "requirements.yml"
-            ],
-            "matchStrings": [
-                "- name:\\s*(?<depName>https://github.com/(?<packageName>[a-zA-Z][\\w\\-/]+))\\.git\\n.*?type:\\s*git\\n.*?version:\\s*(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+)"
-            ],
-            "datasourceTemplate": "github-tags",
-            "depNameTemplate": "{{ packageName }}"
-        }
-    ]
+  customManagers: [
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/requirements.yml/',
+      ],
+      matchStrings: [
+        '- name:\\s*(?<depName>https://github.com/(?<packageName>[a-zA-Z][\\w\\-/]+))\\.git\\n.*?type:\\s*git\\n.*?version:\\s*(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+)',
+      ],
+      datasourceTemplate: 'github-tags',
+      depNameTemplate: '{{ packageName }}',
+    },
+  ],
 }
