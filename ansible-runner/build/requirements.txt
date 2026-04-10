@@ -1,6 +1,6 @@
 kubernetes==35.0.0
 hvac==2.4.0
 certbot==5.5.0
-certbot-dns-cloudflare==5.4.0
+certbot-dns-cloudflare==5.5.0
 ansible-core==2.20.4
 passlib==1.7.4
