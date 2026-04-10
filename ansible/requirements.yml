@@ -43,7 +43,7 @@ collections:
   - name: community.crypto
     version: 3.1.1
   - name: kpfleming.systemd_networkd
-    version: 26.1.0
+    version: 26.3.0
   - name: prometheus.prometheus
     version: 0.28.0
   - name: https://github.com/k3s-io/k3s-ansible.git
