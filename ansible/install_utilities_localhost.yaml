@@ -14,7 +14,7 @@
       if ansible_facts.architecture == 'aarch64' else 'sha512:0d23d8c5022cdf07aa04df8538cda7bf030bfdc445e77ce009f83ffbae73e19462621a226bd03358ee44aa6f6acae1b558cdf2ae42685b4c5f8565aefd73df73'
       }}"
     # renovate: datasource=github-releases depName=helm/helm
-    helm_version: v4.1.1
+    helm_version: v4.1.4
   roles:
     - role: ricsanfre.k8s_cli
 

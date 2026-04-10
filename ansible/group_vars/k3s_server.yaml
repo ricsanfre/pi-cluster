@@ -7,7 +7,7 @@
 
 install_helm: true
 # renovate: datasource=github-releases depName=helm/helm
-helm_version: v4.1.1
+helm_version: v4.1.4
 install_kubectl: false
 
 # OS and hardware architecture
