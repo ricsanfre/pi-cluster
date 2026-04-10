@@ -105,7 +105,7 @@ dashboards:
     node-exporter-full:
       # renovate: depName="Node Exporter Full"
       gnetId: 1860
-      revision: 42
+      revision: 44
       datasource:
         - {name: DS_PROMETHEUS, value: Prometheus}
     cert-manager:
