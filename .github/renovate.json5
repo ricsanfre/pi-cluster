@@ -1,8 +1,12 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
-    "config:recommended",
-    ":skipStatusChecks",
+    "config:best-practices",
+    ":automergeLinters",
+    ":automergeTesters",
+    ":enablePreCommit",
+    ":enableVulnerabilityAlerts",
+    ":automergeRequireAllStatusChecks",
     ":dependencyDashboard",
     "github>olipinski/rdx-cluster//.github/renovate/customManagers.json5",
     "github>olipinski/rdx-cluster//.github/renovate/grafanaDashboards.json5",
@@ -36,4 +40,17 @@
   "ansible-galaxy": {
     managerFilePatterns: ["/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/"],
   },
+  // https://github.com/ThomasSteinbach/deleteme-renovate-test/blob/main/renovate.json
+  "regexManagers": [
+        {
+            "fileMatch": [
+                "requirements.yml"
+            ],
+            "matchStrings": [
+                "- name:\\s*(?<depName>https://github.com/(?<packageName>[a-zA-Z][\\w\\-/]+))\\.git\\n.*?type:\\s*git\\n.*?version:\\s*(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+)"
+            ],
+            "datasourceTemplate": "github-tags",
+            "depNameTemplate": "{{ packageName }}"
+        }
+    ]
 }
