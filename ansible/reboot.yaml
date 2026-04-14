@@ -6,6 +6,8 @@
   tasks:
     - name: Reboot agents
       ansible.builtin.reboot:
+  tags:
+    - agents
 
 - name: Reboot k3s servers
   hosts: k3s_server
@@ -14,6 +16,8 @@
   tasks:
     - name: Reboot servers
       ansible.builtin.reboot:
+  tags:
+    - servers
 
 - name: Reboot the service node
   hosts: service0
@@ -22,6 +26,8 @@
   tasks:
     - name: Reboot service node
       ansible.builtin.reboot:
+  tags:
+    - services
 
 - name: Reboot gateways
   hosts: gateways
@@ -30,3 +36,5 @@
   tasks:
     - name: Reboot gateways
       ansible.builtin.reboot:
+  tags:
+    - gateways
