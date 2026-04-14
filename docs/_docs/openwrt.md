@@ -619,6 +619,27 @@ OpenWRT metrics can be exported deploying Prometheus node exporter packages
     prometheus-node-exporter-lua-wifi \
     prometheus-node-exporter-lua-wifi_stations
     ```
+    
+    {{ site.data.alerts.note }}
+    Note: In newer versions of OpenWRT, opkg package manager has been replaced by apk package manager. In this case, apk command has to be used instead of opkg to install prometheus node exporter packages.
+
+    ```shell
+
+    apk update
+
+    apk add prometheus-node-exporter-lua \
+    prometheus-node-exporter-lua-nat_traffic \
+    prometheus-node-exporter-lua-netstat \
+    prometheus-node-exporter-lua-openwrt \
+    prometheus-node-exporter-lua-wifi \
+    prometheus-node-exporter-lua-wifi_stations
+    ```
+    {{ site.data.alerts.end }}
+
+    {{site.data.alerts.important}}
+    Every time OpenWRT firmware is updated, packages need to be re-installed. This is because OpenWRT firmware upgrade process reset all changes done in the system, including installed packages.
+    
+    {{site.data.alerts.end }}
 
 -   Step 4: Check metrics are exposed
 
@@ -691,39 +712,29 @@ In case Prometheus server is deployed in Kubernetes cluster using kube-prometheu
 
 #### Grafana Dashboard
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 OpenWRTr dashboard can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 18153](https://grafana.com/grafana/dashboards/18153).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file:
+The dashboard can be onboarded with a `GrafanaDashboard` resource:
 
 ```yaml
-# Configure default Dashboard Provider
-# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: infrastructure
-        orgId: 1
-        folder: "Infrastructure"
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/infrastructure-folder
-
-# Add dashboard
-# Dashboards
-dashboards:
-  infrastructure:
-    openWRT:
-      # https://grafana.com/grafana/dashboards/18153-asus-openwrt-router/
-      # renovate: depName="OpenWRT Exporter Dashboard"
-      gnetId: 18153
-      revision: 4
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: openwrt
+spec:
+  allowCrossNamespaceImport: true
+  folder: Infrastructure
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 18153
+    revision: 4
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
 ```
 
 ### Logs

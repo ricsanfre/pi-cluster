@@ -466,38 +466,30 @@ prometheus:
 
 #### Grafana Dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 cert-manager's Grafana dashboard can be downloaded from [grafana.com](https://grafana.com): [dashboard id: 20842](https://grafana.com/grafana/dashboards/20842-cert-manager-kubernetes/) 
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file:
+The dashboard can be onboarded with a `GrafanaDashboard` resource:
 
 ```yaml
-# Configure default Dashboard Provider
-# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: infrastructure
-        orgId: 1
-        folder: "Infrastructure"
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/infrastructure-folder
-
-# Add dashboard
-# Dashboards
-dashboards:
-  infrastructure:
-    cert-manager:
-      # https://grafana.com/grafana/dashboards/20842-cert-manager-kubernetes/
-      gnetId: 20842
-      revision: 3
-      datasource: Prometheus
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: cert-manager
+spec:
+  allowCrossNamespaceImport: true
+  folder: Infrastructure
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 20842
+    revision: 3
+  resyncPeriod: 10m
 ```
+
+`resyncPeriod` forces periodic retries if the Grafana instance was temporarily unavailable when the dashboard resource was first reconciled.
 
 
 ---

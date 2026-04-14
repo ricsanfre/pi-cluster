@@ -1835,7 +1835,13 @@ Providing `serviceMonitor.enabled: true` to the helm chart values.yaml file, cor
 
 #### Grafana Dashboards
 
-If [Grafana's dynamic provisioning of dashboard](/docs/grafana/#dynamic_provisioning_of_dashboards) is configured, Fluent-bit dashboard is automatically deployed by Helm chart when providing the following values:
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
+Fluent-bit dashboards can be onboarded through Grafana Operator using `GrafanaDashboard.spec.configMapRef`.
+
+The Helm chart still generates the dashboard JSON in a `ConfigMap`, but Grafana imports it through a `GrafanaDashboard` resource instead of the old sidecar-based Grafana Helm provisioning.
+
+Enable the chart-generated dashboard `ConfigMap` with:
 
 ```yaml
 # Enable Grafana dashboard
@@ -1847,5 +1853,24 @@ dashboards:
   grafana_folder: "Logging"
 ```
 
-Helm chart will deploy a dahsboard in a kubernetes ConfigMap that Grafana can dynamically load and add into "Loggin" folder.
+Then create a `GrafanaDashboard` resource like this:
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: fluent-bit
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Logging
+  configMapRef:
+    name: fluent-bit-dashboard-fluent-bit
+    key: fluent-bit-fluent-bit.json
+```
 

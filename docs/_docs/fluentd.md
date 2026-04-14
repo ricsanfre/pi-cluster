@@ -1468,11 +1468,38 @@ Corresponding Prometheus Operator's resource, `ServiceMonitor` will be created, 
 
 #### Grafana Dashboards
 
-If [Grafana's dynamic provisioning of dashboard](/docs/grafana/#dynamic_provisioning_of_dashboards) is configured, Fluentd dashboard (ConfigMap resource) is automatically deployed by Helm chart when providing the following values:
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
+Fluentd dashboards can be onboarded through Grafana Operator using `GrafanaDashboard.spec.configMapRef`.
+
+The Fluentd Helm chart still generates the dashboard JSON in a `ConfigMap`, but Grafana imports it through a `GrafanaDashboard` resource instead of the old sidecar-based Grafana Helm provisioning.
+
+Enable the chart-generated dashboard `ConfigMap` with:
 
 ```yaml
 dashboards:
   enabled: "true"
   labels:
     grafana_dashboard: '"1"'
+```
+
+Then create a `GrafanaDashboard` resource like this:
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: fluentd
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Logging
+  configMapRef:
+    name: dashboard-fluentd-fluentd
+    key: fluentd.json
 ```

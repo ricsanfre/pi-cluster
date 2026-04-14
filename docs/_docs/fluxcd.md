@@ -1670,35 +1670,39 @@ When using Kube-Prometheus-Stack, add values to helm chart configuration defined
 
 #### Grafana Dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 Flux provides 2 Grafana Dashboards to display metrics collected by Prometheus available at [Flux monitoring example GitHub repo](https://github.com/fluxcd/flux2-monitoring-example)
 
 -   Control plane dashboard: [control-plane.json](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/configs/dashboards/control-plane.json)
 -   Cluster reconciliation dashboard: [cluster.json](https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/configs/dashboards/cluster.json)
 
-The following configuration can be added to Grafana's Helm Chart so a FluxCD's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+These dashboards can be onboarded with `GrafanaDashboard` resources:
 
 ```yaml
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: flux
-        orgId: 1
-        folder: Flux
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/flux-folder
-# Dashboards
-dashboards:
-  flux:
-    flux-cluster:
-      url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/cluster.json
-      datasource: Prometheus
-    flux-control-plane:
-      url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/control-plane.json
-      datasource: Prometheus
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: flux-cluster
+spec:
+  allowCrossNamespaceImport: true
+  folder: Flux
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/cluster.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: flux-control-plane
+spec:
+  allowCrossNamespaceImport: true
+  folder: Flux
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/control-plane.json
 ```
 
 ---
