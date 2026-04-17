@@ -23,7 +23,6 @@
       with_items:
         - template: cloudflare-credentials.ini.j2
           dest: ~/.secrets/cloudflare-credentials.ini
-      when: enable_letsencrypt
 
   tasks:
     - name: Create LetsEncrypt certificate for external services
@@ -42,41 +41,9 @@
       changed_when:
         - certbot_create.rc==0
         - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
-      when: enable_letsencrypt
       with_items:
         - "{{ minio_hostname }}"
         - "{{ vault_hostname }}"
-
-    - name: Create customCA-signed TLS certificate for minio
-      when: not enable_letsencrypt
-      block:
-        # Generate self-signed certificates directory
-        - name: Create certificates directory
-          ansible.builtin.file:
-            path: "{{ selfsigned_certificates_path }}"
-            state: directory
-            mode: "0750"
-        # Include selfsigned certificates variables
-        - name: Include selfsigned certificates variables
-          ansible.builtin.include_vars: vars/selfsigned-certificates.yaml
-        - name: Generate custom CA
-          ansible.builtin.include_tasks: tasks/generate_custom_ca.yaml
-          args:
-            apply:
-              delegate_to: localhost
-              become: false
-        # Generate selfsigned TLS certificate
-        - name: Generate customCA-signed SSL certificates
-          ansible.builtin.include_tasks: tasks/generate_ca_signed_cert.yaml
-          args:
-            apply:
-              delegate_to: localhost
-              become: false
-          loop:
-            - "{{ minio_hostname }}"
-            - "{{ vault_hostname }}"
-          loop_control:
-            loop_var: server_hostname
 
 ## Install Minio S3 Storage Server
 
@@ -95,14 +62,8 @@
       ansible.builtin.include_vars: vars/vault.yaml
     - name: Include rdxcluster variables
       ansible.builtin.include_vars: vars/rdxcluster.yaml
-    - name: Load customCA-signed TLS certificate for minio
-      ansible.builtin.set_fact:
-        minio_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
-        minio_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
-      when: not enable_letsencrypt
 
     - name: Get letsencrypt TLS certificate for minio
-      when: enable_letsencrypt
       block:
         - name: Check TLS certificate for minio exits
           ansible.builtin.command: "certbot certificates -d {{ minio_hostname }}"
@@ -148,15 +109,8 @@
       ansible.builtin.include_vars: vars/vault.yaml
     - name: Include rdxcluster variables
       ansible.builtin.include_vars: vars/rdxcluster.yaml
-    - name: Load customCA-signed TLS certificate for minio
-      ansible.builtin.set_fact:
-        vault_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
-        vault_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
-        vault_ca: "{{ lookup('file', selfsigned_certificates_path + '/CA.pem') }}"
-      when: not enable_letsencrypt
 
     - name: Get letsencrypt TLS certificate for vault
-      when: enable_letsencrypt
       block:
         - name: Check TLS certificate for vault exits
           ansible.builtin.command: "certbot certificates -d {{ vault_hostname }}"
@@ -176,7 +130,6 @@
           when:
             - certbot_certificates.rc==0
             - '"Certificate Name: " + vault_hostname in certbot_certificates.stdout'
-
         - name: Load tls key and cert
           ansible.builtin.set_fact:
             vault_key: "{{ lookup('file', cert_key_path[0]) }}"

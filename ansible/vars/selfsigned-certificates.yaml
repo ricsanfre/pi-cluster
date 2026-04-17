@@ -1,8 +1,0 @@
----
-# Self-signed certificate generation variables
-ssl_key_size: 4096
-ssl_certificate_provider: selfsigned
-key_type: RSA
-country_name: PL
-email_address: "admin@{{ vault.general.domains.dns }}"
-organization_name: "{{ vault.general.org }}"

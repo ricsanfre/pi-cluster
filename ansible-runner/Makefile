@@ -1,9 +1,6 @@
-
 include runner/env
 
 RUNNER=./ansible-runner.sh
-
-.EXPORT_ALL_VARIABLES:
 
 .PHONY: default
 default: start-ansible-runner runner/.ssh/id_ed25519 runner/.vault/vault_passphrase.gpg

@@ -13,8 +13,6 @@ rules:
       # The below have versioning/fluent strings
       - .pre-commit-config.yaml
       - ansible/host_vars/service0.yaml
-      - ansible/group_vars/control.yaml
-      - ansible/install_utilities_localhost.yaml
       - ansible-runner/build/ansible_runner_setup.yaml
       - ansible/roles/velero_cli/tasks/configure_velero_cli.yaml
   braces:
