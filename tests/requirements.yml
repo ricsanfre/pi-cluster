@@ -33,7 +33,7 @@ roles:
     src: https://github.com/PyratLabs/ansible-role-k3s.git
     version: v3.6.2
   - name: geerlingguy.helm
-    version: v1.0.1
+    version: 1.0.1
 
 collections:
   - name: community.general
