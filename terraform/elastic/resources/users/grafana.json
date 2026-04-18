@@ -1,0 +1,7 @@
+{
+  "vault_secret_key" : "elastic/grafana",
+  "roles" : [ "grafana_role" ],
+  "metadata" : {
+    "version" : 1
+  }
+}
