@@ -102,3 +102,36 @@ spec:
         tag: http.path
       streamingEnabled:
         search: true
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: elasticsearch
+spec:
+  valuesFrom:
+    - targetPath: basicAuthUser
+      valueFrom:
+        secretKeyRef:
+          name: grafana
+          key: elasticsearch-username
+    - targetPath: secureJsonData.basicAuthPassword
+      valueFrom:
+        secretKeyRef:
+          name: grafana
+          key: elasticsearch-password
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Elasticsearch
+    uid: elasticsearch
+    type: elasticsearch
+    access: proxy
+    basicAuth: true
+    basicAuthUser: $${ELASTICSEARCH_USERNAME}
+    url: http://efk-es-http.elastic.svc.cluster.local:9200
+    jsonData:
+      index: logs-*.otel-*
+      timeField: '@timestamp'
+    secureJsonData:
+      basicAuthPassword: $${ELASTICSEARCH_PASSWORD}
