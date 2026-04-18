@@ -17,5 +17,12 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - apm-dashboard.json
+  - name: opentelemetry-demo-overview-dashboard
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+      disableNameSuffixHash: true
+    files:
+      - demo-dashboard.json
 configurations:
   - kustomizeconfig.yaml
