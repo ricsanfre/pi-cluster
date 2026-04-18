@@ -3,3 +3,11 @@ kind: Component
 
 resources:
   - grafana-datasource.yaml
+
+patches:
+  - target:
+      group: grafana.integreatly.org
+      version: v1beta1
+      kind: Grafana
+      name: grafana
+    path: grafana-feature-toggle-patch.yaml

@@ -1,0 +1,5 @@
+- op: add
+  path: /spec/deployment/spec/template/spec/containers/0/env/-
+  value:
+    name: GF_FEATURE_TOGGLES_ENABLE
+    value: elasticsearchESQLQuery
