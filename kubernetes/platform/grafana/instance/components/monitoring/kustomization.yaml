@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - grafana-servicemonitor.yaml
+
+patches:
+  - target:
+      group: grafana.integreatly.org
+      version: v1beta1
+      kind: Grafana
+      name: grafana
+    path: grafana-patch.yaml

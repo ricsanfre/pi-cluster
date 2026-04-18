@@ -15,8 +15,6 @@ spec:
       reporting_enabled: "false"
     log:
       mode: console
-    metrics:
-      enabled: "true"
     auth:
       disable_login_form: "false"
   deployment:
