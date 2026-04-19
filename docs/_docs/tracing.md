@@ -392,6 +392,8 @@ As tempo is running in distributed mode, extra arguments for each of the service
 
 ### Grafana Configuration
 
+See [Grafana Operator - Provisioning Data Sources](/docs/grafana-operator/#provisioning-data-sources) for the general `GrafanaDatasource` provisioning pattern used by Grafana Operator.
+
 Tempo need to be added to Grafana as DataSource. In Tempo distributed mode, the endpoint to be used is the `query-frontend` service.
 
 Tempo search streaming requires the Tempo Helm chart to enable `streamOverHTTPEnabled: true`, which maps to Tempo's `stream_over_http_enabled: true` setting. The full request path between Grafana and Tempo must still preserve HTTP/2 correctly. Otherwise Grafana can emit gRPC preface errors when opening traces from Loki links.
@@ -413,6 +415,29 @@ grafana:
     uid: tempo
     access: proxy
     url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+    jsonData:
+      streamingEnabled:
+        search: true
+```
+
+If Grafana is deployed with Grafana Operator, the same configuration is defined through a `GrafanaDatasource` resource instead of Helm values:
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+    basicAuth: false
     jsonData:
       streamingEnabled:
         search: true
@@ -466,6 +491,33 @@ A derived field `TraceID` is added to logs whose message containing label `trace
 
 When clicking on the `TraceID` link, Grafana will automatically search for that trace ID in Tempo and display the corresponding trace information.
 
+If Grafana is deployed with Grafana Operator, the Loki and Tempo integration can be configured declaratively with `GrafanaDatasource` resources:
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki-read-headless.loki.svc.cluster.local:3100
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: trace_id
+          matcherType: label
+          name: TraceID
+          url: $${__value.raw}
+```
+
+
 ### Traces to Logs correlation
 
 Grafana Tempo can be configured to include links to Loki Explore when displaying trace information. This allows users to easily navigate from a trace to the corresponding logs in Loki.
@@ -497,10 +549,56 @@ grafana:
         query: '{$${__tags}} | trace_id="$${__span.traceId}"'
 ``` 
 
+With Grafana Operator, the same correlation is configured in `GrafanaDatasource.spec.datasource.jsonData.tracesToLogsV2`, as shown in the combined Loki and Tempo example above.
 
 Grafana Tempo's `tracesToLogsV2` configuration allows to specify a custom query that will be used to search for logs in Loki when clicking on the "Logs" link from a trace. In the above configuration, the query is set to search for logs that have a label `trace_id` matching the trace ID of the selected span.
 
 {{site.data.alerts.note}}
 `$` character need to be escaped as `$$` in Grafana datasource configuration. Otherwise, Grafana will try to resolve it as a template variable and the query will not work as expected.
 {{site.data.alerts.end}}
-  
+
+If Grafana is deployed with Grafana Operator, the Loki and Tempo integration can be configured declaratively with `GrafanaDatasource` resources:
+
+
+```yaml
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+    basicAuth: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+      spanBar:
+        type: Tag
+        tag: http.path
+      streamingEnabled:
+        search: true
+```
