@@ -442,6 +442,12 @@
           },
           "editorMode": "code",
           "format": "table",
+            "metrics": [
+              {
+                "id": "1",
+                "type": "logs"
+              }
+            ],
           "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| STATS count = COUNT(*) BY severity = severity_text\n| SORT count DESC",
           "queryType": "esql",
           "refId": "A"
@@ -549,6 +555,12 @@
           },
           "editorMode": "code",
           "format": "table",
+            "metrics": [
+              {
+                "id": "1",
+                "type": "logs"
+              }
+            ],
           "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| KEEP `@timestamp`, severity_text, `body.text`, `scope.name`, trace_id, span_id\n| SORT `@timestamp` DESC\n| LIMIT 100",
           "queryType": "esql",
           "refId": "A"

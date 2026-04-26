@@ -1921,6 +1921,12 @@
                     },
                     "editorMode": "code",
                     "format": "table",
+                        "metrics": [
+                            {
+                                "id": "1",
+                                "type": "logs"
+                            }
+                        ],
                     "query": "FROM $__index\n| WHERE `service.name` == \"$service_name\" AND `service.namespace` == \"$service_namespace\"\n| KEEP `@timestamp`, severity_text, `body.text`, `scope.name`\n| SORT `@timestamp` DESC\n| LIMIT 200",
                     "queryType": "esql",
                     "refId": "A"
