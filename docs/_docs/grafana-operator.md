@@ -469,11 +469,16 @@ spec:
     type: elasticsearch
     access: proxy
     basicAuth: true
+    basicAuthUser: ${elasticsearch-username}
     url: http://efk-es-http.elastic.svc.cluster.local:9200
+    secureJsonData:
+      basicAuthPassword: ${elasticsearch-password}
     jsonData:
       index: logs-*.otel-*
       timeField: '@timestamp'
 ```
+
+`valuesFrom` performs substitution into an existing `${...}` placeholder in the datasource model. The placeholder name must match the referenced Secret key.
 
 
 ### Provisioning Dashboards
