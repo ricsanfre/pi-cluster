@@ -226,7 +226,20 @@ With this configuration:
 
 With Grafana Operator, datasources are provisioned using `GrafanaDatasource` custom resources instead of Helm provisioning files or Grafana sidecars.
 
-Create the Prometheus datasource:
+This approach has two main advantages over the Helm-sidecar model:
+
+-   datasources are declarative Kubernetes resources
+-   reconciliation is handled by the operator instead of by filesystem provisioning inside the Grafana pod
+
+
+#### Prometheus
+
+Prometheus is the default metrics datasource used by dashboards, Explore, and trace-to-metrics links.
+
+Official Grafana documentation:
+
+-   [Prometheus data source](https://grafana.com/docs/grafana/latest/datasources/prometheus/)
+-   [Configure the Prometheus data source](https://grafana.com/docs/grafana/latest/datasources/prometheus/configure/)
 
 ```yaml
 apiVersion: grafana.integreatly.org/v1beta1
@@ -247,19 +260,214 @@ spec:
     isDefault: true
 ```
 
-Add additional datasources as needed.
 
-Common examples are:
+#### Alertmanager
 
--   Prometheus
--   Alertmanager
--   Loki
--   Tempo
+Alertmanager is configured as a separate datasource so Grafana Alerting can browse Prometheus Alertmanager resources, especially silences.
 
-This approach has two main advantages over the Helm-sidecar model:
+Official Grafana documentation:
 
--   datasources are declarative Kubernetes resources
--   reconciliation is handled by the operator instead of by filesystem provisioning inside the Grafana pod
+-   [Alertmanager data source](https://grafana.com/docs/grafana/latest/datasources/alertmanager/)
+-   [Provision the Alertmanager data source](https://grafana.com/docs/grafana/latest/datasources/alertmanager/#provision-the-alertmanager-data-source)
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: alertmanager
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Alertmanager
+    uid: alertmanager
+    type: alertmanager
+    url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
+    jsonData:
+      implementation: prometheus
+```
+
+
+#### Loki
+
+Loki is the logs datasource. In addition to the service URL, the datasource config defines a derived field so log entries with a `trace_id` label can deep-link into Tempo.
+
+Official Grafana documentation:
+
+-   [Loki data source](https://grafana.com/docs/grafana/latest/datasources/loki/)
+-   [Configure the Loki data source](https://grafana.com/docs/grafana/latest/datasources/loki/configure-loki-data-source/)
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki-read-headless.loki.svc.cluster.local:3100
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: trace_id
+          matcherType: label
+          name: TraceID
+          url: $${__value.raw}
+```
+
+
+#### Tempo
+
+Tempo is the tracing datasource. Its configuration also wires Tempo to Loki for trace-to-logs, to Prometheus for trace-to-metrics and service maps, and enables node graph and streaming features.
+
+Official Grafana documentation:
+
+-   [Tempo data source](https://grafana.com/docs/grafana/latest/datasources/tempo/)
+-   [Configure the Tempo data source](https://grafana.com/docs/grafana/latest/datasources/tempo/configure-tempo-data-source/)
+-   [Service graph](https://grafana.com/docs/grafana/latest/datasources/tempo/service-graph/)
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+    basicAuth: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        tags:
+          - key: service.name
+            value: service
+          - key: job
+        queries:
+          - name: Sample query
+            query: sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+      spanBar:
+        type: Tag
+        tag: http.path
+      streamingEnabled:
+        search: true
+```
+
+
+#### Elasticsearch
+
+Elasticsearch is used as the logs backend for OpenTelemetry log records. In Pi Cluster, credentials are injected from a Kubernetes Secret through `valuesFrom`, while the datasource itself targets the `logs-*.otel-*` data streams.
+
+A dedicated grafana user with read-only permissions to the relevant indices/data streams is recommended for production environments.
+
+Official Grafana documentation:
+
+-   [Elasticsearch data source](https://grafana.com/docs/grafana/latest/datasources/elasticsearch/)
+-   [Configure the Elasticsearch data source](https://grafana.com/docs/grafana/latest/datasources/elasticsearch/configure/)
+
+#### Prerequisites: create Elasticsearch user and role
+
+Create a read-only user and role in Elasticsearch for Grafana to use.
+The role should have permissions to read from the relevant indices or data streams, such as `logs-*.otel-*`.
+
+
+The role must include at least:
+
+- Cluster privilege: `monitor`
+- Index patterns: `logs-*.otel-*`
+- Index privileges: `read`
+
+Example role definition:
+
+```json
+{
+  "cluster": ["monitor"],
+  "indices": [
+    {
+      "names": ["logs-*.otel-*"],
+      "privileges": ["read", "view_index_metadata"]
+    }
+  ]
+}
+```
+Example user definition:
+
+```json
+{
+  "username": "grafana",
+  "password": "change-me",
+  "roles": ["grafana-readonly"]
+}
+
+
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: elasticsearch
+spec:
+  valuesFrom:
+    - targetPath: basicAuthUser
+      valueFrom:
+        secretKeyRef:
+          name: grafana
+          key: elasticsearch-username
+    - targetPath: secureJsonData.basicAuthPassword
+      valueFrom:
+        secretKeyRef:
+          name: grafana
+          key: elasticsearch-password
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Elasticsearch
+    uid: elasticsearch
+    type: elasticsearch
+    access: proxy
+    basicAuth: true
+    basicAuthUser: ${ELASTICSEARCH_USERNAME}
+    url: http://efk-es-http.elastic.svc.cluster.local:9200
+    jsonData:
+      index: logs-*.otel-*
+      timeField: '@timestamp'
+    secureJsonData:
+      basicAuthPassword: ${ELASTICSEARCH_PASSWORD}
+```
 
 
 ### Provisioning Dashboards
