@@ -107,7 +107,7 @@ metadata:
   labels:
     dashboards: grafana
 spec:
-  version: 12.3.1
+  version: 13.0.1
   disableDefaultAdminSecret: true
   config:
     analytics:
@@ -136,7 +136,13 @@ spec:
                     secretKeyRef:
                       name: grafana-admin-credentials
                       key: admin-password
+                - name: GF_PLUGINS_PREINSTALL_SYNC
+                  value: elasticsearch,grafana-piechart-panel
+                - name: GF_PLUGINS_PREINSTALL_AUTO_UPDATE
+                  value: "false"
 ```
+
+Starting with Grafana v13, Elasticsearch is a standalone datasource plugin. In operator-managed deployments that run Grafana from a read-only image, disable preinstall auto-updates so Grafana does not try to rewrite the bundled Elasticsearch plugin during startup.
 
 Apply it:
 
@@ -391,6 +397,8 @@ spec:
 #### Elasticsearch
 
 Elasticsearch is used as the logs backend for OpenTelemetry log records. In Pi Cluster, credentials are injected from a Kubernetes Secret through `valuesFrom`, while the datasource itself targets the `logs-*.otel-*` data streams.
+
+Starting with Grafana v13, the Elasticsearch datasource is a standalone plugin. When Grafana is deployed from a read-only container image, keep the plugin preinstalled but disable preinstall auto-update to avoid startup failures caused by attempts to rewrite `plugins-bundled`.
 
 A dedicated grafana user with read-only permissions to the relevant indices/data streams is recommended for production environments.
 

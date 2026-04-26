@@ -39,3 +39,5 @@ spec:
                       key: admin-password
                 - name: GF_PLUGINS_PREINSTALL_SYNC
                   value: elasticsearch,grafana-piechart-panel
+                - name: GF_PLUGINS_PREINSTALL_AUTO_UPDATE
+                  value: "false"
