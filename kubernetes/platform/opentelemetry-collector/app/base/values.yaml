@@ -59,11 +59,14 @@ config:
       verbosity: basic
 
   processors:
-    # Add service instance id from k8s.pod.uid
+    # Add stable service resource attributes derived from Kubernetes metadata.
     resource:
       attributes:
       - key: service.instance.id
         from_attribute: k8s.pod.uid
+        action: insert
+      - key: service.namespace
+        from_attribute: k8s.namespace.name
         action: insert
 
   # Spanmetrics Connector is a component in the OpenTelemetry Collector that allows you to derive metrics from span data. This is particularly useful when you have robust tracing but lack native metrics support in your language or framework.
