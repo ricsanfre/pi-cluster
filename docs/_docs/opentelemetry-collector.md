@@ -37,7 +37,7 @@ The architecture implemented in this repository is the following:
 5. Telemetry is exported to the different backends:
    - traces to Tempo
    - metrics to Prometheus through the OTLP HTTP ingestion endpoint
-  - logs to Elasticsearch and Loki
+   - logs to Elasticsearch and Loki
 
 
 ![otel-architecture](/assets/img/otel-collector-architecture.png)
@@ -352,7 +352,25 @@ Installation steps:
    
   - `promoteResourceAttributes` promotes OpenTelemetry resource attributes to Prometheus labels. This ensures that Kubernetes metadata and service information attached to OpenTelemetry telemetry is preserved when ingested by Prometheus.
 
-  -  `translationStrategy: NoUTF8EscapingWithSuffixes` ensures that OpenTelemetry resource attributes are translated to Prometheus labels without character escaping and with the `_otel` suffix to avoid conflicts with existing Prometheus labels.
+  -  `translationStrategy: NoUTF8EscapingWithSuffixes` will disable changing special characters to _ which allows native use of OpenTelemetry metric format, especially with the semantic conventions . Note that special suffixes like units and _total for counters will be attached to prevent possible collisions with multiple metrics of the same name having different type or units.
+
+     {{ site.data.alerts.warning }}
+
+      The default translation strategy in Prometheus replaces special characters with underscores, which can lead to loss of semantic information and potential collisions between metrics. For example, an OpenTelemetry metric named `http.request.duration` would be translated to `http_request_duration`, losing the original structure and meaning. By using `NoUTF8EscapingWithSuffixes`, you can preserve the original metric names and their semantic conventions, while still ensuring that Prometheus can handle them correctly by adding necessary suffixes for type and unit differentiation.
+
+      PromQL queries will need to use the original OpenTelemetry metric names with the appropriate suffixes, such as `http.request.duration_seconds` for a histogram metric representing request duration in seconds.
+      To avoid syntax errors, metric names with dots are queried as quoted selectors inside braces, so the query would look like:
+
+      ```promql
+      {"__name__"="http.request.duration_seconds"}
+      ```
+      or
+
+      ```promql
+      {"http.request.duration_seconds_bucket"}
+      ```
+      See further details in the [Prometheus documentation](https://prometheus.io/docs/guides/opentelemetry/#send-opentelemetry-metrics-to-the-prometheus-server) and in the [prometheus discussion](https://github.com/prometheus/prometheus/discussions/17861).
+     {{ site.data.alerts.end }}
 
   -  `keepIdentifyingResourceAttributes: true` ensures that resource attributes used for identifying metrics are preserved during translation.
 
