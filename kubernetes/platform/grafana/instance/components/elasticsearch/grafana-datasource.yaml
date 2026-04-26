@@ -25,10 +25,7 @@ spec:
     type: elasticsearch
     access: proxy
     basicAuth: true
-    basicAuthUser: ${ELASTICSEARCH_USERNAME}
     url: http://efk-es-http.elastic.svc.cluster.local:9200
     jsonData:
       index: logs-*.otel-*
       timeField: '@timestamp'
-    secureJsonData:
-      basicAuthPassword: ${ELASTICSEARCH_PASSWORD}
