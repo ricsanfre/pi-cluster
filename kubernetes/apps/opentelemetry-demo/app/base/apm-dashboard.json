@@ -1921,7 +1921,7 @@
                     },
                     "editorMode": "code",
                     "format": "table",
-                    "query": "FROM $__index\n| WHERE `resource.service.name` == \"$service_name\" AND `resource.service.namespace` == \"$service_namespace\"\n| KEEP `@timestamp`, `severity.text`, body, `instrumentationScope.name`\n| SORT `@timestamp` DESC\n| LIMIT 200",
+                    "query": "FROM $__index\n| WHERE `service.name` == \"$service_name\" AND `service.namespace` == \"$service_namespace\"\n| KEEP `@timestamp`, `severity.text`, body, `instrumentationScope.name`\n| SORT `@timestamp` DESC\n| LIMIT 200",
                     "queryType": "esql",
                     "refId": "A"
                 }

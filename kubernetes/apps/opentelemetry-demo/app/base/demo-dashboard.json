@@ -442,7 +442,7 @@
           },
           "editorMode": "code",
           "format": "table",
-          "query": "FROM $__index\n| WHERE `resource.service.name` == \"$service\" AND `resource.service.namespace` == \"otel-demo\"\n| STATS count = COUNT(*) BY severity = `severity.text`\n| SORT count DESC",
+          "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| STATS count = COUNT(*) BY severity = `severity.text`\n| SORT count DESC",
           "queryType": "esql",
           "refId": "A"
         }
@@ -549,7 +549,7 @@
           },
           "editorMode": "code",
           "format": "table",
-          "query": "FROM $__index\n| WHERE `resource.service.name` == \"$service\" AND `resource.service.namespace` == \"otel-demo\"\n| KEEP `@timestamp`, `severity.text`, body, `instrumentationScope.name`, traceId, spanId\n| SORT `@timestamp` DESC\n| LIMIT 100",
+          "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| KEEP `@timestamp`, `severity.text`, body, `instrumentationScope.name`, traceId, spanId\n| SORT `@timestamp` DESC\n| LIMIT 100",
           "queryType": "esql",
           "refId": "A"
         }
