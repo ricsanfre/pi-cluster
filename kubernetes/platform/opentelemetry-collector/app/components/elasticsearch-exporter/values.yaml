@@ -12,6 +12,14 @@ extraEnvs:
         key: es-password
 
 config:
+  processors:
+    # Elasticsearch dashboards filter on service.namespace, but for Kubernetes
+    # workloads the namespace arrives on log attributes and must be promoted.
+    transform/elasticsearch:
+      log_statements:
+        - context: log
+          statements:
+            - set(resource.attributes["service.namespace"], log.attributes["k8s.namespace.name"])
   extensions:
     basicauth:
       client_auth:
@@ -32,5 +40,5 @@ config:
     pipelines:
       logs/elasticsearch:
         receivers: [otlp]
-        processors: [memory_limiter, resource, batch]
+        processors: [memory_limiter, transform/elasticsearch, resource, batch]
         exporters: [elasticsearch]
