@@ -1877,7 +1877,7 @@
                     {
                         "matcher": {
                             "id": "byName",
-                            "options": "severity.text"
+                            "options": "severity_text"
                         },
                         "properties": [
                             {
@@ -1889,7 +1889,7 @@
                     {
                         "matcher": {
                             "id": "byName",
-                            "options": "instrumentationScope.name"
+                            "options": "scope.name"
                         },
                         "properties": [
                             {
@@ -1921,7 +1921,7 @@
                     },
                     "editorMode": "code",
                     "format": "table",
-                    "query": "FROM $__index\n| WHERE `service.name` == \"$service_name\" AND `service.namespace` == \"$service_namespace\"\n| KEEP `@timestamp`, `severity.text`, body, `instrumentationScope.name`\n| SORT `@timestamp` DESC\n| LIMIT 200",
+                    "query": "FROM $__index\n| WHERE `service.name` == \"$service_name\" AND `service.namespace` == \"$service_namespace\"\n| KEEP `@timestamp`, severity_text, `body.text`, `scope.name`\n| SORT `@timestamp` DESC\n| LIMIT 200",
                     "queryType": "esql",
                     "refId": "A"
                 }
@@ -1944,15 +1944,15 @@
                         "includeByName": {},
                         "indexByName": {
                             "@timestamp": 0,
-                            "body": 3,
-                            "instrumentationScope.name": 2,
-                            "severity.text": 1
+                            "body.text": 3,
+                            "scope.name": 2,
+                            "severity_text": 1
                         },
                         "renameByName": {
                             "@timestamp": "Time",
-                            "body": "Message",
-                            "instrumentationScope.name": "Logger",
-                            "severity.text": "Severity"
+                            "body.text": "Message",
+                            "scope.name": "Logger",
+                            "severity_text": "Severity"
                         }
                     }
                 }

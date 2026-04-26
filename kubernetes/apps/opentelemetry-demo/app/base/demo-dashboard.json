@@ -442,7 +442,7 @@
           },
           "editorMode": "code",
           "format": "table",
-          "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| STATS count = COUNT(*) BY severity = `severity.text`\n| SORT count DESC",
+          "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| STATS count = COUNT(*) BY severity = severity_text\n| SORT count DESC",
           "queryType": "esql",
           "refId": "A"
         }
@@ -505,7 +505,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "body"
+              "options": "body.text"
             },
             "properties": [
               {
@@ -517,7 +517,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity.text"
+              "options": "severity_text"
             },
             "properties": [
               {
@@ -549,7 +549,7 @@
           },
           "editorMode": "code",
           "format": "table",
-          "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| KEEP `@timestamp`, `severity.text`, body, `instrumentationScope.name`, traceId, spanId\n| SORT `@timestamp` DESC\n| LIMIT 100",
+          "query": "FROM $__index\n| WHERE `service.name` == \"$service\" AND `service.namespace` == \"otel-demo\"\n| KEEP `@timestamp`, severity_text, `body.text`, `scope.name`, trace_id, span_id\n| SORT `@timestamp` DESC\n| LIMIT 100",
           "queryType": "esql",
           "refId": "A"
         }
@@ -572,19 +572,19 @@
             "includeByName": {},
             "indexByName": {
               "@timestamp": 0,
-              "body": 3,
-              "instrumentationScope.name": 4,
-              "severity.text": 1,
-              "spanId": 6,
-              "traceId": 5
+              "body.text": 3,
+              "scope.name": 4,
+              "severity_text": 1,
+              "span_id": 6,
+              "trace_id": 5
             },
             "renameByName": {
               "@timestamp": "Time",
-              "body": "Message",
-              "instrumentationScope.name": "Logger",
-              "severity.text": "Severity",
-              "spanId": "Span ID",
-              "traceId": "Trace ID"
+              "body.text": "Message",
+              "scope.name": "Logger",
+              "severity_text": "Severity",
+              "span_id": "Span ID",
+              "trace_id": "Trace ID"
             }
           }
         }
