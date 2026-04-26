@@ -407,6 +407,31 @@ Official Grafana documentation:
 -   [Elasticsearch data source](https://grafana.com/docs/grafana/latest/datasources/elasticsearch/)
 -   [Configure the Elasticsearch data source](https://grafana.com/docs/grafana/latest/datasources/elasticsearch/configure/)
 
+#### Enable ES|QL for Elasticsearch
+
+Grafana must enable the Elasticsearch ES|QL feature toggle before dashboards can run datasource queries with `queryType: esql`.
+
+In Grafana Operator deployments, enable it by adding `GF_FEATURE_TOGGLES_ENABLE` with value `elasticsearchESQLQuery` environment variable to the Grafana container:
+
+```yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+  labels:
+    dashboards: grafana
+spec:
+  deployment:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: grafana
+              env:
+                - name: GF_FEATURE_TOGGLES_ENABLE
+                  value: elasticsearchESQLQuery
+```
+
 #### Prerequisites: create Elasticsearch user and role
 
 Create a read-only user and role in Elasticsearch for Grafana to use.
