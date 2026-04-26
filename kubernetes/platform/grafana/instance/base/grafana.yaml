@@ -37,5 +37,5 @@ spec:
                     secretKeyRef:
                       name: grafana
                       key: admin-password
-                - name: GF_INSTALL_PLUGINS
-                  value: grafana-piechart-panel
+                - name: GF_PLUGINS_PREINSTALL_SYNC
+                  value: elasticsearch,grafana-piechart-panel
