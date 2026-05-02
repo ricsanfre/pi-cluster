@@ -7,7 +7,7 @@ spec:
   interval: 1h
   url: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
   ref:
-    tag: 0.45.1
+    tag: 0.48.0
   layerSelector:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
