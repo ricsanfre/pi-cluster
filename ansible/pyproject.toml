@@ -11,7 +11,7 @@ dependencies = [
     "yamllint==1.38.0",
     "kubernetes==35.0.0",
     "hvac==2.4.0",
-    "certbot==5.4.0",
+    "certbot==5.5.0",
     "certbot-dns-ionos==2024.11.9",
 ]
 
