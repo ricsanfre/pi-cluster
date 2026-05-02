@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  prometheus.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-prometheus
+spec:
+  allowCrossNamespaceImport: true
+  folder: Observability
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "panels": [
             {
@@ -800,9 +808,3 @@ data:
         "title": "Prometheus / Overview",
         "uid": "9fa0d141-d019-4ad7-8bc5-42196ee308bd"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-prometheus
-  namespace: kube-prom-stack

@@ -622,33 +622,29 @@ Corresponding Prometheus Operator's resource, `ServiceMonitor` will be created, 
 
 ### Grafana Dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 Velero dashboard sample can be donwloaded from [grafana.com](https://grafana.com): [dashboard id: 11055](https://grafana.com/grafana/dashboards/11055)
 
-The following configuration can be added to Grafana's Helm Chart so a MinIO's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+The dashboard can be onboarded with a `GrafanaDashboard` resource:
 
 ```yaml
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: infrastructure
-        orgId: 1
-        folder: Infrastructure
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/infrastructure-folder
-# Dashboards
-dashboards:
-  infrastructure:
-    velero:
-      # https://grafana.com/grafana/dashboards/11055-kubernetes-addons-velero-stats/
-      # renovate: depName="Velero Dashboard"
-      gnetId: 11055
-      revision: 2
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: velero
+spec:
+  allowCrossNamespaceImport: true
+  folder: Infrastructure
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 11055
+    revision: 2
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
 ```
 
 ## References

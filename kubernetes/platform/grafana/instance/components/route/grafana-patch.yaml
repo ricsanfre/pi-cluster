@@ -1,0 +1,24 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+spec:
+  httpRoute:
+    spec:
+      hostnames:
+        - grafana.${CLUSTER_DOMAIN}
+      parentRefs:
+        - name: public-gateway
+          namespace: envoy-gateway-system
+      rules:
+        - backendRefs:
+            - name: grafana-service
+              port: 3000
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+  config:
+    server:
+      domain: grafana.${CLUSTER_DOMAIN}
+      root_url: https://%(domain)s/

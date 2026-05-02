@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  cluster-total.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-cluster-total
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -803,9 +811,3 @@ data:
         "title": "Kubernetes / Networking / Cluster",
         "uid": "ff635a025bcfea7bc3dd4f508990a3e9"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-cluster-total
-  namespace: kube-prom-stack

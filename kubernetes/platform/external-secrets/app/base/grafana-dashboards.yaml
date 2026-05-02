@@ -1,0 +1,11 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: external-secrets
+spec:
+  allowCrossNamespaceImport: true
+  folder: Secret Management
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/external-secrets/external-secrets/main/docs/snippets/dashboard.json

@@ -38,14 +38,6 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/kubernetes-folder
-      - name: nginx
-        orgId: 1
-        folder: Nginx
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/nginx-folder
       - name: envoy-gateway
         orgId: 1
         folder: Envoy-Gateway
@@ -165,13 +157,6 @@ dashboards:
     spegel:
       url: https://raw.githubusercontent.com/spegel-org/spegel/refs/heads/main/charts/spegel/monitoring/grafana-dashboard.json
       datasource: Prometheus
-    haproxy:
-      # https://grafana.com/grafana/dashboards/12693-haproxy/
-      # renovate: depName="HAProxy Dashboard"
-      gnetId: 12693
-      revision: 12
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
     vault:
       url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
       datasource: Prometheus
@@ -235,13 +220,6 @@ dashboards:
       revision: 3
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
-  nginx:
-    nginx:
-      url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/nginx.json
-      datasource: Prometheus
-    nginx-request-handling-performance:
-      url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/request-handling-performance.json
-      datasource: Prometheus
   minio:
     minio-server:
       # https://grafana.com/grafana/dashboards/13502-minio-dashboard/

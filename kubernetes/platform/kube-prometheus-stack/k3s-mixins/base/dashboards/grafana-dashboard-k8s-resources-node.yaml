@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  k8s-resources-node.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-k8s-resources-node
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -823,9 +831,3 @@ data:
         "title": "Kubernetes / Compute Resources / Node (Pods)",
         "uid": "200ac8fdbfbb74b39aff88118e4d1c2c"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-k8s-resources-node
-  namespace: kube-prom-stack

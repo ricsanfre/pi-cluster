@@ -4,10 +4,25 @@ resources:
   - ns.yaml
   - helm.yaml
   - httproute.yaml
+  - grafana-dashboard.yaml
 
 configMapGenerator:
   - name: opentelemetry-demo-helm-values
     files:
       - base-values.yaml=values.yaml
+  - name: opentelemetry-demo-apm-dashboard
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+      disableNameSuffixHash: true
+    files:
+      - apm-dashboard.json
+  - name: opentelemetry-demo-overview-dashboard
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+      disableNameSuffixHash: true
+    files:
+      - demo-dashboard.json
 configurations:
   - kustomizeconfig.yaml

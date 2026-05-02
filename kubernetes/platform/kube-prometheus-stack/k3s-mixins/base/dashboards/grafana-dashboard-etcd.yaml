@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  etcd.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-etcd
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "description": "etcd sample Grafana dashboard with Prometheus",
         "panels": [
@@ -540,9 +548,3 @@ data:
         "title": "etcd",
         "uid": "c2f4e12cdf69feb95caa41a5a1b423d9"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-etcd
-  namespace: kube-prom-stack

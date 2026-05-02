@@ -1,0 +1,34 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: elasticsearch
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+spec:
+  valuesFrom:
+    - targetPath: basicAuthUser
+      valueFrom:
+        secretKeyRef:
+          name: grafana
+          key: elasticsearch-username
+    - targetPath: secureJsonData.basicAuthPassword
+      valueFrom:
+        secretKeyRef:
+          name: grafana
+          key: elasticsearch-password
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Elasticsearch
+    uid: elasticsearch
+    type: elasticsearch
+    access: proxy
+    basicAuth: true
+    basicAuthUser: ${elasticsearch-username}
+    url: http://efk-es-http.elastic.svc.cluster.local:9200
+    secureJsonData:
+      basicAuthPassword: ${elasticsearch-password}
+    jsonData:
+      index: logs-*.otel-*
+      timeField: '@timestamp'

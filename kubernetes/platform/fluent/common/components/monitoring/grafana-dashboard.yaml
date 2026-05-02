@@ -1,0 +1,17 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: logging
+# https://grafana.com/grafana/dashboards/7752-logging-dashboard/
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: Logging
+  grafanaCom:
+    id: 7752
+    revision: 6
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS

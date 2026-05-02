@@ -7,7 +7,5 @@ serviceMonitor:
 # Enable Grafana dashboard
 dashboards:
   enabled: true
-  labelKey: grafana_dashboard
-  labelValue: 1
   annotations:
     grafana_folder: "Logging"

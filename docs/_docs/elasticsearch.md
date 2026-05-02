@@ -766,33 +766,22 @@ Providing `serviceMonitor.enabled: true` to the helm chart `values.yaml` file, c
 
 #### Grafana Dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 Elasticsearh exporter dashboard sample can be donwloaded from [prometheus-elasticsearh-exporter repo](https://github.com/prometheus-community/elasticsearch_exporter/blob/master/examples/grafana/dashboard.json).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file:
+The dashboard can be onboarded with a `GrafanaDashboard` resource:
 
 ```yaml
-# Configure default Dashboard Provider
-# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: infrastructure
-        orgId: 1
-        folder: "Infrastructure"
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/infrastructure-folder
-
-# Add dashboard
-# Dashboards
-dashboards:
-  infrastructure:
-    elasticsearch:
-      url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/examples/grafana/dashboard.json
-      datasource: Prometheus
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: elasticsearch
+spec:
+  allowCrossNamespaceImport: true
+  folder: Infrastructure
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/prometheus-community/elasticsearch_exporter/master/elasticsearch-mixin/compiled/dashboards/cluster.json
 ```

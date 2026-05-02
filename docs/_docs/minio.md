@@ -261,60 +261,84 @@ metrics:
 
 #### Grafana dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 MinIO provides Grafana Dashboards to display metrics collected by Prometheus.
 
-There are 3 Dashboards available:
+There are 4 dashboards available:
 
 -   MinIO Server Metrics Dashboard: [Grafana dashboard id: 13502](https://grafana.com/grafana/dashboards/13502-minio-dashboard/)
 -   MinIO Bucket Metrics Dashboard: [Grafana dashboard id: 19237](https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/)
 -   MinIO Node Metrics Dashboard: Available in MiniO GitHub Repo: [mino-node.json](https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json)
 -   MinIO Replication Metrics Dashboard: [Grafana dashbord Id 15305](https://grafana.com/grafana/dashboards/15305-minio-replication-dashboard/)
 
+Onboard these dashboards with `GrafanaDashboard` resources instead of provisioning them through Grafana Helm values.
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file, so a MinIO's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+The following manifests show the operator-native pattern:
 
 ```yaml
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: minio
-        orgId: 1
-        folder: Minuo
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/minio-folder
-# Dashboards
-dashboards:
-  minio:
-    minio-server:
-      # https://grafana.com/grafana/dashboards/13502-minio-dashboard/
-      # renovate: depName="MinIO Dashboard"
-      gnetId: 13502
-      revision: 26
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    minio-bucket:
-      # https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/
-      # renovate: depName="MinIO Dashboard"
-      gnetId: 19237
-      revision: 2
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    minio-node:
-      url: https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json
-      datasource: Prometheus
-    minio-replication:
-      # https://grafana.com/grafana/dashboards/15305-minio-replication-dashboard/
-      # renovate: depName="MinIO Dashboard"
-      gnetId: 15305
-      revision: 5
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: minio-server
+spec:
+  allowCrossNamespaceImport: true
+  folder: MinIO
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 13502
+    revision: 26
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: minio-bucket
+spec:
+  allowCrossNamespaceImport: true
+  folder: MinIO
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 19237
+    revision: 2
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: minio-node
+spec:
+  allowCrossNamespaceImport: true
+  folder: MinIO
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/minio/minio/master/docs/metrics/prometheus/grafana/node/minio-node.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: minio-replication
+spec:
+  allowCrossNamespaceImport: true
+  folder: MinIO
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15305
+    revision: 5
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
 ```
 ---
 

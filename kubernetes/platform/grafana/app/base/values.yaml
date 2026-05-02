@@ -33,6 +33,7 @@ datasources:
     - name: Alertmanager
       type: alertmanager
       uid: alertmanager
+      access: proxy
       url: http://kube-prometheus-stack-alertmanager.kube-prom-stack.svc.cluster.local:9093
       jsonData:
         implementation: prometheus
@@ -71,7 +72,7 @@ datasources:
           tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
           queries:
             - name: 'Sample query'
-              query: 'sum(rate(traces_spanmetrics_latency_bucket{$$$$__tags}[5m]))'
+              query: 'sum(rate({"traces.span.metrics.duration_milliseconds_bucket",$$$$__tags}[5m]))'
         serviceMap:
           datasourceUid: 'prometheus'
         nodeGraph:

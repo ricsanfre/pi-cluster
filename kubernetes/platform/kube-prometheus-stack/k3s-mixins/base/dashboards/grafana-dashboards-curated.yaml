@@ -1,0 +1,126 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-api-server
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15761
+    revision: 21
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-coredns
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15762
+    revision: 22
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-global
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15757
+    revision: 43
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-namespaces
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15758
+    revision: 46
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-nodes
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15759
+    revision: 40
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-pods
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 15760
+    revision: 39
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: kubernetes-volumes
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 11454
+    revision: 14
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: node-exporter-full
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 1860
+    revision: 43
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: spegel
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/spegel-org/spegel/refs/heads/main/charts/spegel/monitoring/grafana-dashboard.json

@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  namespace-by-pod.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-namespace-by-pod
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -629,9 +637,3 @@ data:
         "title": "Kubernetes / Networking / Namespace (Pods)",
         "uid": "8b7a8b326d7a6f1f04244066368c67af"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-namespace-by-pod
-  namespace: kube-prom-stack

@@ -2,12 +2,6 @@
 # https://fluxcd.io/flux/monitoring/metrics/
 # https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/controllers/kube-prometheus-stack/kube-state-metrics-config.yaml
 kube-state-metrics:
-  # For kube-prometheus-stacks that are already installed and configured with
-  # custom collectors, commenting out the collectors and extraArgs below will
-  # retain any existing kube-state-metrics configuration.
-  collectors: [ ]
-  extraArgs:
-    - --custom-resource-state-only=true
   rbac:
     extraRules:
       - apiGroups:

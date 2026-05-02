@@ -927,35 +927,24 @@ export VAULT_TOKEN=$(jq -r '.root_token' /etc/vault/unseal.json)
 
 ##### Grafana Dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 Vault dashboard sample can be downloaded from [Grafana jsonnet libraries repo: vault-mixin](https://github.com/grafana/jsonnet-libs/blob/master/vault-mixin/dashboards/vault.json).
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file:
+The dashboard can be onboarded with a `GrafanaDashboard` resource:
 
 ```yaml
-# Configure default Dashboard Provider
-# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: infrastructure
-        orgId: 1
-        folder: "Infrastructure"
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/infrastructure-folder
-
-# Add dashboard
-# Dashboards
-dashboards:
-  infrastructure:
-    vault:
-      url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
-      datasource: Prometheus
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: vault
+spec:
+  allowCrossNamespaceImport: true
+  folder: Infrastructure
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/grafana/jsonnet-libs/refs/heads/master/vault-mixin/dashboards/vault.json
 ```
 
 ## External Secrets Operator installation

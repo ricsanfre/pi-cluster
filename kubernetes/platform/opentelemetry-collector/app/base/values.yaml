@@ -59,7 +59,7 @@ config:
       verbosity: basic
 
   processors:
-    # Add service instance id from k8s.pod.uid
+    # Add stable service resource attributes derived from Kubernetes metadata.
     resource:
       attributes:
       - key: service.instance.id

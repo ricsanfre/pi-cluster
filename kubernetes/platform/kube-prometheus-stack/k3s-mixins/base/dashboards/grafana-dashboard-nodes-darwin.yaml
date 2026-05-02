@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  nodes-darwin.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-nodes-darwin
+spec:
+  allowCrossNamespaceImport: true
+  folder: Node Exporter
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "graphTooltip": 1,
         "panels": [
@@ -738,9 +746,3 @@ data:
         "title": "Node Exporter / MacOS",
         "uid": "629701ea43bf69291922ea45f4a87d37"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-nodes-darwin
-  namespace: kube-prom-stack

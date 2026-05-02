@@ -1,0 +1,16 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: velero
+spec:
+  allowCrossNamespaceImport: true
+  folder: Backup
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 11055
+    revision: 2
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus

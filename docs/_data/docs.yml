@@ -59,6 +59,7 @@
   - opentelemetry-collector
   - tracing
   - grafana
+  - grafana-operator
 - title: Backup
   docs:
   - s3-backup

@@ -1,0 +1,153 @@
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-cruise-control
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-cruise-control
+    key: strimzi-cruise-control.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kafka-bridge
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kafka-bridge
+    key: strimzi-kafka-bridge.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kafka-connect
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kafka-connect
+    key: strimzi-kafka-connect.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kafka-exporter
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kafka-exporter
+    key: strimzi-kafka-exporter.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kafka-mirror-maker-2
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kafka-mirror-maker-2
+    key: strimzi-kafka-mirror-maker-2.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kafka-oauth
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kafka-oauth
+    key: strimzi-kafka-oauth.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kafka
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kafka
+    key: strimzi-kafka.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-kraft
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-kraft
+    key: strimzi-kraft.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: strimzi-operators
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
+  folder: Strimzi
+  configMapRef:
+    name: strimzi-operators
+    key: strimzi-operators.json

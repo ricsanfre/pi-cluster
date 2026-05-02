@@ -2,7 +2,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: grafana-app
+  name: grafana-operator-app
   namespace: flux-system
 spec:
   interval: 30m
@@ -11,15 +11,39 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: kube-prometheus-stack-k3s-mixins
-    - name: tempo-app
-    - name: loki-app
     - name: external-secrets-config
-  path: ./kubernetes/platform/grafana/app/overlays/prod
+  path: ./kubernetes/platform/grafana/operator/overlays/prod
   prune: true
   wait: true
   postBuild:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: grafana-instance
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: grafana
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: grafana-operator-app
+    - name: kube-prometheus-stack-k3s-mixins
+    - name: tempo-app
+    - name: loki-app
+    - name: external-secrets-config
+  path: ./kubernetes/platform/grafana/instance/overlays/prod
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
 

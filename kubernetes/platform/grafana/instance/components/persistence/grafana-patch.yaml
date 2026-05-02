@@ -1,0 +1,40 @@
+- op: add
+  path: /spec/persistentVolumeClaim
+  value:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ${STORAGE_CLASS:=longhorn}
+      resources:
+        requests:
+          storage: 5Gi
+- op: add
+  path: /spec/deployment/spec/template/spec/securityContext
+  value:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+- op: add
+  path: /spec/deployment/spec/template/spec/containers/0/securityContext
+  value:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+- op: add
+  path: /spec/deployment/spec/template/spec/containers/0/readinessProbe
+  value:
+    failureThreshold: 3
+- op: add
+  path: /spec/deployment/spec/template/spec/volumes
+  value:
+    - name: grafana-data
+      persistentVolumeClaim:
+        claimName: grafana-pvc
+- op: add
+  path: /spec/deployment/spec/strategy
+  value:
+    type: Recreate

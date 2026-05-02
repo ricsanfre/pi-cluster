@@ -12,6 +12,14 @@ extraEnvs:
         key: es-password
 
 config:
+  processors:
+    # Custom logs/elasticsearch does not get the preset k8sattributes injection,
+    # so derive service.namespace after explicit Kubernetes enrichment.
+    resource/elasticsearch:
+      attributes:
+        - key: service.namespace
+          from_attribute: k8s.namespace.name
+          action: upsert
   extensions:
     basicauth:
       client_auth:
@@ -32,5 +40,5 @@ config:
     pipelines:
       logs/elasticsearch:
         receivers: [otlp]
-        processors: [memory_limiter, resource, batch]
+        processors: [memory_limiter, k8sattributes, resource/elasticsearch, resource, batch]
         exporters: [elasticsearch]

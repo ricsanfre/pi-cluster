@@ -1,0 +1,50 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: istio-control-plane
+spec:
+  allowCrossNamespaceImport: true
+  folder: Istio
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 7645
+    revision: 298
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: istio-mesh
+spec:
+  allowCrossNamespaceImport: true
+  folder: Istio
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 7639
+    revision: 298
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: istio-performance
+spec:
+  allowCrossNamespaceImport: true
+  folder: Istio
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 11829
+    revision: 298
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus

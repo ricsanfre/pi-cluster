@@ -1,0 +1,50 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.tempo.svc.cluster.local:3200
+    basicAuth: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        tags:
+          - key: service.name
+            value: service
+          - key: job
+        queries:
+          - name: Sample query
+            query: sum(rate({"traces.span.metrics.duration_milliseconds_bucket",$__tags}[5m]))
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+      spanBar:
+        type: Tag
+        tag: http.path
+      streamingEnabled:
+        search: true

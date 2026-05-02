@@ -10,10 +10,21 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": ["Process Grafana dashboards"],
+      "description": ["Process legacy Grafana Helm dashboards"],
       "fileMatch": ["(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"],
       "matchStrings": ["depName=\"(?<depName>.*)\"\\n(?<indentation>\\s+)gnetId: (?<packageName>\\d+)\\n.+revision: (?<currentValue>\\d+)"],
       "autoReplaceStringTemplate": "depName=\"{{{depName}}}\"\n{{{indentation}}}gnetId: {{{packageName}}}\n{{{indentation}}}revision: {{{newValue}}}",
+      "datasourceTemplate": "custom.grafana-dashboards",
+      "versioningTemplate": "regex:^(?<major>\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "description": ["Process Grafana Operator dashboards from Grafana.com"],
+      "fileMatch": ["(^|/)kubernetes/.+\.ya?ml(?:\.j2)?$"],
+      "matchStrings": [
+        "(?<prefix>kind:\\s+GrafanaDashboard\\nmetadata:\\n\\s+name:\\s+(?<depName>[^\\n]+)\\nspec:\\n(?:\\s{2,}[^\\n]*\\n)*?\\s{2}grafanaCom:\\n\\s{4}id:\\s+)(?<packageName>\\d+)(?<middle>\\n\\s{4}revision:\\s+)(?<currentValue>\\d+)"
+      ],
+      "autoReplaceStringTemplate": "{{{prefix}}}{{{packageName}}}{{{middle}}}{{{newValue}}}",
       "datasourceTemplate": "custom.grafana-dashboards",
       "versioningTemplate": "regex:^(?<major>\\d+)$"
     }

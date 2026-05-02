@@ -715,54 +715,96 @@ With that configuration, the Envoy proxy will export access logs, traces, and me
 
 ### Grafana dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 Envoy Gateway Grafana dashboards can be found in the upstream Envoy Gateway project and in the Grafana community catalog:
 
 - Upstream dashboards: [Envoy Gateway GitHub repository: `charts/gateway-addons-helm/dashboards`](https://github.com/envoyproxy/gateway/tree/main/charts/gateway-addons-helm/dashboards)
 - Community dashboards: [Grafana dashboards for Envoy](https://grafana.com/grafana/dashboards/?search=envoy)
 
-Dashboards can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards"](/docs/grafana/#automating-installation-of-grafana-community-dashboards).
-
-Add following configuration to Grafana's helm chart values file:
+Dashboards can be onboarded with `GrafanaDashboard` resources reconciled by Grafana Operator.
 
 ```yaml
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: envoy-gateway
-        orgId: 1
-        folder: Envoy-Gateway
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/envoy-gateway-folder
-
-dashboards:
-  envoy-gateway:
-    envoy-proxy:
-      url: https://raw.githubusercontent.com/envoyproxy/gateway/refs/heads/main/charts/gateway-addons-helm/dashboards/envoy-proxy-global.json
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    envoy-gateway:
-      url: https://raw.githubusercontent.com/envoyproxy/gateway/refs/heads/main/charts/gateway-addons-helm/dashboards/envoy-gateway-global.json
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    envoy-overview:
-      gnetId: 24459
-      revision: 3
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    envoy-upstream:
-      gnetId: 24457
-      revision: 3
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    envoy-downstream:
-      gnetId: 24458
-      revision: 3
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-proxy
+spec:
+  allowCrossNamespaceImport: true
+  folder: Envoy-Gateway
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/envoyproxy/gateway/refs/heads/main/charts/gateway-addons-helm/dashboards/envoy-proxy-global.json
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-gateway
+spec:
+  allowCrossNamespaceImport: true
+  folder: Envoy-Gateway
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/envoyproxy/gateway/refs/heads/main/charts/gateway-addons-helm/dashboards/envoy-gateway-global.json
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-overview
+spec:
+  allowCrossNamespaceImport: true
+  folder: Envoy-Gateway
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 24459
+    revision: 3
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-upstream
+spec:
+  allowCrossNamespaceImport: true
+  folder: Envoy-Gateway
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 24457
+    revision: 3
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-downstream
+spec:
+  allowCrossNamespaceImport: true
+  folder: Envoy-Gateway
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 24458
+    revision: 3
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: Prometheus
 ```
 
 {{site.data.alerts.note}}

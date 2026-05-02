@@ -46,6 +46,75 @@
           tags:
             - monitoring
 
+        # Install Grafana Operator CRDs from the main chart bundle
+        - name: Render grafana-operator chart templates
+          kubernetes.core.helm_template:
+            binary_path: /usr/local/bin/helm
+            chart_ref: oci://ghcr.io/grafana/helm-charts/grafana-operator
+            chart_version: 5.22.2
+            release_name: grafana-operator
+            release_namespace: grafana
+            include_crds: true
+          environment:
+            KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          register: grafana_operator_template
+          changed_when: false
+          tags:
+            - monitoring
+
+        - name: Create temporary file for grafana-operator CRDs
+          ansible.builtin.tempfile:
+            state: file
+            suffix: -grafana-operator-crds.yaml
+          register: grafana_operator_crds_file
+          tags:
+            - monitoring
+
+        - name: Write grafana-operator CRDs manifest
+          ansible.builtin.copy:
+            content: |
+              {% set grafana_operator_crds = (
+                grafana_operator_template.stdout
+                | from_yaml_all
+                | reject('equalto', None)
+                | selectattr('kind', 'defined')
+                | selectattr('kind', 'equalto', 'CustomResourceDefinition')
+                | list
+              ) %}
+              {% for crd in grafana_operator_crds %}
+              ---
+              {{ crd | to_nice_yaml(indent=2) | trim }}
+              {% endfor %}
+            dest: "{{ grafana_operator_crds_file.path }}"
+            mode: "0600"
+          tags:
+            - monitoring
+
+        - name: Install grafana-operator CRDs
+          ansible.builtin.command:
+            cmd: >-
+              kubectl apply
+              --server-side
+              --field-manager=ansible-grafana-operator-crds
+              -f {{ grafana_operator_crds_file.path }}
+          environment:
+            KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+          register: grafana_operator_crds
+          changed_when: >-
+            'created' in grafana_operator_crds.stdout
+            or 'configured' in grafana_operator_crds.stdout
+          retries: 5
+          delay: 15
+          tags:
+            - monitoring
+
+        - name: Remove temporary file for grafana-operator CRDs
+          ansible.builtin.file:
+            path: "{{ grafana_operator_crds_file.path }}"
+            state: absent
+          tags:
+            - monitoring
+
         # Install Cilium CNI and CoreDNS after primary master (delegated to localhost)
 
         # Read and merge Cilium values.yaml files

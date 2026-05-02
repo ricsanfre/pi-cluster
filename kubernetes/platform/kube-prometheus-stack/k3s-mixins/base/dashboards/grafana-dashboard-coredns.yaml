@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  coredns.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-coredns
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "__inputs": [
 
@@ -1649,9 +1657,3 @@ data:
         "uid": "thael1rie7ohG6OY3eMeisahtee2iGoo1gooGhuu",
         "version": 0
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-coredns
-  namespace: kube-prom-stack

@@ -953,6 +953,8 @@ spec:
 
 #### Grafana dashboards
 
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for the general `GrafanaDashboard` onboarding patterns.
+
 Keycloak provides Grafana Dashboards to display metrics collected by Prometheus. They are available at [keycloak/keycloak-grafana-dashboard](https://github.com/keycloak/keycloak-grafana-dashboard) GitHub repo.
 
 
@@ -963,34 +965,38 @@ There are 2 Dashboards available:
 
 Find further details in [Keycloak documentation: Observability Grafana Dashboards](https://www.keycloak.org/observability/grafana-dashboards)
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file, so a Keycloak's dashboard provider can be created and dashboards can be automatically downloaded from GitHub repository
+These dashboards can be onboarded with `GrafanaDashboard` resources:
 
 ```yaml
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: keycloak
-        orgId: 1
-        folder: Keycloak
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/keycloak-folder
-# Dashboards
-dashboards:
-  keycloak:
-    keycloak-planning:
-      url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-capacity-planning-dashboard.json
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
-    keycloak-troubleshooting:
-      url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-troubleshooting-dashboard.json
-      datasource:
-        - { name: DS_PROMETHEUS, value: Prometheus }
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: keycloak-planning
+spec:
+  allowCrossNamespaceImport: true
+  folder: Keycloak
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-capacity-planning-dashboard.json
+  plugins:
+    - name: grafana-piechart-panel
+      version: 1.6.4
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: keycloak-troubleshooting
+spec:
+  allowCrossNamespaceImport: true
+  folder: Keycloak
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  url: https://raw.githubusercontent.com/keycloak/keycloak-grafana-dashboard/refs/heads/main/dashboards/keycloak-troubleshooting-dashboard.json
+  plugins:
+    - name: grafana-piechart-panel
+      version: 1.6.4
 ```
 
 ## Protecting Applications with Envoy Gateway

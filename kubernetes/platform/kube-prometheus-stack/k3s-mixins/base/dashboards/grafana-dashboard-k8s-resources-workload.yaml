@@ -1,6 +1,14 @@
-apiVersion: v1
-data:
-  k8s-resources-workload.json: |-
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-k8s-resources-workload
+spec:
+  allowCrossNamespaceImport: true
+  folder: Kubernetes
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |-
     {
         "editable": false,
         "links": [
@@ -1056,9 +1064,3 @@ data:
         "title": "Kubernetes / Compute Resources / Workload",
         "uid": "a164a7f0339f99e89cea5cb47e9be617"
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: grafana-dashboard-k8s-resources-workload
-  namespace: kube-prom-stack
