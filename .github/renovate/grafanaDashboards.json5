@@ -22,10 +22,10 @@
       "description": ["Process Grafana Operator dashboards from Grafana.com"],
       "fileMatch": ["(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"],
       "matchStrings": [
-        "kind:\\s+GrafanaDashboard\\nmetadata:\\n\\s+name:\\s+(?<metadataName>[^\\n]+)\\nspec:(?:\\n\\s+[^\\n]+)*\\n\\s+grafanaCom:\\n\\s+id:\\s+(?<packageName>\\d+)(?<middle>\\n\\s+revision:\\s+)(?<currentValue>\\d+)"
+        "kind:\\s+GrafanaDashboard\\nmetadata:\\n\\s+name:\\s+(?<depName>[^\\n]+)\\nspec:(?:(?!kind:)[\\s\\S])*?\\s{2}grafanaCom:\\n\\s{4}id:\\s+(?<packageName>\\d+)(?<middle>\\n\\s{4}revision:\\s+)(?<currentValue>\\d+)"
       ],
-      "depNameTemplate": "{{{metadataName}}}-{{{packageName}}}",
-      "autoReplaceStringTemplate": "kind: GrafanaDashboard\nmetadata:\n  name: {{{metadataName}}}\nspec:{{{middle}}}{{{newValue}}}",
+      "depNameTemplate": "{{{depName}}}-{{{packageName}}}",
+      "autoReplaceStringTemplate": "kind: GrafanaDashboard\nmetadata:\n  name: {{{depName}}}\nspec:{{{middle}}}{{{newValue}}}",
       "datasourceTemplate": "custom.grafana-dashboards",
       "versioningTemplate": "regex:^(?<major>\\d+)$"
     }
