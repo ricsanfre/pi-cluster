@@ -57,7 +57,7 @@ This is the process to flash OpenWRT into SD-Card that can be used to boot Raspb
 - Step 4. Connect laptop directly to Raspberry PI ethernet port or via LAN switch
   OpenWRT will assign the laptop a IP via DHCP
 
-- Step 5: Open Luci interface at [http://192.168.1.1](http://192.168.1.1)
+- Step 5: Open Luci interface at `http://192.168.1.1`
   
   Login as `root` user, no password is needed the first time.
 

@@ -651,7 +651,6 @@ spec:
 
 - [K3S Backup/Restore official documentation](https://rancher.com/docs/k3s/latest/en/backup-restore/)
 - [Longhorn Backup/Restore official documentation](https://longhorn.io/docs/latest/snapshots-and-backups/)
-- [Bare metal Minio documentation](https://docs.min.io/minio/baremetal/)
 - [Create a Multi-User MinIO Server for S3-Compatible Object Hosting](https://www.civo.com/learn/create-a-multi-user-minio-server-for-s3-compatible-object-hosting)
 - [Backup Longhorn Volumes to a Minio S3 bucket](https://www.civo.com/learn/backup-longhorn-volumes-to-a-minio-s3-bucket)
 

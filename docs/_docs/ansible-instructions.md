@@ -363,23 +363,16 @@ FluxCD is used to deploy automatically packaged applications contained in the re
 
 - Modify cluster configuration to point to your own repository
 
-  Edit [`kubernetes/clusters/prod/config/cluster.yaml`]({{ site.git_edit_address }}/kubernetes/prod/config/cluster.yam).
+  Edit [`kubernetes/clusters/prod/config/cluster.yaml`]({{ site.git_edit_address }}/kubernetes/prod/config/cluster.yaml).
 
-  In `GitRepository` resource definition, set `spec.url` to the URL of your repository
+  Edit [`kubernetes/platform/flux-operator/instance/overlays/prod/values.yaml`]({{ site.git_edit_address }}/kubernetes/platform/flux-operator/instance/overlays/prod/values.yaml) to set `instance.sync.url` to the URL of your repository.
 
-- In case of using a private Git repository
+  In case of using a private Git repository, set `instance.sync.pullSecret` to secret containing the credentials to access the repository. 
 
-  Add following configuration to `GitRepository` resource
-
-  ```yaml
-  spec:
-    secretRef:
-      name: flux-system
-  ```
 
 - Modify cluster global variables
 
-  Edit [`kubernetes/clusters/prod/config/cluster-settings.yaml`]({{ site.git_edit_address }}/kubernetes/prod/config/cluster-settings.yam) to use your own configuration. Own DNS domain, External Services DNS names, etc.
+  Edit [`kubernetes/clusters/prod/config/cluster-settings.yaml`]({{ site.git_edit_address }}/kubernetes/prod/config/cluster-settings.yaml) to use your own configuration. Own DNS domain, External Services DNS names, etc.
 
 - Tune parameters of the different packaged Applications to meet your specific configuration
 

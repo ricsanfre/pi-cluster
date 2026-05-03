@@ -242,7 +242,7 @@ dashboards:
 
 Fluentbit can be installed in external nodes and configured so logs can be forwarded to Fluentd aggregator service running within the cluster.
 
-There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/linux/ubuntu).
+There are official installation packages for Ubuntu. Installation instructions can be found in [Fluentbit documentation: "Ubuntu installation"](https://docs.fluentbit.io/manual/installation/downloads/linux/ubuntu).
 
 Fluentbit installation and configuration can be automated with Ansible. For example using Ansible role: [**ricsanfre.fluentbit**](https://galaxy.ansible.com/ricsanfre/fluentbit). This role install fluentbit and configure it.
 

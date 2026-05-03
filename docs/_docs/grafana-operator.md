@@ -465,7 +465,9 @@ Example user definition:
   "password": "change-me",
   "roles": ["grafana-readonly"]
 }
+```
 
+#### Create the GrafanaDatasource resource
 
 
 ```yaml

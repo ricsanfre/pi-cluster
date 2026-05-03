@@ -416,7 +416,7 @@ Instead of embedding JSON files into Helm chart `values.yaml`, dashboards from [
 
 A Grafana's POD init-container, `download-dashboards` executes a script to download the files. This script also support the automatic replacement of any DS_PROMETEUS variable.
 
-See script code in [Grafana's Helm chart template file: config.tpl](https://github.com/grafana/helm-charts/blob/main/charts/grafana/templates/_config.tpl#L74-L140)
+See script code in [Grafana's Helm chart template file: config.tpl](https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/templates/_config.tpl#L74-L140)
 
 Dashboards to be downloaded can be specified in `dashboard` variable in Helm `values.yaml`, `gnetId` specifies dashboard Id and `revision` its revision.
 

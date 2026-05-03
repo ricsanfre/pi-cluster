@@ -38,7 +38,7 @@ Fluent Bit is a lightweight and extensible log processor with full support for K
 -   Enrich logs with Kubernetes Metadata.
 -   Forward enriched logs to destination systems like Elasticsearch, Loki, Kafka, HTTP, etc.
 
-Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluentbit documentation on how to install it on Kubernetes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/kubernetes).
+Fluentbit can be installed and configured to collect and parse Kubernetes logs deploying it as a daemonset pod. See fluentbit documentation on how to install it on Kubernetes cluster: ["Fluentbit: Kubernetes Production Grade Log Processor"](https://docs.fluentbit.io/manual/installation/downloads/kubernetes).
 
 ## How does Fluent-bit work?
 

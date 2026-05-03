@@ -54,7 +54,7 @@ For those reasons, Service Mesh solution in the cluster has been migrated to Ist
 
   This sidecarless new architecture is expected to use a lower footprint than Linkerd.
 
-  Preliminary comparison, made by [solo-io](https://www.solo.io/), main contributor to Istio's new Ambient mode, shows reduced Istio footprint and better performance results than Likerd. See comparison analysis ["Istio in Ambient Mode - Doing More for Less!"](https://github.com/solo-io/service-mesh-for-less-blog)
+  Preliminary comparison, made by [solo-io](https://www.solo.io/), main contributor to Istio's new Ambient mode, shows reduced Istio footprint and better performance results than Istio sidecar mode. See comparison analysis ["Istio in Ambient Mode - Doing More for Less!"](https://www.solo.io/blog/istio-more-for-less)
 
 
 ## Istio Architecture

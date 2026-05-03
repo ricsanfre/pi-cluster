@@ -198,7 +198,7 @@ Users/roles including in  `file` realm cannot be managed using the [user APIs](h
 
 {{site.data.alerts.end}}
 
-See [Users and roles](https://www.elastic.co/guide/en/cloud-on-k8s/2.16/k8s-users-and-roles.htmll) from elastic cloud-on-k8s documentation.
+See [Users and roles](https://www.elastic.co/guide/en/cloud-on-k8s/2.16/k8s-users-and-roles.html) from elastic cloud-on-k8s documentation.
 
 To allow fluentd and prometheus exporter to access our elasticsearch cluster, we can define two role that grants the necessary permission for the two users we will be creating (**fluentd, prometheus**).
 

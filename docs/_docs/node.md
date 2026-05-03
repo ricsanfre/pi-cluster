@@ -68,12 +68,6 @@ In network-config file `addresses` field need to be updated for each node (node1
 
 By default, during first boot, cloud image partitions grow to fill the whole capacity of the SDCard/USB Flash Disk or SSD disk). So root partition (/) will grow to fill the full capacity of the disk.
 
-{{site.data.alerts.note}}
-
-As a reference of how cloud images partitions grow in boot time check this blog [entry](https://elastisys.com/how-do-virtual-images-grow/).
-
-{{site.data.alerts.end}}
-
 cloud-init partition SSD Disk will be partitioned during first boot. cloud-init will be configured to reserve 30 GB for root filesystem (OS installation) and the rest will be used for creating a Linux partition (ext4) mounted as `/storage`. This will provide local storage capacity in each node of the cluster, used mainly by Kubernetes distributed storage solution and by backup solution.
 
 

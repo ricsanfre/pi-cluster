@@ -816,7 +816,7 @@ The repository keeps both Prometheus scrape-based monitoring and OTLP metric exp
 For implementation details, examples, and supported configuration patterns, see the Envoy Gateway observability tasks:
 
 - [Gateway observability](https://gateway.envoyproxy.io/docs/tasks/observability/gateway-observability/)
-- [Proxy tracing](https://gateway.envoyproxy.io/docs/tasks/observability/proxy-tracing/)
+- [Proxy tracing](https://gateway.envoyproxy.io/docs/tasks/observability/proxy-trace/)
 - [Proxy access logs](https://gateway.envoyproxy.io/docs/tasks/observability/proxy-accesslog/)
 - [Proxy metrics](https://gateway.envoyproxy.io/docs/tasks/observability/proxy-metric/)
 

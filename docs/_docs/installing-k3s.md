@@ -85,7 +85,7 @@ In this configuration, each agent node is registered to the same server node. A 
 
   {{site.data.alerts.note}}
 
-  After installation, we will see that `kubelet` (k3s-server process) has taken [systemd's inhibitor lock](https://www.freedesktop.org/wiki/Software/systemd/inhibit/), which is the mechanism used by Kubernetes to implement the gracefully shutdown the pods.
+  After installation, we will see that `kubelet` (k3s-server process) has taken [systemd's inhibitor lock](https://systemd.io/INHIBITOR_LOCKS/), which is the mechanism used by Kubernetes to implement the gracefully shutdown the pods.
 
     ```shell  
     sudo systemd-inhibit --list

@@ -375,7 +375,7 @@ spec:
 
 ```
 
-This CR should be created in the same namespace as the Keycloak Deployment CR, defined in the field `keycloakCRName`. The `realm` field accepts a full [RealmRepresentation](https://www.keycloak.org/docs-api/26.1.4/rest-api//index.html#RealmRepresentation).
+This CR should be created in the same namespace as the Keycloak Deployment CR, defined in the field `keycloakCRName`. The `realm` field accepts a full [RealmRepresentation](https://www.keycloak.org/docs-api/latest/rest-api/index.html#RealmRepresentation).
 The recommended way to obtain a `RealmRepresentation` is by leveraging the export functionality [Importing and Exporting Realms](https://www.keycloak.org/server/importExport).
 
 1.  Export the Realm to a single file.
