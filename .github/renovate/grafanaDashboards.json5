@@ -19,12 +19,12 @@
     },
     {
       "customType": "regex",
-      "description": ["Process Grafana Operator dashboards"],
+      "description": ["Process Grafana Operator dashboards from Grafana.com"],
       "fileMatch": ["(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$"],
       "matchStrings": [
         "kind:\\s+GrafanaDashboard\\nmetadata:\\n\\s+name:\\s+(?<metadataName>[^\\n]+)\\nspec:(?:\\n\\s+[^\\n]+)*\\n\\s+grafanaCom:\\n\\s+id:\\s+(?<packageName>\\d+)(?<middle>\\n\\s+revision:\\s+)(?<currentValue>\\d+)"
       ],
-      "depNameTemplate": "grafana-dashboard-{{{packageName}}}", 
+      "depNameTemplate": "{{{metadataName}}}-{{{packageName}}}",
       "autoReplaceStringTemplate": "kind: GrafanaDashboard\nmetadata:\n  name: {{{metadataName}}}\nspec:{{{middle}}}{{{newValue}}}",
       "datasourceTemplate": "custom.grafana-dashboards",
       "versioningTemplate": "regex:^(?<major>\\d+)$"
