@@ -210,7 +210,7 @@ longhorn_version: v1.11.1
 istio_version: 1.29.2
 
 # renovate: datasource=github-releases depName=helm/helm
-helm_version: v3.20.2
+helm_version: v4.1.4
 
 
 #######################
