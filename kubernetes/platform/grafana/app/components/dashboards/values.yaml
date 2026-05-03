@@ -186,7 +186,7 @@ dashboards:
       # https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard/
       # renovate: depName="Istio Dashboard"
       gnetId: 7639
-      revision: 298
+      revision: 304
       datasource:
         - { name: DS_PROMETHEUS, value: Prometheus }
     istio-performance:
