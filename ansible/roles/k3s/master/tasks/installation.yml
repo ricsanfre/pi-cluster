@@ -36,7 +36,7 @@
           kubernetes.core.helm:
             name: prometheus-operator-crd
             chart_ref: oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
-            chart_version: 27.0.1
+            chart_version: 28.0.1
             release_namespace: kube-system
             create_namespace: true
           environment:
