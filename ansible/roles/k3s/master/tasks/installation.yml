@@ -157,7 +157,7 @@
           kubernetes.core.helm:
             name: cilium
             chart_ref: oci://quay.io/cilium/charts/cilium
-            chart_version: 1.19.2
+            chart_version: 1.19.3
             release_namespace: kube-system
             create_namespace: false
             release_values: "{{ cilium_merged_values }}"
