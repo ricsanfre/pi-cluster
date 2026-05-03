@@ -71,6 +71,6 @@ RUN set -eux; \
         done
 
 # Install helm required plugins
-RUN helm plugin install https://github.com/databus23/helm-diff
+RUN helm plugin install --verify=false https://github.com/databus23/helm-diff
 
 WORKDIR /ansible
