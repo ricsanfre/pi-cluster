@@ -204,7 +204,7 @@ fluxcd_version: v2.8.6
 velero_version: v1.18.0
 
 # renovate: datasource=github-releases depName=longhorn/longhorn
-longhorn_version: v1.11.1
+longhorn_version: v1.11.2
 
 # renovate: datasource=github-releases depName=istio/istio
 istio_version: 1.29.2
