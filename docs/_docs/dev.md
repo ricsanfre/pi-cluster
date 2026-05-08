@@ -202,7 +202,7 @@ Follow official [kubectl installation guide](https://kubernetes.io/docs/tasks/to
 
 k3s cluster can be created using K3D. The cluster will be configured with same options as production environment:
 
-- CNI cillium is used, instead of default Flannel
+- CNI cilium is used, instead of default Flannel
 - All K3s add-ons are not installed (traefik, helmcontroller, localpath, coredns, etc.)
 - kube-proxy is disabled (Cilium Kube-proxy replacement feature will be used)
 - Cilium L2 LB announcement will be used
