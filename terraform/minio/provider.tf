@@ -4,7 +4,7 @@ terraform {
   required_providers {
     minio = {
       source  = "aminueza/minio"
-      version = "3.33.1"
+      version = "3.37.0"
     }
     vault = {
       source  = "hashicorp/vault"
