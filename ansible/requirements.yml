@@ -34,7 +34,7 @@ collections:
   - name: community.hashi_vault
     version: 7.1.0
   - name: ansible.posix
-    version: 2.1.0
+    version: 2.2.0
   - name: community.crypto
     version: 3.2.0
   - name: prometheus.prometheus
