@@ -1,6 +1,6 @@
 FROM alpine/kubectl:1.35.3 AS kubectl
 
-FROM alpine/helm:4.1.4 AS helm
+FROM alpine/helm:4.2.0 AS helm
 
 FROM alpine:3.23 AS tofu
 COPY --from=ghcr.io/opentofu/opentofu:1.12.0 /usr/local/bin/tofu /usr/local/bin/tofu
