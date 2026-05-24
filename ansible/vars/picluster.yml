@@ -201,7 +201,7 @@ vault_custom_configuration: |
 fluxcd_version: v2.8.6
 
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
-velero_version: v1.18.0
+velero_version: v1.18.1
 
 # renovate: datasource=github-releases depName=longhorn/longhorn
 longhorn_version: v1.11.1
