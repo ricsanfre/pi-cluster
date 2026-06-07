@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: e-commerce
+resources:
+  - ../../user-service/base
+  - ../../order-service/base
+  - ../../product-service/base
+  - ../../reviews-service/base
+  - ../../cart-service/base
+  - ../../notification-service/base
+  - ../../frontend-service/base

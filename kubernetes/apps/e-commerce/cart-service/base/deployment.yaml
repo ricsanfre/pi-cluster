@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cart-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cart-service
+        app.kubernetes.io/part-of: e-commerce
+    spec:
+      serviceAccountName: cart-service
+
+      containers:
+        - name: cart-service
+          # Image tag is set by the staging overlay via kustomize image transform
+          image: ghcr.io/ricsanfre/spring-microservices-otel-k8s/cart-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8086
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: cart-service-config
+            - secretRef:
+                name: cart-service-oauth-secret
+
+          env:
+            # Kafka SCRAM-SHA-512 password (Strimzi generates and stores in kafka namespace;
+            # copy to e-commerce namespace as cart-service-kafka-secret before deploying).
+            - name: KAFKA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cart-service-kafka-secret
+                  key: password
+            # Valkey ACL password for the cart-service user.
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cart-service-valkey-secret
+                  key: VALKEY_PASSWORD
+
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8086
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8086
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8086
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

@@ -1,0 +1,22 @@
+---
+# Non-sensitive configuration for user-service.
+# Sensitive values (DB password, Keycloak secret) are injected via Secrets
+# referenced in the Deployment env section.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+data:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SERVER_PORT: "8085"
+  # PostgreSQL (CNPG read-write service)
+  DB_HOST: "postgres-rw.databases.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "users"
+  # Keycloak OIDC
+  KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
+  KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
+  KEYCLOAK_REALM: "e-commerce"
+  # OpenTelemetry Collector (managed by OpenTelemetry Operator)
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "user-service"

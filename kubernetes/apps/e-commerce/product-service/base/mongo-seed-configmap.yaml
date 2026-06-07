@@ -1,0 +1,322 @@
+# ConfigMap — MongoDB product seed script
+# Mirrors docker/mongo/init-products.js — keep both in sync.
+# Namespace: e-commerce
+# Consumed by: mongo-products-seed Job (mongo-seed-job.yaml)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-seed-script
+data:
+  init-products.js: |
+    // ──────────────────────────────────────────────────────────────────────────────
+    // MongoDB seed script — seeds the products collection with sample books.
+    //
+    // Mirrors docker/mongo/init-products.js — keep both in sync.
+    //
+    // Data set: 20 books — sci-fi (12) and fantasy (8) genres.
+    // Cover images are served by Open Library (https://openlibrary.org).
+    // ──────────────────────────────────────────────────────────────────────────────
+
+    const productsDb = db.getSiblingDB('products');
+
+    // Guard: skip silently if already seeded (idempotent)
+    if (productsDb.products.countDocuments() > 0) {
+      print('products collection already has data — skipping seed');
+      quit(0);
+    }
+
+    const now = new Date();
+
+    productsDb.products.insertMany([
+
+      // ── Science Fiction ──────────────────────────────────────────────────────
+
+      {
+        name: "Dune",
+        description: "Set on the desert planet Arrakis — sole source of the universe's most " +
+          "precious resource, the spice melange — Frank Herbert's masterwork follows Paul Atreides " +
+          "as treachery and betrayal force him into exile with the Fremen people, who see him as a " +
+          "prophesied messiah. The most influential science fiction novel ever written.",
+        price: NumberDecimal("12.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg",
+        stockQty: 87,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Foundation",
+        description: "Mathematician Hari Seldon devises psychohistory — the science of predicting " +
+          "the behaviour of huge populations — and foresees the fall of the Galactic Empire. He " +
+          "establishes the Foundation on a remote planet to preserve knowledge and shorten the " +
+          "coming dark age from 30,000 years to a single millennium.",
+        price: NumberDecimal("11.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780553293357-L.jpg",
+        stockQty: 64,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Neuromancer",
+        description: "Washed-up hacker Case is hired for one last job: to pull off the ultimate " +
+          "hack in the neon-lit cyberspace of a dystopian future. William Gibson's debut novel " +
+          "invented the word 'cyberspace' and defined the cyberpunk genre, earning the Hugo, " +
+          "Nebula, and Philip K. Dick Awards in the same year.",
+        price: NumberDecimal("13.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780441569595-L.jpg",
+        stockQty: 43,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "The Left Hand of Darkness",
+        description: "On the planet Winter, a lone human envoy must convince a deeply divided " +
+          "nation to join the Ekumen — a loose confederation of human worlds — while navigating " +
+          "a society where people have no fixed gender. Ursula K. Le Guin's Hugo and Nebula " +
+          "Award winner remains one of SF's most profound explorations of identity and politics.",
+        price: NumberDecimal("13.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780441478125-L.jpg",
+        stockQty: 31,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Ender's Game",
+        description: "Gifted child Andrew 'Ender' Wiggin is recruited into Battle School to be " +
+          "trained as the military genius humanity needs against the alien Formics. But the " +
+          "games are not quite games. Orson Scott Card's Hugo and Nebula winner is a landmark " +
+          "of the genre and a relentlessly gripping psychological thriller.",
+        price: NumberDecimal("9.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9781250773616-L.jpg",
+        stockQty: 112,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "The Martian",
+        description: "Astronaut Mark Watney is stranded alone on Mars after his crew presumes him " +
+          "dead and evacuates. Armed with botany expertise, duct tape, and an irreverent sense of " +
+          "humour, he must survive on a hostile planet until a rescue mission can reach him. Andy " +
+          "Weir's debut is a tour-de-force of hard science problem-solving and deadpan wit.",
+        price: NumberDecimal("14.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780804139021-L.jpg",
+        stockQty: 78,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Project Hail Mary",
+        description: "Ryland Grace wakes up alone on a spacecraft millions of miles from Earth " +
+          "with no memory of his name or his mission. He must piece together his past — and " +
+          "solve an impossible physics problem — to save humanity. Andy Weir's most gripping " +
+          "and emotionally resonant work features one of SF's most memorable alien encounters.",
+        price: NumberDecimal("15.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780593135204-L.jpg",
+        stockQty: 55,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Snow Crash",
+        description: "In a near-future America where franchise city-states have replaced the " +
+          "government, Hiro Protagonist — pizza deliverer and legendary hacker — stumbles onto " +
+          "a mystery involving a new drug called Snow Crash that crashes human minds. Neal " +
+          "Stephenson's prophetic 1992 novel coined 'metaverse' and 'avatar' in their modern sense.",
+        price: NumberDecimal("14.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780553380958-L.jpg",
+        stockQty: 39,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Hyperion",
+        description: "Seven pilgrims journey to the distant world of Hyperion to stand before " +
+          "the legendary, lethal Shrike, each telling the story that brought them here. Structured " +
+          "as a Canterbury Tales for the far future, Dan Simmons' Hugo winner weaves military " +
+          "SF, detective noir, romance, and cosmic horror into a single extraordinary tapestry.",
+        price: NumberDecimal("13.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780553283686-L.jpg",
+        stockQty: 47,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "The Hitchhiker's Guide to the Galaxy",
+        description: "Seconds before Earth is demolished to make way for a hyperspace bypass, " +
+          "Arthur Dent is swept into space by his friend Ford Prefect, a researcher for the " +
+          "revised Hitchhiker's Guide. What follows is the funniest and most dangerous journey " +
+          "in the universe — Douglas Adams' comic masterpiece that teaches us 42 is the answer.",
+        price: NumberDecimal("11.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780345391803-L.jpg",
+        stockQty: 93,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Childhood's End",
+        description: "When massive alien ships appear over every city on Earth, humanity enters " +
+          "a golden age under the benevolent Overlords' rule. But the aliens never show their " +
+          "faces, and the price of their utopia may be humanity's destiny as a species. Arthur " +
+          "C. Clarke's most acclaimed novel asks what we would sacrifice for a perfect world.",
+        price: NumberDecimal("11.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780345444059-L.jpg",
+        stockQty: 28,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Blindsight",
+        description: "A crew of enhanced humans and a vampire (no, really) are sent to the " +
+          "outer solar system to make first contact with alien visitors. Peter Watts' hard SF " +
+          "masterwork is a philosophical inquiry into consciousness and free will as much as " +
+          "a first-contact thriller — and it will leave you questioning what it means to be sentient.",
+        price: NumberDecimal("13.99"),
+        category: "science-fiction",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780765319647-L.jpg",
+        stockQty: 19,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      // ── Fantasy ──────────────────────────────────────────────────────────────
+
+      {
+        name: "The Fellowship of the Ring",
+        description: "Young hobbit Frodo Baggins inherits a ring of terrible power and must " +
+          "leave the Shire on an epic quest across Middle-earth. He is joined by eight " +
+          "companions who form the Fellowship, setting out to destroy the One Ring in the " +
+          "fires of Mount Doom before the Dark Lord Sauron can reclaim it. Volume one of The Lord of the Rings.",
+        price: NumberDecimal("16.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780547928210-L.jpg",
+        stockQty: 102,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "The Name of the Wind",
+        description: "Kvothe — legendary scholar, musician, and fighter — tells the story of " +
+          "his own life: from his early years among a troupe of travelling performers, through " +
+          "his training at the legendary magical university, to the events that led him to become " +
+          "the most feared and beloved figure in the world. Book one of The Kingkiller Chronicle.",
+        price: NumberDecimal("14.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780756404079-L.jpg",
+        stockQty: 67,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "A Game of Thrones",
+        description: "In the mythical continent of Westeros, ancient noble families wage bitter " +
+          "wars for the Iron Throne. When Lord Ned Stark answers a king's summons, he is drawn " +
+          "into a web of intrigue and betrayal that will cost his family dearly. George R.R. " +
+          "Martin's landmark epic fantasy subverts every convention of the genre with brutal honesty. Book one of A Song of Ice and Fire.",
+        price: NumberDecimal("9.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780553573404-L.jpg",
+        stockQty: 145,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "The Way of Kings",
+        description: "On the storm-ravaged world of Roshar, three threads converge: a war " +
+          "slave who fights in impossible battles, a young woman who steals ancient texts to " +
+          "find truths the powerful wish hidden, and an assassin who kills kings. Brandon " +
+          "Sanderson's Stormlight Archive is the most ambitious epic fantasy of its generation. Book one of The Stormlight Archive.",
+        price: NumberDecimal("18.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780765326355-L.jpg",
+        stockQty: 56,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "American Gods",
+        description: "Freshly released from prison, Shadow is hired as bodyguard by the " +
+          "mysterious Mr. Wednesday and drawn into a struggle between the old gods — brought " +
+          "to America by immigrants — and the new gods of technology and media. Neil Gaiman's " +
+          "Hugo, Nebula, and Locus Award winner is a journey through the dark heart of America.",
+        price: NumberDecimal("14.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780062572233-L.jpg",
+        stockQty: 44,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Good Omens",
+        description: "The apocalypse is coming — Thursday, according to prophecy. But angel " +
+          "Aziraphale and demon Crowley have grown rather fond of the Earth over six thousand " +
+          "years, and they've misplaced the Antichrist. Terry Pratchett and Neil Gaiman's " +
+          "collaborative masterwork is the funniest, most warm-hearted meditation on the end of the world ever written.",
+        price: NumberDecimal("13.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780060853976-L.jpg",
+        stockQty: 73,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "Mistborn: The Final Empire",
+        description: "For a thousand years the ash has fallen and flowers have not bloomed. " +
+          "The immortal Lord Ruler rules with absolute iron fist. A small crew of con-artists " +
+          "and thieves, led by the brilliant Kelsier — the only man ever to have survived the " +
+          "Lord Ruler's death camps — plot an impossible heist to topple an empire. Book one of the Mistborn trilogy.",
+        price: NumberDecimal("16.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780765311788-L.jpg",
+        stockQty: 61,
+        createdAt: now,
+        updatedAt: now
+      },
+
+      {
+        name: "The Colour of Magic",
+        description: "Rincewind is the worst wizard on Discworld — he can only remember one " +
+          "spell, and even that he dare not use. When he is assigned as guide to Twoflower, " +
+          "the Disc's first tourist, chaos inevitably follows. Terry Pratchett's debut Discworld " +
+          "novel launched the greatest, funniest, and most humane fantasy series of all time.",
+        price: NumberDecimal("12.99"),
+        category: "fantasy",
+        imageUrl: "https://covers.openlibrary.org/b/isbn/9780062225689-L.jpg",
+        stockQty: 52,
+        createdAt: now,
+        updatedAt: now
+      }
+
+    ]);
+
+    const seeded = productsDb.products.countDocuments();
+    print('Seeded ' + seeded + ' products into products.products');
+    print('  science-fiction: ' + productsDb.products.countDocuments({ category: 'science-fiction' }));
+    print('  fantasy:         ' + productsDb.products.countDocuments({ category: 'fantasy' }));

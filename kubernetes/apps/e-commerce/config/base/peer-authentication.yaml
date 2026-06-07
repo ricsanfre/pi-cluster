@@ -1,0 +1,12 @@
+# Istio PeerAuthentication — e-commerce namespace
+# Requires all traffic in the e-commerce namespace to use mTLS (STRICT mode).
+# Works with Istio ambient mode: ztunnel enforces mTLS at L4.
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: e-commerce-strict
+  namespace: e-commerce
+spec:
+  mtls:
+    mode: STRICT

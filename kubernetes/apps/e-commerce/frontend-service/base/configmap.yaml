@@ -1,0 +1,40 @@
+---
+# Non-sensitive configuration for frontend-service (Next.js BFF).
+# Sensitive values (AUTH_SECRET, AUTH_KEYCLOAK_SECRET) are injected via the
+# frontend-service-secret Secret — create it before applying:
+#
+#   kubectl create secret generic frontend-service-secret \
+#     --from-literal=AUTH_SECRET=$(openssl rand -base64 32) \
+#     --from-literal=AUTH_KEYCLOAK_SECRET=e-commerce-web-secret \
+#     --namespace e-commerce
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-service-config
+data:
+  NODE_ENV: "production"
+  NEXT_TELEMETRY_DISABLED: "1"
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
+  # Auth.js v5 — public base URL (used to construct OIDC callback URLs)
+  AUTH_URL: "https://app.${CLUSTER_DOMAIN}"
+  # Keycloak OIDC provider (Auth.js v5 reads AUTH_KEYCLOAK_ID / AUTH_KEYCLOAK_ISSUER automatically)
+  AUTH_KEYCLOAK_ID: "e-commerce-web"
+  AUTH_KEYCLOAK_ISSUER: "https://keycloak.${CLUSTER_DOMAIN}/realms/e-commerce"
+  # Internal Keycloak URL for server-side OIDC discovery and token exchange.
+  # Avoids TLS and DNS issues when the pod cannot resolve the external hostname.
+  # Keycloak's backchannelDynamic:true ensures token/jwks endpoints returned in
+  # the discovery doc use this internal base URL, while authorization_endpoint
+  # still returns the external URL (for browser redirects).
+  # The JWT iss claim always matches AUTH_KEYCLOAK_ISSUER (external), so
+  # Auth.js issuer validation passes even when discovery is fetched internally.
+  AUTH_KEYCLOAK_INTERNAL_ISSUER: "http://keycloak-service.keycloak.svc.cluster.local:8080/realms/e-commerce"
+  # Backend microservice URLs — internal k8s DNS (avoids external TLS/DNS)
+  PRODUCTS_SERVICE_URL: "http://product-service.e-commerce.svc.cluster.local:8081"
+  ORDERS_SERVICE_URL: "http://order-service.e-commerce.svc.cluster.local:8082"
+  REVIEWS_SERVICE_URL: "http://reviews-service.e-commerce.svc.cluster.local:8083"
+  USERS_SERVICE_URL: "http://user-service.e-commerce.svc.cluster.local:8085"
+  CART_SERVICE_URL: "http://cart-service.e-commerce.svc.cluster.local:8086"
+  # OpenTelemetry — traces exported via OTLP HTTP to the collector
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "frontend-service"
