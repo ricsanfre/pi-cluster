@@ -1,0 +1,35 @@
+# Valkey Operator — ValkeyCluster CR
+# Namespace: databases
+# Single-shard Valkey instance for cart-service (Redis-compatible cache).
+---
+apiVersion: valkey.io/v1alpha1
+kind: ValkeyCluster
+metadata:
+  name: valkey
+  namespace: databases
+spec:
+  shards: 1
+  replicas: 1
+  persistence:
+    size: 1Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  config:
+    maxmemory-policy: allkeys-lfu
+  users:
+    - name: cart-service
+      enabled: true
+      passwordSecret:
+        name: valkey-passwords
+        keys:
+          - CART_SERVICE_VALKEY_PASSWORD
+      commands:
+        allow: ["@read", "@write", "@connection"]
+        deny: ["@admin", "@dangerous"]
+      keys:
+        readWrite: ["cart:*"]
