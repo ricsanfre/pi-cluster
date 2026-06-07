@@ -15,7 +15,7 @@ spec:
     - name: infra-databases-config
     - name: keycloak-config
     - name: envoy-gateway-config
-    - name: kafka-app
+    - name: kafka-cluster-app
     - name: opentelemetry-collector-app
   path: ./kubernetes/apps/e-commerce/app/overlays/prod
   prune: true
