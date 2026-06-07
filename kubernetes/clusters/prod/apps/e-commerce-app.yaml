@@ -2,7 +2,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: e-commerce-app
+  name: e-commerce-config
   namespace: flux-system
 spec:
   interval: 30m
@@ -12,12 +12,9 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: infra-databases-config
     - name: keycloak-config
-    - name: envoy-gateway-config
     - name: kafka-cluster-app
-    - name: opentelemetry-collector-app
-  path: ./kubernetes/apps/e-commerce/app/overlays/prod
+  path: ./kubernetes/apps/e-commerce/config/overlays/prod
   prune: true
   wait: true
   postBuild:
@@ -29,7 +26,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: e-commerce-config
+  name: e-commerce-app
   namespace: flux-system
 spec:
   interval: 30m
@@ -39,8 +36,11 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: e-commerce-app
-  path: ./kubernetes/apps/e-commerce/config/overlays/prod
+    - name: e-commerce-config
+    - name: infra-databases-config
+    - name: envoy-gateway-config
+    - name: opentelemetry-collector-app
+  path: ./kubernetes/apps/e-commerce/app/overlays/prod
   prune: true
   wait: true
   postBuild:
