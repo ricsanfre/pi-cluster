@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
-  targetNamespace: databases
+  targetNamespace: cnpg-system
   sourceRef:
     kind: GitRepository
     name: flux-system
