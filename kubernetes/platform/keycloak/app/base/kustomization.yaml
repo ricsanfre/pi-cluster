@@ -4,5 +4,4 @@ namespace: keycloak
 resources:
   - keycloak-externalsecret.yaml
   - keycloak.yaml
-  - peer-authentication.yaml
   - grafana-dashboards.yaml
