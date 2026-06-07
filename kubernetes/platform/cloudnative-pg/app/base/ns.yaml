@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cnpg-system
-  # Ambient mesh intentionally NOT enabled. The CNPG operator webhook runs its
-  # own TLS; ztunnel interception breaks the TLS handshake, causing EOF errors
-  # from the kube-apiserver on admission webhook calls.
+  name: databases
+  # Ambient mesh intentionally NOT enabled on this namespace.
+  # The CNPG operator webhook and PostgreSQL instances use their own TLS;
+  # ztunnel interception breaks admission webhook calls and instance
+  # health checks (EOF / connection reset on ports 9443 and 8000).
