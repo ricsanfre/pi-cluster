@@ -1,0 +1,51 @@
+# MongoDB Community Operator — MongoDBCommunity CR
+# Namespace: databases
+# Single replica set with databases for product-service, reviews-service,
+# and notification-service.
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: mongodb
+  namespace: databases
+spec:
+  members: 1
+  type: ReplicaSet
+  version: "8.0.4"
+
+  security:
+    authentication:
+      modes:
+        - SCRAM
+
+  users:
+    # ── product-service ───────────────────────────────────────────────────
+    - name: products_owner
+      db: admin
+      passwordSecretRef:
+        name: mongodb-products-secret
+      roles:
+        - name: readWrite
+          db: products
+      scramCredentialsSecretName: products-scram
+    # ── reviews-service ───────────────────────────────────────────────────
+    - name: reviews_owner
+      db: admin
+      passwordSecretRef:
+        name: mongodb-reviews-secret
+      roles:
+        - name: readWrite
+          db: reviews
+      scramCredentialsSecretName: reviews-scram
+    # ── notification-service ──────────────────────────────────────────────
+    - name: notifications_owner
+      db: admin
+      passwordSecretRef:
+        name: mongodb-notifications-secret
+      roles:
+        - name: readWrite
+          db: notifications
+      scramCredentialsSecretName: notifications-scram
+
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.journalCompressor: snappy
