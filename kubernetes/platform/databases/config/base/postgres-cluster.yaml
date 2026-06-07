@@ -21,11 +21,7 @@ spec:
       shared_buffers: "256MB"
 
   bootstrap:
-    initdb:
-      database: app
-      owner: app
-      secret:
-        name: postgres-superuser-secret
+    initdb: {}
 
   storage:
     size: 10Gi
