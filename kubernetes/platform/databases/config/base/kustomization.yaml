@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# databases config base — CRs that require CNPG, MongoDB Community, and Valkey Operator CRDs.
+# Included by environment overlays (config/prod, config/dev).
+namespace: databases
+resources:
+  - postgres-cluster.yaml
+  - postgres-databases.yaml
+  - postgres-externalsecrets.yaml
+  - mongodb-community.yaml
+  - mongodb-externalsecrets.yaml
+  - valkey-cluster.yaml
+  - valkey-externalsecrets.yaml
+  - peer-authentication.yaml

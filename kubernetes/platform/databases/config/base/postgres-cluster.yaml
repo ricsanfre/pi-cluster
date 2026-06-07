@@ -1,0 +1,74 @@
+# CloudNativePG — shared PostgreSQL Cluster CR
+# Namespace: databases
+#
+# Shared PostgreSQL cluster used by Keycloak, user-service, and order-service.
+# Each service gets its own database and owner role via CNPG managed roles
+# and Database CRs (see postgres-databases.yaml).
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: databases
+spec:
+  instances: 2
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      secret:
+        name: postgres-superuser-secret
+
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+
+  monitoring:
+    enablePodMonitor: true
+
+  backup:
+    barmanObjectStore:
+      data:
+        compression: bzip2
+      wal:
+        compression: bzip2
+        maxParallel: 8
+      destinationPath: s3://k3s-barman/postgres
+      endpointURL: https://${S3_SERVER}:9091
+      s3Credentials:
+        accessKeyId:
+          name: postgres-minio-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-minio-secret
+          key: AWS_SECRET_ACCESS_KEY
+    retentionPolicy: "30d"
+
+  managed:
+    roles:
+      - name: users_owner
+        ensure: present
+        login: true
+        inherit: true
+        passwordSecret:
+          name: users-db-secret
+      - name: orders_owner
+        ensure: present
+        login: true
+        inherit: true
+        passwordSecret:
+          name: orders-db-secret
+      - name: keycloak_owner
+        ensure: present
+        login: true
+        inherit: true
+        passwordSecret:
+          name: keycloak-db-secret
