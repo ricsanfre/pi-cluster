@@ -15,6 +15,7 @@ spec:
     - name: mongodb-community-operator-app
     - name: valkey-operator-app
     - name: external-secrets-config
+    - name: istio-app
   path: ./kubernetes/platform/databases/config/overlays/prod
   prune: true
   timeout: 10m

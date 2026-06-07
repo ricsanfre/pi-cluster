@@ -33,6 +33,7 @@ spec:
   dependsOn:
     - name: envoy-gateway-app
     - name: cert-manager-config
+    - name: istio-app
   path: ./kubernetes/platform/envoy-gateway/config/overlays/prod
   prune: true
   wait: true
