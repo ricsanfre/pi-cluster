@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: databases
-  labels:
-    istio.io/dataplane-mode: ambient
+  name: cnpg-system
+  # Ambient mesh intentionally NOT enabled. The CNPG operator webhook runs its
+  # own TLS; ztunnel interception breaks the TLS handshake, causing EOF errors
+  # from the kube-apiserver on admission webhook calls.

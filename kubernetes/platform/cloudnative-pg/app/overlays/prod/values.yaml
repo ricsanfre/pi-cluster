@@ -1,7 +1,1 @@
 # cloudnative-pg helm values (prod overlay)
-
-# Exclude the operator from Istio ambient mesh.
-# The CNPG webhook runs its own TLS on port 9443; ztunnel interception
-# breaks the TLS handshake, causing EOF errors from the API server.
-podAnnotations:
-  ambient.istio.io/redirection: disabled
