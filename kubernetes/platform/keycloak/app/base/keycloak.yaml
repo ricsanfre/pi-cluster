@@ -1,14 +1,14 @@
-apiVersion: k8s.keycloak.org/v2alpha1
+apiVersion: k8s.keycloak.org/v2beta1
 kind: Keycloak
 metadata:
   name: keycloak
 spec:
   # Number of instances in the cluster
   instances: 2
-  # External Database connection
+  # External Database connection — uses shared CNPG cluster in databases namespace
   db:
     vendor: postgres
-    host: keycloak-db-rw
+    host: postgres-rw.databases.svc.cluster.local
     port: 5432
     database: keycloak
     usernameSecret:
@@ -22,7 +22,7 @@ spec:
     user:
       secret: keycloak-secret
   # Enabling HTTP communications
-  # Keycloak behing HTTP Proxy closing TLS connections
+  # Keycloak behind HTTP Proxy closing TLS connections
   http:
     httpEnabled: true
   hostname:
@@ -34,8 +34,17 @@ spec:
   proxy:
     headers: xforwarded # double check your reverse proxy sets and overwrites the X-Forwarded-* headers
   # Do not create ingress
-  # TLS options are not supported. Ingress resource to be created separatedly.
+  # TLS options are not supported. Ingress resource to be created separately.
   ingress:
     enabled: false
-  # Additional Options  
-  additionalOptions: []
+  # Additional Options
+  additionalOptions:
+    # OpenTelemetry tracing
+    - name: tracing-enabled
+      value: "true"
+    - name: tracing-endpoint
+      value: "http://otel-collector.otel:4317"
+    - name: tracing-sampler-ratio
+      value: "1.0"
+    - name: health-enabled
+      value: "true"

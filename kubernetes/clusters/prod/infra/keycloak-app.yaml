@@ -2,36 +2,6 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: keycloak-db
-  namespace: flux-system
-spec:
-  interval: 30m
-  targetNamespace: keycloak
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  dependsOn:
-    - name: cloudnative-pg-app
-    - name: keycloak-operator
-  path: ./kubernetes/platform/keycloak/db/overlays/prod
-  prune: true
-  wait: true
-  healthCheckExprs:
-    - apiVersion: postgresql.cnpg.io/v1
-      kind: Cluster
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
-      current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
-  timeout: 15m
-  retryInterval: 2m
-  postBuild:
-    substituteFrom:
-      - kind: ConfigMap
-        name: cluster-settings
-
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
   name: keycloak-operator
   namespace: flux-system
 spec:
@@ -63,7 +33,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: keycloak-db
+    - name: infra-databases-config
     - name: keycloak-operator
   path: ./kubernetes/platform/keycloak/app/overlays/prod
   prune: true
