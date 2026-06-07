@@ -1,0 +1,28 @@
+---
+# Non-sensitive configuration for order-service.
+# DB_PASSWORD is injected via order-service-db-secret.
+# ORDER_SERVICE_CLIENT_SECRET is injected via order-service-oauth-secret.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-service-config
+data:
+  SERVER_PORT: "8082"
+  # PostgreSQL (CNPG read-write service)
+  DB_HOST: "postgres-rw.databases.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "orders"
+  DB_USER: "orders_owner"
+  # Kafka (Strimzi SCRAM-SHA-512 listener — port 9095)
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
+  KAFKA_USERNAME: "order-service"
+  # Keycloak OIDC
+  KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
+  KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
+  KEYCLOAK_REALM: "e-commerce"
+  # Downstream service URLs (plain Kubernetes DNS — ADR-002)
+  USER_SERVICE_URL: "http://user-service.e-commerce.svc.cluster.local:8085"
+  PRODUCT_SERVICE_URL: "http://product-service.e-commerce.svc.cluster.local:8081"
+  # OpenTelemetry Collector
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "order-service"

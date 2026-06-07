@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend-service
+        app.kubernetes.io/part-of: e-commerce
+    spec:
+      serviceAccountName: frontend-service
+
+      containers:
+        - name: frontend-service
+          # Image tag is set by the staging overlay via kustomize image transform
+          image: ghcr.io/ricsanfre/spring-microservices-otel-k8s/frontend-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: frontend-service-config
+            - secretRef:
+                name: frontend-service-secret
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

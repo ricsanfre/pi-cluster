@@ -1,0 +1,27 @@
+---
+# Non-sensitive configuration for cart-service.
+# Sensitive values (Keycloak secret) are injected via Secrets.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cart-service-config
+data:
+  SERVER_PORT: "8086"
+  # Valkey (Redis-compatible) — deployed in the valkey namespace
+  VALKEY_HOST: "valkey.databases.svc.cluster.local"
+  VALKEY_PORT: "6379"
+  VALKEY_USERNAME: "cart-service"
+  # Cart TTL (seconds) — 7 days
+  CART_TTL_SECONDS: "604800"
+  # Keycloak OIDC
+  KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
+  KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
+  # OpenTelemetry Collector
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "cart-service"
+  # Downstream service URLs (plain Kubernetes DNS — ADR-002)
+  USER_SERVICE_URL: "http://user-service.e-commerce.svc.cluster.local:8085"
+  ORDER_SERVICE_URL: "http://order-service.e-commerce.svc.cluster.local:8082"
+  # Kafka (Strimzi SCRAM-SHA-512 listener — port 9095)
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
+  KAFKA_USERNAME: "cart-service"
