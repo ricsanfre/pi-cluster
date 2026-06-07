@@ -1,0 +1,566 @@
+# Keycloak Operator — KeycloakRealmImport CR
+# Imports the e-commerce realm configuration.
+# Namespace: keycloak
+#
+# Mirrors docker/keycloak/realm-e-commerce.json — keep both in sync.
+#
+# Apply:
+#   kubectl apply -f k8s/infra/keycloak/realm-import.yaml
+---
+apiVersion: k8s.keycloak.org/v2beta1
+kind: KeycloakRealmImport
+metadata:
+  name: e-commerce-realm
+spec:
+  keycloakCRName: keycloak
+  # Placeholder values are sourced from the keycloak-realm-secrets K8s Secret
+  # (created by ESO from k8s/infra/keycloak/external-secrets.yaml).
+  # In the realm spec below, reference them as ${PLACEHOLDER_NAME}.
+  placeholders:
+    KC_CLIENT_ECOMMERCE_WEB:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_ECOMMERCE_WEB
+    KC_CLIENT_CART_SERVICE:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_CART_SERVICE
+    KC_CLIENT_ORDER_SERVICE:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_ORDER_SERVICE
+    KC_CLIENT_REVIEWS_SERVICE:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_REVIEWS_SERVICE
+    KC_CLIENT_PRODUCT_SERVICE:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_PRODUCT_SERVICE
+    KC_CLIENT_USER_SERVICE:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_USER_SERVICE
+    KC_CLIENT_NOTIFICATION_SERVICE:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_CLIENT_NOTIFICATION_SERVICE
+    KC_USER_TESTUSER_PASSWORD:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_USER_TESTUSER_PASSWORD
+    KC_USER_OTHERUSER_PASSWORD:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_USER_OTHERUSER_PASSWORD
+    KC_USER_ADMINUSER_PASSWORD:
+      secret:
+        name: keycloak-realm-secrets
+        key: KC_USER_ADMINUSER_PASSWORD
+  realm:
+    realm: e-commerce
+    displayName: "E-Commerce Platform"
+    enabled: true
+    sslRequired: none
+    registrationAllowed: false
+    loginWithEmailAllowed: true
+    duplicateEmailsAllowed: false
+    defaultSignatureAlgorithm: RS256
+
+    roles:
+      client:
+        product-service:
+          - name: "products:read"
+            description: "Read product catalog"
+          - name: "products:write"
+            description: "Create and update products"
+        order-service:
+          - name: "orders:read"
+            description: "Read own orders"
+          - name: "orders:write"
+            description: "Place and update orders"
+        reviews-service:
+          - name: "reviews:read"
+            description: "Read product reviews"
+          - name: "reviews:write"
+            description: "Submit and edit reviews"
+        user-service:
+          - name: "users:read"
+            description: "Read own user profile"
+          - name: "users:resolve"
+            description: "Resolve an IDP subject to an internal user ID (service-to-service only)"
+        notification-service:
+          - name: "notifications:receive"
+            description: "Receive notification events"
+        cart-service:
+          - name: "cart:read"
+            description: "Read own shopping cart"
+          - name: "cart:write"
+            description: "Add, update, and remove items in own shopping cart"
+        e-commerce-web:
+          - name: customer
+            description: "Standard customer — read access to catalog + full order and review lifecycle"
+            composite: true
+            composites:
+              client:
+                product-service:
+                  - "products:read"
+                order-service:
+                  - "orders:read"
+                  - "orders:write"
+                reviews-service:
+                  - "reviews:read"
+                  - "reviews:write"
+                user-service:
+                  - "users:read"
+                cart-service:
+                  - "cart:read"
+                  - "cart:write"
+          - name: admin
+            description: "Admin — all customer permissions plus product writes and notifications"
+            composite: true
+            composites:
+              client:
+                product-service:
+                  - "products:read"
+                  - "products:write"
+                order-service:
+                  - "orders:read"
+                  - "orders:write"
+                reviews-service:
+                  - "reviews:read"
+                  - "reviews:write"
+                user-service:
+                  - "users:read"
+                notification-service:
+                  - "notifications:receive"
+
+    clientScopeMappings:
+      product-service:
+        - clientScope: "products:read"
+          roles:
+            - "products:read"
+        - clientScope: "products:write"
+          roles:
+            - "products:write"
+      order-service:
+        - clientScope: "orders:read"
+          roles:
+            - "orders:read"
+        - clientScope: "orders:write"
+          roles:
+            - "orders:write"
+      reviews-service:
+        - clientScope: "reviews:read"
+          roles:
+            - "reviews:read"
+        - clientScope: "reviews:write"
+          roles:
+            - "reviews:write"
+      user-service:
+        - clientScope: "users:read"
+          roles:
+            - "users:read"
+        - clientScope: "users:resolve"
+          roles:
+            - "users:resolve"
+      notification-service:
+        - clientScope: "notifications:receive"
+          roles:
+            - "notifications:receive"
+      cart-service:
+        - clientScope: "cart:read"
+          roles:
+            - "cart:read"
+        - clientScope: "cart:write"
+          roles:
+            - "cart:write"
+
+    clientScopes:
+      - name: basic
+        description: "OpenID Connect scope for add all basic claims to the token"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "false"
+          display.on.consent.screen: "false"
+        protocolMappers:
+          - name: sub
+            protocol: openid-connect
+            protocolMapper: oidc-sub-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              access.token.claim: "true"
+          - name: auth_time
+            protocol: openid-connect
+            protocolMapper: oidc-usersessionmodel-note-mapper
+            consentRequired: false
+            config:
+              user.session.note: AUTH_TIME
+              introspection.token.claim: "true"
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: auth_time
+              jsonType.label: long
+
+      - name: profile
+        description: "OpenID Connect built-in scope: profile"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          consent.screen.text: "$${profileScopeConsentText}"
+          display.on.consent.screen: "true"
+        protocolMappers:
+          - name: full name
+            protocol: openid-connect
+            protocolMapper: oidc-full-name-mapper
+            consentRequired: false
+            config:
+              id.token.claim: "true"
+              introspection.token.claim: "true"
+              access.token.claim: "true"
+              userinfo.token.claim: "true"
+          - name: username
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-attribute-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              userinfo.token.claim: "true"
+              user.attribute: username
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: preferred_username
+              jsonType.label: String
+          - name: given name
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-attribute-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              userinfo.token.claim: "true"
+              user.attribute: firstName
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: given_name
+              jsonType.label: String
+          - name: family name
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-attribute-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              userinfo.token.claim: "true"
+              user.attribute: lastName
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: family_name
+              jsonType.label: String
+
+      - name: email
+        description: "OpenID Connect built-in scope: email"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          consent.screen.text: "$${emailScopeConsentText}"
+          display.on.consent.screen: "true"
+        protocolMappers:
+          - name: email
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-attribute-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              userinfo.token.claim: "true"
+              user.attribute: email
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: email
+              jsonType.label: String
+          - name: email verified
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-property-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              userinfo.token.claim: "true"
+              user.attribute: emailVerified
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: email_verified
+              jsonType.label: boolean
+
+      - name: "products:read"
+        description: "Read access to the product catalog"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "products:write"
+        description: "Create and update products (admin / product-service)"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "orders:read"
+        description: "Read access to orders"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "orders:write"
+        description: "Place and update orders"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "reviews:read"
+        description: "Read access to product reviews"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "reviews:write"
+        description: "Submit and edit reviews"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "users:read"
+        description: "Read own user profile"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "users:resolve"
+        description: "Resolve an IDP subject to an internal user ID (service-to-service only)"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "false"
+
+      - name: "notifications:receive"
+        description: "Receive notification events"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "cart:read"
+        description: "Read own shopping cart"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+      - name: "cart:write"
+        description: "Add, update, and remove items in own shopping cart"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
+
+    clients:
+      - clientId: e-commerce-web
+        name: "E-Commerce Web App"
+        description: "Confidential BFF client — Next.js server-side OIDC (Auth.js v5)"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_ECOMMERCE_WEB}"
+        standardFlowEnabled: true
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        fullScopeAllowed: false
+        attributes:
+          post.logout.redirect.uris: "http://localhost:3001/*##https://app.${CLUSTER_DOMAIN}/*"
+        redirectUris:
+          - "http://localhost:3001/api/auth/callback/keycloak"
+          - "https://app.${CLUSTER_DOMAIN}/api/auth/callback/keycloak"
+          - "http://localhost:9876/callback"
+        webOrigins:
+          - "http://localhost:3001"
+          - "https://app.${CLUSTER_DOMAIN}"
+        defaultClientScopes:
+          - openid
+          - basic
+          - profile
+          - email
+        optionalClientScopes:
+          - "products:read"
+          - "products:write"
+          - "orders:read"
+          - "orders:write"
+          - "reviews:read"
+          - "reviews:write"
+          - "users:read"
+          - "notifications:receive"
+          - "cart:read"
+          - "cart:write"
+
+      - clientId: product-service
+        name: "Product Service"
+        description: "Confidential client for product-service — resource server + service account"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_PRODUCT_SERVICE}"
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        fullScopeAllowed: false
+        defaultClientScopes: []
+        optionalClientScopes: []
+
+      - clientId: order-service
+        name: "Order Service"
+        description: "Confidential client for order-service — resource server + service account (calls product-service, user-service)"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_ORDER_SERVICE}"
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        fullScopeAllowed: false
+        defaultClientScopes:
+          - "users:resolve"
+          - "products:write"
+        optionalClientScopes: []
+
+      - clientId: reviews-service
+        name: "Reviews Service"
+        description: "Confidential client for reviews-service — resource server + service account (calls user-service, product-service, order-service)"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_REVIEWS_SERVICE}"
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        fullScopeAllowed: false
+        defaultClientScopes:
+          - "users:resolve"
+          - "products:read"
+          - "orders:read"
+        optionalClientScopes: []
+
+      - clientId: user-service
+        name: "User Service"
+        description: "Confidential client for user-service — resource server + service account"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_USER_SERVICE}"
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        fullScopeAllowed: false
+        defaultClientScopes: []
+        optionalClientScopes: []
+
+      - clientId: notification-service
+        name: "Notification Service"
+        description: "Confidential client for notification-service — Kafka consumer resource server (no outbound HTTP calls)"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_NOTIFICATION_SERVICE}"
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        fullScopeAllowed: false
+        defaultClientScopes: []
+        optionalClientScopes: []
+
+      - clientId: cart-service
+        name: "Cart Service"
+        description: "Confidential client for cart-service — resource server + service account (calls user-service, order-service)"
+        enabled: true
+        publicClient: false
+        secret: "$${KC_CLIENT_CART_SERVICE}"
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        fullScopeAllowed: false
+        defaultClientScopes:
+          - "users:resolve"
+          - "orders:write"
+        optionalClientScopes: []
+
+    users:
+      - username: testuser
+        enabled: true
+        email: testuser@example.com
+        firstName: Test
+        lastName: User
+        credentials:
+          - type: password
+            value: "$${KC_USER_TESTUSER_PASSWORD}"
+            temporary: false
+        clientRoles:
+          e-commerce-web:
+            - customer
+
+      - username: otheruser
+        enabled: true
+        email: otheruser@example.com
+        firstName: Other
+        lastName: Person
+        credentials:
+          - type: password
+            value: "$${KC_USER_OTHERUSER_PASSWORD}"
+            temporary: false
+        clientRoles:
+          e-commerce-web:
+            - customer
+
+      - username: service-account-cart-service
+        enabled: true
+        serviceAccountClientId: cart-service
+        clientRoles:
+          order-service:
+            - "orders:write"
+          user-service:
+            - "users:resolve"
+
+      - username: service-account-order-service
+        enabled: true
+        serviceAccountClientId: order-service
+        clientRoles:
+          product-service:
+            - "products:write"
+          user-service:
+            - "users:resolve"
+
+      - username: service-account-reviews-service
+        enabled: true
+        serviceAccountClientId: reviews-service
+        clientRoles:
+          product-service:
+            - "products:read"
+          order-service:
+            - "orders:read"
+          user-service:
+            - "users:resolve"
+
+      - username: adminuser
+        enabled: true
+        email: admin@example.com
+        firstName: Admin
+        lastName: User
+        credentials:
+          - type: password
+            value: "$${KC_USER_ADMINUSER_PASSWORD}"
+            temporary: false
+        clientRoles:
+          e-commerce-web:
+            - admin

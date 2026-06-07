@@ -1,0 +1,82 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: order-service
+        app.kubernetes.io/part-of: e-commerce
+    spec:
+      serviceAccountName: order-service
+
+      containers:
+        - name: order-service
+          image: ghcr.io/ricsanfre/spring-microservices-otel-k8s/order-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8082
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: order-service-config
+
+          env:
+            # DB credentials from CNPG-managed secret (postgres namespace),
+            # copied into e-commerce namespace by the staging overlay.
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: order-service-db-secret
+                  key: password
+            # OAuth2 client credential for calling user-service and product-service
+            - name: ORDER_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: order-service-oauth-secret
+                  key: ORDER_SERVICE_CLIENT_SECRET
+            # Kafka SCRAM-SHA-512 password (Strimzi generates and stores in kafka namespace;
+            # copy to e-commerce namespace as order-service-kafka-secret before deploying).
+            - name: KAFKA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: order-service-kafka-secret
+                  key: password
+
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8082
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

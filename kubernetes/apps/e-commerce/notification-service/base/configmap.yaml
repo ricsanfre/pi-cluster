@@ -1,0 +1,15 @@
+---
+# Non-sensitive configuration for notification-service.
+# Kafka consumer — no outbound HTTP calls, no OAuth2 client credentials needed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-service-config
+data:
+  SERVER_PORT: "8084"
+  # Kafka (Strimzi SCRAM-SHA-512 listener — port 9095)
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
+  KAFKA_USERNAME: "notification-service"
+  # OpenTelemetry Collector
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "notification-service"

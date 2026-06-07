@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: e-commerce
+resources:
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - external-secrets.yaml
+  - serviceaccount.yaml
+  - http-route.yaml
+

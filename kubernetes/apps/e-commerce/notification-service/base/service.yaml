@@ -1,0 +1,16 @@
+---
+# Internal service for actuator health checks only — notification-service
+# has no user-facing REST API endpoints.
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+spec:
+  selector:
+    app.kubernetes.io/name: notification-service
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084
+      protocol: TCP
+  type: ClusterIP
