@@ -10,3 +10,4 @@ resources:
   - client-traffic-policy.yaml
   - backend-traffic-policy.yaml
   - http-redirect-route.yaml
+  - peer-authentication.yaml

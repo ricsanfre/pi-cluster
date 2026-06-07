@@ -5,6 +5,7 @@ resources:
   - cilium-app.yaml
   - cloudnative-pg-app.yaml
   - coredns-app.yaml
+  - databases-config.yaml
   - csi-external-snapshotter-app.yaml
   - elastic-stack-app.yaml
   - envoy-gateway-app.yaml
@@ -25,6 +26,7 @@ resources:
   - otel-collector-app.yaml
   - system-upgrade-app.yaml
   - tempo-app.yaml
+  - valkey-operator-app.yaml
   - vault-app.yaml
   - velero-app.yaml
   - kube-vip-app.yaml
