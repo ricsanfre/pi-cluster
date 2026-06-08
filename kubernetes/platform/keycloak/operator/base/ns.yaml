@@ -2,13 +2,12 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: keycloak
-  # Ambient mesh intentionally NOT enabled on this namespace.
-  # Keycloak's JGroups clustering (Infinispan distributed cache) uses custom
-  # TCP binary protocols with timing-sensitive failure detection (FD). ztunnel
-  # HBONE encapsulation adds latency and interferes with JGroups heartbeat
-  # mechanisms, causing false failure detection and broken cluster formation.
-  # Additionally, the Terraform runner in flux-system (outside the mesh) cannot
-  # connect to Keycloak's HTTP API when STRICT mTLS is enforced. Since Istio
-  # ambient mesh lacks per-port bypass annotations (istio/istio#58546), the only
-  # reliable option is to exclude the entire namespace from the mesh.
+  # Ambient mesh intentionally NOT enabled on this namespace by default.
+  # See the istio component (app/components/istio/) which adds the
+  # istio.io/dataplane-mode: ambient label when used with the prod overlay.
+  # Keycloak's JGroups clustering requires additional configuration to work
+  # with Istio ambient mesh:
+  # 1. cache-embedded-mtls-enabled: false (disables Keycloak's own JGroups TLS)
+  # 2. NetworkPolicy allowing ztunnel pods on JGroups ports
+  # 3. PERMISSIVE PeerAuthentication on port 8080 for non-mesh clients
   # See: design/adr/0003-ambient-mesh-exclusions.md

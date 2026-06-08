@@ -1,0 +1,34 @@
+# Additional NetworkPolicy — allows Istio ztunnel pods to reach Keycloak JGroups ports.
+# The Keycloak Operator creates `keycloak-network-policy` which restricts JGroups
+# ingress (ports 7800, 57800) to only Keycloak-labeled pods. When ambient mesh is
+# enabled, ztunnel intercepts and proxies JGroups traffic via HBONE tunnels, so the
+# actual TCP connections to Keycloak pods originate from ztunnel pods in istio-system,
+# not from the peer Keycloak pod. This policy is additive — Kubernetes union-matches
+# NetworkPolicies, so traffic is allowed if ANY matching policy permits it.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keycloak-istio-mesh
+  namespace: keycloak
+spec:
+  podSelector:
+    matchLabels:
+      app: keycloak
+      app.kubernetes.io/managed-by: keycloak-operator
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow ambient mesh ztunnel proxies to forward JGroups traffic
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+          podSelector:
+            matchLabels:
+              app: ztunnel
+      ports:
+        - port: 7800
+          protocol: TCP
+        - port: 57800
+          protocol: TCP
