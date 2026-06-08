@@ -1,6 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
+resources:
+  - cnpg-webhook-permissive.yaml
+
 patches:
   - path: namespace-labels.yaml
     target:
