@@ -3,9 +3,3 @@ kind: Component
 
 resources:
   - cnpg-webhook-permissive.yaml
-
-patches:
-  - path: namespace-labels.yaml
-    target:
-      kind: Namespace
-      name: databases

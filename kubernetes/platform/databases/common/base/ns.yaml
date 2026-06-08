@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: databases
+  # Ambient mesh label is managed by the components/istio component.
+  # See: databases/common/components/istio/namespace-labels.yaml
+  # This is the single source of truth for the databases namespace —
+  # operators under databases/ do NOT define their own ns.yaml.
