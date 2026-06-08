@@ -1,9 +1,8 @@
-# Istio PeerAuthentication — databases namespace
-# STRICT mTLS for all traffic by default — ztunnel enforces SPIFFE identity.
-# Port 9443 (CNPG admission webhook) is PERMISSIVE: the kube-apiserver
-# calls this webhook from outside the mesh and lacks a SPIFFE identity.
-# CNPG health checks and replication (port 8000) stay STRICT — the CNPG
-# operator runs in the databases namespace with a mesh identity.
+# Istio PeerAuthentication — databases namespace (namespace-wide default)
+# STRICT mTLS for all workloads by default — ztunnel enforces SPIFFE identity.
+# The CNPG webhook pod has its own PeerAuthentication (cnpg-webhook-permissive)
+# with a PERMISSIVE port-level exception on 9443, allowing the kube-apiserver
+# to call the admission webhook without a mesh identity.
 ---
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
@@ -15,6 +14,3 @@ spec:
     matchLabels: {}
   mtls:
     mode: STRICT
-  portLevelMtls:
-    "9443":
-      mode: PERMISSIVE
