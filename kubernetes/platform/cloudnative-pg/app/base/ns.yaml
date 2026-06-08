@@ -2,7 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: databases
-  # Ambient mesh intentionally NOT enabled on this namespace.
-  # The CNPG operator webhook and PostgreSQL instances use their own TLS;
-  # ztunnel interception breaks admission webhook calls and instance
-  # health checks (EOF / connection reset on ports 9443 and 8000).
+  # Ambient mesh label is managed by the app/components/istio component.
+  # See: cloudnative-pg/app/components/istio/namespace-labels.yaml
+  # A PERMISSIVE PeerAuthentication is used to allow non-mesh clients
+  # (kube-apiserver webhook calls, CNPG health checks) to connect
+  # without SPIFFE identity. See design/adr/0003-ambient-mesh-exclusions.md
