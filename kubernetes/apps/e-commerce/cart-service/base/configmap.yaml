@@ -22,6 +22,6 @@ data:
   # Downstream service URLs (plain Kubernetes DNS — ADR-002)
   USER_SERVICE_URL: "http://user-service.e-commerce.svc.cluster.local:8085"
   ORDER_SERVICE_URL: "http://order-service.e-commerce.svc.cluster.local:8082"
-  # Kafka (Strimzi SCRAM-SHA-512 listener — port 9095)
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
+  # Kafka (Strimzi SCRAM-SHA-512 plain listener — port 9092)
+  KAFKA_BOOTSTRAP_SERVERS: "cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
   KAFKA_USERNAME: "cart-service"
