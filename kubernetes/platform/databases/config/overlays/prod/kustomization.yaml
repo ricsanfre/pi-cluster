@@ -4,3 +4,6 @@ namespace: databases
 
 resources:
   - ../../base
+
+components:
+  - ../../components/istio

@@ -1,0 +1,8 @@
+# Add Istio ambient mesh label to the envoy-gateway-system namespace.
+# Enables ztunnel L4 traffic interception and transparent mTLS for Envoy Gateway.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: envoy-gateway-system
+  labels:
+    istio.io/dataplane-mode: ambient

@@ -4,3 +4,6 @@ namespace: e-commerce
 
 resources:
   - ../../base
+
+components:
+  - ../../components/istio
