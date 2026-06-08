@@ -1,0 +1,8 @@
+# Add Istio ambient mesh label to the e-commerce namespace.
+# Enables ztunnel L4 traffic interception and transparent mTLS for this namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: e-commerce
+  labels:
+    istio.io/dataplane-mode: ambient
