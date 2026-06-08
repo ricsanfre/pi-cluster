@@ -1,9 +1,9 @@
 # Istio PeerAuthentication — databases namespace
-# Requires all traffic in the databases namespace to use mTLS (STRICT mode).
-# Works with Istio ambient mode: ztunnel enforces mTLS at L4.
-# Note: databases namespace is intentionally NOT labeled for ambient mesh
-# (see design/adr/0003-ambient-mesh-exclusions.md). This PeerAuthentication
-# is included for when/if the namespace is re-enabled in the future.
+# STRICT mTLS for all traffic by default — ztunnel enforces SPIFFE identity.
+# Port 9443 (CNPG admission webhook) is PERMISSIVE: the kube-apiserver
+# calls this webhook from outside the mesh and lacks a SPIFFE identity.
+# CNPG health checks and replication (port 8000) stay STRICT — the CNPG
+# operator runs in the databases namespace with a mesh identity.
 ---
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
@@ -13,3 +13,6 @@ metadata:
 spec:
   mtls:
     mode: STRICT
+  portLevelMtls:
+    "9443":
+      mode: PERMISSIVE
