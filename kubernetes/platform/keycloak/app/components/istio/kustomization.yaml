@@ -10,7 +10,3 @@ patches:
       group: k8s.keycloak.org
       kind: Keycloak
       name: keycloak
-  - path: namespace-labels.yaml
-    target:
-      kind: Namespace
-      name: keycloak
