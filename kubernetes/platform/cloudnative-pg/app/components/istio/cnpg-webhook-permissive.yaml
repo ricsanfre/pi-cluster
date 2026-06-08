@@ -1,0 +1,20 @@
+# Istio PeerAuthentication — CNPG webhook pod
+# PERMISSIVE on port 9443 (webhook container port, exposed via service on :443).
+# The kube-apiserver calls the CNPG admission webhook from outside the mesh
+# and lacks a SPIFFE identity. This exception allows the TLS handshake to
+# complete end-to-end through ztunnel's transparent proxy.
+# The more specific selector (app.kubernetes.io/name: cloudnative-pg) takes
+# precedence over the namespace-wide databases-strict PeerAuthentication.
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: cnpg-webhook-permissive
+  namespace: databases
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudnative-pg
+  portLevelMtls:
+    "9443":
+      mode: PERMISSIVE
