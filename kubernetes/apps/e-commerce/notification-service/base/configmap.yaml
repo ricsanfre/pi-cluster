@@ -7,8 +7,8 @@ metadata:
   name: notification-service-config
 data:
   SERVER_PORT: "8084"
-  # Kafka (Strimzi SCRAM-SHA-512 listener — port 9095)
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
+  # Kafka (Strimzi SCRAM-SHA-512 plain listener — port 9092)
+  KAFKA_BOOTSTRAP_SERVERS: "cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
   KAFKA_USERNAME: "notification-service"
   # OpenTelemetry Collector
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.otel.svc.cluster.local:4318"
