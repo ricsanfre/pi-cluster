@@ -4,6 +4,7 @@ namespace: keycloak
 
 components:
   - ../../components/affinity-amd64-only
+  - ../../components/istio
 
 resources:
   - ../../base
