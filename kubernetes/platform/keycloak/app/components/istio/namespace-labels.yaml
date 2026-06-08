@@ -1,0 +1,5 @@
+# Add Istio ambient mesh label to the keycloak namespace.
+# Enables ztunnel L4 traffic interception and transparent mTLS for this namespace.
+- op: add
+  path: /metadata/labels/istio.io~1dataplane-mode
+  value: ambient

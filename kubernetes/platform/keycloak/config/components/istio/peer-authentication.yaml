@@ -1,0 +1,14 @@
+# Istio PeerAuthentication — keycloak namespace
+# PERMISSIVE mode on port 8080 (Keycloak HTTP API) allows non-mesh clients
+# (e.g., Terraform runner in flux-system) to connect without a SPIFFE identity.
+# All other traffic defaults to the mesh-wide mTLS policy.
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: keycloak-permissive
+  namespace: keycloak
+spec:
+  portLevelMtls:
+    "8080":
+      mode: PERMISSIVE

@@ -1,0 +1,8 @@
+- op: add
+  path: /spec/additionalOptions/-
+  value:
+    # Disable Keycloak's embedded JGroups mTLS — Istio ambient mesh provides
+    # transport encryption via HBONE tunnels. Keeping embedded mTLS enabled
+    # causes double-encryption and certificate mismatch errors (JGRP000006).
+    name: cache-embedded-mtls-enabled
+    value: "false"

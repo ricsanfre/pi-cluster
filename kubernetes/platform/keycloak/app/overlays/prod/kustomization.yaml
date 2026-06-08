@@ -8,3 +8,4 @@ resources:
 components:
   - ../../components/route
   - ../../components/monitor
+  - ../../components/istio
