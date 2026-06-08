@@ -11,6 +11,8 @@ metadata:
   name: databases-strict
   namespace: databases
 spec:
+  selector:
+    matchLabels: {}
   mtls:
     mode: STRICT
   portLevelMtls:
