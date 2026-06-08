@@ -14,7 +14,7 @@ kind: KafkaTopic
 metadata:
   name: order-created-v1
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: cluster
 spec:
   topicName: order.created.v1
   partitions: 1
@@ -29,7 +29,7 @@ kind: KafkaTopic
 metadata:
   name: order-confirmed-v1
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: cluster
 spec:
   topicName: order.confirmed.v1
   partitions: 1
@@ -43,7 +43,7 @@ kind: KafkaTopic
 metadata:
   name: user-events
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: cluster
 spec:
   topicName: user.events.v1
   partitions: 1

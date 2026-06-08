@@ -22,7 +22,7 @@ kind: KafkaUser
 metadata:
   name: order-service
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: cluster
 spec:
   authentication:
     type: scram-sha-512
@@ -54,7 +54,7 @@ kind: KafkaUser
 metadata:
   name: notification-service
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: cluster
 spec:
   authentication:
     type: scram-sha-512
@@ -84,7 +84,7 @@ kind: KafkaUser
 metadata:
   name: cart-service
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: cluster
 spec:
   authentication:
     type: scram-sha-512

@@ -13,8 +13,8 @@ data:
   DB_PORT: "5432"
   DB_NAME: "orders"
   DB_USER: "orders_owner"
-  # Kafka (Strimzi SCRAM-SHA-512 listener — port 9095)
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
+  # Kafka (Strimzi SCRAM-SHA-512 plain listener — port 9092)
+  KAFKA_BOOTSTRAP_SERVERS: "cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
   KAFKA_USERNAME: "order-service"
   # Keycloak OIDC
   KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
