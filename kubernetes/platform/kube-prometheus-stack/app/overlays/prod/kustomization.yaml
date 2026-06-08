@@ -12,6 +12,7 @@ components:
   - ../../components/vault-agent
   - ../../components/flux-monitoring
   - ../../components/open-telemetry-receiver
+  - ../../components/istio
 
 configMapGenerator:
   - name: kube-prometheus-stack-helm-values
