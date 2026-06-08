@@ -11,6 +11,9 @@ configMapGenerator:
     files:
       - overlay-values.yaml=values.yaml
 
+components:
+  - ../../components/istio
+
 patches:
 - target:
     group: helm.toolkit.fluxcd.io
