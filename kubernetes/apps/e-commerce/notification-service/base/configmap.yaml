@@ -11,5 +11,5 @@ data:
   KAFKA_BOOTSTRAP_SERVERS: "kafka-kafka-bootstrap.kafka.svc.cluster.local:9095"
   KAFKA_USERNAME: "notification-service"
   # OpenTelemetry Collector
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.otel.svc.cluster.local:4318"
   OTEL_SERVICE_NAME: "notification-service"
