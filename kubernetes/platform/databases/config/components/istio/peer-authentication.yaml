@@ -1,6 +1,9 @@
 # Istio PeerAuthentication — databases namespace
 # Requires all traffic in the databases namespace to use mTLS (STRICT mode).
 # Works with Istio ambient mode: ztunnel enforces mTLS at L4.
+# Note: databases namespace is intentionally NOT labeled for ambient mesh
+# (see design/adr/0003-ambient-mesh-exclusions.md). This PeerAuthentication
+# is included for when/if the namespace is re-enabled in the future.
 ---
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication

@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: e-commerce
 resources:
   - ns.yaml
-  - peer-authentication.yaml
   - realm-import.yaml
   - kafka-topics.yaml
   - kafka-users.yaml
