@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - network-policy.yaml
+
+patches:
+  - path: keycloak-additionalOptions.yaml
+    target:
+      group: k8s.keycloak.org
+      kind: Keycloak
+      name: keycloak
+  - path: namespace-labels.yaml
+    target:
+      kind: Namespace
+      name: keycloak
