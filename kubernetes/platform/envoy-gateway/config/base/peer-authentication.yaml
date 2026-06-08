@@ -1,12 +1,14 @@
 # Istio PeerAuthentication — envoy-gateway-system namespace
-# Requires all traffic in the envoy-gateway-system namespace to use mTLS (STRICT mode).
-# Works with Istio ambient mode: ztunnel enforces mTLS at L4.
+# PERMISSIVE mode: accepts both mTLS and plaintext traffic.
+# STRICT would block external traffic to the ingress gateway since
+# external clients don't have SPIFFE identities. mTLS between mesh
+# workloads is still enforced at the workload level.
 ---
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
-  name: envoy-gateway-strict
+  name: envoy-gateway-permissive
   namespace: envoy-gateway-system
 spec:
   mtls:
-    mode: STRICT
+    mode: PERMISSIVE
