@@ -2,6 +2,9 @@
 # Enables ztunnel L4 traffic interception and transparent mTLS for this namespace.
 # Applied here (operator layer) because the Namespace resource is defined by
 # operator/base/ns.yaml, and patches only have scope within the same kustomization.
-- op: add
-  path: /metadata/labels/istio.io~1dataplane-mode
-  value: ambient
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak
+  labels:
+    istio.io/dataplane-mode: ambient
