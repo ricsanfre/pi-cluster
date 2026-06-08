@@ -17,5 +17,5 @@ data:
   PRODUCT_SERVICE_URL: "http://product-service.e-commerce.svc.cluster.local:8081"
   ORDER_SERVICE_URL: "http://order-service.e-commerce.svc.cluster.local:8082"
   # OpenTelemetry Collector
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.otel.svc.cluster.local:4318"
   OTEL_SERVICE_NAME: "reviews-service"

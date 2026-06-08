@@ -17,7 +17,7 @@ data:
   KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
   KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
   # OpenTelemetry Collector
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.otel.svc.cluster.local:4318"
   OTEL_SERVICE_NAME: "cart-service"
   # Downstream service URLs (plain Kubernetes DNS — ADR-002)
   USER_SERVICE_URL: "http://user-service.e-commerce.svc.cluster.local:8085"
