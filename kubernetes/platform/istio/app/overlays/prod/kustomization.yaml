@@ -5,6 +5,9 @@ namespace: istio-system
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: istio-base-overlay-values
     files:
