@@ -23,8 +23,8 @@ cr:
         url: "http://kube-prometheus-stack-prometheus.kube-prom-stack:9090"
       grafana:
         enabled: true
-        # Grafana service name is "grafana" and is in the "grafana" namespace.
-        internal_url: 'http://grafana.grafana.svc.cluster.local/grafana/'
+        # Grafana service at grafana-service.grafana:3000, no sub-path (root_url is /)
+        internal_url: 'http://grafana-service.grafana:3000'
         # Public facing URL of Grafana
         external_url: 'https://grafana.${CLUSTER_DOMAIN}'
         auth:
