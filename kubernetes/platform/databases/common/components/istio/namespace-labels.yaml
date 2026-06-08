@@ -1,0 +1,9 @@
+# Add Istio ambient mesh label to the databases namespace.
+# This is the single source of truth — operators under databases/ do not
+# define their own ns.yaml, so the label won't get stripped by reconciliation.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: databases
+  labels:
+    istio.io/dataplane-mode: ambient
