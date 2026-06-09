@@ -1,0 +1,17 @@
+# Istio PeerAuthentication — kafka namespace (namespace-wide default)
+# STRICT mTLS for all workloads by default — ztunnel enforces SPIFFE identity.
+# The Strimzi operator and Kafka broker pods have their own PeerAuthentication
+# resources with PERMISSIVE port-level exceptions for webhooks and metrics,
+# allowing the kube-apiserver and Prometheus (both outside the mesh) to
+# reach these specific ports without a mesh identity.
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: kafka-strict
+  namespace: kafka
+spec:
+  selector:
+    matchLabels: {}
+  mtls:
+    mode: STRICT

@@ -1,0 +1,24 @@
+# Istio PeerAuthentication — Strimzi cluster operator pod
+# PERMISSIVE on port 8443 (admission webhook) and port 8080 (metrics).
+# Port 8443: the kube-apiserver calls the Strimzi admission webhook from
+# outside the mesh and lacks a SPIFFE identity. This exception allows the
+# TLS handshake to complete end-to-end through ztunnel's transparent proxy.
+# Port 8080: Prometheus scrapes operator metrics from outside the mesh
+# (kube-prom-stack namespace is not in ambient mesh).
+# The more specific selector (strimzi.io/kind: cluster-operator) takes
+# precedence over the namespace-wide kafka-strict PeerAuthentication.
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: strimzi-operator-permissive
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/kind: cluster-operator
+  portLevelMtls:
+    "8443":
+      mode: PERMISSIVE
+    "8080":
+      mode: PERMISSIVE
