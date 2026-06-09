@@ -10,7 +10,8 @@ metadata:
   namespace: keycloak
 spec:
   selector:
-    matchLabels: {}
+    matchLabels:
+      app: keycloak
   portLevelMtls:
     "8080":
       mode: PERMISSIVE
