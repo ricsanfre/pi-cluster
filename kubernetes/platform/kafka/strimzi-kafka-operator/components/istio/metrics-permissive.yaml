@@ -1,0 +1,35 @@
+# Istio PeerAuthentication — Kafka broker and Entity Operator metrics
+# PERMISSIVE on metrics ports allows Prometheus (outside the mesh, in
+# kube-prom-stack namespace) to scrape Kafka broker and Entity Operator
+# metrics without a SPIFFE identity.
+# The more specific selectors take precedence over the namespace-wide
+# kafka-strict PeerAuthentication.
+---
+# Kafka broker JMX Prometheus exporter metrics (port 9404)
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: kafka-broker-metrics-permissive
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/kind: Kafka
+  portLevelMtls:
+    "9404":
+      mode: PERMISSIVE
+---
+# Entity Operator health check / metrics (port 8081)
+# The Entity Operator runs as a sidecar inside Kafka broker pods.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: entity-operator-metrics-permissive
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: entity-operator
+  portLevelMtls:
+    "8081":
+      mode: PERMISSIVE

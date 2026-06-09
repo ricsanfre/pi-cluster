@@ -1,0 +1,10 @@
+# Add Istio ambient mesh label to the kafka namespace.
+# Enables ztunnel L4 traffic interception and transparent mTLS for all Kafka workloads.
+# Applied here (operator layer) because the Namespace resource is defined by
+# operator/base/ns.yaml, and patches only have scope within the same kustomization.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+  labels:
+    istio.io/dataplane-mode: ambient
