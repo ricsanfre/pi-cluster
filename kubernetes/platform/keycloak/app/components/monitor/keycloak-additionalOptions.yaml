@@ -1,8 +1,35 @@
+# Shared OpenTelemetry settings — endpoint, protocol, and resource attributes
+# for all signals (tracing, metrics, logs). Individual signals inherit from these.
+- op: add
+  path: /spec/telemetry
+  value:
+    endpoint: http://otel-collector.otel:4317
+    serviceName: keycloak
+
+# OpenTelemetry Tracing — tracing-specific fields.
+# endpoint and protocol are inherited from spec.telemetry above.
+- op: add
+  path: /spec/tracing
+  value:
+    enabled: true
+    samplerType: traceidratio
+    samplerRatio: 1.0
+
+# Additional tracing options not promoted to first-class CR fields.
+# Per Keycloak operator docs: tracing-jdbc-enabled is intentionally kept as
+# an additionalOption because it "might not be well managed in the future."
+- op: add
+  path: /spec/additionalOptions/-
+  value:
+    name: tracing-jdbc-enabled
+    value: 'true'
+
+# Prometheus Metrics
 - op: add
   path: /spec/additionalOptions/-
   value:
     # Enable metrics endpoint
-    name: metrics-enabled 
+    name: metrics-enabled
     value: 'true'
 - op: add
   path: /spec/additionalOptions/-
@@ -19,6 +46,6 @@
 - op: add
   path: /spec/additionalOptions/-
   value:
-    # Enable user metrics
+    # Enable user event metrics (requires user-event-metrics:v1 feature)
     name: event-metrics-user-enabled
     value: 'true'

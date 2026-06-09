@@ -39,12 +39,6 @@ spec:
     enabled: false
   # Additional Options
   additionalOptions:
-    # OpenTelemetry tracing
-    - name: tracing-enabled
-      value: "true"
-    - name: tracing-endpoint
-      value: "http://otel-collector.otel:4317"
-    - name: tracing-sampler-ratio
-      value: "1.0"
+    # Enable health check endpoints (/health, /health/ready, /health/live)
     - name: health-enabled
       value: "true"
