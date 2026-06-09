@@ -3,7 +3,7 @@ instance:
   sync:
     kind: GitRepository
     url: https://github.com/ricsanfre/pi-cluster
-    ref: refs/heads/feature/ecommerce-observability-demo
+    ref: refs/heads/feature/ecommerce-observability-demo-2
     path: kubernetes/clusters/prod
     interval: 1h
     ignore: |
