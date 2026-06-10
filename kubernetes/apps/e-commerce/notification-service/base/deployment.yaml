@@ -42,9 +42,9 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8084
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
 
           livenessProbe:
             httpGet:
@@ -65,5 +65,5 @@ spec:
               cpu: "50m"
               memory: "128Mi"
             limits:
-              cpu: "200m"
-              memory: "256Mi"
+              cpu: "500m"
+              memory: "512Mi"
