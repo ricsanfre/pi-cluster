@@ -32,7 +32,13 @@ deschedulerPolicy:
               - PodsWithPVC
             evictLocalStoragePods: false
             evictSystemCriticalPods: false
-            nodeFit: true
+            # nodeFit disabled: the descheduler's nodeFit check fails when
+            # control-plane nodes are tainted with NoSchedule, because it
+            # evaluates the pod against ALL nodes (including tainted ones)
+            # rather than requiring fit on just one valid node.
+            # Pods will still be correctly scheduled by kube-scheduler on
+            # the actual untargeted node (node-hp-2) after eviction.
+            nodeFit: false
         - name: LowNodeUtilization
           args:
             thresholds:
