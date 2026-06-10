@@ -6,6 +6,7 @@ resources:
   - coredns-app.yaml
   - csi-external-snapshotter-app.yaml
   - databases-app.yaml
+  - descheduler-app.yaml
   - elastic-stack-app.yaml
   - envoy-gateway-app.yaml
   - external-dns-app.yaml

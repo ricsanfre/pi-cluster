@@ -1,0 +1,6 @@
+# descheduler helm values (dev overlay)
+#
+# Dev-specific overrides. The descheduler is not needed in dev (k3d)
+# environments where all pods run on a single node by design.
+# Set replicas to 0 to effectively disable it.
+replicas: 0

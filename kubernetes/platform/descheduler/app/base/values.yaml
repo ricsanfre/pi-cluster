@@ -1,0 +1,57 @@
+# descheduler helm values (base)
+#
+# Runs as a Deployment (continuous mode) with two balance strategies:
+#   - LowNodeUtilization: evicts pods from nodes above target thresholds
+#     when other nodes exist below the lower thresholds
+#   - RemoveDuplicates: spreads pods of the same ReplicaSet/StatefulSet
+#     across different nodes
+
+kind: Deployment
+deschedulingInterval: 5m
+replicas: 1
+
+image:
+  repository: registry.k8s.io/descheduler/descheduler
+  tag: ""          # use chart appVersion
+  pullPolicy: IfNotPresent
+
+leaderElection:
+  enabled: true
+
+deschedulerPolicyAPIVersion: descheduler/v1alpha2
+deschedulerPolicy:
+  profiles:
+    - name: default
+      pluginConfig:
+        - name: DefaultEvictor
+          args:
+            podProtections:
+              defaultDisabled:
+              - PodsWithLocalStorage
+              extraEnabled:
+              - PodsWithPVC
+            evictLocalStoragePods: false
+            evictSystemCriticalPods: false
+            nodeFit: true
+        - name: LowNodeUtilization
+          args:
+            thresholds:
+              cpu: 20
+              memory: 20
+              pods: 20
+            targetThresholds:
+              cpu: 50
+              memory: 50
+              pods: 50
+        - name: RemoveDuplicates
+      plugins:
+        balance:
+          enabled:
+          - RemoveDuplicates
+          - LowNodeUtilization
+        deschedule:
+          enabled: []
+# Exclude critical system namespaces from eviction to prevent
+# disruption of the control plane and GitOps pipeline.
+cmdOptions:
+  v: 3
