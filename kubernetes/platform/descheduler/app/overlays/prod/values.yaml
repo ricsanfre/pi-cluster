@@ -1,0 +1,9 @@
+# descheduler helm values (prod overlay)
+#
+serviceMonitor:
+  enabled: false
+
+# Exclude kube-system, cert-manager, and flux-system from eviction
+# to prevent disruption of critical cluster services.
+cmdOptions:
+  v: 4
