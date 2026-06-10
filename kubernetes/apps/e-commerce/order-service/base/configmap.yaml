@@ -17,7 +17,7 @@ data:
   KAFKA_BOOTSTRAP_SERVERS: "cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
   KAFKA_USERNAME: "order-service"
   # Keycloak OIDC
-  KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
+  KEYCLOAK_URL: "https://iam.${CLUSTER_DOMAIN}"
   KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
   KEYCLOAK_REALM: "e-commerce"
   # Downstream service URLs (plain Kubernetes DNS — ADR-002)

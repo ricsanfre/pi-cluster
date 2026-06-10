@@ -14,7 +14,7 @@ data:
   DB_PORT: "5432"
   DB_NAME: "users"
   # Keycloak OIDC
-  KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
+  KEYCLOAK_URL: "https://iam.${CLUSTER_DOMAIN}"
   KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
   KEYCLOAK_REALM: "e-commerce"
   # OpenTelemetry Collector (managed by OpenTelemetry Operator)

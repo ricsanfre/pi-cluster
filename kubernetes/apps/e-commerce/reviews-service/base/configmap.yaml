@@ -9,7 +9,7 @@ metadata:
 data:
   SERVER_PORT: "8083"
   # Keycloak OIDC
-  KEYCLOAK_URL: "https://keycloak.${CLUSTER_DOMAIN}"
+  KEYCLOAK_URL: "https://iam.${CLUSTER_DOMAIN}"
   KEYCLOAK_INTERNAL_URL: "http://keycloak-service.keycloak.svc.cluster.local:8080"
   KEYCLOAK_REALM: "e-commerce"
   # Downstream service URLs (plain Kubernetes DNS — ADR-002)
