@@ -20,7 +20,7 @@ data:
   AUTH_URL: "https://app.${CLUSTER_DOMAIN}"
   # Keycloak OIDC provider (Auth.js v5 reads AUTH_KEYCLOAK_ID / AUTH_KEYCLOAK_ISSUER automatically)
   AUTH_KEYCLOAK_ID: "e-commerce-web"
-  AUTH_KEYCLOAK_ISSUER: "https://keycloak.${CLUSTER_DOMAIN}/realms/e-commerce"
+  AUTH_KEYCLOAK_ISSUER: "https://iam.${CLUSTER_DOMAIN}/realms/e-commerce"
   # Internal Keycloak URL for server-side OIDC discovery and token exchange.
   # Avoids TLS and DNS issues when the pod cannot resolve the external hostname.
   # Keycloak's backchannelDynamic:true ensures token/jwks endpoints returned in
