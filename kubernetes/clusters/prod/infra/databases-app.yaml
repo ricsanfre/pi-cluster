@@ -10,6 +10,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+    - name: istio-app
   path: ./kubernetes/platform/databases/common/overlays/prod
   prune: true
 ---

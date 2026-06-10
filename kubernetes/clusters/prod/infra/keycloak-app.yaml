@@ -12,6 +12,8 @@ spec:
     kind: GitRepository
     name: flux-system
   path: ./kubernetes/platform/keycloak/operator/overlays/prod
+  dependsOn:
+    - name: istio-app
   prune: true
   wait: true
   postBuild:
