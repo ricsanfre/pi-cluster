@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: e-commerce
-  # Ambient mesh label is managed by the config/components/istio component.
-  # See: config/components/istio/namespace-labels.yaml

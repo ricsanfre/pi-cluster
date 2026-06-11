@@ -1,0 +1,12 @@
+# CloudNativePG — Keycloak Database CR
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: keycloak-db
+  namespace: databases
+spec:
+  name: keycloak
+  owner: keycloak_owner
+  cluster:
+    name: postgres-keycloak

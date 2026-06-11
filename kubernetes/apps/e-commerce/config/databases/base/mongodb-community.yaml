@@ -1,7 +1,7 @@
 # MongoDB Community Operator — MongoDBCommunity CR
 # Namespace: databases
-# Single replica set with databases for product-service, reviews-service,
-# and notification-service.
+# Shared replica set for product-service, reviews-service, and notification-service.
+# 2 members (1 primary + 1 secondary) for data redundancy.
 ---
 apiVersion: mongodbcommunity.mongodb.com/v1
 kind: MongoDBCommunity
@@ -9,7 +9,7 @@ metadata:
   name: mongodb
   namespace: databases
 spec:
-  members: 1
+  members: 2
   type: ReplicaSet
   version: "8.0.4"
 
@@ -47,5 +47,20 @@ spec:
           db: notifications
       scramCredentialsSecretName: notifications-scram
 
+  statefulSet:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: mongod
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+
   additionalMongodConfig:
     storage.wiredTiger.engineConfig.journalCompressor: snappy
+    storage.wiredTiger.engineConfig.cacheSizeGB: 0.1
