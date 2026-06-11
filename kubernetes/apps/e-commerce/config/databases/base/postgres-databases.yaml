@@ -1,6 +1,5 @@
-# CloudNativePG — per-service Database CRs
+# CloudNativePG — E-commerce Database CRs
 # Each service gets its own database owned by a dedicated role.
-# Roles are managed by the CNPG Cluster (see postgres-cluster.yaml).
 ---
 # ── user-service database ──────────────────────────────────────────────────
 apiVersion: postgresql.cnpg.io/v1
@@ -12,7 +11,7 @@ spec:
   name: users
   owner: users_owner
   cluster:
-    name: postgres
+    name: postgres-ecommerce
 ---
 # ── order-service database ─────────────────────────────────────────────────
 apiVersion: postgresql.cnpg.io/v1
@@ -24,16 +23,4 @@ spec:
   name: orders
   owner: orders_owner
   cluster:
-    name: postgres
----
-# ── keycloak database ──────────────────────────────────────────────────────
-apiVersion: postgresql.cnpg.io/v1
-kind: Database
-metadata:
-  name: keycloak-db
-  namespace: databases
-spec:
-  name: keycloak
-  owner: keycloak_owner
-  cluster:
-    name: postgres
+    name: postgres-ecommerce

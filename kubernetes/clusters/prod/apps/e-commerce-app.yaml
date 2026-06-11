@@ -2,7 +2,31 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: e-commerce-config
+  name: e-commerce-kafka
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 15m
+  targetNamespace: kafka
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: keycloak-config
+    - name: kafka-cluster-app
+  path: ./kubernetes/apps/e-commerce/config/kafka/overlays/prod
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: e-commerce-common
   namespace: flux-system
 spec:
   interval: 30m
@@ -14,7 +38,33 @@ spec:
   dependsOn:
     - name: keycloak-config
     - name: kafka-cluster-app
-  path: ./kubernetes/apps/e-commerce/config/overlays/prod
+  path: ./kubernetes/apps/e-commerce/config/common/overlays/prod
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: e-commerce-databases
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 15m
+  targetNamespace: databases
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cloudnative-pg-app
+    - name: mongodb-community-operator-app
+    - name: valkey-operator-app
+    - name: external-secrets-config
+  path: ./kubernetes/apps/e-commerce/config/databases/overlays/prod
   prune: true
   wait: true
   postBuild:
@@ -36,8 +86,9 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: e-commerce-config
-    - name: infra-databases-config
+    - name: e-commerce-common
+    - name: e-commerce-kafka
+    - name: e-commerce-databases
     - name: envoy-gateway-config
     - name: opentelemetry-collector-app
   path: ./kubernetes/apps/e-commerce/app/overlays/prod

@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-# databases config base — CRs that require CNPG, MongoDB Community, and Valkey Operator CRDs.
-# Included by environment overlays (config/prod, config/dev).
+# E-commerce databases — per-application database clusters.
+# PostgreSQL (CNPG), MongoDB, and Valkey for e-commerce services.
 namespace: databases
 resources:
   - postgres-cluster.yaml
