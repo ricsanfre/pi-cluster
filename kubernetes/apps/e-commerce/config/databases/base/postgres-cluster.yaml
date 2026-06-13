@@ -1,6 +1,6 @@
 # CloudNativePG — E-commerce PostgreSQL Cluster
 # Namespace: databases
-# 2 instances (1 primary + 1 replica), 256Mi memory limit per pod.
+# 2 instances (1 primary + 1 replica), 512Mi memory limit per pod.
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -15,10 +15,10 @@ spec:
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi
+      memory: 256Mi
     limits:
       cpu: 500m
-      memory: 256Mi
+      memory: 512Mi
 
   postgresql:
     parameters:
