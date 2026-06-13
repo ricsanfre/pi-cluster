@@ -56,11 +56,11 @@ spec:
               resources:
                 requests:
                   cpu: 100m
-                  memory: 128Mi
+                  memory: 256Mi
                 limits:
                   cpu: 500m
-                  memory: 256Mi
+                  memory: 512Mi
 
   additionalMongodConfig:
     storage.wiredTiger.engineConfig.journalCompressor: snappy
-    storage.wiredTiger.engineConfig.cacheSizeGB: 0.1
+    storage.wiredTiger.engineConfig.cacheSizeGB: 0.25
