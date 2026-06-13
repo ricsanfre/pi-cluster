@@ -33,4 +33,4 @@ spec:
         allow: ["@read", "@write", "@connection"]
         deny: ["@admin", "@dangerous"]
       keys:
-        readWrite: ["cart:*"]
+        readWrite: ["e-commerce:cart:*"]
