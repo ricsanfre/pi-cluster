@@ -10,6 +10,6 @@ serviceMonitor:
 # when the kubelet is under load, causing stale metrics and making
 # the descheduler blind to hot spots.
 args:
-  - --kubelet-request-timeout=30s
+  - --kubelet-request-timeout=25s
   - --kubelet-insecure-tls
   - --metric-resolution=30s
