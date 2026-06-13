@@ -4,3 +4,12 @@ metrics:
   enabled: true
 serviceMonitor:
   enabled: true
+
+# Increase kubelet scrape timeout so busy nodes (node6 at 99% CPU)
+# can still respond to metrics requests. Default 10s is too short
+# when the kubelet is under load, causing stale metrics and making
+# the descheduler blind to hot spots.
+args:
+  - --kubelet-request-timeout=30s
+  - --kubelet-insecure-tls
+  - --metric-resolution=30s
