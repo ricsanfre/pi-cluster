@@ -67,7 +67,7 @@ spec:
   healthCheckExprs:
     - apiVersion: k8s.keycloak.org/v2beta1
       kind: Keycloak
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
       current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   postBuild:
     substituteFrom:
@@ -96,7 +96,7 @@ spec:
   healthCheckExprs:
     - apiVersion: infra.contrib.fluxcd.io/v1alpha2
       kind: Terraform
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
       current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   postBuild:
     substituteFrom:

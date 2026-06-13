@@ -47,7 +47,8 @@ spec:
       current: status.health in ["green", "yellow"]
     - apiVersion: elasticsearch.k8s.elastic.co/v1
       kind: Kibana
-      failed: status.health in ["yellow","red"]
+      inProgress: "status.health in ['yellow']"
+      failed: status.health in ["red"]
       current: status.health in ["green"]
   postBuild:
     substituteFrom:
@@ -77,7 +78,7 @@ spec:
   healthCheckExprs:
     - apiVersion: infra.contrib.fluxcd.io/v1alpha2
       kind: Terraform
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
       current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   postBuild:
     substituteFrom:
