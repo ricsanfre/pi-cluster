@@ -5,10 +5,10 @@ metadata:
 spec:
   # Number of instances in the cluster
   instances: 2
-  # External Database connection — uses shared CNPG cluster in databases namespace
+  # External Database connection — dedicated CNPG cluster (postgres-keycloak)
   db:
     vendor: postgres
-    host: postgres-rw.databases.svc.cluster.local
+    host: postgres-keycloak-rw.databases.svc.cluster.local
     port: 5432
     database: keycloak
     usernameSecret:
