@@ -1,5 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: e-commerce
+namespace: keycloak
 resources:
-  - ns.yaml
+  - ../../base
