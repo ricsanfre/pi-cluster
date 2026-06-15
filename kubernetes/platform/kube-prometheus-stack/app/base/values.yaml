@@ -76,8 +76,9 @@ prometheus:
     resources:
       requests:
         cpu: 100m
+        memory: 1Gi
       limits:
-        memory: 2000Mi
+        memory: 1800Mi
     ##
     ## POD Storage Spec
     storageSpec:
