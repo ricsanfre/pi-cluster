@@ -3,3 +3,13 @@
 write:
   persistence:
     size: 2Gi
+
+# Reduce memcached cache sizes from massive defaults (8GB/1GB) to homelab-appropriate values
+# Defaults: chunksCache.allocatedMemory=8192, resultsCache.allocatedMemory=1024
+chunksCache:
+  allocatedMemory: 256
+  allocatedCPU: 100m
+
+resultsCache:
+  allocatedMemory: 128
+  allocatedCPU: 100m
