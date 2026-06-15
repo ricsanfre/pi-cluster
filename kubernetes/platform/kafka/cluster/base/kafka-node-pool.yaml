@@ -17,3 +17,18 @@ spec:
         size: 5Gi
         deleteClaim: false
         kraftMetadata: shared
+  # JVM heap at 40% of container limit (best practice for Kafka:
+  # JVM needs headroom for metaspace, thread stacks, direct buffers,
+  # and OS page cache for memory-mapped log segments)
+  # Was: Xms=128M, no Xmx, no container limits — memory unbounded
+  jvmOptions:
+    -Xms: "384m"
+    -Xmx: "512m"
+  # Container limit: Xmx / 0.40 = 512m / 0.40 = 1280Mi
+  resources:
+    requests:
+      cpu: 200m
+      memory: "768Mi"
+    limits:
+      cpu: 1000m
+      memory: "1280Mi"
