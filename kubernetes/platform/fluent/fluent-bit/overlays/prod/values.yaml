@@ -1,1 +1,11 @@
 # fluent-bit helm values (prod overlay)
+
+# Resource limits for the fluent-bit DaemonSet
+# Actual usage: 19-62m CPU typical, up to 629m on spike; 30-161Mi memory
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
