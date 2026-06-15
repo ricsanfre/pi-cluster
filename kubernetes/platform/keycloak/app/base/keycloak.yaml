@@ -39,7 +39,7 @@ spec:
     enabled: false
   # Resource limits — override operator default (1700Mi request, 2Gi limit)
   # Actual usage: ~750-900Mi per instance
-  resourceRequirements:
+  resources:
     requests:
       cpu: 100m
       memory: "900Mi"
