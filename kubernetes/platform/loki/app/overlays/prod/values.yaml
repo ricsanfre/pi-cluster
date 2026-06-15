@@ -1,6 +1,7 @@
 # loki helm values (prod overlay)
 
 write:
+  replicas: 1
   persistence:
     size: 2Gi
 
@@ -17,6 +18,7 @@ resultsCache:
 # Resource limits for Loki components — none previously set
 # Actual usage: backend 166-257Mi, read 131-167Mi, write 97-114Mi
 backend:
+  replicas: 1
   resources:
     requests:
       cpu: 50m
@@ -26,6 +28,7 @@ backend:
       memory: 512Mi
 
 read:
+  replicas: 1
   resources:
     requests:
       cpu: 25m

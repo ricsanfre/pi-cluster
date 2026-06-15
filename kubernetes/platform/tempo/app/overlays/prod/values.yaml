@@ -4,6 +4,9 @@
 # ingester-1 uses up to 631Mi, others under 100Mi
 
 ingester:
+  replicas: 1
+  config:
+    replication_factor: 1
   resources:
     requests:
       cpu: 50m
