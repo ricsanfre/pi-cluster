@@ -1,1 +1,12 @@
 # istio-ztunnel helm values (prod patch)
+
+# Reduce ztunnel resource requests from Helm defaults (200m CPU, 512Mi memory)
+# to homelab-appropriate values. Per Istio performance guidance:
+#   Small clusters (<20 pods/node): 100m CPU, 128Mi memory
+# Actual usage across 8 nodes: 11-29Mi memory, 22-36m CPU
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
