@@ -37,6 +37,15 @@ spec:
   # TLS options are not supported. Ingress resource to be created separately.
   ingress:
     enabled: false
+  # Resource limits — override operator default (1700Mi request, 2Gi limit)
+  # Actual usage: ~750-900Mi per instance
+  resourceRequirements:
+    requests:
+      cpu: 100m
+      memory: "900Mi"
+    limits:
+      cpu: 2000m
+      memory: "1200Mi"
   # Additional Options
   additionalOptions:
     # Enable health check endpoints (/health, /health/ready, /health/live)
