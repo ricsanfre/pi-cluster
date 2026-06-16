@@ -3,3 +3,6 @@ kind: Kustomization
 namespace: databases
 resources:
   - ../../base
+
+components:
+  - ../../components/anti-affinity

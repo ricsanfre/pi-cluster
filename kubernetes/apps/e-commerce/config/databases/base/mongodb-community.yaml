@@ -51,22 +51,6 @@ spec:
     spec:
       template:
         spec:
-          affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 100
-                  preference:
-                    matchExpressions:
-                      - key: kubernetes.io/arch
-                        operator: In
-                        values:
-                          - amd64
-            podAntiAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                - labelSelector:
-                    matchLabels:
-                      app: mongodb-svc
-                  topologyKey: kubernetes.io/hostname
           containers:
             - name: mongod
               resources:

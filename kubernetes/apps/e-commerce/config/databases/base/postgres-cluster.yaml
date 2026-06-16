@@ -10,24 +10,6 @@ metadata:
 spec:
   instances: 2
 
-  affinity:
-    enablePodAntiAffinity: true
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                  - amd64
-    additionalPodAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              cnpg.io/cluster: postgres-ecommerce
-          topologyKey: kubernetes.io/hostname
-
   imageName: ghcr.io/cloudnative-pg/postgresql:18.4
 
   resources:
