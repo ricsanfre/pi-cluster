@@ -10,6 +10,13 @@ metadata:
 spec:
   shards: 1
   replicas: 1
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              valkey.io/cluster: valkey
+          topologyKey: kubernetes.io/hostname
   persistence:
     size: 1Gi
   resources:

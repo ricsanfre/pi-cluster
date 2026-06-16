@@ -9,6 +9,16 @@ spec:
   roles:
     - controller
     - broker
+  template:
+    pod:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  strimzi.io/cluster: cluster
+                  strimzi.io/name: cluster-kafka
+              topologyKey: kubernetes.io/hostname
   storage:
     type: jbod
     volumes:
