@@ -10,6 +10,15 @@ metadata:
 spec:
   instances: 2
 
+  affinity:
+    enablePodAntiAffinity: true
+    additionalPodAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-ecommerce
+          topologyKey: kubernetes.io/hostname
+
   imageName: ghcr.io/cloudnative-pg/postgresql:18.4
 
   resources:

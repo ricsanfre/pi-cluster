@@ -51,6 +51,13 @@ spec:
     spec:
       template:
         spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app: mongodb-svc
+                  topologyKey: kubernetes.io/hostname
           containers:
             - name: mongod
               resources:
