@@ -109,6 +109,12 @@ volumeMounts:
     name: fluentd-tls
     readOnly: true
 
+# Probes - fluentd takes a few seconds to start, need initial delay
+livenessProbe:
+  initialDelaySeconds: 60
+readinessProbe:
+  initialDelaySeconds: 10
+
 # Service. Exporting forwarder port (Metric already exposed by chart)
 service:
   type: "ClusterIP"
