@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# Anti-affinity and node affinity for e-commerce database clusters.
+# - podAntiAffinity (required): spread instances of the same cluster across nodes
+# - nodeAffinity (preferred): prefer amd64 HP nodes for better performance
+
+patches:
+  - target:
+      group: postgresql.cnpg.io
+      kind: Cluster
+      name: postgres-ecommerce
+    path: postgres-patch.yaml
+  - target:
+      group: valkey.io
+      kind: ValkeyCluster
+      name: valkey
+    path: valkey-patch.yaml
+  - target:
+      group: mongodbcommunity.mongodb.com
+      kind: MongoDBCommunity
+      name: mongodb
+    path: mongodb-patch.yaml

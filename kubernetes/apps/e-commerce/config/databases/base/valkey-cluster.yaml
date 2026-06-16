@@ -10,22 +10,6 @@ metadata:
 spec:
   shards: 1
   replicas: 1
-  affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                  - amd64
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              valkey.io/cluster: valkey
-          topologyKey: kubernetes.io/hostname
   persistence:
     size: 1Gi
   resources:

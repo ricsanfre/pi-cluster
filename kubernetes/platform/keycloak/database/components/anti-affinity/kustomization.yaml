@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# Anti-affinity and node affinity for Keycloak PostgreSQL cluster.
+# - podAntiAffinity (required): spread instances across nodes
+# - nodeAffinity (preferred): prefer amd64 HP nodes
+
+patches:
+  - target:
+      group: postgresql.cnpg.io
+      kind: Cluster
+      name: postgres-keycloak
+    path: postgres-patch.yaml
