@@ -16,7 +16,7 @@ spec:
   chart:
     spec:
       chart: opentelemetry-collector
-      version: 0.156.2
+      version: 0.158.2
       sourceRef:
         kind: HelmRepository
         name: open-telemetry
