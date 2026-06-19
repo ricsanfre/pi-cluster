@@ -1,0 +1,13 @@
+[tools]
+# Versiones específicas verificadas (Mayo 2026)
+kubectl = "1.36.1"
+flux2 = "2.8.6"
+velero = "1.18.0"
+istioctl = "1.30.0"
+helm = "4.1.4"
+
+# Herramienta via GitHub Releases
+"github:longhorn/cli" = "1.11.2"
+
+# Versión más reciente estable
+cilium-cli = "0.19.4"
