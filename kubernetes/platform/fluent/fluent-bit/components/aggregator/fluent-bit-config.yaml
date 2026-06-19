@@ -99,3 +99,7 @@ data:
           shared_key: ${FLUENT_AGGREGATOR_SHARED_KEY}
           tls: true
           tls.verify: false
+          # Fluent Bit >=5.0.4 defaults to true, which breaks Fluentd compatibility
+          # See: https://github.com/fluent/fluent-bit/issues/11877
+          # https://docs.fluentbit.io/manual/installation/upgrade-notes#forward-output-retain_metadata_in_forward_mode-default-changed-to-true
+          retain_metadata_in_forward_mode: false
