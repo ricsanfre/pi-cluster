@@ -6,6 +6,7 @@ resources:
 - external-nodes-scrapeconfig.yaml
 - external-bind-scrapeconfig.yaml
 - grafana-dashboards.yaml
-- minio-bearer-externalsecret.yaml
-- minio-ext-scrapeconfig.yaml
+# MinIO-specific monitoring removed (RustFS uses OTLP/OpenTelemetry push, not direct scrape):
+# - minio-bearer-externalsecret.yaml
+# - minio-ext-scrapeconfig.yaml
 - openwrt-scrapeconfig.yaml

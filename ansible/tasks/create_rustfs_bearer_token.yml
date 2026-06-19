@@ -1,0 +1,30 @@
+---
+# RustFS Observability (OTLP-based)
+#
+# RustFS does NOT expose direct Prometheus metrics endpoints like MinIO did.
+# Instead, RustFS uses OpenTelemetry (OTLP) to push metrics to a collector.
+#
+# MinIO exposed metrics at:
+#   /minio/v2/metrics/cluster, /minio/v2/metrics/node,
+#   /minio/v2/metrics/bucket, /minio/v2/metrics/resource
+# and used a bearer token generated via `mc admin prometheus generate`.
+#
+# RustFS metrics are configured via environment variables:
+#   RUSTFS_OBS_ENDPOINT=http://otel-collector:4318   (OTLP HTTP endpoint)
+#   RUSTFS_OBS_LOGGER_LEVEL=error                     (log level)
+#   RUSTFS_OBS_PROFILING_ENDPOINT=http://pyroscope:4040  (profiling)
+#
+# To enable RustFS monitoring:
+#   1. Deploy an OpenTelemetry Collector in the cluster
+#   2. Set RUSTFS_OBS_ENDPOINT in rustfs_server_env_extra
+#   3. Configure Prometheus to scrape the OTel Collector's exporter
+#
+# This task is a documented no-op until the OTLP pipeline is set up.
+
+- name: RustFS metrics (OTLP-based, no bearer token needed)
+  ansible.builtin.debug:
+    msg: >
+      RustFS uses OTLP push for metrics, not direct Prometheus scrape.
+      No bearer token generation is needed.
+      Set RUSTFS_OBS_ENDPOINT to configure OTLP export.
+  when: false  # documented no-op

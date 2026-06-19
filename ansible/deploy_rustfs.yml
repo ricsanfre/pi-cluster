@@ -1,0 +1,355 @@
+---
+# Deploy RustFS S3 Storage Server
+#
+# This playbook handles:
+# 1. TLS certificate generation (Letsencrypt or self-signed)
+# 2. Fetches root credentials from HashiCorp Vault using on-demand lookups
+# 3. RustFS server installation and configuration using ricsanfre.rustfs role
+#
+# Note:
+#   S3 resources configuration (buckets, users, policies) is handled by
+#   configure_minio.yml — the existing Terraform module works against RustFS.
+#
+# Prerequisites:
+#   - Vault server deployed and running
+#   - S3 root secrets loaded in Vault at 'secret/minio/root'
+#   - Vault environment file exists:
+#     * ~/.secrets/vault.env
+#   - inventory.yml configured with [s3] group
+#
+# Usage:
+#   # Ensure Vault credentials file exists
+#   # ~/.secrets/vault.env with:
+#   # VAULT_ADDR=https://vault.example.com:8200
+#   # VAULT_TOKEN=s.xxxxxxxxxxxxx
+#   # VAULT_CACERT=/path/to/certificates/CA.pem
+#
+#   # Generate certificates
+#   ansible-playbook ansible/deploy_rustfs.yml --tags certificates
+#
+#   # Deploy RustFS server (certificates + RustFS service)
+#   ansible-playbook ansible/deploy_rustfs.yml
+
+## Generate TLS certificates for RustFS
+- name: Generate TLS certificates for RustFS
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates, rustfs]
+  vars:
+    propagation_seconds: 300
+    selfsigned_certificates_path: "../certificates"
+    ionos_credentials_file: "~/.secrets/ionos-credentials.ini"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Check Ionos credentials file exists
+      ansible.builtin.stat:
+        path: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_stat
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file exists
+      ansible.builtin.assert:
+        that:
+          - ionos_credentials_stat.stat.exists
+          - ionos_credentials_stat.stat.isreg
+        fail_msg: |
+          ⚠️  Ionos credentials file not found!
+
+          Please create the credentials file before running this playbook:
+
+            {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+    - name: Load Ionos credentials file content
+      ansible.builtin.slurp:
+        src: "{{ ionos_credentials_file }}"
+      register: ionos_credentials_raw
+      when: enable_letsencrypt
+
+    - name: Set Ionos credentials from file
+      ansible.builtin.set_fact:
+        ionos_public_prefix: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_prefix\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+        ionos_secret: "{{ (ionos_credentials_content | regex_search('(?m)^\\s*dns_ionos_secret\\s*=\\s*(\\S+)\\s*$', '\\1') | first) | default('') }}"
+      vars:
+        ionos_credentials_content: "{{ ionos_credentials_raw.content | b64decode }}"
+      when: enable_letsencrypt
+
+    - name: Validate Ionos credentials file format
+      ansible.builtin.assert:
+        that:
+          - ionos_public_prefix != ""
+          - ionos_secret != ""
+        fail_msg: |
+          ⚠️  Invalid Ionos credentials file format!
+
+          File: {{ ionos_credentials_file }}
+
+          Required format:
+
+            dns_ionos_prefix = your-ionos-public-prefix
+            dns_ionos_secret = your-ionos-secret-key
+
+          These credentials are used to generate Let's Encrypt certificates via Ionos DNS.
+      when: enable_letsencrypt
+
+  tasks:
+    - name: Create Letsencrypt certificate for RustFS
+      ansible.builtin.command: |
+        certbot certonly \
+        --config-dir {{ certbot_config_dir }} \
+        --work-dir {{ certbot_work_dir }} \
+        --logs-dir {{ certbot_logs_dir }} \
+        --authenticator dns-ionos \
+        --dns-ionos-credentials {{ ionos_credentials_file }} \
+        --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --agree-tos \
+        --non-interactive \
+        --rsa-key-size 4096 \
+        -m {{ acme_issuer_email }} \
+        -d {{ rustfs_hostname }}
+      register: certbot_create
+      changed_when:
+        - certbot_create.rc == 0
+        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
+      when: enable_letsencrypt
+
+    - name: Create customCA-signed TLS certificate for RustFS
+      when: not enable_letsencrypt
+      block:
+        # Generate self-signed certificates directory
+        - name: Create certificates directory
+          ansible.builtin.file:
+            path: "{{ selfsigned_certificates_path }}"
+            state: directory
+            mode: "0750"
+
+        # Include selfsigned certificates variables
+        - name: Include selfsigned certificates variables
+          ansible.builtin.include_vars: "vars/selfsigned-certificates.yml"
+
+        # Generate custom CA (if needed)
+        - name: Generate custom CA
+          ansible.builtin.include_tasks: tasks/generate_custom_ca.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+
+        # Generate customCA-signed TLS certificate for RustFS
+        - name: Generate customCA-signed SSL certificate for RustFS
+          ansible.builtin.include_tasks: tasks/generate_ca_signed_cert.yml
+          args:
+            apply:
+              delegate_to: localhost
+              become: false
+          vars:
+            server_hostname: "{{ rustfs_hostname }}"
+
+# Install and Configure RustFS with Vault Integration
+- name: Install RustFS S3 Storage Server
+  hosts: s3
+  gather_facts: true
+  tags: [rustfs]
+  become: true
+  vars:
+    server_hostname: "{{ rustfs_hostname }}"
+    selfsigned_certificates_path: "../certificates"
+    vault_secret_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.secrets/vault.env"
+    certbot_config_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/config"
+    certbot_work_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/work"
+    certbot_logs_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.certbot/log"
+
+  pre_tasks:
+    - name: Include picluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    - name: Check Vault secret file exists on controller
+      ansible.builtin.stat:
+        path: "{{ vault_secret_file }}"
+      register: vault_secret_file_stat
+      delegate_to: localhost
+      become: false
+
+    - name: Validate Vault secret file exists
+      ansible.builtin.assert:
+        that:
+          - vault_secret_file_stat.stat.exists
+          - vault_secret_file_stat.stat.isreg
+        fail_msg: |
+          Vault secret file not found: {{ vault_secret_file }}
+
+          Run external services stage 1 first to generate it, or create it with:
+
+            VAULT_ADDR=https://vault.example.com:8200
+            VAULT_TOKEN=s.xxxxxxxxxxxxx
+            VAULT_CACERT=/path/to/certificates/CA.pem
+
+    - name: Get Vault environment from secret file
+      ansible.builtin.set_fact:
+        vault_addr: "{{ lookup('ansible.builtin.ini', 'VAULT_ADDR type=properties file=' ~ vault_secret_file) }}"
+        vault_token: "{{ lookup('ansible.builtin.ini', 'VAULT_TOKEN type=properties file=' ~ vault_secret_file) }}"
+        vault_cacert: "{{ lookup('ansible.builtin.ini', 'VAULT_CACERT type=properties file=' ~ vault_secret_file, errors='ignore') | default('', true) }}"
+
+    - name: Validate Vault variables loaded from secret file
+      ansible.builtin.assert:
+        that:
+          - vault_addr is defined and vault_addr != ""
+          - vault_token is defined and vault_token != ""
+        fail_msg: |
+          Missing VAULT_ADDR or VAULT_TOKEN in {{ vault_secret_file }}
+
+          Please configure Vault access before running this playbook.
+
+    - name: Display Vault configuration (self-signed certificates)
+      ansible.builtin.debug:
+        msg: |
+          Vault Configuration:
+             VAULT_ADDR: {{ vault_addr }}
+             VAULT_TOKEN: {{ vault_token[:20] }}...
+             VAULT_CACERT: {{ vault_cacert }}
+      when: not enable_letsencrypt
+
+    - name: Display Vault configuration (Let's Encrypt certificates)
+      ansible.builtin.debug:
+        msg: |
+          Vault Configuration:
+             VAULT_ADDR: {{ vault_addr }}
+             VAULT_TOKEN: {{ vault_token[:20] }}...
+      when: enable_letsencrypt
+
+    - name: Load customCA-signed TLS certificate for RustFS
+      ansible.builtin.set_fact:
+        rustfs_tls_key: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
+        rustfs_tls_cert: "{{ lookup('file', selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
+      when: not enable_letsencrypt
+
+    - name: Get letsencrypt TLS certificate for RustFS
+      when: enable_letsencrypt
+      block:
+        - name: Check TLS certificate for RustFS exits
+          ansible.builtin.command: >-
+            certbot certificates
+            --config-dir {{ certbot_config_dir }}
+            --work-dir {{ certbot_work_dir }}
+            --logs-dir {{ certbot_logs_dir }}
+            -d {{ rustfs_hostname }}
+          register: certbot_certificates
+          delegate_to: localhost
+          become: false
+          changed_when: false
+          failed_when:
+            - '"Certificate Name: " + rustfs_hostname not in certbot_certificates.stdout'
+
+        - name: Get certificate and key paths for RustFS
+          ansible.builtin.set_fact:
+            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1, '\\1') }}"
+            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2, '\\1') }}"
+          vars:
+            regexp1: 'Certificate Path: (\S+)'
+            regexp2: 'Private Key Path: (\S+)'
+          when:
+            - certbot_certificates.rc == 0
+            - '"Certificate Name: " + rustfs_hostname in certbot_certificates.stdout'
+
+        - name: Load tls key and cert
+          ansible.builtin.set_fact:
+            rustfs_tls_key: "{{ lookup('file', cert_key_path[0]) }}"
+            rustfs_tls_cert: "{{ lookup('file', cert_path[0]) }}"
+
+    # ON-DEMAND VAULT LOOKUP: Fetch S3 root credentials only when needed
+    - name: Fetch S3 root credentials from Vault (on-demand lookup)
+      community.hashi_vault.vault_kv2_get:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
+        ca_cert: "{{ vault_cacert | default(omit) }}"
+        mount_point: "secret"
+        path: "minio/root"
+      register: rustfs_vault_secret
+      delegate_to: localhost
+      become: false
+      no_log: true
+
+    - name: Set RustFS root credentials from Vault
+      ansible.builtin.set_fact:
+        rustfs_root_user: >-
+          {{ (rustfs_vault_secret.secret | default({})).username | default('', true) }}
+        rustfs_root_password: >-
+          {{ (rustfs_vault_secret.secret | default({})).key | default('', true) }}
+      no_log: true
+
+    - name: Validate RustFS credentials were retrieved from Vault
+      ansible.builtin.assert:
+        that:
+          - rustfs_root_user is defined
+          - rustfs_root_user | length > 0
+          - rustfs_root_password is defined
+          - rustfs_root_password | length > 0
+        fail_msg: |
+          ⚠️  Failed to retrieve S3 root credentials from Vault!
+
+          The following credentials are missing or empty:
+          {% if rustfs_root_user is not defined or rustfs_root_user | length == 0 %}
+            - rustfs_root_user
+          {% endif %}
+          {% if rustfs_root_password is not defined or rustfs_root_password | length == 0 %}
+            - rustfs_root_password
+          {% endif %}
+
+          Please verify:
+          1. Vault is accessible at: {{ vault_addr }}
+          2. Secret exists at path: secret/minio/root
+          3. Secret contains keys: username + key
+
+          To check the secret:
+            vault kv get secret/minio/root
+        success_msg: "✓ S3 root credentials successfully retrieved from Vault"
+
+  roles:
+    - role: ricsanfre.rustfs
+
+  post_tasks:
+    - name: Display RustFS installation information
+      ansible.builtin.debug:
+        msg: |
+         ╔════════════════════════════════════════════════════════════╗
+         ║          RustFS Installed Successfully!                    ║
+         ╚════════════════════════════════════════════════════════════╝
+
+         🪣 Access Information:
+
+         S3 API Server:
+           URL: https://{{ rustfs_hostname }}:9091
+
+         Console (Web UI):
+           URL: https://{{ rustfs_hostname }}:9001
+
+         🔐 Credentials:
+           Stored securely in Vault at: secret/minio/root
+
+         📋 Next: Configuring buckets, users, and policies via Terraform...
+
+
+         📚 Next Steps:
+           1. Verify RustFS status:
+             ansible s3 -m ansible.builtin.command -a 'systemctl status rustfs'
+
+           2. Test connectivity:
+             rc alias set myrustfs https://{{ rustfs_hostname }}:9091 <root_user> <root_password>
+             rc ls myrustfs/
+
+           3. For Kubernetes integration, use the existing service accounts
