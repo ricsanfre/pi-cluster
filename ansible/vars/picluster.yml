@@ -115,39 +115,49 @@ ionos_api_endpoint: https://api.hosting.ionos.com
 # issuer email
 acme_issuer_email: admin@ricsanfre.com
 
-##########################
-# Minio S3 configuration #
-##########################
+###########################
+# RustFS S3 configuration #
+###########################
 
-# Minio S3 Server
-minio_hostname: "object-store.homelab.ricsanfre.com"
-minio_endpoint: "{{ minio_hostname }}:9091"
-minio_url: "https://{{ minio_hostname }}:9091"
+# RustFS S3 Server (replaces MinIO)
+rustfs_hostname: "object-store.homelab.ricsanfre.com"
+rustfs_endpoint: "{{ rustfs_hostname }}:9091"
+rustfs_url: "https://{{ rustfs_hostname }}:9091"
 
-# renovate: datasource=github-releases depName=minio/minio versioning=regex:^RELEASE\.(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})T(?<build>\d{2}-\d{2}-\d{2})Z?$
-minio_server_version: RELEASE.2025-09-07T16-13-09Z
-# renovate: datasource=github-releases depName=minio/mc versioning=regex:^RELEASE\.(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})T(?<build>\d{2}-\d{2}-\d{2})Z?$
-minio_mc_version: RELEASE.2025-08-13T08-35-41Z
+# renovate: datasource=github-releases depName=rustfs/rustfs
+rustfs_server_version: "1.0.0-beta.7"
+# renovate: datasource=github-releases depName=rustfs/cli
+rustfs_cli_version: "v0.1.20"
 
-# Minio data dirs
-minio_server_make_datadirs: true
-minio_server_datadirs:
+# RustFS data dirs
+rustfs_server_datadirs:
   - /storage/minio
 
-# Minio admin credentials
-# NOTE: Credentials are loaded from Vault on-demand in deploy_minio.yml
-# minio_root_user: "root"
-# minio_root_password: "{{ vault.minio.root.key }}"
+# RustFS admin credentials
+# NOTE: Credentials are loaded from Vault on-demand in deploy_rustfs.yml
+# rustfs_root_user: "rustfsadmin"
+# rustfs_root_password: "{{ vault.minio.root.key }}"
 
-# Minio site region configuration
-minio_site_region: "eu-west-1"
+# RustFS site region configuration
+rustfs_site_region: "eu-west-1"
 
 # Enabling TLS
-minio_enable_tls: true
-minio_validate_certificate: false
+rustfs_enable_tls: true
+rustfs_validate_certificate: false
 
-# Create Prometheus bearer token
-minio_prometheus_bearer_token: true
+# Enable console
+rustfs_console_enable: true
+
+# Use musl builds for ARM compatibility
+rustfs_use_musl: true
+
+# Backward-compatible aliases for existing playbooks
+minio_hostname: "{{ rustfs_hostname }}"
+minio_endpoint: "{{ rustfs_endpoint }}"
+minio_url: "{{ rustfs_url }}"
+minio_site_region: "{{ rustfs_site_region }}"
+minio_enable_tls: "{{ rustfs_enable_tls }}"
+minio_validate_certificate: "{{ rustfs_validate_certificate }}"
 
 ########################
 # Restic configuration #
@@ -157,7 +167,7 @@ minio_prometheus_bearer_token: true
 restic_version: 0.19.0
 
 # Restic S3 repository configuration
-restic_repository: "s3:{{ minio_url }}/restic"
+restic_repository: "s3:{{ rustfs_url }}/restic"
 restic_use_ca_cert: true
 # Restic AWS credentials
 # NOTE: Credentials are managed by Terraform (terraform/minio)

@@ -23,7 +23,7 @@
           • IONOS DNS API credentials (from filesystem)
           • GitHub PAT credentials (from filesystem)
           • Bind9 DDNS key (from filesystem)
-          • MinIO Prometheus bearer token (from filesystem)
+          • S3 Prometheus metrics token (from filesystem)
           • HTTP Basic Auth credentials
           • General Ansible variables
 
@@ -68,9 +68,9 @@
       ansible.builtin.include_tasks:
         file: tasks/create_basic_auth_credentials.yml
 
-    - name: Load MinIO Prometheus bearer token
+    - name: Load S3 Prometheus metrics token
       ansible.builtin.include_tasks:
-        file: tasks/create_minio_bearer_token.yml
+        file: tasks/create_rustfs_bearer_token.yml
 
     - name: Load IONOS credentials
       ansible.builtin.include_tasks:

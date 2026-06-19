@@ -1,5 +1,5 @@
 ---
-- name: Stage 1 - Destroy MinIO Terraform resources
+- name: Stage 1 - Destroy S3 Terraform resources
   hosts: localhost
   gather_facts: false
   tags: [terraform, s3, stage1]
@@ -12,7 +12,7 @@
   pre_tasks:
     - name: Stage 1 banner
       ansible.builtin.debug:
-        msg: "===== Stage 1/5: Destroy MinIO Terraform resources ====="
+        msg: "===== Stage 1/5: Destroy S3 Terraform resources ====="
 
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
@@ -108,7 +108,7 @@
         - minio_tf_state_dir.stat.exists
         - minio_tf_state_file.stat.exists
 
-    - name: Destroy MinIO Terraform resources
+    - name: Destroy S3 Terraform resources
       ansible.builtin.command:
         cmd: tofu destroy -no-color -auto-approve
         chdir: "{{ terraform_minio_dir }}"
@@ -130,7 +130,7 @@
         - minio_tf_state_dir.stat.exists
         - minio_tf_state_file.stat.exists
 
-- name: Stage 2 - Clean Minio Installation
+- name: Stage 2 - Clean RustFS Installation
   hosts: s3
   become: true
   gather_facts: false
@@ -138,11 +138,11 @@
   tasks:
     - name: Stage 2 banner
       ansible.builtin.debug:
-        msg: "===== Stage 2/5: Clean MinIO installation ====="
+        msg: "===== Stage 2/5: Clean RustFS installation ====="
 
-    - name: Stop and disable Minio Server
+    - name: Stop and disable RustFS Server
       ansible.builtin.systemd:
-        name: minio
+        name: rustfs
         state: stopped
         enabled: false
       become: true
@@ -153,11 +153,12 @@
         path: "{{ item }}"
       with_items:
         - /storage/minio/
-        - /etc/minio/
-        - /usr/local/bin/minio
-        - /usr/local/bin/mc
-        - /etc/systemd/system/minio.service
-        - ~/.mc
+        - /etc/rustfs/
+        - /var/log/rustfs/
+        - /usr/local/bin/rustfs
+        - /usr/local/bin/rc
+        - /etc/systemd/system/rustfs.service
+        - ~/.config/rc/
     - name: Reload systemd daemon
       ansible.builtin.systemd:
         daemon_reload: true

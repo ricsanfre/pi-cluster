@@ -4,8 +4,8 @@
 # This playbook orchestrates the complete deployment of cluster external services:
 # 1. Deploy Vault Server (install, unseal, configure)
 # 2. Configure Vault with Terraform (KV engine, policies, auto-generated secrets)
-# 3. Deploy MinIO server using Vault secrets
-# 4. Configure MinIO resources (buckets, users, policies)
+# 3. Deploy RustFS S3 server using Vault secrets
+# 4. Configure S3 resources (buckets, users, policies)
 # 5. Load external services keys and credentials (DDNS, MinIO Prometheus bearer token)
 #
 # Stage delegation:
@@ -60,9 +60,9 @@
     enable_kubernetes_auth: false
   tags: [terraform, stage2]
 
-- name: "Stage 3: Deploy MinIO with Vault Secrets"
-  ansible.builtin.import_playbook: deploy_minio.yml
-  tags: [minio, stage3]
+- name: "Stage 3: Deploy RustFS with Vault Secrets"
+  ansible.builtin.import_playbook: deploy_rustfs.yml
+  tags: [minio, rustfs, stage3]
 
 - name: "Stage 4: Configure MinIO Resources"
   ansible.builtin.import_playbook: configure_minio.yml
@@ -89,8 +89,8 @@
           Summary:
             - Stage 1: Vault Server deployed and unsealed
             - Stage 2: Terraform configuration applied
-            - Stage 3: MinIO server deployed with Vault integration
-            - Stage 4: MinIO resources configured
+            - Stage 3: RustFS S3 server deployed with Vault integration
+            - Stage 4: S3 resources configured
             - Stage 5: Remaining credentials loaded
 
           Vault Access:
@@ -114,13 +114,13 @@
 
           Secret Locations:
             - Auto-generated secrets: secret/* (from Terraform)
-            - MinIO credentials: secret/minio
+            - S3 credentials: secret/minio
             - IONOS credentials: secret/certmanager/ionos
             - GitHub credentials: secret/flux/github-pat
             - Kubernetes config: secret/kubernetes/cluster
             - Bind9 DDNS: secret/bind9/ddns
             - HTTP Auth: secret/ingress/basic-auth
-            - MinIO monitoring: secret/minio/prometheus
+            - S3 monitoring: secret/minio/prometheus
 
           Next Steps:
             1. Store Vault credentials securely
