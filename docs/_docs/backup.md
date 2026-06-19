@@ -2,7 +2,7 @@
 title: Kubernetes Backup & Restore (Velero)
 permalink: /docs/backup/
 description: How to deploy a backup solution based on Velero in Pi Kubernetes Cluster.
-last_modified_at: "25-06-2025"
+last_modified_at: "19-06-2026"
 ---
 
 ## Backup Architecture and Design
@@ -28,7 +28,7 @@ The backup architecture for the Kubernetes cluster is the following:
 
   Since for the backup and restore is using standard Kubernetes API, Velero can be used as a tool for migrating the configuration from one kubernetes cluster to another having a differnet kubernetes flavor. From K3S to K8S for example.
 
-  Velero can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports opensource S3 [Minio](https://min.io). 
+  Velero can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports S3-compatible servers like [RustFS](https://github.com/rustfs/rustfs). 
 
   Since Velero is a most generic way to backup any Kubernetes cluster (not just K3S) it will be used to implement my cluster K3S backup.
 
@@ -71,13 +71,13 @@ The backup architecture for the Kubernetes cluster is the following:
 
   {{site.data.alerts.end}}
 
-- Minio as backup backend
+- S3 as backup backend
 
-  All the above mechanisms supports as backup backend, a S3-compliant storage infrastructure. For this reason, open-source project [Minio](https://min.io/) has been deployed for the Pi Cluster.
+  All the above mechanisms supports as backup backend, a S3-compliant storage infrastructure. For this reason, [RustFS](https://github.com/rustfs/rustfs) has been deployed as the S3 server for the Pi Cluster.
 
   {{site.data.alerts.note}}
 
-  Minio S3 server installed as stand-alone service and configured as described in [Pi Cluster S3 Object Storage Service](/docs/s3-backup/) will be used as backup backend.
+  The S3 server is installed as a stand-alone service and configured as described in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
 
   {{site.data.alerts.end}}
 
@@ -93,17 +93,17 @@ Longhorn has to be configured so it can perform backups to a en external backups
 Kubernetes CSI Snapshot API used by Velero to automate backup of POD's volumes need to be configured and enabled for Longhorn.
 See how to enable CSI Snapshot using Longhorn in [PiCluster- Longhorn - Configuring CSI Snapshot API](/docs/longhorn/#configuring_csi_snapshot_api).
 
-## Installing and configuring Minio backupstore
+## Installing and configuring S3 backupstore
 
-### Minio Installation
+### S3 Server Installation
 
-See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/).
+See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
 
-### Configuring Minio bucket and user for Velero
+### Configuring S3 bucket and user for Velero
 
 Velero requires an object storage bucket to store backups in.
 
-In Minio a dedicated S3 bucket is created for Velero
+A dedicated S3 bucket is created for Velero:
 
 | User | Bucket |
 |:--- |:--- |
@@ -113,12 +113,12 @@ In Minio a dedicated S3 bucket is created for Velero
 -   Create bucket for storing Velero backups
 
     ```shell
-    mc mb ${MINIO_ALIAS}/k3s-velero
+    rc mb ${S3_ALIAS}/k3s-velero
     ```
 
--   Add `longhorn` user using Minio's CLI
+-   Add `velero` user using RustFS CLI
     ```shell
-    mc admin user add ${MINIO_ALIAS} velero supersecret
+    rc admin user add ${S3_ALIAS} velero supersecret
     ```
 
 -   Define user policy to grant `velero` user access to backups bucket
@@ -159,7 +159,8 @@ In Minio a dedicated S3 bucket is created for Velero
 
 -   Add access policy to `velero` user:
     ```shell
-    mc admin policy add ${MINIO_ALIAS} velero velero_policy.json
+    rc admin policy create ${S3_ALIAS} velero velero_policy.json
+    rc admin policy attach ${S3_ALIAS} velero velero
     ```
 
 See more details in [Velero plugin for aws](https://github.com/vmware-tanzu/velero-plugin-for-aws).
@@ -173,7 +174,7 @@ The complete backup workflow is the following:
 
 ![velero-backup-process](/assets/img/velero-backup-process.png)
 
-As storage provider, Minio will be used. See [Velero's installation documentation using Minio as backend](https://velero.io/docs/latest/contributions/minio/).
+As storage provider, an S3-compatible backend will be used. See [Velero's installation documentation using S3 as backend](https://velero.io/docs/latest/contributions/minio/).
 
 
 ### Velero CLI
@@ -244,17 +245,17 @@ Installation using `Helm` (Release 3):
           - mountPath: /target
             name: plugins
 
-    # Minio storage configuration
+    # S3 storage configuration
     configuration:
       backupStorageLocation:
         - provider: aws
-          bucket: ${MINIO_VELERO_BUCKET}
+          bucket: ${S3_VELERO_BUCKET}
           # caCert is only needed if self-signed certificates are used
           # caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
           config:
             region: eu-west-1
             s3ForcePathStyle: true
-            s3Url: https://${MINIO_BACKUP_SERVER}:9091
+            s3Url: https://${S3_BACKUP_SERVER}:9091
             # insecureSkipTLSVerify true only if using self-signed certificates
             # insecureSkipTLSVerify: true
       # Enable CSI snapshot support
@@ -263,8 +264,8 @@ Installation using `Helm` (Release 3):
       secretContents:
         cloud: |
           [default]
-          aws_access_key_id: ${MINIO_VELERO_USER} # Not encoded
-          aws_secret_access_key: ${MINIO_VELERO_PASSWD} # Not encoded
+          aws_access_key_id: ${S3_VELERO_USER} # Not encoded
+          aws_secret_access_key: ${S3_VELERO_PASSWD} # Not encoded
 
     # Disable VolumeSnapshotLocation CRD. It is not needed for CSI integration
     snapshotsEnabled: false
@@ -273,9 +274,9 @@ Installation using `Helm` (Release 3):
 
     Substitute variables (`${var}`) in the above yaml file before deploying helm chart.
     -   Replace `${VELERO_AWS_PLUGIN_VERSION}` by the version of `velero-plugin-for-aws` that is compatible with Velero version. See compatibility matrix in [velero-plugin-for-aws repor](https://github.com/vmware-tanzu/velero-plugin-for-aws?tab=readme-ov-file#compatibility) (i.e.: v1.12.1)
-    -   Replace `${MINIO_BACKUP_SERVER}` by the DNS name of the backup sercer (i.e. `s3.mydomain.com`)
-    -   Replace `${MINIO_VELERO_BUCKET}` by the bucket name configured for velero in Minio (i.e.: `k3s-velero`)
-    -   Replace `${MINIO_VELERO_USER}` and `${MINIO_VELERO_PASSWD}` by the user and password configured in Minio
+    -   Replace `${S3_BACKUP_SERVER}` by the DNS name of the backup server (i.e. `s3.mydomain.com`)
+    -   Replace `${S3_VELERO_BUCKET}` by the bucket name configured for velero (i.e.: `k3s-velero`)
+    -   Replace `${S3_VELERO_USER}` and `${S3_VELERO_PASSWD}` by the user and password configured in the S3 server
     {{site.data.alerts.end}}
 
 -   Step 5: Install Velero in the `velero` namespace with the overriden values
@@ -322,7 +323,7 @@ Installation using `Helm` (Release 3):
 - Velero plugins installation
 
   The chart configuration deploys the following velero plugin as `initContainers`:
-  - `velero-plugin-for-aws` to enable S3 Minio as backup backend.
+  - `velero-plugin-for-aws` to enable S3 as backup backend.
 
   
   ```yml
@@ -347,42 +348,42 @@ Installation using `Helm` (Release 3):
   snapshotsEnabled: false
   ```
   
-- Configure Minio S3 server as backup backend
+- Configure S3 server as backup backend
 
   ```yml
-  # Minio storage configuration
+  # S3 storage configuration
   configuration:
     # Cloud provider being used
     provider: aws
     backupStorageLocation:
       provider: aws
-      bucket: ${MINIO_VELERO_BUCKET}
+      bucket: ${S3_VELERO_BUCKET}
       # caCert is only needed if self-signed certificates are used
       # caCert: <ca.pem_base64> # cat CA.pem | base64 | tr -d "\n"
       config:
         region: eu-west-1
         s3ForcePathStyle: true
-        s3Url: https://${MINIO_BACKUP_SERVER}:9091
+        s3Url: https://${S3_BACKUP_SERVER}:9091
         # insecureSkipTLSVerify true only if using self-signed certificates
         # insecureSkipTLSVerify: true
   credentials:
     secretContents:
       cloud: |
         [default]
-        aws_access_key_id: ${MINIO_VELERO_USER} # Not encoded
-        aws_secret_access_key: ${MINIO_VELERO_PASSWD} # Not encoded
+        aws_access_key_id: ${S3_VELERO_USER} # Not encoded
+        aws_secret_access_key: ${S3_VELERO_PASSWD} # Not encoded
 
   ```
   
-  Minio server connection data (`configuration.backupStorageLocation.config`), minio credentials (`credentials.secretContents`), and bucket(`configuration.backupStorageLocation.bucket`) to be used.
+  S3 server connection data (`configuration.backupStorageLocation.config`), S3 credentials (`credentials.secretContents`), and bucket(`configuration.backupStorageLocation.bucket`) to be used.
 
   {{site.data.alerts.note}}
-   In case of using a self-signed certificate for Minio server, custom CA certificate must be passed as `configuration.backupStorageLocation.caCert` parameter (base64 encoded and removing any '\n' character)
+   In case of using a self-signed certificate for the S3 server, custom CA certificate must be passed as `configuration.backupStorageLocation.caCert` parameter (base64 encoded and removing any '\n' character)
   {{site.data.alerts.end}}
 
 #### GitOps installation
 
-As alternative, for GitOps deployment, instead of putting minio credentials into helm values in plain text, a Secret can be used to store the credentials.
+As alternative, for GitOps deployment, instead of putting S3 credentials into helm values in plain text, a Secret can be used to store the credentials.
 
 ```yml
 apiVersion: v1
@@ -398,8 +399,8 @@ Where <velero_secret_content> is:
 
 ```
 [default]
-aws_access_key_id: <minio_velero_user> # Not encoded
-aws_secret_access_key: <minio_velero_pass> # Not encoded
+aws_access_key_id: <s3_velero_user> # Not encoded
+aws_secret_access_key: <s3_velero_pass> # Not encoded
 ```
 
 And the following helm values need to be provided, instead of `credentias.secretContent`

@@ -2,16 +2,16 @@
 title: OS Filesystem Backup (Restic)
 permalink: /docs/restic/
 description: How to implement backup and restore of OS filesystem in Kubernetes PI Cluster.
-last_modified_at: "25-06-2025"
+last_modified_at: "19-06-2026"
 ---
 
 
 
 Operating System configuration files should be backed up so configuration at OS level can be restored.
 
-[Restic](https://restic.net) can be used to perform this OS filesystem backup. Restic provides a fast and secure backup program that can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports opensource S3 [Minio](https://min.io).
+[Restic](https://restic.net) can be used to perform this OS filesystem backup. Restic provides a fast and secure backup program that can be intregrated with different storage backends, including Cloud Service Provider Storage services (AWS S3, Google Cloud Storage, Microsoft Azure Blob Storage, etc). It also supports S3-compatible servers like [RustFS](https://github.com/rustfs/rustfs).
 
-OS filesystems from different nodes of the cluster will be backed up using `restic`. As backend S3 Minio server will be used.
+OS filesystems from different nodes of the cluster will be backed up using `restic`. As backend the S3 server will be used.
 
 
 ![restic-architecture](/assets/img/restic-architecture.png)
@@ -20,13 +20,13 @@ OS filesystems from different nodes of the cluster will be backed up using `rest
 Restic installation and backup scheduling tasks can be automated with Ansible using [**ricsanfre.backup**](https://github.com/ricsanfre/ansible-role-backup). This role installs `restic` and configure a `systemd` service and timer to schedule the backup execution. Also a backup policy indicating which file paths to include in the backup can be specified.
 
 
-## Minio Backupstore configuration
+## S3 Backupstore configuration
 
 First S3 backupstore need to be configured
 
-### Install Minio backup server
+### Install S3 backup server
 
-See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/).
+See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
 
 ### Configure Restic bucket and user
 
@@ -35,15 +35,15 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 |restic | restic |
 {: .table .table-white .border-dark }
 
--   Create bucket for storing Longhorn backups/snapshots
+-   Create bucket for storing restic backups
 
     ```shell
-    mc mb ${MINIO_ALIAS}/restic
+    rc mb ${S3_ALIAS}/restic
     ```
 
--   Add `restic` user using Minio's CLI
+-   Add `restic` user using RustFS CLI
     ```shell
-    mc admin user add ${MINIO_ALIAS} restic supersecret
+    rc admin user add ${S3_ALIAS} restic supersecret
     ```
 
 -   Define user policy to grant `restic` user access to backups bucket
@@ -72,9 +72,10 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 
     This policy grants read-write access to `restic` bucket
 
--   Add access policy to `restic` user:
+-   Create and attach access policy to `restic` user:
     ```shell
-    mc admin policy add ${MINIO_ALIAS} restic restic_policy.json
+    rc admin policy create ${S3_ALIAS} restic restic_policy.json
+    rc admin policy attach ${S3_ALIAS} restic restic
     ```
 
 ## Restic Installation
@@ -110,15 +111,15 @@ Ubuntu has as part of its distribution a `restic` package that can be installed 
 -   Step 2: Create `restic.conf` file containing repository information:
 
     ```shell
-    RESTIC_REPOSITORY=s3:https://${MINIO_SERVER}:9091/restic
+    RESTIC_REPOSITORY=s3:https://${S3_SERVER}:9091/restic
     RESTIC_PASSWORD=${RESTIC_REPOSITORY_PASSWORD}
-    AWS_ACCESS_KEY_ID=S{MINIO_RESTIC_USER}
-    AWS_SECRET_ACCESS_KEY=S{MINIO_RESTIC_PASSWORD}
+    AWS_ACCESS_KEY_ID=${S3_RESTIC_USER}
+    AWS_SECRET_ACCESS_KEY=${S3_RESTIC_PASSWORD}
     ```
   
     In the previos file the following variables (${var}) need to be replaced by actual values:
 
-    -   `${MINIO_SERVER}` FQDN of the Minio Server
+    -   `${S3_SERVER}` FQDN of the S3 Server
     -   `${RESTIC_REPOSITORY_PASSWORD}`: repository password to initialize and access the restic repository
 
 -   Step 3: Export as environment variables, the content of the file
@@ -132,9 +133,9 @@ Ubuntu has as part of its distribution a `restic` package that can be installed 
 
 ### Copy CA SSL certificates
 
-In case Minio S3 server is using secure communications using a not trusted certificate (self-signed or signed with custom CA), restic command must be used with `--cacert <path_to_CA.pem_file` option to let restic validate the server certificate.
+In case the S3 server is using secure communications with a not trusted certificate (self-signed or signed with custom CA), restic command must be used with `--cacert <path_to_CA.pem_file` option to let restic validate the server certificate.
 
-Copy CA.pem, used to sign Minio SSL certificate into `/etc/restic/ssl/CA.pem` 
+Copy CA.pem, used to sign the S3 server SSL certificate into `/etc/restic/ssl/CA.pem` 
 
 {{site.data.alerts.note}}
 
@@ -144,7 +145,7 @@ In case of self-signed certificates using a custom CA, all `restic` commands det
 
 ### Restic repository initialization
 
-restic repository (stored within Minio's S3 bucket) need to be initialized before being used. It need to be done just once.
+restic repository (stored within the S3 bucket) need to be initialized before being used. It need to be done just once.
 
 For initilizing the repo execute:
 

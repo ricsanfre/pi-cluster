@@ -2,7 +2,7 @@
 title: Distributed Tracing (Tempo)
 permalink: /docs/tracing/
 description: How to deploy a distributed tracing solution based on Grafana Tempo.
-last_modified_at: "01-04-2026"
+last_modified_at: "19-06-2026"
 ---
 
 
@@ -13,7 +13,7 @@ Distributed tracing solution for Kubernetes cluster is based on [Grafana Tempo](
 
 Grafana Tempo is used as traces backend and Grafana as front-end. Tempo, integrates a [Open Telemetry collector](https://opentelemetry.io/docs/collector/) enabling the ingestion of traces generated with common open source tracing protocols like Jaeger, Zipkin, and OpenTelemetry.
 
-Tempo requires only object storage backend to operate, and is integrated with Grafana, Prometheus, and Loki. Minio S3 Object Store will be used as Tempo backend.
+Tempo requires only an object storage backend to operate, and is integrated with Grafana, Prometheus, and Loki. An S3 Object Store will be used as Tempo backend.
 
 Instead of using embedded Tempo's collector, Pi Cluster uses the same OpenTelemetry Collector deployed in the cluster for receiving and processing telemetry from applications and platform components. That allows to centralize telemetry processing and exporting in a single component, while supporting multiple backends (Prometheus for metrics, Elasticsearch for logs, Tempo for traces) and multiple collection paths (OTLP for instrumented workloads, Prometheus scraping and Fluent Bit collection for non-instrumented workloads).
 
@@ -48,30 +48,30 @@ All Tempo components are included within a single binary (docker image) that  su
 
 Further details in Tempo architecture documentation: [Tempo Architecture](https://grafana.com/docs/tempo/latest/operations/architecture/) and [Tempo deployment](https://grafana.com/docs/tempo/latest/setup/deployment/)
 
-Tempo will be installed using microservices mode configuring S3 Object Storage Server (Minio) as backend.
+Tempo will be installed using microservices mode configuring an S3 Object Storage Server as backend.
 
-## Configure S3 Minio Server
+## Configure S3 Server
 
-Minio Storage server is used as Tempo long-term data storage. 
+The S3 storage server is used as Tempo long-term data storage. 
 
-Grafana Tempo needs to store two different types of data: chunks and indexes. Both of them can be stored in S3 server.
+Grafana Tempo needs to store two different types of data: chunks and indexes. Both of them can be stored in an S3-compatible server.
 
 {{site.data.alerts.note}}
 
-Tempo helm chart is able to install this Minio service as a subchart, but its installation will be disabled and Minio Storage Service already deployed in the cluster will be used as Tempo's backend. 
+Tempo helm chart is able to install an S3 service as a subchart, but its installation will be disabled and the S3 Storage Service already deployed in the cluster will be used as Tempo's backend. 
 
-As part of Minio Storage Service installation, Tempo's S3 bucket, policy and user is already configured.
-See documentation: [Minio S3 Object Storage Service](/docs/minio/).
+As part of the S3 Storage Service installation, Tempo's S3 bucket, policy and user is already configured.
+See documentation: ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
 
 {{site.data.alerts.end}}
 
-### Create Minio user and bucket
+### Create S3 user and bucket
 
-Use Minio's `mc` command to create Tempo bucket and user
+Use RustFS CLI (`rc`) to create the Tempo bucket and user:
 
 ```shell
-mc mb <minio_alias>/k3s-tempo 
-mc admin user add <minio_alias> tempo <user_password>
+rc mb <s3_alias>/k3s-tempo 
+rc admin user add <s3_alias> tempo <user_password>
 ```
 {{site.data.alerts.note}}
 
@@ -91,7 +91,8 @@ Over the resources: arn:aws:s3:::<bucket_name>, arn:aws:s3:::<bucket_name>/*
 Apply policy to user `tempo` so it has the proper persmissions on `k3s-tempo` bucket.
 
 ```shell
-  mc admin policy add <minio_alias> tempo user_policy.json
+  rc admin policy create <s3_alias> tempo user_policy.json
+  rc admin policy attach <s3_alias> tempo tempo
 ```
 
 Where `user_policy.json`, contains the following AWS access policies definition:
@@ -162,10 +163,10 @@ Where `user_policy.json`, contains the following AWS access policies definition:
       backend: s3
       s3:
         bucket: k3s-tempo
-        endpoint: <minio_endpoint>:<minio_port>
+        endpoint: <s3_endpoint>
         region: eu-west-1
-        access_key: <minio_tempo_user>
-        secret_key: <minio_tempo_key>
+        access_key: <s3_tempo_user>
+        secret_key: <s3_tempo_key>
         insecure: false
 
   # Configure distributor
@@ -183,14 +184,14 @@ Where `user_policy.json`, contains the following AWS access policies definition:
           filter_server_spans: false
           flush_to_storage: true
 
-  # Disable Minio server installation
+  # Disable built-in S3 server subchart
   minio:
     enabled: false
   ```
 
   This configuration:
 
-  - Enable S3 as storage backend, providing Minio credentials and bucket.
+  - Enable S3 as storage backend, providing S3 credentials and bucket.
 
   - Enable traces ingestion of different protocols.
 
@@ -211,7 +212,7 @@ Where `user_policy.json`, contains the following AWS access policies definition:
 
 ### GitOps installation
 
-As an alternative, for GitOps deployments, instead of hardcoding minio credentials within Helm chart values, a external secret can be configured leveraging [Tempo's capability of using environment variables in config file](https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration).
+As an alternative, for GitOps deployments, instead of hardcoding S3 credentials within Helm chart values, a external secret can be configured leveraging [Tempo's capability of using environment variables in config file](https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration).
 
 The following secret need to be created:
 ```yml
@@ -373,7 +374,7 @@ metricsGenerator:
           name: tempo-minio-secret
           key: MINIO_SECRET_ACCESS_KEY
 
-# Disable Minio server installation
+# Disable built-in S3 server subchart
 minio:
   enabled: false
 ```
