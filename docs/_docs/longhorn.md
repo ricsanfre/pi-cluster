@@ -2,7 +2,7 @@
 title: Distributed Block Storage (Longhorn)
 permalink: /docs/longhorn/
 description: How to deploy distributed block storage solution based on Longhorn in our Pi Kubernetes Cluster.
-last_modified_at: "27-03-2026"
+last_modified_at: "19-06-2026"
 ---
 
 K3s comes with a default [Local Path Provisioner](https://rancher.com/docs/k3s/latest/en/storage/) that allows creating a PersistentVolumeClaim backed by host-based storage. This means the volume is using storage on the host where the pod is located. If the POD need to be started on a different node it won't be able to access the data.
@@ -365,17 +365,17 @@ Longhorn support two types of backup: incremental and full-backup
 -   Incremental backup: A backup of a snapshot is copied to the backupstore. With incremental backup, Longhorn backs up only data that was changed since the last backup. (delta backup)
 -   Full backup: Longhorn can perform full backups that upload all data blocks in the volume and overwrite existing data blocks in the backupstore.
 
-#### Minio as S3 Backupstore
+#### S3 Backupstore
 
 For configuring Longhorn's backup capability, it is needed to define a *backup target*, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets.
 
-[Minio](https://min.io) can be used as S3-compliant backend. See further details about installing external Minio Server for the cluster in: ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/)
+[RustFS](https://github.com/rustfs/rustfs) is used as the S3-compatible backend. See further details about installing the external S3 server for the cluster in: ["PiCluster - S3 Backup Backend"](/docs/s3-backup/)
 
-##### Install Minio backup server
+##### Install S3 backup server
 
-See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs/s3-backup/).
+See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
 
-##### Configure Longhorn bucket and user
+##### Configure S3 bucket and user
 
 | User | Bucket |
 |:--- |:--- |
@@ -385,12 +385,12 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 -   Create bucket for storing Longhorn backups/snapshots
 
     ```shell
-    mc mb ${MINIO_ALIAS}/k3s-longhorn
+    rc mb ${S3_ALIAS}/k3s-longhorn
     ```
 
--   Add `longhorn` user using Minio's CLI
+-   Add `longhorn` user using RustFS CLI
     ```shell
-    mc admin user add ${MINIO_ALIAS} longhorn supersecret
+    rc admin user add ${S3_ALIAS} longhorn supersecret
     ```
 
 -   Define user policy to grant `longhorn` user access to backups bucket
@@ -421,26 +421,27 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
 
 -   Add access policy to `longhorn` user:
     ```shell
-    mc admin policy add ${MINIO_ALIAS} longhorn longhorn_policy.json
+    rc admin policy create ${S3_ALIAS} longhorn longhorn_policy.json
+    rc admin policy attach ${S3_ALIAS} longhorn longhorn
     ```
 
 
 #### Configure Longhorn backup target
 
--   Create kubernetes `Secret` resource containing Minio end-point access information and credentials: `longhorn-minio-secret.yml`
+-   Create kubernetes `Secret` resource containing S3 end-point access information and credentials: `longhorn-s3-secret.yml`
 
     ```yaml
     apiVersion: v1
     kind: Secret
     metadata:
-      name: minio-secret
+      name: longhorn-minio-secret
       namespace: longhorn-system
     type: Opaque
     data:
-      AWS_ACCESS_KEY_ID: <base64_encoded_longhorn-minio-access-key> # longhorn
-      AWS_SECRET_ACCESS_KEY: <base64_encoded_longhorn-minio-secret-key> # longhornpass
-      AWS_ENDPOINTS: <base64_encoded_mino-end-point> # https://minio-service.default:9000
-      AWS_CERT: <base64_encoded_minio_ssl_pem> # minio_ssl_certificate, containing complete chain, including CA
+      AWS_ACCESS_KEY_ID: <base64_encoded_access_key> # longhorn
+      AWS_SECRET_ACCESS_KEY: <base64_encoded_secret_key> # longhornpass
+      AWS_ENDPOINTS: <base64_encoded_endpoint> # https://object-store.homelab.ricsanfre.com:9091
+      AWS_CERT: <base64_encoded_ssl_pem> # ssl_certificate, containing complete chain, including CA
     ```
 
     {{site.data.alerts.note}}
@@ -452,10 +453,10 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
     For encoding the different access paramenters the following commands can be used:
 
     ```shell
-    echo -n minio_url | base64
-    echo -n minio_access_key_id | base64
-    echo -n minio_secret_access_key | base64
-    cat minio-ssl.pem ca.pem | base64 | tr -d "\n"
+    echo -n s3_url | base64
+    echo -n access_key_id | base64
+    echo -n secret_access_key | base64
+    cat ssl.pem ca.pem | base64 | tr -d "\n"
     ```
 
     {{site.data.alerts.important}}
@@ -468,32 +469,38 @@ See installation instructions in ["PiCluster - S3 Backup Backend (Minio)"](/docs
     kubectl apply -f longhorn-s3-secret.yml
     ```
 
--   Go to the Longhorn UI. In the top navigation bar, click `Settings`. In the Backup section, set `Backup Target` to:
+-   Go to the Longhorn UI. In the top navigation bar, click `Settings`. In the **Backup Target** section, set **Backup Target URL** to:
 
     ```
-    s3://<bucket-name>@<minio-s3-region>/
+    s3://<bucket-name>@<s3-region>/
     ```
 
     {{site.data.alerts.important}}
     Make sure that you have `/` at the end, otherwise you will get an error.
     {{site.data.alerts.end}}
 
-    In the Backup section set `Backup Target Credential Secret` to the secret resource created before
+    Set **Credential Secret** to the secret resource created before:
 
     ```
-    minio-secret
+    longhorn-minio-secret
     ```
 
     ![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
 
-    Backup Target can be automatically configured when deploying longhorn using helm chart
+    Backup Target can be automatically configured when deploying Longhorn using Helm chart.
 
-    Additional values need to be provided to `values.yaml` to configure S3 target.
+    {{site.data.alerts.note}} **Longhorn v1.8.0+ backup store configuration**
+
+    Starting with Longhorn v1.8.0, backup targets are managed as dedicated `BackupTarget` custom resources. While the legacy `defaultSettings.backupTarget` Helm value is still accepted, the recommended approach is the `defaultBackupStore` block:
+
+    {{site.data.alerts.end}}
 
     ```yaml
-    defaultSettings:
-      backupTarget: s3://longhorn@eu-west-1/
-      backupTargetCredentialSecret: minio-secret
+    # Longhorn v1.8.0+ backup store configuration
+    defaultBackupStore:
+      backupTarget: "s3://k3s-longhorn@eu-west-1/"
+      backupTargetCredentialSecret: "longhorn-minio-secret"
+      pollInterval: "300"
     ```
 
 #### Scheduling longhorn volumes backup
