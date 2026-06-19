@@ -1,6 +1,12 @@
 # longhorn helm values (backup)
 
-defaultSettings:
-  # Backup S3 configuration
+# defaultSettings:
+#   # Backup S3 configuration
+#   backupTarget: "s3://k3s-longhorn@eu-west-1/"
+#   backupTargetCredentialSecret: longhorn-minio-secret
+
+# Longhorn 1.12+ backup store configuration
+defaultBackupStore:
   backupTarget: "s3://k3s-longhorn@eu-west-1/"
-  backupTargetCredentialSecret: longhorn-minio-secret
+  backupTargetCredentialSecret: "longhorn-minio-secret"
+  pollInterval: "300"
