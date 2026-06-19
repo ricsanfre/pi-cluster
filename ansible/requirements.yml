@@ -28,7 +28,7 @@ roles:
     version: v1.0.5
 collections:
   - name: community.general
-    version: 13.0.1
+    version: 13.1.0
   - name: kubernetes.core
     version: 6.4.0
   - name: community.hashi_vault
