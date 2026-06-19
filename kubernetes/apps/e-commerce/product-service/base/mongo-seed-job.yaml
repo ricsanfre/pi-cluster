@@ -30,7 +30,7 @@ spec:
         # Uses mongosh exit-code directly (no pipeline) and connects without
         # credentials — MongoDB's ping command requires no authentication.
         - name: wait-for-mongodb
-          image: mongo:8.0
+          image: mongo:8.3
           command:
             - sh
             - -c
@@ -50,7 +50,7 @@ spec:
               memory: 512Mi
       containers:
         - name: mongosh
-          image: mongo:8.0
+          image: mongo:8.3
           command:
             - sh
             - -c
