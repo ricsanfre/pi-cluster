@@ -121,6 +121,8 @@ acme_issuer_email: admin@ricsanfre.com
 
 # RustFS S3 Server (replaces MinIO)
 rustfs_hostname: "object-store.homelab.ricsanfre.com"
+rustfs_server_port: "9091"
+rustfs_console_port: "9092"
 rustfs_endpoint: "{{ rustfs_hostname }}:9091"
 rustfs_url: "https://{{ rustfs_hostname }}:9091"
 

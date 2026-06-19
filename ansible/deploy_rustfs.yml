@@ -336,7 +336,7 @@
            URL: https://{{ rustfs_hostname }}:9091
 
          Console (Web UI):
-           URL: https://{{ rustfs_hostname }}:9001
+           URL: https://{{ rustfs_hostname }}:{{ rustfs_console_port }}
 
          🔐 Credentials:
            Stored securely in Vault at: secret/minio/root
