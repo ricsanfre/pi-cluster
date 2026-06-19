@@ -294,6 +294,72 @@ This configuration means:
 
 Even when an S3 backend is used for long-term storage, Loki still needs local persistent storage on write and backend pods for TSDB working data and compactor processing.
 
+### Homelab footprint optimization
+
+For a small homelab cluster where high availability is not required, Loki can be tuned down to a single replica per component. The prod overlay used in this repository applies the following resource-saving configuration:
+
+```yaml
+# loki helm values (prod overlay)
+
+loki:
+  commonConfig:
+    replication_factor: 1
+
+write:
+  replicas: 1
+  persistence:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+read:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+backend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Reduce memcached cache sizes from defaults (8GB chunks / 1GB results)
+chunksCache:
+  allocatedMemory: 256
+  allocatedCPU: 100m
+
+resultsCache:
+  allocatedMemory: 128
+  allocatedCPU: 100m
+```
+
+{{site.data.alerts.important}} **Replication factor must match write replicas**
+
+Loki's `commonConfig.replication_factor` defaults to `3` in the Helm chart. When `write.replicas` is reduced to `1`, the replication factor must be set to `1` — otherwise the write ring rejects all push requests with HTTP 500 (`at least 2 live replicas required, could only find 1`). This is set via `loki.commonConfig.replication_factor: 1`.
+{{site.data.alerts.end}}
+
+Key changes from the defaults:
+
+- **Single replica** for all components (`write`, `read`, `backend`) — sufficient for homelab workloads
+- **`replication_factor: 1`** — matches the single write replica so the ingester ring accepts writes
+- **Reduced persistence** to 1 Gi per component instead of the default 10 Gi
+- **CPU and memory limits** appropriate for ARM64 Raspberry Pi nodes
+- **Smaller memcached caches** — 256 Mi chunks cache and 128 Mi results cache vs. defaults of 8 Gi and 1 Gi
+
 ### GitOps installation
 
 As an alternative, for GitOps deployments, instead of hardcoding S3 credentials within Helm chart values, a external secret can be configured leveraging [Loki's capability of using environment variables in config file](https://grafana.com/docs/loki/latest/configuration/#use-environment-variables-in-the-configuration).
