@@ -1,5 +1,9 @@
 # loki helm values (prod overlay)
 
+loki:
+  commonConfig:
+    replication_factor: 1
+
 write:
   replicas: 1
   persistence:
