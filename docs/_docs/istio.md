@@ -655,9 +655,367 @@ See further details in [Kiali OpenID Connect Strategy](https://kiali.io/docs/con
    istioctl validate
    ```
 
+## Sample Namespace Mesh Configuration
+
+In my cluster I deploy a sample e-commerce application, which is composed of several microservices deployed in different namespaces. See details of the e-commerce application in [https://github.com/ricsanfre/spring-microservices-otel-k8s](https://github.com/ricsanfre/spring-microservices-otel-k8s). The purpose of this application is to test a distributed microservices-based architecture and test Istio mesh configuration and observability capabilities.
+
+Each namespace in the ambient mesh requires specific configuration depending on
+its workload characteristics. The Pi Cluster currently has five namespaces
+participating in the mesh: `envoy-gateway-system`, `keycloak`, `databases`,
+`e-commerce`, and `kafka`.
+
+### Topology
+
+The following diagram shows how ztunnel proxies mediate traffic between namespaces, which mTLS mode each uses, and where exceptions are needed for non-mesh clients:
+
+<pre class="mermaid">
+graph TB
+    subgraph External["Outside Mesh"]
+        ext["External HTTP Clients"]
+        api["kube-apiserver<br/>(admission webhooks)"]
+        prom["Prometheus<br/>(metrics scraping)"]
+        tofu["Tofu Controller<br/>(flux-system)"]
+    end
+
+    subgraph Node["Kubernetes Node"]
+        ztunnel["ztunnel<br/>(per-node L4 proxy)"]
+
+        subgraph envoy["envoy-gateway-system"]
+            eg["Envoy Gateway"]
+        end
+
+        subgraph kc["keycloak"]
+            key["Keycloak"]
+        end
+
+        subgraph db["databases"]
+            cnpg["CNPG Operator"]
+            pg["PostgreSQL"]
+            valkey["Valkey"]
+            mongo["MongoDB"]
+        end
+
+        subgraph ec["e-commerce"]
+            web["Web Frontend"]
+            api_svc["API Services"]
+        end
+
+        subgraph ka["kafka"]
+            strimzi["Strimzi Operator"]
+            broker["Kafka Brokers"]
+            entity["Entity Operator"]
+        end
+    end
+    
+    ext -->|"HTTPS (external)"| eg
+    api -->|"TLS :443 → :9443<br/>webhook"| cnpg
+    api -->|"TLS :8443<br/>webhook"| strimzi
+    prom -->|"HTTP :9404"| broker
+    prom -->|"HTTP :8080"| strimzi
+    prom -->|"HTTP :8081"| entity
+    tofu -->|"HTTP :8080"| key
+
+    eg <-->|"HBONE mTLS"| ztunnel
+    key <-->|"HBONE mTLS"| ztunnel
+    cnpg <-->|"HBONE mTLS"| ztunnel
+    pg <-->|"HBONE mTLS"| ztunnel
+    valkey <-->|"HBONE mTLS"| ztunnel
+    mongo <-->|"HBONE mTLS"| ztunnel
+    web <-->|"HBONE mTLS"| ztunnel
+    api_svc <-->|"HBONE mTLS"| ztunnel
+    strimzi <-->|"HBONE mTLS"| ztunnel
+    broker <-->|"HBONE mTLS"| ztunnel
+    entity <-->|"HBONE mTLS"| ztunnel
+
+    style envoy fill:#e8f5e9,stroke:#2e7d32
+    style kc fill:#fff3e0,stroke:#e65100
+    style db fill:#e3f2fd,stroke:#1565c0
+    style ec fill:#f3e5f5,stroke:#7b1fa2
+    style ka fill:#fce4ec,stroke:#c62828
+
+    envoyDesc["🟢 envoy-gateway-system<br/>PERMISSIVE — accepts external traffic"]
+    kcDesc["🟠 keycloak<br/>PERMISSIVE :8080<br/>tofu runner outside mesh"]
+    dbDesc["🔵 databases<br/>STRICT<br/>PERMISSIVE :9443 CNPG webhook"]
+    ecDesc["🟣 e-commerce<br/>STRICT — all internal"]
+    kaDesc["🔴 kafka<br/>STRICT<br/>PERMISSIVE :8443, :8080 (Strimzi webhook)<br/>PERMISSIVE :9404, :8081 (metrics)"]
+```
+</pre>
+
+### Mesh Configuration Summary
+
+| Namespace | mTLS Mode | Exceptions | Reason |
+|-----------|-----------|------------|--------|
+| `envoy-gateway-system` | PERMISSIVE | — | External clients lack SPIFFE identities |
+| `keycloak` | PERMISSIVE (port :8080) | Tofu Controller in `flux-system` (outside mesh) | Non-mesh client needs plaintext access to Keycloak API |
+| `databases` | STRICT | PERMISSIVE :9443 (CNPG webhook) | kube-apiserver calls admission webhook without SPIFFE identity |
+| `e-commerce` | STRICT | — | All workloads communicate within the mesh |
+| `kafka` | STRICT | PERMISSIVE :8443, :8080 (Strimzi operator webhook + metrics), PERMISSIVE :9404 (broker JMX), PERMISSIVE :8081 (entity-operator metrics) | kube-apiserver webhook calls + Prometheus scraping from outside mesh |
+
+### Enabling Ambient Mesh in a Namespace
+
+Namespaces opt into the ambient mesh by adding the label:
+
+```shell
+kubectl label namespace <name> istio.io/dataplane-mode=ambient
+```
+
+Unlike sidecar mode, ambient mode requires no pod restarts — traffic
+redirection through ztunnel is transparent to application containers.
+
+### Namespace: envoy-gateway-system
+
+Envoy Gateway serves as the ingress point for external HTTP traffic. Since
+external clients lack SPIFFE identities, the namespace uses PERMISSIVE mTLS:
+
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: envoy-gateway-permissive
+  namespace: envoy-gateway-system
+spec:
+  selector: {matchLabels: {}}
+  mtls:
+    mode: PERMISSIVE
+```
+
+### Namespace: keycloak
+
+Keycloak requires special configuration due to three factors:
+
+1. **Double mTLS encryption** — Keycloak auto-generates TLS certificates for
+   JGroups (Infinispan distributed cache). When ztunnel wraps this traffic in
+   HBONE mTLS, the certificates clash. Disable embedded JGroups mTLS in the
+   Keycloak CR:
+
+   ```yaml
+   additionalOptions:
+     - name: cache-embedded-mtls-enabled
+       value: "false"
+   ```
+
+2. **Operator NetworkPolicy** — The Keycloak Operator creates a restrictive
+   NetworkPolicy that blocks ztunnel infrastructure ports. An additive policy is
+   required to allow HBONE tunnel termination (15008), waypoint proxy (15006),
+   and Istio health/metrics ports (15020, 15021):
+
+   ```yaml
+   apiVersion: networking.k8s.io/v1
+   kind: NetworkPolicy
+   metadata:
+     name: keycloak-istio-mesh
+     namespace: keycloak
+   spec:
+     podSelector:
+       matchLabels:
+         app: keycloak
+         app.kubernetes.io/managed-by: keycloak-operator
+     ingress:
+       - ports:
+           - {port: 15008, protocol: TCP}
+           - {port: 15006, protocol: TCP}
+           - {port: 15020, protocol: TCP}
+           - {port: 15021, protocol: TCP}
+       - from:
+           - namespaceSelector:
+               matchLabels:
+                 kubernetes.io/metadata.name: istio-system
+             podSelector:
+               matchLabels:
+                 app: ztunnel
+         ports:
+           - {port: 7800, protocol: TCP}
+           - {port: 57800, protocol: TCP}
+   ```
+
+3. **Non-mesh client** — The Tofu Controller in `flux-system` runs outside the
+   mesh. Port :8080 (Keycloak HTTP API) uses PERMISSIVE mTLS:
+
+   ```yaml
+   apiVersion: security.istio.io/v1
+   kind: PeerAuthentication
+   metadata:
+     name: keycloak-permissive
+     namespace: keycloak
+   spec:
+     selector:
+       matchLabels:
+         app: keycloak
+     portLevelMtls:
+       "8080":
+         mode: PERMISSIVE
+   ```
+
+### Namespace: databases
+
+The `databases` namespace hosts CloudNativePG, Valkey, and MongoDB operators.
+Key considerations:
+
+1. **Single namespace owner** — Three operators define the `databases` namespace.
+   To prevent label-stripping races, `databases/common` is the sole owner of the
+   namespace resource. All operators reference it rather than defining their own.
+
+2. **CNPG admission webhook** — The `cnpg-webhook-service` serves TLS on
+   container port 9443 (exposed via Service port 443). The kube-apiserver calls
+   this webhook from outside the mesh without a SPIFFE identity. A
+   pod-specific PERMISSIVE exception is needed:
+
+   ```yaml
+   apiVersion: security.istio.io/v1
+   kind: PeerAuthentication
+   metadata:
+     name: databases-strict
+     namespace: databases
+   spec:
+     selector: {matchLabels: {}}
+     mtls:
+       mode: STRICT
+   ---
+   apiVersion: security.istio.io/v1
+   kind: PeerAuthentication
+   metadata:
+     name: cnpg-webhook-permissive
+     namespace: databases
+   spec:
+     selector:
+       matchLabels:
+         app.kubernetes.io/name: cloudnative-pg
+     portLevelMtls:
+       "9443":
+         mode: PERMISSIVE
+   ```
+
+   The pod-specific `cnpg-webhook-permissive` has a more specific selector and
+   takes precedence over the namespace-wide `databases-strict`. Port 9443 is
+   PERMISSIVE only for the CNPG operator pod; all other workloads and ports
+   remain STRICT.
+
+### Namespace: e-commerce
+
+Standard ambient mesh with STRICT mTLS — no exceptions needed. All e-commerce
+workloads communicate within the mesh or through the Envoy Gateway:
+
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: e-commerce-strict
+  namespace: e-commerce
+spec:
+  selector: {matchLabels: {}}
+  mtls:
+    mode: STRICT
+```
+
+### Namespace: kafka
+
+The Kafka namespace requires STRICT mTLS with several PERMISSIVE exceptions:
+
+1. **Strimzi admission webhooks** — The Strimzi operator deploys validating and
+   mutating webhooks on port 8443. The kube-apiserver calls these from outside
+   the mesh without a SPIFFE identity.
+
+2. **Prometheus metrics scraping** — Prometheus runs in `kube-prom-stack`
+   (outside the mesh) and scrapes metrics from Kafka brokers (port 9404),
+   Strimzi operator (port 8080), and entity-operator (port 8081).
+
+```yaml
+# Namespace-wide default
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: kafka-strict
+  namespace: kafka
+spec:
+  selector: {matchLabels: {}}
+  mtls:
+    mode: STRICT
+---
+# Strimzi operator: PERMISSIVE on webhook and metrics ports
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: strimzi-operator-permissive
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/kind: cluster-operator
+  portLevelMtls:
+    "8443":
+      mode: PERMISSIVE
+    "8080":
+      mode: PERMISSIVE
+---
+# Kafka broker JMX metrics
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: kafka-broker-metrics-permissive
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/kind: Kafka
+  portLevelMtls:
+    "9404":
+      mode: PERMISSIVE
+---
+# Entity Operator health/metrics
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: entity-operator-metrics-permissive
+  namespace: kafka
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: entity-operator
+  portLevelMtls:
+    "8081":
+      mode: PERMISSIVE
+```
+
+Pod-specific PeerAuthentications have more specific selectors and take
+precedence over the namespace-wide `kafka-strict`. Webhook and metrics ports are
+PERMISSIVE only for the targeted pods.
+
+#### Kafka Listeners and Ambient Mesh
+
+Kafka uses three listeners with different interactions with the mesh:
+
+| Listener | Port | TLS | Mesh Interaction |
+|----------|------|-----|------------------|
+| Plain (internal) | 9092 | None | ztunnel HBONE provides transport encryption — no app-level TLS needed |
+| TLS (internal) | 9093 | TLS | ztunnel wraps in HBONE mTLS ("double encryption"); redundant with mesh |
+| External | 9094 | TLS Passthrough | External clients negotiate TLS end-to-end with brokers via Envoy Gateway; ztunnel is transparent at L4 |
+
+The Strimzi operator has `generateNetworkPolicy: false`, so no operator-created
+NetworkPolicies conflict with ztunnel. Unlike Keycloak, no additive
+NetworkPolicy is needed.
+
+### Istio Infrastructure Ports
+
+When operator-created NetworkPolicies restrict pod ingress, the following
+ztunnel/ambient mesh ports must be explicitly allowed:
+
+| Port | Purpose |
+|------|---------|
+| 15006 | Waypoint proxy |
+| 15008 | HBONE tunnel termination |
+| 15020 | Istio health checks |
+| 15021 | Istio metrics |
+
+These ports are required for ambient mesh to function when NetworkPolicies are
+present. Without them, ztunnel cannot deliver proxied traffic to pods.
+
+
 ## References
 
 - Install istio using Helm chart: https://istio.io/latest/docs/setup/install/helm/ 
 - Istio getting started: https://istio.io/latest/docs/setup/getting-started/
 - Kiali: https://kiali.io/
 - NGINX Ingress vs Istio gateway: https://imesh.ai/blog/kubernetes-nginx-ingress-vs-istio-ingress-gateway/
+- [Istio ambient mesh traffic redirection](https://istio.io/latest/docs/ambient/architecture/traffic-redirection/)
+- [Keycloak: Configuring distributed caches](https://www.keycloak.org/server/caching)
+- [Keycloak: Running inside a service mesh](https://www.keycloak.org/server/caching#_running_inside_a_service_mesh)
