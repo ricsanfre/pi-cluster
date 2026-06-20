@@ -119,10 +119,10 @@ Using CloudNative-PG a, keycload database cluster can be created. See details on
         endpointURL: https://${S3_BACKUP_SERVER}:9091
         s3Credentials:
           accessKeyId:
-            name: keycloak-minio-secret
+            name: keycloak-s3-secret
             key: AWS_ACCESS_KEY_ID
           secretAccessKey:
-            name: keycloak-minio-secret
+            name: keycloak-s3-secret
             key: AWS_SECRET_ACCESS_KEY
       retentionPolicy: "30d"
   ```

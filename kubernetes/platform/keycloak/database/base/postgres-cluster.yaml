@@ -46,10 +46,10 @@ spec:
       endpointURL: https://${S3_SERVER}:9091
       s3Credentials:
         accessKeyId:
-          name: postgres-keycloak-minio-secret
+          name: postgres-keycloak-s3-secret
           key: AWS_ACCESS_KEY_ID
         secretAccessKey:
-          name: postgres-keycloak-minio-secret
+          name: postgres-keycloak-s3-secret
           key: AWS_SECRET_ACCESS_KEY
     retentionPolicy: "30d"
 

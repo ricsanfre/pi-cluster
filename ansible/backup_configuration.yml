@@ -56,7 +56,7 @@
         validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
         ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: secret
-        path: minio/restic
+        path: s3/restic
       register: restic_vault_secret
       delegate_to: localhost
       tags: ["always"]

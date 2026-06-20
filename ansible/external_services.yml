@@ -108,19 +108,19 @@
             vault kv list secret/
 
             # View specific secrets
-            vault kv get secret/minio
+            vault kv get secret/s3
             vault kv get secret/bind9/ddns
             vault kv get secret/kubernetes/cluster
 
           Secret Locations:
             - Auto-generated secrets: secret/* (from Terraform)
-            - S3 credentials: secret/minio
+            - S3 credentials: secret/s3
             - IONOS credentials: secret/certmanager/ionos
             - GitHub credentials: secret/flux/github-pat
             - Kubernetes config: secret/kubernetes/cluster
             - Bind9 DDNS: secret/bind9/ddns
             - HTTP Auth: secret/ingress/basic-auth
-            - S3 monitoring: secret/minio/prometheus
+            - S3 monitoring: secret/s3/prometheus
 
           Next Steps:
             1. Store Vault credentials securely

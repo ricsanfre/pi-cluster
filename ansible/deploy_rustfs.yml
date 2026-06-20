@@ -278,7 +278,7 @@
         validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
         ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: "secret"
-        path: "minio/root"
+        path: "s3/root"
       register: rustfs_vault_secret
       delegate_to: localhost
       become: false
@@ -312,11 +312,11 @@
 
           Please verify:
           1. Vault is accessible at: {{ vault_addr }}
-          2. Secret exists at path: secret/minio/root
+          2. Secret exists at path: secret/s3/root
           3. Secret contains keys: username + key
 
           To check the secret:
-            vault kv get secret/minio/root
+            vault kv get secret/s3/root
         success_msg: "✓ S3 root credentials successfully retrieved from Vault"
 
   roles:
@@ -339,7 +339,7 @@
            URL: https://{{ rustfs_hostname }}:{{ rustfs_console_port }}
 
          🔐 Credentials:
-           Stored securely in Vault at: secret/minio/root
+           Stored securely in Vault at: secret/s3/root
 
          📋 Next: Configuring buckets, users, and policies via Terraform...
 

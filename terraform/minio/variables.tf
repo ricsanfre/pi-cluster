@@ -65,25 +65,25 @@ variable "vault_skip_tls_verify" {
 
 variable "vault_kv_mount" {
   type        = string
-  description = "Vault KV v2 mount containing Minio user secrets"
+  description = "Vault KV v2 mount containing S3 user secrets"
   default     = "secret"
 }
 
-variable "vault_minio_users_path_prefix" {
+variable "vault_s3_users_path_prefix" {
   type        = string
-  description = "Vault path prefix where Minio user secrets are stored"
-  default     = "minio"
+  description = "Vault path prefix where S3 user secrets are stored"
+  default     = "s3"
 }
 
-variable "vault_minio_user_secret_field" {
+variable "vault_s3_user_secret_field" {
   type        = string
-  description = "Field name in each Vault secret used as Minio IAM user secret"
+  description = "Field name in each Vault secret used as S3 IAM user secret"
   default     = "key"
 }
 
-variable "minio_user_default_secret" {
+variable "s3_user_default_secret" {
   type        = string
-  description = "Fallback Minio IAM user secret when Vault is disabled or field is missing"
+  description = "Fallback S3 IAM user secret when Vault is disabled or field is missing"
   sensitive   = true
   default     = "mySuperSecretKey"
 }
