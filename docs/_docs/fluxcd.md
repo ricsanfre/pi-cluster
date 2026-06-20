@@ -2,7 +2,7 @@
 title: GitOps (FluxCD)
 permalink: /docs/fluxcd/
 description: How to apply GitOps to Pi cluster configuration using FluxCD.
-last_modified_at: "03-04-2026"
+last_modified_at: "20-06-2026"
 ---
 
 ## What is Flux
@@ -332,7 +332,7 @@ spec:
   healthCheckExprs:
     - apiVersion: cert-manager.io/v1
       kind: ClusterIssuer
-      failed: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
       current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
 ```
 
@@ -355,6 +355,99 @@ kubectl get ClusterIssuer ca-issuer -o jsonpath={.status.conditions} | jq .
 ]
 
 ```
+
+##### Preventing early failures with `inProgress`
+
+When using `healthCheckExprs`, a `failed` expression that matches a `Ready: False` condition causes the Kustomization to immediately transition to a `False` ready state. This is problematic during cluster bootstrap or when services are restarting, because many custom resources go through a transitional `Ready: False` state that is **not** a permanent failure — the controller is still reconciling.
+
+The `inProgress` expression solves this: it tells Flux that a resource with no `Ready` condition (or a `Ready: False` condition) is still being reconciled, not failed. Flux will keep waiting (up to `spec.timeout`) instead of marking the Kustomization as failed and blocking downstream dependencies.
+
+**Pattern: condition-based resources**
+
+For CRDs that expose a standard `Ready` condition in `.status.conditions`, use:
+
+```yaml
+healthCheckExprs:
+  - apiVersion: <apiVersion>
+    kind: <Kind>
+    inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
+    current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+```
+
+The `inProgress` expression reads as: *"the Ready condition does not exist yet, OR it exists but is False"* — meaning the resource is still being reconciled. Only when `Ready: True` does the health check pass.
+
+This pattern is applied across the cluster for the following custom resources:
+
+**ClusterSecretStore** (external-secrets):
+
+`kubernetes/clusters/prod/infra/external-secrets-app.yaml`
+
+```yaml
+healthCheckExprs:
+  - apiVersion: external-secrets.io/v1
+    kind: ClusterSecretStore
+    inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
+    current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+```
+
+**Keycloak** (Keycloak Operator CR):
+
+`kubernetes/clusters/prod/infra/keycloak-app.yaml`
+
+```yaml
+healthCheckExprs:
+  - apiVersion: k8s.keycloak.org/v2beta1
+    kind: Keycloak
+    inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
+    current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+```
+
+**Kafka** (Strimzi):
+
+`kubernetes/clusters/prod/infra/kafka-app.yaml`
+
+```yaml
+healthCheckExprs:
+  - apiVersion: kafka.strimzi.io/v1
+    kind: Kafka
+    inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
+    current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+```
+
+**Terraform** resources (Tofu Controller):
+
+`kubernetes/clusters/prod/infra/keycloak-app.yaml` and `kubernetes/clusters/prod/infra/elastic-stack-app.yaml`
+
+```yaml
+healthCheckExprs:
+  - apiVersion: infra.contrib.fluxcd.io/v1alpha2
+    kind: Terraform
+    inProgress: "!status.conditions.exists(c, c.type == 'Ready') || status.conditions.filter(c, c.type == 'Ready').all(c, c.status == 'False')"
+    current: status.conditions.exists(e, e.type == 'Ready') && status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+```
+
+**Pattern: health-field resources (Elasticsearch/Kibana)**
+
+The Elastic Stack CRDs expose a `.status.health` field (instead of `Ready` conditions). For these, `inProgress` captures transitional states (e.g., `yellow` for Kibana), while `failed` is reserved for truly broken states (e.g., `red`):
+
+`kubernetes/clusters/prod/infra/elastic-stack-app.yaml`
+
+```yaml
+healthCheckExprs:
+  - apiVersion: elasticsearch.k8s.elastic.co/v1
+    kind: Elasticsearch
+    failed: status.health in ["red"]
+    current: status.health in ["green", "yellow"]
+  - apiVersion: elasticsearch.k8s.elastic.co/v1
+    kind: Kibana
+    inProgress: "status.health in ['yellow']"
+    failed: status.health in ["red"]
+    current: status.health in ["green"]
+```
+
+{{site.data.alerts.tip}}
+**Rule of thumb:** reserve `failed` for states that require human intervention (e.g., `red` health, permanent errors). Use `inProgress` for states that the controller can resolve on its own given time (e.g., `Ready: False` during initial reconciliation, `yellow` health during shard rebalancing).
+{{site.data.alerts.end}}
 
 #### Dependencies
 `.spec.dependsOn` is an optional list used to refer to other Kustomization objects that the Kustomization depends on.
