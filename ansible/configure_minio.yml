@@ -72,7 +72,7 @@
         validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
         ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: "secret"
-        path: "s3/root"
+        path: "s3/rustfsadmin"
       register: minio_vault_secret
       no_log: true
 
@@ -104,11 +104,11 @@
 
           Please verify:
           1. Vault is accessible at: {{ vault_addr }}
-          2. Secret exists at path: secret/s3/root
+          2. Secret exists at path: secret/s3/rustfsadmin
           3. Secret contains keys: username, key
 
           To check the secret:
-            vault kv get secret/s3/root
+            vault kv get secret/s3/rustfsadmin
         success_msg: "✓ MinIO credentials successfully retrieved from Vault for Terraform"
 
   tasks:
@@ -192,5 +192,5 @@
            Open in browser and login with credentials from Vault
 
          Credentials:
-           Stored securely in Vault at: secret/s3/root
+           Stored securely in Vault at: secret/s3/rustfsadmin
            Retrieved on-demand during configuration
