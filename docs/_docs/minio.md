@@ -1,9 +1,25 @@
 ---
-title: Minio S3 Object Storage Service
+title: Minio S3 Object Storage Service (Deprecated)
 permalink: /docs/minio/
 description: How to deploy a Minio S3 object storage service in our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "27-03-2026"
+last_modified_at: "20-06-2026"
 ---
+
+{{site.data.alerts.important}} **Deprecated Technology in PiCluster project**
+
+MinIO has been retired from the PiCluster due to a progressive degradation of its open-source community edition:
+
+- **February 2025** — Admin UI removed from the community edition. The UI console was re-purposed as a browser-only object console ([object-browser#3509](https://github.com/minio/object-browser/pull/3509)).
+- **October 2025** — Pre-compiled binary releases discontinued. The community edition became source-code only with no Docker images or binary packages ([minio/minio#21647](https://github.com/minio/minio/issues/21647)).
+- **April 2026** — MinIO archived its public repository and removed community version documentation from its website.
+
+These changes made MinIO no longer viable for self-hosted homelab environments. The S3 backend has been migrated to **RustFS**, deployed as an external bare-metal service.
+
+MinIO has been deprecated and this documentation is not updated anymore.
+
+See the replacement solution documentation: ["S3 Backup Backend (RustFS)"](/docs/rustfs/).
+
+{{site.data.alerts.end}}
 
 Minio will be deployed as a Kubernetes service providing Object Store S3-compatile backend for other Kubernetes Services (Loki, Tempo, Mimir, etc. )
 
