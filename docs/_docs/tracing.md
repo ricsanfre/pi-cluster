@@ -219,12 +219,12 @@ The following secret need to be created:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tempo-minio-secret
+  name: tempo-s3-secret
   namespace: tempo
 type: Opaque
 data:
-  MINIO_ACCESS_KEY_ID: < minio_tempo_user | b64encode >
-  MINIO_SECRET_ACCESS_KEY: < minio_tempo_key | b64encode >
+  S3_ACCESS_KEY_ID: < minio_tempo_user | b64encode >
+  S3_SECRET_ACCESS_KEY: < minio_tempo_key | b64encode >
 ```
 
 And the following Helm values has to be provided:
@@ -257,8 +257,8 @@ storage:
       bucket: k3s-tempo
       endpoint: "${S3_SERVER}:9091"
       region: eu-west-1
-      access_key: ${MINIO_ACCESS_KEY_ID}
-      secret_key: ${MINIO_SECRET_ACCESS_KEY}
+      access_key: ${S3_ACCESS_KEY_ID}
+      secret_key: ${S3_SECRET_ACCESS_KEY}
       insecure: false
 
 # Configure distributor
@@ -271,16 +271,16 @@ distributor:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 # Configure ingester
 ingester:
   # Enable environment variables in config file
@@ -288,16 +288,16 @@ ingester:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 # Configure compactor
 compactor:
   # Enable environment variables in config file
@@ -305,16 +305,16 @@ compactor:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 # Configure querier
 querier:
   # Enable environment variables in config file
@@ -322,16 +322,16 @@ querier:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 # Configure query-frontend
 queryFrontend:
   # Enable environment variables in config file
@@ -339,16 +339,16 @@ queryFrontend:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Enable metrics-generator so TraceQL metrics queries such as rate() work
 metricsGenerator:
@@ -363,16 +363,16 @@ metricsGenerator:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: tempo-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Disable built-in S3 server subchart
 minio:

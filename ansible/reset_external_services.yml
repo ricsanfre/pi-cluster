@@ -57,7 +57,7 @@
         validate_certs: "{{ not (enable_letsencrypt | default(false)) }}"
         ca_cert: "{{ vault_cacert | default(omit) }}"
         mount_point: "secret"
-        path: "minio/root"
+        path: "s3/root"
       register: minio_vault_secret
       no_log: true
 

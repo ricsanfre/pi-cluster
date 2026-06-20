@@ -42,8 +42,8 @@ loki:
     s3:
       endpoint: "https://${S3_SERVER}:9091"
       region: eu-west-1
-      secretAccessKey: $${MINIO_SECRET_ACCESS_KEY}
-      accessKeyId: $${MINIO_ACCESS_KEY_ID}
+      secretAccessKey: $${S3_SECRET_ACCESS_KEY}
+      accessKeyId: $${S3_ACCESS_KEY_ID}
       s3ForcePathStyle: true
       insecure: false
       http_config:
@@ -76,16 +76,16 @@ write:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Configuration for the read
 read:
@@ -102,16 +102,16 @@ read:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Configuration for the backend
 backend:
@@ -128,16 +128,16 @@ backend:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Configuration for the gateway
 gateway:

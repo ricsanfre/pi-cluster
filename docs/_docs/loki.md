@@ -370,12 +370,12 @@ The following secret need to be created:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: loki-minio-secret
+  name: loki-s3-secret
   namespace: loki
 type: Opaque
 data:
-  MINIO_ACCESS_KEY_ID: < minio_loki_user | b64encode >
-  MINIO_SECRET_ACCESS_KEY: < minio_loki_key | b64encode >
+  S3_ACCESS_KEY_ID: < minio_loki_user | b64encode >
+  S3_SECRET_ACCESS_KEY: < minio_loki_key | b64encode >
 ```
 
 And the following Helm values has to be provided:
@@ -405,8 +405,8 @@ loki:
     s3:
       endpoint: s3.picluster.ricsanfre.com:9091
       region: eu-west-1
-      secretAccessKey: ${MINIO_SECRET_ACCESS_KEY}
-      accessKeyId: ${MINIO_ACCESS_KEY_ID}
+      secretAccessKey: ${S3_SECRET_ACCESS_KEY}
+      accessKeyId: ${S3_ACCESS_KEY_ID}
       s3ForcePathStyle: true
       insecure: false
       http_config:
@@ -440,16 +440,16 @@ write:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Configuration for the read
 read:
@@ -466,16 +466,16 @@ read:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Configuration for the backend
 backend:
@@ -492,16 +492,16 @@ backend:
   extraArgs:
     - '-config.expand-env=true'
   extraEnv:
-    - name: MINIO_ACCESS_KEY_ID
+    - name: S3_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_ACCESS_KEY_ID
-    - name: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: loki-minio-secret
-          key: MINIO_SECRET_ACCESS_KEY
+          name: loki-s3-secret
+          key: S3_SECRET_ACCESS_KEY
 
 # Configuration for the gateway
 gateway:

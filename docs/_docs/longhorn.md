@@ -434,7 +434,7 @@ See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-back
     apiVersion: v1
     kind: Secret
     metadata:
-      name: longhorn-minio-secret
+      name: longhorn-s3-secret
       namespace: longhorn-system
     type: Opaque
     data:
@@ -482,7 +482,7 @@ See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-back
     Set **Credential Secret** to the secret resource created before:
 
     ```
-    longhorn-minio-secret
+    longhorn-s3-secret
     ```
 
     ![longhorn-backup-settings](/assets/img/longhorn_backup_settings.png)
@@ -499,7 +499,7 @@ See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-back
     # Longhorn v1.8.0+ backup store configuration
     defaultBackupStore:
       backupTarget: "s3://k3s-longhorn@eu-west-1/"
-      backupTargetCredentialSecret: "longhorn-minio-secret"
+      backupTargetCredentialSecret: "longhorn-s3-secret"
       pollInterval: "300"
     ```
 

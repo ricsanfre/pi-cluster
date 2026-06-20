@@ -254,7 +254,7 @@ S3, storage server, like Minio need to be configured.
   apiVersion: v1
   kind: Secret
   metadata:
-    name: cnpg-minio-secret
+    name: cnpg-s3-secret
     namespace: database
   stringData:
     AWS_ACCESS_KEY_ID: "myuser"
@@ -295,10 +295,10 @@ S3, storage server, like Minio need to be configured.
         endpointURL: https://s3.ricsanfre.com:9091
         s3Credentials:
           accessKeyId:
-            name: cnpg-minio-secret
+            name: cnpg-s3-secret
             key: AWS_ACCESS_KEY_ID
           secretAccessKey:
-            name: cnpg-minio-secret
+            name: cnpg-s3-secret
             key: AWS_SECRET_ACCESS_KEY
       retentionPolicy: "30d"
   ```
