@@ -233,6 +233,7 @@ resource "random_string" "password_first_char" {
 
   length  = 1
   special = false
+  numeric = false
   upper   = true
   lower   = true
 }
