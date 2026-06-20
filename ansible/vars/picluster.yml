@@ -133,7 +133,7 @@ rustfs_cli_version: "v0.1.20"
 
 # RustFS data dirs
 rustfs_server_datadirs:
-  - /storage/minio
+  - /storage/rustfs
 
 # RustFS admin credentials
 # NOTE: Credentials are loaded from Vault on-demand in deploy_rustfs.yml
