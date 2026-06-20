@@ -28,7 +28,7 @@ The scope of this project is to build a hybrid x86/ARM kubernetes cluster at hom
 
 As part of the project, the goal is to use a lightweight Kubernetes flavor based on [K3S](https://k3s.io/) and deploy cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
-- S3 Object storage, [Minio](https://min.io/).
+- S3 Object storage, [RustFS](https://github.com/rustfs/rustfs).
 - Backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/).
 - Certificate management, [Cert-Manager](https://cert-manager.io).
 - Secrets Management solution with [Vault](https://www.vaultproject.io/) and [External Secrets](https://external-secrets.io/)
@@ -130,8 +130,8 @@ The following picture shows the set of opensource solutions used so far in the c
         <td>Kubernetes distributed block storage</td>
     </tr>
     <tr>
-        <td><img width="20" src="docs/assets/img/logos/minio.svg"></td>
-        <td><a href="https://min.io/">Minio</a></td>
+        <td><img width="20" src="docs/assets/img/logos/rustfs.svg"></td>
+        <td><a href="https://github.com/rustfs/rustfs">RustFS</a></td>
         <td>S3 Object Storage solution</td>
     </tr>
     <tr>
@@ -241,6 +241,7 @@ The following technologies have been used in previous releases of PiCluster but 
 | <img width="32" src="docs/assets/img/logos/haproxy.svg" > | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer. Replaced by Kube-VIP |
 | <img width="32" src="docs/assets/img/logos/nginx.svg" > | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)  | Kubernetes Ingress Controller. Replaced by Envoy Gateway |
 | <img width="32" src="docs/assets/img/logos/OAuth2-proxy.svg" > | [OAuth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/)  | OAuth2.0 Proxy. Replaced by Envoy Gateway with OIDC integration with Keycloak |
+| <img width="20" src="docs/assets/img/logos/minio.svg" > | [MinIO](https://min.io) | S3 Object Storage. Replaced by RustFS after progressive degradation of open-source community edition |
 
 
 
@@ -276,10 +277,10 @@ There is another list of services that I have decided to run outside the kuberne
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| <img width="60" src="docs/assets/img/logos/minio.svg"> |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
+| <img width="60" src="docs/assets/img/logos/rustfs.svg"> |[RustFS](https://github.com/rustfs/rustfs) | S3 Object Store | Cluster Backup  |
 | <img width="32" src="docs/assets/img/logos/vault.svg"> |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 
-Vault and Minio services are running in one of the cluster nodes, `node1`, to keep them locally accessible to the cluster and to avoid exposing them to the public internet.
+Vault and RustFS services are running in one of the cluster nodes, `node1`, to keep them locally accessible to the cluster and to avoid exposing them to the public internet.
 
 ## Cluster architecture and hardware
 
