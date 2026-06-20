@@ -77,7 +77,7 @@ The backup architecture for the Kubernetes cluster is the following:
 
   {{site.data.alerts.note}}
 
-  The S3 server is installed as a stand-alone service and configured as described in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
+  The S3 server is installed as a stand-alone service and configured as described in ["PiCluster - S3 Backup Backend"](/docs/rustfs/).
 
   {{site.data.alerts.end}}
 
@@ -97,7 +97,7 @@ See how to enable CSI Snapshot using Longhorn in [PiCluster- Longhorn - Configur
 
 ### S3 Server Installation
 
-See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
+See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/rustfs/).
 
 ### Configuring S3 bucket and user for Velero
 
