@@ -1,6 +1,6 @@
 ---
 title: S3 Backup Backend (RustFS)
-permalink: /docs/s3-backup/
+permalink: /docs/rustfs/
 description: How to deploy a RustFS S3 object storage server in Bare-metal environment as backup backend for our Raspberry Pi Kubernetes Cluster.
 last_modified_at: "19-06-2026"
 ---
@@ -9,7 +9,7 @@ last_modified_at: "19-06-2026"
 
 RustFS replaces MinIO as the S3 backup backend for the PiCluster. MinIO was deprecated after a progressive degradation of its open-source community edition — Admin UI removal (Feb 2025), binary release discontinuation (Oct 2025), and repository archival with documentation removal (Apr 2026).
 
-The legacy MinIO documentation is preserved at ["S3 Backup Backend (MinIO - Deprecated)"](/docs/s3-backup-minio/) with a full deprecation timeline.
+The legacy MinIO documentation is preserved at ["S3 Backup Backend (MinIO - Deprecated)"](/docs/s3-backup/) with a full deprecation timeline.
 
 {{site.data.alerts.end}}
 
@@ -512,7 +512,7 @@ User secrets can be sourced from HashiCorp Vault using the `hashicorp/vault` pro
 
 #### Data-driven pattern
 
-For managing multiple buckets, users, and policies at scale, resource definitions can be loaded from JSON files stored in a `resources/` directory. This keeps Terraform HCL thin and makes adding new services a matter of dropping in a JSON file — the same pattern described in the [PiCluster S3 Backup Backend documentation](/docs/s3-backup/).
+For managing multiple buckets, users, and policies at scale, resource definitions can be loaded from JSON files stored in a `resources/` directory. This keeps Terraform HCL thin and makes adding new services a matter of dropping in a JSON file.
 
 The full Terraform implementation for this cluster is available in the repository at [`terraform/minio/`](https://github.com/ricsanfre/pi-cluster/tree/master/terraform/minio), including the provider configuration, resource definitions, and the data-driven JSON resource files for all cluster services (Velero, Loki, Tempo, Longhorn, Restic, and Barman/CNPG).
 

@@ -1,6 +1,6 @@
 ---
 title: S3 Backup Backend (MinIO - Deprecated)
-permalink: /docs/s3-backup-minio/
+permalink: /docs/s3-backup/
 description: How to deploy a Minio S3 object storage server in Bare-metal environment as backup backend for our Raspberry Pi Kubernetes Cluster.
 last_modified_at: "20-06-2026"
 ---
@@ -17,7 +17,7 @@ These changes made MinIO no longer viable for self-hosted homelab environments. 
 
 MinIO has been deprecated and this documentation is not updated anymore.
 
-See the replacement solution documentation: ["S3 Backup Backend (RustFS)"](/docs/s3-backup/).
+See the replacement solution documentation: ["S3 Backup Backend (RustFS)"](/docs/rustfs/).
 
 {{site.data.alerts.end}}
 

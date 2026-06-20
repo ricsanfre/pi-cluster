@@ -369,11 +369,11 @@ Longhorn support two types of backup: incremental and full-backup
 
 For configuring Longhorn's backup capability, it is needed to define a *backup target*, external storage system where longhorn volumes are backed to and restore from. Longhorn support NFS and S3 based backup targets.
 
-[RustFS](https://github.com/rustfs/rustfs) is used as the S3-compatible backend. See further details about installing the external S3 server for the cluster in: ["PiCluster - S3 Backup Backend"](/docs/s3-backup/)
+[RustFS](https://github.com/rustfs/rustfs) is used as the S3-compatible backend. See further details about installing the external S3 server for the cluster in: ["PiCluster - S3 Backup Backend"](/docs/rustfs/)
 
 ##### Install S3 backup server
 
-See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
+See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/rustfs/).
 
 ##### Configure S3 bucket and user
 

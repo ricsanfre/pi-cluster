@@ -26,7 +26,7 @@ First S3 backupstore need to be configured
 
 ### Install S3 backup server
 
-See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
+See installation instructions in ["PiCluster - S3 Backup Backend"](/docs/rustfs/).
 
 ### Configure Restic bucket and user
 

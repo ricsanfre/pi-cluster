@@ -61,7 +61,7 @@ Grafana Tempo needs to store two different types of data: chunks and indexes. Bo
 Tempo helm chart is able to install an S3 service as a subchart, but its installation will be disabled and the S3 Storage Service already deployed in the cluster will be used as Tempo's backend. 
 
 As part of the S3 Storage Service installation, Tempo's S3 bucket, policy and user is already configured.
-See documentation: ["PiCluster - S3 Backup Backend"](/docs/s3-backup/).
+See documentation: ["PiCluster - S3 Backup Backend"](/docs/rustfs/).
 
 {{site.data.alerts.end}}
 
