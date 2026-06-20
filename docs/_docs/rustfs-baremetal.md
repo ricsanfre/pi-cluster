@@ -5,6 +5,14 @@ description: How to deploy a RustFS S3 object storage server in Bare-metal envir
 last_modified_at: "19-06-2026"
 ---
 
+{{site.data.alerts.note}} **MinIO migration**
+
+RustFS replaces MinIO as the S3 backup backend for the PiCluster. MinIO was deprecated after a progressive degradation of its open-source community edition — Admin UI removal (Feb 2025), binary release discontinuation (Oct 2025), and repository archival with documentation removal (Apr 2026).
+
+The legacy MinIO documentation is preserved at ["S3 Backup Backend (MinIO - Deprecated)"](/docs/s3-backup-minio/) with a full deprecation timeline.
+
+{{site.data.alerts.end}}
+
 RustFS can be deployed as a Kubernetes service or as stand-alone in bare-metal environment. Since I want to use the S3 Server for backing-up/restoring the cluster itself, I will go with a bare-metal installation, considering RustFS as an external service in Kubernetes.
 
 [RustFS](https://github.com/rustfs/rustfs) is a high-performance, S3-compatible distributed object storage system written in Rust. It is fully open-source and designed for low resource consumption, making it a good fit for ARM64-based homelab clusters.
@@ -27,9 +35,9 @@ RustFS installation and configuration tasks can be automated using the Ansible r
 -   Step 2. Create RustFS S3 storage directory
 
     ```shell
-    sudo mkdir /storage/minio
-    chown -R rustfs:rustfs /storage/minio
-    chmod -R 750 /storage/minio
+    sudo mkdir /storage/rustfs
+    chown -R rustfs:rustfs /storage/rustfs
+    chmod -R 750 /storage/rustfs
     ```
 
 -   Step 3. Create RustFS config directories
@@ -81,7 +89,7 @@ RustFS installation and configuration tasks can be automated using the Ansible r
     RUSTFS_SECRET_KEY="<admin_user_passwd>"
 
     # RustFS data volumes
-    RUSTFS_VOLUMES="/storage/minio"
+    RUSTFS_VOLUMES="/storage/rustfs"
 
     # RustFS listen addresses
     RUSTFS_ADDRESS=":9091"
@@ -99,7 +107,7 @@ RustFS installation and configuration tasks can be automated using the Ansible r
 
     -   RustFS S3 API Port 9091 (`RUSTFS_ADDRESS`)
     -   RustFS Console Port: 9092 (`RUSTFS_CONSOLE_ADDRESS`)
-    -   RustFS Storage data dir (`RUSTFS_VOLUMES`): `/storage/minio`
+    -   RustFS Storage data dir (`RUSTFS_VOLUMES`): `/storage/rustfs`
     -   Admin credentials (`RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY`)
     -   Web console enabled (`RUSTFS_CONSOLE_ENABLE`)
     -   Log level: `error` (`RUSTFS_OBS_LOGGER_LEVEL`)
