@@ -152,7 +152,7 @@
         state: absent
         path: "{{ item }}"
       with_items:
-        - /storage/minio/
+        - /storage/rustfs/
         - /etc/rustfs/
         - /var/log/rustfs/
         - /usr/local/bin/rustfs
