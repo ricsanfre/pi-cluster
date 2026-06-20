@@ -17,12 +17,3 @@
   value:
     name: KAFKA_PROPERTIES_FILE
     value: /etc/kafdrop/kafka.properties
-
-- op: add
-  path: /spec/template/spec/containers/0/env/-
-  value:
-    name: KAFKA_SASL_JAAS_CONFIG
-    valueFrom:
-      secretKeyRef:
-        name: kafdrop-jaas-config
-        key: plain-jaas.conf
