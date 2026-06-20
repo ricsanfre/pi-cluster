@@ -2,7 +2,7 @@
 title: What is this project about?
 permalink: /docs/home/
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible, Terraform and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "15-03-2026"
+last_modified_at: "20-06-2026"
 ---
 
 
@@ -12,7 +12,7 @@ The main goal of  this project is to create a kubernetes cluster at home using A
 
 The project scope includes the automatic installation and configuration of a lightweight Kubernetes flavor based on [K3S](https://k3s.io/), and deployment of cluster basic services such as:
 - Distributed block storage for POD's persistent volumes, [LongHorn](https://longhorn.io/).
-- S3 Object storage, [Minio](https://min.io/).
+- S3 Object storage, [RustFS](https://github.com/rustfs/rustfs).
 - Backup/restore solution for the cluster, [Velero](https://velero.io/) and [Restic](https://restic.net/). 
 - Certificate management, [Cert-Manager](https://cert-manager.io).
 - Secrets Management solution with [Vault](https://www.vaultproject.io/) and [External Secrets](https://external-secrets.io/)
@@ -65,7 +65,7 @@ The following picture shows the set of opensource solutions used for building th
 | ![kube-vip-icon](/assets/img/logos/kube-vip-icon.png){:width="32"} | [Kube-VIP](https://kube-vip.io/)   | Kubernetes API Load-balancer                                       |
 | ![envoy-icon](/assets/img/logos/envoy.svg){:width="32"}     | [Envoy Gateway](https://gateway.envoyproxy.io/)  | Kubernetes Gateway API Controller   |
 | ![longhorn-icon](/assets/img/logos/longhorn.svg){:width="32"} | [Longhorn](https://longhorn.io/)    | Kubernetes distributed block storage |
-| ![minio-icon](/assets/img/logos/minio.svg){:width="20"}     | [Minio](https://min.io/)              | S3 Object Storage solutio            |
+| ![rustfs-icon](/assets/img/logos/rustfs.svg){:width="20"}     | [RustFS](https://github.com/rustfs/rustfs)              | S3 Object Storage solution            |
 | ![cert-manager-icon](/assets/img/logos/cert-manager.svg){:width="32"} | [Cert-Manager](https://cert-manager.io) | TLS Certificates management  |
 | ![vault-icon](/assets/img/logos/vault.svg){:width="32"} | [Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management solution |
 | ![external-secrets-icon](/assets/img/logos/external-secrets.svg){:width="32"} | [External Secrets Operator](https://external-secrets.io/) | Sync Kubernetes Secrets from Hashicorp |
@@ -101,6 +101,7 @@ The following technologies have been used in previous releases of PiCluster but 
 | ![haproxy-icon](/assets/img/logos/haproxy.svg){:width="32"} | [HAProxy](https://www.haproxy.org/)   | Kubernetes API Load-balancer. Replaced by Kube-VIP |
 | ![nginx-icon](/assets/img/logos/nginx.svg){:width="32"}     | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)  | Kubernetes Ingress Controller. Replaced by Envoy Gateway |
 | ![OAuth2-proxy-icon](/assets/img/logos/OAuth2-proxy.svg){:width="32"}     | [OAuth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/)  | OAuth2.0 Proxy. Replaced by Envoy Gateway with OIDC integration with Keycloak |
+| ![minio-icon](/assets/img/logos/minio.svg){:width="20"} | [MinIO](https://min.io) | S3 Object Storage. Replaced by RustFS after progressive degradation of open-source community edition (Admin UI removal Feb 2025, binary discontinuation Oct 2025, repository archival Apr 2026) |
 {: .table .border-dark }
 
 
@@ -140,11 +141,11 @@ There is another list of services that I have decided to run outside the kuberne
 
 |  |External Service | Resource | Purpose |
 | --- | --- | --- | --- |
-| ![minio-icon](/assets/img/logos/minio.svg){:width="20"} |[Minio](https://min.io) | S3 Object Store | Cluster Backup  |
+| ![rustfs-icon](/assets/img/logos/rustfs.svg){:width="20"} |[RustFS](https://github.com/rustfs/rustfs) | S3 Object Store | Cluster Backup  |
 | ![vault-icon](/assets/img/logos/vault.svg){:width="32"} |[Hashicorp Vault](https://www.vaultproject.io/) | Secrets Management | Cluster secrets management |
 {: .table .border-dark .align-middle }
 
-Vault and Minio services are running in one of the cluster nodes, `node1`, to keep them locally accessible to the cluster and to avoid exposing them to the public internet.
+Vault and RustFS services are running in one of the cluster nodes, `node1`, to keep them locally accessible to the cluster and to avoid exposing them to the public internet.
 
 ## What I have built so far
 
@@ -199,7 +200,8 @@ From software perspective, I have developed the following:
    | [ricsanfre.iscsi_initiator](https://galaxy.ansible.com/ricsanfre/iscsi_initiator)| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator) |
    | [ricsanfre.k8s_cli](https://galaxy.ansible.com/ricsanfre/k8s_cli)| Install kubectl and Helm utilities | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-k8s_cli) |
    | [ricsanfre.fluentbit](https://galaxy.ansible.com/ricsanfre/fluentbit)| Configure fluentbit | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-fluentbit) |
-   | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio)| Configure Minio S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
+   | [ricsanfre.rustfs](https://galaxy.ansible.com/ricsanfre/rustfs)| Configure RustFS S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-rustfs) |
+   | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio)| Configure MinIO S3 server (legacy) | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
    | [ricsanfre.backup](https://galaxy.ansible.com/ricsanfre/backup)| Configure Restic | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-backup) |
    | [ricsanfre.vault](https://galaxy.ansible.com/ricsanfre/vault)| Configure Hashicorp Vault | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-vault) |
    {: .table .border-dark } 
@@ -236,7 +238,7 @@ The software used and the latest version tested of each component
 | Service Mesh | Istio | v1.29.0 | Helm chart version: 1.29.0 |
 | Service Proxy | Ingress NGINX | v1.14.3 | Helm chart version: 4.14.3 |
 | Storage | Longhorn | v1.11.0 | Helm chart version: 1.11.0 |
-| Storage | Minio | RELEASE.2024-12-18T13-15-44Z | Helm chart version: 5.4.0 |
+| Storage | Longhorn | v1.12.0 | Helm chart version: 1.12.0 |
 | TLS Certificates | Certmanager | v1.19.4 | Helm chart version: v1.19.4  |
 | Logging | ECK Operator |  3.3.1 | Helm chart version: 3.3.1 |
 | Logging | Elastic Search | 8.19.12 | Deployed with ECK Operator |
@@ -253,7 +255,7 @@ The software used and the latest version tested of each component
 | Monitoring | Prometheus Elasticsearch Exporter | v1.10.0 | Helm chart version: prometheus-elasticsearch-exporter-7.2.1 |
 | Monitoring | Grafana | 12.3.1 | Helm chart version: 10.5.15 |
 | Tracing | Grafana Tempo | 2.9.0 | Helm chart: tempo-distributed (v1.61.3) |
-| Backup | Minio External (self-hosted) | RELEASE.2025-09-07T16-13-09Z | |
+| Backup | RustFS External (self-hosted) | 1.0.0-beta.7 | |
 | Backup | Restic | 0.18.1 | |
 | Backup | Velero | 1.17.1 | Helm chart version: 11.4.0 |
 | Secrets Management | Hashicorp Vault | 1.21.4 | |
