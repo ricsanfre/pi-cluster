@@ -63,6 +63,7 @@
 - title: Backup
   docs:
   - s3-backup
+  - rustfs
   - restic
   - backup
 - title: GitOps
