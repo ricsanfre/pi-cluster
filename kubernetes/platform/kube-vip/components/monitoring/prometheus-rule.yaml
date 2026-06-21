@@ -11,7 +11,7 @@ spec:
   - name: kube-vip.rules
     rules:
     - alert: KubeVipMetricsMissing
-      expr: absent(kube_vip_is_leader)
+      expr: absent(kube_vip_build_info)
       for: 2m
       labels:
         severity: critical
@@ -19,38 +19,29 @@ spec:
         summary: "Kube-vip metrics are not being reported"
         description: "Prometheus is not receiving metrics from any kube-vip pod. All kube-vip instances may be down or unreachable. The control plane VIP is unavailable."
 
-    - alert: KubeVipNoLeader
-      expr: sum(kube_vip_is_leader) == 0
-      for: 1m
-      labels:
-        severity: critical
-      annotations:
-        summary: "No kube-vip leader elected"
-        description: "No control plane node holds the Virtual IP. The Kubernetes API server is unreachable via the VIP address."
-
-    - alert: KubeVipMultipleLeaders
-      expr: sum(kube_vip_is_leader) > 1
-      for: 30s
-      labels:
-        severity: critical
-      annotations:
-        summary: "Kube-vip split-brain detected"
-        description: "{{ $value }} control plane nodes hold the Virtual IP simultaneously, causing ARP conflicts and API server connectivity issues."
-
-    - alert: KubeVipFlappingLeader
-      expr: increase(kube_vip_leader_election_transitions_total[5m]) > 3
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Kube-vip leadership is unstable"
-        description: "{{ $value | humanize }} leadership transitions occurred for lease {{ $labels.lease_name }} in the last 5 minutes. Check network latency between control plane nodes and physical host health."
-
     - alert: KubeVipPodDown
-      expr: up{job="kube-vip"} == 0
+      expr: up{job="kube-system/kube-vip"} == 0
       for: 5m
       labels:
         severity: warning
       annotations:
         summary: "Kube-vip metrics scrape failing on {{ $labels.instance }}"
         description: "The kube-vip metrics endpoint on {{ $labels.instance }} is not responding. The pod may be down or the Prometheus metrics server is failing on this node."
+
+    - alert: KubeVipDaemonSetUnavailable
+      expr: kube_daemonset_status_number_unavailable{namespace="kube-system", daemonset="kube-vip"} > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Kube-vip DaemonSet has unavailable pods"
+        description: "{{ $value }} kube-vip pod(s) are not available on control plane nodes. The API server VIP may fail over if the leader is affected."
+
+    - alert: KubeVipDaemonSetMisscheduled
+      expr: kube_daemonset_status_number_misscheduled{namespace="kube-system", daemonset="kube-vip"} > 0
+      for: 10m
+      labels:
+        severity: info
+      annotations:
+        summary: "Kube-vip pods running on unexpected nodes"
+        description: "{{ $value }} kube-vip pod(s) are scheduled on nodes that should not run the DaemonSet. Check node affinity rules."

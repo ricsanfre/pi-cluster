@@ -22,11 +22,11 @@ spec:
         "panels": [
             {
                 "id": 1,
-                "title": "VIP Leader Count",
+                "title": "Pods Scrapeable",
                 "type": "stat",
                 "gridPos": {
                     "h": 3,
-                    "w": 8,
+                    "w": 6,
                     "x": 0,
                     "y": 0
                 },
@@ -34,10 +34,156 @@ spec:
                     "type": "prometheus",
                     "uid": "${datasource}"
                 },
-                "description": "Number of control plane nodes currently holding the VIP. Should be exactly 1.",
+                "description": "Number of kube-vip pods successfully scraped by Prometheus. Should equal the number of control plane nodes (3).",
                 "targets": [
                     {
-                        "expr": "sum(kube_vip_is_leader)",
+                        "expr": "count(up{job=\"kube-system/kube-vip\"} == 1)",
+                        "instant": true,
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "red",
+                                    "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "green",
+                                    "value": 3
+                                }
+                            ]
+                        }
+                    }
+                },
+                "options": {
+                    "textMode": "value",
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "center"
+                }
+            },
+            {
+                "id": 2,
+                "title": "Pods Down",
+                "type": "stat",
+                "gridPos": {
+                    "h": 3,
+                    "w": 6,
+                    "x": 6,
+                    "y": 0
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "description": "Number of kube-vip pods whose metrics endpoint is unreachable. Should be 0.",
+                "targets": [
+                    {
+                        "expr": "count(up{job=\"kube-system/kube-vip\"} == 0) OR vector(0)",
+                        "instant": true,
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 1
+                                }
+                            ]
+                        }
+                    }
+                },
+                "options": {
+                    "textMode": "value",
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "center"
+                }
+            },
+            {
+                "id": 3,
+                "title": "DaemonSet Ready",
+                "type": "stat",
+                "gridPos": {
+                    "h": 3,
+                    "w": 6,
+                    "x": 12,
+                    "y": 0
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "description": "Number of DaemonSet pods currently ready. Should match Desired (3).",
+                "targets": [
+                    {
+                        "expr": "kube_daemonset_status_number_ready{namespace=\"kube-system\", daemonset=\"kube-vip\"}",
+                        "instant": true,
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "red",
+                                    "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "green",
+                                    "value": 3
+                                }
+                            ]
+                        }
+                    }
+                },
+                "options": {
+                    "textMode": "value",
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "center"
+                }
+            },
+            {
+                "id": 4,
+                "title": "DaemonSet Desired",
+                "type": "stat",
+                "gridPos": {
+                    "h": 3,
+                    "w": 6,
+                    "x": 18,
+                    "y": 0
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "description": "Number of nodes that should run a kube-vip pod. Should be 3 (one per control plane node).",
+                "targets": [
+                    {
+                        "expr": "kube_daemonset_status_desired_number_scheduled{namespace=\"kube-system\", daemonset=\"kube-vip\"}",
                         "instant": true,
                         "refId": "A"
                     }
@@ -53,11 +199,7 @@ spec:
                                 },
                                 {
                                     "color": "green",
-                                    "value": 1
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 2
+                                    "value": 3
                                 }
                             ]
                         }
@@ -71,29 +213,34 @@ spec:
                 }
             },
             {
-                "id": 2,
-                "title": "Current Leader",
-                "type": "stat",
+                "id": 5,
+                "title": "Pod Status Detail",
+                "type": "table",
                 "gridPos": {
-                    "h": 3,
-                    "w": 16,
-                    "x": 8,
-                    "y": 0
+                    "h": 7,
+                    "w": 24,
+                    "x": 0,
+                    "y": 3
                 },
                 "datasource": {
                     "type": "prometheus",
                     "uid": "${datasource}"
                 },
-                "description": "The control plane node currently holding the Virtual IP.",
+                "description": "Per-pod metrics scrape status. Value 1 = healthy, 0 = scrape failing.",
                 "targets": [
                     {
-                        "expr": "kube_vip_is_leader == 1",
-                        "legendFormat": "{{node}}",
+                        "expr": "up{job=\"kube-system/kube-vip\"}",
+                        "instant": true,
+                        "format": "table",
                         "refId": "A"
                     }
                 ],
                 "fieldConfig": {
                     "defaults": {
+                        "custom": {
+                            "align": "auto",
+                            "filterable": false
+                        },
                         "thresholds": {
                             "mode": "absolute",
                             "steps": [
@@ -106,118 +253,87 @@ spec:
                                     "value": 1
                                 }
                             ]
+                        },
+                        "mappings": [
+                            {
+                                "type": "value",
+                                "value": "1",
+                                "result": {
+                                    "text": "UP"
+                                }
+                            },
+                            {
+                                "type": "value",
+                                "value": "0",
+                                "result": {
+                                    "text": "DOWN"
+                                }
+                            }
+                        ]
+                    },
+                    "overrides": [
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "Value"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Status"
+                                },
+                                {
+                                    "id": "custom.cellOptions",
+                                    "value": {
+                                        "type": "color-background"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "instance"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Scrape Target"
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "pod"
+                            },
+                            "properties": [
+                                {
+                                    "id": "displayName",
+                                    "value": "Pod"
+                                }
+                            ]
                         }
-                    }
+                    ]
                 },
                 "options": {
-                    "textMode": "name",
-                    "colorMode": "background",
-                    "graphMode": "none",
-                    "justifyMode": "center"
+                    "showTypeIcons": false,
+                    "sortBy": [
+                        {
+                            "desc": false,
+                            "displayName": "Pod"
+                        }
+                    ]
                 }
             },
             {
-                "id": 3,
-                "title": "Leadership History per Node",
-                "type": "state-timeline",
+                "id": 6,
+                "title": "Build Info per Node",
+                "type": "table",
                 "gridPos": {
                     "h": 7,
                     "w": 24,
                     "x": 0,
-                    "y": 3
-                },
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "${datasource}"
-                },
-                "description": "Per-node leader status over time. Green indicates the node holds the VIP; blue indicates standby.",
-                "targets": [
-                    {
-                        "expr": "kube_vip_is_leader",
-                        "legendFormat": "{{node}}",
-                        "refId": "A"
-                    }
-                ],
-                "options": {
-                    "mergeValues": true,
-                    "showValue": "never",
-                    "alignValue": "center"
-                },
-                "fieldConfig": {
-                    "defaults": {
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "blue",
-                                    "value": 0
-                                },
-                                {
-                                    "color": "green",
-                                    "value": 1
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            {
-                "id": 4,
-                "title": "Leader Transitions",
-                "type": "timeseries",
-                "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 0,
-                    "y": 10
-                },
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "${datasource}"
-                },
-                "description": "Leadership transitions per lease over the preceding 5-minute rolling window. Plateaus indicate recent failover events; sustained elevated values indicate flapping.",
-                "targets": [
-                    {
-                        "expr": "increase(kube_vip_leader_election_transitions_total[5m])",
-                        "legendFormat": "lease: {{lease_name}}",
-                        "refId": "A"
-                    }
-                ],
-                "fieldConfig": {
-                    "defaults": {
-                        "unit": "short",
-                        "custom": {
-                            "drawStyle": "line",
-                            "lineInterpolation": "stepAfter",
-                            "fillOpacity": 20,
-                            "showPoints": "auto",
-                            "pointSize": 5
-                        }
-                    }
-                },
-                "options": {
-                    "legend": {
-                        "calcs": [
-                            "max",
-                            "sum"
-                        ],
-                        "displayMode": "table",
-                        "placement": "right",
-                        "showLegend": true
-                    },
-                    "tooltip": {
-                        "mode": "multi"
-                    }
-                }
-            },
-            {
-                "id": 5,
-                "title": "Build Info per Node",
-                "type": "table",
-                "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 12,
                     "y": 10
                 },
                 "datasource": {
