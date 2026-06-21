@@ -1,0 +1,56 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kube-vip-alerts
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  groups:
+  - name: kube-vip.rules
+    rules:
+    - alert: KubeVipMetricsMissing
+      expr: absent(kube_vip_is_leader)
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Kube-vip metrics are not being reported"
+        description: "Prometheus is not receiving metrics from any kube-vip pod. All kube-vip instances may be down or unreachable. The control plane VIP is unavailable."
+
+    - alert: KubeVipNoLeader
+      expr: sum(kube_vip_is_leader) == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "No kube-vip leader elected"
+        description: "No control plane node holds the Virtual IP. The Kubernetes API server is unreachable via the VIP address."
+
+    - alert: KubeVipMultipleLeaders
+      expr: sum(kube_vip_is_leader) > 1
+      for: 30s
+      labels:
+        severity: critical
+      annotations:
+        summary: "Kube-vip split-brain detected"
+        description: "{{ $value }} control plane nodes hold the Virtual IP simultaneously, causing ARP conflicts and API server connectivity issues."
+
+    - alert: KubeVipFlappingLeader
+      expr: increase(kube_vip_leader_changes_total[5m]) > 3
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Kube-vip leadership is unstable"
+        description: "{{ $value | humanize }} leadership changes occurred in the last 5 minutes. Check network latency between control plane nodes and physical host health."
+
+    - alert: KubeVipPodDown
+      expr: up{job="kube-vip"} == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Kube-vip metrics scrape failing on {{ $labels.instance }}"
+        description: "The kube-vip metrics endpoint on {{ $labels.instance }} is not responding. The pod may be down or the Prometheus metrics server is failing on this node."

@@ -4,6 +4,9 @@ namespace: kube-system
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: kube-vip-helm-values
     behavior: merge
