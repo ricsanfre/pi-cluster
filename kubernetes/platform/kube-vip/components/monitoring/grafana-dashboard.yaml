@@ -88,7 +88,7 @@ spec:
                 "targets": [
                     {
                         "expr": "kube_vip_is_leader == 1",
-                        "legendFormat": "{{instance}}",
+                        "legendFormat": "{{node}}",
                         "refId": "A"
                     }
                 ],
@@ -134,7 +134,7 @@ spec:
                 "targets": [
                     {
                         "expr": "kube_vip_is_leader",
-                        "legendFormat": "{{instance}}",
+                        "legendFormat": "{{node}}",
                         "refId": "A"
                     }
                 ],
@@ -175,11 +175,11 @@ spec:
                     "type": "prometheus",
                     "uid": "${datasource}"
                 },
-                "description": "Leadership changes per instance over the preceding 5-minute rolling window. Plateaus indicate recent failover events; sustained elevated values indicate flapping.",
+                "description": "Leadership transitions per lease over the preceding 5-minute rolling window. Plateaus indicate recent failover events; sustained elevated values indicate flapping.",
                 "targets": [
                     {
-                        "expr": "increase(kube_vip_leader_changes_total[5m])",
-                        "legendFormat": "{{instance}}",
+                        "expr": "increase(kube_vip_leader_election_transitions_total[5m])",
+                        "legendFormat": "lease: {{lease_name}}",
                         "refId": "A"
                     }
                 ],
@@ -212,8 +212,8 @@ spec:
             },
             {
                 "id": 5,
-                "title": "Gratuitous ARP Packet Rate",
-                "type": "timeseries",
+                "title": "Build Info per Node",
+                "type": "table",
                 "gridPos": {
                     "h": 8,
                     "w": 12,
@@ -224,33 +224,45 @@ spec:
                     "type": "prometheus",
                     "uid": "${datasource}"
                 },
-                "description": "Rate of gratuitous ARP packets sent by each kube-vip instance to advertise the VIP to the local network. A steady low rate (~0.3 pps per standby node) is normal; spikes indicate leadership transitions or ARP storms.",
+                "description": "Kube-vip version and build hash per node. Useful for verifying all control plane nodes run the same version.",
                 "targets": [
                     {
-                        "expr": "rate(kube_vip_arp_packets_total[$__rate_interval])",
-                        "legendFormat": "{{instance}}",
+                        "expr": "kube_vip_build_info",
+                        "instant": true,
+                        "format": "table",
                         "refId": "A"
                     }
                 ],
                 "fieldConfig": {
                     "defaults": {
-                        "unit": "pps",
                         "custom": {
-                            "drawStyle": "line",
-                            "lineInterpolation": "stepAfter",
-                            "showPoints": "never"
+                            "align": "auto",
+                            "filterable": false
                         }
-                    }
+                    },
+                    "overrides": [
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "Value"
+                            },
+                            "properties": [
+                                {
+                                    "id": "custom.hidden",
+                                    "value": true
+                                }
+                            ]
+                        }
+                    ]
                 },
                 "options": {
-                    "legend": {
-                        "displayMode": "table",
-                        "placement": "right",
-                        "showLegend": true
-                    },
-                    "tooltip": {
-                        "mode": "multi"
-                    }
+                    "showTypeIcons": false,
+                    "sortBy": [
+                        {
+                            "desc": false,
+                            "displayName": "node"
+                        }
+                    ]
                 }
             }
         ],

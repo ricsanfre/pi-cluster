@@ -38,13 +38,13 @@ spec:
         description: "{{ $value }} control plane nodes hold the Virtual IP simultaneously, causing ARP conflicts and API server connectivity issues."
 
     - alert: KubeVipFlappingLeader
-      expr: increase(kube_vip_leader_changes_total[5m]) > 3
+      expr: increase(kube_vip_leader_election_transitions_total[5m]) > 3
       for: 2m
       labels:
         severity: warning
       annotations:
         summary: "Kube-vip leadership is unstable"
-        description: "{{ $value | humanize }} leadership changes occurred in the last 5 minutes. Check network latency between control plane nodes and physical host health."
+        description: "{{ $value | humanize }} leadership transitions occurred for lease {{ $labels.lease_name }} in the last 5 minutes. Check network latency between control plane nodes and physical host health."
 
     - alert: KubeVipPodDown
       expr: up{job="kube-vip"} == 0
