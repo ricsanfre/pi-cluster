@@ -4,8 +4,12 @@ namespace: kube-system
 resources:
   - ../../base
 
-components:
-  - ../../components/monitoring
+# Disabling monitoring for now. Kube-vip is not providing metrics when configured only for control-plane vip.
+# Only metric available is `kube_vip_build_info`. Metrics polling tested with kube-vip v1.2
+# Leader election metrics are not available when configured for control-plane vip only. Metrics are available when configured for service vip.
+# See open issue: https://github.com/kube-vip/kube-vip/issues/115
+#components:
+#  - ../../components/monitoring
 
 configMapGenerator:
   - name: kube-vip-helm-values
