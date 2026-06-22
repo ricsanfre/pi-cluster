@@ -1,0 +1,19 @@
+# GrafanaDashboard — MongoDB Overview (Percona)
+# Imported from grafana.com dashboard ID 14901.
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: mongodb
+spec:
+  allowCrossNamespaceImport: true
+  folder: Databases
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 14901
+    revision: 5
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS
