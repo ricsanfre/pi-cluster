@@ -6,3 +6,4 @@ resources:
 
 components:
   - ../../components/anti-affinity
+  - ../../components/mongodb-monitor
