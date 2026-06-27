@@ -18,6 +18,9 @@ spec:
       - databases
   podMetricsEndpoints:
     - port: metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
       path: /metrics
       basicAuth:
         username:
