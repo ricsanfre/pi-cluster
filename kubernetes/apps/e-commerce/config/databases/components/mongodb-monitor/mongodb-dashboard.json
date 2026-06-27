@@ -4209,10 +4209,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$Datasource"
-        },
+        "datasource": null,
         "definition": "label_values(mongodb_connections_current, job)",
         "hide": 0,
         "includeAll": false,
@@ -4238,10 +4235,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$Datasource"
-        },
+        "datasource": null,
         "definition": "label_values(mongodb_connections_current{job=\"$job\"})",
         "hide": 0,
         "includeAll": false,
@@ -4269,10 +4263,7 @@
             "$__all"
           ]
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$Datasource"
-        },
+        "datasource": null,
         "definition": "label_values(mongodb_connections_current{}, cl_name)",
         "hide": 0,
         "includeAll": false,
@@ -4303,10 +4294,7 @@
             "$__all"
           ]
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$Datasource"
-        },
+        "datasource": null,
         "definition": "label_values(mongodb_connections_current{cl_name='$cl_name'}, rs_nm)",
         "hide": 0,
         "includeAll": true,
@@ -4337,10 +4325,7 @@
             "$__all"
           ]
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$Datasource"
-        },
+        "datasource": null,
         "definition": "label_values(mongodb_connections_current{cl_name='$cl_name',rs_nm='$rs_nm'},instance)",
         "hide": 0,
         "includeAll": true,
@@ -4371,10 +4356,7 @@
             "$__all"
           ]
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$Datasource"
-        },
+        "datasource": null,
         "definition": "label_values(mongodb_connections_current{cl_name='$cl_name',rs_nm='$rs_nm'},process_port)",
         "description": "Only applicable for process level metrics",
         "hide": 0,
