@@ -1,9 +1,9 @@
-# GrafanaDashboard — MongoDB Performance Overview
-# Uses the official MongoDB Ops Manager dashboard JSON, which matches
-# the automation agent metric format (mongodb_connections_*, mongodb_asserts_*,
-# mongodb_wiredTiger_*, mongodb_members_*, etc.).
-# The dashboard JSON is stored in a ConfigMap (mongodb-grafana-dashboard)
-# in the databases namespace.
+# GrafanaDashboard — MongoDB Monitoring
+# Uses the official MongoDB Atlas sample dashboard which matches
+# the automation agent metric format (mongodb_connections_*,
+# mongodb_asserts_*, mongodb_wiredTiger_*, mongodb_members_*, etc.).
+# Some panels may not populate if the metric name or label differs
+# slightly from the Atlas agent format.
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
@@ -18,6 +18,4 @@ spec:
   datasources:
     - datasourceName: prometheus
       inputName: DS_PROMETHEUS
-  configMapRef:
-    name: mongodb-grafana-dashboard-metrics
-    key: mongodb-metrics.json
+  url: https://raw.githubusercontent.com/mongodb/mongodb-atlas-kubernetes/main/docs/grafana/sample_dashboard.json
