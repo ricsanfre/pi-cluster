@@ -11,3 +11,4 @@ resources:
   - mongodb-externalsecrets.yaml
   - valkey-cluster.yaml
   - valkey-externalsecrets.yaml
+  - peerauthentication.yaml
