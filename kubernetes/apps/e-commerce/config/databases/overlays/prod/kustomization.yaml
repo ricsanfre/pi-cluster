@@ -6,3 +6,6 @@ resources:
 
 components:
   - ../../components/anti-affinity
+  - ../../components/istio
+  - ../../components/mongodb-monitor
+  - ../../components/valkey-monitor

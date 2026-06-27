@@ -1,0 +1,41 @@
+# PodMonitor — MongoDB metrics scraping
+# Scrapes the built-in Prometheus endpoint on the mongodb-agent
+# enabled by spec.prometheus on the MongoDBCommunity CR.
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: mongodb
+  namespace: databases
+  labels:
+    app: mongodb-svc
+spec:
+  selector:
+    matchLabels:
+      app: mongodb-svc
+  namespaceSelector:
+    matchNames:
+      - databases
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      basicAuth:
+        username:
+          name: mongodb-prometheus-secret
+          key: username
+        password:
+          name: mongodb-prometheus-secret
+          key: password
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_namespace]
+          action: replace
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          action: replace
+          targetLabel: kubernetes_pod_name
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          targetLabel: node_name
+        - sourceLabels: [__meta_kubernetes_pod_host_ip]
+          action: replace
+          targetLabel: node_ip

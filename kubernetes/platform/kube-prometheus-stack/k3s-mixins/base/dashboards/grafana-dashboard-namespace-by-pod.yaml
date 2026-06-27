@@ -175,7 +175,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down",
-                                            "url": "/d/7a18067ce943a40ae25454675c19ff5c/kubernetes-networking-pod?${datasource:queryparam}&var-cluster=${cluster}&var-namespace=${namespace}&var-pod=${__data.fields.Pod}"
+                                            "url": "/d/7a18067ce943a40ae25454675c19ff5c?${datasource:queryparam}&var-cluster=${cluster}&var-namespace=${namespace}&var-pod=${__data.fields.Pod}"
                                         }
                                     ]
                                 }

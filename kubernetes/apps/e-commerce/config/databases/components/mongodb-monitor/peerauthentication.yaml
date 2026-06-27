@@ -1,0 +1,19 @@
+# PeerAuthentication — PERMISSIVE mTLS for MongoDB metrics port
+# The databases-strict policy enforces STRICT mTLS on all pods in the
+# databases namespace. Since Prometheus scrapes from outside the mesh
+# and doesn't have a mesh identity, STRICT mode blocks the scrape.
+# This port-level PERMISSIVE exception follows the same pattern as
+# cnpg-webhook-permissive (for CloudNative-PG webhook port 9443).
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: mongodb-metrics-permissive
+  namespace: databases
+spec:
+  portLevelMtls:
+    "9216":
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app: mongodb-svc

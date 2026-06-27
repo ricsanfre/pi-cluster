@@ -105,7 +105,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down to pods",
-                                            "url": "/d/40597a704a610e936dc6ed374a7ce023/k8s-resources-windows-pod?${datasource:queryparam}&var-cluster=$cluster&var-namespace=$namespace&var-pod=${__data.fields.Pod}"
+                                            "url": "/d/40597a704a610e936dc6ed374a7ce023?${datasource:queryparam}&var-cluster=$cluster&var-namespace=$namespace&var-pod=${__data.fields.Pod}"
                                         }
                                     ]
                                 }
@@ -298,7 +298,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down to pods",
-                                            "url": "/d/40597a704a610e936dc6ed374a7ce023/k8s-resources-windows-pod?${datasource:queryparam}&var-cluster=$cluster&var-namespace=$namespace&var-pod=${__data.fields.Pod}"
+                                            "url": "/d/40597a704a610e936dc6ed374a7ce023?${datasource:queryparam}&var-cluster=$cluster&var-namespace=$namespace&var-pod=${__data.fields.Pod}"
                                         }
                                     ]
                                 }

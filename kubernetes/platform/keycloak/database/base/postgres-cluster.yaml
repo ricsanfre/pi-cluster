@@ -34,6 +34,11 @@ spec:
 
   monitoring:
     enablePodMonitor: true
+    podMonitorRelabelings:
+      - sourceLabels: [__meta_kubernetes_namespace]
+        targetLabel: namespace
+      - sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
 
   backup:
     barmanObjectStore:

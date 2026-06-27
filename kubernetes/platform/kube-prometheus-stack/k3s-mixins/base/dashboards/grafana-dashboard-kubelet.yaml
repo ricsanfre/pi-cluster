@@ -123,7 +123,7 @@ spec:
                             "type": "prometheus",
                             "uid": "${datasource}"
                         },
-                        "expr": "sum(kubelet_running_containers{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"})",
+                        "expr": "sum(kubelet_running_containers{cluster=\"$cluster\", job=\"kubelet\", container_state=\"running\", instance=~\"$instance\"})",
                         "instant": true
                     }
                 ],

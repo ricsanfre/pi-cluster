@@ -1,0 +1,21 @@
+# GrafanaDashboard — Valkey/Redis overview
+# Imported from grafana.com dashboard ID 11835.
+# Works with the renamed valkey_* -> redis_* metrics
+# from the metricRelabelings in the PodMonitor.
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: valkey
+spec:
+  allowCrossNamespaceImport: true
+  folder: Databases
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  grafanaCom:
+    id: 11835
+    revision: 1
+  datasources:
+    - datasourceName: prometheus
+      inputName: DS_PROMETHEUS

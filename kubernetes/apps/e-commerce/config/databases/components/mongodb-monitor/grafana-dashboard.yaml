@@ -1,0 +1,24 @@
+# GrafanaDashboard — MongoDB Monitoring
+# Dashboard adapted from the MongoDB Atlas sample dashboard to match
+# the Community Operator agent metric format.
+# Modifications from the Atlas original:
+# - Datasource variable set to DS_PROMETHEUS (not thanos/Datasource)
+# - mongodb_up replaced with mongodb_connections_current for variable queries
+# - group_id/org_id selectors removed (not present in agent metrics)
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: mongodb
+spec:
+  allowCrossNamespaceImport: true
+  folder: Databases
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasources:
+    - datasourceName: Prometheus
+      inputName: DS_PROMETHEUS
+  configMapRef:
+    name: mongodb-grafana-dashboard
+    key: mongodb-dashboard.json

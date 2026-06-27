@@ -1,0 +1,28 @@
+# MongoDB monitoring component
+# Enables Prometheus exporter sidecar, PodMonitor, and Grafana dashboard
+# for the e-commerce MongoDB replica set.
+# Only applied in prod overlay.
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - mongodb-prometheus-externalsecret.yaml
+  - peerauthentication.yaml
+  - podmonitor.yaml
+  - grafana-dashboard.yaml
+
+configMapGenerator:
+  - name: mongodb-grafana-dashboard
+    namespace: databases
+    options:
+      disableNameSuffixHash: true
+    files:
+      - mongodb-dashboard.json=mongodb-dashboard.json
+
+patches:
+  - target:
+      group: mongodbcommunity.mongodb.com
+      kind: MongoDBCommunity
+      name: mongodb
+    path: mongodb-patch.yaml

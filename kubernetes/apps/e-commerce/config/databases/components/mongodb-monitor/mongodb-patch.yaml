@@ -1,0 +1,11 @@
+# Strategic merge patch — enables Prometheus exporter sidecar on MongoDB pods
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: mongodb
+spec:
+  prometheus:
+    port: 9216
+    username: "prometheus"
+    passwordSecretRef:
+      name: mongodb-prometheus-secret
