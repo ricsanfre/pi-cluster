@@ -12,6 +12,14 @@ resources:
   - podmonitor.yaml
   - grafana-dashboard.yaml
 
+configMapGenerator:
+  - name: mongodb-grafana-dashboard
+    namespace: databases
+    options:
+      disableNameSuffixHash: true
+    files:
+      - mongodb-dashboard.json=mongodb-dashboard.json
+
 patches:
   - target:
       group: mongodbcommunity.mongodb.com
