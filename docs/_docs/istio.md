@@ -713,6 +713,9 @@ graph TB
     prom -->|"HTTP :9404"| broker
     prom -->|"HTTP :8080"| strimzi
     prom -->|"HTTP :8081"| entity
+    prom -->|"HTTP :9187"| pg
+    prom -->|"HTTP :9216"| mongo
+    prom -->|"HTTP :9121"| valkey
     tofu -->|"HTTP :8080"| key
 
     eg <-->|"HBONE mTLS"| ztunnel
@@ -735,7 +738,7 @@ graph TB
 
     envoyDesc["🟢 envoy-gateway-system<br/>PERMISSIVE — accepts external traffic"]
     kcDesc["🟠 keycloak<br/>PERMISSIVE :8080<br/>tofu runner outside mesh"]
-    dbDesc["🔵 databases<br/>STRICT<br/>PERMISSIVE :9443 CNPG webhook"]
+    dbDesc["🔵 databases<br/>STRICT<br/>PERMISSIVE :9443 (CNPG webhook)<br/>PERMISSIVE :9187, :9216, :9121 (metrics)"]
     ecDesc["🟣 e-commerce<br/>STRICT — all internal"]
     kaDesc["🔴 kafka<br/>STRICT<br/>PERMISSIVE :8443, :8080 (Strimzi webhook)<br/>PERMISSIVE :9404, :8081 (metrics)"]
 ```
@@ -747,7 +750,7 @@ graph TB
 |-----------|-----------|------------|--------|
 | `envoy-gateway-system` | PERMISSIVE | — | External clients lack SPIFFE identities |
 | `keycloak` | PERMISSIVE (port :8080) | Tofu Controller in `flux-system` (outside mesh) | Non-mesh client needs plaintext access to Keycloak API |
-| `databases` | STRICT | PERMISSIVE :9443 (CNPG webhook) | kube-apiserver calls admission webhook without SPIFFE identity |
+| `databases` | STRICT | PERMISSIVE :9443 (CNPG webhook), PERMISSIVE :9187 (CNPG metrics), PERMISSIVE :9216 (MongoDB metrics), PERMISSIVE :9121 (Valkey metrics) | kube-apiserver webhook calls + Prometheus scraping from outside mesh |
 | `e-commerce` | STRICT | — | All workloads communicate within the mesh |
 | `kafka` | STRICT | PERMISSIVE :8443, :8080 (Strimzi operator webhook + metrics), PERMISSIVE :9404 (broker JMX), PERMISSIVE :8081 (entity-operator metrics) | kube-apiserver webhook calls + Prometheus scraping from outside mesh |
 
@@ -889,6 +892,44 @@ Key considerations:
    takes precedence over the namespace-wide `databases-strict`. Port 9443 is
    PERMISSIVE only for the CNPG operator pod; all other workloads and ports
    remain STRICT.
+
+3. **Prometheus metrics scraping** — Prometheus runs in `kube-prom-stack`, outside the mesh
+   without a SPIFFE identity. Each database type exposes metrics on a dedicated port
+   that must be PERMISSIVE to allow scraping. A separate PeerAuthentication targets
+   each workload's pod labels for least-privilege exceptions:
+
+   | Database | Port | PeerAuthentication | Selector |
+   |----------|------|--------------------|----------|
+   | CloudNative-PG (e-commerce) | 9187 | `cnpg-metrics-permissive` | `cnpg.io/cluster: postgres-ecommerce` |
+   | CloudNative-PG (Keycloak) | 9187 | `postgres-keycloak-metrics-permissive` | `cnpg.io/cluster: postgres-keycloak` |
+   | MongoDB | 9216 | `mongodb-metrics-permissive` | `app: mongodb-svc` |
+   | Valkey | 9121 | `valkey-metrics-permissive` | `app.kubernetes.io/name: valkey` |
+
+   Example for the e-commerce CNPG cluster:
+
+   ```yaml
+   apiVersion: security.istio.io/v1
+   kind: PeerAuthentication
+   metadata:
+     name: cnpg-metrics-permissive
+     namespace: databases
+   spec:
+     selector:
+       matchLabels:
+         cnpg.io/cluster: postgres-ecommerce
+     portLevelMtls:
+       "9187":
+         mode: PERMISSIVE
+   ```
+
+   {{site.data.alerts.note}}
+
+   Each database workload requires its own PeerAuthentication because the pod label
+   selectors are database-specific. Policies are placed in the component that owns
+   the workload: e-commerce database policies in `apps/e-commerce/config/databases/components/`,
+   Keycloak database policies in `platform/keycloak/database/components/`.
+
+   {{site.data.alerts.end}}
 
 ### Namespace: e-commerce
 
