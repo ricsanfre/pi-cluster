@@ -96,7 +96,7 @@ prometheus:
     scrapeClasses:
       - name: cluster-relabeling
         default: true
-        relabelings:
+        metricRelabelings:
           - sourceLabels: [cluster]
             regex: ^$
             action: replace
