@@ -5,8 +5,7 @@ metadata:
   name: mongodb
 spec:
   prometheus:
-    enabled: true
-    metricsPort: 9216
+    port: 9216
     username: "prometheus"
     passwordSecretRef:
       name: mongodb-prometheus-secret
