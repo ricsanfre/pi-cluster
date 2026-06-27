@@ -97,7 +97,9 @@ prometheus:
       - name: cluster-relabeling
         default: true
         relabelings:
-          - action: replace
+          - sourceLabels: [cluster]
+            regex: ^$
+            action: replace
             targetLabel: cluster
             replacement: ${CLUSTER_NAME:-pi-cluster}
     # Additional external labels to be added to all metrics
