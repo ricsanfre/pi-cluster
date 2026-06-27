@@ -1,0 +1,42 @@
+# PodMonitor — Valkey metrics scraping
+# Targets the built-in metrics-exporter sidecar injected by
+# the Valkey Operator (valkey.io/v1alpha1) on port 9121 ("metrics").
+# metricRelabelings rename valkey_* -> redis_* so standard Redis
+# Grafana dashboards (e.g., grafana.com/11835) work correctly.
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: valkey
+  namespace: databases
+  labels:
+    app.kubernetes.io/name: valkey
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
+  namespaceSelector:
+    matchNames:
+      - databases
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_namespace]
+          action: replace
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          action: replace
+          targetLabel: kubernetes_pod_name
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          targetLabel: node_name
+        - sourceLabels: [__meta_kubernetes_pod_host_ip]
+          action: replace
+          targetLabel: node_ip
+      metricRelabelings:
+        # Rename valkey_* to redis_* for Grafana dashboard compatibility
+        - sourceLabels: [__name__]
+          regex: 'valkey_(.+)'
+          targetLabel: __name__
+          replacement: 'redis_${1}'
