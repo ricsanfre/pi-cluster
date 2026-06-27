@@ -1,5 +1,6 @@
-# GrafanaDashboard — MongoDB Overview (Percona)
-# Imported from grafana.com dashboard ID 14901.
+# GrafanaDashboard — MongoDB Overview (Percona, ID 20192)
+# Compatible with the MongoDB Community Operator's built-in metrics
+# endpoint (mongodb-agent, port 9216).
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
@@ -12,8 +13,8 @@ spec:
     matchLabels:
       dashboards: grafana
   grafanaCom:
-    id: 14901
-    revision: 5
+    id: 20192
+    revision: 2
   datasources:
     - datasourceName: prometheus
       inputName: DS_PROMETHEUS
