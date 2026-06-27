@@ -1,6 +1,6 @@
-# PodMonitor — MongoDB exporter metrics scraping
-# Scrapes the exporter sidecar injected by the MongoDB Community Operator
-# when spec.prometheus.enabled is set to true.
+# PodMonitor — MongoDB metrics scraping
+# Scrapes the built-in Prometheus endpoint on the mongodb-agent
+# enabled by spec.prometheus on the MongoDBCommunity CR.
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -17,8 +17,15 @@ spec:
     matchNames:
       - databases
   podMetricsEndpoints:
-    - targetPort: 9216
+    - port: metrics
       path: /metrics
+      basicAuth:
+        username:
+          name: mongodb-prometheus-secret
+          key: username
+        password:
+          name: mongodb-prometheus-secret
+          key: password
       relabelings:
         - sourceLabels: [__meta_kubernetes_namespace]
           action: replace
