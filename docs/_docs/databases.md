@@ -1014,9 +1014,6 @@ The MongoDB Community Operator exposes Prometheus metrics through the `mongodb-a
          app: mongodb-svc
      podMetricsEndpoints:
        - port: metrics
-         scheme: https
-         tlsConfig:
-           insecureSkipVerify: true
          path: /metrics
          basicAuth:
            username:
@@ -1029,7 +1026,7 @@ The MongoDB Community Operator exposes Prometheus metrics through the `mongodb-a
 
    {{site.data.alerts.note}}
 
-   The `mongodb-agent` serves Prometheus metrics over **HTTPS** by default, using operator-managed internal certificates. Set `scheme: https` and `insecureSkipVerify: true` unless you configure a custom TLS certificate via `spec.prometheus.tlsSecretKeyRef`.
+   The `mongodb-agent` serves Prometheus metrics over **HTTP** with Basic Auth. TLS can be enabled on the metrics endpoint via `spec.prometheus.tlsSecretKeyRef` if needed; in that case add `scheme: https` and configure `tlsConfig` accordingly.
 
    {{site.data.alerts.end}}
 
