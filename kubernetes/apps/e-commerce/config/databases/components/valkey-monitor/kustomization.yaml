@@ -1,0 +1,11 @@
+# Valkey monitoring component
+# Enables PodMonitor and Grafana dashboard for Valkey metrics.
+# No CR patch needed — the metrics-exporter sidecar is built-in.
+# No ExternalSecret needed — scraping is unauthenticated.
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - podmonitor.yaml
+  - grafana-dashboard.yaml
