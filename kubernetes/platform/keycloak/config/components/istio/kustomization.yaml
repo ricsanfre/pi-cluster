@@ -3,3 +3,4 @@ kind: Component
 
 resources:
   - peer-authentication.yaml
+  - cnpg-metrics-permissive.yaml
