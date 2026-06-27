@@ -14,7 +14,7 @@ spec:
       dashboards: grafana
   grafanaCom:
     id: 20192
-    revision: 2
+    revision: 1
   datasources:
     - datasourceName: prometheus
       inputName: DS_PROMETHEUS
