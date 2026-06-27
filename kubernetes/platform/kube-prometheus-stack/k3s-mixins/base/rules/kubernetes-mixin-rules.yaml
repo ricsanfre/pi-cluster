@@ -28,7 +28,13 @@ spec:
         sum by (namespace, pod, job, cluster) (
           max by(namespace, pod, job, cluster) (
             kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown"}
-          ) * on(namespace, pod, cluster) group_left(owner_kind) topk by(namespace, pod, cluster) (
+            or
+            (
+              kube_pod_status_phase{job="kube-state-metrics", phase="Running"} == 1
+              and on(namespace, pod, cluster)
+              kube_pod_status_ready{job="kube-state-metrics", condition="true"} == 0
+            )
+          ) * on(namespace, pod, cluster) group_left() topk by(namespace, pod, cluster) (
             1, max by(namespace, pod, owner_kind, cluster) (kube_pod_owner{owner_kind!="Job"})
           )
         ) > 0
@@ -250,7 +256,7 @@ spec:
             ==
           kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics"}
         )
-        and on(namespace, horizontalpodautoscaler) (
+        and on(namespace, horizontalpodautoscaler, cluster) (
           kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics"}
             !=
           kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics"}
@@ -379,11 +385,13 @@ spec:
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubequotaalmostfull
         summary: Namespace quota is going to be full.
       expr: |
-        max without (instance, job, type) (
-          kube_resourcequota{job="kube-state-metrics", type="used"}
+        topk by (cluster, namespace, resource, resourcequota) (1,
+          max without (instance, job, type) (
+            kube_resourcequota{job="kube-state-metrics", type="used"}
+          )
         )
         / on (cluster, namespace, resource, resourcequota) group_left()
-        (
+        topk by (cluster, namespace, resource, resourcequota) (1,
           max without (instance, job, type) (
             kube_resourcequota{job="kube-state-metrics", type="hard"}
           ) > 0
@@ -398,11 +406,13 @@ spec:
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubequotafullyused
         summary: Namespace quota is fully used.
       expr: |
-        max without (instance, job, type) (
-          kube_resourcequota{job="kube-state-metrics", type="used"}
+        topk by (cluster, namespace, resource, resourcequota) (1,
+          max without (instance, job, type) (
+            kube_resourcequota{job="kube-state-metrics", type="used"}
+          )
         )
         / on (cluster, namespace, resource, resourcequota) group_left()
-        (
+        topk by (cluster, namespace, resource, resourcequota) (1,
           max without (instance, job, type) (
             kube_resourcequota{job="kube-state-metrics", type="hard"}
           ) > 0
@@ -417,11 +427,13 @@ spec:
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubequotaexceeded
         summary: Namespace quota has exceeded the limits.
       expr: |
-        max without (instance, job, type) (
-          kube_resourcequota{job="kube-state-metrics", type="used"}
+        topk by (cluster, namespace, resource, resourcequota) (1,
+          max without (instance, job, type) (
+            kube_resourcequota{job="kube-state-metrics", type="used"}
+          )
         )
         / on (cluster, namespace, resource, resourcequota) group_left()
-        (
+        topk by (cluster, namespace, resource, resourcequota) (1,
           max without (instance, job, type) (
             kube_resourcequota{job="kube-state-metrics", type="hard"}
           ) > 0
@@ -579,9 +591,9 @@ spec:
     rules:
     - alert: KubeAPIErrorBudgetBurn
       annotations:
-        description: The API server is burning too much error budget.
+        description: The Kube API server is burning too much error budget.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
-        summary: The API server is burning too much error budget.
+        summary: The Kube API server is burning too much error budget.
       expr: |
         sum by(cluster) (apiserver_request:burnrate1h) > (14.40 * 0.01000)
         and on(cluster)
@@ -593,9 +605,9 @@ spec:
         short: 5m
     - alert: KubeAPIErrorBudgetBurn
       annotations:
-        description: The API server is burning too much error budget.
+        description: The Kube API server is burning too much error budget.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
-        summary: The API server is burning too much error budget.
+        summary: The Kube API server is burning too much error budget.
       expr: |
         sum by(cluster) (apiserver_request:burnrate6h) > (6.00 * 0.01000)
         and on(cluster)
@@ -607,9 +619,9 @@ spec:
         short: 30m
     - alert: KubeAPIErrorBudgetBurn
       annotations:
-        description: The API server is burning too much error budget.
+        description: The Kube API server is burning too much error budget.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
-        summary: The API server is burning too much error budget.
+        summary: The Kube API server is burning too much error budget.
       expr: |
         sum by(cluster) (apiserver_request:burnrate1d) > (3.00 * 0.01000)
         and on(cluster)
@@ -621,9 +633,9 @@ spec:
         short: 2h
     - alert: KubeAPIErrorBudgetBurn
       annotations:
-        description: The API server is burning too much error budget.
+        description: The Kube API server is burning too much error budget.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
-        summary: The API server is burning too much error budget.
+        summary: The Kube API server is burning too much error budget.
       expr: |
         sum by(cluster) (apiserver_request:burnrate3d) > (1.00 * 0.01000)
         and on(cluster)

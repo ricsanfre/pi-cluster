@@ -315,7 +315,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down to pods",
-                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
+                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
                                         }
                                     ]
                                 }
@@ -567,7 +567,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down to pods",
-                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
+                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
                                         }
                                     ]
                                 }
@@ -744,7 +744,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down to pods",
-                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
+                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
                                         }
                                     ]
                                 }
@@ -1418,7 +1418,7 @@ spec:
                                     "value": [
                                         {
                                             "title": "Drill down to pods",
-                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
+                                            "url": "/d/85a562078cdf77779eaa1add43ccec1e?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
                                         }
                                     ]
                                 }
