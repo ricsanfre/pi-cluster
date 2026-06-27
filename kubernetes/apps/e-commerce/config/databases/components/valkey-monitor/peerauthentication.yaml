@@ -1,0 +1,19 @@
+# PeerAuthentication — PERMISSIVE mTLS for Valkey metrics port
+# The databases-strict policy enforces STRICT mTLS on all pods in the
+# databases namespace. Since Prometheus scrapes from outside the mesh
+# and doesn't have a mesh identity, STRICT mode blocks the scrape.
+# This port-level PERMISSIVE exception allows unauthenticated access
+# to the Valkey metrics exporter (port 9121).
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: valkey-metrics-permissive
+  namespace: databases
+spec:
+  portLevelMtls:
+    "9121":
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
