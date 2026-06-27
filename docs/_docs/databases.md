@@ -963,37 +963,65 @@ Before proceeding, ensure a `ca-issuer` ClusterIssuer is configured in your clus
 
 ### Monitoring
 
-MongoDB Community Operator exposes Prometheus metrics via a sidecar exporter. To enable monitoring:
+The MongoDB Community Operator exposes Prometheus metrics through the `mongodb-agent`'s built-in HTTP server. To enable monitoring:
 
-1. Add the Prometheus exporter to the `MongoDBCommunity` resource:
+1. Configure `spec.prometheus` on the `MongoDBCommunity` resource:
 
    ```yaml
    spec:
      prometheus:
        port: 9216
-       username: "admin"
+       username: "prometheus"
        passwordSecretRef:
-         name: admin-user
+         name: mongodb-prometheus-secret
    ```
 
-   The exporter runs as a sidecar container in each MongoDB pod, exposing metrics on the configured port (default `9216`).
+   This configures the `mongodb-agent` to serve Prometheus metrics on the specified port with HTTP Basic Auth. The password is read from the referenced Kubernetes Secret (key: `password`).
 
-2. Create a PodMonitor to scrape the metrics:
+   {{site.data.alerts.note}}
+
+   The operator configures the agent's metrics endpoint but does **not** automatically declare the container port in the pod spec. You must declare it manually by adding a `ports` entry to the `mongodb-agent` container in `spec.statefulSet.spec.template.spec.containers`:
+
+   ```yaml
+   spec:
+     statefulSet:
+       spec:
+         template:
+           spec:
+             containers:
+               - name: mongodb-agent
+                 ports:
+                   - containerPort: 9216
+                     name: metrics
+                     protocol: TCP
+   ```
+
+   Without this, Prometheus cannot discover the port via a PodMonitor.
+
+   {{site.data.alerts.end}}
+
+2. Create a PodMonitor with HTTP Basic Auth to scrape the metrics:
 
    ```yaml
    apiVersion: monitoring.coreos.com/v1
    kind: PodMonitor
    metadata:
      name: mongodb
-     namespace: mongodb
+     namespace: databases
    spec:
      selector:
        matchLabels:
          app: mongodb-svc
      podMetricsEndpoints:
        - port: metrics
-         interval: 30s
          path: /metrics
+         basicAuth:
+           username:
+             name: mongodb-prometheus-secret
+             key: username
+           password:
+             name: mongodb-prometheus-secret
+             key: password
    ```
 
 Key metrics exposed:

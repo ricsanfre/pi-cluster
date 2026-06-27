@@ -61,6 +61,10 @@ spec:
                   cpu: 500m
                   memory: 512Mi
             - name: mongodb-agent
+              ports:
+                - containerPort: 9216
+                  name: metrics
+                  protocol: TCP
               resources:
                 requests:
                   cpu: 50m
