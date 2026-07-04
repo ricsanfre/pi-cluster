@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: fluent-bit
-      version: 0.57.7
+      version: 0.57.8
       sourceRef:
         kind: HelmRepository
         name: fluent
