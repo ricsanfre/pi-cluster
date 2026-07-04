@@ -2059,14 +2059,14 @@
       },
       {
         "current": {
-          "text": "otel",
-          "value": "otel"
+          "text": "logs-*.otel-*",
+          "value": "logs-*.otel-*"
         },
         "hide": 0,
         "label": "Log Index",
         "name": "index",
         "options": [],
-        "query": "otel",
+        "query": "logs-*.otel-*",
         "skipUrlSync": false,
         "type": "textbox"
       }
