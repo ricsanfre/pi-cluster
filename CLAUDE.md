@@ -202,7 +202,11 @@ When validating changes from a feature branch in the live cluster:
    flux reconcile source git "${GR_NAME}" -n flux-system
    flux reconcile kustomization flux-system -n flux-system --with-source
    ```
-5. After merge: revert `instance.sync.ref` to `refs/heads/master`, push, and patch in-cluster GitRepository back to `master`
+5. After merge: revert `instance.sync.ref` to `refs/heads/master`, push, and patch in-cluster GitRepository back to `master`:
+   ```bash
+   kubectl -n flux-system patch gitrepository "${GR_NAME}" --type merge -p '{"spec":{"ref":{"branch":"master","name":null}}}'
+   flux reconcile source git "${GR_NAME}" -n flux-system
+   ```
 
 ## Search strategy
 
@@ -211,3 +215,4 @@ When validating changes from a feature branch in the live cluster:
 
 ## Git Commit Guidelines
 - Never add Co-Authored-By to commit messages
+- Never add "🤖 Generated with [Claude Code]" or similar attributions to PR bodies
