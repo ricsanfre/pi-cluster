@@ -2,7 +2,7 @@
 title: Secret Management (Vault)
 permalink: /docs/vault/
 description: How to deploy Hashicorp Vault as a Secret Manager for our Raspberry Pi Kubernetes Cluster.
-last_modified_at: "01-03-2026"
+last_modified_at: "04-07-2026"
 ---
 
 [HashiCorp Vault](https://www.vaultproject.io/) is used as Secret Management solution for Raspberry PI cluster. All cluster secrets (users, passwords, api tokens, etc) will be securely encrypted and stored in Vault.
@@ -820,6 +820,206 @@ The Vault Helm chart is able to install only the Vault Agent Injector service.
     ```
 
 -   Step 7: Configure Kubernetes Auth method in external Vault, following steps 5 to 8 of [[#Configure Kubernetes Auth Method (Not using Vault Helm Chart)]]
+
+### Terraform-based configuration
+
+As an alternative to manual `vault` CLI commands, Vault resources (KV secrets engine, policies, Kubernetes authentication roles, and secrets) can be managed declaratively using OpenTofu/Terraform with the official [HashiCorp Vault Terraform provider](https://registry.terraform.io/providers/hashicorp/vault/latest/docs).
+
+#### Providers
+
+The Terraform configuration uses three providers to manage the full Vault lifecycle:
+
+| Provider | Purpose |
+|:---|:---|
+| `hashicorp/vault` | Manages Vault resources: secrets engine mounts, policies, Kubernetes auth backend, and roles |
+| `hashicorp/kubernetes` | Creates the service account and long-lived token needed for Vault's Kubernetes auth method |
+| `hashicorp/random` | Generates cryptographically random passwords for secrets |
+
+{{site.data.alerts.note}} **Vault token requirement**
+
+Terraform needs a Vault token with sufficient privileges to manage resources. The root token generated during Vault initialization (stored in `/etc/vault/unseal.json`) can be used for initial deployment. For ongoing operations, consider creating a dedicated administrative token with a limited TTL.
+
+{{site.data.alerts.end}}
+
+#### Example Terraform configuration
+
+```hcl
+terraform {
+  required_providers {
+    vault = {
+      source  = "hashicorp/vault"
+      version = "~> 5.9"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 3.2"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.9"
+    }
+  }
+}
+
+provider "vault" {
+  address         = var.vault_address
+  token           = var.vault_token
+  skip_tls_verify = var.vault_skip_tls_verify
+}
+
+provider "kubernetes" {
+  config_path = var.kubernetes_config_path
+}
+
+# Mount KV v2 secrets engine
+resource "vault_mount" "kv_engine_v2" {
+  path = "secret"
+  type = "kv-v2"
+}
+
+# Create a policy from YAML
+resource "vault_policy" "readonly" {
+  name   = "readonly"
+  policy = file("${path.module}/resources/policies/readonly.yaml")
+}
+
+# Enable Kubernetes auth and create a role
+resource "vault_kubernetes_auth_backend_role" "external_secrets" {
+  backend                          = vault_auth_backend.kubernetes.path
+  role_name                        = "external-secrets"
+  bound_service_account_names      = ["external-secrets"]
+  bound_service_account_namespaces = ["external-secrets"]
+  token_policies                   = ["readonly"]
+  audience                         = "https://kubernetes.default.svc.cluster.local"
+}
+
+# Create a secret with auto-generated password
+resource "vault_kv_secret_v2" "database" {
+  mount     = vault_mount.kv_engine_v2.path
+  name      = "postgresql/database-prod"
+  data_json = jsonencode({
+    username = "db_admin"
+    password = random_password.db.result
+    host     = "postgres.prod.svc.cluster.local"
+  })
+}
+```
+
+This configuration:
+- Mounts the **KV v2 secrets engine** at `secret/`
+- Creates a **readonly policy** loaded from a YAML file
+- Configures the **Kubernetes auth method** and creates a role for the External Secrets Operator
+- Creates a **secret** with an auto-generated password
+
+#### Data-driven pattern
+
+For managing multiple secrets, policies, and roles at scale, resource definitions are loaded from JSON and YAML files stored in a `resources/` directory. This keeps Terraform HCL thin and makes adding new services a matter of dropping in a JSON or YAML file.
+
+**Directory structure:**
+
+```
+terraform/vault/
+├── main.tf                         # Root module — loads resources/ and creates Vault objects
+├── variables.tf                    # Configuration variables
+├── outputs.tf                      # Aggregated outputs
+├── versions.tf                     # Provider configuration
+├── backend.tf                      # State management
+├── terraform.tfvars.example        # Variable template
+└── resources/
+    ├── secrets/                    # JSON files → vault_kv_secret_v2
+    │   ├── postgresql.json
+    │   ├── s3.json
+    │   ├── prometheus.json
+    │   └── ...
+    ├── policies/                   # YAML/JSON files → vault_policy (YAML recommended)
+    │   ├── readonly.yaml
+    │   ├── readwrite.yaml
+    │   ├── create-child-token.yaml
+    │   └── vault-metrics.yaml
+    └── roles/                      # JSON files → vault_kubernetes_auth_backend_role
+        ├── external-secrets.json
+        ├── prometheus.json
+        └── tf-runner.json
+```
+
+**Secret definition** (`resources/secrets/s3.json`):
+
+Each JSON file can define one or more secrets. The filename becomes the path prefix — for example, `s3.json` stores secrets at `secret/data/s3/<name>`.
+
+```json
+{
+  "velero": {
+    "secret_name": "key",
+    "content": {
+      "username": "velero",
+      "service": "s3_velero",
+      "purpose": "disaster_recovery"
+    }
+  }
+}
+```
+
+The `secret_name` field instructs Terraform to auto-generate a cryptographically random password for the named key. Values in `content` can be static or generated — any field matching `secret_name` is replaced with the generated password.
+
+**Policy definition** (`resources/policies/readonly.yaml`, YAML recommended for readability):
+
+```yaml
+readonly:
+  description: "Read-only access to all secrets"
+  policy: |
+    path "secret/data/*" {
+      capabilities = ["read", "list"]
+    }
+    path "secret/metadata/*" {
+      capabilities = ["list", "read"]
+    }
+```
+
+YAML is the recommended format for policies because it supports native multiline strings via the `|` literal block syntax, making HCL policy rules readable without JSON's escaped newlines (`\n`). JSON format is also supported for compatibility; both are merged into a single configuration.
+
+**Kubernetes role definition** (`resources/roles/external-secrets.json`):
+
+```json
+{
+  "external-secrets": {
+    "service_account_names": ["external-secrets"],
+    "service_account_namespaces": ["external-secrets"],
+    "policies": ["readonly"],
+    "audience": "https://kubernetes.default.svc.cluster.local",
+    "token_ttl": 3600,
+    "token_max_ttl": 86400
+  }
+}
+```
+
+Each role binds one or more Kubernetes service accounts to a set of Vault policies. The `audience` field must match the audience requested by the service (e.g., External Secrets Operator's `ClusterSecretStore`).
+
+#### Auto-password generation
+
+Terraform uses the `random` provider to generate cryptographically secure passwords for any field marked with `secret_name` in the secrets JSON file. Passwords are never stored in plain text — they are written directly to Vault and only exist in Terraform state, which should be stored in an encrypted remote backend. Each secret can optionally override the default password length via a `password_length` field.
+
+#### Feature control flags
+
+Individual components can be selectively enabled or disabled using feature flags, enabling phased deployments:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `enable_secrets` | `true` | Create KV secrets from `resources/secrets/` |
+| `enable_policies` | `true` | Create Vault policies from `resources/policies/` |
+| `enable_roles` | `true` | Create Kubernetes auth roles from `resources/roles/` |
+| `enable_kubernetes_auth` | `true` | Set up Kubernetes auth method, service account, and token |
+
+Example: deploy policies first, verify, then add secrets and roles in later phases:
+
+```bash
+# Phase 1: Deploy only policies and Kubernetes auth
+tofu apply -var="enable_secrets=false" -var="enable_roles=false"
+
+# Phase 2: Add secrets and roles
+tofu apply -var="enable_secrets=true" -var="enable_roles=true"
+```
+
+The full Terraform implementation for this cluster is available in the repository at [`terraform/vault/`](https://github.com/ricsanfre/pi-cluster/tree/master/terraform/vault), including the provider configuration, resource definitions, and all the data-driven JSON/YAML resource files for the cluster services.
 
 ### Observability
 
