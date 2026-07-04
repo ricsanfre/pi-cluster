@@ -123,3 +123,24 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: e-commerce-monitoring
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 5m
+  targetNamespace: e-commerce
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: grafana-operator-app
+    - name: opentelemetry-collector-app
+    - name: e-commerce-common
+  path: ./kubernetes/apps/e-commerce/config/monitoring
+  prune: true
+  wait: true

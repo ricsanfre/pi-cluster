@@ -1,0 +1,14 @@
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: e-commerce-apm
+spec:
+  allowCrossNamespaceImport: true
+  folder: E-Commerce
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  configMapRef:
+    name: e-commerce-apm-dashboard
+    key: apm-dashboard.json

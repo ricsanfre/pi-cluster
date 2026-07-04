@@ -9,6 +9,6 @@ config:
   service:
     pipelines:
       traces:
-        processors: [memory_limiter, resource, batch]
+        processors: [memory_limiter, k8sattributes, resource, batch]
         exporters: [spanmetrics, otlp]
 
