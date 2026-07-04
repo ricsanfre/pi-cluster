@@ -84,6 +84,7 @@ The following picture shows the set of opensource solutions used for building th
 | ![kafka-icon](/assets/img/logos/apache_kafka.svg){:width="32"}   | [Kafka Strimzi Operator](https://strimzi.io/)   | Kubermetes Operator for running Kafka, Event Streaming and distribution  |
 | ![cloudnative-pg-icon](/assets/img/logos/cloudnative-pg.png){:width="32"}  | [CloudNative-PG](https://cloudnative-pg.io/)  | Kubernetes Operator for running PosgreSQL  |
 | ![mongodb-icon](/assets/img/logos/mongodb.svg){:width="32"}         | [MongoDB Operator](https://github.com/mongodb/mongodb-kubernetes-operator)     | [[Kubernetes Operator]] for running MongoDB |
+| ![valkey-icon](/assets/img/logos/valkey.svg){:width="32"}         | [Valkey Operator](https://github.com/valkey-io/valkey-operator)     | Kubernetes Operator for running Valkey (Redis-compatible memory database) |
 {: .table .border-dark }
 
 

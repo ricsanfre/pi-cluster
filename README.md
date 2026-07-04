@@ -224,6 +224,11 @@ The following picture shows the set of opensource solutions used so far in the c
         <td><a href="https://github.com/mongodb/mongodb-kubernetes-operator">MongoDB Kubernetes Operator</a></td>
         <td>Kubernetes Operator for running MongoDB </td>
     </tr>
+    <tr>
+        <td><img width="32" src="docs/assets/img/logos/valkey.svg" alt="valkey logo"></td>
+        <td><a href="https://github.com/valkey-io/valkey-operator">Valkey Operator</a></td>
+        <td>Kubernetes Operator for running Valkey (Redis-compatible memory database)</td>
+    </tr>
 </table>
 </div>
 
