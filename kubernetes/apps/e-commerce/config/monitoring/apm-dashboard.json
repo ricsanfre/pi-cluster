@@ -2011,7 +2011,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(target_info{\"deployment.environment.name\"=~\"$deployment_environment_name\", \"telemetry.sdk.name\"=~\"\\\\S.*\"},\"service.namespace\")",
+        "definition": "label_values(target_info{\"deployment.environment.name\"=~\"$deployment_environment_name\",\"service.name\"=~\".+\"}, \"service.namespace\")",
         "description": "Service namespace.\nResource attribute `service.namespace` via `target_info`.\nValue `<<not defined>>` when the resource attribute `service.namespace` is not set.",
         "includeAll": false,
         "label": "Namespace",
@@ -2019,7 +2019,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(target_info{\"deployment.environment.name\"=~\"$deployment_environment_name\", \"telemetry.sdk.name\"=~\"\\\\S.*\"},\"service.namespace\")",
+          "query": "label_values(target_info{\"deployment.environment.name\"=~\"$deployment_environment_name\",\"service.name\"=~\".+\"}, \"service.namespace\")",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -2042,14 +2042,14 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(target_info{\"service.namespace\"=~\"$service_namespace\", \"deployment.environment.name\"=~\"$deployment_environment_name\", \"telemetry.sdk.name\"=~\"\\\\S.*\"},\"service.name\")",
+        "definition": "label_values(target_info{\"service.namespace\"=~\"$service_namespace\",\"deployment.environment.name\"=~\"$deployment_environment_name\",\"service.name\"=~\".+\"}, \"service.name\")",
         "description": "Service name.\nResource attribute `service.name` via `target_info`.",
         "label": "Service",
         "name": "service_name",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(target_info{\"service.namespace\"=~\"$service_namespace\", \"deployment.environment.name\"=~\"$deployment_environment_name\", \"telemetry.sdk.name\"=~\"\\\\S.*\"},\"service.name\")",
+          "query": "label_values(target_info{\"service.namespace\"=~\"$service_namespace\",\"deployment.environment.name\"=~\"$deployment_environment_name\",\"service.name\"=~\".+\"}, \"service.name\")",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
