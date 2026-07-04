@@ -1000,7 +1000,7 @@ The MongoDB Community Operator exposes Prometheus metrics through the `mongodb-a
 
    {{site.data.alerts.end}}
 
-2. Create a PodMonitor with HTTP Basic Auth to scrape the metrics:
+2. Create a PodMonitor with HTTP Basic Auth, relabelings, and the mandatory port declaration. See the reference implementation at `kubernetes/apps/e-commerce/config/databases/components/mongodb-monitor/podmonitor.yaml`:
 
    ```yaml
    apiVersion: monitoring.coreos.com/v1
@@ -1008,10 +1008,15 @@ The MongoDB Community Operator exposes Prometheus metrics through the `mongodb-a
    metadata:
      name: mongodb
      namespace: databases
+     labels:
+       app: mongodb-svc
    spec:
      selector:
        matchLabels:
          app: mongodb-svc
+     namespaceSelector:
+       matchNames:
+         - databases
      podMetricsEndpoints:
        - port: metrics
          path: /metrics
@@ -1022,24 +1027,79 @@ The MongoDB Community Operator exposes Prometheus metrics through the `mongodb-a
            password:
              name: mongodb-prometheus-secret
              key: password
+         relabelings:
+           - sourceLabels: [__meta_kubernetes_namespace]
+             targetLabel: namespace
+           - sourceLabels: [__meta_kubernetes_pod_name]
+             targetLabel: kubernetes_pod_name
+           - sourceLabels: [__meta_kubernetes_pod_node_name]
+             targetLabel: node_name
+           - sourceLabels: [__meta_kubernetes_pod_host_ip]
+             targetLabel: node_ip
    ```
+
+   PodMonitor configuration details:
+
+   | Setting | Value | Reason |
+   |---------|-------|--------|
+   | `selector` | `app: mongodb-svc` | Label set by the MongoDB operator on all instance pods |
+   | `port` | `metrics` | Must match the `name` in the container `ports` declaration |
+   | `basicAuth` | References `mongodb-prometheus-secret` | The agent requires HTTP Basic Auth (keys: `username`, `password`) |
+   | `relabelings` | `namespace`, `pod_name`, `node_name`, `node_ip` | Preserves Kubernetes metadata for Prometheus queries |
 
    {{site.data.alerts.note}}
 
-   The `mongodb-agent` serves Prometheus metrics over **HTTP** with Basic Auth. TLS can be enabled on the metrics endpoint via `spec.prometheus.tlsSecretKeyRef` if needed; in that case add `scheme: https` and configure `tlsConfig` accordingly.
+   The `mongodb-agent` serves Prometheus metrics over **HTTP** with Basic Auth. TLS on the metrics endpoint requires opt-in via `spec.prometheus.tlsSecretKeyRef` — if configured, add `scheme: https` and `tlsConfig` to the PodMonitor.
 
    {{site.data.alerts.end}}
+
+3. Create an Istio `PeerAuthentication` to allow Prometheus (outside the mesh) to reach the metrics port. See the reference at `kubernetes/apps/e-commerce/config/databases/components/mongodb-monitor/peerauthentication.yaml`:
+
+   ```yaml
+   apiVersion: security.istio.io/v1
+   kind: PeerAuthentication
+   metadata:
+     name: mongodb-metrics-permissive
+     namespace: databases
+   spec:
+     portLevelMtls:
+       "9216":
+         mode: PERMISSIVE
+     selector:
+       matchLabels:
+         app: mongodb-svc
+   ```
+
+   Without this, the `databases-strict` policy's STRICT mTLS blocks Prometheus from reaching the agent's metrics endpoint.
+
+#### Grafana dashboard
+
+The MongoDB dashboard is adapted from the [MongoDB Atlas sample dashboard](https://github.com/mongodb/mongodb-atlas-kubernetes/blob/main/docs/grafana/sample_dashboard.json). The following modifications were applied to make it compatible with the Community Operator agent (see `kubernetes/apps/e-commerce/config/databases/components/mongodb-monitor/mongodb-dashboard.json`):
+
+| Modification | Reason |
+|--------------|--------|
+| Datasource set to `DS_PROMETHEUS` | Original used `${Datasource}` defaulting to `thanos`; the grafana-operator resolves `DS_PROMETHEUS` via the `datasources` mapping in the `GrafanaDashboard` CR |
+| All panel/target datasources set to `null` | Falls back to Grafana's default Prometheus datasource |
+| Template variable datasources nullified | Original query variables referenced `$Datasource` which no longer exists |
+| `mongodb_up` → `mongodb_connections_current` | Agent does not expose `mongodb_up`; used for variable queries |
+| `group_id`/`org_id` selectors removed | Atlas-specific labels not present in Community Operator metrics |
+| `group_id` template variable removed | Meaningless dropdown for non-Atlas deployments |
+| `concurrentTransactions` → `queues_execution` | MongoDB 8.0 renamed these metrics |
 
 Key metrics exposed:
 
 | Metric | Description |
 |--------|-------------|
-| `mongodb_connections` | Number of active client connections |
-| `mongodb_op_counters_total` | Operations per second (reads, writes, commands) |
-| `mongodb_memory_usage_bytes` | Memory used by the MongoDB process |
-| `mongodb_replset_member_state` | Replica set member state (primary/replica) |
-| `mongodb_document_count` | Document count per collection |
-| `mongodb_asserts_total` | Assert counts (warnings, errors) |
+| `mongodb_connections_current` | Current number of client connections |
+| `mongodb_connections_active` | Number of active client connections |
+| `mongodb_asserts_regular` | Regular assertion rate |
+| `mongodb_asserts_warning` | Warning assertion rate |
+| `mongodb_opcounters_command` | Command operations rate |
+| `mongodb_wiredTiger_cache_bytes_currently_in_the_cache` | WiredTiger cache usage |
+| `mongodb_members_health` | Replica set member health status |
+| `mongodb_members_state` | Replica set member state (1=PRIMARY, 2=SECONDARY) |
+| `mongodb_queues_execution_read_available` | Available read tickets (MongoDB 8.0+) |
+| `mongodb_opLatencies_reads_latency` | Read operation latency |
 
 
 ### Backup and restore
@@ -1523,9 +1583,9 @@ For CA verification, mount the TLS CA certificate from the secret and configure 
 
 ### Monitoring
 
-Valkey Operator includes a Prometheus metrics exporter sidecar on port `9121` that provides cluster-level and node-level metrics.
+Valkey Operator includes a Prometheus metrics exporter sidecar (`oliver006/redis_exporter`) on port `9121` that provides cluster-level and node-level metrics. The exporter is **enabled by default** — no CR configuration is needed to activate it.
 
-The exporter is enabled by default. To disable it:
+To disable it:
 
 ```yaml
 spec:
@@ -1535,7 +1595,9 @@ spec:
 
 #### Prometheus PodMonitor
 
-Create a PodMonitor to scrape Valkey metrics with Prometheus:
+Create a PodMonitor to scrape Valkey metrics. The exporter emits metrics with a `valkey_` prefix (because the operator configures it with `--namespace=valkey`). Standard Redis Grafana dashboards expect a `redis_` prefix, so the PodMonitor uses `metricRelabelings` to rename at scrape time.
+
+See the reference implementation at `kubernetes/apps/e-commerce/config/databases/components/valkey-monitor/podmonitor.yaml`:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -1543,15 +1605,73 @@ kind: PodMonitor
 metadata:
   name: valkey
   namespace: databases
+  labels:
+    app.kubernetes.io/name: valkey
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: valkey
+  namespaceSelector:
+    matchNames:
+      - databases
   podMetricsEndpoints:
     - port: metrics
-      interval: 30s
       path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: kubernetes_pod_name
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node_name
+        - sourceLabels: [__meta_kubernetes_pod_host_ip]
+          targetLabel: node_ip
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: 'valkey_(.+)'
+          targetLabel: __name__
+          replacement: 'redis_$1'
 ```
+
+PodMonitor configuration details:
+
+| Setting | Value | Reason |
+|---------|-------|--------|
+| `selector` | `app.kubernetes.io/name: valkey` | Label set by the Valkey operator on all cluster pods |
+| `port` | `metrics` | Named port exposed by the metrics-exporter sidecar (port 9121) |
+| `relabelings` | `namespace`, `pod_name`, `node_name`, `node_ip` | Preserves Kubernetes metadata for Prometheus queries |
+| `metricRelabelings` | `valkey_*` → `redis_*` | Standard Redis Grafana dashboards query `redis_*` metrics; this rename makes them compatible without dashboard modifications |
+
+{{site.data.alerts.note}}
+
+The exporter serves metrics without authentication — no `basicAuth` is needed. The exporter authenticates against Valkey internally to collect metrics, but the `/metrics` HTTP endpoint is open.
+
+{{site.data.alerts.end}}
+
+#### Istio PeerAuthentication
+
+Create an Istio `PeerAuthentication` to allow Prometheus (outside the mesh) to reach the metrics port. See the reference at `kubernetes/apps/e-commerce/config/databases/components/valkey-monitor/peerauthentication.yaml`:
+
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: valkey-metrics-permissive
+  namespace: databases
+spec:
+  portLevelMtls:
+    "9121":
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
+```
+
+#### Grafana dashboard
+
+The Valkey dashboard imports [Redis Dashboard for Prometheus Redis Exporter](https://grafana.com/grafana/dashboards/11835) (ID 11835) via `grafanaCom` in the `GrafanaDashboard` CR. No dashboard modifications are needed — the `metricRelabelings` in the PodMonitor handle the `valkey_*` → `redis_*` rename at scrape time, making all panels work with their original `redis_*` queries.
+
+See `kubernetes/apps/e-commerce/config/databases/components/valkey-monitor/grafana-dashboard.yaml` for the GrafanaDashboard resource.
 
 Key metrics exposed:
 
