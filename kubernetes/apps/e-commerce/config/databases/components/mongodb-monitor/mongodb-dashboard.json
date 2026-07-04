@@ -4231,30 +4231,6 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": null,
-        "definition": "label_values(mongodb_connections_current{job=\"$job\"})",
-        "hide": 0,
-        "includeAll": false,
-        "label": "Group Id",
-        "multi": false,
-        "name": "group_id",
-        "options": [],
-        "query": ".*",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 5,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "current": {
           "selected": false,
           "text": [
             "All"
@@ -4400,7 +4376,7 @@
   },
   "timezone": "",
   "title": "Dedicated Atlas Deployments - Mongo Metrics",
-  "uid": "W0lo7Gx7k",
+  "uid": "mongodb-agent-3f569626",
   "version": 17,
   "weekStart": ""
 }
