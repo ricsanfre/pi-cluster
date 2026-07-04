@@ -1,1 +1,8 @@
 # opentelemetry-collector helm values (prod overlay)
+config:
+  processors:
+    resource:
+      attributes:
+      - key: deployment.environment.name
+        value: "prod"
+        action: insert

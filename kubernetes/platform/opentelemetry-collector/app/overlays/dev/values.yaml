@@ -1,1 +1,8 @@
 # opentelemetry-collector helm values (dev overlay)
+config:
+  processors:
+    resource:
+      attributes:
+      - key: deployment.environment.name
+        value: "dev"
+        action: insert
