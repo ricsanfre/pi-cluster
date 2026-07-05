@@ -7,7 +7,7 @@ spec:
   interval: 1h
   url: oci://ghcr.io/prometheus-community/charts/prometheus-elasticsearch-exporter
   ref:
-    tag: 7.2.1
+    tag: 7.3.0
   layerSelector:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
