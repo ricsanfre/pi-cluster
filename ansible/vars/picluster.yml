@@ -166,7 +166,7 @@ minio_validate_certificate: "{{ rustfs_validate_certificate }}"
 ########################
 
 # renovate: datasource=github-releases depName=restic/restic
-restic_version: 0.19.0
+restic_version: 0.19.1
 
 # Restic S3 repository configuration
 restic_repository: "s3:{{ rustfs_url }}/restic"
