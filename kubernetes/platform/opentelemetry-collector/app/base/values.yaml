@@ -25,8 +25,9 @@ ports:
 podAnnotations:
   prometheus.io/scrape: "true"
 config:
-  # Explicitly define receivers with 0.0.0.0 instead of ${env:MY_POD_IP}
-  # to avoid Flux 2.9 strict-mode postBuild variable substitution errors.
+  # All receivers, extensions, and telemetry endpoints are explicitly set to
+  # 0.0.0.0 instead of the chart default ${env:MY_POD_IP} to avoid Flux 2.9
+  # strict-mode postBuild variable substitution errors.
   receivers:
     otlp:
       protocols:
@@ -34,6 +35,22 @@ config:
           endpoint: 0.0.0.0:4317
         http:
           endpoint: 0.0.0.0:4318
+    jaeger:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:14250
+    zipkin:
+      endpoint: 0.0.0.0:9411
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: opentelemetry-collector
+            scrape_interval: 10s
+            static_configs:
+              - targets: [0.0.0.0:8888]
+  extensions:
+    health_check:
+      endpoint: 0.0.0.0:13133
 
   # By Default helm chart enables debug exporter
   exporters:
