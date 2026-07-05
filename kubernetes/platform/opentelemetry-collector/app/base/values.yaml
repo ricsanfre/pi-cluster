@@ -39,6 +39,10 @@ config:
       protocols:
         grpc:
           endpoint: 0.0.0.0:14250
+        thrift_http:
+          endpoint: 0.0.0.0:14268
+        thrift_compact:
+          endpoint: 0.0.0.0:6831
     zipkin:
       endpoint: 0.0.0.0:9411
     prometheus:
