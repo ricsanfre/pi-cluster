@@ -39,4 +39,4 @@ spec:
         - sourceLabels: [__name__]
           regex: 'valkey_(.+)'
           targetLabel: __name__
-          replacement: 'redis_${1}'
+          replacement: 'redis_$${1}'

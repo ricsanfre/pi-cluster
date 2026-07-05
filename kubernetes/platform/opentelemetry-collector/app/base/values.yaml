@@ -25,33 +25,15 @@ ports:
 podAnnotations:
   prometheus.io/scrape: "true"
 config:
-  # By Default helm chart enables all receivers: otlp, jaeger, zipkin, prometheus
-  # receivers:
-  #   jaeger:
-  #     protocols:
-  #       grpc:
-  #         endpoint: ${env:MY_POD_IP}:14250
-  #       thrift_compact:
-  #         endpoint: ${env:MY_POD_IP}:6831
-  #       thrift_http:
-  #         endpoint: ${env:MY_POD_IP}:14268
-  #   otlp:
-  #     protocols:
-  #       grpc:
-  #         endpoint: ${env:MY_POD_IP}:4317
-  #       http:
-  #         endpoint: ${env:MY_POD_IP}:4318
-  #   # if internalTelemetryViaOTLP.metrics.enabled = true, prometheus receiver will be removed
-  #   prometheus:
-  #     config:
-  #       scrape_configs:
-  #         - job_name: opentelemetry-collector
-  #           scrape_interval: 10s
-  #           static_configs:
-  #             - targets:
-  #                 - ${env:MY_POD_IP}:8888
-  #   zipkin:
-  #     endpoint: ${env:MY_POD_IP}:9411
+  # Explicitly define receivers with 0.0.0.0 instead of ${env:MY_POD_IP}
+  # to avoid Flux 2.9 strict-mode postBuild variable substitution errors.
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
 
   # By Default helm chart enables debug exporter
   exporters:
