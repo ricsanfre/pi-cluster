@@ -2,7 +2,7 @@
 title: What is this project about?
 permalink: /docs/home/
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible, Terraform and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "20-06-2026"
+last_modified_at: "06-07-2026"
 ---
 
 
@@ -227,44 +227,44 @@ The software used and the latest version tested of each component
 | OS | Ubuntu | 24.04.4 LTS | |
 | Control | Ansible | 2.21.1 | ansible-core version |
 | Control | cloud-init | 23.1.2 | version pre-integrated into Ubuntu 24.04 |
-| Kubernetes | K3S | v1.36.1+k3s1 | |
+| Kubernetes | K3S | v1.36.2+k3s1 | |
 | Kubernetes | Helm | v4.2.2 | |
-| Kubernetes | etcd | v3.6.7-k3s1 | version embedded into K3S |
-| Computing | containerd | v2.2.3-k3s1 | version embedded into K3S |
-| Networking | Kube-VIP | v1.0.4 | Helm chart version: 0.9.9 |
+| Kubernetes | etcd | v3.6.12-k3s1 | version embedded into K3S |
+| Computing | containerd | v2.3.2-k3s2 | version embedded into K3S |
+| Networking | Kube-VIP | v1.2.0 | Helm chart version: 0.9.9 |
 | Networking | Cilium | 1.19.5 | |
 | Networking | CoreDNS | 1.13.1 | Helm chart version: 1.46.0 |
 | Networking | External-DNS | 0.21.0 | Helm chart version: 1.21.1 |
 | Metric Server | Kubernetes Metrics Server | v0.8.1 | Helm chart version: 3.13.1 |
-| Service Mesh | Istio | 1.30.1 | |
-| Service Proxy | Envoy Gateway | 1.8.1 | Replaces Ingress NGINX and OAuth2 Proxy |
+| Service Mesh | Istio | 1.30.2 | |
+| Service Proxy | Envoy Gateway | 1.8.2 | Replaces Ingress NGINX and OAuth2 Proxy |
 | Storage | Longhorn | 1.12.0 | |
-| TLS Certificates | Cert-Manager | v1.20.2 | |
-| Logging | ECK Operator | 3.4.0 | |
-| Logging | ElasticSearch | 8.19.16 | Deployed with ECK Operator |
-| Logging | Kibana | 8.19.16 | Deployed with ECK Operator |
-| Logging | Fluentbit | 5.0.7 | Helm chart version: 0.57.7 |
+| TLS Certificates | Cert-Manager | v1.20.3 | |
+| Logging | ECK Operator | 3.4.1 | |
+| Logging | ElasticSearch | 8.19.18 | Deployed with ECK Operator |
+| Logging | Kibana | 8.19.18 | Deployed with ECK Operator |
+| Logging | Fluentbit | 5.0.8 | Helm chart version: 0.57.8 |
 | Logging | Fluentd | 1.18.0 | Helm chart version: 0.5.3 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.18 |
 | Logging | Loki | 3.6.7 | Helm chart version: 7.0.0 |
-| Monitoring | Kube Prometheus Stack | 86.3.1 | |
-| Monitoring | Prometheus Operator | v0.91.0 | Installed with Kube Prometheus Stack |
-| Monitoring | Prometheus | v3.12.0 | Installed with Kube Prometheus Stack |
-| Monitoring | AlertManager | v0.33.0 | Installed with Kube Prometheus Stack |
+| Monitoring | Kube Prometheus Stack | 87.10.1 | |
+| Monitoring | Prometheus Operator | v0.92.1 | Installed with Kube Prometheus Stack |
+| Monitoring | Prometheus | v3.13.0 | Installed with Kube Prometheus Stack |
+| Monitoring | AlertManager | v0.33.1 | Installed with Kube Prometheus Stack |
 | Monitoring | Prometheus Node Exporter | v1.11.1 | Installed with Kube Prometheus Stack |
 | Monitoring | Kube State Metrics | v2.19.1 | Installed with Kube Prometheus Stack |
-| Monitoring | Prometheus Elasticsearch Exporter | v1.10.0 | Helm chart version: 7.2.1 |
+| Monitoring | Prometheus Elasticsearch Exporter | v1.10.0 | Helm chart version: 7.3.0 |
 | Monitoring | Grafana | 13.0.1 | Deployed with Grafana Operator. Helm chart version: 5.24.0 |
 | Tracing | Grafana Tempo | 2.9.0 | Helm chart version: 1.61.3 |
 | Backup | RustFS External (self-hosted) | 1.0.0-beta.7 | |
-| Backup | Restic | 0.19.0 | |
-| Backup | Velero | 1.18.1 | Helm chart version: 12.0.3 |
+| Backup | Restic | 0.19.1 | |
+| Backup | Velero | 1.18.1 | Helm chart version: 12.1.0 |
 | Secrets Management | Hashicorp Vault | 2.0.3 | |
-| Secrets Management | External Secret Operator | 2.6.0 | |
-| Identity Access Management | Keycloak | 26.6.3 | Deployed with Keycloak Operator |
-| GitOps | Flux CD | v2.8.8 | |
+| Secrets Management | External Secret Operator | 2.7.0 | |
+| Identity Access Management | Keycloak | 26.6.4 | Deployed with Keycloak Operator |
+| GitOps | Flux CD | 2.9.0 | |
 | GitOps | Flux Tofu Controller | 0.16.4 | |
-| Streaming | Strimzi Kafka Operator | 1.0.1 | Kafka version: 4.1.1 |
-| Database | CloudNative-PG | 1.29.1 | PostgreSQL Operator |
+| Streaming | Strimzi Kafka Operator | 1.1.0 | Kafka version: 4.3.0 |
+| Database | CloudNative-PG | 1.30.0 | PostgreSQL Operator |
 | Database | MongoDB Operator | 0.13.0 | |
-| Database | Valkey Operator | 0.2.0 | |
+| Database | Valkey Operator | 0.3.0 | |
 {: .table .border-dark }
