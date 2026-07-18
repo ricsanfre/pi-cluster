@@ -37,7 +37,22 @@ Control-plane nodes will be configured so no load is deployed in it.
     sudo sysctl --system
     ```
 
-- Step 2: Disable swap memory (only x86 nodes)
+- Step 2: Increase inotify limits for container workloads
+
+    Kubernetes nodes running multiple container runtimes, CNI plugins (Cilium, Istio CNI), and storage drivers (Longhorn) can exhaust the default inotify user instances limit (`fs.inotify.max_user_instances = 128`). This causes CNI agents to fail with `couldn't initialize inotify: too many open files`.
+
+    Add the following to `/etc/sysctl.d/k8s.conf` (update the file created in Step 1):
+
+    ```shell
+    cat <<EOF | sudo tee -a /etc/sysctl.d/k8s.conf
+    fs.inotify.max_user_instances = 512
+    fs.inotify.max_user_watches = 256000
+    EOF
+
+    sudo sysctl --system
+    ```
+
+- Step 3: Disable swap memory (only x86 nodes)
 
   ```shell
   sudo swapoff -a
@@ -45,7 +60,7 @@ Control-plane nodes will be configured so no load is deployed in it.
 
   Modify /etc/fstab to make this change permanent, commenting line corresponding to swap.
 
-- Step 3: Enable `cgroup` on Raspberry PI nodes.
+- Step 4: Enable `cgroup` on Raspberry PI nodes.
 
   Modify file `/boot/firmware/cmdline.txt` to include the line:
 
@@ -53,7 +68,7 @@ Control-plane nodes will be configured so no load is deployed in it.
   cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
   ```
 
-- Step 4: Reboot the server
+- Step 5: Reboot the server
 
 
 ## Single-server Setup with an Embedded DB

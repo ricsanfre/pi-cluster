@@ -36,6 +36,17 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
 
+# Increase inotify limits for container/CNI workloads
+- name: Increase inotify limits
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop:
+    - { name: fs.inotify.max_user_instances, value: "512" }
+    - { name: fs.inotify.max_user_watches, value: "256000" }
+
 - name: Disable swap memory
   ansible.builtin.include_tasks: disable_swap.yml
 
