@@ -7,7 +7,7 @@ spec:
   interval: 1h
   url: oci://ghcr.io/coredns/charts/coredns
   ref:
-    tag: 1.46.0
+    tag: 1.46.1
   layerSelector:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
