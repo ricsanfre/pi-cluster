@@ -10,4 +10,4 @@ helm = "4.2.3"
 "github:longhorn/cli" = "1.12.0"
 
 # Versión más reciente estable
-cilium-cli = "0.19.5"
+cilium-cli = "0.19.6"
