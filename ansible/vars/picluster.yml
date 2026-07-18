@@ -219,7 +219,7 @@ velero_version: v1.18.1
 longhorn_version: v1.12.0
 
 # renovate: datasource=github-releases depName=istio/istio
-istio_version: 1.30.2
+istio_version: 1.30.3
 
 # renovate: datasource=github-releases depName=helm/helm
 helm_version: v4.2.3
