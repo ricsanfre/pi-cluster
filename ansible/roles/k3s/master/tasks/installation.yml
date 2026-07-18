@@ -198,7 +198,7 @@
           kubernetes.core.helm:
             name: coredns
             chart_ref: oci://ghcr.io/coredns/charts/coredns
-            chart_version: 1.46.0
+            chart_version: 1.46.1
             release_namespace: kube-system
             create_namespace: false
             release_values: "{{ coredns_merged_values }}"
