@@ -142,18 +142,22 @@ The installation process is the following:
 
 -   Install the CRDs by entering the following commands:
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.0/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
-    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.0/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
+    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
+    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
+    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloaksamlclients.k8s.keycloak.org-v1.yml
+    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloakoidcclients.k8s.keycloak.org-v1.yml
     ```
 
 -   Install the Keycloak Operator deployment by entering the following command:
 
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.0/kubernetes/kubernetes.yml
+    kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/kubernetes.yml
     ```
 
 {{site.data.alerts.note}}
-In the previous URLs replace version `26.3.0` by the latest Keycloak version available.
+In the previous URLs replace version `26.7.0` by the latest Keycloak version available.
+
+**Important:** Starting from Keycloak 26.7.0, four CRDs are required: `keycloaks`, `keycloakrealmimports`, `keycloaksamlclients`, and `keycloakoidcclients`. Earlier versions only needed the first two.
 
 {{site.data.alerts.end}}
 
@@ -183,9 +187,11 @@ keycloak-operator/
     namespace: keycloak
     resources:
       - ns.yaml
-      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.0/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
-      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.0/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
-      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.0/kubernetes/kubernetes.yml
+      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
+      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
+      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloaksamlclients.k8s.keycloak.org-v1.yml
+      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/keycloakoidcclients.k8s.keycloak.org-v1.yml
+      - https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.7.0/kubernetes/kubernetes.yml
     ```
 
 -   `keycloak-operator/base/ns.yaml`
