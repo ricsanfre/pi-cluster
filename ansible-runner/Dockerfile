@@ -59,7 +59,7 @@ RUN uv sync --frozen --no-dev
 # Install ansible roles/collections dependencies
 RUN set -eux; \
         for attempt in 1 2 3; do \
-            uv run ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r requirements.yml --roles-path "/home/runner/.ansible/roles" --timeout 600 && break; \
+            uv run ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS --force -r requirements.yml --roles-path "/home/runner/.ansible/roles" --timeout 600 && break; \
             if [ "$attempt" -eq 3 ]; then exit 1; fi; \
             sleep 10; \
         done
