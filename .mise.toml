@@ -3,7 +3,7 @@
 kubectl = "1.36.2"
 flux2 = "2.9.2"
 velero = "1.18.1"
-istioctl = "1.30.2"
+istioctl = "1.30.3"
 helm = "4.2.3"
 
 # Herramienta via GitHub Releases
