@@ -108,7 +108,7 @@ wheels = [
 
 [[package]]
 name = "ansible-core"
-version = "2.21.1"
+version = "2.21.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -117,9 +117,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "resolvelib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/6d/38d7eaea1df4a95c3b137e780f6ad2208d7886334a291cadde5d645f08a1/ansible_core-2.21.1.tar.gz", hash = "sha256:a5536ece95be84de15212b3644cdbbe9cbd9efd62e4e8a544cd6b0b27a083039", size = 3384534, upload-time = "2026-06-18T19:35:02.887Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/6d/14fbdae14e7d02fd8349e6a52a76c144a1f92a2df3236c46bd7030cafdce/ansible_core-2.21.2.tar.gz", hash = "sha256:c6139e662eda1bfb5af16029f12afa5edfc7f95f8cd44281b1bdb434a6d9dc70", size = 3388984, upload-time = "2026-07-13T19:39:08.347Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/90/55/894f2cad10ef650bf33a0e64e242805de2d1a8835f539d04d52053fe08a6/ansible_core-2.21.1-py3-none-any.whl", hash = "sha256:1403ff56bb69484ef90788126d06c65b4e28e8d2dcdcfb7f027d4c1495052d7e", size = 2454057, upload-time = "2026-06-18T19:35:00.741Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/0c/c3f6f78d0e28123bec95a7d1a0caf8042c51042ce71db2816a290448863b/ansible_core-2.21.2-py3-none-any.whl", hash = "sha256:c7d696c717da03109a32a569a5fe57925812a86734344eab775cba169bf57cf8", size = 2456273, upload-time = "2026-07-13T19:39:06.668Z" },
 ]
 
 [[package]]
@@ -692,7 +692,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ansible-core", specifier = "==2.21.1" },
+    { name = "ansible-core", specifier = "==2.21.2" },
     { name = "ansible-lint", specifier = ">=26,<27" },
     { name = "certbot", specifier = "==5.6.0" },
     { name = "certbot-dns-ionos", specifier = "==2024.11.9" },
