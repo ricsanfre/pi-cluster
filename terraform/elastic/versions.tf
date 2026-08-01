@@ -3,7 +3,7 @@ terraform {
   required_providers {
     elasticstack = {
       source  = "elastic/elasticstack"
-      version = "0.16.2"
+      version = "0.16.3"
     }
     vault = {
       source  = "hashicorp/vault"
