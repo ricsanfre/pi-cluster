@@ -1,7 +1,7 @@
 [tools]
 # Versiones específicas verificadas (Mayo 2026)
 kubectl = "1.36.3"
-flux2 = "2.9.2"
+flux2 = "2.9.4"
 velero = "1.18.1"
 istioctl = "1.30.3"
 helm = "4.2.4"
