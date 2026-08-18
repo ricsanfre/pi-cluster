@@ -7,7 +7,7 @@ istioctl = "1.30.3"
 helm = "4.2.4"
 
 # Herramienta via GitHub Releases
-"github:longhorn/cli" = "1.12.0"
+"github:longhorn/cli" = "1.12.1"
 
 # Versión más reciente estable
 cilium-cli = "0.19.6"
