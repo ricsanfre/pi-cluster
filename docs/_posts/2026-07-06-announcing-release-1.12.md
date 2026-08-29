@@ -19,7 +19,7 @@ Both modes share the same `ansible.cfg`, inventory, playbooks, and Galaxy requir
 
 The Docker-based runner has been rebuilt using a multi-stage Docker build that copies tools (kubectl, helm, helmfile, tofu) from their official images, ensuring version consistency and simplifying maintenance. Ansible Vault and GPG key generation have been removed from the runner container as part of the migration to HashiCorp Vault for secrets management.
 
-See further details in [Ansible Control Node Instructions](/docs/ansible-instructions/) and the [Ansible Dual Execution Environment design document]({{ site.github.repository_url }}/blob/master/design/ansible-dual-execution-environment.md).
+See further details in [Ansible Control Node Instructions](/docs/ansible/) and the [Ansible Dual Execution Environment design document]({{ site.github.repository_url }}/blob/master/design/ansible-dual-execution-environment.md).
 
 
 ## Migrate Ansible Credentials to HashiCorp Vault
@@ -91,7 +91,7 @@ All cluster nodes have been upgraded from Ubuntu 22.04 (Jammy) to Ubuntu 24.04 (
 
 The upgrade involved updating cloud-init autoinstall configurations for x86 nodes, updating PXE server boot files for network-based provisioning, and removing the `linux-modules-extra-raspi` package (no longer needed for Raspberry Pi on 24.04). K3s was upgraded to the latest stable release supporting the new kernel and OS.
 
-See further details in [Installing Ubuntu 24.04](/docs/installing-ubuntu/) and [PXE Server Documentation](/docs/pxe-server/).
+See further details in [OS Installation- Raspberry Pi](docs/ubuntu/rpi/) and [PXE Server Intallation](/docs/pxe-server/).
 
 
 ## HAProxy to Kube-VIP Migration
@@ -102,7 +102,7 @@ Kube-VIP provides a virtual IP (VIP) for the K3s API server using ARP-based lead
 
 Kube-VIP is deployed as a FluxCD HelmRelease and its installation is integrated into the K3s installation Ansible playbook. The legacy HAProxy monitoring and dashboards have been decommissioned, and Prometheus monitoring with a dedicated Grafana dashboard has been configured for Kube-VIP.
 
-See further details in [K3s Installation - Kube-VIP](/docs/installing-k3s/) and the [Kube-VIP Monitoring design document]({{ site.github.repository_url }}/blob/master/design/kube-vip-monitoring.md).
+See further details in [K3s Installation - Kube-VIP](/docs/k3s-installation/) and the [Kube-VIP Monitoring design document]({{ site.github.repository_url }}/blob/master/design/kube-vip-monitoring.md).
 
 
 ## Replace NGINX Ingress Controller with Envoy Gateway
@@ -179,7 +179,7 @@ The migration involved deploying RustFS via Ansible on `node1`, migrating existi
 
 RustFS is deployed as an external service on `node1` together with Vault, maintaining the existing architecture where critical infrastructure services run outside the cluster.
 
-See further details in [RustFS Documentation](/docs/rustfs-baremetal/) and the [RustFS Terraform Compatibility design document]({{ site.github.repository_url }}/blob/master/design/rustfs-terraform-compatibility.md).
+See further details in [RustFS Documentation](/docs/rustfs/) and the [RustFS Terraform Compatibility design document]({{ site.github.repository_url }}/blob/master/design/rustfs-terraform-compatibility.md).
 
 
 ## MongoDB Monitoring
