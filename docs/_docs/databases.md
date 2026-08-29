@@ -27,7 +27,7 @@ CloudNative-PG offers a declarative way of deploying PostgreSQL databases, suppo
 - HA support using database replicas
   - Data replication from rw instance to read-only instances. See details in [CloudNative-PG Replication](https://cloudnative-pg.io/documentation/current/replication/)
 - Backup and restore
-  - Support backup and restore to/from S3 Object Storage like Minio/AWS. See details in [CloudNative-PG Backup on Object Stores](https://cloudnative-pg.io/documentation/current/backup_barmanobjectstore/)
+  - Support backup and restore to/from S3 Object Storage like Minio/AWS. See details in [CloudNative-PG Backup on Object Stores](https://cloudnative-pg.io/docs/current/backup#object-storebased-backups)
   - The operator can orchestrate a continuous backup infrastructure that is based on the [Barman Cloud](https://pgbarman.org/) tool.
   - Scheduled backups via the `ScheduledBackup` CRD (see [Scheduled Backups](#scheduled-backups))
 - Monitoring:
@@ -376,7 +376,7 @@ All databases share the same RW service endpoint — connection isolation is enf
 
 {{site.data.alerts.note}}
 
-The `Database` CRD is reconciled by the CloudNative-PG operator. If you delete the `Database` resource, the corresponding PostgreSQL database is dropped. See [CloudNative-PG Database Management](https://cloudnative-pg.io/documentation/current/database_management/) for all options.
+The `Database` CRD is reconciled by the CloudNative-PG operator. If you delete the `Database` resource, the corresponding PostgreSQL database is dropped. See [CloudNative-PG Database Management](https://cloudnative-pg.io/docs/current/declarative_database_management/) for all options.
 
 {{site.data.alerts.end}}
 
@@ -1301,7 +1301,7 @@ Where:
 - `spec.persistence.size`: Size of the PVC allocated to each Valkey node
 - `spec.persistence.storageClassName`: Kubernetes StorageClass for PVCs (e.g., `longhorn`)
 - `spec.resources`: CPU and memory requests/limits applied to each pod
-- `spec.config`: Valkey server configuration directives passed to all nodes (see [Valkey configuration docs](https://valkey.io/topics/config/))
+- `spec.config`: Valkey server configuration directives passed to all nodes (see [Valkey configuration docs](https://valkey.io/topics/valkey.conf/))
 - `spec.users`: Per-user ACL rules distributed to every node via a mounted Secret
 
 #### Multi-shard cluster with pod anti-affinity

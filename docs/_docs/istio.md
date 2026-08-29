@@ -505,7 +505,7 @@ Installation using `Helm` (Release 3):
 
   - Kiali is exposed through Envoy Gateway using an external `HTTPRoute` resource instead of the Kiali ingress settings.
 
-    See further details in [Kubernetes Gateway API HTTPRoute](https://gateway-api.sigs.k8s.io/api-types/httproute/)
+    See further details in [Kubernetes Gateway API HTTPRoute](https://gateway-api.sigs.k8s.io/reference/api-types/httproute/)
 
   - External connection to Prometheus, Grafana and Tempo is configured (`cr.spec.external_services`)
 
