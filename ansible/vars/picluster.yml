@@ -129,7 +129,7 @@ rustfs_url: "https://{{ rustfs_hostname }}:9091"
 # renovate: datasource=github-releases depName=rustfs/rustfs
 rustfs_server_version: 1.0.0-rc.2
 # renovate: datasource=github-releases depName=rustfs/cli
-rustfs_cli_version: v0.1.31
+rustfs_cli_version: v0.1.32
 
 # RustFS data dirs
 rustfs_server_datadirs:
