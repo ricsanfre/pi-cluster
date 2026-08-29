@@ -3,7 +3,7 @@ FROM alpine/kubectl:1.36.3 AS kubectl
 FROM alpine/helm:4.2.4 AS helm
 
 FROM alpine:3.24 AS tofu
-COPY --from=ghcr.io/opentofu/opentofu:1.12.5 /usr/local/bin/tofu /usr/local/bin/tofu
+COPY --from=ghcr.io/opentofu/opentofu:1.12.6 /usr/local/bin/tofu /usr/local/bin/tofu
 
 FROM ghcr.io/astral-sh/uv:0.12.5 AS uv
 
