@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: kafdrop
-        image: obsidiandynamics/kafdrop:4.2.0
+        image: obsidiandynamics/kafdrop:4.3.0
         imagePullPolicy: Always
         ports:
         - containerPort: 9000
