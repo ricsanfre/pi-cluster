@@ -127,7 +127,7 @@ rustfs_endpoint: "{{ rustfs_hostname }}:9091"
 rustfs_url: "https://{{ rustfs_hostname }}:9091"
 
 # renovate: datasource=github-releases depName=rustfs/rustfs
-rustfs_server_version: 1.0.0-rc.2
+rustfs_server_version: 1.0.0-rc.2-preview.1
 # renovate: datasource=github-releases depName=rustfs/cli
 rustfs_cli_version: v0.1.31
 
