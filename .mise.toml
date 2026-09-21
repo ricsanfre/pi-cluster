@@ -2,7 +2,7 @@
 # Versiones específicas verificadas (Mayo 2026)
 kubectl = "1.37.0"
 flux2 = "2.9.5"
-velero = "1.18.2"
+velero = "1.18.3"
 istioctl = "1.31.0"
 helm = "4.3.0"
 opentofu = "1.12.6"
