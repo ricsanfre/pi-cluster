@@ -1,6 +1,6 @@
 [tools]
 # Versiones específicas verificadas (Mayo 2026)
-kubectl = "1.37.0"
+kubectl = "1.37.1"
 flux2 = "2.9.5"
 velero = "1.18.2"
 istioctl = "1.31.0"
