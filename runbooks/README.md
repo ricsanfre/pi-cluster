@@ -23,7 +23,7 @@ If no runbook covers the situation, start from a triage runbook (`GITOPS-002`, `
 | Domain | File | Runbook IDs |
 | --- | --- | --- |
 | Bootstrap and Recovery | [`cluster/bootstrap-recovery.md`](cluster/bootstrap-recovery.md) | `CLUSTER-001`, `CLUSTER-002` (backlog: `CLUSTER-003`) |
-| Nodes and Capacity | [`cluster/nodes-capacity.md`](cluster/nodes-capacity.md) | `CLUSTER-010`, `CLUSTER-011`, `CLUSTER-012` (backlog: `CLUSTER-013`) |
+| Nodes and Capacity | [`cluster/nodes-capacity.md`](cluster/nodes-capacity.md) | `CLUSTER-010` … `CLUSTER-012`, `CLUSTER-014` (backlog: `CLUSTER-013`) |
 | GitOps and Release Operations | [`cluster/gitops-release.md`](cluster/gitops-release.md) | `GITOPS-001` … `GITOPS-006` |
 | Security and Access | [`cluster/security-access.md`](cluster/security-access.md) | `SEC-001` … `SEC-003` (backlog: `SEC-004`, `SEC-005`) |
 | Upgrades and Change Management | [`cluster/change-management.md`](cluster/change-management.md) | `CHANGE-001`, `CHANGE-002` (backlog: `CHANGE-003`, `CHANGE-004`) |
@@ -101,6 +101,7 @@ References:
 - [`CLUSTER-010` Node Replacement Workflow](cluster/nodes-capacity.md#runbook-cluster-010)
 - [`CLUSTER-011` Planned Node Drain and Maintenance](cluster/nodes-capacity.md#runbook-cluster-011)
 - [`CLUSTER-012` Node Disk Pressure Response](cluster/nodes-capacity.md#runbook-cluster-012)
+- [`CLUSTER-014` Hung Node and etcd Quorum Loss Recovery](cluster/nodes-capacity.md#runbook-cluster-014)
 - `CLUSTER-013` Cluster Capacity Expansion Checklist
 
 #### GitOps and Release Operations

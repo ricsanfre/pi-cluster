@@ -23,11 +23,13 @@ Procedure:
 
 - Flux namespace: `flux-system`
 - Keycloak namespace: `keycloak`
+- Database namespace: `databases`
 - Flux Kustomizations:
-  - `keycloak-db`
+  - `keycloak-database`
   - `keycloak-app`
   - `keycloak-config`
-- CNPG cluster: `keycloak-db`
+- CNPG cluster: `postgres-keycloak`
+- CNPG database CR: `keycloak-db` (owned by the cluster; unrelated to the Kustomization name)
 - Keycloak CR: `keycloak`
 - Terraform CR (tofu-controller): `config-keycloak`
 
@@ -36,7 +38,7 @@ Procedure:
 ```bash
 flux suspend kustomization keycloak-config -n flux-system
 flux suspend kustomization keycloak-app -n flux-system
-flux suspend kustomization keycloak-db -n flux-system
+flux suspend kustomization keycloak-database -n flux-system
 ```
 
 3. Stop Keycloak app object (optional but recommended).
@@ -48,34 +50,34 @@ kubectl -n keycloak delete keycloak keycloak --ignore-not-found
 4. Delete PostgreSQL cluster object.
 
 ```bash
-kubectl -n keycloak delete cluster.postgresql.cnpg.io keycloak-db --ignore-not-found
+kubectl -n databases delete cluster.postgresql.cnpg.io postgres-keycloak --ignore-not-found
 ```
 
 5. Delete PostgreSQL PVCs (actual data wipe).
 
 ```bash
-kubectl -n keycloak delete pvc -l cnpg.io/cluster=keycloak-db
+kubectl -n databases delete pvc -l cnpg.io/cluster=postgres-keycloak
 ```
 
 6. Verify DB resources are gone.
 
 ```bash
-kubectl -n keycloak get pvc | grep keycloak-db || true
-kubectl -n keycloak get cluster.postgresql.cnpg.io keycloak-db || true
+kubectl -n databases get pvc -l cnpg.io/cluster=postgres-keycloak || true
+kubectl -n databases get cluster.postgresql.cnpg.io postgres-keycloak || true
 ```
 
 7. Recreate database layer first.
 
 ```bash
-flux resume kustomization keycloak-db -n flux-system
-flux reconcile kustomization keycloak-db -n flux-system --with-source
+flux resume kustomization keycloak-database -n flux-system
+flux reconcile kustomization keycloak-database -n flux-system --with-source
 ```
 
 Wait until the CNPG cluster is Ready:
 
 ```bash
-kubectl -n keycloak get cluster.postgresql.cnpg.io keycloak-db -o wide
-kubectl -n keycloak get pods
+kubectl -n databases get cluster.postgresql.cnpg.io postgres-keycloak -o wide
+kubectl -n databases get pods -l cnpg.io/cluster=postgres-keycloak
 ```
 
 8. Recreate Keycloak application.
@@ -97,6 +99,7 @@ Verify:
 
 ```bash
 kubectl -n keycloak get pods
+kubectl -n databases get cluster.postgresql.cnpg.io
 kubectl -n flux-system get terraform config-keycloak
 kubectl -n flux-system describe terraform config-keycloak
 ```
@@ -192,38 +195,164 @@ Runbook ID: `KEYCLOAK-003`
 Owner: IAM Platform
 Severity: `SEV-1` or `Maintenance`
 
-Objective: Restore Keycloak PostgreSQL data from object storage backup.
+Objective: Restore Keycloak PostgreSQL data from the object store into a recovery cluster, validate it,
+and cut over.
 
 Preconditions:
 
-- Confirm latest successful backup exists for `keycloak-db`.
-- Confirm object storage credentials in `keycloak-db-minio-secret` are valid.
-- Confirm maintenance window is active.
+- Maintenance window is active.
+- `postgres-keycloak-s3-secret` exists in `databases` and its credentials are valid.
+- **A base backup exists.** Archived WAL alone cannot be recovered from. Confirm there is a restore
+  point:
+
+  ```bash
+  kubectl -n databases get cluster postgres-keycloak \
+    -o jsonpath='first={.status.firstRecoverabilityPoint}{"\n"}last={.status.lastSuccessfulBackup}{"\n"}'
+  kubectl -n databases get backups.postgresql.cnpg.io
+  ```
+
+  Both values must be non-empty and at least one `Backup` must exist. **If they are empty, stop** —
+  see the known gap at the end of this runbook.
+- Note the S3 endpoint. The manifests use `${S3_SERVER}`, which only Flux substitutes:
+
+  ```bash
+  kubectl -n flux-system get configmap cluster-settings -o jsonpath='{.data.S3_SERVER}{"\n"}'
+  ```
 
 Procedure:
 
-1. Suspend `keycloak-app` and `keycloak-config` reconciliation.
-2. Create a recovery CNPG cluster manifest from backup metadata.
-3. Validate recovered data in an isolated cluster/service.
-4. Perform cutover to recovered cluster.
-5. Resume app and config reconciliations.
+1. Suspend every Kustomization that owns or consumes the database. Suspending `keycloak-database` is
+   mandatory: without it Flux re-applies the `Cluster` CR while you are restoring.
+
+```bash
+flux suspend kustomization keycloak-config -n flux-system
+flux suspend kustomization keycloak-app -n flux-system
+flux suspend kustomization keycloak-database -n flux-system
+```
+
+2. Create the recovery cluster. Use a distinct name so the original is untouched during validation.
+   `serverName` is required: it tells barman which server's backups to read, and it defaults to the
+   cluster name, which is no longer `postgres-keycloak` for the recovery cluster.
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-keycloak-recovery
+  namespace: databases
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  externalClusters:
+  - name: origin
+    barmanObjectStore:
+      destinationPath: s3://k3s-barman/postgres-keycloak
+      endpointURL: https://<S3_SERVER>:9091
+      serverName: postgres-keycloak
+      s3Credentials:
+        accessKeyId:
+          name: postgres-keycloak-s3-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-keycloak-s3-secret
+          key: AWS_SECRET_ACCESS_KEY
+  bootstrap:
+    recovery:
+      source: origin
+```
+
+Replace `<S3_SERVER>` with the value from the precondition. Omitting `recoveryTarget` restores to the
+latest point; add one for point-in-time recovery.
+
+3. Apply the manifest and wait for the recovery cluster to become ready.
+
+```bash
+kubectl apply -f postgres-keycloak-recovery.yaml
+kubectl -n databases get cluster postgres-keycloak-recovery -o wide -w
+```
+
+4. Validate the recovered data before touching the original.
+
+```bash
+kubectl -n databases exec postgres-keycloak-recovery-1 -- \
+  psql -U postgres -d keycloak -c '\dt'
+kubectl -n databases exec postgres-keycloak-recovery-1 -- \
+  psql -U postgres -d keycloak -Atc 'select count(*) from realm;'
+```
+
+A missing or implausibly small `realm` count means the wrong restore point. Delete the recovery
+cluster and retry with an explicit `recoveryTarget`.
+
+5. Cut over. Choose one option and record which was used.
+
+Option A — preserve the `postgres-keycloak` name (recommended). Keycloak's host is hardcoded to
+`postgres-keycloak-rw.databases.svc.cluster.local`, so keeping the name avoids any application change.
+
+```bash
+kubectl -n databases delete cluster postgres-keycloak-recovery
+kubectl -n databases delete pvc -l cnpg.io/cluster=postgres-keycloak-recovery
+kubectl -n databases delete cluster.postgresql.cnpg.io postgres-keycloak --ignore-not-found
+kubectl -n databases delete pvc -l cnpg.io/cluster=postgres-keycloak
+```
+
+Then re-apply the manifest from step 2 with `metadata.name: postgres-keycloak`, keeping the
+`externalClusters` entry but dropping its `serverName` (it then defaults to the cluster name). Wait for
+`Ready=True` before resuming anything.
+
+Option B — keep the recovery cluster and repoint Keycloak. Faster, but leaves `keycloak-database`
+suspended until the names are reconciled.
+
+- Change `db.host` in `kubernetes/platform/keycloak/app/base/keycloak.yaml` to
+  `postgres-keycloak-recovery-rw.databases.svc.cluster.local`, commit, then
+  `flux reconcile kustomization keycloak-app -n flux-system --with-source`.
+- `database/base/postgres-cluster.yaml` still declares `postgres-keycloak`, so either rename the
+  cluster in Git or keep `keycloak-database` suspended. Decide before closing the incident.
+
+6. Resume the application layer.
+
+```bash
+flux reconcile kustomization keycloak-app -n flux-system --with-source
+flux resume kustomization keycloak-config -n flux-system
+flux reconcile kustomization keycloak-config -n flux-system --with-source
+```
+
+For Option A, also resume `keycloak-database` once the cluster exists and matches Git.
 
 Verify:
 
 ```bash
-kubectl -n keycloak get cluster.postgresql.cnpg.io
+kubectl -n databases get cluster.postgresql.cnpg.io
+kubectl -n databases get pods -l app.kubernetes.io/name=postgresql
 kubectl -n keycloak get pods
 kubectl -n keycloak logs -l app=keycloak --tail=100
+kubectl -n flux-system get terraform config-keycloak
 ```
+
+- CNPG cluster `Ready=True` with `ContinuousArchiving=True`.
+- Keycloak pods `Running` and the admin console reachable.
+- `keycloak-app` and `keycloak-config` Kustomizations `Ready=True`.
 
 Rollback:
 
-- Repoint Keycloak DB host to previous RW service if cutover validation fails.
-- Re-suspend `keycloak-config` until DB state is stable.
+1. Before cutover, delete the recovery cluster; the original is untouched.
+2. After cutover, repoint `db.host` to the previous RW service and reconcile `keycloak-app`.
+3. If the restored data is wrong, repeat from step 2 with an explicit `recoveryTarget.targetTime`.
+   Never delete object-store paths to force a fresh start.
 
 References:
 
-- `kubernetes/platform/keycloak/db/base/keycloak-db.yaml`
+- `kubernetes/platform/keycloak/database/base/postgres-cluster.yaml` — CNPG cluster and backup config.
+- `kubernetes/platform/keycloak/app/base/keycloak.yaml` — `db.host`, needed for Option B.
+
+**Known gap (2026-11-01).** `postgres-keycloak` reports an empty `firstRecoverabilityPoint` and
+`lastSuccessfulBackup`, and no `Backup` or `ScheduledBackup` object exists. `ContinuousArchiving=True`
+means WAL is being archived, but with no base backup this runbook cannot be executed. A
+`ScheduledBackup` must be added (the cluster already sets `retentionPolicy: 30d`) before this
+procedure is usable. Separately, native Barman support is removed in CloudNativePG 1.31 — migrate to
+the Barman Cloud Plugin and update this runbook before upgrading the operator.
 
 ## Rotate Keycloak Admin Credentials (Vault + Keycloak)
 
@@ -307,7 +436,7 @@ Runbook ID: `KEYCLOAK-006`
 Owner: IAM Platform
 Severity: `SEV-2`
 
-Objective: Standard triage flow for `keycloak-db`, `keycloak-app`, and `keycloak-config`.
+Objective: Standard triage flow for `keycloak-database`, `keycloak-app`, and `keycloak-config`.
 
 Preconditions:
 
@@ -317,7 +446,7 @@ Procedure:
 
 ```bash
 flux get kustomizations -n flux-system | grep keycloak
-kubectl -n flux-system describe kustomization keycloak-db
+kubectl -n flux-system describe kustomization keycloak-database
 kubectl -n flux-system describe kustomization keycloak-app
 kubectl -n flux-system describe kustomization keycloak-config
 ```
@@ -393,9 +522,9 @@ Preconditions:
 Procedure:
 
 ```bash
-kubectl -n keycloak get cluster.postgresql.cnpg.io keycloak-db -o wide
-kubectl -n keycloak get pods -l cnpg.io/cluster=keycloak-db
-kubectl -n keycloak describe cluster.postgresql.cnpg.io keycloak-db
+kubectl -n databases get cluster.postgresql.cnpg.io postgres-keycloak -o wide
+kubectl -n databases get pods -l cnpg.io/cluster=postgres-keycloak
+kubectl -n databases describe cluster.postgresql.cnpg.io postgres-keycloak
 ```
 
 Verify:
@@ -535,13 +664,14 @@ Procedure:
 
 1. Suspend and remove `keycloak-config`.
 2. Remove `keycloak-app` and verify CR cleanup.
-3. Remove `keycloak-db` and decide whether to keep or delete backups.
+3. Remove `postgres-keycloak` (namespace `databases`) and decide whether to keep or delete backups.
 4. Remove related Vault secrets and Terraform resources.
 
 Verify:
 
 ```bash
 kubectl -n keycloak get all
+kubectl -n databases get clusters.postgresql.cnpg.io || true
 kubectl -n flux-system get kustomizations | grep keycloak || true
 kubectl -n flux-system get terraform config-keycloak || true
 ```
@@ -572,15 +702,15 @@ Procedure:
 
 ```bash
 flux get kustomizations -n flux-system | grep keycloak
-kubectl -n keycloak get cluster.postgresql.cnpg.io keycloak-db
+kubectl -n databases get cluster.postgresql.cnpg.io postgres-keycloak
 kubectl -n keycloak get keycloak keycloak
 kubectl -n flux-system get terraform config-keycloak
 ```
 
 Verify:
 
-- `keycloak-db` Kustomization Healthy.
-- CNPG cluster `keycloak-db` Ready.
+- `keycloak-database` Kustomization Healthy.
+- CNPG cluster `postgres-keycloak` Ready.
 - `keycloak-app` Kustomization Healthy.
 - Keycloak CR Ready.
 - `keycloak-config` Kustomization Healthy.

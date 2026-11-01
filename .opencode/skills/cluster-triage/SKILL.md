@@ -147,7 +147,9 @@ and that backups are still landing.
 
 | Symptom | Likely cause | Runbook |
 | --- | --- | --- |
-| API server unreachable, all nodes NotReady | kube-vip VIP or control-plane endpoint | `CLUSTER-001`, `CLUSTER-002` |
+| API server unreachable, all nodes NotReady | etcd quorum loss or kube-vip endpoint | `CLUSTER-014` |
+| API `ServiceUnavailable`; a node answers TCP 22 but never sends a banner | Control-plane node hung at userspace level (often under-voltage) | `CLUSTER-014` |
+| `ping` to `10.0.0.x` fails, everything "looks down" | Gateway rejects IPv4 ICMP by design — not a fault | `CLUSTER-014` |
 | Kustomization stuck `False`, no new revision | Git source cannot fetch (auth, branch, network) | `GITOPS-001` |
 | One Kustomization `False`, others fine | Manifest/patch error or missing dependency | `GITOPS-002` |
 | HelmRelease `False`, chart or values error | Chart version, schema change, stuck release | `GITOPS-003` |

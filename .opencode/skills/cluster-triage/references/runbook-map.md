@@ -18,6 +18,7 @@ Symptom-to-runbook index for triage. Canonical catalog: [`runbooks/README.md`](.
 | `CLUSTER-010` | Replacing a failed node |
 | `CLUSTER-011` | Planned drain, reboot, or maintenance |
 | `CLUSTER-012` | `DiskPressure`, evictions, or a full node filesystem |
+| `CLUSTER-014` | Cluster API unavailable; a node accepts TCP but never sends a banner; etcd reports no quorum |
 
 ### GitOps and release — `runbooks/cluster/gitops-release.md`
 
