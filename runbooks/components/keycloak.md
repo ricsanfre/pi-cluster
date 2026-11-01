@@ -212,7 +212,7 @@ Preconditions:
   ```
 
   Both values must be non-empty and at least one `Backup` must exist. **If they are empty, stop** —
-  see the known gap at the end of this runbook.
+  see the backup prerequisites at the end of this runbook.
 - Note the S3 endpoint. The manifests use `${S3_SERVER}`, which only Flux substitutes:
 
   ```bash
@@ -347,11 +347,11 @@ References:
 - `kubernetes/platform/keycloak/database/base/postgres-cluster.yaml` — CNPG cluster and backup config.
 - `kubernetes/platform/keycloak/app/base/keycloak.yaml` — `db.host`, needed for Option B.
 
-**Known gap (2026-11-01).** `postgres-keycloak` reports an empty `firstRecoverabilityPoint` and
-`lastSuccessfulBackup`, and no `Backup` or `ScheduledBackup` object exists. `ContinuousArchiving=True`
-means WAL is being archived, but with no base backup this runbook cannot be executed. A
-`ScheduledBackup` must be added (the cluster already sets `retentionPolicy: 30d`) before this
-procedure is usable. Separately, native Barman support is removed in CloudNativePG 1.31 — migrate to
+**Backup prerequisites (2026-11-01).** `postgres-keycloak` is covered by the `postgres-keycloak-daily`
+ScheduledBackup (02:30 daily, destination `s3://k3s-barman/postgres-keycloak`,
+`retentionPolicy: 30d`); the first base backup completed on 2026-11-01. If `firstRecoverabilityPoint`
+and `lastSuccessfulBackup` are ever empty again, the schedule has stopped working — investigate before
+attempting a restore. Separately, native Barman support is removed in CloudNativePG 1.31 — migrate to
 the Barman Cloud Plugin and update this runbook before upgrading the operator.
 
 ## Rotate Keycloak Admin Credentials (Vault + Keycloak)
