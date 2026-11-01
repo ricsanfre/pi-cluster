@@ -292,6 +292,23 @@ When validating changes from a feature branch in the live cluster:
    flux reconcile source git "${GR_NAME}" -n flux-system
    ```
 
+## Discovery spikes
+
+Use a spike when the question is "should we use X, Y or Z" rather than "add X". The `tech-spike`
+skill carries the procedure.
+
+- Frame a concrete decision, a timebox, and what evidence would settle it.
+- Judge candidates against this cluster: hybrid ARM64/AMD64, 8–16 GB nodes, Longhorn, FluxCD,
+  Vault/External Secrets, Keycloak, Envoy Gateway, the Prometheus/Loki/Tempo stack, RustFS backups,
+  and homelab cost/power limits.
+- Shortlist 2–4 candidates and score them on a stated matrix. ARM64 support and licensing are
+  disqualifying, not weighted.
+- A proof of concept runs in the dev cluster or a throwaway namespace — never in prod — and is torn
+  down afterwards. Measure resource usage instead of trusting the project's claims.
+- Record the outcome in `design/adr/NNNN-<slug>.md` (format of `design/adr/0010-*`, status
+  `Proposed`) when adopting, or `design/<slug>.md` as a spike note with a verdict and a revisit
+  trigger when deferring or rejecting.
+
 ## Delivering a new service
 
 Use this checklist when adding a platform capability or a workload. The agent skill `new-service`
@@ -368,8 +385,8 @@ State what you ran and what passed. If a check could not run, say why.
 
 OpenCode project agents live in `.opencode/agents/` and skills in `.opencode/skills/`.
 
-- **`sre`** — DevOps/SRE and platform engineer for triage, service delivery/testing, Ansible stages,
-  Terraform validation, and runbook-driven operations. Read-only by default; mutations require
-  approval; destructive commands are denied.
-- Skills: `cluster-triage`, `flux-change`, `change-preflight`, `new-service`, `service-testing`,
-  `docs-authoring`.
+- **`sre`** — DevOps/SRE and platform engineer for triage, service delivery/testing, technology
+  spikes, Ansible stages, Terraform validation, and runbook-driven operations. Read-only by default;
+  mutations require approval; destructive commands are denied.
+- Skills: `cluster-triage`, `flux-change`, `change-preflight`, `tech-spike`, `new-service`,
+  `service-testing`, `docs-authoring`.
