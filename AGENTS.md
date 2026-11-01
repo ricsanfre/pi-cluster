@@ -383,7 +383,9 @@ State what you ran and what passed. If a check could not run, say why.
 
 ## Agents and skills
 
-OpenCode project agents live in `.opencode/agents/` and skills in `.opencode/skills/`.
+OpenCode project agents live in `.opencode/agents/` and skills in `.opencode/skills/`. Usage and the
+extension guide are documented in [`docs/_docs/opencode-agents.md`](docs/_docs/opencode-agents.md);
+the rationale is in [`design/adr/0012-opencode-sre-agent.md`](design/adr/0012-opencode-sre-agent.md).
 
 - **`sre`** — DevOps/SRE and platform engineer for triage, service delivery/testing, technology
   spikes, Ansible stages, Terraform validation, and runbook-driven operations. Read-only by default;

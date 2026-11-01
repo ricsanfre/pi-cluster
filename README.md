@@ -309,6 +309,8 @@ The content of this website and the source code to build it (Jekyll static based
 
 Check out the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder), Ansible playbooks (`/ansible` folder) and packaged Kubernetes applications ( `/kubernetes` folder) contained in this repository, so you can use in for your own homelab.
 
+The repository also ships project-scoped OpenCode agents and skills for operating, extending and documenting the cluster. See [OpenCode AI Agents](https://picluster.ricsanfre.com/docs/opencode-agents/).
+
 ## About the Project
 
 This project was started in June 2021 by Ricardo Sanchez
