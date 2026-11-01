@@ -292,6 +292,38 @@ When validating changes from a feature branch in the live cluster:
    flux reconcile source git "${GR_NAME}" -n flux-system
    ```
 
+## Delivering a new service
+
+Use this checklist when adding a platform capability or a workload. The agent skill `new-service`
+carries the detailed procedure; `service-testing` covers validation.
+
+1. **Classify** — `kubernetes/platform/<service>/` for infrastructure (operators, controllers,
+   storage, networking, observability); `kubernetes/apps/<group>/` for user workloads.
+2. **Pin upstream** — exact chart version, OCI (`OCIRepository`) vs HTTP (`HelmRepository`), CRD
+   ownership, ARM64/AMD64 image support, persistence needs.
+3. **Scaffold** — copy `boilerplate/fluxcd-app-template-vars.yaml.example`, fill the variables, run
+   `make -C boilerplate generate-fluxcd-app`, then move the result into place. `boilerplate/output/`
+   is scratch and must not be committed.
+4. **Layer** — `app/base` for chart + generic values, `app/components` for reusable bundles
+   (monitoring, route, auth, istio), `app/overlays/{dev,prod}` for environment values only,
+   `config/base` + `config/overlays` for non-Helm resources.
+5. **Secrets** — Vault is the source. Define the secret in `terraform/vault/resources/`, then consume
+   it with an `ExternalSecret` referencing the shared `vault-backend` `ClusterSecretStore`. Never
+   commit a secret.
+6. **SSO** — Keycloak clients/groups in `terraform/keycloak/resources/`, applied through the
+   tofu-controller pattern in `kubernetes/platform/keycloak/config/base/terraform.yaml`.
+7. **Observability** — ServiceMonitor/PodMonitor in `config/components/monitoring`, Grafana dashboard
+   next to it, stdout logs, OTLP traces to the `otel` collector when supported.
+8. **Ingress/TLS** — Envoy Gateway `HTTPRoute` with `${CLUSTER_DOMAIN}` from `cluster-settings`;
+   cert-manager handles TLS; ExternalDNS publishes the hostname.
+9. **Wire Flux** — add `<service>-app.yaml` (and `-config.yaml`) under
+   `kubernetes/clusters/prod/{infra,apps}/`, with real `dependsOn` entries and
+   `postBuild.substituteFrom` when using `${...}` variables; register it in `kustomization.yaml`.
+10. **Document** — `docs/_docs/<service>.md` plus `docs/_data/docs.yml`; design note in `design/`
+    when the choice is non-obvious; runbook in `runbooks/` plus catalog and runbook-map entries.
+11. **Test before prod** — render both overlays, deploy to the dev cluster, run the `service-testing`
+    ladder, and present the promotion checklist. Prod wiring needs an explicit request.
+
 ## Safety constraints
 
 - **Never run** destructive actions without an explicit user request: `make clean`, `make k3s-reset`,
@@ -336,6 +368,8 @@ State what you ran and what passed. If a check could not run, say why.
 
 OpenCode project agents live in `.opencode/agents/` and skills in `.opencode/skills/`.
 
-- **`sre`** — DevOps/SRE agent for triage, Ansible stages, Terraform validation, and runbook-driven
-  operations. Read-only by default; mutations require approval; destructive commands are denied.
-- Skills: `cluster-triage`, `flux-change`, `change-preflight`, `docs-authoring`.
+- **`sre`** — DevOps/SRE and platform engineer for triage, service delivery/testing, Ansible stages,
+  Terraform validation, and runbook-driven operations. Read-only by default; mutations require
+  approval; destructive commands are denied.
+- Skills: `cluster-triage`, `flux-change`, `change-preflight`, `new-service`, `service-testing`,
+  `docs-authoring`.
