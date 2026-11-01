@@ -7,6 +7,7 @@ resources:
   - postgres-cluster.yaml
   - postgres-databases.yaml
   - postgres-externalsecrets.yaml
+  - postgres-scheduledbackup.yaml
   - mongodb-community.yaml
   - mongodb-externalsecrets.yaml
   - valkey-cluster.yaml

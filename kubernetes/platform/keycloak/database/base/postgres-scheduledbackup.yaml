@@ -1,0 +1,20 @@
+# CloudNativePG — Keycloak PostgreSQL scheduled base backup
+# Namespace: databases
+# Destination and credentials come from the Cluster's
+# spec.backup.barmanObjectStore (s3://k3s-barman/postgres-keycloak).
+# Retention is the Cluster's backup.retentionPolicy (30d).
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-keycloak-daily
+  namespace: databases
+spec:
+  # CNPG cron format has six fields: seconds minutes hours dom month dow.
+  schedule: "0 30 2 * * *"
+  method: barmanObjectStore
+  backupOwnerReference: self
+  # Take a base backup as soon as Flux applies this, closing the current gap.
+  immediate: true
+  cluster:
+    name: postgres-keycloak

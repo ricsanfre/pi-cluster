@@ -5,3 +5,4 @@ resources:
   - postgres-cluster.yaml
   - postgres-database.yaml
   - postgres-externalsecret.yaml
+  - postgres-scheduledbackup.yaml

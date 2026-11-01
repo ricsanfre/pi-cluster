@@ -1,0 +1,21 @@
+# CloudNativePG — E-commerce PostgreSQL scheduled base backup
+# Namespace: databases
+# Destination and credentials come from the Cluster's
+# spec.backup.barmanObjectStore (s3://k3s-barman/postgres-ecommerce).
+# Retention is the Cluster's backup.retentionPolicy (30d).
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-ecommerce-daily
+  namespace: databases
+spec:
+  # CNPG cron format has six fields: seconds minutes hours dom month dow.
+  # Staggered 15 minutes after the Keycloak backup.
+  schedule: "0 45 2 * * *"
+  method: barmanObjectStore
+  backupOwnerReference: self
+  # Take a base backup as soon as Flux applies this, closing the current gap.
+  immediate: true
+  cluster:
+    name: postgres-ecommerce
