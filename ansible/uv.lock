@@ -4,7 +4,7 @@ requires-python = "==3.14.*"
 
 [[package]]
 name = "acme"
-version = "5.8.0"
+version = "5.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -13,9 +13,9 @@ dependencies = [
     { name = "pyrfc3339" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3a/b8/4ca6f1b0e04472d21b248d32a6abc5e24058dac68b513a8ab7526837b100/acme-5.8.0.tar.gz", hash = "sha256:44c4edb53acdd3fa8402cb29c78a6d1bd2005d777a4d2fcd12663bbc3c147b34", size = 91121, upload-time = "2026-09-01T21:15:36.946Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/ad/da805f98b7b7fc0e9f9ec490ad743b2c8b5fca3fb8fcf3bf4a3012bc53f2/acme-5.9.0.tar.gz", hash = "sha256:bbfd9cf42797b5378a05833c0fd917de9418b69e03cbdb39abb7e85e5532fe75", size = 90758, upload-time = "2026-10-29T19:36:53.682Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/f8/4e40a19169b540aca57e5d1f260dfb184a2cf27c8a3c5165a28bcba975d9/acme-5.8.0-py3-none-any.whl", hash = "sha256:637501767248156545d85c23b806381ac346c5eac759f8e35052af85b7bb3933", size = 95024, upload-time = "2026-09-01T21:15:18.526Z" },
+    { url = "https://files.pythonhosted.org/packages/89/9d/16b9c80e6fff6d7f33d937a188ebdd6318177a34c6ac6b9e7ae470bbceda/acme-5.9.0-py3-none-any.whl", hash = "sha256:a646011d6c7c843d89c91a901a2bf450752621f6431f19851bec1222c94446bd", size = 95158, upload-time = "2026-10-29T19:36:32.2Z" },
 ]
 
 [[package]]
@@ -191,7 +191,7 @@ wheels = [
 
 [[package]]
 name = "certbot"
-version = "5.8.0"
+version = "5.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "acme" },
@@ -204,9 +204,9 @@ dependencies = [
     { name = "pyrfc3339" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/31/29/fbf5127d2b8d178d7add2b9145560436a69b437045c6197a4b6edbfcbb3c/certbot-5.8.0.tar.gz", hash = "sha256:a4a2c7b0459bb626b3791ef07b6df26bbb222d2324783ba3e60f76c0933eec87", size = 708523, upload-time = "2026-09-01T21:15:48.114Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/4c/c7ba4e990f6bded907aaefbb079e8adf8181bd92051e24ba70051d73f2b9/certbot-5.9.0.tar.gz", hash = "sha256:bf7d096c8b7e595d8c8dd2c1374db2bd11f53ea33d1748aaea805e81007710d8", size = 706114, upload-time = "2026-10-29T19:36:55.248Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/a9/7742882b276c06e430fb23da13e4512b3cd89d4aa6fb9ddfd7b96812bbff/certbot-5.8.0-py3-none-any.whl", hash = "sha256:c06793e6a0169b07ee09e11e6a017c7d5a77310055d693fffd66c53363ab87ff", size = 781034, upload-time = "2026-09-01T21:15:35.532Z" },
+    { url = "https://files.pythonhosted.org/packages/28/8d/338872b2d2416c86c2541e2e6d6e851be0859fb571cd6ec57cd322477022/certbot-5.9.0-py3-none-any.whl", hash = "sha256:b7adb889d4dc5ee81bc4b606de2576c564e701d6addef3b8685e90e2a4991299", size = 781792, upload-time = "2026-10-29T19:36:33.929Z" },
 ]
 
 [[package]]
@@ -691,7 +691,7 @@ dependencies = [
 requires-dist = [
     { name = "ansible-core", specifier = "==2.21.5" },
     { name = "ansible-lint", specifier = ">=26,<27" },
-    { name = "certbot", specifier = "==5.8.0" },
+    { name = "certbot", specifier = "==5.9.0" },
     { name = "certbot-dns-ionos", specifier = "==2024.11.9" },
     { name = "hvac", specifier = "==2.4.0" },
     { name = "kubernetes", specifier = "==36.0.3" },
