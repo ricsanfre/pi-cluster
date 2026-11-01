@@ -264,5 +264,3 @@ kubectl logs -n kube-system deployment/descheduler | grep "Evicting\|evicted"
 # Check HelmRelease health
 flux get helmrelease -n kube-system descheduler
 ```
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
