@@ -4,3 +4,11 @@ namespace: keycloak
 
 resources:
   - ../../base
+
+patches:
+  - path: keycloak-patch.yaml
+    target:
+      group: k8s.keycloak.org
+      kind: Keycloak
+      name: keycloak
+  - path: remove-grafana-dashboards.yaml

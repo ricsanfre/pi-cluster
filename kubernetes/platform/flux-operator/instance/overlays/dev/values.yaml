@@ -4,12 +4,20 @@ instance:
     kind: GitRepository
     url: https://github.com/ricsanfre/pi-cluster
     ref: refs/heads/master
-    path: kubernetes/cluster/dev
+    path: kubernetes/clusters/dev
     interval: 1h
+    # /test/ is intentionally NOT ignored: POC manifests created by
+    # `make -C dev dev-poc-new` live under test/<name>/ and are synced by a
+    # dedicated Flux Kustomization added to clusters/dev/profiles/.
     ignore: |
       /ansible/
       /ansible-runner/
       /design/
       /docs/
       /metal/
-      /test/
+  components:
+    # Keep the dev footprint small: notification-controller is not needed
+    # for most POCs and is disabled here.
+    - source-controller
+    - kustomize-controller
+    - helm-controller

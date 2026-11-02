@@ -49,7 +49,7 @@
     values_files:
       - ../kubernetes/platform/flux-operator/operator/base/values.yaml
       - ../kubernetes/platform/flux-operator/operator/components/monitoring/values.yaml
-      - ../kubernetes/platform/flux-operator/operator/overlays/prod/values.yaml
+      - ../kubernetes/platform/flux-operator/operator/overlays/{{ overlay }}/values.yaml
 
 - name: Create Github secret
   ansible.builtin.shell: |
@@ -79,4 +79,4 @@
     create_namespace: true
     values_files:
       - ../kubernetes/platform/flux-operator/instance/base/values.yaml
-      - ../kubernetes/platform/flux-operator/instance/overlays/prod/values.yaml
+      - ../kubernetes/platform/flux-operator/instance/overlays/{{ overlay }}/values.yaml

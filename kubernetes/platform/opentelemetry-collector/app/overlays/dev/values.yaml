@@ -1,8 +1,23 @@
 # opentelemetry-collector helm values (dev overlay)
+
 config:
+  exporters:
+    otlp:
+      endpoint: tempo-distributor.tempo.svc.cluster.local:4317
+      tls:
+        insecure: true
   processors:
     resource:
       attributes:
-      - key: deployment.environment.name
-        value: "dev"
-        action: insert
+        - key: deployment.environment.name
+          value: "dev"
+          action: insert
+  service:
+    pipelines:
+      traces:
+        receivers:
+          - otlp
+        processors:
+          - resource
+        exporters:
+          - otlp

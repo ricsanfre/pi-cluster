@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - cilium-app.yaml
   - coredns-app.yaml
-  - envoy-gateway-app.yaml
+  - external-services.yaml
   - flux-app.yaml
   - metrics-server-app.yaml
+  - namespaces.yaml

@@ -1,0 +1,15 @@
+- op: replace
+  path: /spec/kafka/config/offsets.topic.replication.factor
+  value: 1
+- op: replace
+  path: /spec/kafka/config/transaction.state.log.replication.factor
+  value: 1
+- op: replace
+  path: /spec/kafka/config/transaction.state.log.min.isr
+  value: 1
+- op: replace
+  path: /spec/kafka/config/default.replication.factor
+  value: 1
+- op: replace
+  path: /spec/kafka/config/min.insync.replicas
+  value: 1

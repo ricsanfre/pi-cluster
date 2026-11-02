@@ -1,0 +1,49 @@
+# Dev log shipping: tail container logs and push directly to Loki.
+# The prod path uses fluent-bit -> fluentd -> Elasticsearch/Loki; the dev
+# environment skips the aggregator to stay small.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  fluent-bit.yaml: |-
+    service:
+      daemon: false
+      flush: 1
+      log_level: info
+      http_server: true
+      http_listen: 0.0.0.0
+      http_port: 2020
+      health_check: true
+      storage.path: /var/log/fluentbit/storage
+      storage.sync: full
+      storage.checksum: true
+      storage.backlog.mem_limit: 5M
+      storage.metrics: true
+    pipeline:
+      inputs:
+        - name: tail
+          alias: input.kube
+          path: /var/log/containers/*.log
+          path_key: filename
+          multiline.parser: docker, cri
+          tag: kube.*
+          db: /var/log/fluentbit/flb_kube.db
+          storage.type: filesystem
+          skip_long_lines: true
+      filters:
+        - name: kubernetes
+          match: kube.*
+          kube_tag_prefix: kube.var.log.containers.
+          merge_log: true
+          k8s-logging.parser: true
+      outputs:
+        - name: loki
+          match: kube.*
+          host: loki.loki.svc.cluster.local
+          port: 3100
+          labels: job=fluent-bit,namespace=$kubernetes['namespace_name'],pod=$kubernetes['pod_name']
+          line_format: json
+          auto_kubernetes_labels: true

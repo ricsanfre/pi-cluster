@@ -1,0 +1,72 @@
+---
+# Development-only external services for the k3d environment.
+#
+# RustFS is always started. Vault is opt-in:
+#   docker compose --profile vault up -d
+#
+# The `picluster` network is created by dev/create_cluster.sh. Services use
+# fixed IPs so Kubernetes Services/EndpointSlices can reach them without
+# relying on Docker DNS from nested pod network namespaces.
+name: dev-external-services
+
+services:
+  rustfs-perms:
+    image: alpine:3.22
+    user: "0:0"
+    restart: "no"
+    volumes:
+      - ./data/rustfs:/fix/data
+      - ./data/logs:/fix/logs
+      - ./certs:/fix/certs
+    command: ["sh", "-c", "mkdir -p /fix/data /fix/logs && chown -R 10001:10001 /fix/data /fix/logs /fix/certs"]
+
+  rustfs:
+    image: rustfs/rustfs:1.0.4
+    container_name: dev-rustfs
+    restart: unless-stopped
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
+    networks:
+      picluster:
+        ipv4_address: 172.30.100.10
+    ports:
+      - "127.0.0.1:9091:9091"
+      - "127.0.0.1:9092:9092"
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:?set RUSTFS_ACCESS_KEY in .env}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?set RUSTFS_SECRET_KEY in .env}
+      RUSTFS_ADDRESS: ":9091"
+      RUSTFS_CONSOLE_ADDRESS: ":9092"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_TLS_PATH: "/certs"
+      RUSTFS_OBS_LOGGER_LEVEL: "error"
+      RUSTFS_OBS_LOG_DIRECTORY: "/var/log/rustfs/"
+    volumes:
+      - ./data/rustfs:/data
+      - ./data/logs:/var/log/rustfs
+      - ./certs:/certs:ro
+    command: ["/data"]
+
+  vault:
+    image: hashicorp/vault:1.20.4
+    container_name: dev-vault
+    profiles: ["vault"]
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    networks:
+      picluster:
+        ipv4_address: 172.30.100.11
+    ports:
+      - "127.0.0.1:8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN:?set VAULT_DEV_ROOT_TOKEN in .env}
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    command: ["server", "-dev", "-dev-root-token-id=${VAULT_DEV_ROOT_TOKEN}"]
+
+networks:
+  picluster:
+    external: true
+    name: picluster

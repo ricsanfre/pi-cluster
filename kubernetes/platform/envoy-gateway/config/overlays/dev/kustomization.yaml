@@ -4,3 +4,15 @@ namespace: envoy-gateway-system
 
 resources:
   - ../../base
+
+patches:
+  - path: certificate-patch.yaml
+    target:
+      group: cert-manager.io
+      kind: Certificate
+      name: pi-cluster-tls
+  - path: envoy-proxy-patch.yaml
+    target:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: envoy

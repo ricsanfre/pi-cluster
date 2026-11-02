@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: databases
+---
+# Namespace used by the Envoy Gateway HTTP redirect route.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: networking

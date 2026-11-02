@@ -2,13 +2,13 @@ apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: picluster
-servers: 1
-agents: 2
+servers: {{ .servers }}
+agents: {{ .agents }}
 kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)
   hostIP: {{ .host_ip }} # where the Kubernetes API will be listening on
   hostPort: "6443"
 # Setting version of k3s
-image: rancher/k3s:v1.30.6-k3s1
+image: {{ .image }}
 # Setting docker network to be used
 network: picluster
 options:
@@ -37,10 +37,6 @@ options:
       - arg: --disable=servicelb
         nodeFilters:
           - server:*
-      # Disable local storage
-      - arg: --disable=local-storage
-        nodeFilters:
-          - server:*
       # Disable metric server
       - arg: --disable=metrics-server
         nodeFilters:
@@ -48,15 +44,15 @@ options:
       # Disable network-policy
       - arg: --disable-network-policy
         nodeFilters:
-         - server:*
+          - server:*
       # Disable kube-proxy
       - arg: --disable-kube-proxy
         nodeFilters:
-         - server:*
+          - server:*
       # Disable flannel-backend
       - arg: --flannel-backend=none
         nodeFilters:
-         - server:*
+          - server:*
       # Adding cluster PODs and Services CIDRs
       - arg: --cluster-cidr={{ .cluster_subnet }}
         nodeFilters:
