@@ -1,0 +1,56 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: loki-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 15m
+  targetNamespace: loki
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/loki/app/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: fluent-common-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: fluent
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/fluent/common/overlays/dev
+  prune: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: fluent-bit-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: fluent
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: fluent-common-app
+    - name: loki-app
+  path: ./kubernetes/platform/fluent/fluent-bit/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

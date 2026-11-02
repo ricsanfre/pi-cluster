@@ -5,3 +5,8 @@ cgroup:
   autoMount:
     enabled: false
   hostRoot: /run/cilium/cgroupv2
+
+# k3d exposes the k3s API on 6443 inside the server container. The prod base
+# value (6444) does not apply here.
+k8sServiceHost: 127.0.0.1
+k8sServicePort: 6443

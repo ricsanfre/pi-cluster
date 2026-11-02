@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-external
+---
+# RustFS runs outside the cluster (Docker Compose) on the `picluster` network.
+# A headless Service plus a manually managed EndpointSlice gives pods a stable
+# in-cluster name without relying on Docker DNS from pod network namespaces.
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs
+  namespace: dev-external
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: s3
+      port: 9091
+      protocol: TCP
+      targetPort: s3
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: rustfs
+  namespace: dev-external
+  labels:
+    kubernetes.io/service-name: rustfs
+    endpointslice.kubernetes.io/managed-by: manual
+addressType: IPv4
+ports:
+  - name: s3
+    port: 9091
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 172.30.100.10
+    conditions:
+      ready: true
+---
+# Optional Vault dev server, started with `VAULT=1 make dev-services-up`.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  namespace: dev-external
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      port: 8200
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: vault
+  namespace: dev-external
+  labels:
+    kubernetes.io/service-name: vault
+    endpointslice.kubernetes.io/managed-by: manual
+addressType: IPv4
+ports:
+  - name: http
+    port: 8200
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 172.30.100.11
+    conditions:
+      ready: true

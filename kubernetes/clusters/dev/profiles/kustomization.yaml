@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Opt-in profiles. Add one line per profile you want Flux to reconcile, e.g.:
+#   resources:
+#     - cert-manager.yaml
+#     - ingress.yaml
+#
+# Available profiles:
+#   cert-manager.yaml  cert-manager + self-signed CA issuers
+#   ingress.yaml       Envoy Gateway + dev CA wildcard certificate (requires cert-manager)
+#   cnpg.yaml          CloudNativePG operator
+#   secrets.yaml       External Secrets Operator (optional external Vault)
+#   observability.yaml kube-prometheus-stack (tuned for dev)
+#   logging.yaml       Loki single-binary + Fluent Bit
+#   tracing.yaml       Tempo + OpenTelemetry Collector
+#   messaging.yaml     Strimzi, one ephemeral KRaft broker
+#   data.yaml          MongoDB community operator + Valkey operator
+#   keycloak.yaml      Keycloak operator + instance
+#   velero.yaml        Velero backup/restore
+resources: []

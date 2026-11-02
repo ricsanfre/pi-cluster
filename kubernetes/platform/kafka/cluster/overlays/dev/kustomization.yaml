@@ -4,3 +4,15 @@ namespace: kafka
 
 resources:
   - ../../base
+
+patches:
+  - path: kafka-patch.yaml
+    target:
+      group: kafka.strimzi.io
+      kind: Kafka
+      name: cluster
+  - path: node-pool-patch.yaml
+    target:
+      group: kafka.strimzi.io
+      kind: KafkaNodePool
+      name: dual-role

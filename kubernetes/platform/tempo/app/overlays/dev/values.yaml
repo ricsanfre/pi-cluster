@@ -1,1 +1,44 @@
 # tempo helm values (dev overlay)
+#
+# Keep the distributed chart (it is what the repo already pins) but scale every
+# component to one replica and use local filesystem storage. No S3/External
+# Secrets, so the tracing profile does not require the secrets profile.
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+    wal:
+      path: /var/tempo/wal
+    s3: null
+
+distributor:
+  replicas: 1
+  extraArgs: []
+  extraEnv: []
+ingester:
+  replicas: 1
+  extraArgs: []
+  extraEnv: []
+querier:
+  replicas: 1
+  extraArgs: []
+  extraEnv: []
+queryFrontend:
+  replicas: 1
+  extraArgs: []
+  extraEnv: []
+compactor:
+  replicas: 1
+  extraArgs: []
+  extraEnv: []
+metricsGenerator:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 256Mi

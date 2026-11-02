@@ -1,0 +1,16 @@
+- op: replace
+  path: /spec/replicas
+  value: 1
+- op: replace
+  path: /spec/storage
+  value:
+    type: ephemeral
+- op: replace
+  path: /spec/resources
+  value:
+    requests:
+      cpu: 200m
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"

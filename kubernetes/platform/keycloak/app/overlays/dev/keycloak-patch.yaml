@@ -1,0 +1,14 @@
+apiVersion: k8s.keycloak.org/v2beta1
+kind: Keycloak
+metadata:
+  name: keycloak
+spec:
+  # One instance keeps the dev footprint small.
+  instances: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "768Mi"

@@ -1,1 +1,6 @@
 # metrics-server helm values (dev overlay)
+
+# Prometheus Operator CRDs are only installed by the observability profile.
+# Do not make the base depend on them.
+serviceMonitor:
+  enabled: false

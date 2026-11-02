@@ -1,0 +1,14 @@
+# The dev Keycloak database does not use the Barman object store.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-keycloak-daily
+  namespace: databases
+$patch: delete
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: postgres-keycloak-s3-externalsecret
+  namespace: databases
+$patch: delete

@@ -4,6 +4,7 @@ namespace: fluent
 
 resources:
   - ../../base
+  - fluent-bit-config.yaml
 
 configMapGenerator:
   - name: fluent-bit-helm-values
@@ -12,8 +13,8 @@ configMapGenerator:
       - overlay-values.yaml=values.yaml
 
 patches:
-- target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: fluent-bit
-  path: helm-patch.yaml
+  - target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: fluent-bit
+    path: helm-patch.yaml

@@ -1,8 +1,8 @@
 ---
 title: Kubernetes development environment
 permalink: /docs/dev/
-description: How to configure a development environment for the Pi Cluster using K3D.
-last_modified_at: "31-12-2024"
+description: How to configure a development environment for the Pi Cluster using K3D, with a manual walkthrough and an automated base + profiles workflow.
+last_modified_at: "02-11-2026"
 
 ---
 
@@ -15,6 +15,151 @@ The development setup is the following:
 - Docker cluster nodes and Load balancer Kubernetes services are reachable from local host through docker network
 
 ![picluster-dev-k3d](/assets/img/pi-cluster-dev-k3d-architecture.png)
+
+{{site.data.alerts.note}}
+The recommended path is the automated workflow (`make -C dev dev-up`). The
+manual walkthrough below is kept so each step can be understood and debugged.
+Both use the same k3d network, Cilium, CoreDNS and Flux components, and the dev
+cluster now runs the same k3s minor as production (`v1.37.1+k3s1`).
+{{site.data.alerts.end}}
+
+## Automated workflow (recommended)
+
+The automated workflow is implemented in `dev/` and `kubernetes/clusters/dev/`.
+It creates the Docker network, the k3d cluster, the external RustFS/Vault
+services, and bootstraps Cilium, CoreDNS and Flux.
+
+### Quick start
+
+```bash
+cd dev
+make dev-preflight   # tools + MemAvailable check (>= 8 GiB)
+make dev-up          # network + cluster + external services + Flux + smoke
+make dev-status      # context guard, Flux, HelmReleases, pods, warnings
+make dev-smoke       # nodes, DNS, metrics, local-path PVC, base pods
+make dev-usage       # host memory, docker stats, kubectl top
+make dev-down        # stop external services and delete the cluster (data kept)
+make dev-recreate    # down + up + smoke
+```
+
+`dev-preflight` refuses to continue if the host has less than 8 GiB available.
+Every Make target asserts the `k3d-picluster` kubectl context.
+
+### Base components
+
+| Component | Dev setting |
+| --- | --- |
+| k3d | 1 server, 0 agents, 5 GiB cap; `K3D_AGENTS`/`K3S_IMAGE` overrides |
+| Cilium | 1 operator, kube-proxy replacement, Hubble disabled |
+| CoreDNS | 1 replica |
+| Flux | source + kustomize + helm controllers; notification disabled |
+| metrics-server | for `kubectl top` |
+| local-path | k3s bundled provisioner, default StorageClass |
+| `dev-external` | stable Service/EndpointSlice names for RustFS/Vault |
+
+The k3s image defaults to `rancher/k3s:v1.37.1-k3s1` to match prod. Override it
+with `K3S_IMAGE=rancher/k3s:<tag>` or add agents with `K3D_AGENTS=1` for
+multi-node scheduling tests.
+
+### Profiles
+
+Profiles are opt-in. Add one file per profile to
+`kubernetes/clusters/dev/profiles/kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cert-manager.yaml
+  - cnpg.yaml
+```
+
+| Profile | Contents | Requires |
+| --- | --- | --- |
+| `cert-manager` | cert-manager + self-signed CA issuers | — |
+| `ingress` | Envoy Gateway + dev CA wildcard certificate | `cert-manager` |
+| `cnpg` | CloudNativePG operator | — |
+| `secrets` | External Secrets Operator | Vault (`VAULT=1`) |
+| `observability` | tuned kube-prometheus-stack | — |
+| `logging` | Loki single-binary + Fluent Bit | — |
+| `tracing` | Tempo + OpenTelemetry Collector | — |
+| `messaging` | Strimzi, one ephemeral KRaft broker | — |
+| `data` | MongoDB operator + Valkey operator | — |
+| `keycloak` | Keycloak + its PostgreSQL | `cnpg`, `secrets` |
+| `velero` | Velero backup/restore | `secrets` |
+
+Removing a profile from the list prunes its resources on the next reconcile.
+Heavy profiles (`observability`, `messaging`, `keycloak`) should not run more
+than two at a time on a 16 GB laptop.
+
+### External services
+
+RustFS (and optional Vault) run outside the cluster in Docker Compose:
+
+```bash
+cd dev
+make dev-services-up              # RustFS
+VAULT=1 make dev-services-up      # RustFS + Vault
+make dev-services-down            # stop, keep data
+make dev-services-reset           # stop and delete data (confirmation)
+```
+
+The cluster reaches RustFS through `rustfs.dev-external.svc.cluster.local:9091`.
+The local dev CA is copied into POC namespaces as the `rustfs-ca` Secret.
+
+### POC workflow
+
+```bash
+cd dev
+make dev-poc-new NAME=cnpg-barman
+```
+
+This creates `test/cnpg-barman/` with a Namespace, ResourceQuota (requests
+2 GiB, limits 3 GiB), LimitRange and a kustomization, plus a Flux Kustomization
+in `kubernetes/clusters/dev/profiles/poc-cnpg-barman.yaml`. Add that file to
+`profiles/kustomization.yaml` and commit.
+
+### Resource budget
+
+| Item | Budget |
+| --- | --- |
+| Host baseline (browser + editor) | ~4.6 GiB |
+| Host reserve | ~2 GiB |
+| Usable for cluster + external services | ~8.5 GiB |
+| Single-node k3d cap | 5 GiB |
+| Base measured target | <= 1.5 GiB |
+| POC namespace quota | requests 2 GiB, limits 3 GiB |
+
+Expected combinations:
+
+| Combination | Estimated total | Verdict |
+| --- | --- | --- |
+| Base + `cnpg` + RustFS | ~2.7 GiB | comfortable |
+| Base + `cnpg` + `ingress` + RustFS | ~3.0 GiB | comfortable |
+| Base + `observability` + `cnpg` + `ingress` | ~3.8 GiB | fine |
+| Base + `messaging` + `observability` | ~3.7 GiB | memory-fine, CPU-tight |
+| Base + all heavy profiles | ~5–6 GiB | not recommended |
+
+### Limitations and troubleshooting
+
+- **Longhorn is not supported in k3d.** Dev uses `local-path`; PVCs are
+  node-local and lost with the cluster.
+- The cluster is x86-only in practice; prod is hybrid ARM64/AMD64.
+- The dev CA is local and untrusted. Do not reuse it outside the dev cluster.
+- Flux tracks `master`. Branch validation must follow the `flux-change`
+  procedure and be reverted afterwards.
+
+| Symptom | Check |
+| --- | --- |
+| Wrong context | `kubectl config current-context` must be `k3d-picluster` |
+| Flux not reconciling | `make dev-status`; `flux get kustomizations -A` |
+| Pods Pending after create | Cilium not Ready: `kubectl -n kube-system rollout status ds/cilium` |
+| DNS failures | `kubectl -n kube-system get pods -l k8s-app=kube-dns` |
+| PVC Pending | `local-path` uses `WaitForFirstConsumer`; a consumer pod is required |
+| RustFS unreachable | `make dev-services-up`; check `https://127.0.0.1:9091/health` with the dev CA |
+| RustFS TLS errors in a pod | Copy `rustfs-ca` into the namespace and use `endpointCA` |
+| Memory pressure | `make dev-usage`; remove a heavy profile; `make dev-down` |
+| Cluster wedged | `make dev-recreate` (external data is kept) |
 
 ## Preparing the development environment
 
@@ -132,8 +277,8 @@ Follow official [K3D installation guide](https://docs.docker.com/engine/install/
 
   ```shell
   $ k3d version
-  k3d version v5.7.5
-  k3s version v1.30.6-k3s1 (default)
+  k3d version v5.8.3
+  k3s version v1.37.1-k3s1 (default)
   ```
 
 ### Kubectl
@@ -253,7 +398,7 @@ docker network create \
       --driver bridge \
       --subnet "172.30.0.0/16" \
       --gateway "172.30.0.1" \
-      --ip-range "172.30.0.0/16" \
+      --ip-range "172.30.0.0/17" \
       "picluster"
 ```
 
@@ -263,18 +408,25 @@ docker network create \
 
 - Step 1. Create k3d-config.yaml file
 
+  In the repository this file is generated from
+  `dev/k3d-cluster/k3d-cluster.yaml.tmpl` by `dev/create_cluster.sh`
+  (`make -C dev create-k3d`). The rendered example is:
+
   ```yaml
   apiVersion: k3d.io/v1alpha5
   kind: Simple
   metadata:
     name: picluster
   servers: 1
-  agents: 2
+  # Default dev topology is single-node. Use K3D_AGENTS=1 (or 2) for
+  # scheduling/failover POCs; multi-node partitions the same laptop memory.
+  agents: 0
   kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)
     hostIP: 127.172.30.1 # where the Kubernetes API will be listening on
     hostPort: "6443"
   # Setting version of k3s
-  image: rancher/k3s:v1.30.6-k3s1
+  # Same k3s minor as prod; override with K3S_IMAGE for a POC.
+  image: rancher/k3s:v1.37.1-k3s1
   # Setting docker network to be used
   network: picluster
   options:
@@ -303,10 +455,7 @@ docker network create \
         - arg: --disable=servicelb
           nodeFilters:
             - server:*
-        # Disable local storage
-        - arg: --disable=local-storage
-          nodeFilters:
-            - server:*
+        # local-path is left enabled and is the default StorageClass.
         # Disable metric server
         - arg: --disable=metrics-server
           nodeFilters:
@@ -342,16 +491,15 @@ docker network create \
       switchCurrentContext: true  
   ```
 
-  - This config 3 nodes cluster is created (1 control plane node and 2 workers) connected to docker network created before (`picluster`)
+  - By default this creates a single-node cluster (1 control plane node and 0 workers) connected to the docker network created before (`picluster`):
 
     - k3d-picluster-server-0, with IP 172.30.0.2
-    - k3d-picluster-agent-0, with IP 172.30.0.3
-    - k3d-picluster-agent-1, with IP 172.30.0.4
 
+    Set `K3D_AGENTS=1` (or `2`) in `dev/create_cluster.sh` to add workers; each agent gets the next `172.30.0.x` address.
 
-  - k3s version is defined through the corresponding docker image label (`image: rancher/k3s:v1.30.6-k3s1`)
+  - k3s version is defined through the corresponding docker image label (`image: rancher/k3s:v1.37.1-k3s1`), matching production.
 
-  - Following k3s services are disabled: `kube-proxy`, `traefik`, `servicelb`, `flannel` and `network-policy`
+  - Following k3s services are disabled: `kube-proxy`, `traefik`, `servicelb`, `flannel`, `network-policy` and `metrics-server` (Flux installs metrics-server). `local-path` is left enabled and is the default StorageClass.
 
   - k3d default load balancer is also disabled (`k3d.disableLoadbalancer: true`)
 
@@ -361,6 +509,10 @@ docker network create \
   ```shell
   K3D_FIX_MOUNTS=1 K3D_FIX_DNS=0 k3d cluster create -c k3d-config.yaml
   ```
+
+  In the repository, `make -C dev create-k3d` renders the template and runs
+  the equivalent command. `make -C dev dev-up` also installs Cilium, CoreDNS
+  and Flux afterwards.
 
   {{site.data.alerts.note}}
 
@@ -385,8 +537,16 @@ docker network create \
   kubectl get nodes
   ```
 
+  {{site.data.alerts.note}}
+  The node stays `NotReady` until a CNI is installed. This is expected because
+  flannel and kube-proxy are disabled; continue with the Cilium installation.
+  {{site.data.alerts.end}}
+
 ### Installing Cilium CNI
 
+In the automated workflow, `dev/bootstrap.sh` installs the same chart and Flux
+adopts the release. The manual steps below are the equivalent for debugging or
+for building the environment by hand.
 
 Installation using `Helm` (Release 3):
 
@@ -410,17 +570,17 @@ Installation using `Helm` (Release 3):
     # Roll out cilium-operator pods automatically when configmap is updated.
     rollOutPods: true
 
-    # Install operator on master node
+    # Install operator on control-plane node
     nodeSelector:
-      node-role.kubernetes.io/master: "true"
+      node-role.kubernetes.io/control-plane: "true"
 
   # Roll out cilium agent pods automatically when ConfigMap is updated.
   rollOutCiliumPods: true
 
   # K8s API service
-  # K3s nodes running API proxy at port 6444
+  # K3s API server inside the k3d node
   k8sServiceHost: 127.0.0.1
-  k8sServicePort: 6444
+  k8sServicePort: 6443
 
   # Replace Kube-proxy
   kubeProxyReplacement: true
@@ -457,7 +617,11 @@ Installation using `Helm` (Release 3):
 - Step 5: Install Cilium in kube-system namespace
 
   ```shell
-  helm install cilium cilium/cilium --namespace kube-system -f cilium-values.yaml
+  helm upgrade --install cilium cilium/cilium \
+    --version 1.20.4 \
+    --namespace kube-system \
+    -f cilium-values.yaml \
+    --wait
   ```
  
 - Step 1: Configure Cilium LB-IPAM
@@ -512,3 +676,8 @@ For details about Cilium installation and configuration see ["Cilium CNI"](/docs
 - [Harnessing the Power of Cilium: A Guide to BGP Integration with Gateway API on IPv4](https://allanjohn909.medium.com/harnessing-the-power-of-cilium-a-guide-to-bgp-integration-with-gateway-api-on-ipv4-7b0d058a1c0d)
 - [Integrating Cilium with Gateway API, IPv6, and BGP for Advanced Networking Solutions](https://allanjohn909.medium.com/integrating-cilium-with-gateway-api-ipv6-and-bgp-for-advanced-networking-solutions-5b41b0ca0090)
 - [Understanding Docker DNS](https://medium.com/@prajwal.chin/understanding-docker-dns-2ed4b070a0)
+- [k3d documentation](https://k3d.io/)
+- [FluxCD documentation](https://fluxcd.io/flux/)
+- [RustFS Docker installation](https://docs.rustfs.com/installation/docker/)
+- [`dev/README.md`](https://github.com/ricsanfre/pi-cluster/blob/master/dev/README.md) — automated workflow quickstart
+- [`dev/external-services/README.md`](https://github.com/ricsanfre/pi-cluster/blob/master/dev/external-services/README.md) — RustFS/Vault details

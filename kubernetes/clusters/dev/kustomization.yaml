@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# The FluxInstance syncs this path. config and infra are always applied.
+# Profiles are opt-in: add one file per profile to ./profiles/kustomization.yaml.
+resources:
+  - config
+  - infra
+  - profiles

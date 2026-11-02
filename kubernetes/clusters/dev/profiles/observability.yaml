@@ -1,0 +1,36 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus-operator-crds
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: kube-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/kube-prometheus-stack/prometheus-operator-crds/overlays/dev
+  prune: true
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kube-prometheus-stack-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: kube-prom-stack
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: prometheus-operator-crds
+  path: ./kubernetes/platform/kube-prometheus-stack/app/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

@@ -31,3 +31,5 @@
 # IDE
 .vscode/
 .idea/
+# Planning documents (working notes, not part of the repository)
+/plans/

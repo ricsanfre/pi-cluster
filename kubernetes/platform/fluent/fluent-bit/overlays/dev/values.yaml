@@ -1,1 +1,11 @@
 # fluent-bit helm values (dev overlay)
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
+
+hotReload:
+  enabled: false
