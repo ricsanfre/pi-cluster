@@ -3,6 +3,7 @@ kind: Component
 
 resources:
   - keycloak-servicemonitor.yaml
+  - grafana-dashboards.yaml
 
 patches:
 - path: keycloak-additionalOptions.yaml

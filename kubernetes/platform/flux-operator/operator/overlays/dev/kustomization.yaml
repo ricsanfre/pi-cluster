@@ -17,4 +17,3 @@ patches:
       kind: HelmRelease
       name: flux-operator
     path: helm-patch.yaml
-  - path: remove-grafana-dashboards.yaml

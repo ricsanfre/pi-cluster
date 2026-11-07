@@ -5,6 +5,9 @@ namespace: external-secrets
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: external-secrets-helm-values
     behavior: merge
