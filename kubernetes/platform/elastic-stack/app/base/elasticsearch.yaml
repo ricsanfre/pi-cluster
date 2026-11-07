@@ -6,7 +6,7 @@ metadata:
   #   "helm.sh/hook": post-install,post-upgrade
 spec:
   # renovate: datasource=github-releases depName=elastic/elasticsearch
-  version: 8.19.23
+  version: 8.19.24
   nodeSets:
     - name: default
       count: 1
