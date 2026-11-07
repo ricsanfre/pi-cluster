@@ -1,9 +1,8 @@
-- op: replace
+- op: add
   path: /spec/instances
   value: 1
-- op: replace
-  path: /spec/storage/size
-  value: 2Gi
-- op: replace
-  path: /spec/storage/storageClass
-  value: local-path
+- op: add
+  path: /spec/storage
+  value:
+    size: 2Gi
+    storageClass: local-path

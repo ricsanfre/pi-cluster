@@ -4,3 +4,10 @@ namespace: external-secrets
 
 resources:
   - ../../base
+
+patches:
+  - path: cluster-secret-store-patch.yaml
+    target:
+      group: external-secrets.io
+      kind: ClusterSecretStore
+      name: vault-backend

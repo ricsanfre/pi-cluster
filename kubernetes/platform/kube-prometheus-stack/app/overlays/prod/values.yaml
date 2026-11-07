@@ -1,1 +1,57 @@
 # kube-prometheus-stack helm values (prod overlay)
+
+# AlertManager configuration
+alertmanager:
+  alertmanagerSpec:
+    # Configure access to AlertManager via subdomain
+    externalUrl: http://alertmanager.${CLUSTER_DOMAIN}
+    # HA configuration: number of Alertmanager pods
+    replicas: 1
+    # POD storage
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: ${STORAGE_CLASS:=longhorn}
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+
+prometheus:
+  prometheusSpec:
+    # Retention data configuration
+    retention: 14d
+    retentionSize: 50GB
+    # Limit POD resources
+    resources:
+      requests:
+        cpu: 100m
+        memory: 1Gi
+      limits:
+        memory: 1800Mi
+    # POD storage
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: ${STORAGE_CLASS:=longhorn}
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+## Etcd monitoring
+## kubeControllerManager, kubeScheduler and kubeProxy are disabled by
+## components/k3s: k3s exposes their metrics combined and the endpoints in
+## base were never used.
+kubeEtcd:
+  enabled: true
+  endpoints:
+    - 10.0.0.12
+    - 10.0.0.13
+    - 10.0.0.14
+  service:
+    enabled: true
+    port: 2381
+    targetPort: 2381
+  serviceMonitor:
+    enabled: true

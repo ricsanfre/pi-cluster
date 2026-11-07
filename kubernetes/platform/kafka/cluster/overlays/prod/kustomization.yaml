@@ -11,3 +11,15 @@ components:
   - ../../components/external-listener
   - ../../components/monitoring
   - ../../components/anti-affinity
+
+patches:
+  - path: kafka-patch.yaml
+    target:
+      group: kafka.strimzi.io
+      kind: Kafka
+      name: cluster
+  - path: node-pool-patch.yaml
+    target:
+      group: kafka.strimzi.io
+      kind: KafkaNodePool
+      name: dual-role

@@ -5,18 +5,9 @@ metadata:
   labels:
     strimzi.io/cluster: cluster
 spec:
-  replicas: 3
   roles:
     - controller
     - broker
-  storage:
-    type: jbod
-    volumes:
-      - id: 0
-        type: persistent-claim
-        size: 5Gi
-        deleteClaim: false
-        kraftMetadata: shared
   # JVM heap at 40% of container limit (best practice for Kafka:
   # JVM needs headroom for metaspace, thread stacks, direct buffers,
   # and OS page cache for memory-mapped log segments)
@@ -24,11 +15,3 @@ spec:
   jvmOptions:
     -Xms: "384m"
     -Xmx: "512m"
-  # Container limit: Xmx / 0.40 = 512m / 0.40 = 1280Mi
-  resources:
-    requests:
-      cpu: 200m
-      memory: "768Mi"
-    limits:
-      cpu: 1000m
-      memory: "1280Mi"

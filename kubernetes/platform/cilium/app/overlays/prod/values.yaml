@@ -1,1 +1,10 @@
 # cilium helm values (prod overlay)
+
+operator:
+  # Install operator on master node
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+
+# K3s API endpoint (k3s is configured with 6444 in prod)
+k8sServiceHost: 127.0.0.1
+k8sServicePort: 6444

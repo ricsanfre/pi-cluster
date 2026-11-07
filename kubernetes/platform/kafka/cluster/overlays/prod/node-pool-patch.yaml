@@ -1,0 +1,22 @@
+- op: add
+  path: /spec/replicas
+  value: 3
+- op: add
+  path: /spec/storage
+  value:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 5Gi
+        deleteClaim: false
+        kraftMetadata: shared
+- op: add
+  path: /spec/resources
+  value:
+    requests:
+      cpu: 200m
+      memory: "768Mi"
+    limits:
+      cpu: 1000m
+      memory: "1280Mi"

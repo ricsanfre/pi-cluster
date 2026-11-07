@@ -2,30 +2,6 @@
 
 # Produce cleaner resources names
 cleanPrometheusOperatorObjectNames: true
-# AlertManager configuration
-alertmanager:
-  alertmanagerSpec:
-    ##
-    ## Configure access to AlertManager via sub-path
-    # externalUrl: http://monitoring.${CLUSTER_DOMAIN}/alertmanager/
-    # routePrefix: /alertmanager
-    ## Configure access to AlertManager via subdomain
-    externalUrl: http://alertmanager.${CLUSTER_DOMAIN}
-    ##
-    ## HA configuration: Replicas
-    ## Number of Alertmanager POD replicas
-    replicas: 1
-    ##
-    ## POD Storage Spec
-    storage:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: ${STORAGE_CLASS:=longhorn}
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 1Gi
-    ##
 # Prometheus configuration
 prometheus:
   prometheusSpec:
@@ -63,32 +39,11 @@ prometheus:
     ## ref: https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects
     # Enable WAL compression
     walCompression: true
-    # Retention data configuration
-    retention: 14d
-    retentionSize: 50GB
     ## Enable Experimental Features
     # ref: https://prometheus.io/docs/prometheus/latest/feature_flags/
     enableFeatures:
       # Enable Memory snapshot on shutdown.
       - memory-snapshot-on-shutdown
-    ##
-    ## Limit POD Resources
-    resources:
-      requests:
-        cpu: 100m
-        memory: 1Gi
-      limits:
-        memory: 1800Mi
-    ##
-    ## POD Storage Spec
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: ${STORAGE_CLASS:=longhorn}
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 10Gi
     ## Default cluster label configuration for all metrics.
     ## This is needed to add cluster label to all metrics, so we can distinguish metrics from different clusters in a multi-cluster setup.
     ## Without cluster label, kuberentes Dashboards do not work.
@@ -174,83 +129,6 @@ kubeApiServer:
   enabled: true
   serviceMonitor:
     # Enable Service Monitor
-    enabled: true
-
-## Kube Controller Manager
-kubeControllerManager:
-  ## K3s controller manager is not running as a POD
-  ## ServiceMonitor and Headless service is generated
-  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
-  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
-  ##
-  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
-
-  # Enable KubeController manager montoring
-  enabled: true
-  # endpoints : IP addresses of K3s control plane nodes
-  # K3d tip: Get the K3d control plane node IPs e.g. as follows:
-  # kubectl get nodes -l node-role.kubernetes.io/control-plane=true -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' | tr ' ' ',' | sed 's/^/[&/;s/$/]/'
-  endpoints: &cp
-    - 10.0.0.12
-    - 10.0.0.13
-    - 10.0.0.14
-  service:
-    # Enable creation of service
-    enable: true
-  serviceMonitor:
-    # Enable and configure Service Monitor
-    enabled: true
-
-## Etcd monitoring
-kubeEtcd:
-  enabled: true
-  # K3s etcd not running as a POD, so endpoints need to be configured
-  endpoints: *cp
-  service:
-    enabled: true
-    port: 2381
-    targetPort: 2381
-  serviceMonitor:
-    enabled: true
-
-## Kube Scheduler
-kubeScheduler:
-  ## K3s Kube-scheduler is not running as a POD
-  ## ServiceMonitor and Headless service is generated
-  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
-  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
-  ##
-  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
-  enabled: true
-  # K3s kube-scheduler not running as a POD
-  # Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
-  #
-  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
-  endpoints: *cp
-  serviceMonitor:
-    enabled: true
-
-kubeProxy:
-  ## K3s kube-proxy is not running as a POD
-  ## ServiceMonitor and Headless service is generated
-  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
-  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
-  ##
-  enabled: true
-  # K3s kube-proxy not running as a POD
-  endpoints:
-    - 10.0.0.12
-    - 10.0.0.13
-    - 10.0.0.14
-    - 10.0.0.15
-    - 10.0.0.16
-    - 10.0.0.20
-    - 10.0.0.21
-    - 10.0.0.22
-  serviceMonitor:
     enabled: true
 
 ## Core DNS monitoring

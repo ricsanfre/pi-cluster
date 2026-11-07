@@ -1,1 +1,4 @@
 # coredns helm values (prod overlay)
+
+# One replica per node.
+replicaCount: 3

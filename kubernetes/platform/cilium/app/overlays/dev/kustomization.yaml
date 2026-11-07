@@ -11,6 +11,14 @@ components:
   - ../../components/istio-config
 
 configMapGenerator:
-  - name: cilium-overlay-values
+  - name: cilium-helm-values
+    behavior: merge
     files:
-      - values.yaml=values.yaml
+      - overlay-values.yaml=values.yaml
+
+patches:
+  - target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: cilium
+    path: helm-patch.yaml

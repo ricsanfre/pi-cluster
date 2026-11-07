@@ -1,3 +1,4 @@
 # coredns helm values (dev overlay)
-
-replicaCount: 1
+#
+# Single-node k3d cluster: the chart default (1 replica) is what we want, so
+# this file intentionally carries no overrides.

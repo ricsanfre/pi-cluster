@@ -6,10 +6,6 @@ spec:
   dnsNames:
     - ${CLUSTER_DOMAIN}
     - "*.${CLUSTER_DOMAIN}"
-  duration: 160h
-  issuerRef:
-    kind: ClusterIssuer
-    name: letsencrypt-issuer
   privateKey:
     algorithm: ECDSA
     size: 256

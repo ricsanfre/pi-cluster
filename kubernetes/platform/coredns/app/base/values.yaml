@@ -1,6 +1,5 @@
 # coredns helm values (base)
 
-replicaCount: 3
 k8sAppLabelOverride: kube-dns
 serviceAccount:
   create: true

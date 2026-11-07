@@ -1,12 +1,9 @@
 # kube-prometheus-stack helm values (dev overlay)
 #
-# Tuned for a single-node laptop cluster: no Alertmanager, no Grafana,
-# 7-day / 5 GB retention, local-path storage.
+# Tuned for a single-node laptop cluster: no Alertmanager, 7-day / 5 GB
+# retention, local-path storage.
 
 alertmanager:
-  enabled: false
-
-grafana:
   enabled: false
 
 prometheus:
@@ -36,7 +33,8 @@ prometheusOperator:
     limits:
       memory: 256Mi
 
-# k3s does not expose these as pods, and k3d cannot reach the prod endpoints.
+# k3d does not expose these as pods and has no control-plane endpoints to
+# scrape. The chart enables them by default, so disable them explicitly.
 kubeEtcd:
   enabled: false
 kubeControllerManager:
@@ -45,14 +43,3 @@ kubeScheduler:
   enabled: false
 kubeProxy:
   enabled: false
-
-kubeApiServer:
-  enabled: true
-kubelet:
-  enabled: true
-coreDns:
-  enabled: true
-nodeExporter:
-  enabled: true
-kube-state-metrics:
-  enabled: true
