@@ -33,8 +33,9 @@ prometheusOperator:
     limits:
       memory: 256Mi
 
+# Dev disables the k3s control-plane scraping recipe documented in base:
 # k3d does not expose these as pods and has no control-plane endpoints to
-# scrape. The chart enables them by default, so disable them explicitly.
+# scrape.
 kubeEtcd:
   enabled: false
 kubeControllerManager:

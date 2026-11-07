@@ -131,6 +131,89 @@ kubeApiServer:
     # Enable Service Monitor
     enabled: true
 
+# K3s control-plane scraping recipe (kubectl-free, endpoint based).
+# These endpoints are the upstream-documented way to enable
+# kube-prometheus monitoring on k3s. Overlays own the actual decision:
+# prod's components/k3s disables them (k3s exposes combined metrics and
+# kubelet-only scraping avoids duplicates), dev disables them as well.
+## Kube Controller Manager
+kubeControllerManager:
+  ## K3s controller manager is not running as a POD
+  ## ServiceMonitor and Headless service is generated
+  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  ##
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+
+  # Enable KubeController manager montoring
+  enabled: true
+  # endpoints : IP addresses of K3s control plane nodes
+  # K3d tip: Get the K3d control plane node IPs e.g. as follows:
+  # kubectl get nodes -l node-role.kubernetes.io/control-plane=true -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' | tr ' ' ',' | sed 's/^/[&/;s/$/]/'
+  endpoints: &cp
+    - 10.0.0.12
+    - 10.0.0.13
+    - 10.0.0.14
+  service:
+    # Enable creation of service
+    enable: true
+  serviceMonitor:
+    # Enable and configure Service Monitor
+    enabled: true
+
+## Etcd monitoring
+kubeEtcd:
+  enabled: true
+  # K3s etcd not running as a POD, so endpoints need to be configured
+  endpoints: *cp
+  service:
+    enabled: true
+    port: 2381
+    targetPort: 2381
+  serviceMonitor:
+    enabled: true
+
+## Kube Scheduler
+kubeScheduler:
+  ## K3s Kube-scheduler is not running as a POD
+  ## ServiceMonitor and Headless service is generated
+  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  ##
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+  enabled: true
+  # K3s kube-scheduler not running as a POD
+  # Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  #
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/#services-without-selectors
+  endpoints: *cp
+  serviceMonitor:
+    enabled: true
+
+kubeProxy:
+  ## K3s kube-proxy is not running as a POD
+  ## ServiceMonitor and Headless service is generated
+  ## headless service is needed, So prometheus can discover each of the endpoints/PODs behind the service.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  ## Required headless service to extract the metrics the service need to be defined without selector and so the endpoints must be defined explicitly
+  ##
+  enabled: true
+  # K3s kube-proxy not running as a POD
+  endpoints:
+    - 10.0.0.12
+    - 10.0.0.13
+    - 10.0.0.14
+    - 10.0.0.15
+    - 10.0.0.16
+    - 10.0.0.20
+    - 10.0.0.21
+    - 10.0.0.22
+  serviceMonitor:
+    enabled: true
+
+
 ## Core DNS monitoring
 ##
 coreDns:
