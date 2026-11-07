@@ -3,5 +3,4 @@ kind: Kustomization
 namespace: velero
 
 resources:
-  - longhorn-volume-snapshot-class.yaml
   - backup-schedule.yaml

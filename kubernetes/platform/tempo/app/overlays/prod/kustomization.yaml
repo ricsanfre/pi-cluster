@@ -5,6 +5,9 @@ namespace: tempo
 resources:
   - ../../base
 
+components:
+  - ../../components/s3-backend
+
 configMapGenerator:
   - name: tempo-helm-values
     behavior: merge
