@@ -11,28 +11,17 @@ storage:
       path: /var/tempo/traces
     wal:
       path: /var/tempo/wal
-    s3: null
 
 distributor:
   replicas: 1
-  extraArgs: []
-  extraEnv: []
 ingester:
   replicas: 1
-  extraArgs: []
-  extraEnv: []
 querier:
   replicas: 1
-  extraArgs: []
-  extraEnv: []
 queryFrontend:
   replicas: 1
-  extraArgs: []
-  extraEnv: []
 compactor:
   replicas: 1
-  extraArgs: []
-  extraEnv: []
 metricsGenerator:
   enabled: false
 

@@ -1,4 +1,7 @@
 # tempo helm values (base)
+#
+# Only settings shared by every environment. Storage backend, S3 credentials,
+# replicas and metrics-generator enablement are overlay concerns.
 
 streamOverHTTPEnabled: true
 
@@ -19,136 +22,12 @@ traces:
   opencensus:
     enabled: true
 
-# Configure S3 backend
-storage:
-  trace:
-    backend: s3
-    s3:
-      bucket: k3s-tempo
-      endpoint: "${S3_SERVER}:9091"
-      region: eu-west-1
-      access_key: $${S3_ACCESS_KEY_ID}
-      secret_key: $${S3_SECRET_ACCESS_KEY}
-      insecure: false
-
 # Configure distributor
 distributor:
   config:
     log_received_spans:
       enabled: true
-  # Enable environment variables in config file
-  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
-  extraArgs:
-    - '-config.expand-env=true'
-  extraEnv:
-    - name: S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_ACCESS_KEY_ID
-    - name: S3_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_SECRET_ACCESS_KEY
-# Configure ingester
-ingester:
-  # Enable environment variables in config file
-  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
-  extraArgs:
-    - '-config.expand-env=true'
-  extraEnv:
-    - name: S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_ACCESS_KEY_ID
-    - name: S3_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_SECRET_ACCESS_KEY
-# Configure compactor
-compactor:
-  # Enable environment variables in config file
-  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
-  extraArgs:
-    - '-config.expand-env=true'
-  extraEnv:
-    - name: S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_ACCESS_KEY_ID
-    - name: S3_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_SECRET_ACCESS_KEY
-# Configure querier
-querier:
-  # Enable environment variables in config file
-  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
-  extraArgs:
-    - '-config.expand-env=true'
-  extraEnv:
-    - name: S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_ACCESS_KEY_ID
-    - name: S3_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_SECRET_ACCESS_KEY
-# Configure query-frontend
-queryFrontend:
-  # Enable environment variables in config file
-  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
-  extraArgs:
-    - '-config.expand-env=true'
-  extraEnv:
-    - name: S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_ACCESS_KEY_ID
-    - name: S3_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_SECRET_ACCESS_KEY
 
-# Enable metrics-generator so TraceQL metrics queries such as rate() have a live ring.
-metricsGenerator:
-  enabled: true
-  config:
-    processor:
-      local_blocks:
-        filter_server_spans: false
-        flush_to_storage: true
-  # Enable environment variables in config file
-  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
-  extraArgs:
-    - '-config.expand-env=true'
-  extraEnv:
-    - name: S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_ACCESS_KEY_ID
-    - name: S3_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: tempo-s3-secret
-          key: S3_SECRET_ACCESS_KEY
-# Activate the local-blocks processor for all tenants.
-overrides:
-  defaults:
-    metrics_generator:
-      processors:
-        - local-blocks
 # Disable Minio server installation
 minio:
   enabled: false
