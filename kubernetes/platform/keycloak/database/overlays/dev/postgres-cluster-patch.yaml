@@ -7,7 +7,3 @@
 - op: replace
   path: /spec/storage/storageClass
   value: local-path
-# No external RustFS backup in dev by default; keeps the profile independent
-# from the secrets profile.
-- op: remove
-  path: /spec/backup

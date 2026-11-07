@@ -1,0 +1,26 @@
+# CNPG Barman object-store backup for the Keycloak database.
+# Included by the prod overlay only: dev has no RustFS backup target and keeps
+# the profile independent from the secrets profile.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-keycloak
+  namespace: databases
+spec:
+  backup:
+    barmanObjectStore:
+      data:
+        compression: bzip2
+      wal:
+        compression: bzip2
+        maxParallel: 8
+      destinationPath: s3://k3s-barman/postgres-keycloak
+      endpointURL: https://${S3_SERVER}:9091
+      s3Credentials:
+        accessKeyId:
+          name: postgres-keycloak-s3-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-keycloak-s3-secret
+          key: AWS_SECRET_ACCESS_KEY
+    retentionPolicy: "30d"

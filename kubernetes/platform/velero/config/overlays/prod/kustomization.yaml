@@ -4,3 +4,6 @@ namespace: velero
 
 resources:
   - ../../base
+
+components:
+  - ../../components/longhorn-snapshot

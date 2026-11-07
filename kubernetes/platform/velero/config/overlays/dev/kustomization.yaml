@@ -4,6 +4,3 @@ namespace: velero
 
 resources:
   - ../../base
-
-patches:
-  - path: remove-longhorn-vsc.yaml
