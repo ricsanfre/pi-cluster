@@ -1,9 +1,3 @@
-# k3d dev uses local-path, not Longhorn. Keep only the CRD dependency.
-- op: replace
-  path: /spec/dependsOn
-  value:
-    - name: prometheus-operator-crds
-      namespace: kube-system
 - op: add
   path: /spec/valuesFrom/-
   value:

@@ -28,9 +28,6 @@ spec:
     remediation:
       strategy: rollback
       retries: 3
-  dependsOn:
-    - name: longhorn
-      namespace: longhorn-system
   valuesFrom:
   - kind: ConfigMap
     name: cloudnative-pg-helm-values

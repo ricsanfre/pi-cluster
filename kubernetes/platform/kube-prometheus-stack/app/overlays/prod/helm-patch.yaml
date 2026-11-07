@@ -1,4 +1,9 @@
 - op: add
+  path: /spec/dependsOn/-
+  value:
+    name: longhorn
+    namespace: longhorn-system
+- op: add
   path: /spec/valuesFrom/-
   value:
     kind: ConfigMap
