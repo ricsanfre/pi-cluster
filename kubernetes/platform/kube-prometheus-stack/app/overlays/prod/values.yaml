@@ -39,19 +39,3 @@ prometheus:
             requests:
               storage: 10Gi
 
-## Etcd monitoring
-## kubeControllerManager, kubeScheduler and kubeProxy are disabled by
-## components/k3s: k3s exposes their metrics combined and the endpoints in
-## base were never used.
-kubeEtcd:
-  enabled: true
-  endpoints:
-    - 10.0.0.12
-    - 10.0.0.13
-    - 10.0.0.14
-  service:
-    enabled: true
-    port: 2381
-    targetPort: 2381
-  serviceMonitor:
-    enabled: true
