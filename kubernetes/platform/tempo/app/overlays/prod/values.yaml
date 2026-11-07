@@ -1,12 +1,65 @@
 # tempo helm values (prod overlay)
+#
+# Distributed deployment backed by RustFS (S3).
 
-# Resource limits — none previously set, all components unbounded
-# ingester-1 uses up to 631Mi, others under 100Mi
+# Configure S3 backend
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: k3s-tempo
+      endpoint: "${S3_SERVER}:9091"
+      region: eu-west-1
+      access_key: $${S3_ACCESS_KEY_ID}
+      secret_key: $${S3_SECRET_ACCESS_KEY}
+      insecure: false
 
+# Configure distributor
+distributor:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Configure ingester
 ingester:
   replicas: 1
   config:
     replication_factor: 1
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
+  # ingester-1 uses up to 631Mi, others under 100Mi
   resources:
     requests:
       cpu: 50m
@@ -15,7 +68,23 @@ ingester:
       cpu: 500m
       memory: 768Mi
 
+# Configure compactor
 compactor:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
   resources:
     requests:
       cpu: 25m
@@ -24,16 +93,23 @@ compactor:
       cpu: 200m
       memory: 512Mi
 
-distributor:
-  resources:
-    requests:
-      cpu: 25m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
+# Configure querier
 querier:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
   resources:
     requests:
       cpu: 25m
@@ -42,7 +118,23 @@ querier:
       cpu: 200m
       memory: 256Mi
 
+# Configure query-frontend
 queryFrontend:
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
   resources:
     requests:
       cpu: 25m
@@ -51,7 +143,29 @@ queryFrontend:
       cpu: 200m
       memory: 256Mi
 
+# Enable metrics-generator so TraceQL metrics queries such as rate() have a live ring.
 metricsGenerator:
+  enabled: true
+  config:
+    processor:
+      local_blocks:
+        filter_server_spans: false
+        flush_to_storage: true
+  # Enable environment variables in config file
+  # https://grafana.com/docs/tempo/latest/configuration/#use-environment-variables-in-the-configuration
+  extraArgs:
+    - '-config.expand-env=true'
+  extraEnv:
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: tempo-s3-secret
+          key: S3_SECRET_ACCESS_KEY
   resources:
     requests:
       cpu: 25m
@@ -59,3 +173,10 @@ metricsGenerator:
     limits:
       cpu: 200m
       memory: 512Mi
+
+# Activate the local-blocks processor for all tenants.
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - local-blocks
