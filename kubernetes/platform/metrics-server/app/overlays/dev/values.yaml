@@ -1,6 +1,8 @@
 # metrics-server helm values (dev overlay)
 
-# Prometheus Operator CRDs are only installed by the observability profile.
-# Do not make the base depend on them.
+# The ServiceMonitor depends on the Prometheus Operator CRDs, which only exist
+# when the opt-in observability profile is enabled. Base keeps monitoring on;
+# dev disables it here so the always-on metrics-server app does not require
+# the observability profile.
 serviceMonitor:
   enabled: false
