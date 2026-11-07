@@ -5,5 +5,13 @@ resources:
   - ../../base
 
 components:
+  - ../../components/backup
   - ../../components/anti-affinity
   - ../../components/istio
+
+patches:
+  - path: postgres-cluster-patch.yaml
+    target:
+      group: postgresql.cnpg.io
+      kind: Cluster
+      name: postgres-keycloak

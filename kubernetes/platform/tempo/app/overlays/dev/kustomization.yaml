@@ -17,4 +17,3 @@ patches:
       kind: HelmRelease
       name: tempo
     path: helm-patch.yaml
-  - path: remove-externalsecret.yaml

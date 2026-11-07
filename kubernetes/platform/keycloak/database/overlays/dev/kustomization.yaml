@@ -11,4 +11,3 @@ patches:
       group: postgresql.cnpg.io
       kind: Cluster
       name: postgres-keycloak
-  - path: remove-backup-resources.yaml

@@ -1,7 +1,0 @@
-# The dev cluster uses local-path, not Longhorn. Remove the Longhorn snapshot
-# class so Velero config does not require the snapshot.storage.k8s.io CRDs.
-apiVersion: snapshot.storage.k8s.io/v1
-kind: VolumeSnapshotClass
-metadata:
-  name: velero-longhorn-backup-vsc
-$patch: delete

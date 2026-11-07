@@ -1,9 +1,8 @@
-# ip-pool.yaml
+# IP pool is environment-specific: the prod overlay sets the LAN range and the
+# dev overlay sets the k3d range.
 apiVersion: "cilium.io/v2alpha1"
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: "first-pool"
   namespace: kube-system
-spec:
-  blocks:
-    - cidr: 10.0.0.64/26
+spec: {}

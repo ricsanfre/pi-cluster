@@ -4,4 +4,3 @@ namespace: keycloak
 resources:
   - keycloak-externalsecret.yaml
   - keycloak.yaml
-  - grafana-dashboards.yaml

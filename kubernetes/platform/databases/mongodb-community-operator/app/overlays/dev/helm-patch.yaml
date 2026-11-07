@@ -1,6 +1,3 @@
-# k3d dev uses local-path, not Longhorn. Drop the prod-only dependency.
-- op: remove
-  path: /spec/dependsOn
 - op: add
   path: /spec/valuesFrom/-
   value:

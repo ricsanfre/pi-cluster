@@ -36,8 +36,6 @@ spec:
   dependsOn:
   - name: prometheus-operator-crds
     namespace: kube-system
-  - name: longhorn
-    namespace: longhorn-system
   valuesFrom:
   - kind: ConfigMap
     name: kube-prometheus-stack-helm-values

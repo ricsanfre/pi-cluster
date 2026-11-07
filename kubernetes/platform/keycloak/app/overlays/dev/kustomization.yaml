@@ -11,4 +11,3 @@ patches:
       group: k8s.keycloak.org
       kind: Keycloak
       name: keycloak
-  - path: remove-grafana-dashboards.yaml

@@ -8,18 +8,10 @@ k8sClientRateLimit:
 
 # Avoid having to manually restart the Cilium pods on config changes 
 operator:
-  replicas: 1  # Uncomment this if you only have one node
+  replicas: 1
   rollOutPods: true
-  
-  # Install operator on master node
-  nodeSelector:
-    node-role.kubernetes.io/control-plane: "true"
 
 rollOutCiliumPods: true
-
-# K8s API service
-k8sServiceHost: 127.0.0.1
-k8sServicePort: 6444
 
 # Replace Kube-proxy
 kubeProxyReplacement: true

@@ -2,30 +2,6 @@
 
 # Produce cleaner resources names
 cleanPrometheusOperatorObjectNames: true
-# AlertManager configuration
-alertmanager:
-  alertmanagerSpec:
-    ##
-    ## Configure access to AlertManager via sub-path
-    # externalUrl: http://monitoring.${CLUSTER_DOMAIN}/alertmanager/
-    # routePrefix: /alertmanager
-    ## Configure access to AlertManager via subdomain
-    externalUrl: http://alertmanager.${CLUSTER_DOMAIN}
-    ##
-    ## HA configuration: Replicas
-    ## Number of Alertmanager POD replicas
-    replicas: 1
-    ##
-    ## POD Storage Spec
-    storage:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: ${STORAGE_CLASS:=longhorn}
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 1Gi
-    ##
 # Prometheus configuration
 prometheus:
   prometheusSpec:
@@ -63,32 +39,11 @@ prometheus:
     ## ref: https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects
     # Enable WAL compression
     walCompression: true
-    # Retention data configuration
-    retention: 14d
-    retentionSize: 50GB
     ## Enable Experimental Features
     # ref: https://prometheus.io/docs/prometheus/latest/feature_flags/
     enableFeatures:
       # Enable Memory snapshot on shutdown.
       - memory-snapshot-on-shutdown
-    ##
-    ## Limit POD Resources
-    resources:
-      requests:
-        cpu: 100m
-        memory: 1Gi
-      limits:
-        memory: 1800Mi
-    ##
-    ## POD Storage Spec
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: ${STORAGE_CLASS:=longhorn}
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 10Gi
     ## Default cluster label configuration for all metrics.
     ## This is needed to add cluster label to all metrics, so we can distinguish metrics from different clusters in a multi-cluster setup.
     ## Without cluster label, kuberentes Dashboards do not work.
@@ -176,6 +131,11 @@ kubeApiServer:
     # Enable Service Monitor
     enabled: true
 
+# K3s control-plane scraping recipe (kubectl-free, endpoint based).
+# These endpoints are the upstream-documented way to enable
+# kube-prometheus monitoring on k3s. Overlays own the actual decision:
+# prod's components/k3s disables them (k3s exposes combined metrics and
+# kubelet-only scraping avoids duplicates), dev disables them as well.
 ## Kube Controller Manager
 kubeControllerManager:
   ## K3s controller manager is not running as a POD
@@ -252,6 +212,7 @@ kubeProxy:
     - 10.0.0.22
   serviceMonitor:
     enabled: true
+
 
 ## Core DNS monitoring
 ##

@@ -1,0 +1,9 @@
+# ip-pool.yaml
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "first-pool"
+  namespace: kube-system
+spec:
+  blocks:
+    - cidr: 10.0.0.64/26

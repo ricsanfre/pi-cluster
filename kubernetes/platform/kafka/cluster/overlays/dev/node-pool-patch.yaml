@@ -1,11 +1,11 @@
-- op: replace
+- op: add
   path: /spec/replicas
   value: 1
-- op: replace
+- op: add
   path: /spec/storage
   value:
     type: ephemeral
-- op: replace
+- op: add
   path: /spec/resources
   value:
     requests:

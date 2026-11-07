@@ -2,7 +2,7 @@
 title: Kubernetes development environment
 permalink: /docs/dev/
 description: How to configure a development environment for the Pi Cluster using K3D, with a manual walkthrough and an automated base + profiles workflow.
-last_modified_at: "02-11-2026"
+last_modified_at: "07-11-2026"
 
 ---
 
@@ -91,6 +91,30 @@ resources:
 Removing a profile from the list prunes its resources on the next reconcile.
 Heavy profiles (`observability`, `messaging`, `keycloak`) should not run more
 than two at a time on a 16 GB laptop.
+
+### Overlay conventions
+
+Both environments share the same `base` and differ only through overlays and
+components:
+
+| Layer | Contains |
+| --- | --- |
+| `base/` | Chart reference, namespace and values that are identical in every environment |
+| `components/<name>/` | Optional resources and value bundles (Grafana dashboards, ServiceMonitors, S3 ExternalSecrets, CNPG backups, Longhorn snapshot classes) |
+| `overlays/dev/` | Dev-only values and patches: single replica, `local-path`, filesystem storage, dev Vault |
+| `overlays/prod/` | Prod-only values and patches: replicas, Longhorn, S3/RustFS, prod Vault, ACME issuer |
+
+Rules of thumb:
+
+- Base never carries a resource that an environment must delete. If dev does
+  not need it, it belongs in a component that only prod includes.
+- Env-specific choices (replica counts, storage class, issuer, IP ranges,
+  endpoints, retention, credentials) live in the overlay, not in base.
+- Overlays add or override; they should not need `$patch: delete` or
+  `op: remove` against base.
+- Add-on monitoring resources (Grafana dashboards, Prometheus Operator
+  ServiceMonitors) always live under `components/monitoring`, so a dev profile
+  remains usable without the observability stack.
 
 ### External services
 
