@@ -1,0 +1,9 @@
+# 1 primary + 1 replica on Longhorn storage.
+- op: add
+  path: /spec/instances
+  value: 2
+- op: add
+  path: /spec/storage
+  value:
+    size: 5Gi
+    storageClass: longhorn
