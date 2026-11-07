@@ -9,5 +9,5 @@ components:
   - ../../components/security
   - ../../components/superuser
   - ../../components/external-listener
-  - ../../components/monitor
+  - ../../components/monitoring
   - ../../components/anti-affinity

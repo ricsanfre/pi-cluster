@@ -17,4 +17,3 @@ patches:
       kind: HelmRelease
       name: external-secrets
     path: helm-patch.yaml
-  - path: remove-grafana-dashboard.yaml

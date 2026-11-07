@@ -8,7 +8,7 @@ resources:
 components:
   - ../../components/route
   - ../../components/backup
-  - ../../components/monitor
+  - ../../components/monitoring
 
 configMapGenerator:
   - name: longhorn-helm-values

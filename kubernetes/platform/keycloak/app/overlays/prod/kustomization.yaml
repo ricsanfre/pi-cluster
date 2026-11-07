@@ -7,5 +7,5 @@ resources:
 
 components:
   - ../../components/route
-  - ../../components/monitor
+  - ../../components/monitoring
   - ../../components/istio
