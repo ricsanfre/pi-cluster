@@ -46,10 +46,12 @@
     chart_version: 0.62.1
     release_namespace: flux-system
     create_namespace: true
-    values_files:
-      - ../kubernetes/platform/flux-operator/operator/base/values.yaml
-      - ../kubernetes/platform/flux-operator/operator/components/monitoring/values.yaml
-      - ../kubernetes/platform/flux-operator/operator/overlays/{{ overlay }}/values.yaml
+    # The monitoring component is prod-only: dev has no Prometheus Operator CRDs
+    # (the observability profile is opt-in), so enabling its ServiceMonitor
+    # would make the initial Helm install fail.
+    values_files: "{{ ['../kubernetes/platform/flux-operator/operator/base/values.yaml']
+                      + (['../kubernetes/platform/flux-operator/operator/components/monitoring/values.yaml'] if overlay == 'prod' else [])
+                      + ['../kubernetes/platform/flux-operator/operator/overlays/' ~ overlay ~ '/values.yaml'] }}"
 
 - name: Create Github secret
   ansible.builtin.shell: |
