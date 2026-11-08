@@ -34,3 +34,48 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+---
+# Self-contained Grafana: chart installs its own CRDs, admin password generated
+# by the operator, Prometheus datasource only (no Vault).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: grafana-operator-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: grafana
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: prometheus-operator-crds
+  path: ./kubernetes/platform/grafana/operator/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: grafana-instance
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: grafana
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: grafana-operator-app
+    - name: kube-prometheus-stack-app
+  path: ./kubernetes/platform/grafana/instance/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

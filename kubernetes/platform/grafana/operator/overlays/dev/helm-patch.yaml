@@ -1,0 +1,4 @@
+# Dev has no Ansible pre-install step: let the Helm chart own the CRDs.
+- op: add
+  path: /spec/install/crds
+  value: Create
