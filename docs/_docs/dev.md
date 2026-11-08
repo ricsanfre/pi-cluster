@@ -103,7 +103,7 @@ Profiles that list `secrets` read credentials from the external dev Vault
 
 `external-dns` needs the lab's BIND server reachable at `EXTERNAL_DNS_SERVER`
 (`10.0.0.11`) and the TSIG key under `bind9/ddns` in the dev Vault. It publishes
-into a zone named after `CLUSTER_DOMAIN`, which for dev is `k3d.local.test`;
+into a zone named after `CLUSTER_DOMAIN`, which for dev is `picluster.local.test`;
 the lab server has no such zone, so the `network` profile cannot publish dev
 records and should be left off.
 
@@ -124,54 +124,55 @@ Cilium-assigned LoadBalancer IP — `HTTP_GATEWAY_LOAD_BALANCER_IP`, default
 to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 `kubectl port-forward`; only DNS and TLS trust are missing.
 
-The dev `CLUSTER_DOMAIN` is `k3d.local.test`, an RFC 2606 `.test` name that is
-never published to the lab BIND. Add it to the laptop resolver inside the
-`local.test` zone (BIND shown; `127.0.0.1` would not work because nothing
-listens on the host's port 80/443 — `k3d`'s load balancer and `servicelb` are
-disabled):
+The dev `CLUSTER_DOMAIN` is `picluster.local.test`, an RFC 2606 `.test` name
+that is never published to the lab BIND. Everything the dev environment
+publishes — gateway hostnames, RustFS and Vault — lives in that one zone,
+declared in the laptop resolver next to the existing `local.test` one (BIND
+shown; `127.0.0.1` would not work because nothing listens on the host's port
+80/443 — `k3d`'s load balancer and `servicelb` are disabled):
 
 ```bind
 $TTL 2d
-$ORIGIN local.test.
+$ORIGIN picluster.local.test.
 
-@        IN  SOA  ns.local.test. admin.local.test. (
+@        IN  SOA  ns.picluster.local.test. admin.picluster.local.test. (
                 2026110801 ; serial
                 12h        ; refresh
                 15m        ; retry
                 3w         ; expire
                 2h )       ; minimum TTL
-         IN  NS   ns.local.test.
-*        IN  A    127.0.0.1      ; other local projects
-*.k3d    IN  A    172.30.200.1   ; k3d Envoy Gateway
-rustfs   IN  A    172.30.100.10  ; RustFS S3 + console
-vault    IN  A    172.30.100.11  ; Vault (opt-in profile)
+         IN  NS   ns.picluster.local.test.
+*        IN  A    172.30.200.1    ; Envoy Gateway (cert-manager wildcard)
+rustfs   IN  A    172.30.100.10   ; RustFS S3 + console
+vault    IN  A    172.30.100.11   ; Vault (opt-in profile)
 ```
 
-The wildcard at `*.k3d` only answers names under `k3d.local.test`, so the
-cluster gets its own subdomain while the rest of `local.test` keeps pointing at
-`127.0.0.1`. `rustfs` and `vault` are exact records: they win over the `*`
-wildcard, which is how the external services keep their own addresses and why
-the in-cluster CoreDNS wildcard below does not shadow them.
+Because it is a separate zone, the `*` wildcard of the parent `local.test`
+(which points at `127.0.0.1` for other projects) never applies. Inside
+`picluster.local.test`, the exact `rustfs` and `vault` records win over the
+wildcard, so the external services keep their own addresses.
 
-`*.k3d.local.test` is signed by the dev CA, which also signs the RustFS server
-certificate, so a single trust entry covers the gateway and RustFS. See
-[Private PKI](#private-pki-dev-only) for how the CA is created, published into
-the cluster and rotated.
+`*.picluster.local.test` is signed by the dev CA, which also signs the RustFS
+and Vault server certificates, so a single trust entry covers the gateway and
+both external services. See [Private PKI](#private-pki-dev-only) for how the
+CA is created, published into the cluster and rotated.
 
 Verify routing, TLS and DNS in that order before opening a browser:
 
 ```bash
 # bypass DNS: does the gateway answer and present a valid chain?
 curl -sv --cacert picluster-dev-ca.crt \
-  --resolve app.k3d.local.test:443:172.30.200.1 https://app.k3d.local.test/ -o /dev/null
+  --resolve app.picluster.local.test:443:172.30.200.1 https://app.picluster.local.test/ -o /dev/null
 
 # through the resolver
-dig +short app.k3d.local.test      # expected: 172.30.200.1
-curl -sv https://app.k3d.local.test/ -o /dev/null
+dig +short app.picluster.local.test      # expected: 172.30.200.1
+curl -sv https://app.picluster.local.test/ -o /dev/null
 
-# the external service, which lives in the parent zone
-dig +short rustfs.local.test       # expected: 172.30.100.10
-curl -sS --cacert picluster-dev-ca.crt https://rustfs.local.test:9091/health
+# the external services
+dig +short rustfs.picluster.local.test   # expected: 172.30.100.10
+dig +short vault.picluster.local.test    # expected: 172.30.100.11
+curl -sS --cacert picluster-dev-ca.crt https://rustfs.picluster.local.test:9091/health
+curl -sS --cacert picluster-dev-ca.crt https://vault.picluster.local.test:8200/v1/sys/health
 ```
 
 {{site.data.alerts.note}}
@@ -182,8 +183,8 @@ workload `HTTPRoute`s attach to the `https` listener only.
 
 Two more constraints:
 
-- The wildcard certificate covers a single label: `app.k3d.local.test` is
-  valid, `a.b.k3d.local.test` is not.
+- The wildcard certificate covers a single label: `app.picluster.local.test` is
+  valid, `a.b.picluster.local.test` is not.
 - Pods that call the gateway by hostname (Keycloak issuer URLs, OIDC
   callbacks) must resolve it inside the cluster too. CoreDNS forwards to the
   Docker embedded resolver, which only sees the host's `/etc/resolv.conf`
@@ -194,10 +195,16 @@ Two more constraints:
 
   ```yaml
   {% raw %}- name: template
-    parameters: ANY ANY k3d.local.test
+    parameters: ANY ANY picluster.local.test
     configBlock: |-
       answer "{{ .Name }} 60 IN A 172.30.200.1"{% endraw %}
   ```
+
+  That wildcard also answers `rustfs.picluster.local.test` and
+  `vault.picluster.local.test` with the gateway IP, which is wrong for the
+  external services. Pods keep using the `*.dev-external.svc.cluster.local`
+  names; if a pod ever needs the local.test names, add explicit `hosts` plugin
+  entries for those two hosts instead of relying on the wildcard.
 
 ### Private PKI (dev only)
 
@@ -206,8 +213,9 @@ Dev has a single private CA. `dev/external-services/gen-certs.sh` creates it
 cert-manager signs the cluster certificates with the same CA through
 `ClusterIssuer/ca-issuer`, which in dev is backed by the `dev-root-ca` Secret
 instead of the self-signed root that prod uses. The result is one trust anchor:
-`https://app.k3d.local.test/`, `https://rustfs.local.test:9091` and
-`https://vault.local.test:8200` all validate against the same CA.
+`https://app.picluster.local.test/`,
+`https://rustfs.picluster.local.test:9091` and
+`https://vault.picluster.local.test:8200` all validate against the same CA.
 
 `make -C dev dev-seed-ca` publishes it into the cluster:
 

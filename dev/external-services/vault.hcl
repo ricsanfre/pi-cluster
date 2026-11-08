@@ -10,9 +10,9 @@
 # -dev-root-token-id and -dev-listen-address, so do not pass -config again.
 #
 # The certificate is issued by the dev CA (gen-certs.sh) with SANs for
-# vault.local.test, the dev-external Service names, localhost and the
+# vault.picluster.local.test, the dev-external Service names, localhost and the
 # container IP, so the laptop and the pods validate the same certificate.
-api_addr = "https://vault.local.test:8200"
+api_addr = "https://vault.picluster.local.test:8200"
 
 listener "tcp" {
   address         = "0.0.0.0:8200"
