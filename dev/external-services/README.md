@@ -6,14 +6,15 @@ topology.
 
 | Service | Address | Notes |
 | --- | --- | --- |
-| RustFS S3 | `https://rustfs.local.test:9091` (host, via DNS) / `https://127.0.0.1:9091` (host, published port) / `https://rustfs.dev-external.svc.cluster.local:9091` (cluster) | TLS with the local dev CA |
-| RustFS console | `https://rustfs.local.test:9092` | optional |
-| Vault | `https://vault.local.test:8200` (host, via DNS) / `https://127.0.0.1:8200` (published port) / `https://vault.dev-external.svc.cluster.local:8200` (cluster) | dev mode, TLS with the local dev CA, root token in `.env`, opt-in profile |
+| RustFS S3 | `https://rustfs.picluster.local.test:9091` (host, via DNS) / `https://127.0.0.1:9091` (host, published port) / `https://rustfs.dev-external.svc.cluster.local:9091` (cluster) | TLS with the local dev CA |
+| RustFS console | `https://rustfs.picluster.local.test:9092` | optional |
+| Vault | `https://vault.picluster.local.test:8200` (host, via DNS) / `https://127.0.0.1:8200` (published port) / `https://vault.dev-external.svc.cluster.local:8200` (cluster) | dev mode, TLS with the local dev CA, root token in `.env`, opt-in profile |
 
-The `*.local.test` names come from the laptop resolver: `rustfs` and `vault`
-are explicit A records pointing at the fixed container IPs (`172.30.100.10`,
-`172.30.100.11`). See [the dev docs](../../docs/_docs/dev.md#accessing-services-from-the-host)
-for the zone file.
+The `*.picluster.local.test` names come from the laptop resolver: `rustfs` and
+`vault` are explicit A records in that zone pointing at the fixed container IPs
+(`172.30.100.10`, `172.30.100.11`). See
+[the dev docs](../../docs/_docs/dev.md#accessing-services-from-the-host) for the
+zone file.
 
 ## First start
 

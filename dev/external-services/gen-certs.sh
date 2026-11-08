@@ -100,7 +100,7 @@ DNS.2 = rustfs.dev-external
 DNS.3 = rustfs.dev-external.svc
 DNS.4 = rustfs.dev-external.svc.cluster.local
 DNS.5 = localhost
-DNS.6 = rustfs.local.test
+DNS.6 = rustfs.picluster.local.test
 IP.1 = 127.0.0.1
 IP.2 = 172.30.100.10"
 
@@ -110,7 +110,7 @@ DNS.2 = vault.dev-external
 DNS.3 = vault.dev-external.svc
 DNS.4 = vault.dev-external.svc.cluster.local
 DNS.5 = localhost
-DNS.6 = vault.local.test
+DNS.6 = vault.picluster.local.test
 IP.1 = 127.0.0.1
 IP.2 = 172.30.100.11"
 
