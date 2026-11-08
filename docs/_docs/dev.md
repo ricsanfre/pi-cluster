@@ -2,7 +2,7 @@
 title: Kubernetes development environment
 permalink: /docs/dev/
 description: How to configure a development environment for the Pi Cluster using K3D, with a manual walkthrough and an automated base + profiles workflow.
-last_modified_at: "07-11-2026"
+last_modified_at: "08-11-2026"
 
 ---
 
@@ -56,6 +56,7 @@ Every Make target asserts the `k3d-picluster` kubectl context.
 | metrics-server | for `kubectl top` |
 | local-path | k3s bundled provisioner, default StorageClass |
 | `dev-external` | stable Service/EndpointSlice names for RustFS/Vault |
+{: .table .border-dark }
 
 The k3s image defaults to `rancher/k3s:v1.37.1-k3s1` to match prod. Override it
 with `K3S_IMAGE=rancher/k3s:<tag>` or add agents with `K3D_AGENTS=1` for
@@ -91,6 +92,7 @@ resources:
 | `network` | external-dns against the lab BIND server | `secrets`, lab reachable |
 | `maintenance` | system-upgrade and descheduler | — |
 | `e-commerce` | e-commerce demo workload | `cnpg`, `data`, `secrets`, `keycloak`, `messaging`, `ingress`, `tracing`, `observability` |
+{: .table .border-dark }
 
 Removing a profile from the list prunes its resources on the next reconcile.
 Heavy profiles (`observability`, `messaging`, `keycloak`, `elastic`,
@@ -121,6 +123,7 @@ components:
 | `components/<name>/` | Optional resources and value bundles (Grafana dashboards, ServiceMonitors, S3 ExternalSecrets, CNPG backups, Longhorn snapshot classes) |
 | `overlays/dev/` | Dev-only values and patches: single replica, `local-path`, filesystem storage, dev Vault |
 | `overlays/prod/` | Prod-only values and patches: replicas, Longhorn, S3/RustFS, prod Vault, ACME issuer |
+{: .table .border-dark }
 
 Rules of thumb:
 
@@ -172,6 +175,7 @@ in `kubernetes/clusters/dev/profiles/poc-cnpg-barman.yaml`. Add that file to
 | Single-node k3d cap | 5 GiB |
 | Base measured target | <= 1.5 GiB |
 | POC namespace quota | requests 2 GiB, limits 3 GiB |
+{: .table .border-dark }
 
 Expected combinations:
 
@@ -182,6 +186,7 @@ Expected combinations:
 | Base + `observability` + `cnpg` + `ingress` | ~3.8 GiB | fine |
 | Base + `messaging` + `observability` | ~3.7 GiB | memory-fine, CPU-tight |
 | Base + all heavy profiles | ~5–6 GiB | not recommended |
+{: .table .border-dark }
 
 ### Limitations and troubleshooting
 
@@ -216,6 +221,7 @@ Expected combinations:
 | RustFS TLS errors in a pod | Copy `rustfs-ca` into the namespace and use `endpointCA` |
 | Memory pressure | `make dev-usage`; remove a heavy profile; `make dev-down` |
 | Cluster wedged | `make dev-recreate` (external data is kept) |
+{: .table .border-dark }
 
 ## Preparing the development environment
 
@@ -380,6 +386,7 @@ One kubeconfig can describe both clusters; they are distinguished by context nam
 | --- | --- | --- |
 | `picluster-prod` | lab (`10.0.0.10:6443`) | `make k3s-install` |
 | `k3d-picluster` | local k3d cluster | `make dev-up` |
+{: .table .border-dark }
 
 `k3s_install.yml` writes the production entry to `$HOME/.kube/pi-cluster.yaml`
 and merges it into `$HOME/.kube/config`, so reinstalling the lab never deletes

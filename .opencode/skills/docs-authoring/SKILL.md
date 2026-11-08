@@ -62,6 +62,18 @@ section, place it in a sensible position — the file order is the sidebar order
   so a clean hierarchy matters.
 - Fence code blocks with a language (`bash`, `yaml`, `text`).
 - Use tables for option/parameter matrices.
+- Close every table with a block IAL; without it kramdown emits a bare `<table>` and the Bootstrap
+  theme styling is lost:
+
+  ```markdown
+  | Column | Column |
+  | --- | --- |
+  | value | value |
+  {: .table .border-dark }
+  ```
+
+  Use `{: .table .border-dark }` (the default) or `{: .table .table-white .border-dark }` when the
+  table needs a white background. The IAL goes on the line immediately after the last table row.
 - Callouts come from `docs/_data/alerts.yml`:
 
   ```markdown

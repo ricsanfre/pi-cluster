@@ -259,6 +259,8 @@ Then register the slug under the right section in `docs/_data/docs.yml`. Convent
 - Callouts use the data files: `{{site.data.alerts.note}} … {{site.data.alerts.end}}`
   (`tip`, `note`, `important`, `warning`).
 - Images live in `docs/assets/img/` and are referenced as `/assets/img/<file>`.
+- Tables need a block IAL after the last row or kramdown renders an unstyled `<table>`:
+  `{: .table .border-dark }` (or `{: .table .table-white .border-dark }` for a white background).
 - Build before committing: `cd docs && bundle exec jekyll build`.
 
 ### Runbooks (`runbooks/`)
