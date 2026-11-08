@@ -87,7 +87,6 @@ resources:
 | `data` | MongoDB/Valkey operators + shared database resources | — |
 | `keycloak` | Keycloak + PostgreSQL + Terraform config | `cnpg`, `secrets` |
 | `velero` | Velero backup/restore + CSI snapshotter | `secrets` |
-| `istio` | Istio ambient mesh + Kiali | `secrets`, `keycloak`, `observability` |
 | `elastic` | ECK, Elasticsearch/Kibana, exporter and Fluentd | `secrets` |
 | `network` | external-dns against the lab BIND server | `secrets`, lab reachable |
 | `maintenance` | system-upgrade and descheduler | — |
@@ -188,6 +187,13 @@ Expected combinations:
 
 - **Longhorn is not supported in k3d.** Dev uses `local-path`; PVCs are
   node-local and lost with the cluster.
+- **Istio ambient is not usable on k3d.** The Istio CNI plugin rewrites
+  Cilium's `/etc/cni/net.d/05-cilium.conflist`; pod sandbox creation then fails
+  (`FailedCreatePodSandBox`) and the node eventually reports `NotReady`. The
+  `istio/app` dev overlay is kept for rendering and prod parity, but there is no
+  dev profile for Istio or Kiali. Recovery: remove the profile (Flux prunes
+  Istio and the CNI agent restores the Cilium config), then restart the k3d
+  node if it stays `NotReady`.
 - The cluster is x86-only in practice; prod is hybrid ARM64/AMD64.
 - The dev CA is local and untrusted. Do not reuse it outside the dev cluster.
 - Flux tracks `master`. Branch validation must follow the `flux-change`
