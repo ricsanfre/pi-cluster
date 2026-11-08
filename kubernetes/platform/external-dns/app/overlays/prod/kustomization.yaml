@@ -5,6 +5,9 @@ namespace: external-dns
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: external-dns-helm-values
     behavior: merge

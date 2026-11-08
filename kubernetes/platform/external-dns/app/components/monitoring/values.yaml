@@ -1,0 +1,3 @@
+# external-dns helm values (monitoring)
+serviceMonitor:
+  enabled: true

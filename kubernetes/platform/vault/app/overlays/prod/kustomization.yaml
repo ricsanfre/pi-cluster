@@ -5,6 +5,9 @@ namespace: vault
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: vault-helm-values
     behavior: merge

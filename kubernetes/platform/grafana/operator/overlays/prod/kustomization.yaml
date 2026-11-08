@@ -5,6 +5,9 @@ namespace: grafana
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: grafana-operator-helm-values
     behavior: merge

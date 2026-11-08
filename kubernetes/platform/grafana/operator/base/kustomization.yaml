@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
   - ns.yaml
   - helm.yaml
-  - grafana-dashboard.yaml
 
 configMapGenerator:
   - name: grafana-operator-helm-values

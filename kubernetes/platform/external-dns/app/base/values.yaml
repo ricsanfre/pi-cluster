@@ -39,5 +39,3 @@ sources:
 domainFilters: 
   - ${CLUSTER_DOMAIN}
 logLevel: debug
-serviceMonitor:
-  enabled: true
