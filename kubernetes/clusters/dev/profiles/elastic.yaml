@@ -4,6 +4,9 @@
 # Elasticsearch exporter and Fluentd credentials come from Vault.
 # Elasticsearch needs vm.max_map_count=262144 on the Docker host unless
 # node.store.allow_mmap is false (it is, in this repo).
+# The Terraform-driven `elastic-stack/config` is not included: it needs the
+# tofu-controller and Vault Kubernetes auth, which the dev Vault does not
+# provide.
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
