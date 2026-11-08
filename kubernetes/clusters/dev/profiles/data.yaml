@@ -28,3 +28,18 @@ spec:
   path: ./kubernetes/platform/databases/valkey-operator/app/overlays/dev
   prune: true
   wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: databases-common
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: databases
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/databases/common/overlays/dev
+  prune: true
+  wait: true

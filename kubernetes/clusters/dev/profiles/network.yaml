@@ -1,0 +1,22 @@
+---
+# external-dns publishes records to the lab's BIND server (RFC2136). Requires
+# the `secrets` profile: the TSIG key is read from Vault (bind9/ddns) through an
+# ExternalSecret, and the lab must be reachable at EXTERNAL_DNS_SERVER.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: external-dns-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: external-dns
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/external-dns/app/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

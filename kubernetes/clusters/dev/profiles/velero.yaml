@@ -2,6 +2,21 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: csi-external-snapshotter-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: kube-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./kubernetes/platform/csi-external-snapshotter/app/overlays/dev
+  prune: true
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: velero-app
   namespace: flux-system
 spec:
@@ -10,6 +25,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+    - name: csi-external-snapshotter-app
   path: ./kubernetes/platform/velero/app/overlays/dev
   prune: true
   wait: true

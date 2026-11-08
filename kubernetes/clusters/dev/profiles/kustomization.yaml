@@ -10,11 +10,16 @@ kind: Kustomization
 #   ingress.yaml       Envoy Gateway + dev CA wildcard certificate (requires cert-manager)
 #   cnpg.yaml          CloudNativePG operator
 #   secrets.yaml       External Secrets Operator (optional external Vault)
-#   observability.yaml kube-prometheus-stack (tuned for dev) + Grafana
+#   observability.yaml kube-prometheus-stack + Grafana + k3s mixins + external scrape configs
 #   logging.yaml       Loki single-binary + Fluent Bit
 #   tracing.yaml       Tempo + OpenTelemetry Collector
-#   messaging.yaml     Strimzi, one ephemeral KRaft broker
-#   data.yaml          MongoDB community operator + Valkey operator
-#   keycloak.yaml      Keycloak operator + instance
-#   velero.yaml        Velero backup/restore
+#   messaging.yaml     Strimzi, schema-registry and kafdrop
+#   data.yaml          MongoDB/Valkey operators + shared database resources
+#   keycloak.yaml      Keycloak operator + instance + Terraform config
+#   velero.yaml        Velero backup/restore + CSI snapshotter
+#   istio.yaml         Istio ambient mesh + Kiali (needs secrets, keycloak, observability)
+#   elastic.yaml       ECK + Elasticsearch/Kibana + exporter + Fluentd (needs secrets)
+#   network.yaml       external-dns against the lab BIND (needs secrets)
+#   maintenance.yaml   system-upgrade + descheduler
+#   e-commerce.yaml    e-commerce demo (needs several profiles; see file header)
 resources: []
