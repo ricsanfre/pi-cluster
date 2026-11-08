@@ -79,3 +79,47 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kube-prometheus-stack-k3s-mixins
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: kube-prom-stack
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: kube-prometheus-stack-app
+  path: ./kubernetes/platform/kube-prometheus-stack/k3s-mixins/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+---
+# Scrape configs for the lab's external nodes. Targets are unreachable when the
+# lab is off; Prometheus reports them down without failing the Kustomization.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kube-prometheus-stack-externalnodes
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: kube-prom-stack
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: kube-prometheus-stack-app
+  path: ./kubernetes/platform/kube-prometheus-stack/externalnodes-monitoring/overlays/dev
+  prune: true
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
