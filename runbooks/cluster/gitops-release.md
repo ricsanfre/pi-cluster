@@ -313,3 +313,92 @@ Rollback:
 
 1. Patch `GitRepository` ref back to `master`.
 2. Reconcile source and root Kustomization.
+
+## GITOPS-007 Terraform State Lock Recovery
+
+<a id="runbook-gitops-007"></a>
+Runbook ID: `GITOPS-007`
+Owner: Platform
+Severity: `SEV-2`
+
+Objective: Clear a Terraform state lock left behind by a dead tofu-controller runner, so the
+`Terraform` CR, its Kustomization and the Kustomizations that depend on it can reconcile again.
+
+Preconditions:
+
+- `kubectl` context `picluster-prod` (`kubectl --context picluster-prod ...`).
+- A `Terraform` CR reports `error acquiring the state lock`:
+
+  ```bash
+  kubectl --context picluster-prod -n flux-system get terraform
+  kubectl --context picluster-prod -n flux-system get terraform <name> \
+    -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
+  ```
+
+- The lock is **stale**: its `Created` timestamp predates the incident and the runner pod in
+  `Who` (`runner@<name>-tf-runner`) no longer exists. Do not unlock a live operation — a current
+  run is visible as a running `<name>-tf-runner` pod and a `StateLocked=True LockHeld` condition.
+
+Procedure:
+
+1. Record the lock `ID`, `Who` and `Created` from the Ready condition message.
+2. Confirm the owner is gone and read the lock object (the tofu-controller default backend is the
+   Kubernetes backend, so locks are `coordination.k8s.io` Leases):
+
+   ```bash
+   kubectl --context picluster-prod -n flux-system get pods | grep <name>-tf-runner
+   kubectl --context picluster-prod -n flux-system get lease lock-tfstate-default-<name>
+   ```
+
+3. Force unlock. `forceUnlock: yes` alone is **not** enough: the controller also needs
+   `lockIdentifier` set to the `ID` from step 1.
+
+   ```bash
+   kubectl --context picluster-prod -n flux-system patch terraform <name> --type merge \
+     -p '{"spec":{"tfstate":{"forceUnlock":"yes","lockIdentifier":"<lock-id>"}}}'
+   ```
+
+4. Trigger an immediate reconcile instead of waiting for the 30m interval:
+
+   ```bash
+   kubectl --context picluster-prod -n flux-system annotate terraform <name> \
+     reconcile.fluxcd.io/requestedAt="$(date +%s)" --overwrite
+   ```
+
+5. Wait for the plan and, if there are pending changes, the apply:
+
+   ```bash
+   kubectl --context picluster-prod -n flux-system wait \
+     --for=condition=Ready terraform/<name> --timeout=600s
+   ```
+
+6. Revert the two fields — they must not stay armed:
+
+   ```bash
+   kubectl --context picluster-prod -n flux-system patch terraform <name> --type merge \
+     -p '{"spec":{"tfstate":{"forceUnlock":"no","lockIdentifier":null}}}'
+   ```
+
+   The generation change triggers one more plan; wait for `Ready=True` again.
+
+Verify:
+
+- `Terraform` CR: `Ready=True`, reason `TerraformPlannedNoChanges` or `TerraformAppliedSucceed`.
+- The owning Kustomization is `READY=True` and its dependants stop reporting a dependency error.
+- `kubectl get lease lock-tfstate-default-<name>` shows an empty `HOLDER` (the Lease object stays).
+
+Rollback:
+
+1. Re-apply step 6 in case the revert patch is interrupted; the default is `forceUnlock: no`.
+2. If the plan fails for a different reason, work from the new message — the unlock is one-way but
+   the state itself is untouched.
+3. Never set `forceUnlock: yes` or `auto` in Git: it would disable locking for every reconcile.
+   `auto` unlocks without an identifier and is only appropriate when no other system can be using
+   the state.
+
+References:
+
+- `kubernetes/platform/elastic-stack/config/base/terraform.yaml`,
+  `kubernetes/platform/keycloak/config/base/terraform.yaml`
+- [tofu-controller documentation](https://flux-iac.github.io/tofu-controller/)
+- [Terraform state locking and force-unlock](https://developer.hashicorp.com/terraform/language/state/locking)

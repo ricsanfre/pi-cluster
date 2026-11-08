@@ -152,6 +152,7 @@ and that backups are still landing.
 | `ping` to `10.0.0.x` fails, everything "looks down" | Gateway rejects IPv4 ICMP by design — not a fault | `CLUSTER-014` |
 | Kustomization stuck `False`, no new revision | Git source cannot fetch (auth, branch, network) | `GITOPS-001` |
 | One Kustomization `False`, others fine | Manifest/patch error or missing dependency | `GITOPS-002` |
+| Terraform CR `error acquiring the state lock` | Stale lock from an interrupted runner | `GITOPS-007` |
 | HelmRelease `False`, chart or values error | Chart version, schema change, stuck release | `GITOPS-003` |
 | Pods `ContainerCreating`, PVC pending | Longhorn replica degradation or disk pressure | `CLUSTER-012` |
 | App logs `connection refused` to Vault | Vault sealed or auth backend issue | `VAULT-001`, `VAULT-004` |

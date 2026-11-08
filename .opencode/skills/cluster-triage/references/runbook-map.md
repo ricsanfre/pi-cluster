@@ -30,6 +30,7 @@ Symptom-to-runbook index for triage. Canonical catalog: [`runbooks/README.md`](.
 | `GITOPS-004` | You need to suspend and later resume reconciliation safely |
 | `GITOPS-005` | Upgrading or rolling back Flux itself |
 | `GITOPS-006` | Validating a branch against the live cluster |
+| `GITOPS-007` | A `Terraform` CR reports `error acquiring the state lock` |
 
 ### Security and access — `runbooks/cluster/security-access.md`
 
