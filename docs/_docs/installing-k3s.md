@@ -795,6 +795,11 @@ To enable remote access to the cluster using `kubectl` and `helm` applications f
 
 - Step 2: Copy k3s configuration file, located in `/etc/rancher/k3s/k3s.yaml`, to `$HOME/.kube/config`.
 
+    The Ansible playbook (`make k3s-install`) does this automatically: it writes the production
+    entry to `$HOME/.kube/pi-cluster.yaml`, renames its context to `picluster-prod` and merges it
+    into `$HOME/.kube/config` without removing other contexts (such as `k3d-picluster` from a
+    local dev cluster).
+
 - Step 3: Modify `k3s.yaml` configuration file for using the IP address instead of localhost
 
 - Step 4: Enable HTTPS connectivity on port 6443 between the server and the k3s control node

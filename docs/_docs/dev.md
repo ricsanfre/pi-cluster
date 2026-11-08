@@ -181,7 +181,7 @@ Expected combinations:
 
 | Symptom | Check |
 | --- | --- |
-| Wrong context | `kubectl config current-context` must be `k3d-picluster` |
+| Wrong context | Use `--context k3d-picluster` (dev) or `--context picluster-prod` (lab) |
 | Flux not reconciling | `make dev-status`; `flux get kustomizations -A` |
 | Pods Pending after create | Cilium not Ready: `kubectl -n kube-system rollout status ds/cilium` |
 | DNS failures | `kubectl -n kube-system get pods -l k8s-app=kube-dns` |
@@ -345,6 +345,26 @@ Follow official [kubectl installation guide](https://kubernetes.io/docs/tasks/to
     platform: linux/amd64
   kustomizeVersion: v5.0.4-0.20230601165947-6ce0bf390ce3
   ```
+
+### Cluster contexts
+
+One kubeconfig can describe both clusters; they are distinguished by context name:
+
+| Context | Cluster | Written by |
+| --- | --- | --- |
+| `picluster-prod` | lab (`10.0.0.10:6443`) | `make k3s-install` |
+| `k3d-picluster` | local k3d cluster | `make dev-up` |
+
+`k3s_install.yml` writes the production entry to `$HOME/.kube/pi-cluster.yaml`
+and merges it into `$HOME/.kube/config`, so reinstalling the lab never deletes
+the dev context. Pass `--context` rather than relying on the current context:
+
+```shell
+kubectl --context picluster-prod get nodes
+kubectl --context k3d-picluster get pods -A
+```
+
+Running any `dev/` target switches the current context to `k3d-picluster`.
 
 ### Helm
 

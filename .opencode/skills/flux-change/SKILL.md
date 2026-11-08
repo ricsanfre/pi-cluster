@@ -11,7 +11,8 @@ Validate a branch in the live cluster without merging it, then restore the clust
 
 - The branch is pushed to `origin`.
 - The working tree is clean (`git status`), or the remaining changes are intentional.
-- Kubeconfig points at the production cluster (`kubectl config current-context`).
+- Kubeconfig has a context for the production cluster (`picluster-prod`); pass
+  `--context picluster-prod` (and `--context k3d-picluster` for dev).
 - The change has already passed `change-preflight`.
 
 Destructive operations are out of scope here: this skill only changes the Flux sync ref and
