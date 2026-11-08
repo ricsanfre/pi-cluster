@@ -1,1 +1,6 @@
 # vault helm values (dev overlay)
+#
+# Dev Vault runs outside the cluster as a Docker Compose container (dev mode,
+# plain HTTP) and is exposed to pods through the dev-external Service.
+global:
+  externalVaultAddr: "http://vault.dev-external.svc.cluster.local:8200"

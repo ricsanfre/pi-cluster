@@ -6,6 +6,7 @@ metadata:
   namespace: flux-system
 data:
   CLUSTER_DOMAIN: dev.homelab.ricsanfre.com
+  EXTERNAL_DNS_SERVER: 10.0.0.11
   S3_SERVER: rustfs.dev-external.svc.cluster.local
   STORAGE_CLASS: local-path
   TRUSTED_INTERNAL_POD_CIDR: 10.42.0.0/16

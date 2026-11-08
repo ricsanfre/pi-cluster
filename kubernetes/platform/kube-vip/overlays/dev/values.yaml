@@ -1,1 +1,10 @@
-# dev overlay values for kube-vip helm chart
+# kube-vip helm values (dev overlay)
+#
+# k3d already publishes the API server on 6443 and has no control-plane VIP,
+# so both control-plane and service LoadBalancer modes are disabled. The
+# DaemonSet still runs (profile-ready) but does nothing on k3d.
+config:
+  address: ""
+env:
+  cp_enable: "false"
+  svc_enable: "false"
