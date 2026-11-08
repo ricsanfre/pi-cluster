@@ -58,7 +58,7 @@ done
 if [ "$VAULT" = "1" ]; then
   echo "Waiting for Vault health endpoint"
   for i in $(seq 1 60); do
-    if curl --silent --fail http://127.0.0.1:8200/v1/sys/health >/dev/null 2>&1; then
+    if curl --silent --fail --cacert certs/ca.crt https://127.0.0.1:8200/v1/sys/health >/dev/null 2>&1; then
       break
     fi
     if [ "$i" -eq 60 ]; then

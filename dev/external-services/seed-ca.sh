@@ -26,6 +26,10 @@ CA_KEY="$SCRIPT_DIR/certs/ca.key"
 # that exist are seeded; the rest are picked up on the next run.
 RUSTFS_CONSUMERS="${RUSTFS_CONSUMERS:-velero databases loki tempo}"
 
+# Namespaces whose workloads verify the Vault server certificate (the dev
+# ClusterSecretStore references this Secret through caProvider).
+VAULT_CONSUMERS="${VAULT_CONSUMERS:-external-secrets}"
+
 if [ ! -f "$CA_CRT" ] || [ ! -f "$CA_KEY" ]; then
   echo "ERROR: $CA_CRT or $CA_KEY not found. Run ./gen-certs.sh first." >&2
   exit 1
@@ -74,5 +78,14 @@ for ns in $RUSTFS_CONSUMERS; do
       --from-file=ca.crt="$CA_CRT" \
       --dry-run=client -o yaml | kubectl apply -f - >/dev/null
     echo "Seeded Secret/$ns/rustfs-ca"
+  fi
+done
+
+for ns in $VAULT_CONSUMERS; do
+  if kubectl get namespace "$ns" >/dev/null 2>&1; then
+    kubectl -n "$ns" create secret generic vault-ca \
+      --from-file=ca.crt="$CA_CRT" \
+      --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+    echo "Seeded Secret/$ns/vault-ca"
   fi
 done

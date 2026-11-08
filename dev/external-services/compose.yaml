@@ -60,7 +60,8 @@ services:
     command: ["/data"]
 
   vault:
-    image: hashicorp/vault:1.20.4
+    # renovate: datasource=docker depName=hashicorp/vault
+    image: hashicorp/vault:2.2.1
     container_name: dev-vault
     profiles: ["vault"]
     restart: unless-stopped
@@ -73,9 +74,18 @@ services:
       - "127.0.0.1:8200:8200"
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN:?set VAULT_DEV_ROOT_TOKEN in .env}
-      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
-      VAULT_ADDR: "http://0.0.0.0:8200"
-    command: ["server", "-dev", "-dev-root-token-id=${VAULT_DEV_ROOT_TOKEN}"]
+      # The `-dev` listener is container-local; 0.0.0.0:8200 is the TLS
+      # listener from vault.hcl. The image entrypoint turns this variable into
+      # `-dev-listen-address`, so do not repeat the flag in `command`.
+      VAULT_DEV_LISTEN_ADDRESS: "127.0.0.1:8299"
+      VAULT_ADDR: "https://127.0.0.1:8200"
+      VAULT_CACERT: "/vault/certs/ca.crt"
+    volumes:
+      - ./vault.hcl:/vault/config/vault.hcl:ro
+      - ./certs:/vault/certs:ro
+    # The entrypoint already adds -config=/vault/config and
+    # -dev-root-token-id, so only the mode flag is passed here.
+    command: ["server", "-dev"]
 
 networks:
   picluster:
