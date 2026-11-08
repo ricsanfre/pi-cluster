@@ -219,13 +219,14 @@
     # example k3d-picluster from the local dev cluster):
     #   ~/.kube/pi-cluster.yaml  production fragment, always rewritten here
     #   ~/.kube/config           shared file, merged from the fragment
-    - name: Write the production kubeconfig fragment
+    - name: Stage the production kubeconfig fragment
       ansible.builtin.copy:
         content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', k3s_api_vip) }}"
-        dest: "{{ kube_home }}/pi-cluster.yaml"
+        dest: "{{ kube_home }}/pi-cluster.tmp.yaml"
         mode: "0600"
       delegate_to: localhost
       run_once: true
+      changed_when: false
 
     - name: Rename the k3s context to picluster-prod
       ansible.builtin.command:
@@ -235,7 +236,28 @@
           - rename-context
           - default
           - picluster-prod
-          - "--kubeconfig={{ kube_home }}/pi-cluster.yaml"
+          - "--kubeconfig={{ kube_home }}/pi-cluster.tmp.yaml"
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+      when: not ansible_check_mode
+
+    # Comparing the staged file (canonical YAML produced by kubectl) with the
+    # installed fragment keeps this task idempotent.
+    - name: Write the production kubeconfig fragment
+      ansible.builtin.copy:
+        src: "{{ kube_home }}/pi-cluster.tmp.yaml"
+        dest: "{{ kube_home }}/pi-cluster.yaml"
+        remote_src: true
+        mode: "0600"
+      delegate_to: localhost
+      run_once: true
+      when: not ansible_check_mode
+
+    - name: Remove the staged production kubeconfig
+      ansible.builtin.file:
+        path: "{{ kube_home }}/pi-cluster.tmp.yaml"
+        state: absent
       delegate_to: localhost
       run_once: true
       changed_when: false
@@ -290,6 +312,7 @@
         state: absent
       delegate_to: localhost
       run_once: true
+      changed_when: false
       when: not ansible_check_mode
 
     - name: Restore the previous kubectl context
