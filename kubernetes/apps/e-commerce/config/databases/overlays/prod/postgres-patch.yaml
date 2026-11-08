@@ -1,0 +1,7 @@
+# Prod sizing: 2 PostgreSQL instances and a 10Gi volume.
+- op: replace
+  path: /spec/instances
+  value: 2
+- op: replace
+  path: /spec/storage/size
+  value: 10Gi

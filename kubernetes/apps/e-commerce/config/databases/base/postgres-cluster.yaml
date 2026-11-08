@@ -1,6 +1,7 @@
 # CloudNativePG — E-commerce PostgreSQL Cluster
 # Namespace: databases
-# 2 instances (1 primary + 1 replica), 512Mi memory limit per pod.
+# Base shape: 1 instance and 5Gi. The prod overlay sets 2 instances and 10Gi;
+# the backup configuration lives in components/backup (prod only).
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -8,7 +9,7 @@ metadata:
   name: postgres-ecommerce
   namespace: databases
 spec:
-  instances: 2
+  instances: 1
 
   imageName: ghcr.io/cloudnative-pg/postgresql:18.6
 
@@ -29,8 +30,8 @@ spec:
     initdb: {}
 
   storage:
-    size: 10Gi
-    storageClass: longhorn
+    size: 5Gi
+    storageClass: ${STORAGE_CLASS:=longhorn}
 
   monitoring:
     enablePodMonitor: true
@@ -39,24 +40,6 @@ spec:
         targetLabel: namespace
       - sourceLabels: [__meta_kubernetes_pod_name]
         targetLabel: pod
-
-  backup:
-    barmanObjectStore:
-      data:
-        compression: bzip2
-      wal:
-        compression: bzip2
-        maxParallel: 8
-      destinationPath: s3://k3s-barman/postgres-ecommerce
-      endpointURL: https://${S3_SERVER}:9091
-      s3Credentials:
-        accessKeyId:
-          name: postgres-ecommerce-s3-secret
-          key: AWS_ACCESS_KEY_ID
-        secretAccessKey:
-          name: postgres-ecommerce-s3-secret
-          key: AWS_SECRET_ACCESS_KEY
-    retentionPolicy: "30d"
 
   managed:
     roles:

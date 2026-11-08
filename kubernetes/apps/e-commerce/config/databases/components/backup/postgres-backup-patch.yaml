@@ -1,0 +1,21 @@
+# Barman Cloud Plugin backup configuration for the e-commerce PostgreSQL cluster.
+# Prod-only: dev has no RustFS endpoint or S3 credentials.
+- op: add
+  path: /spec/backup
+  value:
+    barmanObjectStore:
+      data:
+        compression: bzip2
+      wal:
+        compression: bzip2
+        maxParallel: 8
+      destinationPath: s3://k3s-barman/postgres-ecommerce
+      endpointURL: https://${S3_SERVER}:9091
+      s3Credentials:
+        accessKeyId:
+          name: postgres-ecommerce-s3-secret
+          key: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-ecommerce-s3-secret
+          key: AWS_SECRET_ACCESS_KEY
+    retentionPolicy: "30d"

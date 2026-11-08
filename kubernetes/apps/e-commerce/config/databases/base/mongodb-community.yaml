@@ -1,7 +1,7 @@
 # MongoDB Community Operator — MongoDBCommunity CR
 # Namespace: databases
 # Shared replica set for product-service, reviews-service, and notification-service.
-# 2 members (1 primary + 1 secondary) for data redundancy.
+# Base shape: 1 member. The prod overlay sets 2 members (1 primary + 1 secondary).
 ---
 apiVersion: mongodbcommunity.mongodb.com/v1
 kind: MongoDBCommunity
@@ -9,7 +9,7 @@ metadata:
   name: mongodb
   namespace: databases
 spec:
-  members: 2
+  members: 1
   type: ReplicaSet
   version: "8.0.4"
 
