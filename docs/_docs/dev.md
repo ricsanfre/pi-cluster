@@ -128,6 +128,61 @@ Cilium-assigned LoadBalancer IP — `HTTP_GATEWAY_LOAD_BALANCER_IP`, default
 to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 `kubectl port-forward`; only DNS and TLS trust are missing.
 
+<pre class="mermaid">
+flowchart TB
+  subgraph HOST["Laptop"]
+    direction TB
+    CLIENT["browser / curl / kubectl"]
+    BIND["BIND resolver<br/>127.0.0.1:53<br/>local.test + picluster.local.test"]
+    BRIDGE["docker bridge br-…<br/>172.30.0.1/16<br/>route 172.30.0.0/16"]
+  end
+
+  subgraph NET["docker network picluster — 172.30.0.0/16, gateway 172.30.0.1, dynamic range 172.30.0.0/17"]
+    direction TB
+
+    subgraph NODE["k3d node container k3d-picluster-server-0 — 172.30.0.2<br/>k3s API 127.172.30.1:6443"]
+      direction TB
+      subgraph K3S["k3s"]
+        direction TB
+        PODS["pods 10.42.0.0/16"]
+        SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10"]
+        XSVC["dev-external headless Services<br/>rustfs → 172.30.100.10<br/>vault → 172.30.100.11"]
+      end
+      GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443<br/>Cilium LB-IPAM pool 172.30.200.1–254<br/>L2-announced on picluster"]
+    end
+
+    RUSTFS["dev-rustfs container — 172.30.100.10<br/>S3 :9091, console :9092<br/>also published on 127.0.0.1:9091/9092"]
+    VAULT["dev-vault container — 172.30.100.11<br/>TLS :8200<br/>also published on 127.0.0.1:8200"]
+  end
+
+  CLIENT -->|"1 · DNS query"| BIND
+  BIND -.->|"*.picluster.local.test → 172.30.200.1"| CLIENT
+  BIND -.->|"rustfs/vault.picluster.local.test → 172.30.100.10/.11"| CLIENT
+
+  CLIENT ==>|"2 · HTTPS"| BRIDGE
+  BRIDGE -->|":443"| GW
+  BRIDGE -->|":9091 :9092"| RUSTFS
+  BRIDGE -->|":8200"| VAULT
+
+  GW -->|"HTTPRoute → Service"| PODS
+  PODS -->|"dev-external Service"| XSVC
+  XSVC ==>|"EndpointSlice, same L2 segment"| RUSTFS
+  XSVC ==> VAULT
+
+  PODS -->|"3 · resolve *.picluster.local.test"| SVCS
+  SVCS -->|"forward to /etc/resolv.conf → Docker DNS 127.0.0.11"| BIND
+
+  NODE -.->|"kubectl --context k3d-picluster"| CLIENT
+</pre>
+
+The paths in the diagram: (1) the laptop resolver answers from the
+`local.test` zone, (2) the host routes straight to the LoadBalancer IP and the
+container IPs over the bridge — no port mapping involved, (3) pods resolve
+cluster-external names through CoreDNS, which forwards to the Docker embedded
+resolver and then to the host resolver. The published `127.0.0.1` ports are a
+fallback that bypasses DNS and the gateway; pods cannot use them. The `elastic`
+profile additionally claims `172.30.200.12` for the Fluentd LoadBalancer.
+
 The dev `CLUSTER_DOMAIN` is `picluster.local.test`, an RFC 2606 `.test` name
 that is never published to the lab BIND. Add three records to the existing
 `local.test` zone (BIND syntax, relative to `$ORIGIN local.test.`; `127.0.0.1`
