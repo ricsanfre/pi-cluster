@@ -1,0 +1,20 @@
+---
+# Dev private PKI.
+#
+# The CA is generated on the laptop by dev/external-services/gen-certs.sh and
+# imported into the cluster by `make dev-seed-ca` as the `dev-root-ca` Secret.
+# The same CA signs the RustFS server certificate and every certificate issued
+# by this ClusterIssuer (Envoy Gateway wildcard, Fluentd), so the laptop and
+# the workloads share a single dev trust anchor.
+#
+# Prod does not use this: public hostnames use Let's Encrypt and
+# cluster-internal certificates use the self-signed CA from
+# ../components/internal-ca.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: ca-issuer
+  namespace: cert-manager
+spec:
+  ca:
+    secretName: dev-root-ca

@@ -18,7 +18,18 @@ services:
       - ./data/rustfs:/fix/data
       - ./data/logs:/fix/logs
       - ./certs:/fix/certs
-    command: ["sh", "-c", "mkdir -p /fix/data /fix/logs && chown -R 10001:10001 /fix/data /fix/logs /fix/certs"]
+    # Only the RustFS keypair needs the service UID. Chowning /fix/certs
+    # recursively would take ownership of ca.key away from the invoking user,
+    # breaking gen-certs.sh re-issues and `make dev-seed-ca`.
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /fix/data /fix/logs
+        chown -R 10001:10001 /fix/data /fix/logs
+        for f in /fix/certs/rustfs_cert.pem /fix/certs/rustfs_key.pem; do
+          [ -f "$$f" ] && chown 10001:10001 "$$f" || true
+        done
 
   rustfs:
     image: rustfs/rustfs:1.0.4

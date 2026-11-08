@@ -50,5 +50,9 @@ make dev-services-reset  # stop and delete data (asks for confirmation)
 | `bootstrap.sh` | yes | creates buckets and the Barman user |
 | `.env`, `certs/`, `data/` | no | local credentials, certificates, data |
 
-The CA certificate (`certs/ca.crt`) is public and is copied into POC
-namespaces as the `rustfs-ca` Secret when needed.
+The CA is generated once by `gen-certs.sh` and reused: it is the dev root of
+trust. It signs the RustFS server certificate and is imported into the k3d
+cluster by `make dev-seed-ca` (Secret `dev-root-ca`, used by
+`ClusterIssuer/ca-issuer`) and published as `ClusterTrustBundle/picluster-dev-ca`.
+Deleting `certs/` rotates it and invalidates every certificate it signed;
+re-run `gen-certs.sh` and `make dev-seed-ca` afterwards.

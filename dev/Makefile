@@ -103,6 +103,11 @@ dev-recreate: ## Recreate the cluster from scratch and run smoke tests
 dev-services-up: ## Start RustFS (and Vault when VAULT=1)
 	VAULT=$(VAULT) ./external-services/up.sh
 
+.PHONY: dev-seed-ca
+dev-seed-ca: ## Seed the dev CA into the cluster (cert-manager issuer + trust bundle)
+	$(require_context)
+	./external-services/seed-ca.sh
+
 .PHONY: dev-services-down
 dev-services-down: ## Stop external services, keep data
 	./external-services/down.sh
