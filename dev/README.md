@@ -65,4 +65,8 @@ dev/
 
 - Longhorn is not supported in k3d; `local-path` is used.
 - Flux tracks `master`; revert any branch validation.
+- Services behind the `ingress` profile are reached over HTTPS at
+  `*.<name>.dev.local.test`; add a local `dev.local.test` zone pointing at
+  `172.30.200.1` and trust the dev CA. See
+  [Accessing services from the host](../docs/_docs/dev.md#accessing-services-from-the-host).
 - The dev CA and credentials are local-only and gitignored.
