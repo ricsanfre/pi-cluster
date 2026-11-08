@@ -1,1 +1,16 @@
 # kiali-operator helm values (dev overlay)
+#
+# Dev runs without Grafana or Tempo by default, so drop the deep links instead
+# of showing broken panels. Authentication stays on OIDC and targets the dev
+# Keycloak (`iam.<CLUSTER_DOMAIN>`) — the kiali profile requires the keycloak
+# profile. Prometheus comes from the observability profile.
+cr:
+  spec:
+    deployment:
+      logger:
+        log_level: info
+    external_services:
+      grafana:
+        enabled: false
+      tracing:
+        enabled: false
