@@ -125,32 +125,26 @@ to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 `kubectl port-forward`; only DNS and TLS trust are missing.
 
 The dev `CLUSTER_DOMAIN` is `picluster.local.test`, an RFC 2606 `.test` name
-that is never published to the lab BIND. Everything the dev environment
-publishes — gateway hostnames, RustFS and Vault — lives in that one zone,
-declared in the laptop resolver next to the existing `local.test` one (BIND
-shown; `127.0.0.1` would not work because nothing listens on the host's port
-80/443 — `k3d`'s load balancer and `servicelb` are disabled):
+that is never published to the lab BIND. Add three records to the existing
+`local.test` zone (BIND syntax, relative to `$ORIGIN local.test.`; `127.0.0.1`
+would not work because nothing listens on the host's port 80/443 — `k3d`'s
+load balancer and `servicelb` are disabled):
 
 ```bind
-$TTL 2d
-$ORIGIN picluster.local.test.
-
-@        IN  SOA  ns.picluster.local.test. admin.picluster.local.test. (
-                2026110801 ; serial
-                12h        ; refresh
-                15m        ; retry
-                3w         ; expire
-                2h )       ; minimum TTL
-         IN  NS   ns.picluster.local.test.
-*        IN  A    172.30.200.1    ; Envoy Gateway (cert-manager wildcard)
-rustfs   IN  A    172.30.100.10   ; RustFS S3 + console
-vault    IN  A    172.30.100.11   ; Vault (opt-in profile)
+; keep the existing wildcard for other local projects
+*                 IN  A    127.0.0.1
+; k3d dev environment
+*.picluster       IN  A    172.30.200.1    ; Envoy Gateway: <svc>.picluster.local.test
+rustfs.picluster  IN  A    172.30.100.10   ; RustFS S3:9091 + console:9092
+vault.picluster   IN  A    172.30.100.11   ; Vault:8200
 ```
 
-Because it is a separate zone, the `*` wildcard of the parent `local.test`
-(which points at `127.0.0.1` for other projects) never applies. Inside
-`picluster.local.test`, the exact `rustfs` and `vault` records win over the
-wildcard, so the external services keep their own addresses.
+Bump the zone serial and reload it (`sudo rndc reload local.test`). The exact
+`rustfs.picluster` and `vault.picluster` records win over `*.picluster`, and
+`*.picluster` is a closer match than the apex `*`, so other local projects keep
+resolving to `127.0.0.1`. A separate `picluster.local.test` child zone with the
+same three records works too, if you would rather remove the dev names by
+deleting one zone.
 
 `*.picluster.local.test` is signed by the dev CA, which also signs the RustFS
 and Vault server certificates, so a single trust entry covers the gateway and
