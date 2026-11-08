@@ -67,7 +67,9 @@ dev/
 - Longhorn is not supported in k3d; `local-path` is used.
 - Flux tracks `master`; revert any branch validation.
 - Services behind the `ingress` profile are reached over HTTPS at
-  `*.<name>.dev.local.test`; add a local `dev.local.test` zone pointing at
-  `172.30.200.1` and trust the dev CA. See
+  `<name>.k3d.local.test`; add a wildcard for `*.k3d` pointing at
+  `172.30.200.1` in your local `local.test` zone and trust the dev CA.
+  RustFS and Vault keep names in the parent zone
+  (`rustfs.local.test:9091`, `vault.local.test:8200`). See
   [Accessing services from the host](../docs/_docs/dev.md#accessing-services-from-the-host).
 - The dev CA and credentials are local-only and gitignored.

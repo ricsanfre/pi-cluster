@@ -47,7 +47,7 @@ fi
 # when the certificate does not match, which is the signal to re-issue.
 if [ -f "$CERT_DIR/rustfs_cert.pem" ] && [ -f "$CERT_DIR/rustfs_key.pem" ] \
   && openssl x509 -in "$CERT_DIR/rustfs_cert.pem" -noout \
-    -checkhost rustfs.dev.local.test >/dev/null 2>&1; then
+    -checkhost rustfs.local.test >/dev/null 2>&1; then
   echo "Using existing RustFS certificate in $CERT_DIR"
   exit 0
 fi
@@ -72,7 +72,7 @@ DNS.2 = rustfs.dev-external
 DNS.3 = rustfs.dev-external.svc
 DNS.4 = rustfs.dev-external.svc.cluster.local
 DNS.5 = localhost
-DNS.6 = rustfs.dev.local.test
+DNS.6 = rustfs.local.test
 IP.1 = 127.0.0.1
 IP.2 = 172.30.100.10
 EOF
