@@ -366,6 +366,15 @@ kubectl --context k3d-picluster get pods -A
 
 Running any `dev/` target switches the current context to `k3d-picluster`.
 
+`flux` takes the same global flags (`--context`, `--kubeconfig`, before or
+after the subcommand) and honours `KUBECONFIG`, so scripts can target a cluster
+without touching the current context:
+
+```shell
+flux --context picluster-prod get kustomizations -A
+flux --context k3d-picluster reconcile kustomization flux-system --with-source
+```
+
 ### Helm
 
 - Step 1: Download helm install script
