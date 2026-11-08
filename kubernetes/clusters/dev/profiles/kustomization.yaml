@@ -17,4 +17,5 @@ kind: Kustomization
 #   data.yaml          MongoDB community operator + Valkey operator
 #   keycloak.yaml      Keycloak operator + instance
 #   velero.yaml        Velero backup/restore
-resources: []
+resources:
+  - observability.yaml
