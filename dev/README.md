@@ -70,6 +70,6 @@ dev/
   `<name>.k3d.local.test`; add a wildcard for `*.k3d` pointing at
   `172.30.200.1` in your local `local.test` zone and trust the dev CA.
   RustFS and Vault keep names in the parent zone
-  (`rustfs.local.test:9091`, `vault.local.test:8200`). See
+  (`https://rustfs.local.test:9091`, `https://vault.local.test:8200`). See
   [Accessing services from the host](../docs/_docs/dev.md#accessing-services-from-the-host).
 - The dev CA and credentials are local-only and gitignored.

@@ -8,7 +8,7 @@ topology.
 | --- | --- | --- |
 | RustFS S3 | `https://rustfs.local.test:9091` (host, via DNS) / `https://127.0.0.1:9091` (host, published port) / `https://rustfs.dev-external.svc.cluster.local:9091` (cluster) | TLS with the local dev CA |
 | RustFS console | `https://rustfs.local.test:9092` | optional |
-| Vault | `http://vault.local.test:8200` (host) / `http://127.0.0.1:8200` / `http://vault.dev-external.svc.cluster.local:8200` (cluster) | dev mode, plain HTTP, root token in `.env`, opt-in profile |
+| Vault | `https://vault.local.test:8200` (host, via DNS) / `https://127.0.0.1:8200` (published port) / `https://vault.dev-external.svc.cluster.local:8200` (cluster) | dev mode, TLS with the local dev CA, root token in `.env`, opt-in profile |
 
 The `*.local.test` names come from the laptop resolver: `rustfs` and `vault`
 are explicit A records pointing at the fixed container IPs (`172.30.100.10`,
@@ -51,7 +51,7 @@ make dev-services-reset  # stop and delete data (asks for confirmation)
 | `compose.yaml` | yes | RustFS + optional Vault |
 | `.env.example` | yes | variable names, no secrets |
 | `gen-env.sh` | yes | generates `.env` |
-| `gen-certs.sh` | yes | generates the dev CA and RustFS cert |
+| `gen-certs.sh` | yes | generates the dev CA and the RustFS/Vault server certificates |
 | `bootstrap.sh` | yes | creates buckets and the Barman user |
 | `.env`, `certs/`, `data/` | no | local credentials, certificates, data |
 

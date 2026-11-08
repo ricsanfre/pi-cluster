@@ -202,12 +202,12 @@ Two more constraints:
 ### Private PKI (dev only)
 
 Dev has a single private CA. `dev/external-services/gen-certs.sh` creates it
-(`certs/ca.crt`) and signs the RustFS server certificate with it; cert-manager
-signs the cluster certificates with the same CA through
+(`certs/ca.crt`) and signs the RustFS and Vault server certificates with it;
+cert-manager signs the cluster certificates with the same CA through
 `ClusterIssuer/ca-issuer`, which in dev is backed by the `dev-root-ca` Secret
 instead of the self-signed root that prod uses. The result is one trust anchor:
-`https://app.k3d.local.test/` and `https://rustfs.local.test:9091` both
-validate against the same CA.
+`https://app.k3d.local.test/`, `https://rustfs.local.test:9091` and
+`https://vault.local.test:8200` all validate against the same CA.
 
 `make -C dev dev-seed-ca` publishes it into the cluster:
 
@@ -216,6 +216,7 @@ validate against the same CA.
 | `Secret/cert-manager/dev-root-ca` | CA certificate and key; a `ca` type issuer needs the key to sign |
 | `ClusterTrustBundle/picluster-dev-ca` | public trust anchor any pod can project |
 | `Secret/<ns>/rustfs-ca` | public CA for workloads that verify RustFS (`velero`, `databases`, `loki`, `tempo`) |
+| `Secret/external-secrets/vault-ca` | public CA referenced by the dev `ClusterSecretStore` through `caProvider` |
 {: .table .border-dark }
 
 The target is idempotent, skips namespaces that do not exist yet, and no-ops on
@@ -234,8 +235,9 @@ A `ClusterTrustBundle` is a trust anchor, not a setting: components that take
 an explicit CA field still have to reference one. Velero reads
 `configuration.backupStorageLocation[].config.caCert`, CNPG reads
 `spec.backup.barmanObjectStore.endpointCA`, and External Secrets reads
-`caBundle`. None of them are wired in dev yet — the `rustfs-ca` Secret is
-seeded and waiting for those fields.
+`caProvider`. The dev `vault-backend` ClusterSecretStore uses the seeded
+`vault-ca` Secret; Velero and CNPG are not wired in dev yet — their
+`rustfs-ca` Secret is seeded and waiting for those fields.
 {{site.data.alerts.end}}
 
 {{site.data.alerts.warning}}
@@ -289,9 +291,11 @@ make dev-services-down            # stop, keep data
 make dev-services-reset           # stop and delete data (confirmation)
 ```
 
-The cluster reaches RustFS through `rustfs.dev-external.svc.cluster.local:9091`.
-The local dev CA is seeded into POC namespaces as the `rustfs-ca` Secret by
-`dev-poc-new.sh`, and into the other consumer namespaces by `make dev-seed-ca`.
+The cluster reaches RustFS through `https://rustfs.dev-external.svc.cluster.local:9091`
+and Vault through `https://vault.dev-external.svc.cluster.local:8200`; both
+serve TLS with the dev CA. The CA is seeded into POC namespaces as the
+`rustfs-ca` Secret by `dev-poc-new.sh`, and into the other consumer namespaces
+(`rustfs-ca`, `vault-ca`) by `make dev-seed-ca`.
 
 ### POC workflow
 
@@ -359,6 +363,8 @@ Expected combinations:
 | PVC Pending | `local-path` uses `WaitForFirstConsumer`; a consumer pod is required |
 | RustFS unreachable | `make dev-services-up`; check `https://127.0.0.1:9091/health` with the dev CA |
 | RustFS TLS errors in a pod | `make dev-seed-ca` seeds `rustfs-ca`; reference it with `endpointCA` |
+| Vault unreachable | `VAULT=1 make dev-services-up`; `curl --cacert dev/external-services/certs/ca.crt https://127.0.0.1:8200/v1/sys/health` |
+| Vault TLS errors from ESO | `make dev-seed-ca` seeds `vault-ca`; the `vault-backend` store reads it via `caProvider` |
 | Memory pressure | `make dev-usage`; remove a heavy profile; `make dev-down` |
 | Cluster wedged | `make dev-recreate` (external data is kept) |
 {: .table .border-dark }
