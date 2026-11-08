@@ -17,7 +17,6 @@ kind: Kustomization
 #   data.yaml          MongoDB/Valkey operators + shared database resources
 #   keycloak.yaml      Keycloak operator + instance + Terraform config
 #   velero.yaml        Velero backup/restore + CSI snapshotter
-#   istio.yaml         Istio ambient mesh + Kiali (needs secrets, keycloak, observability)
 #   elastic.yaml       ECK + Elasticsearch/Kibana + exporter + Fluentd (needs secrets)
 #   network.yaml       external-dns against the lab BIND (needs secrets)
 #   maintenance.yaml   system-upgrade + descheduler
