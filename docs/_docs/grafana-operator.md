@@ -809,7 +809,7 @@ COPY --from=build /k3s-mixins/templates /
 k3s-mixins:
 	docker build --no-cache --target mixins --output out/ .
 	mv out/*-rules.yaml ../base/rules/.
-	mv out/*.yaml ../base/dashboards/.
+	mv out/*.yaml ../components/monitoring/.
 ```
 
 Run the build from `kubernetes/platform/kube-prometheus-stack/k3s-mixins/build`:
@@ -820,7 +820,7 @@ make k3s-mixins
 
 With this workflow:
 
--   dashboards generated from mixins land in `kubernetes/platform/kube-prometheus-stack/k3s-mixins/base/dashboards` as `GrafanaDashboard` manifests
+-   dashboards generated from mixins land in `kubernetes/platform/kube-prometheus-stack/k3s-mixins/components/monitoring` as `GrafanaDashboard` manifests
 -   Prometheus rules land in `kubernetes/platform/kube-prometheus-stack/k3s-mixins/base/rules`
 -   the resulting dashboards are reconciled natively by Grafana Operator instead of being discovered by Grafana sidecars through labeled ConfigMaps
 

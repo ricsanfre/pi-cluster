@@ -1,0 +1,4 @@
+# grafana-operator helm values (monitoring)
+serviceMonitor:
+  enabled: true
+  interval: 30s

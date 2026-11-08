@@ -4,3 +4,6 @@ namespace: kube-prom-stack
 
 resources:
   - ../../base
+
+components:
+  - ../../components/monitoring

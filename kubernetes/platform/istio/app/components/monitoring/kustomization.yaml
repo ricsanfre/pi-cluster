@@ -4,3 +4,4 @@ kind: Component
 resources:
   - ztunnel-pod-monitor.yaml
   - istiod-service-monitor.yaml
+  - grafana-dashboards.yaml

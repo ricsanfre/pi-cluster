@@ -5,6 +5,9 @@ namespace: elastic
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+
 configMapGenerator:
   - name: prometheus-elasticsearch-exporter-helm-values
     behavior: merge
