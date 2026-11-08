@@ -186,7 +186,13 @@ Expected combinations:
 ### Limitations and troubleshooting
 
 - **Longhorn is not supported in k3d.** Dev uses `local-path`; PVCs are
-  node-local and lost with the cluster.
+  node-local and lost with the cluster. The `longhorn/app` dev overlay sets one
+  replica and a `/var/lib/longhorn` data path, but Longhorn also needs
+  `iscsid`/open-iscsi on the Docker host, which is not installed here, so it is
+  kept for parity and is not validated.
+- **cert-manager-webhook-ionos is prod-only.** Dev uses the self-signed CA
+  issuer from the `cert-manager` profile; the IONOS DNS-01 webhook needs
+  credentials that only exist in prod.
 - **Istio ambient is not usable on k3d.** The Istio CNI plugin rewrites
   Cilium's `/etc/cni/net.d/05-cilium.conflist`; pod sandbox creation then fails
   (`FailedCreatePodSandBox`) and the node eventually reports `NotReady`. The

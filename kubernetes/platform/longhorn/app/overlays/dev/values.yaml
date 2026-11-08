@@ -1,1 +1,12 @@
 # longhorn helm values (dev overlay)
+#
+# Longhorn needs `iscsid` (open-iscsi) on the Docker host and privileged
+# mounts; it is not installed on the current k3d host, so this overlay is kept
+# for parity and has NOT been validated. One replica and a node-local data
+# path avoid the multi-node assumptions of the prod profile, and local-path
+# stays the default StorageClass.
+defaultSettings:
+  defaultReplicaCount: "1"
+  defaultDataPath: "/var/lib/longhorn"
+persistence:
+  defaultClass: false
