@@ -105,7 +105,11 @@ Profiles that list `secrets` read credentials from the external dev Vault
 (`10.0.0.11`) and the TSIG key under `bind9/ddns` in the dev Vault. It publishes
 into a zone named after `CLUSTER_DOMAIN`, which for dev is `picluster.local.test`;
 the lab server has no such zone, so the `network` profile cannot publish dev
-records and should be left off.
+records and should be left off. The dev names live as `*.picluster` records in
+the laptop's `local.test` zone, which that server does not serve either. Making
+`network` usable would need a real `picluster.local.test` zone on the laptop
+BIND with `allow-update` (and `EXTERNAL_DNS_SERVER` pointing at it), not a
+subdomain inside `local.test`.
 
 The `elastic` profile stores data on `local-path` and uses
 `node.store.allow_mmap: false`, so no host `vm.max_map_count` tuning is required.
