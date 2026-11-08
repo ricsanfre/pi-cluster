@@ -1,7 +1,4 @@
 ---
-# Istio ambient mesh. The istiod/ztunnel monitors are Prometheus Operator CRs,
-# so this Kustomization requires the `observability` profile (which installs the
-# CRDs). Kiali additionally requires `keycloak` and `secrets`.
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -14,8 +11,6 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  dependsOn:
-    - name: prometheus-operator-crds
   path: ./kubernetes/platform/istio/app/overlays/dev
   prune: true
   wait: true
