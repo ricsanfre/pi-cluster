@@ -1,1 +1,10 @@
-# istio-istiod helm values (dev patch)
+# istio-istiod helm values (dev overlay)
+#
+# k3d dev cluster: istiod serves a single-node ambient mesh, so the default
+# requests (500m CPU, 2Gi memory) are oversized for a 5 GiB server.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

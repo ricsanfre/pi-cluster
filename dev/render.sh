@@ -13,6 +13,7 @@ paths=(
   "kubernetes/platform/cilium/app/overlays/dev"
   "kubernetes/platform/cilium/config/overlays/dev"
   "kubernetes/platform/coredns/app/overlays/dev"
+  "kubernetes/platform/istio/app/overlays/dev"
   "kubernetes/platform/flux-operator/operator/overlays/dev"
   "kubernetes/platform/flux-operator/instance/overlays/dev"
   "kubernetes/platform/metrics-server/app/overlays/dev"
