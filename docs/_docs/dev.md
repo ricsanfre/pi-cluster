@@ -130,50 +130,66 @@ to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 
 <pre class="mermaid">
 flowchart TB
-  subgraph HOST["Laptop"]
+  subgraph HOST["Host network namespace"]
     direction TB
+    NIC["eth0 · LAN"]
+    RESOLVER["BIND 127.0.0.1:53<br/>local.test + picluster.local.test"]
     CLIENT["browser / curl / kubectl"]
-    BIND["BIND resolver<br/>127.0.0.1:53<br/>local.test + picluster.local.test"]
-    BRIDGE["docker bridge br-…<br/>172.30.0.1/16<br/>route 172.30.0.0/16"]
+    BRIDGE["docker bridge br-…<br/>veth1 · veth2 · veth3<br/>172.30.0.1/16 · route 172.30.0.0/16"]
   end
 
-  subgraph NET["docker network picluster — 172.30.0.0/16, gateway 172.30.0.1, dynamic range 172.30.0.0/17"]
+  subgraph CN["Container network namespaces — docker network picluster 172.30.0.0/16 (gateway 172.30.0.1, dynamic range 172.30.0.0/17)"]
     direction TB
 
-    subgraph NODE["k3d node container k3d-picluster-server-0 — 172.30.0.2<br/>k3s API 127.172.30.1:6443"]
+    subgraph NODE["k3d-picluster-server-0 · eth0 172.30.0.2"]
       direction TB
       subgraph K3S["k3s"]
         direction TB
         PODS["pods 10.42.0.0/16"]
         SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10"]
-        XSVC["dev-external headless Services<br/>rustfs → 172.30.100.10<br/>vault → 172.30.100.11"]
+        XSVC["dev-external headless Services<br/>rustfs → 172.30.100.10 · vault → 172.30.100.11"]
       end
-      GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443<br/>Cilium LB-IPAM pool 172.30.200.1–254<br/>L2-announced on picluster"]
+      GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443<br/>Cilium LB-IPAM pool 172.30.200.1–254"]
     end
 
-    RUSTFS["dev-rustfs container — 172.30.100.10<br/>S3 :9091, console :9092<br/>also published on 127.0.0.1:9091/9092"]
-    VAULT["dev-vault container — 172.30.100.11<br/>TLS :8200<br/>also published on 127.0.0.1:8200"]
+    subgraph RUSTC["dev-rustfs · eth0 172.30.100.10"]
+      RS["S3 :9091 · console :9092<br/>published 127.0.0.1:9091/9092"]
+    end
+    subgraph VAULTC["dev-vault · eth0 172.30.100.11"]
+      VS["TLS :8200<br/>published 127.0.0.1:8200"]
+    end
   end
 
-  CLIENT -->|"1 · DNS query"| BIND
-  BIND -.->|"*.picluster.local.test → 172.30.200.1"| CLIENT
-  BIND -.->|"rustfs/vault.picluster.local.test → 172.30.100.10/.11"| CLIENT
+  CLIENT -->|"1 · DNS query"| RESOLVER
+  RESOLVER -.->|"*.picluster.local.test → 172.30.200.1<br/>rustfs/vault → 172.30.100.10/.11"| CLIENT
 
   CLIENT ==>|"2 · HTTPS"| BRIDGE
   BRIDGE -->|":443"| GW
-  BRIDGE -->|":9091 :9092"| RUSTFS
-  BRIDGE -->|":8200"| VAULT
+  BRIDGE -->|":9091 :9092"| RS
+  BRIDGE -->|":8200"| VS
+
+  BRIDGE -.->|"veth pair · L2 announce 172.30.200.1"| NODE
+  BRIDGE -.->|"veth pair"| RUSTC
+  BRIDGE -.->|"veth pair"| VAULTC
 
   GW -->|"HTTPRoute → Service"| PODS
   PODS -->|"dev-external Service"| XSVC
-  XSVC ==>|"EndpointSlice, same L2 segment"| RUSTFS
-  XSVC ==> VAULT
+  XSVC ==>|"EndpointSlice, same L2 segment"| RS
+  XSVC ==> VS
 
   PODS -->|"3 · resolve *.picluster.local.test"| SVCS
-  SVCS -->|"forward to /etc/resolv.conf → Docker DNS 127.0.0.11"| BIND
+  SVCS -->|"forward → Docker DNS 127.0.0.11"| RESOLVER
 
-  NODE -.->|"kubectl --context k3d-picluster"| CLIENT
+  NODE -.->|"kubectl · API 127.172.30.1:6443"| CLIENT
 </pre>
+
+Every container runs in its own network namespace and is attached to the
+`picluster` bridge through a veth pair (the host side appears as `veth1`,
+`veth2`, …). Cilium answers ARP for the LoadBalancer IP `172.30.200.1` on that
+bridge, which is why the host reaches it without a port mapping. With
+`K3D_AGENTS=1` the agent containers join the same bridge at `172.30.0.3`,
+`172.30.0.4`, …; the L2 announcer answers for `172.30.200.1` from whichever
+node holds the lease.
 
 The paths in the diagram: (1) the laptop resolver answers from the
 `local.test` zone, (2) the host routes straight to the LoadBalancer IP and the
