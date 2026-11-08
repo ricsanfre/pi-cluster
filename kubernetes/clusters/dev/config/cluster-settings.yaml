@@ -5,10 +5,11 @@ metadata:
   name: cluster-settings
   namespace: flux-system
 data:
-  # Local-only domain (RFC 2606 .test). The laptop resolver points
-  # *.dev.local.test at the Envoy Gateway LoadBalancer IP; nothing is
-  # published to the lab BIND. See docs/_docs/dev.md.
-  CLUSTER_DOMAIN: dev.local.test
+  # Local-only domain (RFC 2606 .test). The laptop resolver resolves
+  # *.k3d.local.test to the Envoy Gateway LoadBalancer IP; nothing is
+  # published to the lab BIND. The external services (RustFS, Vault)
+  # keep names in the parent local.test zone. See docs/_docs/dev.md.
+  CLUSTER_DOMAIN: k3d.local.test
   EXTERNAL_DNS_SERVER: 10.0.0.11
   S3_SERVER: rustfs.dev-external.svc.cluster.local
   STORAGE_CLASS: local-path
