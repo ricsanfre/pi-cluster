@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# Self-signed internal CA used by prod for cluster-internal certificates
+# (Fluentd, and any workload that cannot use a public issuer). Dev does not
+# use this component: its CA is generated on the laptop by
+# dev/external-services/gen-certs.sh and imported into the cluster.
+resources:
+  - ca-issuer.yaml

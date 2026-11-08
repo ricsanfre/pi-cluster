@@ -44,6 +44,7 @@ make dev-poc-new NAME=my-poc
 ```bash
 make dev-services-up          # RustFS
 VAULT=1 make dev-services-up  # RustFS + Vault
+make dev-seed-ca             # publish the dev CA to the cluster
 make dev-services-down        # keep data
 make dev-services-reset       # delete data (confirmation)
 ```

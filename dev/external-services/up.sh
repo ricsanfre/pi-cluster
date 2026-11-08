@@ -51,6 +51,10 @@ done
 
 ./bootstrap.sh
 
+# Publish the dev CA as the cluster trust anchor and cert-manager issuer seed.
+# No-op when the current context is not the k3d cluster.
+./seed-ca.sh
+
 if [ "$VAULT" = "1" ]; then
   echo "Waiting for Vault health endpoint"
   for i in $(seq 1 60); do

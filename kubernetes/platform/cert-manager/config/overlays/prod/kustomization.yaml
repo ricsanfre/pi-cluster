@@ -7,3 +7,4 @@ resources:
 
 components:
   - ../../components/acme-ionos
+  - ../../components/internal-ca

@@ -4,3 +4,4 @@ namespace: cert-manager
 
 resources:
   - ../../base
+  - ca-issuer.yaml

@@ -3,5 +3,4 @@ kind: Kustomization
 namespace: cert-manager
 
 resources:
-  - ca-issuer.yaml
   - self-signed-issuer.yaml

@@ -147,14 +147,10 @@ ns  IN  A    172.30.200.1
 The parent `local.test` zone keeps its own wildcard: BIND answers from the
 longest matching zone, so `app.dev.local.test` never falls back to it.
 
-`*.dev.local.test` is signed by the dev CA (`ClusterIssuer/ca-issuer`, root in
-the `root-secret` Secret in `cert-manager`). Export it and trust it in the
-browser or OS keychain — only on the dev laptop:
-
-```bash
-kubectl --context k3d-picluster -n cert-manager get secret root-secret \
-  -o jsonpath='{.data.ca\.crt}' | base64 -d > picluster-dev-ca.crt
-```
+`*.dev.local.test` is signed by the dev CA, which also signs the RustFS server
+certificate, so a single trust entry covers the gateway and RustFS. See
+[Private PKI](#private-pki-dev-only) for how the CA is created, published into
+the cluster and rotated.
 
 Verify routing, TLS and DNS in that order before opening a browser:
 
@@ -192,6 +188,58 @@ Two more constraints:
     configBlock: |-
       answer "{{ .Name }} 60 IN A 172.30.200.1"{% endraw %}
   ```
+
+### Private PKI (dev only)
+
+Dev has a single private CA. `dev/external-services/gen-certs.sh` creates it
+(`certs/ca.crt`) and signs the RustFS server certificate with it; cert-manager
+signs the cluster certificates with the same CA through
+`ClusterIssuer/ca-issuer`, which in dev is backed by the `dev-root-ca` Secret
+instead of the self-signed root that prod uses. The result is one trust anchor:
+`https://app.dev.local.test/` and `https://rustfs.dev.local.test:9091` both
+validate against the same CA.
+
+`make -C dev dev-seed-ca` publishes it into the cluster:
+
+| Object | Purpose |
+| --- | --- |
+| `Secret/cert-manager/dev-root-ca` | CA certificate and key; a `ca` type issuer needs the key to sign |
+| `ClusterTrustBundle/picluster-dev-ca` | public trust anchor any pod can project |
+| `Secret/<ns>/rustfs-ca` | public CA for workloads that verify RustFS (`velero`, `databases`, `loki`, `tempo`) |
+{: .table .border-dark }
+
+The target is idempotent, skips namespaces that do not exist yet, and no-ops on
+a non-k3d context, so re-run it after enabling a profile that needs the CA.
+Export the certificate for the browser with:
+
+```bash
+cp dev/external-services/certs/ca.crt picluster-dev-ca.crt
+# or read it back from the cluster:
+kubectl --context k3d-picluster -n cert-manager get secret dev-root-ca \
+  -o jsonpath='{.data.tls\.crt}' | base64 -d > picluster-dev-ca.crt
+```
+
+{{site.data.alerts.important}}
+A `ClusterTrustBundle` is a trust anchor, not a setting: components that take
+an explicit CA field still have to reference one. Velero reads
+`configuration.backupStorageLocation[].config.caCert`, CNPG reads
+`spec.backup.barmanObjectStore.endpointCA`, and External Secrets reads
+`caBundle`. None of them are wired in dev yet — the `rustfs-ca` Secret is
+seeded and waiting for those fields.
+{{site.data.alerts.end}}
+
+{{site.data.alerts.warning}}
+The CA key has to live in a cluster Secret for the issuer to sign, so any
+workload that can read `dev-root-ca` can mint certificates the laptop trusts.
+That is acceptable for a disposable dev CA and never for prod, which uses Let's
+Encrypt for public hostnames and the `components/internal-ca` self-signed CA
+for cluster-internal certificates.
+
+Deleting `certs/` rotates the CA. After that, re-run `gen-certs.sh` and
+`make dev-seed-ca`, restart the compose stack, and delete the issued
+Certificate secrets so cert-manager re-creates them — cert-manager does not
+detect CA rotation on its own.
+{{site.data.alerts.end}}
 
 ### Overlay conventions
 
@@ -232,7 +280,8 @@ make dev-services-reset           # stop and delete data (confirmation)
 ```
 
 The cluster reaches RustFS through `rustfs.dev-external.svc.cluster.local:9091`.
-The local dev CA is copied into POC namespaces as the `rustfs-ca` Secret.
+The local dev CA is seeded into POC namespaces as the `rustfs-ca` Secret by
+`dev-poc-new.sh`, and into the other consumer namespaces by `make dev-seed-ca`.
 
 ### POC workflow
 
@@ -299,7 +348,7 @@ Expected combinations:
 | DNS failures | `kubectl -n kube-system get pods -l k8s-app=kube-dns` |
 | PVC Pending | `local-path` uses `WaitForFirstConsumer`; a consumer pod is required |
 | RustFS unreachable | `make dev-services-up`; check `https://127.0.0.1:9091/health` with the dev CA |
-| RustFS TLS errors in a pod | Copy `rustfs-ca` into the namespace and use `endpointCA` |
+| RustFS TLS errors in a pod | `make dev-seed-ca` seeds `rustfs-ca`; reference it with `endpointCA` |
 | Memory pressure | `make dev-usage`; remove a heavy profile; `make dev-down` |
 | Cluster wedged | `make dev-recreate` (external data is kept) |
 {: .table .border-dark }
