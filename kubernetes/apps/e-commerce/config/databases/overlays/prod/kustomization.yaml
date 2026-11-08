@@ -5,7 +5,20 @@ resources:
   - ../../base
 
 components:
+  - ../../components/backup
   - ../../components/anti-affinity
   - ../../components/istio
   - ../../components/mongodb-monitor
   - ../../components/valkey-monitor
+
+patches:
+  - target:
+      group: postgresql.cnpg.io
+      kind: Cluster
+      name: postgres-ecommerce
+    path: postgres-patch.yaml
+  - target:
+      group: mongodbcommunity.mongodb.com
+      kind: MongoDBCommunity
+      name: mongodb
+    path: mongodb-patch.yaml

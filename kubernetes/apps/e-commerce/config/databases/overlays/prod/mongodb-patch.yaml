@@ -1,0 +1,4 @@
+# Prod sizing: two MongoDB members (1 primary + 1 secondary).
+- op: replace
+  path: /spec/members
+  value: 2

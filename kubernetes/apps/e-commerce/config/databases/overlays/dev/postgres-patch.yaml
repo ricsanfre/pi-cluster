@@ -1,0 +1,4 @@
+# Dev has no Prometheus Operator CRDs unless the observability profile is on.
+- op: replace
+  path: /spec/monitoring/enablePodMonitor
+  value: false
