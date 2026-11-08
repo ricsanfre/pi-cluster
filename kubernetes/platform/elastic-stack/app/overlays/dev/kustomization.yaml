@@ -2,5 +2,19 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: elastic
 
+# Self-contained dev Elastic stack: single node, local-path storage and smaller
+# heap sizes. Auth, routes and the Istio sidecars are prod-only components.
 resources:
   - ../../base
+
+patches:
+  - target:
+      group: elasticsearch.k8s.elastic.co
+      kind: Elasticsearch
+      name: efk
+    path: elasticsearch-patch.yaml
+  - target:
+      group: kibana.k8s.elastic.co
+      kind: Kibana
+      name: efk
+    path: kibana-patch.yaml

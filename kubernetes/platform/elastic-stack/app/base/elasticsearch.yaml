@@ -21,7 +21,7 @@ spec:
             resources:
               requests:
                 storage: 10Gi
-            storageClassName: longhorn
+            storageClassName: ${STORAGE_CLASS:=longhorn}
       podTemplate:
         spec:
           # Limiting Resources consumption

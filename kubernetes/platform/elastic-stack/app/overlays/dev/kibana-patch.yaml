@@ -1,0 +1,8 @@
+# Dev sizing for Kibana (single replica).
+- op: replace
+  path: /spec/podTemplate/spec/containers/0/resources
+  value:
+    requests:
+      memory: 384Mi
+    limits:
+      memory: 768Mi

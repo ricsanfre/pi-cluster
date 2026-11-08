@@ -1,1 +1,5 @@
 # fluentd helm values (dev overlay)
+#
+# Small dev cluster: cap the HPA instead of the prod value of 100.
+autoscaling:
+  maxReplicas: 3

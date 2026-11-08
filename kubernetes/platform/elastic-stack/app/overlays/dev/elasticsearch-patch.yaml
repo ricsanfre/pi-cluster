@@ -1,0 +1,11 @@
+# Dev sizing for the single-node Elasticsearch cluster.
+- op: replace
+  path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources
+  value:
+    requests:
+      memory: 768Mi
+    limits:
+      memory: 768Mi
+- op: replace
+  path: /spec/nodeSets/0/volumeClaimTemplates/0/spec/resources/requests/storage
+  value: 5Gi
