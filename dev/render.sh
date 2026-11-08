@@ -25,6 +25,8 @@ paths=(
   "kubernetes/platform/external-secrets/config/overlays/dev"
   "kubernetes/platform/kube-prometheus-stack/prometheus-operator-crds/overlays/dev"
   "kubernetes/platform/kube-prometheus-stack/app/overlays/dev"
+  "kubernetes/platform/grafana/operator/overlays/dev"
+  "kubernetes/platform/grafana/instance/overlays/dev"
   "kubernetes/platform/loki/app/overlays/dev"
   "kubernetes/platform/fluent/common/overlays/dev"
   "kubernetes/platform/fluent/fluent-bit/overlays/dev"

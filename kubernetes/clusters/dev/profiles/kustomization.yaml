@@ -10,7 +10,7 @@ kind: Kustomization
 #   ingress.yaml       Envoy Gateway + dev CA wildcard certificate (requires cert-manager)
 #   cnpg.yaml          CloudNativePG operator
 #   secrets.yaml       External Secrets Operator (optional external Vault)
-#   observability.yaml kube-prometheus-stack (tuned for dev)
+#   observability.yaml kube-prometheus-stack (tuned for dev) + Grafana
 #   logging.yaml       Loki single-binary + Fluent Bit
 #   tracing.yaml       Tempo + OpenTelemetry Collector
 #   messaging.yaml     Strimzi, one ephemeral KRaft broker
