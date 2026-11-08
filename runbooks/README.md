@@ -24,7 +24,7 @@ If no runbook covers the situation, start from a triage runbook (`GITOPS-002`, `
 | --- | --- | --- |
 | Bootstrap and Recovery | [`cluster/bootstrap-recovery.md`](cluster/bootstrap-recovery.md) | `CLUSTER-001`, `CLUSTER-002` (backlog: `CLUSTER-003`) |
 | Nodes and Capacity | [`cluster/nodes-capacity.md`](cluster/nodes-capacity.md) | `CLUSTER-010` … `CLUSTER-012`, `CLUSTER-014` (backlog: `CLUSTER-013`) |
-| GitOps and Release Operations | [`cluster/gitops-release.md`](cluster/gitops-release.md) | `GITOPS-001` … `GITOPS-006` |
+| GitOps and Release Operations | [`cluster/gitops-release.md`](cluster/gitops-release.md) | `GITOPS-001` … `GITOPS-007` |
 | Security and Access | [`cluster/security-access.md`](cluster/security-access.md) | `SEC-001` … `SEC-003` (backlog: `SEC-004`, `SEC-005`) |
 | Upgrades and Change Management | [`cluster/change-management.md`](cluster/change-management.md) | `CHANGE-001`, `CHANGE-002` (backlog: `CHANGE-003`, `CHANGE-004`) |
 | Backup and Compliance | [`cluster/backup-compliance.md`](cluster/backup-compliance.md) | `BACKUP-001` … `BACKUP-003` (backlog: `AUDIT-001`) |
@@ -112,6 +112,7 @@ References:
 - [`GITOPS-004` Safe Suspend and Resume Strategy](cluster/gitops-release.md#runbook-gitops-004)
 - [`GITOPS-005` Flux Upgrade and Rollback](cluster/gitops-release.md#runbook-gitops-005)
 - [`GITOPS-006` Branch-Based Live Validation Workflow](cluster/gitops-release.md#runbook-gitops-006)
+- [`GITOPS-007` Terraform State Lock Recovery](cluster/gitops-release.md#runbook-gitops-007)
 
 #### Security and Access
 
