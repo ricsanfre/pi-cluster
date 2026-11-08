@@ -24,6 +24,10 @@ All repository entry points are exposed by `make`. Run `make help` for the autho
   (`ansible-runner/ansible-runner.sh`). **Never run host `ansible-playbook` directly.**
 - The default runner mode is Docker (`docker exec` into the `ansible-runner` container). Set
   `ANSIBLE_RUNNER_MODE=local` to use the local `uv` environment instead.
+- Kubernetes contexts: `picluster-prod` (lab) and `k3d-picluster` (dev). Pass `--context`
+  explicitly rather than relying on the current context. `make k3s-install` writes the production
+  entry to `~/.kube/pi-cluster.yaml` and merges it into `~/.kube/config`, so the dev context
+  survives a lab reinstall.
 - Git and Flux are the source of truth for cluster state. Do not `kubectl edit` live resources;
   change manifests, commit, and reconcile.
 - Never run destructive actions without an explicit user request (see

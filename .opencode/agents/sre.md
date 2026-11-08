@@ -291,7 +291,10 @@ accurate.
 - The runner defaults to Docker; `ANSIBLE_RUNNER_MODE=local` uses `uv`. Inside the container the repo
   is mounted at `/runner` with `ansible/`, `kubernetes/`, `terraform/`, and the kubeconfig available.
 - Tool versions come from `.mise.toml`. `make help` is the authoritative target list.
-- Kubernetes context: verify with `kubectl config current-context` before drawing conclusions. For a
+- Kubernetes contexts: `picluster-prod` (lab) and `k3d-picluster` (dev). Pass `--context`
+  explicitly. `make k3s-install` writes `~/.kube/pi-cluster.yaml` and merges it into
+  `~/.kube/config`, so reinstalling the lab preserves the dev context.
+- For a
   read-only sweep, `kubectl` and `flux` are already allowed.
 - For Terraform, only `validate`, `fmt` and `plan` are allowed. Never apply.
 - Read manifests, values, and playbooks before describing them. No invented commands, paths, or flags.

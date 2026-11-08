@@ -194,6 +194,8 @@
 - name: Get Kubernets config file
   hosts: k3s_master
   tags: [kube-config]
+  vars:
+    kube_home: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube"
   pre_tasks:
     - name: Include picluster variables
       ansible.builtin.include_vars: "vars/picluster.yml"
@@ -204,13 +206,102 @@
         src: /etc/rancher/k3s/k3s.yaml
       register: kubeconfig_base64
 
-    - name: Write Kubernetes config file with the correct cluster address
+    - name: Ensure the kubeconfig directory exists on the controller
+      ansible.builtin.file:
+        path: "{{ kube_home }}"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+      run_once: true
+
+    # The kubeconfig is kept in two files so that reinstalling the cluster only
+    # refreshes the production entry and never deletes other contexts (for
+    # example k3d-picluster from the local dev cluster):
+    #   ~/.kube/pi-cluster.yaml  production fragment, always rewritten here
+    #   ~/.kube/config           shared file, merged from the fragment
+    - name: Write the production kubeconfig fragment
       ansible.builtin.copy:
         content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', k3s_api_vip) }}"
-        dest: "~/.kube/config"
+        dest: "{{ kube_home }}/pi-cluster.yaml"
         mode: "0600"
       delegate_to: localhost
       run_once: true
+
+    - name: Rename the k3s context to picluster-prod
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - config
+          - rename-context
+          - default
+          - picluster-prod
+          - "--kubeconfig={{ kube_home }}/pi-cluster.yaml"
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Ensure the shared kubeconfig exists on the controller
+      ansible.builtin.copy:
+        content: |
+          apiVersion: v1
+          kind: Config
+          preferences: {}
+        dest: "{{ kube_home }}/config"
+        force: false
+        mode: "0600"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Read the current kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      delegate_to: localhost
+      run_once: true
+      register: current_ctx
+      changed_when: false
+      failed_when: false
+
+    - name: Render the merged kubeconfig
+      ansible.builtin.shell: |
+        set -euo pipefail
+        KUBECONFIG="{{ kube_home }}/pi-cluster.yaml:{{ kube_home }}/config" \
+          kubectl config view --flatten > "{{ kube_home }}/config.merged"
+      args:
+        executable: /bin/bash
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Install the merged kubeconfig
+      ansible.builtin.copy:
+        src: "{{ kube_home }}/config.merged"
+        dest: "{{ kube_home }}/config"
+        remote_src: true
+        mode: "0600"
+      delegate_to: localhost
+      run_once: true
+      when: not ansible_check_mode
+
+    - name: Remove the temporary merged kubeconfig
+      ansible.builtin.file:
+        path: "{{ kube_home }}/config.merged"
+        state: absent
+      delegate_to: localhost
+      run_once: true
+      when: not ansible_check_mode
+
+    - name: Restore the previous kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, use-context, "{{ current_ctx.stdout }}"]
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+      when:
+        - not ansible_check_mode
+        - current_ctx.rc == 0
+        - current_ctx.stdout | length > 0
 
 - name: Install Cilium CNI and CoreDNS
   hosts: localhost
