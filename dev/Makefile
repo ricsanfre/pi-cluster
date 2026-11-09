@@ -60,14 +60,22 @@ dev-preflight: ## Check host memory, required tools and writability of the dev t
 	fi
 
 .PHONY: dev-up
-dev-up: ## Create the cluster, start external services, bootstrap Flux and run smoke tests
+dev-up: ## Create the cluster, seed the dev CA, start external services, bootstrap Flux, run smoke tests
 	$(MAKE) dev-preflight
 	./create_cluster.sh
+	# Host artifacts first, then the CA seed: ClusterIssuer/ca-issuer reads
+	# Secret/dev-root-ca, so it must exist before Flux reconciles anything.
+	$(MAKE) dev-prepare
+	$(MAKE) dev-seed-ca
 	# Cilium must be installed before the node can become Ready. Do this
 	# before starting external services so the cluster comes up promptly.
 	./bootstrap.sh
 	$(MAKE) dev-services-up
 	$(MAKE) dev-smoke
+
+.PHONY: dev-prepare
+dev-prepare: ## Generate dev credentials and certificates (host-only)
+	./external-services/prepare.sh
 
 .PHONY: dev-bootstrap
 dev-bootstrap: ## Re-run the Cilium/CoreDNS/Flux bootstrap
