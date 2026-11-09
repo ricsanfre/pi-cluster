@@ -35,11 +35,18 @@ load-kernel-modules: ## Load the kernel modules Cilium needs (requires sudo)
 	sudo modprobe -v xt_socket
 
 .PHONY: dev-preflight
-dev-preflight: ## Check host memory and required tools
-	@for cmd in docker k3d kubectl helm openssl curl; do \
+dev-preflight: ## Check host memory, required tools and writability of the dev tree
+	@for cmd in docker k3d kubectl helm flux openssl curl tmpl; do \
 		command -v $$cmd >/dev/null || { echo "ERROR: missing '$$cmd'" >&2; exit 1; }; \
 	done
 	@docker info >/dev/null 2>&1 || { echo "ERROR: Docker daemon is not reachable" >&2; exit 1; }
+	@docker compose version >/dev/null 2>&1 || { echo "ERROR: the 'docker compose' plugin is not available" >&2; exit 1; }
+	@certdir="$(DEVDIR)/external-services/certs"; \
+	if [ -d "$$certdir" ] && [ ! -w "$$certdir" ]; then \
+		echo "ERROR: $$certdir is not writable by $(shell id -un); cert re-issue and CA seeding would fail" >&2; \
+		echo "       Fix: sudo chown -R $$(id -u):$$(id -g) $$certdir" >&2; \
+		exit 1; \
+	fi
 	@mem_kb=$$(awk '/^MemAvailable:/ {print $$2}' /proc/meminfo); \
 	mem_gb=$$((mem_kb / 1024 / 1024)); \
 	if [ "$$mem_gb" -lt "$(DEV_MIN_MEM_GB)" ]; then \
@@ -98,6 +105,18 @@ dev-down: ## Stop external services and delete the k3d cluster (data is kept)
 dev-recreate: ## Recreate the cluster from scratch and run smoke tests
 	$(MAKE) dev-down
 	$(MAKE) dev-up
+
+.PHONY: dev-destroy
+dev-destroy: ## Delete the cluster, external-services data, certs and credentials (prompts)
+	$(MAKE) dev-services-reset FORCE=$(FORCE)
+	-k3d cluster delete "$(K3D_CLUSTER)"
+	@if docker network inspect picluster >/dev/null 2>&1; then \
+		if [ -z "$$(docker network inspect picluster --format '{{range .Containers}}{{.Name}}{{end}}')" ]; then \
+			docker network rm picluster; \
+		else \
+			echo "Keeping network 'picluster': containers are still attached"; \
+		fi; \
+	fi
 
 .PHONY: dev-services-up
 dev-services-up: ## Start RustFS (and Vault when VAULT=1)

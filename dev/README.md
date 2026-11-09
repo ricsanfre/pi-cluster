@@ -16,7 +16,23 @@ make dev-down
 ```
 
 `make dev-up` creates the `picluster` Docker network, the k3d cluster, starts
-RustFS, bootstraps Cilium/CoreDNS/Flux and runs the smoke test.
+RustFS/Vault, bootstraps Cilium/CoreDNS/Flux, publishes the dev CA and runs the
+smoke test. The CA seed does not depend on any profile: `seed-ca.sh` creates the
+`cert-manager` and `external-secrets` namespaces itself, so enabling
+`cert-manager`/`ingress` later only needs a Flux reconcile.
+
+## Lifecycle
+
+| Level | Command | Removes |
+| --- | --- | --- |
+| stop, keep everything | `make dev-down` | k3d cluster only; services stopped, data/certs kept |
+| recreate | `make dev-recreate` | cluster, then `dev-up` again (data/certs kept) |
+| destroy | `make dev-destroy` | cluster, RustFS data, certs, `.env`, unused `picluster` network |
+
+`dev-down` is the everyday target. `dev-destroy` deletes the dev CA and the
+credentials, so the next `dev-up` generates new ones; it also leaves any
+in-cluster copy of the old CA stale — `make dev-services-reset` alone warns
+about this.
 
 ## Profiles
 
@@ -44,10 +60,13 @@ make dev-poc-new NAME=my-poc
 ```bash
 make dev-services-up          # RustFS
 VAULT=1 make dev-services-up  # RustFS + Vault
-make dev-seed-ca             # publish the dev CA to the cluster
+make dev-seed-ca             # re-publish the dev CA (idempotent)
 make dev-services-down        # keep data
 make dev-services-reset       # delete data (confirmation)
 ```
+
+`dev-services-up` already seeds the CA; `dev-seed-ca` is for re-running it after
+enabling a profile that added consumer namespaces (`velero`, `loki`, `tempo`).
 
 ## Layout
 
