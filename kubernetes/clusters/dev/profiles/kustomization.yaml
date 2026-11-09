@@ -23,3 +23,4 @@ kind: Kustomization
 #   e-commerce.yaml    e-commerce demo (needs several profiles; see file header)
 resources:
   - cert-manager.yaml
+  - ingress.yaml
