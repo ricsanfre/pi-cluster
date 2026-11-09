@@ -26,6 +26,13 @@
   <text x="435" y="89" text-anchor="middle" fill="#5a3a18" font-size="14">HTTP</text>
   <text x="435" y="108" text-anchor="middle" fill="#5a3a18" font-size="14">Browser</text>
 
+  <rect x="565" y="62" width="225" height="62" rx="11" fill="#e8f2fb" stroke="#2e78b7" stroke-width="1.5"/>
+  <text x="677" y="86" text-anchor="middle" fill="#1d4e75" font-size="14">BIND 127.0.0.1:53</text>
+  <text x="677" y="106" text-anchor="middle" fill="#1d4e75" font-size="12">local.test · picluster.local.test</text>
+
+  <line x1="505" y1="94" x2="558" y2="94" stroke="#2e78b7" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#a-blue)"/>
+  <text x="531" y="87" text-anchor="middle" fill="#2e78b7" font-size="11">DNS</text>
+
   <line x1="265" y1="123" x2="265" y2="164" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
   <line x1="435" y1="123" x2="435" y2="164" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
 
