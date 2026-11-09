@@ -5,8 +5,8 @@
 # is unreachable from a container namespace. The dev zone is answered here
 # instead, mirroring how production reaches the same external services by name:
 #
-#   hosts    rustfs / vault -> their external-service container addresses
-#   template the rest of picluster.local.test -> the Envoy Gateway LB address
+#   template rustfs / vault -> their external-service container addresses
+#   template the rest of the zone (single label) -> the Envoy Gateway LB address
 #
 # `servers` is a list, so Helm replaces the base value rather than merging it:
 # keep this block in sync with kubernetes/platform/coredns/app/base/values.yaml.
@@ -30,19 +30,29 @@ servers:
       pods insecure
       fallthrough in-addr.arpa ip6.arpa
       ttl 30
-  # Exact names win over the wildcard below, so RustFS and Vault keep their own
-  # container addresses instead of being sent to the gateway.
-  - name: hosts
-    configBlock: |-
-      172.30.100.10 rustfs.picluster.local.test
-      172.30.100.11 vault.picluster.local.test
-      fallthrough
-  # Single-label wildcard: <svc>.picluster.local.test -> Envoy Gateway.
+  # The three template instances share the zone and chain through
+  # `fallthrough`: the two exact names are answered first, everything else in
+  # the zone (single label only, matching the certificate) goes to the gateway.
+  # A single `hosts` block cannot coexist with a zone-scoped template — the
+  # template answers for the whole zone before hosts is reached.
   - name: template
     parameters: IN A picluster.local.test
     configBlock: |-
-      match "^.*\.picluster\.local\.test\.$"
+      match "^rustfs\.picluster\.local\.test\.$"
+      answer "{{ .Name }} 60 IN A 172.30.100.10"
+      fallthrough
+  - name: template
+    parameters: IN A picluster.local.test
+    configBlock: |-
+      match "^vault\.picluster\.local\.test\.$"
+      answer "{{ .Name }} 60 IN A 172.30.100.11"
+      fallthrough
+  - name: template
+    parameters: IN A picluster.local.test
+    configBlock: |-
+      match "^[a-z0-9-]+\.picluster\.local\.test\.$"
       answer "{{ .Name }} 60 IN A 172.30.200.1"
+      fallthrough
   # Serves a /metrics endpoint on :9153, required by the ServiceMonitor
   - name: prometheus
     parameters: 0.0.0.0:9153
