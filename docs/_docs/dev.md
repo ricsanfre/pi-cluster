@@ -172,42 +172,7 @@ Cilium-assigned LoadBalancer IP — `HTTP_GATEWAY_LOAD_BALANCER_IP`, default
 to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 `kubectl port-forward`; only DNS and TLS trust are missing.
 
-<pre class="mermaid">
-flowchart TB
-  subgraph HOST["Host network namespace"]
-    direction TB
-    ETH0["eth0 · LAN"]
-    TOOLS["shell · kubectl<br/>browser · curl"]
-    RESOLVER["BIND 127.0.0.1:53<br/>local.test · picluster.local.test"]
-    BRIDGE["docker bridge picluster<br/>172.30.0.1/16 · ip-range 172.30.0.0/17"]
-    VETH1["veth1"]
-    VETH2["veth2"]
-    VETH3["veth3"]
-    TOOLS ==> BRIDGE
-    BRIDGE --- VETH1
-    BRIDGE --- VETH2
-    BRIDGE --- VETH3
-  end
-
-  subgraph CN["Container network namespaces — docker network picluster"]
-    direction TB
-    subgraph NODE["k3d-picluster-server-0 · eth0 172.30.0.2"]
-      direction LR
-      GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443"]
-      PODS["pods 10.42.0.0/16<br/>Cilium CNI"]
-      SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10"]
-    end
-    RUSTFS["dev-rustfs · eth0 172.30.100.10<br/>S3 :9091 · console :9092"]
-    VAULT["dev-vault · eth0 172.30.100.11<br/>TLS :8200"]
-    POOL["Cilium LB-IPAM pool<br/>172.30.200.1–254"]
-    NODE --- POOL
-  end
-
-  VETH1 <-->|"veth pair"| NODE
-  VETH2 <-->|"veth pair"| RUSTFS
-  VETH3 <-->|"veth pair"| VAULT
-  POOL -.->|"L2 announcement"| BRIDGE
-</pre>
+![k3d dev network namespaces](/assets/img/pi-cluster-dev-k3d-network.svg)
 
 The diagram is split by network namespace: the host owns the `picluster` bridge
 and the `veth` side of every pair, the containers own the other side. `veth1`

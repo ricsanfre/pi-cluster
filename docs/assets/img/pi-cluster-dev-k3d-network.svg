@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="620" viewBox="0 0 850 620" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a-orange" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#c47b1a"/>
+    </marker>
+    <marker id="a-orange-start" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M9,0 L9,6 L0,3 z" fill="#c47b1a"/>
+    </marker>
+    <marker id="a-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2e78b7"/>
+    </marker>
+  </defs>
+
+  <!-- Host network namespace -->
+  <rect x="10" y="10" width="800" height="340" rx="14" fill="#fbfdff" stroke="#2e78b7" stroke-width="2" stroke-dasharray="8 5"/>
+  <text x="795" y="36" text-anchor="end" fill="#2e78b7" font-size="15">Host Network Namespace</text>
+
+  <rect x="35" y="25" width="100" height="44" rx="9" fill="#dbe9f7" stroke="#2e78b7" stroke-width="1.5"/>
+  <text x="85" y="53" text-anchor="middle" fill="#1d4e75" font-size="15">eth0</text>
+
+  <rect x="200" y="65" width="130" height="58" rx="11" fill="#fdf6ee" stroke="#a66a2e" stroke-width="1.5"/>
+  <text x="265" y="89" text-anchor="middle" fill="#5a3a18" font-size="14">Shell</text>
+  <text x="265" y="108" text-anchor="middle" fill="#5a3a18" font-size="14">kubectl</text>
+
+  <rect x="370" y="65" width="130" height="58" rx="11" fill="#fdf6ee" stroke="#a66a2e" stroke-width="1.5"/>
+  <text x="435" y="89" text-anchor="middle" fill="#5a3a18" font-size="14">HTTP</text>
+  <text x="435" y="108" text-anchor="middle" fill="#5a3a18" font-size="14">Browser</text>
+
+  <line x1="265" y1="123" x2="265" y2="164" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
+  <line x1="435" y1="123" x2="435" y2="164" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
+
+  <rect x="30" y="170" width="760" height="50" rx="12" fill="#dff0d8" stroke="#4a9b4a" stroke-width="1.8"/>
+  <text x="410" y="192" text-anchor="middle" fill="#2f6b2f" font-size="15">docker bridge</text>
+  <text x="410" y="211" text-anchor="middle" fill="#2f6b2f" font-size="14">(172.30.0.1)</text>
+
+  <line x1="145" y1="220" x2="145" y2="254" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
+  <line x1="400" y1="220" x2="400" y2="254" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
+  <line x1="655" y1="220" x2="655" y2="254" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)"/>
+
+  <rect x="110" y="258" width="70" height="44" rx="9" fill="#ffe8c8" stroke="#d08a1a" stroke-width="1.5"/>
+  <text x="145" y="285" text-anchor="middle" fill="#7a4c06" font-size="13">veth1</text>
+  <rect x="365" y="258" width="70" height="44" rx="9" fill="#ffe8c8" stroke="#d08a1a" stroke-width="1.5"/>
+  <text x="400" y="285" text-anchor="middle" fill="#7a4c06" font-size="13">veth2</text>
+  <rect x="620" y="258" width="70" height="44" rx="9" fill="#ffe8c8" stroke="#d08a1a" stroke-width="1.5"/>
+  <text x="655" y="285" text-anchor="middle" fill="#7a4c06" font-size="13">veth3</text>
+
+  <!-- Container network namespaces -->
+  <rect x="10" y="365" width="800" height="235" rx="14" fill="#f9fdf9" stroke="#4a9b4a" stroke-width="2" stroke-dasharray="8 5"/>
+  <text x="795" y="590" text-anchor="end" fill="#3f8f3f" font-size="15">Container Network Namespace</text>
+
+  <rect x="35" y="385" width="220" height="70" rx="11" fill="#fbe3e3" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="145" y="414" text-anchor="middle" fill="#7d1f16" font-size="14">k3d-picluster-server-0</text>
+  <text x="145" y="436" text-anchor="middle" fill="#7d1f16" font-size="13">(172.30.0.2)</text>
+
+  <rect x="290" y="385" width="220" height="70" rx="11" fill="#fbe3e3" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="400" y="414" text-anchor="middle" fill="#7d1f16" font-size="14">dev-rustfs</text>
+  <text x="400" y="436" text-anchor="middle" fill="#7d1f16" font-size="13">(172.30.100.10)</text>
+
+  <rect x="545" y="385" width="220" height="70" rx="11" fill="#fbe3e3" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="655" y="414" text-anchor="middle" fill="#7d1f16" font-size="14">dev-vault</text>
+  <text x="655" y="436" text-anchor="middle" fill="#7d1f16" font-size="13">(172.30.100.11)</text>
+
+  <line x1="145" y1="306" x2="145" y2="381" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)" marker-start="url(#a-orange-start)"/>
+  <line x1="400" y1="306" x2="400" y2="381" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)" marker-start="url(#a-orange-start)"/>
+  <line x1="655" y1="306" x2="655" y2="381" stroke="#c47b1a" stroke-width="1.8" marker-end="url(#a-orange)" marker-start="url(#a-orange-start)"/>
+
+  <rect x="30" y="490" width="600" height="64" rx="12" fill="#e8e1f7" stroke="#6b4fa8" stroke-width="1.8"/>
+  <text x="330" y="516" text-anchor="middle" fill="#3f2d6b" font-size="15">Cilium CNI</text>
+  <text x="330" y="536" text-anchor="middle" fill="#3f2d6b" font-size="13">(10.42.0.0/16) · services 10.43.0.0/16 · CoreDNS 10.43.0.10</text>
+
+  <rect x="650" y="490" width="140" height="64" rx="12" fill="#e8e1f7" stroke="#6b4fa8" stroke-width="1.8"/>
+  <text x="720" y="510" text-anchor="middle" fill="#3f2d6b" font-size="13">LB IP Pool</text>
+  <text x="720" y="527" text-anchor="middle" fill="#3f2d6b" font-size="12">(172.30.200.1–254)</text>
+  <text x="720" y="544" text-anchor="middle" fill="#3f2d6b" font-size="12">Envoy Gateway .1</text>
+
+  <path d="M795,522 L795,190 L760,190" fill="none" stroke="#2e78b7" stroke-width="1.8" stroke-dasharray="7 4" marker-end="url(#a-blue)"/>
+  <text x="820" y="350" text-anchor="middle" fill="#2e78b7" font-size="13" transform="rotate(-90 820 350)">L2 Announcements</text>
+</svg>
