@@ -67,10 +67,11 @@ dev-up: ## Create the cluster, seed the dev CA, start external services, bootstr
 	# Secret/dev-root-ca, so it must exist before Flux reconciles anything.
 	$(MAKE) dev-prepare
 	$(MAKE) dev-seed-ca
-	# Cilium must be installed before the node can become Ready. Do this
-	# before starting external services so the cluster comes up promptly.
-	./bootstrap.sh
+	# External services before Flux: the profiles that consume RustFS and
+	# Vault (secrets, velero, loki, tempo, keycloak) then reconcile against
+	# healthy endpoints instead of failing their first attempts.
 	$(MAKE) dev-services-up
+	./bootstrap.sh
 	$(MAKE) dev-smoke
 
 .PHONY: dev-prepare

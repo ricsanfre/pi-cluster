@@ -60,10 +60,15 @@ target that touches the cluster asserts the `k3d-picluster` kubectl context.
 1. `create_cluster.sh` — Docker network, k3d cluster, kubectl context, API ready.
 2. `dev-prepare` → `prepare.sh` — `gen-env.sh` and `gen-certs.sh` (host-only).
 3. `dev-seed-ca` → `seed-ca.sh` — publish the CA into the cluster.
-4. `bootstrap.sh` — Cilium, CoreDNS, flux-operator, flux-instance, root
+4. `dev-services-up` → `up.sh` — Compose, buckets, dev Vault token.
+5. `bootstrap.sh` — Cilium, CoreDNS, flux-operator, flux-instance, root
    Kustomization.
-5. `dev-services-up` → `up.sh` — Compose, buckets, dev Vault token.
 6. `smoke.sh` — nodes, DNS, storage, metrics, RustFS.
+
+External services come **before** Flux so that the profiles consuming RustFS and
+Vault (`secrets`, `velero`, `loki`, `tempo`, `keycloak`) reconcile against
+healthy endpoints on their first attempt. They only need the Docker network and
+the API server, both of which exist after step 1.
 
 The CA seed is deliberately **before** Flux and independent of any profile:
 `seed-ca.sh` creates the `cert-manager` and `external-secrets` namespaces
@@ -258,7 +263,7 @@ Verify routing, TLS and DNS in that order before opening a browser:
 
 ```bash
 # bypass DNS: does the gateway answer and present a valid chain?
-curl -sv --cacert picluster-dev-ca.crt \
+curl -sv --cacert dev-ca.crt \
   --resolve app.picluster.local.test:443:172.30.200.1 https://app.picluster.local.test/ -o /dev/null
 
 # through the resolver
@@ -268,8 +273,8 @@ curl -sv https://app.picluster.local.test/ -o /dev/null
 # the external services
 dig +short rustfs.picluster.local.test   # expected: 172.30.100.10
 dig +short vault.picluster.local.test    # expected: 172.30.100.11
-curl -sS --cacert picluster-dev-ca.crt https://rustfs.picluster.local.test:9091/health
-curl -sS --cacert picluster-dev-ca.crt https://vault.picluster.local.test:8200/v1/sys/health
+curl -sS --cacert dev-ca.crt https://rustfs.picluster.local.test:9091/health
+curl -sS --cacert dev-ca.crt https://vault.picluster.local.test:8200/v1/sys/health
 ```
 
 {{site.data.alerts.note}}
@@ -319,7 +324,6 @@ instead of the self-signed root that prod uses. The result is one trust anchor:
 | Object | Purpose |
 | --- | --- |
 | `Secret/cert-manager/dev-root-ca` | CA certificate and key; a `ca` type issuer needs the key to sign |
-| `ClusterTrustBundle/picluster-dev-ca` | public trust anchor any pod can project |
 | `Secret/<ns>/rustfs-ca` | public CA for workloads that verify RustFS (`velero`, `databases`, `loki`, `tempo`) |
 | `Secret/external-secrets/vault-ca` | public CA referenced by the dev `ClusterSecretStore` through `caProvider` |
 {: .table .border-dark }
@@ -332,20 +336,25 @@ cert-manager profile, not a product of it; consumer namespaces (`velero`, `loki`
 the browser with:
 
 ```bash
-cp dev/external-services/certs/ca.crt picluster-dev-ca.crt
+cp dev/external-services/certs/ca.crt dev-ca.crt
 # or read it back from the cluster:
 kubectl --context k3d-picluster -n cert-manager get secret dev-root-ca \
-  -o jsonpath='{.data.tls\.crt}' | base64 -d > picluster-dev-ca.crt
+  -o jsonpath='{.data.tls\.crt}' | base64 -d > dev-ca.crt
 ```
 
 {{site.data.alerts.important}}
-A `ClusterTrustBundle` is a trust anchor, not a setting: components that take
-an explicit CA field still have to reference one. Velero reads
-`configuration.backupStorageLocation[].config.caCert`, CNPG reads
+Every consumer needs an explicit CA reference: a trust anchor is not a setting.
+Velero reads `configuration.backupStorageLocation[].config.caCert`, CNPG reads
 `spec.backup.barmanObjectStore.endpointCA`, and External Secrets reads
 `caProvider`. The dev `vault-backend` ClusterSecretStore uses the seeded
-`vault-ca` Secret; Velero and CNPG are not wired in dev yet — their
-`rustfs-ca` Secret is seeded and waiting for those fields.
+`vault-ca` Secret; Velero and CNPG are not wired in dev yet — their `rustfs-ca`
+Secret is seeded and waiting for those fields.
+
+A `ClusterTrustBundle` is not published either. Nothing in the tree projects
+one, its `spec.trustBundle` is inline PEM with no `secretRef` (so it cannot be a
+static manifest without committing the CA and letting it drift on rotation), and
+trust-manager is not part of the dev stack. Publish one, or adopt trust-manager,
+when a workload actually needs the cluster-wide anchor.
 {{site.data.alerts.end}}
 
 {{site.data.alerts.warning}}
