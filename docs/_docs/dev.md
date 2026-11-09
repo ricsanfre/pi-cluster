@@ -176,70 +176,55 @@ to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 flowchart TB
   subgraph HOST["Host network namespace"]
     direction TB
-    NIC["eth0 · LAN"]
-    RESOLVER["BIND 127.0.0.1:53<br/>local.test + picluster.local.test"]
-    CLIENT["browser / curl / kubectl"]
-    BRIDGE["docker bridge br-…<br/>veth1 · veth2 · veth3<br/>172.30.0.1/16 · route 172.30.0.0/16"]
+    ETH0["eth0 · LAN"]
+    TOOLS["shell · kubectl<br/>browser · curl"]
+    RESOLVER["BIND 127.0.0.1:53<br/>local.test · picluster.local.test"]
+    BRIDGE["docker bridge picluster<br/>172.30.0.1/16 · ip-range 172.30.0.0/17"]
+    VETH1["veth1"]
+    VETH2["veth2"]
+    VETH3["veth3"]
+    TOOLS ==> BRIDGE
+    BRIDGE --- VETH1
+    BRIDGE --- VETH2
+    BRIDGE --- VETH3
   end
 
-  subgraph CN["Container network namespaces — docker network picluster 172.30.0.0/16 (gateway 172.30.0.1, dynamic range 172.30.0.0/17)"]
+  subgraph CN["Container network namespaces — docker network picluster"]
     direction TB
-
     subgraph NODE["k3d-picluster-server-0 · eth0 172.30.0.2"]
-      direction TB
-      subgraph K3S["k3s"]
-        direction TB
-        PODS["pods 10.42.0.0/16"]
-        SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10<br/>template: rustfs/vault + single-label wildcard"]
-      end
-      GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443<br/>Cilium LB-IPAM pool 172.30.200.1–254"]
+      direction LR
+      GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443"]
+      PODS["pods 10.42.0.0/16<br/>Cilium CNI"]
+      SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10"]
     end
-
-    subgraph RUSTC["dev-rustfs · eth0 172.30.100.10"]
-      RS["S3 :9091 · console :9092<br/>published 127.0.0.1:9091/9092"]
-    end
-    subgraph VAULTC["dev-vault · eth0 172.30.100.11"]
-      VS["TLS :8200<br/>published 127.0.0.1:8200"]
-    end
+    RUSTFS["dev-rustfs · eth0 172.30.100.10<br/>S3 :9091 · console :9092"]
+    VAULT["dev-vault · eth0 172.30.100.11<br/>TLS :8200"]
+    POOL["Cilium LB-IPAM pool<br/>172.30.200.1–254"]
+    NODE --- POOL
   end
 
-  CLIENT -->|"1 · DNS query"| RESOLVER
-  RESOLVER -.->|"*.picluster.local.test → 172.30.200.1<br/>rustfs/vault → 172.30.100.10/.11"| CLIENT
-
-  CLIENT ==>|"2 · HTTPS"| BRIDGE
-  BRIDGE -->|":443"| GW
-  BRIDGE -->|":9091 :9092"| RS
-  BRIDGE -->|":8200"| VS
-
-  BRIDGE -.->|"veth pair · L2 announce 172.30.200.1"| NODE
-  BRIDGE -.->|"veth pair"| RUSTC
-  BRIDGE -.->|"veth pair"| VAULTC
-
-  GW -->|"HTTPRoute → Service"| PODS
-  PODS ==>|"resolved directly, same L2 segment"| RS
-  PODS ==> VS
-
-  PODS -->|"3 · rustfs/vault/*.picluster.local.test"| SVCS
-
-  NODE -.->|"kubectl · API 127.172.30.1:6443"| CLIENT
+  VETH1 <-->|"veth pair"| NODE
+  VETH2 <-->|"veth pair"| RUSTFS
+  VETH3 <-->|"veth pair"| VAULT
+  POOL -.->|"L2 announcement"| BRIDGE
 </pre>
 
-Every container runs in its own network namespace and is attached to the
-`picluster` bridge through a veth pair (the host side appears as `veth1`,
-`veth2`, …). Cilium answers ARP for the LoadBalancer IP `172.30.200.1` on that
-bridge, which is why the host reaches it without a port mapping. With
-`K3D_AGENTS=1` the agent containers join the same bridge at `172.30.0.3`,
-`172.30.0.4`, …; the L2 announcer answers for `172.30.200.1` from whichever
-node holds the lease.
+The diagram is split by network namespace: the host owns the `picluster` bridge
+and the `veth` side of every pair, the containers own the other side. `veth1`
+pairs with the k3d node, `veth2` with RustFS and `veth3` with Vault. Cilium
+answers ARP for the LoadBalancer IP `172.30.200.1` on that bridge, which is why
+the host reaches it without a port mapping. With `K3D_AGENTS=1` the agent
+containers join the same bridge at `172.30.0.3`, `172.30.0.4`, …; the L2
+announcer answers for `172.30.200.1` from whichever node holds the lease.
 
-The paths in the diagram: (1) the laptop resolver answers from the
-`local.test` zone, (2) the host routes straight to the LoadBalancer IP and the
-container IPs over the bridge — no port mapping involved, (3) pods resolve the
-same names through CoreDNS, which answers the dev zone itself with three
-chained `template` rules: `rustfs` and `vault` get their container addresses,
-every other single-label name goes to the gateway. The published `127.0.0.1` ports are a fallback that bypasses DNS
-and the gateway; pods cannot use them. The `elastic` profile additionally
-claims `172.30.200.12` for the Fluentd LoadBalancer.
+Host requests go from the tools to the bridge and straight to the LoadBalancer
+IP or to the two container IPs — no port mapping involved. Pods resolve the same
+names through CoreDNS, which answers the dev zone itself with three chained
+`template` rules: `rustfs` and `vault` get their container addresses, every
+other single-label name goes to the gateway. The published `127.0.0.1` ports
+(RustFS `:9091`/`:9092`, Vault `:8200`) are a fallback that bypasses DNS and the
+gateway; pods cannot use them. The `elastic` profile additionally claims
+`172.30.200.12` for the Fluentd LoadBalancer.
 
 {{site.data.alerts.note}}
 CoreDNS cannot forward the dev zone to the laptop resolver: it forwards to the
