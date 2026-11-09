@@ -2,7 +2,7 @@
 title: Kubernetes development environment
 permalink: /docs/dev/
 description: How to configure a development environment for the Pi Cluster using K3D, with a manual walkthrough and an automated base + profiles workflow.
-last_modified_at: "08-11-2026"
+last_modified_at: "09-11-2026"
 
 ---
 
@@ -13,6 +13,10 @@ The development setup is the following:
 - Cilium is installed as CNI which also takes care of the routing which was handled by kube-proxy. 
 - Cilium L2-LB awareness is enabled, and a set of IP’s are configured for Loadbalancers services and advertised via L2 announcements. 
 - Docker cluster nodes and Load balancer Kubernetes services are reachable from local host through docker network
+- A local BIND9 resolver on the laptop is authoritative for `local.test` and its
+  `picluster.local.test` child zone, so `<svc>.picluster.local.test`,
+  `rustfs.picluster.local.test` and `vault.picluster.local.test` resolve to the
+  dev addresses without `kubectl port-forward` (see [BIND9](#bind9))
 
 ![picluster-dev-k3d](/assets/img/pi-cluster-dev-k3d-architecture.png)
 
@@ -200,26 +204,15 @@ fallback that bypasses DNS and the gateway; pods cannot use them. The `elastic`
 profile additionally claims `172.30.200.12` for the Fluentd LoadBalancer.
 
 The dev `CLUSTER_DOMAIN` is `picluster.local.test`, an RFC 2606 `.test` name
-that is never published to the lab BIND. Add three records to the existing
-`local.test` zone (BIND syntax, relative to `$ORIGIN local.test.`; `127.0.0.1`
-would not work because nothing listens on the host's port 80/443 — `k3d`'s
-load balancer and `servicelb` are disabled):
+that is never published to the lab BIND. The laptop resolver described in
+[BIND9](#bind9) serves it as a child zone of `local.test`; `127.0.0.1` would
+not work because nothing listens on the host's port 80/443 — `k3d`'s load
+balancer and `servicelb` are disabled.
 
-```bind
-; keep the existing wildcard for other local projects
-*                 IN  A    127.0.0.1
-; k3d dev environment
-*.picluster       IN  A    172.30.200.1    ; Envoy Gateway: <svc>.picluster.local.test
-rustfs.picluster  IN  A    172.30.100.10   ; RustFS S3:9091 + console:9092
-vault.picluster   IN  A    172.30.100.11   ; Vault:8200
-```
-
-Bump the zone serial and reload it (`sudo rndc reload local.test`). The exact
-`rustfs.picluster` and `vault.picluster` records win over `*.picluster`, and
-`*.picluster` is a closer match than the apex `*`, so other local projects keep
-resolving to `127.0.0.1`. A separate `picluster.local.test` child zone with the
-same three records works too, if you would rather remove the dev names by
-deleting one zone.
+Inside that zone the wildcard sends `<svc>.picluster.local.test` to Envoy
+Gateway, while the exact `rustfs` and `vault` records keep the external
+services on `172.30.100.10` and `172.30.100.11`. The parent `local.test`
+wildcard does not interfere: BIND answers from the longest matching zone.
 
 `*.picluster.local.test` is signed by the dev CA, which also signs the RustFS
 and Vault server certificates, so a single trust entry covers the gateway and
@@ -451,6 +444,7 @@ Expected combinations:
 The following need to be installed in your local development environment
 
 - Docker
+- BIND9 (local resolver for the `local.test` and `picluster.local.test` zones)
 - [K3D](https://k3d.io/)
 - kubectl
 - helm
@@ -546,6 +540,124 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
     ```shell
     sudo systemctl restart docker
     ```
+
+### BIND9
+
+The dev hostnames are resolved by a BIND9 instance running on the laptop. It
+is authoritative for `local.test` (used by other local projects) and for the
+`picluster.local.test` child zone that holds everything the dev environment
+publishes. Nothing is delegated to or published in the lab DNS.
+
+- Step 1. Install BIND9 and its tools
+
+  ```shell
+  sudo apt-get update
+  sudo apt-get install -y bind9 bind9utils bind9-dnsutils
+  ```
+
+- Step 2. Make sure BIND9 can own port 53
+
+  `systemd-resolved` normally listens on `127.0.0.53:53`. Check it with:
+
+  ```shell
+  sudo ss -lntp 'sport = :53'
+  ```
+
+  If `systemd-resolved` owns the port, free it by setting `DNSStubListener=no`
+  in `/etc/systemd/resolved.conf`, restarting `systemd-resolved`, and pointing
+  `/etc/resolv.conf` at `nameserver 127.0.0.1` so the host queries BIND9.
+
+- Step 3. Declare both zones in `/etc/bind/named.conf.local`
+
+  ```bind
+  zone "local.test" {
+      type master;
+      file "/etc/bind/db.local.test";
+  };
+
+  zone "picluster.local.test" {
+      type master;
+      file "/etc/bind/db.picluster.local.test";
+  };
+  ```
+
+  No delegation is needed in `local.test`: both zones are served by the same
+  instance, which answers from the longest matching zone.
+
+- Step 4. Create the parent zone `/etc/bind/db.local.test`
+
+  ```bind
+  $TTL 2d
+  $ORIGIN local.test.
+
+  @   IN  SOA  ns.local.test. admin.local.test. (
+               2026110901 ; serial
+               12h        ; refresh
+               15m        ; retry
+               3w         ; expire
+               2h )       ; minimum TTL
+      IN  NS   ns.local.test.
+  ns  IN  A    127.0.0.1
+  *   IN  A    127.0.0.1
+  ```
+
+- Step 5. Create the dev zone `/etc/bind/db.picluster.local.test`
+
+  ```bind
+  $TTL 2d
+  $ORIGIN picluster.local.test.
+
+  @        IN  SOA  ns.picluster.local.test. admin.picluster.local.test. (
+                  2026110901 ; serial
+                  12h        ; refresh
+                  15m        ; retry
+                  3w         ; expire
+                  2h )       ; minimum TTL
+           IN  NS   ns.picluster.local.test.
+  ns       IN  A    127.0.0.1
+  *        IN  A    172.30.200.1    ; Envoy Gateway: <svc>.picluster.local.test
+  rustfs   IN  A    172.30.100.10   ; RustFS S3:9091 + console:9092
+  vault    IN  A    172.30.100.11   ; Vault:8200
+  ```
+
+  The wildcard sends application hostnames to the k3d Envoy Gateway; the exact
+  `rustfs` and `vault` records win over it and keep the external services on
+  their own container addresses.
+
+- Step 6. Validate, load and test
+
+  ```shell
+  sudo named-checkconf
+  sudo named-checkzone local.test /etc/bind/db.local.test
+  sudo named-checkzone picluster.local.test /etc/bind/db.picluster.local.test
+  sudo systemctl restart named
+  ```
+
+  ```shell
+  dig +short app.picluster.local.test      # 172.30.200.1
+  dig +short rustfs.picluster.local.test   # 172.30.100.10
+  dig +short vault.picluster.local.test    # 172.30.100.11
+  dig +short db.local.test                 # 127.0.0.1
+  ```
+
+  Bump the SOA serial whenever a zone changes, and reload it with
+  `sudo rndc reload <zone>` after editing a file.
+
+{{site.data.alerts.note}}
+The three dev records can also live in the existing `local.test` zone as
+`*.picluster`, `rustfs.picluster` and `vault.picluster` entries. The child zone
+is preferable: it keeps the dev names together, and it is the only layout that
+can accept dynamic updates if `external-dns` is ever enabled in dev (the
+`network` profile expects `EXTERNAL_DNS_RFC2136_ZONE` to be a real zone).
+{{site.data.alerts.end}}
+
+{{site.data.alerts.note}}
+If you restrict `listen-on` or `allow-query` in `/etc/bind/named.conf.options`,
+keep `127.0.0.1` reachable. Allowing `172.30.0.1` (the `picluster` bridge
+address) also lets k3d containers query the laptop resolver directly, which is
+an alternative to the CoreDNS `template` workaround described in
+[Accessing services from the host](#accessing-services-from-the-host).
+{{site.data.alerts.end}}
 
 ### K3D
 
