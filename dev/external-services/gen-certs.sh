@@ -120,8 +120,12 @@ IP.2 = 172.30.100.11"
 # image's `vault` user (UID 100) after start, so its keypair is world-readable:
 # it protects an in-memory dev server whose root token lives in .env anyway.
 chown 10001:10001 "$CERT_DIR/rustfs_key.pem" "$CERT_DIR/rustfs_cert.pem" 2>/dev/null || true
-chmod 644 "$CERT_DIR/ca.crt" "$CERT_DIR/rustfs_cert.pem" "$CERT_DIR/vault_cert.pem" "$CERT_DIR/vault_key.pem"
+chmod 644 "$CERT_DIR/ca.crt" "$CERT_DIR/vault_cert.pem" "$CERT_DIR/vault_key.pem"
 chmod 600 "$CERT_DIR/ca.key"
-chmod 640 "$CERT_DIR/rustfs_key.pem"
+# `rustfs-perms` has already given the RustFS keypair to UID 10001, so after the
+# first `dev-services-up` the host user cannot chmod it any more (EPERM, which
+# aborted this script). Compose guarantees its modes; only fix files we own.
+if [ -O "$CERT_DIR/rustfs_cert.pem" ]; then chmod 644 "$CERT_DIR/rustfs_cert.pem"; fi
+if [ -O "$CERT_DIR/rustfs_key.pem" ]; then chmod 640 "$CERT_DIR/rustfs_key.pem"; fi
 
 echo "Certificates written to $CERT_DIR"
