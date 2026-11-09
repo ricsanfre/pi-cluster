@@ -21,4 +21,5 @@ kind: Kustomization
 #   network.yaml       external-dns against the lab BIND (needs secrets)
 #   maintenance.yaml   system-upgrade + descheduler
 #   e-commerce.yaml    e-commerce demo (needs several profiles; see file header)
-resources: []
+resources:
+  - cert-manager.yaml
