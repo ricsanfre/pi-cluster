@@ -13,7 +13,11 @@
 #   - ClusterTrustBundle/picluster-dev-ca (public trust anchor for pods)
 #   - Secret/rustfs-ca in every namespace whose workloads verify RustFS TLS
 #
-# Safe to re-run. No-op on clusters other than k3d-picluster.
+# The cert-manager and external-secrets namespaces are created here, so the
+# seed can run before (or without) the profiles that install those components.
+#
+# Safe to re-run. No-op on clusters other than k3d-picluster or when that
+# cluster is not reachable.
 #
 set -euo pipefail
 
@@ -47,15 +51,27 @@ if [ "$current" != "$KUBE_CONTEXT" ]; then
   exit 0
 fi
 
-if kubectl get namespace cert-manager >/dev/null 2>&1; then
-  kubectl -n cert-manager create secret tls dev-root-ca \
-    --cert="$CA_CRT" \
-    --key="$CA_KEY" \
-    --dry-run=client -o yaml | kubectl apply -f - >/dev/null
-  echo "Seeded Secret/cert-manager/dev-root-ca"
-else
-  echo "SKIP: cert-manager namespace not found (enable the cert-manager profile)"
+if ! kubectl get --raw /readyz >/dev/null 2>&1; then
+  echo "Skipping CA seed: cluster '$KUBE_CONTEXT' is not reachable"
+  exit 0
 fi
+
+# The issuer seed does not need cert-manager (a Secret only needs the API
+# server), and creating the namespace here removes the ordering trap where
+# `dev-up` seeded too early and `cert-manager-config` then waited forever on a
+# ClusterIssuer whose secret did not exist. The profile applies the same
+# Namespace later; the manifest is identical, so the apply is idempotent.
+#
+# `external-secrets` is created for the same reason: the dev ClusterSecretStore
+# reads Secret/external-secrets/vault-ca through `caProvider`.
+kubectl create namespace cert-manager --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+kubectl create namespace external-secrets --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+
+kubectl -n cert-manager create secret tls dev-root-ca \
+  --cert="$CA_CRT" \
+  --key="$CA_KEY" \
+  --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+echo "Seeded Secret/cert-manager/dev-root-ca"
 
 if kubectl api-resources --api-group=certificates.k8s.io 2>/dev/null | grep -q '^clustertrustbundles'; then
   kubectl apply -f - >/dev/null <<EOF

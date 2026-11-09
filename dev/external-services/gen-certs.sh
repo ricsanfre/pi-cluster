@@ -27,11 +27,37 @@ if [ -f "$CERT_DIR/ca.key" ] && [ ! -r "$CERT_DIR/ca.key" ]; then
   exit 1
 fi
 
+# cert_covers_alt_names <crt> <alt-names block>
+#
+# True when the certificate is unexpired and carries every DNS/IP entry in the
+# block. OpenSSL 3.0's `x509 -checkhost/-checkip` exits 0 even on a mismatch
+# (`Hostname x does NOT match certificate`), so the exit status cannot be used
+# as the signal; the message can.
+cert_covers_alt_names() {
+  local crt="$1" alt_names="$2" line name
+  [ -f "$crt" ] || return 1
+  openssl x509 -in "$crt" -noout -checkend 0 >/dev/null 2>&1 || return 1
+  while IFS= read -r line; do
+    case "$line" in
+      DNS.*=*)
+        name="${line#*=}"; name="${name// /}"
+        openssl x509 -in "$crt" -noout -checkhost "$name" 2>/dev/null \
+          | grep -q 'does match certificate' || return 1
+        ;;
+      IP.*=*)
+        name="${line#*=}"; name="${name// /}"
+        openssl x509 -in "$crt" -noout -checkip "$name" 2>/dev/null \
+          | grep -q 'does match certificate' || return 1
+        ;;
+    esac
+  done <<<"$alt_names"
+  return 0
+}
+
 # issue_server_cert <name> <common-name/check-host> <alt-names block>
 #
-# Re-issues the certificate when it is missing or does not cover the check
-# host (for example after adding a SAN). -checkhost exits non-zero when the
-# certificate does not match, which is the signal to re-issue.
+# Re-issues the certificate when it is missing, expired, or does not cover every
+# SAN in the block (for example after adding a name).
 issue_server_cert() {
   local name="$1" host="$2" alt_names="$3"
   local crt="$CERT_DIR/${name}_cert.pem"
@@ -39,8 +65,7 @@ issue_server_cert() {
   local cnf="$CERT_DIR/${name}-san.cnf"
   local csr="$CERT_DIR/${name}.csr"
 
-  if [ -f "$crt" ] && [ -f "$key" ] \
-    && openssl x509 -in "$crt" -noout -checkhost "$host" >/dev/null 2>&1; then
+  if [ -f "$crt" ] && [ -f "$key" ] && cert_covers_alt_names "$crt" "$alt_names"; then
     echo "Using existing $name certificate in $CERT_DIR"
     return 0
   fi
@@ -62,6 +87,12 @@ subjectAltName = @alt_names
 [alt_names]
 $alt_names
 EOF
+
+  # Remove the previous pair first. `rustfs-perms` gives the RustFS keypair to
+  # UID 10001, so the host user cannot open it for writing; deleting only needs
+  # write access to the directory, and the new files come back owned by the
+  # invoking user.
+  rm -f "$crt" "$key" "$csr"
 
   openssl req -newkey rsa:2048 -nodes \
     -keyout "$key" \

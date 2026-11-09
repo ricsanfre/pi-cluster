@@ -44,10 +44,43 @@ make dev-smoke       # nodes, DNS, metrics, local-path PVC, base pods
 make dev-usage       # host memory, docker stats, kubectl top
 make dev-down        # stop external services and delete the cluster (data kept)
 make dev-recreate    # down + up + smoke
+make dev-destroy     # cluster + services data + certs + credentials (asks first)
 ```
 
-`dev-preflight` refuses to continue if the host has less than 8 GiB available.
-Every Make target asserts the `k3d-picluster` kubectl context.
+`dev-preflight` refuses to continue if the host has less than 8 GiB available or
+a required tool is missing (`docker`, `docker compose`, `k3d`, `kubectl`,
+`helm`, `flux`, `openssl`, `curl`, `tmpl`), and checks that
+`dev/external-services/certs` is writable by the invoking user. Every Make
+target that touches the cluster asserts the `k3d-picluster` kubectl context.
+
+### Lifecycle and ordering
+
+`dev-up` is ordered so that no step waits on a later one:
+
+1. `create_cluster.sh` — Docker network, k3d cluster, kubectl context, API ready.
+2. `bootstrap.sh` — Cilium, CoreDNS, flux-operator, flux-instance, root
+   Kustomization.
+3. `up.sh` — `gen-env.sh`, `gen-certs.sh`, **CA seed**, then Compose, buckets and
+   the dev Vault token.
+4. `smoke.sh` — nodes, DNS, storage, metrics, RustFS.
+
+The CA seed is deliberately early and profile-independent: `seed-ca.sh` creates
+the `cert-manager` and `external-secrets` namespaces itself and writes
+`Secret/cert-manager/dev-root-ca` before any chart is installed. A `ca`
+ClusterIssuer only needs that Secret to exist when it reconciles, so enabling
+`cert-manager` or `ingress` later needs nothing but a Flux reconcile — there is
+no window where `cert-manager-config` waits on a missing secret. Re-running
+`seed-ca.sh` afterwards only picks up consumer namespaces that the profiles
+created (`velero`, `loki`, `tempo`).
+
+Three teardown levels exist, from least to most destructive:
+
+| Command | Deletes |
+| --- | --- |
+| `make dev-down` | k3d cluster; services stopped, `data/` and `certs/` kept |
+| `make dev-recreate` | the cluster, then `dev-up` again; data/certs kept |
+| `make dev-destroy` | cluster, `data/`, `certs/`, `.env`, and the unused `picluster` network |
+{: .table .border-dark }
 
 ### Base components
 
@@ -289,9 +322,12 @@ instead of the self-signed root that prod uses. The result is one trust anchor:
 | `Secret/external-secrets/vault-ca` | public CA referenced by the dev `ClusterSecretStore` through `caProvider` |
 {: .table .border-dark }
 
-The target is idempotent, skips namespaces that do not exist yet, and no-ops on
-a non-k3d context, so re-run it after enabling a profile that needs the CA.
-Export the certificate for the browser with:
+The seed is idempotent and no-ops on a non-k3d context or when the cluster is
+unreachable. It creates the `cert-manager` and `external-secrets` namespaces if
+they do not exist, because the issuer Secret is a prerequisite for the
+cert-manager profile, not a product of it; consumer namespaces (`velero`, `loki`,
+`tempo`, …) are only seeded when they already exist. Export the certificate for
+the browser with:
 
 ```bash
 cp dev/external-services/certs/ca.crt picluster-dev-ca.crt

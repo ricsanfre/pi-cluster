@@ -25,6 +25,11 @@ fi
 ./gen-env.sh
 ./gen-certs.sh
 
+# Publish the CA before anything consumes it. seed-ca.sh creates the
+# cert-manager and external-secrets namespaces itself, so this works on a fresh
+# cluster and whether or not those profiles are enabled.
+./seed-ca.sh
+
 mkdir -p data/rustfs data/logs
 
 args=(--project-directory "$SCRIPT_DIR" --env-file "$SCRIPT_DIR/.env" up -d)
@@ -51,9 +56,9 @@ done
 
 ./bootstrap.sh
 
-# Publish the dev CA as the cluster trust anchor and cert-manager issuer seed.
-# No-op when the current context is not the k3d cluster.
-./seed-ca.sh
+echo "External services are up"
+echo "Consumer namespaces created later by profiles (velero, loki, tempo) can be"
+echo "seeded with 'make dev-seed-ca'."
 
 if [ "$VAULT" = "1" ]; then
   echo "Waiting for Vault health endpoint"
