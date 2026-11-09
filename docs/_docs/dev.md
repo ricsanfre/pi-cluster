@@ -491,6 +491,7 @@ Expected combinations:
 The following need to be installed in your local development environment
 
 - Docker
+- a `picluster` Docker bridge network for the cluster and its external services
 - BIND9 (local resolver for the `local.test` and `picluster.local.test` zones)
 - [K3D](https://k3d.io/)
 - kubectl
@@ -587,6 +588,35 @@ Follow official [installation guide](https://docs.docker.com/engine/install/ubun
     ```shell
     sudo systemctl restart docker
     ```
+
+### Docker network
+
+The k3d nodes and the external services (RustFS, Vault) share one Docker bridge
+network. Create it before the DNS zones below, so every address in them comes
+from a network that already exists. The command is idempotent-safe:
+
+```shell
+docker network inspect picluster >/dev/null 2>&1 || docker network create \
+      --driver bridge \
+      --subnet "172.30.0.0/16" \
+      --gateway "172.30.0.1" \
+      --ip-range "172.30.0.0/17" \
+      "picluster"
+```
+
+`dev/create_cluster.sh` and `dev/external-services/up.sh` reuse the network when
+it is already there, so running this by hand changes nothing.
+
+| Address | Used by |
+| --- | --- |
+| `172.30.0.1` | bridge gateway, reachable from the host |
+| `172.30.0.2` | k3d server (agents follow at `.3`, `.4`, …) |
+| `172.30.100.10` / `.11` | RustFS / Vault, fixed in `compose.yaml` |
+| `172.30.200.1–254` | Cilium LB-IPAM pool: Envoy Gateway `.1`, Fluentd `.12` |
+| `127.172.30.1:6443` | k3s API endpoint as seen from the host |
+{: .table .border-dark }
+
+The `local.test` records in the next section point at these addresses.
 
 ### BIND9
 
@@ -863,22 +893,11 @@ sudo sysctl -p
 ```
 
 
-### Creating docker network
-
-A specific docker network, 172.30.0.0/16, will be created for the k3d dev environment
-
-```shell
-docker network create \
-      --driver bridge \
-      --subnet "172.30.0.0/16" \
-      --gateway "172.30.0.1" \
-      --ip-range "172.30.0.0/17" \
-      "picluster"
-```
-
-
 ### Creating K3D cluster
 
+The cluster attaches to the `picluster` network created in
+[Docker network](#docker-network); `k3d-cluster.yaml` selects it with
+`network: picluster`.
 
 - Step 1. Create k3d-config.yaml file
 
