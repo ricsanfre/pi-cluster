@@ -11,7 +11,7 @@ data:
   # keep names in the parent local.test zone. See docs/_docs/dev.md.
   CLUSTER_DOMAIN: picluster.local.test
   EXTERNAL_DNS_SERVER: 10.0.0.11
-  S3_SERVER: rustfs.dev-external.svc.cluster.local
+  S3_SERVER: rustfs.picluster.local.test
   STORAGE_CLASS: local-path
   FLUENTD_LOAD_BALANCER_IP: 172.30.200.12
   TRUSTED_INTERNAL_POD_CIDR: 10.42.0.0/16

@@ -99,7 +99,7 @@ Three teardown levels exist, from least to most destructive:
 | Flux | source + kustomize + helm controllers; notification disabled |
 | metrics-server | for `kubectl top` |
 | local-path | k3s bundled provisioner, default StorageClass |
-| `dev-external` | stable Service/EndpointSlice names for RustFS/Vault |
+| CoreDNS | answers the dev zone in-cluster: `rustfs`/`vault` + the gateway wildcard |
 {: .table .border-dark }
 
 The k3s image defaults to `rancher/k3s:v1.37.1-k3s1` to match prod. Override it
@@ -190,8 +190,7 @@ flowchart TB
       subgraph K3S["k3s"]
         direction TB
         PODS["pods 10.42.0.0/16"]
-        SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10"]
-        XSVC["dev-external headless Services<br/>rustfs → 172.30.100.10 · vault → 172.30.100.11"]
+        SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10<br/>hosts: rustfs/vault · template: *.picluster.local.test"]
       end
       GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443<br/>Cilium LB-IPAM pool 172.30.200.1–254"]
     end
@@ -217,12 +216,10 @@ flowchart TB
   BRIDGE -.->|"veth pair"| VAULTC
 
   GW -->|"HTTPRoute → Service"| PODS
-  PODS -->|"dev-external Service"| XSVC
-  XSVC ==>|"EndpointSlice, same L2 segment"| RS
-  XSVC ==> VS
+  PODS ==>|"resolved directly, same L2 segment"| RS
+  PODS ==> VS
 
-  PODS -->|"3 · resolve *.picluster.local.test"| SVCS
-  SVCS -->|"forward → Docker DNS 127.0.0.11"| RESOLVER
+  PODS -->|"3 · rustfs/vault/*.picluster.local.test"| SVCS
 
   NODE -.->|"kubectl · API 127.172.30.1:6443"| CLIENT
 </pre>
@@ -237,11 +234,20 @@ node holds the lease.
 
 The paths in the diagram: (1) the laptop resolver answers from the
 `local.test` zone, (2) the host routes straight to the LoadBalancer IP and the
-container IPs over the bridge — no port mapping involved, (3) pods resolve
-cluster-external names through CoreDNS, which forwards to the Docker embedded
-resolver and then to the host resolver. The published `127.0.0.1` ports are a
-fallback that bypasses DNS and the gateway; pods cannot use them. The `elastic`
-profile additionally claims `172.30.200.12` for the Fluentd LoadBalancer.
+container IPs over the bridge — no port mapping involved, (3) pods resolve the
+same names through CoreDNS, which answers the dev zone itself: `rustfs` and
+`vault` from a `hosts` block, the rest of the zone from a `template` pointing at
+the gateway. The published `127.0.0.1` ports are a fallback that bypasses DNS
+and the gateway; pods cannot use them. The `elastic` profile additionally
+claims `172.30.200.12` for the Fluentd LoadBalancer.
+
+{{site.data.alerts.note}}
+CoreDNS cannot forward the dev zone to the laptop resolver: it forwards to the
+node's `/etc/resolv.conf`, which is Docker's embedded resolver, and that
+resolver's upstream is the host's loopback stub — unreachable from a container
+namespace. Answering the zone in CoreDNS also keeps pods independent of whether
+BIND is running.
+{{site.data.alerts.end}}
 
 The dev `CLUSTER_DOMAIN` is `picluster.local.test`, an RFC 2606 `.test` name
 that is never published to the lab BIND. The laptop resolver described in
@@ -287,26 +293,13 @@ Two more constraints:
 
 - The wildcard certificate covers a single label: `app.picluster.local.test` is
   valid, `a.b.picluster.local.test` is not.
-- Pods that call the gateway by hostname (Keycloak issuer URLs, OIDC
-  callbacks) must resolve it inside the cluster too. CoreDNS forwards to the
-  Docker embedded resolver, which only sees the host's `/etc/resolv.conf`
-  servers — if the laptop resolver is a loopback stub, cluster resolution
-  fails. In that case append a `template` plugin to the plugin list in
-  `kubernetes/platform/coredns/app/base/values.yaml` (Helm replaces lists, so a
-  dev overlay would have to repeat the whole `servers` block):
-
-  ```yaml
-  {% raw %}- name: template
-    parameters: ANY ANY picluster.local.test
-    configBlock: |-
-      answer "{{ .Name }} 60 IN A 172.30.200.1"{% endraw %}
-  ```
-
-  That wildcard also answers `rustfs.picluster.local.test` and
-  `vault.picluster.local.test` with the gateway IP, which is wrong for the
-  external services. Pods keep using the `*.dev-external.svc.cluster.local`
-  names; if a pod ever needs the local.test names, add explicit `hosts` plugin
-  entries for those two hosts instead of relying on the wildcard.
+- Pods that call the gateway by hostname (Keycloak issuer URLs, OIDC callbacks)
+  must resolve it inside the cluster too. The dev CoreDNS overlay answers the
+  zone itself: a `template` sends the single-label wildcard to the gateway, and
+  a `hosts` block pins `rustfs` and `vault` to their own container addresses so
+  they are not sent to the gateway. See
+  `kubernetes/platform/coredns/app/overlays/dev/values.yaml` — the `servers`
+  list is repeated there because Helm replaces lists instead of merging them.
 
 ### Private PKI (dev only)
 
@@ -408,11 +401,12 @@ make dev-services-down            # stop, keep data
 make dev-services-reset           # stop and delete data (confirmation)
 ```
 
-The cluster reaches RustFS through `https://rustfs.dev-external.svc.cluster.local:9091`
-and Vault through `https://vault.dev-external.svc.cluster.local:8200`; both
-serve TLS with the dev CA. The CA is seeded into POC namespaces as the
-`rustfs-ca` Secret by `dev-poc-new.sh`, and into the other consumer namespaces
-(`rustfs-ca`, `vault-ca`) by `make dev-seed-ca`.
+The cluster reaches RustFS through `https://rustfs.picluster.local.test:9091` and
+Vault through `https://vault.picluster.local.test:8200`; CoreDNS answers both
+from its `hosts` block, so pods use the same names as the host. Both serve TLS
+with the dev CA. The CA is seeded into POC namespaces as the `rustfs-ca` Secret
+by `dev-poc-new.sh`, and into the other consumer namespaces (`rustfs-ca`,
+`vault-ca`) by `make dev-seed-ca`.
 
 ### POC workflow
 

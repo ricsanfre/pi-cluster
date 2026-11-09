@@ -1,4 +1,55 @@
 # coredns helm values (dev overlay)
 #
-# Single-node k3d cluster: the chart default (1 replica) is what we want, so
-# this file intentionally carries no overrides.
+# Pods have no DNS path to the laptop resolver: CoreDNS forwards to the node's
+# /etc/resolv.conf (Docker embedded DNS), whose upstream is a loopback stub that
+# is unreachable from a container namespace. The dev zone is answered here
+# instead, mirroring how production reaches the same external services by name:
+#
+#   hosts    rustfs / vault -> their external-service container addresses
+#   template the rest of picluster.local.test -> the Envoy Gateway LB address
+#
+# `servers` is a list, so Helm replaces the base value rather than merging it:
+# keep this block in sync with kubernetes/platform/coredns/app/base/values.yaml.
+
+servers:
+- zones:
+  - zone: .
+  port: 53
+  plugins:
+  - name: errors
+  # Serves a /health endpoint on :8080, required by the livenessProbe
+  - name: health
+    configBlock: |-
+      lameduck 5s
+  # Serves a /ready endpoint on :8181, required by the readinessProbe
+  - name: ready
+  # Required to query the Kubernetes API for data
+  - name: kubernetes
+    parameters: cluster.local in-addr.arpa ip6.arpa
+    configBlock: |-
+      pods insecure
+      fallthrough in-addr.arpa ip6.arpa
+      ttl 30
+  # Exact names win over the wildcard below, so RustFS and Vault keep their own
+  # container addresses instead of being sent to the gateway.
+  - name: hosts
+    configBlock: |-
+      172.30.100.10 rustfs.picluster.local.test
+      172.30.100.11 vault.picluster.local.test
+      fallthrough
+  # Single-label wildcard: <svc>.picluster.local.test -> Envoy Gateway.
+  - name: template
+    parameters: IN A picluster.local.test
+    configBlock: |-
+      match "^.*\.picluster\.local\.test\.$"
+      answer "{{ .Name }} 60 IN A 172.30.200.1"
+  # Serves a /metrics endpoint on :9153, required by the ServiceMonitor
+  - name: prometheus
+    parameters: 0.0.0.0:9153
+  - name: forward
+    parameters: . /etc/resolv.conf
+  - name: cache
+    parameters: 30
+  - name: loop
+  - name: reload
+  - name: loadbalance
