@@ -58,20 +58,22 @@ target that touches the cluster asserts the `k3d-picluster` kubectl context.
 `dev-up` is ordered so that no step waits on a later one:
 
 1. `create_cluster.sh` — Docker network, k3d cluster, kubectl context, API ready.
-2. `bootstrap.sh` — Cilium, CoreDNS, flux-operator, flux-instance, root
+2. `dev-prepare` → `prepare.sh` — `gen-env.sh` and `gen-certs.sh` (host-only).
+3. `dev-seed-ca` → `seed-ca.sh` — publish the CA into the cluster.
+4. `bootstrap.sh` — Cilium, CoreDNS, flux-operator, flux-instance, root
    Kustomization.
-3. `up.sh` — `gen-env.sh`, `gen-certs.sh`, **CA seed**, then Compose, buckets and
-   the dev Vault token.
-4. `smoke.sh` — nodes, DNS, storage, metrics, RustFS.
+5. `dev-services-up` → `up.sh` — Compose, buckets, dev Vault token.
+6. `smoke.sh` — nodes, DNS, storage, metrics, RustFS.
 
-The CA seed is deliberately early and profile-independent: `seed-ca.sh` creates
-the `cert-manager` and `external-secrets` namespaces itself and writes
-`Secret/cert-manager/dev-root-ca` before any chart is installed. A `ca`
-ClusterIssuer only needs that Secret to exist when it reconciles, so enabling
-`cert-manager` or `ingress` later needs nothing but a Flux reconcile — there is
-no window where `cert-manager-config` waits on a missing secret. Re-running
-`seed-ca.sh` afterwards only picks up consumer namespaces that the profiles
-created (`velero`, `loki`, `tempo`).
+The CA seed is deliberately **before** Flux and independent of any profile:
+`seed-ca.sh` creates the `cert-manager` and `external-secrets` namespaces
+itself and writes `Secret/cert-manager/dev-root-ca` while the API server is the
+only thing running. `ClusterIssuer/ca-issuer` therefore always finds its secret,
+and enabling `cert-manager` or `ingress` later needs nothing but a Flux
+reconcile — there is no window where `cert-manager-config` waits on a missing
+secret and holds back `envoy-gateway-config`. `dev-up` runs the seed exactly
+once; re-running `seed-ca.sh` afterwards only picks up consumer namespaces that
+the profiles created (`velero`, `loki`, `tempo`).
 
 Three teardown levels exist, from least to most destructive:
 

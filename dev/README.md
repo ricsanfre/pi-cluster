@@ -15,11 +15,12 @@ make dev-usage
 make dev-down
 ```
 
-`make dev-up` creates the `picluster` Docker network, the k3d cluster, starts
-RustFS/Vault, bootstraps Cilium/CoreDNS/Flux, publishes the dev CA and runs the
-smoke test. The CA seed does not depend on any profile: `seed-ca.sh` creates the
-`cert-manager` and `external-secrets` namespaces itself, so enabling
-`cert-manager`/`ingress` later only needs a Flux reconcile.
+`make dev-up` creates the `picluster` Docker network, the k3d cluster, generates
+credentials and the dev CA, seeds the CA into the cluster, starts RustFS/Vault,
+bootstraps Cilium/CoreDNS/Flux and runs the smoke test. The CA seed runs before
+Flux (see `dev-prepare`) and does not depend on any profile: `seed-ca.sh`
+creates the `cert-manager` and `external-secrets` namespaces itself, so
+enabling `cert-manager`/`ingress` later only needs a Flux reconcile.
 
 ## Lifecycle
 
@@ -65,8 +66,10 @@ make dev-services-down        # keep data
 make dev-services-reset       # delete data (confirmation)
 ```
 
-`dev-services-up` already seeds the CA; `dev-seed-ca` is for re-running it after
-enabling a profile that added consumer namespaces (`velero`, `loki`, `tempo`).
+`dev-up` seeds the CA into the cluster before Flux starts. `dev-services-up`
+only prepares host artifacts (credentials, certificates) and starts the
+containers; on an existing cluster, run `make dev-seed-ca` after enabling a
+profile that added consumer namespaces (`velero`, `loki`, `tempo`).
 
 ## Layout
 

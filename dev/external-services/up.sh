@@ -22,13 +22,7 @@ if ! docker network inspect picluster >/dev/null 2>&1; then
     picluster
 fi
 
-./gen-env.sh
-./gen-certs.sh
-
-# Publish the CA before anything consumes it. seed-ca.sh creates the
-# cert-manager and external-secrets namespaces itself, so this works on a fresh
-# cluster and whether or not those profiles are enabled.
-./seed-ca.sh
+./prepare.sh
 
 mkdir -p data/rustfs data/logs
 
