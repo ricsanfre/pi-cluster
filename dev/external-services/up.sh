@@ -50,10 +50,6 @@ done
 
 ./bootstrap.sh
 
-echo "External services are up"
-echo "Consumer namespaces created later by profiles (velero, loki, tempo) can be"
-echo "seeded with 'make dev-seed-ca'."
-
 if [ "$VAULT" = "1" ]; then
   echo "Waiting for Vault health endpoint"
   for i in $(seq 1 60); do
@@ -81,3 +77,5 @@ if [ "$VAULT" = "1" ]; then
 fi
 
 echo "External services are up"
+echo "Consumer namespaces created later by profiles (velero, loki, tempo) can be"
+echo "seeded with 'make dev-seed-ca'."
