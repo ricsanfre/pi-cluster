@@ -10,8 +10,8 @@
 #
 #   - Secret/dev-root-ca in the cert-manager namespace (issuer seed, contains
 #     the CA key: the issuer cannot sign without it)
-#   - ClusterTrustBundle/picluster-dev-ca (public trust anchor for pods)
 #   - Secret/rustfs-ca in every namespace whose workloads verify RustFS TLS
+#   - Secret/vault-ca in the external-secrets namespace (caProvider)
 #
 # The cert-manager and external-secrets namespaces are created here, so the
 # seed can run before (or without) the profiles that install those components.
@@ -72,21 +72,6 @@ kubectl -n cert-manager create secret tls dev-root-ca \
   --key="$CA_KEY" \
   --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 echo "Seeded Secret/cert-manager/dev-root-ca"
-
-if kubectl api-resources --api-group=certificates.k8s.io 2>/dev/null | grep -q '^clustertrustbundles'; then
-  kubectl apply -f - >/dev/null <<EOF
-apiVersion: certificates.k8s.io/v1
-kind: ClusterTrustBundle
-metadata:
-  name: picluster-dev-ca
-spec:
-  trustBundle: |
-$(sed 's/^/    /' "$CA_CRT")
-EOF
-  echo "Seeded ClusterTrustBundle/picluster-dev-ca"
-else
-  echo "SKIP: this cluster does not serve certificates.k8s.io ClusterTrustBundle"
-fi
 
 for ns in $RUSTFS_CONSUMERS; do
   if kubectl get namespace "$ns" >/dev/null 2>&1; then
