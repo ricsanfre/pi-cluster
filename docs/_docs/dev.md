@@ -190,7 +190,7 @@ flowchart TB
       subgraph K3S["k3s"]
         direction TB
         PODS["pods 10.42.0.0/16"]
-        SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10<br/>hosts: rustfs/vault · template: *.picluster.local.test"]
+        SVCS["services 10.43.0.0/16<br/>CoreDNS 10.43.0.10<br/>template: rustfs/vault + single-label wildcard"]
       end
       GW["Envoy Gateway public-gateway<br/>LB IP 172.30.200.1 :80/:443<br/>Cilium LB-IPAM pool 172.30.200.1–254"]
     end
@@ -235,9 +235,9 @@ node holds the lease.
 The paths in the diagram: (1) the laptop resolver answers from the
 `local.test` zone, (2) the host routes straight to the LoadBalancer IP and the
 container IPs over the bridge — no port mapping involved, (3) pods resolve the
-same names through CoreDNS, which answers the dev zone itself: `rustfs` and
-`vault` from a `hosts` block, the rest of the zone from a `template` pointing at
-the gateway. The published `127.0.0.1` ports are a fallback that bypasses DNS
+same names through CoreDNS, which answers the dev zone itself with three
+chained `template` rules: `rustfs` and `vault` get their container addresses,
+every other single-label name goes to the gateway. The published `127.0.0.1` ports are a fallback that bypasses DNS
 and the gateway; pods cannot use them. The `elastic` profile additionally
 claims `172.30.200.12` for the Fluentd LoadBalancer.
 
@@ -295,9 +295,8 @@ Two more constraints:
   valid, `a.b.picluster.local.test` is not.
 - Pods that call the gateway by hostname (Keycloak issuer URLs, OIDC callbacks)
   must resolve it inside the cluster too. The dev CoreDNS overlay answers the
-  zone itself: a `template` sends the single-label wildcard to the gateway, and
-  a `hosts` block pins `rustfs` and `vault` to their own container addresses so
-  they are not sent to the gateway. See
+  zone itself with chained `template` rules: the two exact names resolve to the
+  external containers, the single-label wildcard to the gateway. See
   `kubernetes/platform/coredns/app/overlays/dev/values.yaml` — the `servers`
   list is repeated there because Helm replaces lists instead of merging them.
 
@@ -403,7 +402,7 @@ make dev-services-reset           # stop and delete data (confirmation)
 
 The cluster reaches RustFS through `https://rustfs.picluster.local.test:9091` and
 Vault through `https://vault.picluster.local.test:8200`; CoreDNS answers both
-from its `hosts` block, so pods use the same names as the host. Both serve TLS
+from its template rules, so pods use the same names as the host. Both serve TLS
 with the dev CA. The CA is seeded into POC namespaces as the `rustfs-ca` Secret
 by `dev-poc-new.sh`, and into the other consumer namespaces (`rustfs-ca`,
 `vault-ca`) by `make dev-seed-ca`.
