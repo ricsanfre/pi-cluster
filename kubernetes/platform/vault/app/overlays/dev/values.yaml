@@ -1,8 +1,8 @@
 # vault helm values (dev overlay)
 #
 # Dev Vault runs outside the cluster as a Docker Compose container (dev mode)
-# and is exposed to pods through the dev-external Service. It serves TLS with
-# the dev CA; workloads that talk to it need that CA (see
-# docs/_docs/dev.md#private-pki-dev-only).
+# and pods reach it at vault.picluster.local.test, which the dev CoreDNS overlay
+# answers. It serves TLS with the dev CA; workloads that talk to it need that CA
+# (see docs/_docs/dev.md#private-pki-dev-only).
 global:
-  externalVaultAddr: "https://vault.dev-external.svc.cluster.local:8200"
+  externalVaultAddr: "https://vault.picluster.local.test:8200"

@@ -125,23 +125,18 @@ else
     -addext "keyUsage=critical,keyCertSign,cRLSign" >/dev/null 2>&1
 fi
 
-issue_server_cert rustfs rustfs.dev-external.svc.cluster.local \
-  "DNS.1 = rustfs
-DNS.2 = rustfs.dev-external
-DNS.3 = rustfs.dev-external.svc
-DNS.4 = rustfs.dev-external.svc.cluster.local
-DNS.5 = localhost
-DNS.6 = rustfs.picluster.local.test
+# Only the names actually used remain: the host-facing zone (browser, curl,
+# Terraform) and localhost/127.0.0.1 for the published ports. Pods reach the
+# services through the same picluster.local.test records via CoreDNS.
+issue_server_cert rustfs rustfs.picluster.local.test \
+  "DNS.1 = localhost
+DNS.2 = rustfs.picluster.local.test
 IP.1 = 127.0.0.1
 IP.2 = 172.30.100.10"
 
-issue_server_cert vault vault.dev-external.svc.cluster.local \
-  "DNS.1 = vault
-DNS.2 = vault.dev-external
-DNS.3 = vault.dev-external.svc
-DNS.4 = vault.dev-external.svc.cluster.local
-DNS.5 = localhost
-DNS.6 = vault.picluster.local.test
+issue_server_cert vault vault.picluster.local.test \
+  "DNS.1 = localhost
+DNS.2 = vault.picluster.local.test
 IP.1 = 127.0.0.1
 IP.2 = 172.30.100.11"
 
