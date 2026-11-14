@@ -7,7 +7,7 @@
 
 # k3s version
 # renovate: datasource=github-releases depName=k3s-io/k3s
-k3s_version: v1.37.1+k3s1
+k3s_version: v1.37.2+k3s1
 
 # k3s master node VIP (loadbalancer)
 k3s_api_vip: 10.0.0.10
@@ -38,6 +38,7 @@ k3s_kubelet_config: |
 # --disable 'traefik'
 # --disable 'local-storage'
 # --disable 'coredns'
+# --disable 'gateway-api-crd'
 # --node-taint 'node-role.kubernetes.io/control-plane:NoSchedule'
 # --kube-controller-manager-arg 'bind-address=0.0.0.0'
 # --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
@@ -58,13 +59,17 @@ k3s_server_config:
   # TLS config
   tls-san:
     - "{{ k3s_api_vip }}"  # IP to HAProxy
-  # Disable K3s addons: coredns, local path, servicelb, traefik and metric-server
+  # Disable K3s addons: coredns, local path, servicelb, traefik, metric-server and gateway-api-crd
+  # gateway-api-crd: K3s >= v1.37 bundles the Gateway API CRDs as a HelmChart addon, which
+  # cannot be applied with the Helm controller disabled. Gateway API CRDs are provided by
+  # Envoy Gateway through Flux instead. Disabling it requires K3s >= v1.37.2.
   disable:
     - coredns
     - local-storage
     - servicelb
     - traefik
     - metrics-server
+    - gateway-api-crd
   write-kubeconfig-mode: 644
   node-taint:
     - 'node-role.kubernetes.io/control-plane:NoSchedule'

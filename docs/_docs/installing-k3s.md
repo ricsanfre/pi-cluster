@@ -2,7 +2,7 @@
 title: K3S Installation
 permalink: /docs/k3s-installation/
 description: How to install K3s, a lightweight kubernetes distribution, in our Pi Kubernetes cluster. Single master node and high availability deployment can be used.
-last_modified_at: "15-08-2025"
+last_modified_at: "14-11-2026"
 ---
 
 
@@ -277,6 +277,7 @@ Embedded etcd data store will be used. Installation procedure is described in K3
   - local-storage
   - servicelb
   - traefik
+  - gateway-api-crd
   etcd-expose-metrics: true
   kube-controller-manager-arg:
   - bind-address=0.0.0.0
@@ -766,7 +767,7 @@ Manifests are tracked as `AddOn` custom resources (CRD) in the `kube-system` nam
 
 Installation of this addOns can be disabled during k3s installation:
 
-- `--disable '<addon>'`: Where `<addon>` can be `coredns`, `traefik`, `local-storage` or `metric-server`
+- `--disable '<addon>'`: Where `<addon>` can be `coredns`, `traefik`, `local-storage`, `metric-server` or `gateway-api-crd` (K3s >= `v1.37.2`)
 
 ### Helm Add-ons
 
@@ -783,6 +784,21 @@ To disable K3s HelmChart Controller the following additional installation option
 If HelmChart controller is disabled Traefik add-ons need to be disabled as well
 
 - `--disable 'traefik'`: to disable Traefik installation
+
+{{site.data.alerts.warning}}
+Since K3s `v1.37`, the Kubernetes Gateway API CRDs are bundled as a packaged add-on named
+`gateway-api-crd`. It is deployed as a `HelmChart` custom resource, so it cannot be applied when the
+Helm controller is disabled: the `helm.cattle.io` CRDs are never registered and the K3s add-on
+controller retries the apply every few seconds, logging
+`ApplyManifestFailed ... the server could not find the requested resource` and flooding the event
+stream. When the Helm controller is disabled, disable this add-on as well. The option is accepted from
+K3s `v1.37.2+k3s1` onwards:
+
+- `--disable 'gateway-api-crd'`: to disable the bundled Gateway API CRDs add-on
+{{site.data.alerts.end}}
+
+In this cluster the Gateway API CRDs are installed by Envoy Gateway through FluxCD, so the packaged
+add-on is redundant.
 
 
 See further details in [K3s documentationt - Managing k3s packaged components](https://docs.k3s.io/installation/packaged-components)
