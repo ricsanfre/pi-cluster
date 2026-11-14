@@ -24,6 +24,6 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - ingress.yaml
-  # Enabled for the barman-cloud-plugin POC (design/adr/0013). It brings the
-  # CloudNativePG operator and the Barman Cloud plugin into `databases`.
+  # CloudNativePG backs the Keycloak and e-commerce databases. The profile
+  # also installs the Barman Cloud plugin required by design/adr/0013.
   - cnpg.yaml

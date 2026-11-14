@@ -4,7 +4,8 @@
 # recoveryTarget.targetTime sits between the phase A base backup (10:39:49)
 # and the phase B plugin base backup (10:46:32), so recovery must start from
 # the in-tree backup and replay WAL archived across the switch. Expect only
-# the phase-a marker.
+# the phase-a marker. This timestamp is recorded PoC evidence: adjust it for
+# a new run.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:

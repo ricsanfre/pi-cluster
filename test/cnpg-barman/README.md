@@ -58,6 +58,9 @@ cd test/cnpg-barman
 
 `restore-intree` deletes `pg-poc-restore` first to keep the namespace inside its
 memory quota; the two restore clusters are never needed at the same time.
+`restore/restore-cluster-intree.yaml` carries the `targetTime` recorded during
+the 2026-11-14 run; a new run must set it between its own phase A and phase B
+backups.
 
 Capture the output of `wal`, `measure`, and the rollout from `phase-b` into the
 ADR's "Proof of Concept" section before teardown.

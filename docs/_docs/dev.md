@@ -369,8 +369,9 @@ in `kubernetes/clusters/dev/profiles/poc-my-poc.yaml`. Add that file to
 
 The Barman Cloud plugin migration rehearsal ([ADR 0013](https://github.com/ricsanfre/pi-cluster/blob/master/design/adr/0013-barman-cloud-plugin-migration.md))
 does not use that template: it needs a CloudNativePG `Cluster` in a dev-only
-namespace, so it is script-driven from `test/cnpg-barman/` with the `cnpg`
-profile enabled. See `test/cnpg-barman/README.md` for the gate order.
+namespace, so it is script-driven from `test/cnpg-barman/`. The `cnpg` profile
+(enabled by default) provides the operator and the plugin. See
+`test/cnpg-barman/README.md` for the gate order.
 
 ### Resource budget
 
