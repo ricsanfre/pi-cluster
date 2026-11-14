@@ -2,7 +2,7 @@
 title: What is this project about?
 permalink: /docs/home/
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible, Terraform and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "06-07-2026"
+last_modified_at: "14-11-2026"
 ---
 
 
@@ -199,7 +199,6 @@ From software perspective, I have developed the following:
    | [ricsanfre.storage](https://galaxy.ansible.com/ricsanfre/storage)| Configure LVM | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-storage) |
    | [ricsanfre.iscsi_target](https://galaxy.ansible.com/ricsanfre/iscsi_target)| Configure iSCSI Target| [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_target) |
    | [ricsanfre.iscsi_initiator](https://galaxy.ansible.com/ricsanfre/iscsi_initiator)| Configure iSCSI Initiator | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-iscsi_initiator) |
-   | [ricsanfre.k8s_cli](https://galaxy.ansible.com/ricsanfre/k8s_cli)| Install kubectl and Helm utilities | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-k8s_cli) |
    | [ricsanfre.fluentbit](https://galaxy.ansible.com/ricsanfre/fluentbit)| Configure fluentbit | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-fluentbit) |
    | [ricsanfre.rustfs](https://galaxy.ansible.com/ricsanfre/rustfs)| Configure RustFS S3 server | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-rustfs) |
    | [ricsanfre.minio](https://galaxy.ansible.com/ricsanfre/minio)| Configure MinIO S3 server (legacy) | [{{site.data.icons.github}}](https://github.com/ricsanfre/ansible-role-minio) |
