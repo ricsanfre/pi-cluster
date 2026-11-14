@@ -14,7 +14,7 @@ spec:
   hard:
     requests.cpu: "2"
     requests.memory: 2Gi
-    limits.memory: 3Gi
+    limits.memory: 4Gi
     pods: "20"
 ---
 apiVersion: v1

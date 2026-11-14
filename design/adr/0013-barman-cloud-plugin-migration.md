@@ -164,8 +164,9 @@ away a hard constraint.
 ### Negative
 
 - One more controller to run and monitor on a power-constrained homelab.
-- A sidecar is added to every PostgreSQL instance. With 2 instances per cluster and 4 in total, the
-  memory cost must be measured before prod rollout.
+- A sidecar is added to every PostgreSQL instance. Measured in the dev PoC: ~15 MiB idle per
+  instance (<70 MiB for the 4 instances) and 294–356 MiB while a restarted instance restores WAL,
+  with a 512 MiB limit and a 500m CPU limit recommended.
 - Each cluster takes a rolling restart when the migration is applied.
 
 ### Neutral
@@ -259,13 +260,47 @@ Open questions the PoC must answer:
 | Behaviour of the rolling restart on a 2-instance cluster | Temporary single-instance exposure |
 | Does `endpointCA` need to be set in production? | The dev RustFS uses a private CA; the production endpoint may not |
 
+### PoC results (2026-11-14, dev k3d)
+
+Environment: CloudNativePG chart `0.29.1` (app `1.30.1`), plugin chart `0.8.1` (app
+`v0.15.1`), RustFS `1.0.4` over TLS with the dev CA, 2-instance cluster in `cnpg-barman`.
+
+| Gate | Result |
+| --- | --- |
+| In-tree baseline | `ContinuousArchiving=True`; WAL archived (`failed_count=0`); base backup `poc-intree-5kkwh` completed |
+| Switch to the plugin | `spec.backup` removed, `spec.plugins` added, `ObjectStore` created, `ScheduledBackup.method=plugin`; rolling restart, primary stayed `pg-poc-1`, pods recreated one at a time (`READY 2/2`, sidecar as a restartable init container) |
+| barman-cloud against RustFS | `barman-cloud-backup 3.20.1` in the sidecar; plugin base backup `poc-plugin-rxzch` completed; scheduled backup `pg-poc-intree-daily-20261114103600` completed |
+| WAL continuity | Archiving continued after the switch; `last_archived_wal` advanced `…005` → `…009`; recovery replayed WAL written after the switch |
+| Restore from the plugin's latest backup | `pg-poc-restore`: markers `phase-a` and `phase-b` recovered |
+| Restore from the **in-tree** backup | `pg-poc-restore-intree` with `targetTime` before the plugin backup: only `phase-a` recovered, i.e. the plugin read the base backup written by the in-tree code and replayed plugin-archived WAL across the switch |
+| Sidecar footprint | idle 14–17 MiB, <1m CPU; peak while restoring WAL on a restarted standby 294–356 MiB at 250m CPU (capped by the limit). Restored clusters keep no sidecar after bootstrap |
+| ScheduledBackup plugin path | `method: plugin` + `pluginConfiguration` created and completed a backup |
+
+Findings that change the migration plan:
+
+- **256 MiB is not enough for the sidecar.** With `instanceSidecarConfiguration.resources`
+  memory limit `256Mi`, the sidecar on the restarted standby was `OOMKilled` while restoring WAL;
+  `pg_stat_archiver.failed_count` rose by 6 and one segment was retried. PostgreSQL retried it and
+  the archive caught up, and the restore proved there is no gap, but the limit must be set before
+  the switch. Production values: requests `50m`/`64Mi`, memory limit `512Mi`, CPU limit `500m`
+  (250m throttled the catch-up).
+- **The sidecar is injected into every instance pod** as a restartable init container named
+  `plugin-barman-cloud`, so `kubectl top pod --containers` and resource reasoning must look at
+  `initContainers`, not `spec.containers`.
+- **The standby is the expensive instance during a rollout**, not the primary: its sidecar
+  restores WAL from the object store to catch up after the pod restart.
+- **Production needs `endpointCA` only if the RustFS certificate is not publicly trusted.** The
+  dev endpoint uses the private dev CA and requires it; the production endpoint was not
+  reachable from the PoC environment to confirm.
+- The operator's deprecation warning still says "removed in 1.31.0", matching the note above.
+
 ## Risks
 
 | Risk | Mitigation |
 | --- | --- |
-| Sidecar footprint degrades 8 GB nodes | Measure in the PoC; set explicit requests/limits in the chart values |
+| Sidecar footprint degrades 8 GB nodes | Set `instanceSidecarConfiguration.resources` explicitly: requests 50m/64Mi, memory limit 512Mi, CPU limit 500m. 256Mi was OOMKilled during WAL catch-up; idle use is ~15Mi |
 | WAL gap during migration | Take a base backup immediately before; verify `ContinuousArchiving=True` and a restore after |
-| RustFS incompatibility with barman 3.20.1 | PoC gate before any prod change |
+| RustFS incompatibility with barman 3.20.1 | Verified in the dev PoC; re-check against production RustFS before the switch |
 | Plugin chart supports only the latest plugin point release | Pin chart `0.8.1`; upgrade deliberately |
 | Operator/plugin namespace coupling | Both stay in `databases`; document it in the service runbook |
 

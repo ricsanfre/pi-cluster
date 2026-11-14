@@ -28,11 +28,14 @@ spec:
       maxParallel: 8
   retentionPolicy: "7d"
   # Sidecar footprint gate: explicit requests/limits so the PoC measures
-  # usage, not scheduler defaults. Values are PoC starting points.
+  # usage, not scheduler defaults. 256Mi was OOMKilled while restoring WAL on a
+  # standby; 250m CPU throttled the catch-up. These are the recommended prod
+  # values (requests 50m/64Mi in practice; the PoC keeps 25m/64Mi).
   instanceSidecarConfiguration:
     resources:
       requests:
         cpu: 25m
         memory: 64Mi
       limits:
-        memory: 256Mi
+        cpu: 500m
+        memory: 512Mi

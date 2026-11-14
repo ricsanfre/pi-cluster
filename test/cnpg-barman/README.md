@@ -15,12 +15,12 @@ migration actually adds.
 | Gate | Command | Pass condition |
 | --- | --- | --- |
 | In-tree baseline still works | `./poc.sh phase-a`, `./poc.sh marker phase-a`, `./poc.sh backup intree` | `ContinuousArchiving=True`, WAL segment advances, base backup `completed` |
-| Plugin reaches RustFS with barman-cloud 3.20.1 (sidecar) | `./poc.sh phase-b`, `./poc.sh marker phase-b` | WAL segment advances after the switch, `failed_count=0` |
-| Pre-switch backups stay readable | `./poc.sh restore` | `pg-poc-restore` Ready, `poc_marker` shows the `phase-a` row |
+| Plugin reaches RustFS with barman-cloud 3.20.1 (sidecar) | `./poc.sh phase-b`, `./poc.sh marker phase-b` | WAL segment advances after the switch, `failed_count` stops increasing |
+| Pre-switch backups stay readable | `./poc.sh restore-intree` | `pg-poc-restore-intree` Ready, only the `phase-a` marker recovered |
 | WAL archived after the switch is replayed | `./poc.sh restore` | `poc_marker` shows the `phase-b` row as well |
-| Sidecar footprint | `./poc.sh measure` | per-container usage recorded; decide requests/limits for prod |
-| Rolling restart on a 2-instance cluster | `./poc.sh phase-b` | both pods recreated, cluster returns Ready; note the single-instance window |
-| ScheduledBackup plugin syntax | `./poc.sh status` | `pg-poc-intree-daily` has `METHOD=plugin` |
+| Sidecar footprint | `./poc.sh measure` | idle ~15Mi; peak ~300-360Mi while restoring WAL |
+| Rolling restart on a 2-instance cluster | `./poc.sh phase-b` | both pods recreated, primary retained or switchover logged; note the single-instance window |
+| ScheduledBackup plugin syntax | `./poc.sh status` | `pg-poc-intree-daily` has `METHOD=plugin`; a scheduled backup completes |
 
 `phase-b` keeps the same cluster name, so the manifest diff is exactly the
 production change: `spec.backup` removed, `spec.plugins` added, `ObjectStore`
@@ -51,9 +51,13 @@ cd test/cnpg-barman
 ./poc.sh marker phase-b  # prove WAL archived by the sidecar
 ./poc.sh backup plugin   # base backup with the plugin method
 ./poc.sh measure         # sidecar CPU/memory per instance
-./poc.sh restore         # pg-poc-restore reading the same object store
+./poc.sh restore         # latest backup: phase-a + phase-b markers
+./poc.sh restore-intree  # targetTime before the plugin backup: phase-a only
 ./poc.sh status
 ```
+
+`restore-intree` deletes `pg-poc-restore` first to keep the namespace inside its
+memory quota; the two restore clusters are never needed at the same time.
 
 Capture the output of `wal`, `measure`, and the rollout from `phase-b` into the
 ADR's "Proof of Concept" section before teardown.
@@ -82,6 +86,12 @@ The dev bucket prefix `s3://k3s-barman/poc/cnpg-barman` is left in RustFS;
   only needed if the RustFS endpoint certificate is not publicly trusted.
 - `ObjectStore.spec.configuration.serverName` must stay empty. The restore
   cluster passes `serverName` as a plugin parameter instead.
+- The sidecar is injected as a restartable init container named
+  `plugin-barman-cloud`, not as a regular container. `kubectl top pod
+  --containers` and any resource reasoning must look at `initContainers`.
+- Do not set a 256Mi memory limit on the sidecar: it was `OOMKilled` while
+  restoring WAL on a restarted standby. The PoC uses 512Mi memory and 500m CPU
+  (250m throttled the catch-up) and measured an idle footprint of ~15Mi.
 - If archiving fails with an `x-amz-content-sha256` error, add the
   `AWS_REQUEST_CHECKSUM_CALCULATION` / `AWS_RESPONSE_CHECKSUM_VALIDATION`
   workaround from the plugin documentation to

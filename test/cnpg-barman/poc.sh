@@ -227,9 +227,27 @@ cmd_restore() {
   apply "$SCRIPT_DIR/restore/restore-cluster.yaml"
   wait_cluster "$RESTORE_CLUSTER" 1200s
   echo
-  echo "== Markers recovered into $RESTORE_CLUSTER =="
-  local p
-  p="$(kubectl -n "$NS" get cluster "$RESTORE_CLUSTER" -o jsonpath='{.status.currentPrimary}')"
+  echo "== Markers recovered into $RESTORE_CLUSTER (latest backup) =="
+  print_markers "$RESTORE_CLUSTER"
+}
+
+# Point-in-time restore that forces the pre-switch in-tree base backup: the
+# target time falls between the phase A backup and the phase B plugin backup.
+cmd_restore_intree() {
+  require_dev
+  require_poc_secrets
+  # Keep the namespace inside its memory quota: one restore cluster at a time.
+  kubectl -n "$NS" delete cluster "$RESTORE_CLUSTER" --ignore-not-found --wait=true --timeout=300s
+  apply "$SCRIPT_DIR/restore/restore-cluster-intree.yaml"
+  wait_cluster "pg-poc-restore-intree" 1200s
+  echo
+  echo "== Markers recovered into pg-poc-restore-intree (in-tree backup + plugin WAL) =="
+  print_markers "pg-poc-restore-intree"
+}
+
+print_markers() {
+  local cluster="$1" p
+  p="$(kubectl -n "$NS" get cluster "$cluster" -o jsonpath='{.status.currentPrimary}')"
   kubectl -n "$NS" exec "$p" -c postgres -- \
     psql -U postgres -d app -tAc "SELECT label, inserted_at FROM poc_marker ORDER BY id;"
 }
@@ -287,6 +305,7 @@ Commands:
   phase-b       Apply the ObjectStore and switch the cluster to the plugin
   wal           Print pg_stat_archiver and the ObjectStore recovery window
   restore       Create pg-poc-restore from the object store and print markers
+  restore-intree  Restore before the plugin backup: proves the in-tree base backup is readable
   measure       Show per-container CPU/memory of the instance pods
   status        Clusters, archiving condition, backups, pods
   down          Delete every POC resource in namespace/$NS
@@ -301,6 +320,7 @@ case "${1:-}" in
   phase-b) cmd_phase_b ;;
   wal) cmd_wal ;;
   restore) cmd_restore ;;
+  restore-intree) cmd_restore_intree ;;
   measure) cmd_measure ;;
   status) cmd_status ;;
   down) cmd_down ;;
