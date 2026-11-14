@@ -16,6 +16,8 @@ spec:
   # step. The job is created immediately and blocks in this container, which
   # means jobActiveDeadlineSecs must cover the whole server rollout plus the
   # agent upgrade - not just the agent upgrade.
+  # Raise this value here only. Editing the k3s-server plan changes its hash and
+  # re-triggers the control-plane rollout.
   prepare:
     image: rancher/k3s-upgrade
     args:

@@ -17,7 +17,10 @@ spec:
       effect: NoSchedule
   serviceAccountName: system-upgrade
   concurrency: 1
-  jobActiveDeadlineSecs: 3600
+  # Leave this at the default-ish 1800. Changing ANY spec field changes the
+  # plan hash, which makes the controller treat every server as due for upgrade
+  # and re-rolls the whole control plane.
+  jobActiveDeadlineSecs: 1800
   # Cordon node before upgrade it
   cordon: true
   upgrade:
