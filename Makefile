@@ -33,6 +33,7 @@ ANSIBLE_LOCAL_COLLECTIONS_DIR := $(HOME)/.ansible/collections
 	configure-os-backup \
 	os-backup \
 	k3s-install \
+	k3s-config \
 	k3s-bootstrap \
 	k3s-bootstrap-dev \
 	k3s-reset \
@@ -124,6 +125,9 @@ os-backup: ## Trigger restic backup on all cluster nodes
 
 k3s-install: ## Install k3s on cluster nodes
 	$(RUNNER) ansible-playbook k3s_install.yml
+
+k3s-config: ## Apply K3s server config with a rolling restart (no reinstall)
+	$(RUNNER) ansible-playbook k3s_config.yml
 
 k3s-bootstrap: ## Bootstrap k3s services and addons
 	$(RUNNER) ansible-playbook k3s_bootstrap.yml

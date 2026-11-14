@@ -1,0 +1,74 @@
+---
+# Apply configuration-only changes to the K3s control-plane nodes.
+#
+# Renders /etc/rancher/k3s/config.yaml from the same template used by the full
+# install (roles/k3s/master/templates/config.yml.j2). K3s is restarted only when
+# the rendered file actually changed, and the upstream installer is never run,
+# so this is safe against a running cluster.
+#
+# Servers are processed one at a time (`serial: 1`) so etcd keeps quorum, and
+# each one must report ready before the next is touched.
+#
+# Use it for options that only affect the server configuration file, such as the
+# `disable:` add-on list. Do not use k3s_install.yml for those: in HA mode it
+# only runs the installer on the primary master, so the secondary masters would
+# get the new file but never restart K3s.
+#
+# Usage: make k3s-config
+
+- name: Apply K3s server configuration
+  hosts: k3s_master
+  serial: 1
+  become: true
+  vars:
+    k3s_token_file: "{{ k3s_config_directory }}/cluster-token"
+  tasks:
+    - name: Load cluster variables
+      ansible.builtin.include_vars: "vars/picluster.yml"
+
+    # Facts consumed by the configuration template. They mirror the values the
+    # k3s master role computes during a full install, but are always defined so
+    # the template can be rendered on secondary servers too.
+    - name: Set k3s cluster topology facts
+      ansible.builtin.set_fact:
+        k3s_build_cluster: "{{ (groups['k3s_master'] | default([]) | length) > 1 }}"
+        k3s_primary_control_node: "{{ inventory_hostname == groups['k3s_master'][0] }}"
+        k3s_registration_ip: "{{ k3s_api_vip | default(hostvars[groups['k3s_master'][0]].ansible_host) }}"
+
+    - name: Render K3s server configuration
+      ansible.builtin.template:
+        src: roles/k3s/master/templates/config.yml.j2
+        dest: "{{ k3s_config_directory }}/config.yaml"
+        mode: "0644"
+      register: k3s_config_render
+      notify: Restart K3s
+
+    # Run the restart now rather than at the end of the play, so that each server
+    # is confirmed healthy before `serial` moves on to the next one. With no
+    # change notified this is a no-op and K3s is left alone.
+    - name: Apply pending restart before health checks
+      ansible.builtin.meta: flush_handlers
+
+    - name: Wait for the Kubernetes API to listen again
+      ansible.builtin.wait_for:
+        host: localhost
+        port: 6443
+        delay: 5
+        timeout: 180
+      when: k3s_config_render is changed
+
+    - name: Wait for the API server to report ready
+      ansible.builtin.command:
+        cmd: k3s kubectl get --raw /readyz
+      register: k3s_readyz
+      until: k3s_readyz.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+      when: k3s_config_render is changed
+
+  handlers:
+    - name: Restart K3s
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted

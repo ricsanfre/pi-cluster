@@ -930,3 +930,25 @@ For resetting the cluster execute:
 ```shell
 ansible-playbook k3s_reset.yml
 ```
+
+### Applying configuration-only changes
+
+Do not use `k3s_install.yml` to roll out a change that only affects
+`/etc/rancher/k3s/config.yaml` (for example the `disable:` add-on list). It re-runs the upstream
+installer, re-applies unrelated Helm releases and CRDs, and in an HA deployment it only runs the
+installer on the primary master: the secondary masters receive the new configuration file but never
+restart K3s, leaving the file and the running process out of sync.
+
+Use the dedicated playbook instead. It renders the same `config.yml.j2` template, restarts K3s only
+when the file actually changed, and processes the servers one at a time (`serial: 1`), waiting for the
+API server to report ready before touching the next one:
+
+```shell
+make k3s-config
+# equivalent to: ansible-playbook k3s_config.yml
+```
+
+The playbook only targets the control-plane nodes. Worker nodes do not need to be restarted for
+server-side options such as `disable`, since their configuration template (`k3s_agent_config`) does not
+include them.
+
