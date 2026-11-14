@@ -2,7 +2,7 @@
 title: Kubernetes development environment
 permalink: /docs/dev/
 description: How to configure a development environment for the Pi Cluster using K3D, with a manual walkthrough and an automated base + profiles workflow.
-last_modified_at: "09-11-2026"
+last_modified_at: "14-11-2026"
 
 ---
 
@@ -121,7 +121,7 @@ resources:
 | --- | --- | --- |
 | `cert-manager` | cert-manager + self-signed CA issuers | — |
 | `ingress` | Envoy Gateway + dev CA wildcard certificate | `cert-manager` |
-| `cnpg` | CloudNativePG operator | — |
+| `cnpg` | CloudNativePG operator + Barman Cloud plugin | `cert-manager` |
 | `secrets` | External Secrets Operator | Vault (`VAULT=1`) |
 | `observability` | tuned kube-prometheus-stack + Grafana + k3s mixins + external scrape configs | — |
 | `logging` | Loki single-binary + Fluent Bit | — |
@@ -359,13 +359,18 @@ by `dev-poc-new.sh`, and into the other consumer namespaces (`rustfs-ca`,
 
 ```bash
 cd dev
-make dev-poc-new NAME=cnpg-barman
+make dev-poc-new NAME=my-poc
 ```
 
-This creates `test/cnpg-barman/` with a Namespace, ResourceQuota (requests
+This creates `test/my-poc/` with a Namespace, ResourceQuota (requests
 2 GiB, limits 3 GiB), LimitRange and a kustomization, plus a Flux Kustomization
-in `kubernetes/clusters/dev/profiles/poc-cnpg-barman.yaml`. Add that file to
+in `kubernetes/clusters/dev/profiles/poc-my-poc.yaml`. Add that file to
 `profiles/kustomization.yaml` and commit.
+
+The Barman Cloud plugin migration rehearsal ([ADR 0013](https://github.com/ricsanfre/pi-cluster/blob/master/design/adr/0013-barman-cloud-plugin-migration.md))
+does not use that template: it needs a CloudNativePG `Cluster` in a dev-only
+namespace, so it is script-driven from `test/cnpg-barman/` with the `cnpg`
+profile enabled. See `test/cnpg-barman/README.md` for the gate order.
 
 ### Resource budget
 

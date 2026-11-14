@@ -1,0 +1,32 @@
+---
+# Barman Cloud CNPG-I plugin.
+# Must run in the same namespace as the CloudNativePG operator (databases):
+# the operator discovers plugins by watching Services labelled
+# cnpg.io/pluginName in its own namespace.
+# The HelmRepository is the one created by the cloudnative-pg app; the Flux
+# Kustomization that applies this overlay dependsOn cloudnative-pg-app.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plugin-barman-cloud
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: plugin-barman-cloud
+      version: 0.8.1
+      sourceRef:
+        kind: HelmRepository
+        name: cloudnative-pg
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+    - kind: ConfigMap
+      name: plugin-barman-cloud-helm-values
+      valuesKey: base-values.yaml

@@ -31,6 +31,7 @@ paths=(
   "kubernetes/platform/envoy-gateway/app/overlays/dev"
   "kubernetes/platform/envoy-gateway/config/overlays/dev"
   "kubernetes/platform/databases/cloudnative-pg/app/overlays/dev"
+  "kubernetes/platform/databases/plugin-barman-cloud/app/overlays/dev"
   "kubernetes/platform/external-secrets/app/overlays/dev"
   "kubernetes/platform/external-secrets/config/overlays/dev"
   "kubernetes/platform/kube-prometheus-stack/prometheus-operator-crds/overlays/dev"

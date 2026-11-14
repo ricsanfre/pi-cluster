@@ -1,0 +1,38 @@
+# Phase B — the ObjectStore that replaces .spec.backup.barmanObjectStore.
+# destinationPath, credentials and compressions are copied verbatim from the
+# phase A cluster, plus endpointCA for the dev RustFS private CA.
+# retentionPolicy moves from the Cluster to the ObjectStore.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: pg-poc-store
+  namespace: cnpg-barman
+spec:
+  configuration:
+    destinationPath: s3://k3s-barman/poc/cnpg-barman
+    endpointURL: https://rustfs.picluster.local.test:9091
+    endpointCA:
+      name: rustfs-ca
+      key: ca.crt
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-poc-s3
+        key: AWS_ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-poc-s3
+        key: AWS_SECRET_ACCESS_KEY
+    data:
+      compression: bzip2
+    wal:
+      compression: bzip2
+      maxParallel: 8
+  retentionPolicy: "7d"
+  # Sidecar footprint gate: explicit requests/limits so the PoC measures
+  # usage, not scheduler defaults. Values are PoC starting points.
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 256Mi

@@ -1,0 +1,13 @@
+# The chart creates certificates for the plugin gRPC endpoint, so it needs
+# cert-manager before the first install.
+- op: add
+  path: /spec/dependsOn
+  value:
+    - name: cert-manager
+      namespace: cert-manager
+- op: add
+  path: /spec/valuesFrom/-
+  value:
+    kind: ConfigMap
+    name: plugin-barman-cloud-helm-values
+    valuesKey: overlay-values.yaml

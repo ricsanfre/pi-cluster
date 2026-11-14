@@ -1,0 +1,17 @@
+# Phase B — ScheduledBackup switched to the plugin. This is the exact change
+# the production postgres-keycloak-daily / postgres-ecommerce-daily objects
+# need.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: pg-poc-intree-daily
+  namespace: cnpg-barman
+spec:
+  schedule: "0 15 3 * * *"
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+  backupOwnerReference: self
+  immediate: false
+  cluster:
+    name: pg-poc

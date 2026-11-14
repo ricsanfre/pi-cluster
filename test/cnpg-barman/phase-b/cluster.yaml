@@ -1,0 +1,37 @@
+# Phase B — the atomic switch: spec.backup is gone, the plugin archives WAL.
+# Everything else is unchanged from phase-a/cluster.yaml so the diff is only
+# the backup configuration.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-poc
+  namespace: cnpg-barman
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6
+
+  storage:
+    size: 2Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  postgresql:
+    parameters:
+      shared_buffers: "64MB"
+      max_connections: "100"
+
+  bootstrap:
+    initdb: {}
+
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: pg-poc-store

@@ -1,0 +1,29 @@
+# plugin-barman-cloud helm values (base)
+#
+# Chart 0.8.1 / plugin v0.15.1. The chart supports only the latest point
+# release of the plugin, so bump chart and image together.
+#
+# The chart requires cert-manager: it creates a self-signed Issuer and the
+# client/server certificates used for the gRPC link between the operator, the
+# plugin and the per-instance sidecar.
+
+crds:
+  # ObjectStore (barmancloud.cnpg.io/v1). Deleting the CRD deletes every
+  # ObjectStore and the backup configuration it holds.
+  create: true
+
+replicaCount: 1
+
+logLevel: info
+
+# Controller resources. The per-instance sidecar is sized separately through
+# ObjectStore.spec.instanceSidecarConfiguration.
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+certificate:
+  createIssuer: true
