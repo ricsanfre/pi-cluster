@@ -2,7 +2,7 @@
 title: Lab Architecture
 permalink: /docs/architecture/
 description: Homelab architecture of our Pi Kubernetes cluster. Cluster nodes, firewall, and Ansible control node. Networking and cluster storage design.
-last_modified_at: "20-06-2026"
+last_modified_at: "14-11-2026"
 ---
 
 
@@ -71,6 +71,41 @@ For building the cluster, using bare metal servers instead of virtual machines, 
   - [1 x ANKER USB Charging Hub](https://www.amazon.es/Anker-Cargador-USB-6-Puertos/dp/B00PTLSH9G/). 6 port USB power supply (60 w and max 12 A)
   - [7 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html).
 
+##### Power distribution
+
+The Raspberry Pi nodes are not powered by individual adapters: they share two 6-port USB chargers.
+
+{{site.data.alerts.note}}
+Both chargers are rated **60 W / 12 A total**, and that limit is shared by every port on the unit, so the
+per-port figures are not additive. A Raspberry Pi 4B with a bus-powered USB SSD draws ~1.7–2 A under load
+(~8–10 W) and can transiently exceed that during I/O bursts or cold boot. The per-port rating is therefore
+the binding constraint, not the total — both chargers run at roughly half of their 12 A capacity.
+{{site.data.alerts.end}}
+
+| Charger | Port | Port rating | Connected to |
+| --- | --- | --- | --- |
+| ANIDEES AI Charger 6+ | 1 | 5 V / 2.5 A (smart) | not in use |
+| | 2 | 5 V / 3 A | `gateway` (GL-iNet Slate Plus) |
+| | 3 | 5 V / 3 A | `node5` |
+| | 4 | 5 V / 3 A | `node4` |
+| | 5, 6 | 5 V / 3 A | not in use |
+| ANKER 6-port hub | 1 | 5 V / 2.4 A (PowerIQ) | not in use |
+| | 2 | 5 V / 2.4 A | not in use (`node6` removed after a hardware failure) |
+| | 3 | 5 V / 2.4 A | `node2` |
+| | 4 | 5 V / 2.4 A | `node1` |
+| | 5 | 5 V / 2.4 A | `node3` |
+| | 6 | 5 V / 2.4 A | not in use |
+{: .table .border-dark }
+
+The GL-iNet GL-A1300 (`gateway`) is specified at 5 V/3 A but consumes < 6.5 W (~1.3 A).
+
+A Raspberry Pi 4B plus USB SSD banks close to the ANKER's 2.4 A per-port limit, so the control-plane nodes
+are better served by a 3 A port or, preferably, a dedicated **official 5.1 V/3 A** supply: the extra 0.1 V
+compensates for the voltage drop across the USB cable, which cheap cables with inline switches make worse.
+
+Under-voltage is monitored per node. The `rpi_metrics` Ansible role exports `rpi_under_voltage_alarm`,
+`rpi_throttled_bits`, `rpi_core_volts` and `rpi_arm_clock_hz` through node_exporter's textfile collector,
+and the `RaspberryPiUnderVoltage` alert fires when a board reports it for five minutes.
 
 #### x86-based old refurbished mini PC
 
