@@ -18,8 +18,6 @@ The development setup is the following:
   `rustfs.picluster.local.test` and `vault.picluster.local.test` resolve to the
   dev addresses without `kubectl port-forward` (see [BIND9](#bind9))
 
-![picluster-dev-k3d](/assets/img/pi-cluster-dev-k3d-architecture.png)
-
 {{site.data.alerts.note}}
 The recommended path is the automated workflow (`make -C dev dev-up`). The
 manual walkthrough below is kept so each step can be understood and debugged.
@@ -172,7 +170,7 @@ Cilium-assigned LoadBalancer IP — `HTTP_GATEWAY_LOAD_BALANCER_IP`, default
 to `172.30.0.0/16` through that bridge, so the gateway is reachable without
 `kubectl port-forward`; only DNS and TLS trust are missing.
 
-![k3d dev network namespaces](/assets/img/pi-cluster-dev-k3d-network.svg)
+![k3d dev network namespaces](/assets/img/pi-cluster-dev-k3d-architecture.png)
 
 The diagram is split by network namespace: the host owns the `picluster` bridge
 and the `veth` side of every pair, the containers own the other side. `veth1`
