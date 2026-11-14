@@ -48,8 +48,7 @@ ANSIBLE_LOCAL_COLLECTIONS_DIR := $(HOME)/.ansible/collections
 	configure-minio \
 	configure-vault \
 	load-external-services-keys \
-	get-pi-status \
-	install-local-utils
+	get-pi-status
 
 help: ## Show this help message
 	@echo "Available targets:"
@@ -168,9 +167,6 @@ load-external-services-keys: ## Load external services keys into the cluster
 
 get-pi-status: ## Get Raspberry Pi throttling status
 	$(RUNNER) ansible -b -m shell -a "pi_throttling" raspberrypi
-
-install-local-utils: ## Install local utility tooling on localhost
-	cd ansible; ansible-playbook install_utilities_localhost.yml --ask-become-pass
 
 configure-minio: ## Configure MinIO Resoures (Terraform)
 	$(RUNNER) ansible-playbook configure_minio.yml
