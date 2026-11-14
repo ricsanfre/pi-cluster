@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart rpi-metrics timer
+  ansible.builtin.systemd:
+    name: rpi-metrics.timer
+    state: restarted

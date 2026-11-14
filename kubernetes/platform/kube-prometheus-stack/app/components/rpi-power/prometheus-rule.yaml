@@ -1,0 +1,37 @@
+---
+# Alerts on the Raspberry Pi power/clock metrics exported by the Ansible
+# `rpi_metrics` role through node_exporter's textfile collector.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rpi-power
+  labels:
+    prometheus: k8s
+spec:
+  groups:
+    - name: rpi-power.rules
+      rules:
+        - alert: RaspberryPiUnderVoltage
+          expr: rpi_under_voltage_alarm == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Raspberry Pi under-voltage on {{ $labels.kubernetes_node }}"
+            description: >-
+              The firmware is reporting under-voltage on {{ $labels.kubernetes_node }},
+              which makes it clock-throttle. Check the board's PSU, USB cable (inline
+              switches add resistance) and which charger port it uses. Sustained
+              under-voltage has caused control-plane hangs on this cluster.
+
+        - alert: RaspberryPiPowerMetricsMissing
+          expr: absent(rpi_under_voltage_alarm)
+          for: 15m
+          labels:
+            severity: info
+          annotations:
+            summary: "Raspberry Pi power metrics are missing"
+            description: >-
+              No rpi_* metrics have been scraped for 15m. Check that the rpi-metrics
+              timer is running on the ARM nodes and that node_exporter is mounting
+              /var/lib/node_exporter/textfile.

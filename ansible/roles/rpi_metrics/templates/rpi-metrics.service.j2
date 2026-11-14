@@ -1,0 +1,6 @@
+[Unit]
+Description=Collect Raspberry Pi power and clock metrics for node_exporter
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/rpi-metrics.sh

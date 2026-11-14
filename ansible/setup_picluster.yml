@@ -68,6 +68,11 @@
     - role: ricsanfre.ntp
       tags: [ntp]
 
+    # Raspberry Pi power/clock metrics for node_exporter (ARM nodes only)
+    - role: rpi_metrics
+      tags: [metrics]
+      when: ansible_facts['architecture'] == 'aarch64'
+
   tasks:
     # Local Storage configuration
     - name: Dedicated Disks

@@ -1,0 +1,8 @@
+---
+# Directory read by node_exporter's textfile collector (hostPath mounted into
+# the node-exporter DaemonSet, see kubernetes/platform/kube-prometheus-stack).
+rpi_metrics_textfile_dir: /var/lib/node_exporter/textfile
+
+# Collection interval. Keep it well below the scrape interval so every scrape
+# sees a fresh file.
+rpi_metrics_interval: 15s

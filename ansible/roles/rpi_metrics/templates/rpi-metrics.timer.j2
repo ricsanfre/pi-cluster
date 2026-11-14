@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodically collect Raspberry Pi power and clock metrics
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec={{ rpi_metrics_interval }}
+AccuracySec=5s
+Unit=rpi-metrics.service
+
+[Install]
+WantedBy=timers.target

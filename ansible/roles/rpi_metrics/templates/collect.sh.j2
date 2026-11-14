@@ -1,0 +1,49 @@
+#!/bin/bash
+# Collect Raspberry Pi power and clock metrics for node_exporter's textfile
+# collector. The file is written atomically so a scrape never reads a partial
+# file.
+#
+# vcgencmd is not exposed by any exporter, and the firmware's under-voltage
+# state (plus the clock cap it causes) is invisible in Prometheus without this.
+
+set -u
+
+out="{{ rpi_metrics_textfile_dir }}/rpi.prom"
+tmp="${out}.$$"
+
+# The rpi_volt hwmon device exposes the firmware under-voltage alarm.
+under_voltage=0
+for hwmon in /sys/class/hwmon/hwmon*; do
+    if [ "$(cat "${hwmon}/name" 2>/dev/null)" = "rpi_volt" ] &&
+        [ "$(cat "${hwmon}/in0_lcrit_alarm" 2>/dev/null)" = "1" ]; then
+        under_voltage=1
+    fi
+done
+
+throttled="$(vcgencmd get_throttled 2>/dev/null | cut -d= -f2)"
+case "${throttled}" in
+    0x*) ;;
+    *) throttled=0x0 ;;
+esac
+
+core_volts="$(vcgencmd measure_volts core 2>/dev/null | sed -e 's/^.*=//' -e 's/V$//')"
+arm_clock="$(vcgencmd measure_clock arm 2>/dev/null | cut -d= -f2)"
+soc_temp="$(vcgencmd measure_temp 2>/dev/null | sed -e 's/^.*=//' -e "s/'C$//")"
+
+{
+    echo '# HELP rpi_under_voltage_alarm Firmware under-voltage state reported right now (1 = active)'
+    echo '# TYPE rpi_under_voltage_alarm gauge'
+    echo "rpi_under_voltage_alarm ${under_voltage}"
+    echo '# HELP rpi_throttled_bits Raw vcgencmd get_throttled bitmask (bit0 under-voltage now, bit1 freq capped, bit2 throttled, bit16-19 occurred)'
+    echo '# TYPE rpi_throttled_bits gauge'
+    echo "rpi_throttled_bits $((throttled))"
+    echo '# HELP rpi_core_volts SoC core voltage in volts'
+    echo '# TYPE rpi_core_volts gauge'
+    echo "rpi_core_volts ${core_volts}"
+    echo '# HELP rpi_arm_clock_hz Current ARM clock in Hz'
+    echo '# TYPE rpi_arm_clock_hz gauge'
+    echo "rpi_arm_clock_hz ${arm_clock}"
+    echo '# HELP rpi_temp_celsius SoC temperature in degrees Celsius'
+    echo '# TYPE rpi_temp_celsius gauge'
+    echo "rpi_temp_celsius ${soc_temp}"
+} > "${tmp}" 2>/dev/null && mv "${tmp}" "${out}"
