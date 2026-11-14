@@ -6,9 +6,14 @@
 prometheus-node-exporter:
   extraArgs:
     - --collector.textfile.directory=/host/textfile
+  # DirectoryOrCreate makes the DaemonSet self-sufficient: node-exporter runs on
+  # every node, and on the x86 nodes nothing writes to this directory, so it is
+  # simply empty there - but kubelet must be able to create it or the pod fails
+  # to start.
   extraHostVolumeMounts:
     - name: textfile
       hostPath: /var/lib/node_exporter/textfile
+      type: DirectoryOrCreate
       mountPath: /host/textfile
       readOnly: true
 
