@@ -32,7 +32,7 @@ services:
         done
 
   rustfs:
-    image: rustfs/rustfs:1.0.4
+    image: rustfs/rustfs:1.0.5
     container_name: dev-rustfs
     restart: unless-stopped
     depends_on:
