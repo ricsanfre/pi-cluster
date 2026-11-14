@@ -11,4 +11,4 @@ opentofu = "1.13.2"
 "github:longhorn/cli" = "1.13.0"
 
 # Versión más reciente estable
-cilium-cli = "0.20.2"
+cilium-cli = "0.20.3"
