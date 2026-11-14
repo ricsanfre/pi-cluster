@@ -884,12 +884,15 @@ See more details in [K3S Automated Upgrades documentation](https://docs.k3s.io/u
         operator: Exists
         effect: NoSchedule
     serviceAccountName: system-upgrade
-    # Wait for k3s-server upgrade plan to complete before executing k3s-agent plan
-    # dependsOn keeps the job from being created until the dependency completes.
-    # Do not use a `prepare` step for this: the job is created immediately and
-    # would burn its jobActiveDeadlineSecs while waiting for the servers.
-    dependsOn:
-      - name: k3s-server
+    # Wait for k3s-server upgrade plan to complete before executing k3s-agent plan.
+    # The Plan CRD has no dependsOn field, so sequencing uses a prepare step. The
+    # job is created immediately and blocks here, so jobActiveDeadlineSecs must
+    # cover the server rollout too.
+    prepare:
+      image: rancher/k3s-upgrade
+      args:
+        - prepare
+        - k3s-server
     concurrency: 1
     jobActiveDeadlineSecs: 3600
     # Cordon node before upgrade it
