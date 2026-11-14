@@ -5,7 +5,7 @@
 # Tunables (environment):
 #   K3D_SERVERS        number of k3d servers (default: 1)
 #   K3D_AGENTS         number of k3d agents (default: 0)
-#   K3S_IMAGE          k3s image (default: rancher/k3s:v1.37.1-k3s1, matching prod)
+#   K3S_IMAGE          k3s image (default: rancher/k3s:v1.37.2-k3s1, matching prod)
 #   K3D_SERVER_MEMORY  memory cap for each server (default: 5g)
 #   K3D_AGENT_MEMORY   memory cap for each agent (default: 3g)
 #   K3D_CLUSTER        k3d cluster name (default: picluster)
@@ -23,7 +23,7 @@ DATA_JSON="$WORK_DIR/data.json"
 K3D_CLUSTER="${K3D_CLUSTER:-picluster}"
 K3D_SERVERS="${K3D_SERVERS:-1}"
 K3D_AGENTS="${K3D_AGENTS:-0}"
-K3S_IMAGE="${K3S_IMAGE:-rancher/k3s:v1.37.1-k3s1}"
+K3S_IMAGE="${K3S_IMAGE:-rancher/k3s:v1.37.2-k3s1}"
 K3D_SERVER_MEMORY="${K3D_SERVER_MEMORY:-5g}"
 K3D_AGENT_MEMORY="${K3D_AGENT_MEMORY:-3g}"
 
