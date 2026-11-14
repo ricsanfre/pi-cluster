@@ -856,7 +856,9 @@ See more details in [K3S Automated Upgrades documentation](https://docs.k3s.io/u
           operator: Exists
     serviceAccountName: system-upgrade
     concurrency: 1
-    jobActiveDeadlineSecs: 3600
+    # Do not change this field: any spec change alters the plan hash and makes
+    # the controller re-roll every server node.
+    jobActiveDeadlineSecs: 1800
     # Cordon node before upgrade it
     cordon: true
     upgrade:
