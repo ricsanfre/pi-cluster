@@ -14,3 +14,25 @@ spec:
   prune: true
   wait: true
   timeout: 10m
+---
+# Barman Cloud CNPG-I plugin. Same namespace as the operator (databases):
+# CloudNativePG discovers plugins through Services labelled cnpg.io/pluginName
+# in its own namespace. Reused HelmRepository is created by cloudnative-pg-app.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: plugin-barman-cloud-app
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: databases
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cloudnative-pg-app
+    - name: cert-manager-app
+  path: ./kubernetes/platform/databases/plugin-barman-cloud/app/overlays/dev
+  prune: true
+  wait: true
+  timeout: 5m

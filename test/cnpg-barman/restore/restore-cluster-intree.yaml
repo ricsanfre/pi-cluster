@@ -1,0 +1,42 @@
+# Restore rehearsal #2 — force the plugin to read the base backup written by
+# the in-tree code before the switch.
+#
+# recoveryTarget.targetTime sits between the phase A base backup (10:39:49)
+# and the phase B plugin base backup (10:46:32), so recovery must start from
+# the in-tree backup and replay WAL archived across the switch. Expect only
+# the phase-a marker. This timestamp is recorded PoC evidence: adjust it for
+# a new run.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-poc-restore-intree
+  namespace: cnpg-barman
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6
+
+  storage:
+    size: 2Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  bootstrap:
+    recovery:
+      source: pg-poc-source
+      recoveryTarget:
+        targetTime: "2026-11-14T10:44:00Z"
+
+  externalClusters:
+    - name: pg-poc-source
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: pg-poc-store
+          serverName: pg-poc

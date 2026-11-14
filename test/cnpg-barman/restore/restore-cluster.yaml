@@ -1,0 +1,38 @@
+# Restore rehearsal — the shape KEYCLOAK-003 / PG-001 must adopt:
+# externalClusters[].plugin with barmanObjectName + serverName instead of
+# externalClusters[].barmanObjectStore.
+#
+# No spec.plugins: the restored cluster must not archive into the source's
+# destination path. It only reads the object store to recover.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-poc-restore
+  namespace: cnpg-barman
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6
+
+  storage:
+    size: 2Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  bootstrap:
+    recovery:
+      source: pg-poc-source
+
+  externalClusters:
+    - name: pg-poc-source
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: pg-poc-store
+          serverName: pg-poc

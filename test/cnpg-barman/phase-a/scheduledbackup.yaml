@@ -1,0 +1,15 @@
+# Phase A — in-tree ScheduledBackup. Destination and credentials come from
+# spec.backup.barmanObjectStore; no backup fires on its own, poc.sh triggers
+# explicit base backups so each gate is observed.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: pg-poc-intree-daily
+  namespace: cnpg-barman
+spec:
+  schedule: "0 15 3 * * *"
+  method: barmanObjectStore
+  backupOwnerReference: self
+  immediate: false
+  cluster:
+    name: pg-poc

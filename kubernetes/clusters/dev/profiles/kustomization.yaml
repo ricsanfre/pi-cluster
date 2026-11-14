@@ -8,7 +8,7 @@ kind: Kustomization
 # Available profiles:
 #   cert-manager.yaml  cert-manager + self-signed CA issuers
 #   ingress.yaml       Envoy Gateway + dev CA wildcard certificate (requires cert-manager)
-#   cnpg.yaml          CloudNativePG operator
+#   cnpg.yaml          CloudNativePG operator + Barman Cloud plugin
 #   secrets.yaml       External Secrets Operator (optional external Vault)
 #   observability.yaml kube-prometheus-stack + Grafana + k3s mixins + external scrape configs
 #   logging.yaml       Loki single-binary + Fluent Bit
@@ -24,3 +24,6 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - ingress.yaml
+  # CloudNativePG backs the Keycloak and e-commerce databases. The profile
+  # also installs the Barman Cloud plugin required by design/adr/0013.
+  - cnpg.yaml
