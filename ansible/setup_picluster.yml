@@ -68,10 +68,10 @@
     - role: ricsanfre.ntp
       tags: [ntp]
 
-    # Raspberry Pi power/clock metrics for node_exporter (ARM nodes only)
+    # node_exporter textfile directory on every node; the collector itself is
+    # installed on ARM nodes only (see the role)
     - role: rpi_metrics
       tags: [metrics]
-      when: ansible_facts['architecture'] == 'aarch64'
 
   tasks:
     # Local Storage configuration

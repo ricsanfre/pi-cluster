@@ -1,0 +1,51 @@
+---
+# Raspberry Pi only: `vcgencmd get_throttled` is not exposed by any exporter, so
+# without this the under-voltage state (and the firmware clock cap it causes) is
+# invisible in Prometheus. The kernel already exposes the same condition as a
+# hwmon alarm:
+#   /sys/class/hwmon/hwmonN/in0_lcrit_alarm   (name = rpi_volt)
+
+- name: Install Raspberry Pi metrics collector
+  ansible.builtin.template:
+    src: collect.sh.j2
+    dest: /usr/local/bin/rpi-metrics.sh
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart rpi-metrics timer
+
+- name: Install Raspberry Pi metrics service
+  ansible.builtin.template:
+    src: rpi-metrics.service.j2
+    dest: /etc/systemd/system/rpi-metrics.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart rpi-metrics timer
+
+- name: Install Raspberry Pi metrics timer
+  ansible.builtin.template:
+    src: rpi-metrics.timer.j2
+    dest: /etc/systemd/system/rpi-metrics.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart rpi-metrics timer
+
+- name: Enable and start Raspberry Pi metrics timer
+  ansible.builtin.systemd:
+    name: rpi-metrics.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  # The unit file is not written in check mode, so systemd cannot act on it.
+  when: not ansible_check_mode
+
+- name: Collect metrics once so a file exists before the first timer run
+  ansible.builtin.command:
+    cmd: /usr/local/bin/rpi-metrics.sh
+  changed_when: false

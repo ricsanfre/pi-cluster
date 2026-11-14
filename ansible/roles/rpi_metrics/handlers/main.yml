@@ -7,3 +7,5 @@
   ansible.builtin.systemd:
     name: rpi-metrics.timer
     state: restarted
+  # The unit file is not written in check mode, so systemd cannot act on it.
+  when: not ansible_check_mode
