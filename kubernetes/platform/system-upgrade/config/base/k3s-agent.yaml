@@ -12,11 +12,15 @@ spec:
         operator: DoesNotExist
   serviceAccountName: system-upgrade
   # Wait for k3s-server upgrade plan to complete before executing k3s-agent plan.
-  # dependsOn keeps the agent job from being created until the server plan is
-  # complete. Do not gate this with a `prepare` step: the job is created
-  # immediately and would consume jobActiveDeadlineSecs while waiting.
-  dependsOn:
-    - name: k3s-server
+  # The Plan CRD has no `dependsOn` field, so sequencing is done with a prepare
+  # step. The job is created immediately and blocks in this container, which
+  # means jobActiveDeadlineSecs must cover the whole server rollout plus the
+  # agent upgrade - not just the agent upgrade.
+  prepare:
+    image: rancher/k3s-upgrade
+    args:
+      - prepare
+      - k3s-server
   concurrency: 1
   jobActiveDeadlineSecs: 3600
   # Cordon node before upgrade it
