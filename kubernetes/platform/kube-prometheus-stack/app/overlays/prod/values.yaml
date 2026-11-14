@@ -1,5 +1,17 @@
 # kube-prometheus-stack helm values (prod overlay)
 
+# node_exporter scrapes the Raspberry Pi power/clock metrics written by the
+# Ansible `rpi_metrics` role (vcgencmd under-voltage state and clock cap).
+# Prod-only: the k3d dev cluster has no ARM nodes and no collector.
+prometheus-node-exporter:
+  extraArgs:
+    - --collector.textfile.directory=/host/textfile
+  extraHostVolumeMounts:
+    - name: textfile
+      hostPath: /var/lib/node_exporter/textfile
+      mountPath: /host/textfile
+      readOnly: true
+
 # AlertManager configuration
 alertmanager:
   alertmanagerSpec:
