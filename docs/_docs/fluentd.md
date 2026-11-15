@@ -1337,7 +1337,7 @@ metadata:
     app: fluentd
   annotations:
     io.cilium/lb-ipam-ips: ${FLUENTD_LOAD_BALANCER_IP}
-    external-dns.alpha.kubernetes.io/hostname: fluentd.${CLUSTER_DOMAIN}
+    external-dns.kubernetes.io/hostname: fluentd.${CLUSTER_DOMAIN}
   name: fluentd-ext
   namespace: logging
 spec:

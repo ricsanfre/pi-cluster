@@ -297,7 +297,7 @@ metadata:
   name: https-redirect
   namespace: networking
   annotations:
-    external-dns.alpha.kubernetes.io/controller: none
+    external-dns.kubernetes.io/controller: none
 spec:
   parentRefs:
     - name: public-gateway
