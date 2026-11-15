@@ -67,9 +67,9 @@ For building the cluster, using bare metal servers instead of virtual machines, 
   - [6 x Startech USB 3.0 to SATA III Adapter](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84) for connecting SSD disk to USB 3.0 ports.
   - [1 x GeeekPi Pi Rack Case](https://www.amazon.es/GeeekPi-Raspberry-Ventilador-refrigeraci%C3%B3n-disipador/dp/B07Z4GRQGH/ref=sr_1_11). It comes with a stack for 4 x Raspberry Pi’s, plus heatsinks and fans)
   - [1 x SSD Rack Case](https://www.aliexpress.com/i/33008511822.html)
-  - [1 x ANIDEES AI CHARGER 6+](https://www.tiendatec.es/raspberry-pi/raspberry-pi-alimentacion/796-anidees-ai-charger-6-cargador-usb-6-puertos-5v-60w-12a-raspberry-pi-4712909320214.html). 6 port USB power supply (60 W and max 12 A)
+  - [1 x ANIDEES AI CHARGER 6+](http://anidees.com/product/794/). 6 port USB power supply (60 W and max 12 A)
   - [1 x ANKER USB Charging Hub](https://www.amazon.es/Anker-Cargador-USB-6-Puertos/dp/B00PTLSH9G/). 6 port USB power supply (60 w and max 12 A)
-  - [7 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html).
+  - [7 x USB power pigtails, 50 cm (NIBIKIA)](https://www.amazon.es/-/en/NIBIKIA/dp/B0CL747JHZ).
 
 
 #### x86-based old refurbished mini PC
