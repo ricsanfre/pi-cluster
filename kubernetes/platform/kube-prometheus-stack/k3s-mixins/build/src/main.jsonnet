@@ -62,6 +62,10 @@ local prometheusMixin = addMixin({
   mixin: (import 'prometheus/mixin.libsonnet') + {
     _config+:: {
       showMultiCluster: false,
+      // kube-prometheus-stack names the ServiceMonitor after the release, so
+      // the default `job="prometheus"` matches no target and every rule of
+      // this mixin stays silent.
+      prometheusSelector: 'job="kube-prometheus-stack-prometheus"',
     },
   },
 });
@@ -70,7 +74,10 @@ local prometheusOperatorMixin = addMixin({
   name: 'prometheus-operator',
   dashboardFolder: 'Observability',
   mixin: (import 'prometheus-operator-mixin/mixin.libsonnet') + {
-    _config+:: {},
+    _config+:: {
+      // Same as above: the operator is scraped as job="kube-prometheus-stack-operator".
+      prometheusOperatorSelector: 'job="kube-prometheus-stack-operator"',
+    },
   },
 });
 
@@ -121,8 +128,28 @@ local grafanaDashboards =
   prometheusOperatorMixinHelmGrafanaDashboards;
 
 
+// The upstream KubeletDown rule compares two counts `on (cluster)`, but
+// Prometheus does not attach external labels to the synthetic `up` series, so
+// the right-hand side loses the `cluster` label, `unless on (cluster)` never
+// matches and the alert fires forever. Restore the original kube-prometheus
+// formulation, which is correct for a single cluster.
+local fixKubeletDown(rule) =
+  if std.objectHas(rule, 'alert') && rule.alert == 'KubeletDown'
+  then rule { expr: 'absent(up{job="kubelet", metrics_path="/metrics"} == 1)' }
+  else rule;
+
+local fixKubeletDownRule(rules) =
+  rules {
+    spec+: {
+      groups: [
+        group { rules: [fixKubeletDown(rule) for rule in group.rules] }
+        for group in rules.spec.groups
+      ],
+    },
+  };
+
 local prometheusAlerts = {
-  'kubernetes-mixin-rules': kubernetesMixin.prometheusRules,
+  'kubernetes-mixin-rules': fixKubeletDownRule(kubernetesMixin.prometheusRules),
   'node-exporter-mixin-rules': nodeExporterMixin.prometheusRules,
   'coredns-mixin-rules': corednsMixin.prometheusRules,
   'etcd-mixin-rules': etcdMixin.prometheusRules,

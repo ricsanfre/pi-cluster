@@ -61,7 +61,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -123,7 +123,7 @@ spec:
                 },
                 "id": 2,
                 "interval": "1m",
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -173,7 +173,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -235,7 +235,7 @@ spec:
                 },
                 "id": 4,
                 "interval": "1m",
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {

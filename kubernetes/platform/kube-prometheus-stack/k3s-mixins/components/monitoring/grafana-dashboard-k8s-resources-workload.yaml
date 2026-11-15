@@ -61,7 +61,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -120,7 +120,7 @@ spec:
                     "y": 7
                 },
                 "id": 2,
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -251,7 +251,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -313,7 +313,7 @@ spec:
                     "y": 21
                 },
                 "id": 4,
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -464,7 +464,7 @@ spec:
                     "y": 28
                 },
                 "id": 5,
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -608,7 +608,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -659,7 +659,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -710,7 +710,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -761,7 +761,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -812,7 +812,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -863,7 +863,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -914,7 +914,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -965,7 +965,7 @@ spec:
                         "mode": "single"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
