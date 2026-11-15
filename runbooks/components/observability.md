@@ -62,6 +62,25 @@ kubectl -n monitoring logs deploy/loki --tail=200
 4. Verify retention/compaction settings and available storage.
 5. Reconcile observability stack config if drift is suspected.
 
+Common cause: unbounded label cardinality.
+
+`429 maximum active stream limit exceeded` and an OOM-looping ingester usually mean one label
+value is unbounded, not that the ingester is undersized. `host` is the usual culprit: an upstream
+parse failure puts a blob (often a full JSON log line) in `host`, and every distinct value becomes
+a new stream.
+
+```bash
+# in-memory streams for the ingester (a healthy homelab is dozens, not thousands)
+kubectl -n loki get --raw "/api/v1/namespaces/loki/pods/loki-write-0:3100/proxy/metrics" \
+  | grep -E '^loki_ingester_memory_streams'
+```
+
+Fluentd drops records whose `host` is not a plain hostname before the Loki output
+(`@OUTPUT_LOKI`); those records still reach Elasticsearch. If the count is still in the thousands,
+the malformed streams are persisted in the ingester WAL and are replayed on every restart — check
+`msg="Recovered from WAL segments"`. Clearing `/var/loki/wal` while the ingester is stopped
+discards them, at the cost of the unflushed Loki copy (Elasticsearch keeps the full history).
+
 Verify:
 
 - New logs appear in Grafana Explore.

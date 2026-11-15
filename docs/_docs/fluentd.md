@@ -946,6 +946,16 @@ The following fluentd configuration files are used:
     </label>
     # Loki Output
     <label @OUTPUT_LOKI>
+        # Drop records whose `host` is not a plain hostname: `host` is a Loki
+        # label, so an upstream parse failure that leaves a JSON blob (or any
+        # other blob) there would create one stream per distinct value.
+        <filter **>
+            @type grep
+            <exclude>
+                key host
+                pattern /[^A-Za-z0-9._-]/
+            </exclude>
+        </filter>
         <match **>
             @type loki
             @id out_loki_kube
@@ -1248,6 +1258,14 @@ Storing logs from different applications in different indexes is an alternative 
 
 ```xml
 <label @OUTPUT_LOKI>
+    # Drop records whose `host` is not a plain hostname (see the note below).
+    <filter **>
+        @type grep
+        <exclude>
+            key host
+            pattern /[^A-Za-z0-9._-]/
+        </exclude>
+    </filter>
     <match **>
         @type loki
         @id out_loki_kube
@@ -1281,6 +1299,12 @@ Storing logs from different applications in different indexes is an alternative 
 -   `label` and `extra_labes` define the labels Loki can use to index the logs. Main keys from the record are used to index the logs.
 
 -   `line_format`. Use JSON
+
+{{site.data.alerts.warning}}
+Every label value combination is a separate Loki stream, so the number of distinct values of a label must stay bounded. `host` is the risky one: when an upstream parser fails it can receive an arbitrary blob (typically a whole JSON log line), and one bad record per distinct blob creates a stream per record. That exhausts the ingester's stream limit (`429 maximum active stream limit exceeded`) and, with a small write limit, puts it into an OOM loop.
+
+The `grep` filter before the `loki` match guards against this: it drops records whose `host` is not a plain hostname (characters other than letters, digits, `.`, `_` and `-`). Those records still reach Elasticsearch through `@OUTPUT_ES`, which does not use `host` as a label, so no log content is lost. Do not remove this filter to "keep more data" — it is what keeps the stream count bounded.
+{{site.data.alerts.end}}
 
 
 ## Logs from external nodes
