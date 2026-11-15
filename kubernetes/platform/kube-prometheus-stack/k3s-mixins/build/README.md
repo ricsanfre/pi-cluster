@@ -22,6 +22,10 @@ Original version from Adin's post has be updated to
 - Adding showMultiCluster config option to several of the mixins, so "cluster" variable in Dashboards is not displayed. This obtain same outcomes as kube-prom-stack helm chart hacking scripts generating manifest files from mixins:
   https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/hack/sync_grafana_dashboards.py#L171
 - Fixing issue with `generate.sh` script: dashboard yaml files not to be escaped.
+- Selecting the Prometheus and Prometheus Operator targets by their real job names (`kube-prometheus-stack-prometheus` and `kube-prometheus-stack-operator`). The mixins default to `job="prometheus"` and `job="prometheus-operator"`, which match nothing in this cluster, so every rule of those two mixes stayed silent.
+- Rewriting the upstream `KubeletDown` expression. It compares two counts `on (cluster)`, but Prometheus does not attach external labels to the synthetic `up` series, so the right-hand side has no `cluster` label, `unless on (cluster)` never matches and the alert fires permanently. `main.jsonnet` replaces it with `absent(up{job="kubelet", metrics_path="/metrics"} == 1)`.
+
+Because of these last two, **the generated files are not byte-identical to a plain upstream build**. Re-run `make k3s-mixins` rather than copying output from upstream, and check `src/main.jsonnet` when reviewing the diff.
 
 ## Build k3s mixins
 
