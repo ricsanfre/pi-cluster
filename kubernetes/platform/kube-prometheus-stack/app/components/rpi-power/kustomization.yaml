@@ -1,0 +1,11 @@
+---
+# Raspberry Pi power monitoring.
+#
+# The collector itself runs on the host as a systemd timer (Ansible role
+# `rpi_metrics`) and writes rpi.prom into the node_exporter textfile directory.
+# node_exporter reads it through the host mount configured in the prod overlay.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - prometheus-rule.yaml

@@ -81,3 +81,17 @@
             open_iscsi_initiator_name: "iqn.2021-07.com.ricsanfre.homelab:{{ ansible_facts['nodename'] }}"
             open_iscsi_automatic_startup: true
       tags: [storage]
+
+# Raspberry Pi power monitoring.
+# Exports under-voltage, throttling, core voltage, ARM clock and temperature to
+# the node_exporter textfile collector so charger and cable changes can be
+# measured instead of sampled over SSH.
+# Run standalone with: ansible-playbook setup_picluster.yml --tags metrics
+- name: Configure Raspberry Pi power metrics
+  hosts: raspberrypi
+  gather_facts: true
+  tags: [node, metrics]
+  become: true
+  roles:
+    - role: rpi_metrics
+      tags: [metrics]

@@ -303,3 +303,85 @@ whole cluster appeared unreachable. `node3` reported `throttled=0x50005`; after 
 `node3` and `node4` all showed under-voltage history while `node5` was clean. Power-cycling `node2` and
 `node4` while leaving `node3` running restored quorum and the VIP moved to `node3`. Flux re-converged
 unaided. Follow-up: power delivery on the three control-plane Pis.
+
+## CLUSTER-015 Raspberry Pi Under-Voltage and Power Triage
+
+<a id="runbook-cluster-015"></a>
+Runbook ID: `CLUSTER-015`
+Owner: Platform
+Severity: `SEV-3` (degraded node) or `SEV-2` when it affects a control-plane node
+
+Objective: Confirm whether a Raspberry Pi node is running outside its power envelope, find which
+cable, port or supply is responsible, and prove the fix with metrics instead of SSH sampling.
+
+Preconditions:
+
+- The `rpi_*` metrics are deployed (see [monitoring](../../docs/_docs/monitoring.md#raspberry-pi-power-monitoring)).
+  Without them, step 1 falls back to `make get-pi-status`.
+- Physical access to the chargers and the current port map in
+  [hardware](../../docs/_docs/hardware.md#power-supply).
+- The node is not a control-plane member that is already degraded; see `CLUSTER-014` first.
+
+Procedure:
+
+1. Read the signal per node. The kernel alarm is authoritative; a set bit in `get_throttled` whose
+   "now" flag already cleared can still mean the rail was out of spec seconds ago.
+
+```bash
+PROM='kubectl -n kube-prom-stack get --raw /api/v1/namespaces/kube-prom-stack/services/kube-prometheus-stack-prometheus:9090/proxy/api/v1/query'
+$PROM?query=rpi_under_voltage_alarm
+$PROM?query=rpi_arm_clock_hz
+$PROM?query=rpi_throttled_bits
+```
+
+2. Interpret. `rpi_under_voltage_alarm: 1` means under-voltage is active right now and the firmware is
+   capping the clock. Confirm the cap: a Pi 4 should reach 1.5-1.8 GHz under load and will sit at
+   600 MHz while capped. `rpi_throttled_bits` in the 0x50000 range means the event is historical
+   (occurred, not active) - typical after a cold boot, worth watching but not an incident.
+
+3. Map the node to its charger and port in [hardware](../../docs/_docs/hardware.md#power-supply). Note
+   the per-port rating: 3 A on ANIDEES ports 2-6, 2.4 A on the ANKER.
+
+4. A/B the cable. Swap the suspect node's cable with a known-good node's cable that sits on a 3 A port,
+   and re-read step 1 after ~10 minutes of normal load.
+
+   - Flag follows the cable -> replace the cable.
+   - Flag stays with the node -> continue.
+
+5. A/B the port. Move the node to a free 3 A port on the other charger and repeat the measurement.
+
+6. If a node still drops out on a known-good cable and a 3 A port, stop moving cables: use a dedicated
+   official 5.1 V/3 A supply for it. The +0.1 V absorbs cable drop; 5.0 V supplies have no headroom.
+   A node that still trips on a dedicated supply is suspect hardware (`CLUSTER-010`).
+
+7. Do not restart the k3s service on a control-plane node while its alarm is active. Under-voltage is
+   the mechanism behind the hangs in `CLUSTER-014`: the node answers TCP but never completes userspace
+   startup.
+
+Verify:
+
+- `rpi_under_voltage_alarm` is `0` for 24 h on the affected nodes and `RaspberryPiUnderVoltage` is not
+  firing.
+- `rpi_arm_clock_hz` reaches its normal range under load, not a sustained 600 MHz.
+- `make get-pi-status` reports `0x0`, or only the "occurred" bits after a boot.
+- No new `RaspberryPiPowerMetricsMissing` or `NodeExporterScrapeFailing` alerts.
+
+Rollback:
+
+1. Cable and port changes are physical: reconnect the previous cable/port and re-measure.
+2. If moving a control-plane node drops it out of etcd, follow `CLUSTER-014`. Restore quorum before
+   continuing the triage.
+
+References:
+
+- [monitoring](../../docs/_docs/monitoring.md#raspberry-pi-power-monitoring) - collector, metrics, alerts.
+- [hardware](../../docs/_docs/hardware.md#power-supply) - charger topology and port assignment.
+- `Makefile` - `get-pi-status` target; `make get-pi-status`.
+- `ansible/roles/rpi_metrics/` - the collector installed on the nodes.
+
+**Incident record (2026-11-15).** After the 2026-11-14 shutdown, `node3` and `node4` reported
+`throttled=0x50005` with `in0_lcrit_alarm=1` and were pinned at 600 MHz; they sat on ports rated 2.4 A
+and 3 A respectively. The cluster was rewired with 50 cm pigtails (the inline ON/OFF switches were the
+prime suspect) and `node2`-`node5` were moved to ANIDEES 3 A ports. After the rewiring all four nodes
+read `0x0` with no kernel alarm and clocks of 1.4-1.8 GHz; `node5` recorded a single `0x50000` event
+during cold boot, which is the expected inrush window.

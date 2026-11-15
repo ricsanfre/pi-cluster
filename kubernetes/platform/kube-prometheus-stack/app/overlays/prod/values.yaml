@@ -39,3 +39,24 @@ prometheus:
             requests:
               storage: 10Gi
 
+# Raspberry Pi power metrics.
+#
+# The collector runs on the host (Ansible role `rpi_metrics`) and writes
+# /var/lib/node_exporter/textfile/rpi.prom. node_exporter reads that directory
+# through the host mount below.
+#
+# type: DirectoryOrCreate matters: node_exporter is a DaemonSet, so this volume
+# is mounted on the x86 nodes too, where the collector never writes anything. An
+# empty directory is harmless (the textfile collector exports nothing and
+# node_textfile_scrape_error stays 0); a missing one is not, because the pod
+# would fail to start and the node would lose every node_exporter metric.
+prometheus-node-exporter:
+  extraArgs:
+    - --collector.textfile.directory=/host/textfile
+  extraHostVolumeMounts:
+    - name: textfile
+      hostPath: /var/lib/node_exporter/textfile
+      type: DirectoryOrCreate
+      mountPath: /host/textfile
+      readOnly: true
+

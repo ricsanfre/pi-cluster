@@ -1,0 +1,55 @@
+---
+# Raspberry Pi power metrics.
+#
+# vcgencmd and the rpi_volt hwmon device only exist on Raspberry Pi hardware,
+# so the collector is gated on the binary rather than on an architecture fact:
+# facts are not reliable when the playbook is run with --tags.
+- name: Check whether vcgencmd is available
+  ansible.builtin.stat:
+    path: /usr/bin/vcgencmd
+  register: rpi_metrics_vcgencmd
+
+- name: Install Raspberry Pi power metrics collector
+  when: rpi_metrics_vcgencmd.stat.exists
+  block:
+    - name: Create node_exporter textfile collector directory
+      ansible.builtin.file:
+        path: "{{ rpi_metrics_textfile_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install Raspberry Pi power metrics collector script
+      ansible.builtin.copy:
+        src: rpi_metrics
+        dest: /usr/local/bin/rpi_metrics
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install Raspberry Pi power metrics service unit
+      ansible.builtin.copy:
+        src: rpi-metrics.service
+        dest: /etc/systemd/system/rpi-metrics.service
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload systemd and restart rpi-metrics timer
+
+    - name: Install Raspberry Pi power metrics timer unit
+      ansible.builtin.template:
+        src: rpi-metrics.timer.j2
+        dest: /etc/systemd/system/rpi-metrics.timer
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload systemd and restart rpi-metrics timer
+
+    - name: Enable and start Raspberry Pi power metrics timer
+      ansible.builtin.systemd:
+        name: rpi-metrics.timer
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: not ansible_check_mode

@@ -1,0 +1,75 @@
+#!/bin/bash
+# Export Raspberry Pi power and thermal metrics for node_exporter's textfile
+# collector.
+#
+# Runs from rpi-metrics.timer as root. The rendered file must stay world
+# readable (0644) because node_exporter runs as an unprivileged user and
+# reports node_textfile_scrape_error=1 when it cannot read the directory.
+
+set -u
+
+TEXTFILE_DIR="${TEXTFILE_DIR:-/var/lib/node_exporter/textfile}"
+TARGET="${TEXTFILE_DIR}/rpi.prom"
+TMP="${TARGET}.tmp.$$"
+
+cleanup() {
+    rm -f "${TMP}"
+}
+trap cleanup EXIT
+
+if ! command -v vcgencmd >/dev/null 2>&1; then
+    echo "rpi_metrics: vcgencmd not found, nothing to export" >&2
+    exit 0
+fi
+
+mkdir -p "${TEXTFILE_DIR}"
+
+# The kernel hwmon driver exposes the firmware under-voltage alarm as
+# in0_lcrit_alarm on the device named rpi_volt. It is more reliable than the
+# vcgencmd bitmask, whose "now" bits can clear between reads.
+under_voltage=""
+for hwmon in /sys/class/hwmon/hwmon*; do
+    [ -r "${hwmon}/name" ] || continue
+    if [ "$(cat "${hwmon}/name")" = "rpi_volt" ] && [ -r "${hwmon}/in0_lcrit_alarm" ]; then
+        under_voltage="$(cat "${hwmon}/in0_lcrit_alarm")"
+        break
+    fi
+done
+
+# vcgencmd get_throttled -> throttled=0x50000; Prometheus needs a decimal.
+throttled_hex="$(vcgencmd get_throttled | sed -n 's/^throttled=//p')"
+throttled=""
+case "${throttled_hex}" in
+    0x* | 0X*) throttled="$((throttled_hex))" ;;
+esac
+
+core_volts="$(vcgencmd measure_volts core | sed -n 's/^volt=\([0-9.]*\)V$/\1/p')"
+arm_clock="$(vcgencmd measure_clock arm | sed -n 's/.*=\([0-9][0-9]*\)$/\1/p')"
+temperature="$(vcgencmd measure_temp | sed -n "s/^temp=\(-\{0,1\}[0-9.]*\)'C$/\1/p")"
+
+# emit <metric> <value> <help> [type]
+# Skips empty values: a metric line without a sample would make the whole
+# textfile invalid and trip node_textfile_scrape_error.
+emit() {
+    [ -n "$2" ] || return 0
+    printf '# HELP %s %s\n' "$1" "$3"
+    printf '# TYPE %s %s\n' "$1" "${4:-gauge}"
+    printf '%s %s\n' "$1" "$2"
+}
+
+{
+    emit rpi_under_voltage_alarm "${under_voltage}" \
+        "Kernel under-voltage alarm reported by the Raspberry Pi firmware driver (1 = active)."
+    emit rpi_throttled_bits "${throttled}" \
+        "Raw bitmask from vcgencmd get_throttled (bit 0 under-voltage now, bit 1 frequency capped, bits 16-19 occurred)."
+    emit rpi_core_volts "${core_volts}" \
+        "Core voltage reported by vcgencmd measure_volts core."
+    emit rpi_arm_clock_hz "${arm_clock}" \
+        "Current ARM clock reported by vcgencmd measure_clock arm."
+    emit rpi_temp_celsius "${temperature}" \
+        "SoC temperature reported by vcgencmd measure_temp."
+} >"${TMP}"
+
+chmod 0644 "${TMP}"
+mv -f "${TMP}" "${TARGET}"
+trap - EXIT
