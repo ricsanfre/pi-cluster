@@ -603,6 +603,16 @@ The above Kubernetes resources, except TLS certificate and shared secret, are cr
             __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
           </record>
         </filter>
+        # Drop records whose `host` is not a plain hostname: `host` is a Loki
+        # label, so an upstream parse failure that leaves a blob there would
+        # create one stream per distinct value.
+        <filter **>
+          @type grep
+          <exclude>
+            key host
+            pattern /[^A-Za-z0-9._-]/
+          </exclude>
+        </filter>
         # Send received logs to Loki
         <match **>
           @type loki
@@ -1122,6 +1132,16 @@ It is not needed to change the default content of the `fluent.conf` created by H
         __dummy__ ${if record.has_key?('log_processed'); record['message'] = record['log_processed']; end; nil}
       </record>
     </filter>
+    # Drop records whose `host` is not a plain hostname: `host` is a Loki
+    # label, so an upstream parse failure that leaves a blob there would
+    # create one stream per distinct value.
+    <filter **>
+      @type grep
+      <exclude>
+        key host
+        pattern /[^A-Za-z0-9._-]/
+      </exclude>
+    </filter>
     <match **>
       @type loki
       @id out_loki_kube
@@ -1156,8 +1176,9 @@ It is not needed to change the default content of the `fluent.conf` created by H
   - routes all logs to elastic search configuring [elasticsearch output plugin](https://docs.fluentd.org/output/elasticsearch). Complete list of parameters in [fluent-plugin-elasticsearch repository](https://github.com/uken/fluent-plugin-elasticsearch).
 
   - routes all logs to Loki configuring [loki output plugin](https://grafana.com/docs/loki/latest/clients/fluentd/). It adds the following labels to each log stream: app, pod, container, namespace, node_name and job.
-    Before routing them it applies the following filter
+    Before routing them it applies the following filters
     - rename `log_processed` field to `message` field.
+    - drop records whose `host` is not a plain hostname. Each label value combination is a separate Loki stream, so `host` must stay bounded: an upstream parse failure can otherwise put an arbitrary blob (a whole JSON log line, for example) in `host` and create a stream per record. The dropped records still reach Elasticsearch, which does not use `host` as a label.
 
 ##### ElasticSearch specific configuration
 

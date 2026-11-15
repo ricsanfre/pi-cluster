@@ -212,6 +212,22 @@ data:
     </label>
     # Loki Output
     <label @OUTPUT_LOKI>
+        # `host` is used as a Loki label, so it must have bounded cardinality:
+        # every distinct value becomes a separate stream. If an upstream parser
+        # fails, `host` can receive an arbitrary blob - typically a whole JSON
+        # log line - and the number of streams explodes until the ingester hits
+        # "maximum active stream limit exceeded" and runs out of memory.
+        #
+        # Drop records whose `host` is not a plain hostname. They are still
+        # delivered to Elasticsearch through @OUTPUT_ES, which does not use
+        # `host` as a label, so no log content is lost.
+        <filter **>
+            @type grep
+            <exclude>
+                key host
+                pattern /[^A-Za-z0-9._-]/
+            </exclude>
+        </filter>
         <match **>
             @type loki
             @id out_loki_kube
