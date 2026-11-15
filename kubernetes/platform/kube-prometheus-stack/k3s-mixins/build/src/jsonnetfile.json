@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/kubernetes-sigs/kubernetes-mixin.git",
+          "subdir": ""
+        }
+      },
+      "version": "bacbfe09a73a2b3a5ebcd1da52c08366b6d0f358"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/prometheus-operator/kube-prometheus.git",
+          "subdir": "jsonnet/kube-prometheus"
+        }
+      },
+      "version": "v0.19.0"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/povilasv/coredns-mixin.git",
+          "subdir": ""
+        }
+      },
+      "version": "eb356cfbdcb901fa1a3c3d008faa2a5773a917a1"
+    }
+  ]
+}

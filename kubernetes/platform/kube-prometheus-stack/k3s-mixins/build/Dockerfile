@@ -17,13 +17,10 @@ RUN go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
 # Install gojsontoyaml
 RUN go install github.com/brancz/gojsontoyaml@latest
 
-# Init Jsonnet project
-RUN jb init
-
-# Install mixinx
-RUN jb install github.com/kubernetes-monitoring/kubernetes-mixin@master
-RUN jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@main
-RUN jb install github.com/povilasv/coredns-mixin@master
+# Install the mixins pinned in src/jsonnetfile.json.
+# kube-prometheus and coredns-mixin are pinned; kubernetes-mixin tracks master
+# because its newest tag lags master by months (see README.md).
+RUN jb install
 
 # RUN jsonnet main.jsonnet -J vendor > generated.json
 

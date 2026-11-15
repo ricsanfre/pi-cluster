@@ -34,3 +34,21 @@ Execute command:
 ```shell
 make k3s-mixins
 ```
+
+## Dependency pinning
+
+`src/jsonnetfile.json` declares the mixins, so the Dockerfile no longer installs `@master` and a build is
+reproducible:
+
+| Dependency | Pin | Why |
+| --- | --- | --- |
+| `kube-prometheus` | tag `v0.19.0` | publishes semver tags; Renovate bumps them |
+| `kubernetes-mixin` | commit `bacbfe09…` | tags lag master by months (the newest, `version-1.5.6`, was four months behind). Renovate tracks the `master` digest with a `git-refs` custom manager, not the tags |
+| `coredns-mixin` | commit `eb356cfb…` | publishes no tags and has not moved since 2023 |
+
+`kube-prometheus` pulls node-exporter, prometheus, prometheus-operator, etcd and alertmanager mixins
+transitively, so their versions follow the `kube-prometheus` pin. `jsonnetfile.lock.json` therefore lists
+`kubernetes-mixin` twice — once transitive (`13235f75` via kube-prometheus) and once direct (`bacbfe09`);
+the direct entry wins in `vendor/`.
+
+After changing a pin, run `make k3s-mixins` and commit the regenerated files.
