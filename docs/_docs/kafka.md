@@ -264,24 +264,24 @@ listeners:
       bootstrap:
         host: kafka-bootstrap.mydomain.com
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: kafka-bootstrap.mydomain.com.
-          external-dns.alpha.kubernetes.io/ttl: "60"
+          external-dns.kubernetes.io/hostname: kafka-bootstrap.mydomain.com.
+          external-dns.kubernetes.io/ttl: "60"
       brokers:
       - broker: 0
         host: kafka-broker-0.mydomain.com
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: kafka-broker-0.mydomain.com.
-          external-dns.alpha.kubernetes.io/ttl: "60"
+          external-dns.kubernetes.io/hostname: kafka-broker-0.mydomain.com.
+          external-dns.kubernetes.io/ttl: "60"
       - broker: 1
         host: kafka-broker-1.mydomain.com
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: kafka-broker-1.mydomain.com.
-          external-dns.alpha.kubernetes.io/ttl: "60"
+          external-dns.kubernetes.io/hostname: kafka-broker-1.mydomain.com.
+          external-dns.kubernetes.io/ttl: "60"
       - broker: 2
         host: kafka-broker-2.mydomain.com
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: kafka-broker-2.mydomain.com.
-          external-dns.alpha.kubernetes.io/ttl: "60"
+          external-dns.kubernetes.io/hostname: kafka-broker-2.mydomain.com.
+          external-dns.kubernetes.io/ttl: "60"
       class: nginx
 ```
 
@@ -793,24 +793,24 @@ spec:
         configuration: # Configure Ingress resources created by Strimzi
           bootstrap:
             annotations:
-              external-dns.alpha.kubernetes.io/hostname: kafka-bootstrap.${CLUSTER_DOMAIN}.
-              external-dns.alpha.kubernetes.io/ttl: "60"
+              external-dns.kubernetes.io/hostname: kafka-bootstrap.${CLUSTER_DOMAIN}.
+              external-dns.kubernetes.io/ttl: "60"
             host: kafka-bootstrap.${CLUSTER_DOMAIN}
           brokers:
             - broker: 0
               annotations:
-                external-dns.alpha.kubernetes.io/hostname: kafa-broker-0.${CLUSTER_DOMAIN}.
-                external-dns.alpha.kubernetes.io/ttl: "60"
+                external-dns.kubernetes.io/hostname: kafa-broker-0.${CLUSTER_DOMAIN}.
+                external-dns.kubernetes.io/ttl: "60"
               host: kafka-broker-0.${CLUSTER_DOMAIN}
             - broker: 1
               annotations:
-                external-dns.alpha.kubernetes.io/hostname: kafka-broker-1.${CLUSTER_DOMAIN}.
-                external-dns.alpha.kubernetes.io/ttl: "60"
+                external-dns.kubernetes.io/hostname: kafka-broker-1.${CLUSTER_DOMAIN}.
+                external-dns.kubernetes.io/ttl: "60"
               host: kafka-broker-1.${CLUSTER_DOMAIN}
             - broker: 2
               annotations:
-                external-dns.alpha.kubernetes.io/hostname: broker-2.${CLUSTER_DOMAIN}.
-                external-dns.alpha.kubernetes.io/ttl: "60"
+                external-dns.kubernetes.io/hostname: broker-2.${CLUSTER_DOMAIN}.
+                external-dns.kubernetes.io/ttl: "60"
               host: kafka-broker-2.${CLUSTER_DOMAIN}
           # Use External Certificate
           brokerCertChainAndKey:

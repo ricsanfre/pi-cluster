@@ -270,6 +270,12 @@ Details on how to configure rfc2136 provider, used for integrating Bind9, can be
 
 To use external-dns add an ingress or a LoadBalancer service with a host that is part of the domain-filter
 
+{{site.data.alerts.warning}}
+external-dns **v0.22.0 and later** read annotations under the prefix `external-dns.kubernetes.io/`. Releases before that used `external-dns.alpha.kubernetes.io/`, which is only still read when the controller is started with `--enable-legacy-annotation-prefix` (disabled by default in chart `1.22.0+`).
+
+An object annotated with the old prefix is silently ignored: external-dns logs `No endpoints could be generated from 'service/<ns>/<name>'` and creates no record. Always use `external-dns.kubernetes.io/` in new manifests:
+{{site.data.alerts.end}}
+
 For example the following wll add A records to the DNS:
 
 ```yaml
@@ -278,7 +284,7 @@ kind: Service
 metadata:
   name: nginx
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: svc.homelab.ricsanfre.com
+    external-dns.kubernetes.io/hostname: svc.homelab.ricsanfre.com
 spec:
   type: LoadBalancer
   ports:
@@ -353,7 +359,7 @@ These sources enable the following behavior:
 
 The set of domain names from a *Route is sourced from the following places:
  - If the *Route is a GRPCRoute, HTTPRoute, or TLSRoute, adds each of the `spec.hostnames`.
- - Adds the hostnames from any `external-dns.alpha.kubernetes.io/hostname` annotation on the *Route.
+ - Adds the hostnames from any `external-dns.kubernetes.io/hostname` annotation on the *Route.
 
 See further details on supported Gateway API resources in [External-DNS documentation- Gateway API Route Sources](https://kubernetes-sigs.github.io/external-dns/v0.20.0/docs/sources/gateway-api/).
 
