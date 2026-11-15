@@ -20,6 +20,10 @@ leaderElection:
 
 deschedulerPolicyAPIVersion: descheduler/v1alpha2
 deschedulerPolicy:
+  # Bound the churn: without a cap a single cycle can evict every removable pod
+  # of an overutilized node at once, which is far more disruptive than the
+  # imbalance it fixes. 3 pods per node per 5m cycle converges in minutes.
+  maxNoOfPodsToEvictPerNode: 3
   profiles:
     - name: default
       pluginConfig:
@@ -41,14 +45,27 @@ deschedulerPolicy:
             nodeFit: false
         - name: LowNodeUtilization
           args:
+            # A node is underutilized only when *every* dimension is below
+            # `thresholds`, and overutilized when *any* dimension is above
+            # `targetThresholds`.
+            #
+            # The previous 20/20/20 was unreachable: the x86 workers sit at
+            # 42-55% of CPU requests, so the only nodes ever considered
+            # underutilized were the tainted control-plane nodes (~13%). Every
+            # candidate eviction was then skipped with "doesn't tolerate node
+            # taint", so node5 could stay at 99% of requests indefinitely while
+            # the cluster reported nothing to do.
+            #
+            # 60% admits the x86 workers as targets, while a node at 70% of
+            # requests is still not a source.
             thresholds:
-              cpu: 20
-              memory: 20
-              pods: 20
+              cpu: 60
+              memory: 40
+              pods: 40
             targetThresholds:
-              cpu: 50
-              memory: 50
-              pods: 50
+              cpu: 80
+              memory: 70
+              pods: 60
         - name: RemoveDuplicates
       plugins:
         balance:
