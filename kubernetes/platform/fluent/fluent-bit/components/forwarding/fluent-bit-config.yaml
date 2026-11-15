@@ -22,11 +22,19 @@ data:
       storage.backlog.mem_limit: 5M
       storage.metrics: true
     parsers:
-      - name: syslog-rfc3164-nopri
+      # /var/log/syslog and /var/log/auth.log on these nodes are RFC5424 without
+      # PRI: "2026-11-15T15:04:04.282350+00:00 node-hp-2 python3.12[596499]: msg".
+      # The previous RFC3164 parser captured "<timestamp> <host> <ident>:" as the
+      # time, which then failed time_format, and handed the first token of the
+      # message to `host`. That made `host` an unbounded Loki label value (one
+      # stream per distinct first word) and truncated every message. The ident
+      # group is optional and restricted to ident characters so a JSON payload
+      # stays in `log`.
+      - name: syslog-rfc5424-nopri
         format: regex
-        regex: '/^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<log>.*)$/'
+        regex: '/^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<log>.*)$/'
         time_key: time
-        time_format: '%b %d %H:%M:%S'
+        time_format: '%Y-%m-%dT%H:%M:%S.%L%z'
         time_keep: false
     pipeline:
       inputs:
@@ -43,7 +51,7 @@ data:
           alias: input.host
           path: /var/log/auth.log, /var/log/syslog
           path_key: filename
-          parser: syslog-rfc3164-nopri
+          parser: syslog-rfc5424-nopri
           tag: host.*
           db: /var/log/fluentbit/flb_host.db
           storage.type: filesystem
