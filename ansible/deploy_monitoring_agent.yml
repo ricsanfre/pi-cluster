@@ -59,6 +59,8 @@
         mount_point: "secret"
         path: "fluent/shared-key"
       register: fluentd_vault_secret
+      delegate_to: localhost
+      become: false
       no_log: true
 
     - name: Set Fluentd shared key from Vault
