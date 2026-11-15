@@ -1,0 +1,8 @@
+---
+- name: Reload systemd and restart rpi-metrics timer
+  ansible.builtin.systemd:
+    name: rpi-metrics.timer
+    state: restarted
+    daemon_reload: true
+  # In check mode the unit files do not exist yet, so systemd would fail.
+  when: not ansible_check_mode

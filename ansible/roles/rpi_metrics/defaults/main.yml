@@ -1,0 +1,8 @@
+---
+# Directory read by node_exporter's textfile collector on Raspberry Pi nodes.
+# The path is mounted into the node_exporter DaemonSet from the prod overlay
+# of kube-prometheus-stack (see kubernetes/platform/kube-prometheus-stack).
+rpi_metrics_textfile_dir: /var/lib/node_exporter/textfile
+
+# How often the collector refreshes the textfile.
+rpi_metrics_interval: 30s

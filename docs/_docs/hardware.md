@@ -21,9 +21,9 @@ This is the hardware I'm using to create the cluster:
 - [5 x Startech USB 3.0 to SATA III Adapter](https://www.amazon.es/Startech-USB3S2SAT3CB-Adaptador-3-0-2-5-negro/dp/B00HJZJI84) for connecting SSD disk to USB 3.0 ports.
 - [1 x GeeekPi Pi Rack Case](https://www.amazon.es/GeeekPi-Raspberry-Ventilador-refrigeraci%C3%B3n-disipador/dp/B07Z4GRQGH/ref=sr_1_11). It comes with a stack for 4 x Raspberry Pi’s, plus heatsinks and fans)
 - [1 x SSD Rack Case](https://www.aliexpress.com/i/33008511822.html)
-- [1 x ANIDEES AI CHARGER 6+](https://www.tiendatec.es/raspberry-pi/raspberry-pi-alimentacion/796-anidees-ai-charger-6-cargador-usb-6-puertos-5v-60w-12a-raspberry-pi-4712909320214.html). 6 port USB power supply (60 W and max 12 A)
+- [1 x ANIDEES AI CHARGER 6+](http://anidees.com/product/794/). 6 port USB power supply (60 W and max 12 A)
 - [1 x ANKER USB Charging Hub](https://www.amazon.es/Anker-Cargador-USB-6-Puertos/dp/B00PTLSH9G/) . 6 port USB power supply (60 w and max 12 A)
-- [6 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html).
+- [USB power pigtails, 50 cm (NIBIKIA)](https://www.amazon.es/-/en/NIBIKIA/dp/B0CL747JHZ) for connecting the Raspberry Pi nodes to the chargers.
 
 
 ### x86 nodes
@@ -36,6 +36,42 @@ This is the hardware I'm using to create the cluster:
 
 - [1 x Negear GS108-300PES](https://www.amazon.es/Netgear-GS108E-300PES-conmutador-gestionable-met%C3%A1lica/dp/B00MYYTP3S). 8 ports GE ethernet manageable switch (QoS and VLAN support)
 - [8 x Ethernet Cable](https://www.aliexpress.com/item/32821735352.html). Flat Cat 6,  15 cm length
+
+### Power supply
+
+The Raspberry Pi nodes are powered by two 6-port USB chargers, each rated 60 W and **12 A shared across
+all of its ports**:
+
+- **ANIDEES AI CHARGER 6+** — 3 A per port on ports 2-6.
+- **ANKER USB Charging Hub** — 2.4 A per port.
+
+Current distribution:
+
+| Node | Charger | Port | Port rating |
+| --- | --- | --- | --- |
+| `node1` | ANKER | 3 | 2.4 A |
+| `node2` | ANIDEES | 2 | 3 A |
+| `node3` | ANIDEES | 3 | 3 A |
+| `node4` | ANIDEES | 4 | 3 A |
+| `node5` | ANIDEES | 5 | 3 A |
+| `gateway` (GL-iNet GL-A1300) | ANKER | 2 | 2.4 A |
+{: .table .border-dark }
+
+Free ports: ANIDEES port 1 (5V/2.5A smart) and port 6; ANKER ports 4, 5 and 6.
+
+{{site.data.alerts.important}}
+The **per-port** rating is the constraint, not the total. Both chargers run well below their 60 W total,
+but a Raspberry Pi 4 with a USB SSD briefly draws more than 2.4 A at cold boot, and that inrush is when
+under-voltage events are recorded. The three control-plane nodes (`node2`, `node3`, `node4`) are the ones
+that hang when the rail sags, so they are kept on 3 A ports.
+{{site.data.alerts.end}}
+
+{{site.data.alerts.note}}
+Power is delivered through 50 cm USB pigtails, with no inline switch. Under-voltage and the firmware clock
+cap are exported as `rpi_*` metrics, described in
+[monitoring](/docs/monitoring/#raspberry-pi-power-monitoring); triage procedure in
+[runbook `CLUSTER-015`](https://github.com/ricsanfre/pi-cluster/blob/master/runbooks/cluster/nodes-capacity.md#runbook-cluster-015).
+{{site.data.alerts.end}}
 
 
 

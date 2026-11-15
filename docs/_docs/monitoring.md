@@ -1202,6 +1202,72 @@ kube-prometheus-stack-scheduler                           1      8m15s
 kube-prometheus-stack-workload-total                      1      8m15s
 
 ```
+## Raspberry Pi power monitoring
+
+Raspberry Pi 4 nodes do not expose power health through any exporter by default: `vcgencmd get_throttled`
+is not scraped, and the `hwmon` collector of `node_exporter` only reads `*_input` attributes, not the
+`rpi_volt` alarm. Under-voltage and the firmware clock cap are therefore invisible to Prometheus unless
+something exports them explicitly.
+
+Two pieces provide them:
+
+1. **A host collector** installed by the Ansible role `rpi_metrics` (`ansible/roles/rpi_metrics`). A
+   systemd timer (`rpi-metrics.timer`, every 30 seconds) runs `/usr/local/bin/rpi_metrics`, which writes
+   `/var/lib/node_exporter/textfile/rpi.prom` atomically with mode `0644`, so a Prometheus scrape never
+   reads a partially written file.
+2. **A textfile directory mount** in the `node_exporter` DaemonSet, configured only in the prod overlay
+   of `kube-prometheus-stack`.
+
+```yaml
+# kubernetes/platform/kube-prometheus-stack/app/overlays/prod/values.yaml
+prometheus-node-exporter:
+  extraArgs:
+    - --collector.textfile.directory=/host/textfile
+  extraHostVolumeMounts:
+    - name: textfile
+      hostPath: /var/lib/node_exporter/textfile
+      type: DirectoryOrCreate
+      mountPath: /host/textfile
+      readOnly: true
+```
+
+{{site.data.alerts.note}}
+`node_exporter` is a DaemonSet, so the mount exists on the x86 nodes too, where the collector never
+writes anything. `type: DirectoryOrCreate` creates an empty directory there: the textfile collector then
+exports nothing and `node_textfile_scrape_error` stays `0`. Without the `type`, the pod would fail to
+start on those nodes and they would lose every `node_exporter` metric.
+{{site.data.alerts.end}}
+
+| Metric | Source |
+| --- | --- |
+| `rpi_under_voltage_alarm` | `in0_lcrit_alarm` of the `rpi_volt` hwmon device (1 = active) |
+| `rpi_throttled_bits` | `vcgencmd get_throttled` bitmask, as a decimal integer |
+| `rpi_core_volts` | `vcgencmd measure_volts core` |
+| `rpi_arm_clock_hz` | `vcgencmd measure_clock arm` |
+| `rpi_temp_celsius` | `vcgencmd measure_temp` |
+{: .table .border-dark }
+
+The existing `node_exporter` relabeling adds the `kubernetes_node` label, so the metrics are addressable
+per node: `rpi_under_voltage_alarm{kubernetes_node="node4"}`.
+
+The `PrometheusRule` `rpi-power-alerts` (component `components/rpi-power`) ships three alerts:
+
+| Alert | Expression | Meaning |
+| --- | --- | --- |
+| `RaspberryPiUnderVoltage` | `rpi_under_voltage_alarm == 1` for 5m | The firmware is capping the ARM clock |
+| `RaspberryPiPowerMetricsMissing` | ARM64 node with no `rpi_under_voltage_alarm` for 15m | The collector or the textfile mount is broken |
+| `NodeExporterScrapeFailing` | `up{job="node-exporter"} == 0` for 10m | No scrape at all, so the two rules above cannot see the node |
+{: .table .border-dark }
+
+{{site.data.alerts.note}}
+`node1` runs its own `node_exporter` outside the DaemonSet, scraped as an external target with
+`--collector.textfile.directory=/var/lib/node_exporter` (not the `textfile` subdirectory). The collector
+installs there too, but those metrics are not scraped until that path is aligned.
+{{site.data.alerts.end}}
+
+See [runbook `CLUSTER-015`](https://github.com/ricsanfre/pi-cluster/blob/master/runbooks/cluster/nodes-capacity.md#runbook-cluster-015)
+for the under-voltage triage procedure.
+
 ## Additional Configuration
 
 ### Installing Grafana separately

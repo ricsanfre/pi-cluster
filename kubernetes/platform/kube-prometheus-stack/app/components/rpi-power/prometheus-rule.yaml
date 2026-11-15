@@ -1,0 +1,56 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rpi-power-alerts
+  labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: kube-prometheus-stack
+spec:
+  groups:
+  - name: raspberry-pi.power
+    rules:
+    - alert: RaspberryPiUnderVoltage
+      expr: rpi_under_voltage_alarm == 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Raspberry Pi under-voltage on {{ $labels.kubernetes_node }}"
+        description: >-
+          The Raspberry Pi firmware reports an active under-voltage alarm on
+          {{ $labels.kubernetes_node }}. The firmware caps the ARM clock while the
+          rail is out of spec, which slows kubelet and any control-plane component
+          on that node. Check the PSU, cable and charger port for that node.
+
+    - alert: RaspberryPiPowerMetricsMissing
+      expr: |
+        node_uname_info{machine="aarch64", kubernetes_node!=""}
+          unless on (kubernetes_node)
+        rpi_under_voltage_alarm
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Raspberry Pi power metrics missing on {{ $labels.kubernetes_node }}"
+        description: >-
+          {{ $labels.kubernetes_node }} is an ARM64 Kubernetes node but exports no
+          rpi_under_voltage_alarm. Either the rpi_metrics collector (systemd timer
+          rpi-metrics.timer) or node_exporter's textfile collector is not working
+          on that node.
+
+    # node_exporter is scraped through a ServiceMonitor, so a target that stops
+    # answering leaves no series at all. Without this rule a node can lose every
+    # node_exporter metric - and therefore every Raspberry Pi power metric -
+    # without paging anyone.
+    - alert: NodeExporterScrapeFailing
+      expr: up{job="node-exporter"} == 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "node_exporter scrape failing on {{ $labels.instance }}"
+        description: >-
+          Prometheus cannot scrape node_exporter on {{ $labels.instance }}.
+          The node is either unreachable, overloaded enough that the scrape
+          times out, or its node_exporter pod is unhealthy.
