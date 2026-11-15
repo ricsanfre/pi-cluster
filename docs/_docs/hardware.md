@@ -23,7 +23,7 @@ This is the hardware I'm using to create the cluster:
 - [1 x SSD Rack Case](https://www.aliexpress.com/i/33008511822.html)
 - [1 x ANIDEES AI CHARGER 6+](https://www.tiendatec.es/raspberry-pi/raspberry-pi-alimentacion/796-anidees-ai-charger-6-cargador-usb-6-puertos-5v-60w-12a-raspberry-pi-4712909320214.html). 6 port USB power supply (60 W and max 12 A)
 - [1 x ANKER USB Charging Hub](https://www.amazon.es/Anker-Cargador-USB-6-Puertos/dp/B00PTLSH9G/) . 6 port USB power supply (60 w and max 12 A)
-- [6 x USB-C charging cable with ON/OFF switch](https://www.aliexpress.com/item/33049198504.html) (replaced in November 2026 by 50 cm pigtails without switches: the switches were suspected of causing voltage drop).
+- [USB power pigtails, 50 cm (NIBIKIA)](https://www.amazon.es/-/en/NIBIKIA/dp/B0CL747JHZ) for connecting the Raspberry Pi nodes to the chargers.
 
 
 ### x86 nodes
@@ -67,9 +67,8 @@ that hang when the rail sags, so they are kept on 3 A ports.
 {{site.data.alerts.end}}
 
 {{site.data.alerts.note}}
-The nodes were rewired on 2026-11-15 with 50 cm USB pigtails and without the inline ON/OFF switches used
-previously: the switches were a voltage-drop suspect. From that day `node2`-`node5` all sit on ANIDEES
-3 A ports. The change is measurable with the `rpi_*` metrics described in
+Power is delivered through 50 cm USB pigtails, with no inline switch. Under-voltage and the firmware clock
+cap are exported as `rpi_*` metrics, described in
 [monitoring](/docs/monitoring/#raspberry-pi-power-monitoring); triage procedure in
 [runbook `CLUSTER-015`](https://github.com/ricsanfre/pi-cluster/blob/master/runbooks/cluster/nodes-capacity.md#runbook-cluster-015).
 {{site.data.alerts.end}}
