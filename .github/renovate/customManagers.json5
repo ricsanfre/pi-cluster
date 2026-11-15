@@ -58,6 +58,22 @@
       "datasourceTemplate": "docker",
       "depNameTemplate": "{{product}}",
       "packageNameTemplate": "{{package}}",
+    },
+    {
+      // kubernetes-mixin does not cut tags often enough to be useful: the newest
+      // one (version-1.5.6) lagged master by four months. jsonnetfile.json pins a
+      // commit and this manager keeps it at the head of master, the same pattern
+      // the kube-prometheus-stack chart uses for its own kube-prometheus pin.
+      "customType": "regex",
+      "description": ["Track kubernetes-mixin master by commit digest"],
+      "fileMatch": ["(^|/)k3s-mixins/build/src/jsonnetfile\\.json$"],
+      "matchStrings": [
+        "\"remote\": \"https://github\\.com/kubernetes-sigs/kubernetes-mixin\\.git\"[\\s\\S]*?\"version\": \"(?<currentDigest>[0-9a-f]{40})\""
+      ],
+      "currentValueTemplate": "master",
+      "depNameTemplate": "kubernetes-sigs/kubernetes-mixin",
+      "packageNameTemplate": "https://github.com/kubernetes-sigs/kubernetes-mixin",
+      "datasourceTemplate": "git-refs"
     }
   ]
 }
