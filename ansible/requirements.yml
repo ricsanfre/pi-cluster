@@ -17,7 +17,7 @@ roles:
   - name: ricsanfre.iscsi_initiator
     version: v1.1.1
   - name: ricsanfre.fluentbit
-    version: v1.0.5
+    version: v1.0.6
   - name: ricsanfre.minio
     version: v1.1.15
   - name: ricsanfre.rustfs
