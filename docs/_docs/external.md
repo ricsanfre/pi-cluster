@@ -268,7 +268,7 @@ Configuration is quite similar to the one defined for the fluentbit (See ["Colle
     Tag host.*
     DB /run/fluentbit-state.db
     Path /var/log/auth.log,/var/log/syslog
-    Parser syslog-rfc3164-nopri
+    Parser syslog-rfc5424-nopri
 
 [OUTPUT]
     Name forward
@@ -294,14 +294,23 @@ Substitute variables (`${var}`) in the above config file before applying it.
 `/etc/fluent-bit/custom_parsers.conf`
 ```
 [PARSER]
-    Name syslog-rfc3164-nopri
+    Name syslog-rfc5424-nopri
     Format regex
-    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Regex /^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<message>.*)$/
     Time_Key time
-    Time_Format %b %d %H:%M:%S
+    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
     Time_Keep False
 ```
 
 
-With this configuration, Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field), and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
+With this configuration, Fluentbit monitors `/var/log/auth.log` and `/var/log/syslog`, parsing them with the custom `syslog-rfc5424-nopri` parser (Ubuntu 24.04 writes RFC5424 records without a PRI field), and forwards them to the fluentd aggregator through the DNS name of its external LoadBalancer Service.
+
+{{site.data.alerts.important}}
+The forward output uses a DNS name, so the agent cannot ship anything until `fluentd.${CLUSTER_DOMAIN}` resolves on the host. Check with `getent hosts fluentd.<domain>`. If it does not resolve, confirm that external-dns produced an endpoint for the `fluentd-ext` Service:
+
+```bash
+kubectl -n external-dns logs deploy/external-dns | grep fluentd-ext
+kubectl -n fluent get svc fluentd-ext -o jsonpath='{.status.loadBalancer.ingress}'
+```
+{{site.data.alerts.end}}
 

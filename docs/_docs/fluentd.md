@@ -1025,10 +1025,14 @@ All these files should be put together into a ConfigMap. [TODO] Add reference to
   <parse>
     message_format rfc3164
   </parse>
-<source>
+</source>
 ```
--  Fluentd to expose `syslog` protocol on port 5140
--  Input messages are parsed using embedded rfc3164 syslog parser (i.e. OpenWRT generates syslog messages following that format)
+-  Fluentd exposes the `syslog` protocol on port 5140 (UDP)
+-  Input messages are parsed with the embedded rfc3164 syslog parser, because this endpoint is for **OpenWrt** clients: the gateway (`logread`/busybox syslogd) emits RFC3164 records (`Nov 15 14:53:57 host ident: message`)
+
+{{site.data.alerts.note}}
+Do not point the Kubernetes nodes' fluent-bit agents at this endpoint. They tail `/var/log/syslog` and `/var/log/auth.log`, which Ubuntu 24.04 writes as **RFC5424 without a PRI field** (`2026-11-15T15:04:04.282350+00:00 host ident[pid]: message`); those files need the `syslog-rfc5424-nopri` parser described in [Fluent-bit](/docs/fluentbit/), not `message_format rfc3164`.
+{{site.data.alerts.end}}
 
 ### ElasticSearch Output Configuration
 
@@ -1334,7 +1338,24 @@ spec:
   -   Replace `${FLUENTD_LOAD_BALANCER_IP}` by Load balancer IP. IP belonging to Cilium's Load Balancer address pool range (i.e. 10.0.0.101).
   -   Replace `${CLUSTER_DOMAIN}` by the domain name used in the cluster. For example: `homelab.ricsanfre.com`.
 
-ExternalDNS will automatically create a DNS entry mapped to Load Balancer IP, making fluentd service available at fluentd.{$CLUSTER_DOMAIN} port 24224. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+ExternalDNS is expected to create a DNS entry mapped to the Load Balancer IP, making the aggregator available at `fluentd.${CLUSTER_DOMAIN}` on port 24224. Further details in ["External DNS - Use External DNS"](/docs/kube-dns/#use-external-dns)
+
+{{site.data.alerts.important}}
+The external agents address the aggregator **by name**, so the record must exist before any log can be shipped. Verify it from the node:
+
+```bash
+getent hosts fluentd.<domain>
+```
+
+If it does not resolve, check that external-dns produced an endpoint for this Service before debugging the agent:
+
+```bash
+kubectl -n external-dns logs deploy/external-dns | grep fluentd-ext
+kubectl -n fluent get svc fluentd-ext -o jsonpath='{.status.loadBalancer.ingress}'
+```
+
+A `No endpoints could be generated from 'service/fluent/fluentd-ext'` line means the record was never created; the agent will retry forever without logging a useful error.
+{{site.data.alerts.end}}
 
 {{site.data.alerts.end}}
 

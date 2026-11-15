@@ -622,12 +622,12 @@ service:
   storage.backlog.mem_limit: 5M
   storage.metrics: true
 parsers:
-    # Ubuntu syslog parser
-  - name: syslog-rfc3164-nopri
+    # Ubuntu RFC5424 syslog parser (syslog without a PRI field)
+  - name: syslog-rfc5424-nopri
     format: regex
-    regex: '/^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<log>.*)$/'
+    regex: '/^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<log>.*)$/'
     time_key: time
-    time_format: '%b %d %H:%M:%S'
+    time_format: '%Y-%m-%dT%H:%M:%S.%L%z'
     time_keep: false
 pipeline:
   inputs:
@@ -650,7 +650,7 @@ pipeline:
       alias: input.host
       path: /var/log/auth.log, /var/log/syslog
       path_key: filename
-      parser: syslog-rfc3164-nopri
+      parser: syslog-rfc5424-nopri
       tag: host.*
       db: /var/log/fluentbit/flb_host.db
       storage.type: filesystem
@@ -786,12 +786,12 @@ service:
   storage.backlog.mem_limit: 5M
   storage.metrics: true
 parsers:
-    # Ubuntu syslog parser
-  - name: syslog-rfc3164-nopri
+    # Ubuntu RFC5424 syslog parser (syslog without a PRI field)
+  - name: syslog-rfc5424-nopri
     format: regex
-    regex: '/^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<log>.*)$/'
+    regex: '/^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<log>.*)$/'
     time_key: time
-    time_format: '%b %d %H:%M:%S'
+    time_format: '%Y-%m-%dT%H:%M:%S.%L%z'
     time_keep: false
 pipeline:
   inputs:
@@ -814,7 +814,7 @@ pipeline:
       alias: input.host
       path: /var/log/auth.log, /var/log/syslog
       path_key: filename
-      parser: syslog-rfc3164-nopri
+      parser: syslog-rfc5424-nopri
       tag: host.*
       db: /var/log/fluentbit/flb_host.db
       storage.type: filesystem
@@ -1113,12 +1113,12 @@ records generated have the following fields:
 
 ```yaml
 parsers:
-    # Ubuntu syslog parser
-  - name: syslog-rfc3164-nopri
+    # Ubuntu RFC5424 syslog parser (syslog without a PRI field)
+  - name: syslog-rfc5424-nopri
     format: regex
-    regex: '/^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<log>.*)$/'
+    regex: '/^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<log>.*)$/'
     time_key: time
-    time_format: '%b %d %H:%M:%S'
+    time_format: '%Y-%m-%dT%H:%M:%S.%L%z'
     time_keep: false
 pipeline:
   inputs:
@@ -1127,7 +1127,7 @@ pipeline:
       alias: input.host
       path: /var/log/auth.log, /var/log/syslog
       path_key: filename
-      parser: syslog-rfc3164-nopri
+      parser: syslog-rfc5424-nopri
       tag: host.*
       db: /var/log/fluentbit/flb_host.db
       storage.type: filesystem
@@ -1141,7 +1141,11 @@ It configures fluentbit to monitor OS logs, using [tail](https://docs.fluentbit.
 
 -   `path_key`: `filename` key is added to all the records containing file path
 
--   `parser`: custom parser is used to parse Ubuntu's non-compliance syslog messages (syslog without `priority`). `syslog-rfc3164-nopri` parser is defined in `parsers` section.
+-   `parser`: custom parser used to parse Ubuntu's syslog files. Since Ubuntu 24.04 writes **RFC5424 without a PRI field** (`2026-11-15T15:04:04.282350+00:00 node-hp-2 python3.12[596499]: message`), the parser is `syslog-rfc5424-nopri`, defined in the `parsers` section: it captures the ISO-8601 timestamp with the `%z` offset and keeps the rest of the line in `log`.
+
+    {{site.data.alerts.important}}
+    Do not use an RFC3164 parser (`time_format: '%b %d %H:%M:%S'`) for these files. It consumes `<timestamp> <host> <ident>:` as the time, fails to parse it, and stores the **first token of the message** in `host`. When the message starts with a JSON payload that token is the whole payload, which turns `host` into an unbounded Loki label value (one stream per distinct first word) and truncates every log line.
+    {{site.data.alerts.end}}
 
 -   `tag`: all logs are tagged adding prefix `kube.`. Note that `tag` field includes asterisk (`*`) character. It makes fluent-bit to replace that asterisk will be replaced with the absolute path of the monitored file (tag expansion), with slashes replaced by dots. So all events will be tagged as `host.var.log.file_name.log`
 
@@ -1732,11 +1736,11 @@ service:
   storage.backlog.mem_limit: 5M
   storage.metrics: true
 parsers:
-  - name: syslog-rfc3164-nopri
+  - name: syslog-rfc5424-nopri
     format: regex
-    regex: '/^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<log>.*)$/'
+    regex: '/^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<log>.*)$/'
     time_key: time
-    time_format: '%b %d %H:%M:%S'
+    time_format: '%Y-%m-%dT%H:%M:%S.%L%z'
     time_keep: false
 pipeline:
   inputs:
@@ -1791,7 +1795,7 @@ pipeline:
       alias: input.host
       path: /var/log/auth.log, /var/log/syslog
       path_key: filename
-      parser: syslog-rfc3164-nopri
+      parser: syslog-rfc5424-nopri
       tag: host.*
       db: /var/log/fluentbit/flb_host.db
       storage.type: filesystem

@@ -1347,7 +1347,7 @@ For speed-up the installation there is available a [helm chart](https://github.c
           Path_Key filename
           Mem_Buf_Limit 5MB
           storage.type filesystem
-          Parser syslog-rfc3164-nopri
+          Parser syslog-rfc5424-nopri
 
     # fluent-bit.config OUTPUT
     outputs: |
@@ -1367,11 +1367,11 @@ For speed-up the installation there is available a [helm chart](https://github.c
     customParsers: |
 
       [PARSER]
-          Name syslog-rfc3164-nopri
+          Name syslog-rfc5424-nopri
           Format regex
-          Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+          Regex /^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<message>.*)$/
           Time_Key time
-          Time_Format %b %d %H:%M:%S
+          Time_Format %Y-%m-%dT%H:%M:%S.%L%z
           Time_Keep Off
 
     # fluent-bit.config FILTERS:
@@ -1597,12 +1597,12 @@ The file content has the following sections:
       Tag host.*
       DB /var/log/fluentbit/flb_host.db
       Path /var/log/auth.log,/var/log/syslog
-      Parser syslog-rfc3164-nopri
+      Parser syslog-rfc5424-nopri
       Mem_Buf_Limit 50MB
       storage.type filesystem
     ```
 
-    Fluentbit is configured for extracting OS level logs (`/var/logs/auth` and `/var/log/syslog` files), using custom parser `syslog-rfc3164-nopri` (syslog without priority field) defined in `custom_parser.conf` file.
+    Fluentbit is configured for extracting OS level logs (`/var/log/auth.log` and `/var/log/syslog` files), using the custom parser `syslog-rfc5424-nopri` defined in the `customParser.conf` file. Ubuntu 24.04 writes RFC5424 records without a PRI field (`2026-11-15T15:04:04.282350+00:00 node ident[pid]: message`), so the parser captures the ISO-8601 timestamp with its `%z` offset and keeps the rest of the line in `message`. An RFC3164 parser (`Time_Format %b %d %H:%M:%S`) does not work for these files: it fails on the timestamp and stores the first word of the message in `host`.
 
     To increase realibility, [fluentbit memory/filesystem buffering mechanism](https://docs.fluentbit.io/manual/administration/buffering-and-storage) is enabled: (`Mem_Buf_Limit` set to 50MB and `storage.type` set to filesystem).
 
@@ -1759,11 +1759,11 @@ customParser.conf file has custom parsers definition ([PARSER] sections).
 
 ```
 [PARSER]
-    Name syslog-rfc3164-nopri
+    Name syslog-rfc5424-nopri
     Format regex
-    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Regex /^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<message>.*)$/
     Time_Key time
-    Time_Format %b %d %H:%M:%S
+    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
     Time_Keep False
 ```
 
@@ -2055,7 +2055,7 @@ Configuration is quite similar to the one defined for the fluentbit-daemonset, r
     Tag host.*
     DB /run/fluentbit-state.db
     Path /var/log/auth.log,/var/log/syslog
-    Parser syslog-rfc3164-nopri
+    Parser syslog-rfc5424-nopri
 
 [FILTER]
     Name lua
@@ -2077,12 +2077,12 @@ Configuration is quite similar to the one defined for the fluentbit-daemonset, r
 `/etc/fluent-bit/custom_parsers.conf`
 ```
 [PARSER]
-    Name syslog-rfc3164-nopri
+    Name syslog-rfc5424-nopri
     Format regex
-    Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+    Regex /^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<message>.*)$/
     Time_Key time
-    Time_Format %b %d %H:%M:%S
+    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
     Time_Keep False
 ```
 
-With configuration Fluentbit will monitoring log entries in `/var/log/auth.log` and `/var/log/syslog` files, parsing them using a custom parser `syslog-rfc3165-nopri` (syslog default parser removing priority field) and forward them to fluentd aggregator service running in K3S cluster. Fluentd destination is configured using DNS name associated to fluentd aggregator service external IP.
+With this configuration Fluentbit monitors `/var/log/auth.log` and `/var/log/syslog`, parsing them with the custom `syslog-rfc5424-nopri` parser (Ubuntu 24.04 writes RFC5424 records without a PRI field) and forwarding them to the fluentd aggregator. The destination is configured with the DNS name of the aggregator's external LoadBalancer Service, so the agent cannot ship anything until that name resolves on the host: check with `getent hosts fluentd.<domain>` and, if it fails, confirm that external-dns produced an endpoint for the `fluentd-ext` Service.
