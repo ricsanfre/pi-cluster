@@ -4,3 +4,28 @@ namespace: e-commerce
 
 resources:
   - ../../base
+
+patches:
+  # The e-commerce stack is the heaviest JVM workload in the cluster: seven
+  # single-replica Spring Boot services. On a cold start they all land on node5,
+  # the only untainted ARM worker, and saturate it (60+ pods on 4 cores), which
+  # in turn makes the kubelet and the container runtime miss their deadlines.
+  #
+  # Pin them to the x86 nodes, which have roughly three times the compute per
+  # node. `required` is deliberate: a pending pod is preferable to one that
+  # starves the ARM worker. The dev overlay is left unconstrained (k3d is amd64
+  # anyway, so this would be a no-op there).
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/arch
+                      operator: In
+                      values:
+                        - amd64
