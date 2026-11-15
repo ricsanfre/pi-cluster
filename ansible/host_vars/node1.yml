@@ -134,7 +134,7 @@ fluentbit_inputs: |
       Tag host.*
       DB /run/fluentbit-state.db
       Path /var/log/auth.log,/var/log/syslog
-      Parser syslog-rfc3164-nopri
+      Parser syslog-rfc5424-nopri
 
 # Fluentbit output
 fluentbit_outputs: |
@@ -151,11 +151,11 @@ fluentbit_outputs: |
 # Fluentbit custom parsers
 fluentbit_custom_parsers: |
   [PARSER]
-      Name syslog-rfc3164-nopri
+      Name syslog-rfc5424-nopri
       Format regex
-      Regex /^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$/
+      Regex /^(?<time>[^ ]+) (?<host>[^ ]+) (?:(?<ident>[A-Za-z0-9_./-]+)(?:\[(?<pid>[0-9]+)\])?: )?(?<message>.*)$/
       Time_Key time
-      Time_Format %b %d %H:%M:%S
+      Time_Format %Y-%m-%dT%H:%M:%S.%L%z
       Time_Keep False
 
 ################################
