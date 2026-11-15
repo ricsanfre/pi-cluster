@@ -60,7 +60,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -107,7 +107,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -169,7 +169,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -216,7 +216,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -292,7 +292,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -361,7 +361,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -431,7 +431,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -478,7 +478,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -540,7 +540,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {

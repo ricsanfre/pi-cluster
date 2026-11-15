@@ -207,7 +207,7 @@ spec:
                     "y": 1
                 },
                 "id": 2,
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -276,7 +276,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -323,7 +323,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -381,7 +381,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -428,7 +428,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -511,7 +511,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -573,7 +573,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -620,7 +620,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -682,7 +682,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -729,7 +729,7 @@ spec:
                         "sort": "desc"
                     }
                 },
-                "pluginVersion": "v11.4.0",
+                "pluginVersion": "v13.0.0",
                 "targets": [
                     {
                         "datasource": {
@@ -773,7 +773,7 @@ spec:
                     "label": "job",
                     "multi": true,
                     "name": "job",
-                    "query": "label_values(prometheus_build_info{job=\"prometheus\"}, job)",
+                    "query": "label_values(prometheus_build_info{job=\"kube-prometheus-stack-prometheus\"}, job)",
                     "refresh": 2,
                     "sort": 2,
                     "type": "query"
