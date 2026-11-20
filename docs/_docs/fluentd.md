@@ -64,9 +64,11 @@ Since I am currently dispatching logs to 2 different destinations (ElasticSearch
 [fluentd-kubernetes-daemonset images](https://github.com/fluent/fluentd-kubernetes-daemonset) should work for deploying fluentd as Deployment. For outputing to the ES you just need to select the adequate [fluentd-kubernetes-daemonset image tag](https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags).
 
 As alternative, you can create your own customized docker image or use mine. You can find it in [ricsanfre/fluentd-aggregator GitHub repository](https://github.com/ricsanfre/fluentd-aggregator).
-The multi-architecture (amd64/arm64) image is available in docker hub:
+The multi-architecture (amd64/arm64) image is published in GitHub Container Registry:
 
-- `ricsanfre/fluentd-aggregator:v1.17.1-debian-1.0`
+- `ghcr.io/ricsanfre/fluentd-aggregator:v1.20.1-debian-1.1`
+
+Tags mirror the fluentd base image they are built from; there is no rolling `latest`.
 
 {{site.data.alerts.end}}
 
@@ -108,10 +110,9 @@ fluentd -c ${FLUENTD_CONF} ${FLUENTD_OPT} -r ${SIMPLE_SNIFFER}
 Customized image Dockerfile could look like this:
 
 ```dockerfile
-ARG BASE_IMAGE=fluent/fluentd:v1.17.1-debian-1.0
+ARG TAG=v1.20.1-debian-1.1
 
-
-FROM $BASE_IMAGE
+FROM fluent/fluentd:${TAG}
 
 ## 1- Update base image installing fluent plugins. Executing commands `gem install <plugin_name>`
 
@@ -337,9 +338,9 @@ Installation process is the following:
     ```yaml
     # Fluentd image
     image:
-      repository: "ricsanfre/fluentd-aggregator"
+      repository: "ghcr.io/ricsanfre/fluentd-aggregator"
       pullPolicy: "IfNotPresent"
-      tag: "v1.17.1-debian-1.0"
+      tag: "v1.20.1-debian-1.1"
 
     # Deploy fluentd as deployment
     kind: "Deployment"
@@ -454,9 +455,9 @@ The Helm chart deploy fluentd as a Deployment, passing environment values to the
 ```yml
 # Fluentd image
 image:
-  repository: "ricsanfre/fluentd-aggregator"
+  repository: "ghcr.io/ricsanfre/fluentd-aggregator"
   pullPolicy: "IfNotPresent"
-  tag: "v1.17.1-debian-1.0"
+  tag: "v1.20.1-debian-1.1"
 
 # Deploy fluentd as deployment
 kind: "Deployment"
@@ -487,7 +488,7 @@ securityContext:
    runAsUser: 1000
 ```
 
--   Fluentd is deployed as Deployment (`kind: "Deployment"`) with 1 replica (`replicaCount: 1`, using custom fluentd image (`image.repository: "ricsanfre/fluentd-aggregator` and `image.tag`).
+-   Fluentd is deployed as Deployment (`kind: "Deployment"`) with 1 replica (`replicaCount: 1`, using custom fluentd image (`image.repository: "ghcr.io/ricsanfre/fluentd-aggregator"` and `image.tag`).
 
 -   Service account (`serviceAccount.create: false`) and corresponding RoleBinding (`rbac.create: false`) are not created since fluentd aggregator does not need to access to Kubernetes API.
 
