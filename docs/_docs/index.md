@@ -2,7 +2,7 @@
 title: What is this project about?
 permalink: /docs/home/
 description: The scope of this project is to create a kubernetes cluster at home using Raspberry Pis and low cost mini PCs, and to automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies with tools like Ansible, Terraform and FluxCD. How to automatically deploy K3s baesed kubernetes cluster, Longhorn as distributed block storage for PODs' persistent volumes, Prometheus as monitoring solution, EFK+Loki stack as centralized log management solution, Velero and Restic as backup solution and Istio as service mesh architecture.
-last_modified_at: "14-11-2026"
+last_modified_at: "20-11-2026"
 ---
 
 
@@ -243,7 +243,7 @@ The software used and the latest version tested of each component
 | Logging | ElasticSearch | 8.19.18 | Deployed with ECK Operator |
 | Logging | Kibana | 8.19.18 | Deployed with ECK Operator |
 | Logging | Fluentbit | 5.0.8 | Helm chart version: 0.57.8 |
-| Logging | Fluentd | 1.18.0 | Helm chart version: 0.5.3 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.18 |
+| Logging | Fluentd | 1.20.1 | Helm chart version: 0.5.3 [Custom docker image](https://github.com/ricsanfre/fluentd-aggregator) from official v1.20.1 |
 | Logging | Loki | 3.6.7 | Helm chart version: 7.0.0 |
 | Monitoring | Kube Prometheus Stack | 87.10.1 | |
 | Monitoring | Prometheus Operator | v0.92.1 | Installed with Kube Prometheus Stack |
