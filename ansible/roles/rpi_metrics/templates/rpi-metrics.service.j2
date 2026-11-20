@@ -1,0 +1,11 @@
+[Unit]
+Description=Raspberry Pi power metrics collector for node_exporter
+
+[Service]
+Type=oneshot
+# The collector reads TEXTFILE_DIR from the environment, defaulting to
+# /var/lib/node_exporter/textfile. Set it explicitly so the file lands in the
+# directory the local node_exporter actually reads: the cluster DaemonSet mounts
+# the textfile subdirectory, a host exporter may be configured with the parent.
+Environment=TEXTFILE_DIR={{ rpi_metrics_textfile_dir }}
+ExecStart=/usr/local/bin/rpi_metrics

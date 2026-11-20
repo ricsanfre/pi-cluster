@@ -1,6 +1,0 @@
-[Unit]
-Description=Raspberry Pi power metrics collector for node_exporter
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/rpi_metrics
