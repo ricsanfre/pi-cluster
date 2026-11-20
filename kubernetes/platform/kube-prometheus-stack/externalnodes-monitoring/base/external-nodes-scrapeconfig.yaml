@@ -13,10 +13,12 @@ spec:
       replacement: node-exporter
     # Give external nodes the label the cluster nodes get from their ServiceMonitor,
     # so dashboards and alerts can select `kubernetes_node` uniformly.
-    # instance is node1.homelab.ricsanfre.com:9100
+    # Relabel from __address__, not instance: `instance` is only populated after
+    # target relabeling, so a relabeling sourced on it never matches.
+    # __address__ is node1.homelab.ricsanfre.com:9100
     - action: replace
       sourceLabels:
-        - instance
+        - __address__
       regex: '([^.]+)\..*'
       targetLabel: kubernetes_node
       replacement: '$1'
