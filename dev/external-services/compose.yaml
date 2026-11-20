@@ -61,7 +61,7 @@ services:
 
   vault:
     # renovate: datasource=docker depName=hashicorp/vault
-    image: hashicorp/vault:2.2.1
+    image: hashicorp/vault:2.2.2
     container_name: dev-vault
     profiles: ["vault"]
     restart: unless-stopped
