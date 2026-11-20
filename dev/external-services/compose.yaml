@@ -11,7 +11,7 @@ name: dev-external-services
 
 services:
   rustfs-perms:
-    image: alpine:3.22
+    image: alpine:3.24
     user: "0:0"
     restart: "no"
     volumes:
