@@ -1313,9 +1313,11 @@ The `grep` filter before the `loki` match guards against this: it drops records 
 Agents running Fluent Bit **5.0.4 or later** must set `Retain_Metadata_In_Forward_Mode false` in their
 forward output. Since 5.0.4 the option defaults to `true` and encodes the event as Forward protocol v1.5
 (`[EventTime, metadata]`), which fluentd < 1.20 cannot decode. Fluentd then drops every event with
-`skip invalid event: ... time=[..., {}]`, while the record's fields parse perfectly and the input counter
-keeps rising — the only symptom is that the data never reaches Elasticsearch or Loki. Fluentd 1.20 and
-later accept the format and discard the metadata.
+`skip invalid event: ... time=[..., {}]`, while the record's fields parse perfectly. The counter that shows
+it is `fluentd_input_status_num_records_total`, which fluentd emits **after** `in_forward` accepts the event
+and labels with `hostname`: a rejected sender produces no series at all, so check it with
+`sum by (hostname) (fluentd_input_status_num_records_total{tag=~"host.*"})` rather than as a total. Fluentd
+1.20 and later accept the format and discard the metadata.
 {{site.data.alerts.end}}
 
 For colleting the logs from external nodes (nodes not belonging to kubernetes cluster: i.e: `node1`, `gateway`), fluentd service can be exposed so external systems can use it to ingest logs

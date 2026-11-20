@@ -81,6 +81,31 @@ the malformed streams are persisted in the ingester WAL and are replayed on ever
 `msg="Recovered from WAL segments"`. Clearing `/var/loki/wal` while the ingester is stopped
 discards them, at the cost of the unflushed Loki copy (Elasticsearch keeps the full history).
 
+Second common cause: **Fluent Bit ≥ 5.0.4 sending Forward protocol v1.5**. If `skip invalid event`
+appears with `time=[..., {}]` and the fields themselves parse correctly, the agent is missing
+`Retain_Metadata_In_Forward_Mode false` (`retain_metadata_in_forward_mode: false` in Helm values).
+fluentd < 1.20 cannot decode that format and drops every event. See
+[Fluent Bit upgrade notes](https://docs.fluentbit.io/manual/installation/upgrade-notes#forward-output-retain_metadata_in_forward_mode-default-changed-to-true).
+
+**Confirming that one host is actually shipping**
+
+`fluentd_input_status_num_records_total` is emitted by a `prometheus` filter **after** `in_forward`
+accepts the event, and is labelled with the record's `hostname`. A sender whose events are rejected has
+**no series at all**, so always compare per host — several agents emit the same `host.*` tags and a
+cluster-wide total hides the missing one.
+
+```bash
+# accepted records per reporting host, last 15m
+curl -sG "$PROM/api/v1/query" --data-urlencode 'query=sum by (hostname) (increase(fluentd_input_status_num_records_total{tag=~"host.*"}[15m]))'
+
+# anything being rejected right now (one line per dropped event)
+kubectl -n fluent logs deploy/fluentd --since=10m | grep -c 'skip invalid event'
+```
+
+Then confirm at the destination (`host="<name>"` in Loki, or the index in Elasticsearch): the input
+counter proves the aggregator accepted the batch, not that it reached a sink.
+
+
 Verify:
 
 - New logs appear in Grafana Explore.

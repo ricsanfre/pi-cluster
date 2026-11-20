@@ -1691,9 +1691,11 @@ pipeline:
 The host agents managed by Ansible (`ansible/host_vars/node1.yml` and `ansible/group_vars/control.yml`)
 set the classic-configuration equivalent, `Retain_Metadata_In_Forward_Mode false`, in their `[OUTPUT]`
 block. Without it every record from that agent is **received and then discarded** by fluentd with
-`skip invalid event: ... time=[..., {}]`. Note that `fluentd_input_status_num_records_total` still
-increments in that case: the input counter proves arrival, not ingestion. Always confirm the data at the
-destination (`host="<name>"` in Loki, or the index in Elasticsearch).
+`skip invalid event: ... time=[..., {}]`. To detect it, use `fluentd_input_status_num_records_total`: fluentd
+emits it from a `prometheus` filter **after** `in_forward` accepts the event and labels it with the record's
+`hostname`, so a rejected host produces no series at all. Filter it per host — `sum by (hostname)` — because
+the in-cluster agents emit the same `host.*` tags and a cluster-wide total will mask the missing one. Then
+confirm the data at the destination (`host="<name>"` in Loki, or the index in Elasticsearch).
 {{site.data.alerts.end}}
 
 
