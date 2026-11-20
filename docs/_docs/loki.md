@@ -2,7 +2,7 @@
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kubernetes cluster.
-last_modified_at: "19-06-2026"
+last_modified_at: "20-11-2026"
 
 ---
 
@@ -311,11 +311,11 @@ write:
     size: 1Gi
   resources:
     requests:
-      cpu: 25m
-      memory: 64Mi
+      cpu: 50m
+      memory: 128Mi
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 500m
+      memory: 512Mi
 
 read:
   replicas: 1
@@ -358,6 +358,11 @@ Key changes from the defaults:
 - **`replication_factor: 1`** — matches the single write replica so the ingester ring accepts writes
 - **Reduced persistence** to 1 Gi per component instead of the default 10 Gi
 - **CPU and memory limits** appropriate for ARM64 Raspberry Pi nodes
+- **Ingester (`write`) sized for WAL replay** — on restart the ingester loads its WAL into memory *on top
+  of* its ~230 Mi steady state (~600 streams). At the previous 256 Mi limit the replay always crossed the
+  limit, so the pod OOM-looped without ever draining the WAL, taking the write path and the fluentd Loki
+  output down with it. `cpu 500m` / `memory 512Mi` is the value measured on this cluster; do not shrink it
+  back to the pre-replay baseline.
 - **Smaller memcached caches** — 256 Mi chunks cache and 128 Mi results cache vs. defaults of 8 Gi and 1 Gi
 
 ### GitOps installation

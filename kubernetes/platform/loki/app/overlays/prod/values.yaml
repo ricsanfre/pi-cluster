@@ -63,13 +63,17 @@ write:
         secretKeyRef:
           name: loki-s3-secret
           key: S3_SECRET_ACCESS_KEY
+  # The ingester must load the WAL into memory to replay it after a restart, on top of the
+  # steady state of ~230Mi (600 streams). At 256Mi the replay always crossed the limit and the
+  # pod OOM-looped without ever draining the WAL (2026-11-15 and again after the 2026-11-20
+  # boot), taking the write path and the fluentd Loki output down with it.
   resources:
     requests:
-      cpu: 25m
-      memory: 64Mi
+      cpu: 50m
+      memory: 128Mi
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 500m
+      memory: 512Mi
 
 # Reduce memcached cache sizes from massive defaults (8GB/1GB) to homelab-appropriate values
 # Defaults: chunksCache.allocatedMemory=8192, resultsCache.allocatedMemory=1024
