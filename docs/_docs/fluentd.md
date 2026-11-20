@@ -2,7 +2,7 @@
 title: Log aggregation and distribution (Fluentd)
 permalink: /docs/fluentd/
 description: How to deploy log distribution solution for Kubernetes Cluster using Fluentd.
-last_modified_at: "16-08-2025"
+last_modified_at: "20-11-2026"
 ---
 
 Fluentd is deploy as log aggregator, collecting all logs forwarded by Fluentbit agent and routing all logs to different backends (i.e ElasticSearch, Loki, Kafka, S3 bucket).
@@ -1308,6 +1308,15 @@ The `grep` filter before the `loki` match guards against this: it drops records 
 
 
 ## Logs from external nodes
+
+{{site.data.alerts.important}}
+Agents running Fluent Bit **5.0.4 or later** must set `Retain_Metadata_In_Forward_Mode false` in their
+forward output. Since 5.0.4 the option defaults to `true` and encodes the event as Forward protocol v1.5
+(`[EventTime, metadata]`), which fluentd < 1.20 cannot decode. Fluentd then drops every event with
+`skip invalid event: ... time=[..., {}]`, while the record's fields parse perfectly and the input counter
+keeps rising — the only symptom is that the data never reaches Elasticsearch or Loki. Fluentd 1.20 and
+later accept the format and discard the metadata.
+{{site.data.alerts.end}}
 
 For colleting the logs from external nodes (nodes not belonging to kubernetes cluster: i.e: `node1`, `gateway`), fluentd service can be exposed so external systems can use it to ingest logs
 
