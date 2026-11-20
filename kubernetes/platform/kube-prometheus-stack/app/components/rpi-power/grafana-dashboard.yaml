@@ -30,7 +30,7 @@ spec:
           "description": "rpi_under_voltage_alarm: 1 means the firmware is capping the ARM clock right now.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 6,
@@ -87,7 +87,7 @@ spec:
           "description": "Bits 0-2 of vcgencmd get_throttled: under-voltage, frequency capped, throttled.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 6,
@@ -154,7 +154,7 @@ spec:
           "description": "Sticky bits 16 and 18: under-voltage or throttling occurred since boot, even if the live alarm is 0.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 6,
@@ -216,7 +216,7 @@ spec:
           "description": "rpi_arm_clock_hz from vcgencmd. A sustained drop is what under-voltage looks like from the inside.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 7,
@@ -260,7 +260,7 @@ spec:
           "description": "rpi_core_volts. Below ~0.85 V under load usually means the PSU or cable is marginal.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 7,
@@ -304,7 +304,7 @@ spec:
           "description": "rpi_temp_celsius.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 7,
@@ -348,7 +348,7 @@ spec:
           "description": "Seconds since rpi_metrics last rewrote rpi.prom. Above 300 s the timer is stuck or the file is not being read.",
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$${datasource}"
           },
           "gridPos": {
             "h": 7,
