@@ -137,13 +137,18 @@ read:
         secretKeyRef:
           name: loki-s3-secret
           key: S3_SECRET_ACCESS_KEY
+  # The querier answers the canary's count_over_time/offset queries plus Grafana
+  # Explore. At 256Mi it ran pinned at the limit, GC pressure throttled the CPU to
+  # 100% and the 1s readiness probe could not be served, so the Service lost its
+  # endpoints whenever the write path was healthy enough to give it work to do
+  # (2026-11-15 and again on 2026-11-20).
   resources:
     requests:
-      cpu: 25m
-      memory: 64Mi
+      cpu: 50m
+      memory: 128Mi
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 500m
+      memory: 512Mi
 
 # Configuration for the gateway
 gateway:

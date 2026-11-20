@@ -321,11 +321,11 @@ read:
   replicas: 1
   resources:
     requests:
-      cpu: 25m
-      memory: 64Mi
+      cpu: 50m
+      memory: 128Mi
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 500m
+      memory: 512Mi
 
 backend:
   replicas: 1
@@ -363,6 +363,10 @@ Key changes from the defaults:
   limit, so the pod OOM-looped without ever draining the WAL, taking the write path and the fluentd Loki
   output down with it. `cpu 500m` / `memory 512Mi` is the value measured on this cluster; do not shrink it
   back to the pre-replay baseline.
+- **Querier (`read`) sized for query load** — the canary's `count_over_time` and multi-hour `offset` queries
+  plus Grafana Explore keep the querier busy. At 256 Mi it ran pinned at the limit, GC pressure throttled the
+  CPU to 100 % and the 1 s readiness probe could not be served, so the Service lost its endpoints whenever
+  the write path was healthy enough to give it work. `cpu 500m` / `memory 512Mi` for the same reason.
 - **Smaller memcached caches** — 256 Mi chunks cache and 128 Mi results cache vs. defaults of 8 Gi and 1 Gi
 
 ### GitOps installation
