@@ -33,6 +33,10 @@ fluentbit_outputs: |
       Shared_Key {{ fluentd_shared_key }}
       tls true
       tls.verify false
+      # Fluent Bit >=5.0.4 defaults to true, which makes it emit Forward protocol v1.5
+      # events ([EventTime, metadata]) that fluentd <1.20 cannot decode; fluentd then
+      # drops every event with "skip invalid event" (fluent-bit#11877).
+      Retain_Metadata_In_Forward_Mode false
   [OUTPUT]
       name prometheus_exporter
       match node_metrics
