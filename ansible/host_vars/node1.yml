@@ -124,6 +124,16 @@ restic_clean_service: true
 vault_venv_path: "/opt/vault-venv"
 
 ################################
+# rpi_metrics collector
+################################
+# node1 runs a host node_exporter (not the cluster DaemonSet), started with
+# --collector.textfile.directory=/var/lib/node_exporter — the parent of the role
+# default. Writing rpi.prom there is what makes the metrics scrapeable; with the
+# default (/var/lib/node_exporter/textfile) the collector works but the file is
+# never read.
+rpi_metrics_textfile_dir: /var/lib/node_exporter
+
+################################
 # Fluent-bit Agent configuration
 ################################
 

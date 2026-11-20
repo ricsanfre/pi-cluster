@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kubernetes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "27-03-2026"
+last_modified_at: "20-11-2026"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintained by the community.
@@ -1247,8 +1247,10 @@ start on those nodes and they would lose every `node_exporter` metric.
 | `rpi_temp_celsius` | `vcgencmd measure_temp` |
 {: .table .border-dark }
 
-The existing `node_exporter` relabeling adds the `kubernetes_node` label, so the metrics are addressable
-per node: `rpi_under_voltage_alarm{kubernetes_node="node4"}`.
+The `node_exporter` relabeling adds the `kubernetes_node` label, so the metrics are addressable per node:
+`rpi_under_voltage_alarm{kubernetes_node="node4"}`. For `node1`, which is scraped as an external target, the
+`ScrapeConfig` derives the same label from the target address (`node1.homelab.ricsanfre.com:9100` →
+`kubernetes_node="node1"`), so every rule and panel can select nodes uniformly.
 
 The `PrometheusRule` `rpi-power-alerts` (component `components/rpi-power`) ships three alerts:
 
@@ -1260,10 +1262,17 @@ The `PrometheusRule` `rpi-power-alerts` (component `components/rpi-power`) ships
 {: .table .border-dark }
 
 {{site.data.alerts.note}}
-`node1` runs its own `node_exporter` outside the DaemonSet, scraped as an external target with
-`--collector.textfile.directory=/var/lib/node_exporter` (not the `textfile` subdirectory). The collector
-installs there too, but those metrics are not scraped until that path is aligned.
+`node1` runs its own `node_exporter` outside the DaemonSet, scraped as an external target and started with
+`--collector.textfile.directory=/var/lib/node_exporter` — one level above the `textfile` directory the role
+writes to by default. `ansible/host_vars/node1.yml` therefore overrides `rpi_metrics_textfile_dir` to
+`/var/lib/node_exporter`; with the default path the collector runs and rewrites `rpi.prom` every 30 s, but
+node_exporter never reads it and the node exports no `rpi_*` series at all.
 {{site.data.alerts.end}}
+
+The `GrafanaDashboard` `rpi-power` (same component, folder *Infrastructure*) charts all five metrics per node:
+the live under-voltage alarm, the current throttle flags, the sticky "since boot" flags, ARM clock, core
+voltage, SoC temperature, and collector freshness (`time() - node_textfile_mtime_seconds`), which is the
+panel that catches a dead `rpi-metrics.timer`.
 
 See [runbook `CLUSTER-015`](https://github.com/ricsanfre/pi-cluster/blob/master/runbooks/cluster/nodes-capacity.md#runbook-cluster-015)
 for the under-voltage triage procedure.
