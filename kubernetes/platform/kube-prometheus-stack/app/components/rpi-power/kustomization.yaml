@@ -9,3 +9,4 @@ kind: Component
 
 resources:
   - prometheus-rule.yaml
+  - grafana-dashboard.yaml

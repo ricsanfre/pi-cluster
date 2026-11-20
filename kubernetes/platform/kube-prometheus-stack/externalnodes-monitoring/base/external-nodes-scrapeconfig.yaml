@@ -11,3 +11,12 @@ spec:
     - action: replace
       targetLabel: job
       replacement: node-exporter
+    # Give external nodes the label the cluster nodes get from their ServiceMonitor,
+    # so dashboards and alerts can select `kubernetes_node` uniformly.
+    # instance is node1.homelab.ricsanfre.com:9100
+    - action: replace
+      sourceLabels:
+        - instance
+      regex: '([^.]+)\..*'
+      targetLabel: kubernetes_node
+      replacement: '$1'
