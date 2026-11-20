@@ -29,8 +29,8 @@
         mode: "0755"
 
     - name: Install Raspberry Pi power metrics service unit
-      ansible.builtin.copy:
-        src: rpi-metrics.service
+      ansible.builtin.template:
+        src: rpi-metrics.service.j2
         dest: /etc/systemd/system/rpi-metrics.service
         owner: root
         group: root
