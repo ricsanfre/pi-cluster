@@ -5,6 +5,10 @@ FROM alpine/helm:4.3.2 AS helm
 FROM alpine:3.24 AS tofu
 COPY --from=ghcr.io/opentofu/opentofu:1.13.9 /usr/local/bin/tofu /usr/local/bin/tofu
 
+# kubectl, helm and opentofu are also pinned in .mise.toml, which is the source
+# of truth. Bump both files together: `make check-runner-versions` (run by CI)
+# fails when they disagree.
+
 FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
 
 

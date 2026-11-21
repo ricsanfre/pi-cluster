@@ -27,3 +27,6 @@ jobs:
       - name: Lint all the YAMLs.
         working-directory: ./ansible
         run: yamllint .
+
+      - name: Check the runner tool versions match .mise.toml.
+        run: python3 scripts/check-runner-versions.py
