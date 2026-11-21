@@ -2,7 +2,7 @@
 title: Monitoring (Prometheus)
 permalink: /docs/prometheus/
 description: How to deploy kubernetes cluster monitoring solution based on Prometheus. Installation based on Prometheus Operator using kube-prometheus-stack project.
-last_modified_at: "20-11-2026"
+last_modified_at: "21-11-2026"
 ---
 
 Prometheus stack installation for kubernetes using Prometheus Operator can be streamlined using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project maintained by the community.
@@ -1335,36 +1335,14 @@ If Spegel add-on is configured, its metrics are automatically exposed via all K3
 
 Spegel metrics are automatically recollected from kubelet metrics port. All K3s metrics are scrapped from kubelet metrics port to avoid K3s metrics duplication collection. See section below.
 
-Spegel provides a Grafana dashboard in json format available in Spegel github repo:[https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json](https://github.com/spegel-org/spegel/blob/main/charts/spegel/monitoring/grafana-dashboard.json)
+Spegel does not ship a Grafana dashboard any more. Upstream removed it from the Helm chart in
+v0.8.0, when the per-registry `spegel_advertised_*` metrics were consolidated into a single
+`spegel_advertised_keys` gauge and the existing panels became incompatible with the new metric
+set. The PiCluster repository therefore deploys no Spegel dashboard: the metrics described above
+are still exposed through the kubelet endpoint and can be charted directly.
 
-Dashboard can be automatically added using Grafana's dashboard providers configuration. See further details in ["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards](/docs/grafana/#automating-installation-of-grafana-community-dashboards)
-
-Add following configuration to Grafana's helm chart values file:
-
-```yaml
-# Configure default Dashboard Provider
-# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-      - name: infrastructure
-        orgId: 1
-        folder: "Infrastructure"
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/infrastructure-folder
-
-# Add dashboard
-# Dashboards
-dashboards:
-  infrastructure:
-    spegel:
-      url: https://raw.githubusercontent.com/spegel-org/spegel/refs/heads/main/charts/spegel/monitoring/grafana-dashboard.json
-      datasource: Prometheus
-```
+Generic instructions for loading a dashboard from a provider URL are in
+["PiCluster - Observability Visualization (Grafana): Automating installation of community dashboards"](/docs/grafana/#automating-installation-of-grafana-community-dashboards).
 
 ### K3S duplicate metrics issue
 

@@ -112,15 +112,3 @@ spec:
   datasources:
     - inputName: DS_PROMETHEUS
       datasourceName: Prometheus
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
-  name: spegel
-spec:
-  allowCrossNamespaceImport: true
-  folder: Kubernetes
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana
-  url: https://raw.githubusercontent.com/spegel-org/spegel/refs/heads/main/charts/spegel/monitoring/grafana-dashboard.json
