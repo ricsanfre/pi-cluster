@@ -19,6 +19,8 @@ Symptom-to-runbook index for triage. Canonical catalog: [`runbooks/README.md`](.
 | `CLUSTER-011` | Planned drain, reboot, or maintenance |
 | `CLUSTER-012` | `DiskPressure`, evictions, or a full node filesystem |
 | `CLUSTER-014` | Cluster API unavailable; a node accepts TCP but never sends a banner; etcd reports no quorum |
+| `CLUSTER-015` | Raspberry Pi under-voltage, throttling, or power triage |
+| `CLUSTER-016` | Node root filesystem low; image cache is the dominant consumer |
 
 ### GitOps and release — `runbooks/cluster/gitops-release.md`
 
@@ -122,6 +124,12 @@ Symptom-to-runbook index for triage. Canonical catalog: [`runbooks/README.md`](.
 | `NET-006` | Inspecting served certificates and chain |
 | `NET-007` | Renewal monitoring and forced reissuance |
 | `NET-008` | TLS secret does not match the served certificate |
+
+### Kafka and data services — `runbooks/components/data-services.md`
+
+| ID | Use when |
+| --- | --- |
+| `VALKEY-001` | `ValkeyCluster` stuck in `Reconciling` after pod restarts (stale IPs in `nodes.conf`) |
 
 ## Backlog (no runbook yet)
 
