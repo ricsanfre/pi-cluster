@@ -38,3 +38,9 @@
 # files into base/rules/ and components/monitoring/, so this is intermediate
 # output and must never be committed.
 /kubernetes/platform/kube-prometheus-stack/k3s-mixins/build/out/
+
+# Boilerplate scaffolding. `make vars-example` copies the tracked example to
+# fluxcd-app-template-vars.yaml, and `make generate-fluxcd-app` writes generated
+# manifests to output/. Both are local working files, never committed.
+/boilerplate/output/
+/boilerplate/fluxcd-app-template-vars.yaml
