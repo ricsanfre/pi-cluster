@@ -611,11 +611,30 @@ is deployed.
 -   `Loki / Logs`
 -   `Recording Rules`
 
-Labelled ConfigMaps are the same delivery route the fluentd, fluent-bit, Strimzi and CloudNativePG
-charts already use in this cluster: the grafana-operator reads them cluster-wide, so no
-`GrafanaDashboard` resource is needed. `monitoring.rules` stays disabled because none of these
-dashboards query recorded metrics.
+Labelled ConfigMaps are the same source the fluentd, fluent-bit, Strimzi and CloudNativePG charts
+produce in this cluster, but the grafana-operator does not import them on its own: each dashboard is
+wired with a `GrafanaDashboard` resource that points at the ConfigMap key through
+`spec.configMapRef`, the same shape used for those services:
 
-See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for
-the alternative `GrafanaDashboard` onboarding patterns.
+```yml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: loki-operational
+spec:
+  allowCrossNamespaceImport: true
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: Observability
+  configMapRef:
+    name: loki-dashboards-1
+    key: loki-operational.json
+```
+
+Nine of the ten are onboarded: `Loki / Operational`, `Loki / Writes`, `Loki / Reads`,
+`Loki / Writes Resources`, `Loki / Reads Resources`, `Loki / Retention`, `Loki / Chunks`,
+`Loki / Deletion` and `Loki / Logs`. The `Recording Rules` dashboard is deliberately skipped: it
+queries `loki_ruler_wal_*`, and `monitoring.rules` stays disabled because none of the other bundled
+dashboards need recorded metrics.
 
