@@ -70,7 +70,10 @@ spec:
                   cpu: 50m
                   memory: 128Mi
                 limits:
-                  cpu: 200m
+                  # The agent averages ~45m but bursts past the old 200m quota
+                  # (20ms/100ms) often enough to trip CPUThrottlingHigh at ~35%
+                  # of CFS periods. 500m gives 50ms/100ms of headroom.
+                  cpu: 500m
                   memory: 256Mi
 
   additionalMongodConfig:
