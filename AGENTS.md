@@ -369,6 +369,7 @@ Run the narrowest check that covers the change:
 | Ansible playbook/role | `./ansible-runner/ansible-runner.sh ansible-playbook --syntax-check <playbook>.yml` |
 | Terraform module | `tofu init -backend=false && tofu validate && tofu fmt -check` (inside runner) |
 | Flux/Kubernetes overlay | `kubectl kustomize kubernetes/platform/<svc>/app/overlays/<env>` |
+| `.mise.toml` or `ansible-runner/Dockerfile` | `make check-runner-versions` |
 | `docs/` | `cd docs && bundle exec jekyll build` |
 | Runbooks | Catalog link resolves to the new anchor |
 

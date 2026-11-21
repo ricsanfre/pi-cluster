@@ -77,6 +77,9 @@ ansible-local-syntax-check-external-services: ansible-local-galaxy ## Syntax-che
 uv-lock-check: ## Ensure uv.lock is in sync with pyproject.toml
 	cd $(ANSIBLE_DIR) && uv lock --check
 
+check-runner-versions: ## Ensure .mise.toml and ansible-runner/Dockerfile pin the same tool versions
+	python3 scripts/check-runner-versions.py
+
 lint: ## Run yamllint in the runner container
 	$(RUNNER) yamllint .
 
