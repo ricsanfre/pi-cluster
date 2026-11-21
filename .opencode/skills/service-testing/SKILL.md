@@ -79,7 +79,7 @@ Run the service's own protocol, not just an HTTP 200:
 - **Databases**: create a database, write/read a row, drop it.
 - **Kafka**: produce and consume a message (`test/kafka/` has clients and a Makefile).
 - **Object storage**: `mc` or `aws s3` put/get/delete against RustFS.
-- **Backup**: `velero backup create` a namespace, inspect status (`test/velero/nginx.yaml` is the
+- **Backup**: `velero backup create` a namespace, inspect status (`test/velero/example.yaml` is the
   sample workload).
 - **Tracing**: send a request through the e-commerce app (OTel-instrumented) or another
   instrumented workload, then confirm the trace in Grafana Tempo.
