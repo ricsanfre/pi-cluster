@@ -385,3 +385,149 @@ and 3 A respectively. The cluster was rewired with 50 cm pigtails (the inline ON
 prime suspect) and `node2`-`node5` were moved to ANIDEES 3 A ports. After the rewiring all four nodes
 read `0x0` with no kernel alarm and clocks of 1.4-1.8 GHz; `node5` recorded a single `0x50000` event
 during cold boot, which is the expected inrush window.
+
+## CLUSTER-016 Node Image Cache and Disk Headroom
+
+<a id="runbook-cluster-016"></a>
+Runbook ID: `CLUSTER-016`
+Owner: Platform
+Severity: `SEV-3` (proactive) or `SEV-2` when `nodefs.available` is below 10 % or `DiskPressure=True`
+
+Objective: Reclaim node root-filesystem space from the container image cache **safely** — without
+removing images a workload still needs, without breaking peer image distribution (Spegel), and
+without losing images that cannot be re-pulled.
+
+Preconditions:
+- Node access through an ephemeral debug pod (or the Ansible runner):
+
+```bash
+kubectl debug node/<node> --image=busybox:1.36.1 --profile=sysadmin --attach=false -- sleep 3600
+kubectl exec <debug-pod> -- chroot /host <command>
+kubectl delete pod <debug-pod>
+```
+
+- `k3s crictl` and `k3s ctr` are available on the host (`/usr/local/bin`), and K3s points kubelet at
+  `/etc/rancher/k3s/kubelet.config`.
+- Confirm **which** filesystem is short. Longhorn data lives on the `/storage` LV on the x86 nodes;
+  the pressure in this runbook is on the filesystem holding `/`.
+
+Key facts:
+- **Kubelet image GC is the supported mechanism.** Every 5 minutes, when usage reaches
+  `imageGCHighThresholdPercent` (85), it removes least-recently-used unused images down to
+  `imageGCLowThresholdPercent` (80), and only touches images unused for at least
+  `imageMinimumGCAge` (2m). It skips images used by a container and images labelled
+  `io.cri-containerd.pinned=pinned`. Kubernetes explicitly warns against external GC tools.
+- **Spegel has no garbage collection.** The K3s embedded registry mirror (`embedded-registry: true`,
+  local registry `:6443`, P2P `:5001`) depends entirely on kubelet GC. It only makes a cache miss
+  cheaper: another node, or the upstream registry, serves the image. It is **not** a safe-delete API.
+- **`crictl rmi --prune` ignores the pinned label** (containerd issue #9793). Never use it on a node
+  that holds pinned images.
+- Node-exporter labels the node as **`kubernetes_node`**, not `node` (in-cluster targets).
+
+Procedure:
+
+1. Measure and split the usage. The kubelet summary API and configz are read-only:
+
+```bash
+kubectl get --raw "/api/v1/nodes/<node>/proxy/stats/summary" \
+  | jq '.node | {fs: .fs, imageFs: .runtime.imageFs}'
+kubectl get --raw "/api/v1/nodes/<node>/proxy/configz" \
+  | jq '.kubeletconfig | {imageGCHighThresholdPercent,imageGCLowThresholdPercent,imageMinimumGCAge,imageMaximumGCAge}'
+kubectl get node <node> -o jsonpath='{range .status.conditions[*]}{.type}={.status} {end}{"\n"}'
+```
+
+`imageFs.usedBytes` is the image cache. If pod logs (`pods[].containers[].logs.usedBytes`) and
+writable layers (`rootfs`) are small, images are the target.
+
+2. **Preferred fix: let kubelet GC keep headroom, and pin what must survive.** Add the GC fields to
+   the existing `k3s_kubelet_config` block in `ansible/vars/picluster.yml` (the `k3s` role writes it
+   to `/etc/rancher/k3s/kubelet.config`), keeping the existing `shutdownGracePeriod*` fields, then
+   roll the node per `CLUSTER-011`:
+
+```yaml
+k3s_kubelet_config: |
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  shutdownGracePeriod: 30s
+  shutdownGracePeriodCriticalPods: 10s
+  imageGCHighThresholdPercent: 75
+  imageGCLowThresholdPercent: 70
+  # optional: also drop images unused for 7 days, regardless of disk usage
+  imageMaximumGCAge: 168h
+```
+
+Kubelet then prunes on its own schedule and honours pins and in-use images.
+
+3. Pin images that must never be pruned. Rollback and air-gapped images are the usual case:
+
+```bash
+# on the node
+k3s ctr -n k8s.io images label <repo:tag> io.cri-containerd.pinned=pinned
+k3s crictl inspecti <repo:tag> -o json | jq .status.pinned    # must print true
+```
+
+Remove a pin with `io.cri-containerd.pinned-` (trailing dash). Importing a tar with
+`k3s ctr -n k8s.io images import <tar>` also pins it. Record the pinned set here or in the service
+doc, because a pin is invisible in Git.
+
+Known image to pin: `docker.io/ricsanfre/fluentd-aggregator:v1.18-debian-1` — the logging rollback
+tag, no longer published on Docker Hub.
+
+4. **Break-glass manual reclaim** — only when GC cannot run yet (for example, the config change is
+   deferred). Build the list from **all** containers on the node (`crictl ps -a` includes exited
+   ones), never from tags alone:
+
+```bash
+k3s crictl ps -a -o json      # imageRef / image  -> in use
+k3s crictl images -o json     # candidates
+```
+
+Remove only images that are:
+- not referenced by any container on the node (running **or** exited), and
+- not pinned, and
+- either present on another node (Spegel can serve it) or pullable from upstream.
+
+Remove them individually, with a timeout above crictl's 2 s default:
+
+```bash
+k3s crictl --timeout 3m rmi <image-id>
+```
+
+Never use `crictl rmi --prune` on a node that holds pinned images. Spegel caveat: `crictl rmi`
+removes the image reference and its unpacked snapshots; the compressed blobs can remain in
+containerd's content store until GC, so a peer may still serve them briefly. Removing a per-node
+duplicate is safe for in-use or public images; removing the **last** copy of a non-pullable image is
+unrecoverable.
+
+5. Decide what is safe. Be explicit about the limits:
+- "Unused" only means "not referenced by a container on this node". The runtime cannot know about
+  rollback tags, scaled-to-zero workloads, or images a future Job will need; pin those or keep them
+  in a registry.
+- There is no per-image cluster map. An image used by a workload is present on the node running it,
+  and Spegel serves it from there. Check one node with `k3s crictl images | grep <ref>`; check a
+  specific image on every node only when it matters.
+- Spegel's metrics (`spegel_advertised_content_digests`) are aggregate counts, not a per-image node
+  index.
+
+Verify:
+- `df -B1 /` shows the recovered free space; `node.fs` and `imageFs` in the summary dropped.
+- Node is `Ready` with `DiskPressure=False`.
+- No `Failed` / `ErrImagePull` / `ImagePullBackOff` events, and new pods on the node start (they may
+  pull via Spegel).
+- Spegel still advertises content:
+  `kubectl get --raw "/api/v1/nodes/<node>/proxy/metrics" | grep spegel_advertised`.
+
+Rollback:
+1. Removed images are re-pulled on demand from a peer (Spegel) or upstream.
+2. There is no undo for the last copy of an unpublished image. Restore it from the registry or
+   backup, `k3s ctr -n k8s.io images import` it, and pin it (step 3).
+
+See also:
+- `CLUSTER-012` for active disk pressure and eviction.
+- `CLUSTER-011` to drain a node before changing kubelet GC settings.
+
+References:
+- Kubernetes garbage collection: <https://kubernetes.io/docs/concepts/architecture/garbage-collection>
+- Spegel FAQ (no built-in GC): <https://spegel.dev/docs/faq>
+- K3s embedded registry mirror: <https://docs.k3s.io/installation/registry-mirror>
+- containerd pinned images ignored by `crictl rmi --prune`: <https://github.com/containerd/containerd/issues/9793>
