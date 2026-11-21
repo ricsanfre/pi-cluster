@@ -1,7 +1,7 @@
 # <cluster> cluster status — last updated <YYYY-MM-DD HH:MMZ>
 
 > Rolling status for `<cluster>` (`<kube-context>`). Refresh with `OPS-003` / the
-> `cluster-handover` skill. Untracked session context: never commit. Template:
+> `cluster-healthcheck` skill. Untracked session context: never commit. Template:
 > `operational-status/TEMPLATE.md`. Historical incidents: `operational-status/<cluster>/incidents/`.
 
 ---
@@ -87,5 +87,5 @@
 
 ## 9. Suggested first moves
 
-1. Run `OPS-003` / the `cluster-handover` skill to refresh this file.
+1. Run `OPS-003` / the `cluster-healthcheck` skill to refresh this file.
 2. <next action>

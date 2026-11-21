@@ -314,8 +314,8 @@ Load the skill before starting the matching task:
   overlays, secrets, SSO, observability, cluster wiring, docs and runbook.
 - `service-testing` — proving a service works: dev-cluster deploy, smoke and integration tests,
   promotion checklist, cleanup.
-- `cluster-handover` — refreshing the live cluster handover: layer sweep plus e2e checks, then
-  reconcile every open issue against fresh evidence and update
+- `cluster-healthcheck` — running a cluster healthcheck and refreshing the operational status: layer
+  sweep plus e2e checks, then reconcile every open issue against fresh evidence and update
   `operational-status/<cluster>/cluster-status.md`.
 - `docs-authoring` — writing or updating Jekyll pages, runbooks (`runbooks/`), or release notes.
 

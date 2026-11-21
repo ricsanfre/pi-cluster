@@ -72,7 +72,7 @@ Verify:
 - Follow-up review date is scheduled.
 - Vault returns to operational state.
 
-## OPS-003 Platform Health Snapshot and Handover Refresh
+## OPS-003 Platform Healthcheck and Status Refresh
 
 <a id="runbook-ops-003"></a>
 Runbook ID: `OPS-003`
@@ -164,7 +164,7 @@ Rollback:
 
 References:
 - `.opencode/skills/cluster-triage/SKILL.md` - sweep order and healthy signals.
-- `.opencode/skills/cluster-handover/SKILL.md` - agent orchestration of this runbook.
+- `.opencode/skills/cluster-healthcheck/SKILL.md` - agent orchestration of this runbook.
 - `runbooks/components/observability.md` - `OBS-001`, `OBS-004`.
 - `operational-status/README.md` - layout and rules for the rolling status files.
 - `operational-status/<cluster>/cluster-status.md` - current state and work queue.

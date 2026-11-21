@@ -397,4 +397,4 @@ the rationale is in [`design/adr/0012-opencode-sre-agent.md`](design/adr/0012-op
   spikes, Ansible stages, Terraform validation, and runbook-driven operations. Read-only by default;
   mutations require approval; destructive commands are denied.
 - Skills: `cluster-triage`, `flux-change`, `change-preflight`, `tech-spike`, `new-service`,
-  `service-testing`, `cluster-handover`, `docs-authoring`.
+  `service-testing`, `cluster-healthcheck`, `docs-authoring`.

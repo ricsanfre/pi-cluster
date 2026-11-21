@@ -142,7 +142,7 @@ References:
 
 - [`OPS-001` Incident Command Workflow](cluster/operations-governance.md#runbook-ops-001)
 - [`OPS-002` Postmortem Template and Action Tracking](cluster/operations-governance.md#runbook-ops-002)
-- [`OPS-003` Platform Health Snapshot and Handover Refresh](cluster/operations-governance.md#runbook-ops-003)
+- [`OPS-003` Platform Healthcheck and Status Refresh](cluster/operations-governance.md#runbook-ops-003)
 - `OPS-004` Runbook Review and Stale Runbook Cleanup Process
 
 ### Component Backlog Catalog

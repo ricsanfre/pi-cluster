@@ -1,11 +1,11 @@
 ---
-name: cluster-handover
-description: Use to refresh the live cluster handover — run the layer sweep plus end-to-end checks (metrics, logs, traces, SSO, data services), reconcile every open issue against fresh evidence, and update `operational-status/<cluster>/cluster-status.md`. Load at the start of a session, after a batch of fixes, or for a periodic health review.
+name: cluster-healthcheck
+description: Use to run a cluster healthcheck and refresh the operational status — run the layer sweep plus end-to-end checks (metrics, logs, traces, SSO, data services), reconcile every open issue against fresh evidence, and update `operational-status/<cluster>/cluster-status.md`. Load at the start of a session, after a batch of fixes, or for a periodic health review.
 ---
 
-# Cluster Handover
+# Cluster Healthcheck
 
-Refresh the cluster health snapshot and the live-issue handover so it reflects reality.
+Run the cluster health sweep and refresh the operational status so it reflects reality.
 
 The rolling status file is `operational-status/<cluster>/cluster-status.md`; `operational-status/README.md`
 defines the convention and `operational-status/TEMPLATE.md` is the first-run template. The status file
