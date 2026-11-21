@@ -36,6 +36,21 @@ deschedulerPolicy:
               - PodsWithPVC
             evictLocalStoragePods: false
             evictSystemCriticalPods: false
+            # Cluster-critical namespaces are never eviction candidates.
+            # v1alpha2 dropped `excludedNamespaces`, so the exclusion is
+            # expressed as a namespace selector: `kubernetes.io/metadata.name`
+            # is applied automatically to every namespace. This is the
+            # protection the prod overlay comment has always claimed; without
+            # it the cert-manager webhook, the Flux controllers and
+            # snapshot-controller were evicted on every cycle.
+            namespaceLabelSelector:
+              matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: NotIn
+                values:
+                - kube-system
+                - cert-manager
+                - flux-system
             # nodeFit disabled: the descheduler's nodeFit check fails when
             # control-plane nodes are tainted with NoSchedule, because it
             # evaluates the pod against ALL nodes (including tainted ones)
@@ -58,12 +73,24 @@ deschedulerPolicy:
             #
             # 60% admits the x86 workers as targets, while a node at 70% of
             # requests is still not a source.
+            #
+            # 2026-11-21: the CPU target was raised from 80 to 90. Both x86
+            # workers sit above 80% of requests (node-hp-1 81%, node-hp-3
+            # 85-87%) while idling at 38-43% of *actual* CPU, so every 5-minute
+            # cycle evicted 3 pods from each of them — 195 evictions in four
+            # hours, including the CNPG and cert-manager controllers and
+            # tempo-ingester — and the scheduler put them back on the same
+            # nodes. 90 keeps LowNodeUtilization meaningful for genuine request
+            # pressure without chasing over-reservation. Rebalancing the
+            # requests themselves (and retiring this strategy if it cannot
+            # help, since the only under-utilized nodes are the tainted
+            # control-plane ones) is the follow-up.
             thresholds:
               cpu: 60
               memory: 40
               pods: 40
             targetThresholds:
-              cpu: 80
+              cpu: 90
               memory: 70
               pods: 60
         - name: RemoveDuplicates

@@ -3,7 +3,9 @@
 serviceMonitor:
   enabled: false
 
-# Exclude kube-system, cert-manager, and flux-system from eviction
-# to prevent disruption of critical cluster services.
+# Eviction of kube-system, cert-manager and flux-system is excluded in the
+# base policy (DefaultEvictor `namespaceLabelSelector`), not here: Helm replaces
+# lists on merge, so a profile override in this overlay would drop the whole
+# pluginConfig block.
 cmdOptions:
   v: 4
