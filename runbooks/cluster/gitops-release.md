@@ -335,20 +335,35 @@ Preconditions:
     -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
   ```
 
-- The lock is **stale**: its `Created` timestamp predates the incident and the runner pod in
-  `Who` (`runner@<name>-tf-runner`) no longer exists. Do not unlock a live operation — a current
-  run is visible as a running `<name>-tf-runner` pod and a `StateLocked=True LockHeld` condition.
+- The lock is **stale**. Decide that from the lock itself, not from the presence of a runner pod:
+  its `Created` timestamp predates the incident and the **same lock `ID`** recurs across successive
+  failed attempts (count them under `Events:` in `describe terraform <name>`).
+
+  A running `<name>-tf-runner` pod is **not** evidence of a live operation: the runner is one-shot
+  and shows `Running` for ~20 s on every attempt, including the ones that fail to acquire the lock,
+  so it is present while the lock is stale. A genuinely live run is a single pod that stays up for
+  minutes, with a `Created` timestamp that advances between attempts.
+
+  This precondition previously read "a current run is visible as a running `<name>-tf-runner` pod
+  and a `StateLocked=True LockHeld` condition", which produces a false positive and blocks the
+  unlock exactly when it is needed.
 
 Procedure:
 
 1. Record the lock `ID`, `Who` and `Created` from the Ready condition message.
-2. Confirm the owner is gone and read the lock object (the tofu-controller default backend is the
-   Kubernetes backend, so locks are `coordination.k8s.io` Leases):
+2. Read the lock object and watch a couple of attempts (the tofu-controller default backend is the
+   Kubernetes backend, so locks are `coordination.k8s.io` Leases). A single `get pods` proves
+   nothing — the runner pod exits within seconds and is deleted:
 
    ```bash
-   kubectl --context picluster-prod -n flux-system get pods | grep <name>-tf-runner
+   kubectl --context picluster-prod -n flux-system get pods | grep <name>-tf-runner   # transient
    kubectl --context picluster-prod -n flux-system get lease lock-tfstate-default-<name>
+   kubectl --context picluster-prod -n flux-system describe terraform <name> \
+     | sed -n '/Events:/,$p'
    ```
+
+   Stale signature: the Lease `HOLDER` equals the lock `ID`, the event stream repeats that same
+   `ID` on every attempt, and each attempt ends in `error acquiring the state lock` within seconds.
 
 3. Force unlock. `forceUnlock: yes` alone is **not** enough: the controller also needs
    `lockIdentifier` set to the `ID` from step 1.
