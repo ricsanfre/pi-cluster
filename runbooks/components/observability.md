@@ -53,8 +53,8 @@ Procedure:
 1. Check Loki and agent pod health.
 
 ```bash
-kubectl -n monitoring get pods | grep -i loki
-kubectl -n monitoring logs deploy/loki --tail=200
+kubectl -n loki get pods
+kubectl -n fluent get pods
 ```
 
 2. Validate ingest path from Fluent Bit/Promtail to Loki endpoint.
@@ -86,6 +86,26 @@ appears with `time=[..., {}]` and the fields themselves parse correctly, the age
 `Retain_Metadata_In_Forward_Mode false` (`retain_metadata_in_forward_mode: false` in Helm values).
 fluentd < 1.20 cannot decode that format and drops every event. See
 [Fluent Bit upgrade notes](https://docs.fluentbit.io/manual/installation/upgrade-notes#forward-output-retain_metadata_in_forward_mode-default-changed-to-true).
+
+Third common cause: **an output buffer overflow on the aggregator drops records for every sink.**
+fluentd's `@type copy` is not isolated per store: `@OUTPUT_LOKI` and `@OUTPUT_ES` are stores of the
+same `copy`, both with `retry_forever true`. When the Loki store cannot flush, its buffer fills and
+the store throws (`BufferOverflowError`, `overflow_action=:throw_exception`), so the copy fails as a
+unit and **Elasticsearch loses the same records**. This happened on 2026-11-20 between 14:39Z and
+14:47Z while `loki-write` was OOM-looping.
+
+Symptom: a gap in *both* sinks while the agents keep sending, with the output queue not draining:
+
+```bash
+kubectl -n fluent logs deploy/fluentd --since=15m | grep -E 'BufferOverflow|overflow_action'
+
+# queue and retry counters are per store — check them before blaming the inputs
+curl -sG "$PROM/api/v1/query" --data-urlencode 'query=fluentd_output_status_buffer_queue_length'
+curl -sG "$PROM/api/v1/query" --data-urlencode 'query=fluentd_output_status_retry_count'
+```
+
+The fix is on the output side, not the input side: set `overflow_action` on the Loki store, or give
+Loki its own `<match>` with a bounded buffer, so one jammed sink cannot starve the other.
 
 **Confirming that one host is actually shipping**
 
