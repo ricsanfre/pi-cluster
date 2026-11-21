@@ -348,7 +348,7 @@ Installation process is the following:
     replicaCount: 1
     # Enabling HPA
     autoscaling:
-      enabled: false
+      enabled: true
       minReplicas: 1
       maxReplicas: 100
       targetCPUUtilizationPercentage: 80
