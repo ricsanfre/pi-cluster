@@ -37,7 +37,10 @@ kubectl top nodes
 ```
 
 Healthy: all nodes `Ready`, no `MemoryPressure` / `DiskPressure` / `PIDPressure`, CPU and memory not
-saturated. Pi nodes also suffer from throttling and SD-card wear — check with `make get-pi-status`.
+saturated. The Raspberry Pi nodes boot from an **SSD on a USB-SATA bridge** (`ASM105x`), not an SD
+card: the failure mode is a USB storage stall (`dmesg | grep -iE "uas|reset|I/O error"`), not card
+wear. A stalled node still accepts TCP 22 but never sends an SSH banner and stops reporting to the
+kubelet — power-cycle territory. Check throttling with `make get-pi-status`.
 
 ### 3. Control plane and system components
 
