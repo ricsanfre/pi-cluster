@@ -15,6 +15,21 @@ image:
   tag: ""          # use chart appVersion
   pullPolicy: IfNotPresent
 
+# The chart default is requests/limits 500m CPU and 256Mi memory. That request
+# is charged against whatever node the pod lands on: on 2026-11-21 the pod was
+# scheduled to node-hp-3 and its 500m alone took that node from 85% to 98% of
+# CPU requests, which is what tipped LowNodeUtilization into evicting again.
+# Measured usage is ~2m CPU and 15Mi steady, with a 141Mi transient while the
+# informer caches are built at start-up, and 0% CFS throttling at the 500m
+# limit, so keep the limit and shrink the request.
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
 leaderElection:
   enabled: true
 
