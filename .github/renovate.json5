@@ -9,7 +9,9 @@
     'github>ricsanfre/pi-cluster//.github/renovate/groups.json5',
     'github>ricsanfre/pi-cluster//.github/renovate/labels.json5',
   ],
-  dependencyDashboardTitle: 'Renovate Dashboard 🤖',
+  dependencyDashboard: {
+    title: 'Renovate Dashboard 🤖',
+  },
   flux: {
     managerFilePatterns: [
       '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
@@ -50,19 +52,25 @@
       '/(^|/)ansible/.+\\.ya?ml(?:\\.j2)?$/',
     ],
   },
-  // Dependencies of the k3s-mixins build
-  // (kubernetes/platform/kube-prometheus-stack/k3s-mixins/build/src/jsonnetfile.json).
   packageRules: [
     {
       description: 'kubernetes-mixin is pinned to a commit and tracked by the git-refs custom manager, not by tags',
-      matchManagers: ['jsonnet-bundler'],
-      matchPackageNames: ['https://github.com/kubernetes-sigs/kubernetes-mixin.git'],
+      matchManagers: [
+        'jsonnet-bundler',
+      ],
+      matchPackageNames: [
+        'https://github.com/kubernetes-sigs/kubernetes-mixin.git',
+      ],
       enabled: false,
     },
     {
       description: 'kube-prometheus publishes v-prefixed semver tags',
-      matchManagers: ['jsonnet-bundler'],
-      matchPackageNames: ['https://github.com/prometheus-operator/kube-prometheus.git'],
+      matchManagers: [
+        'jsonnet-bundler',
+      ],
+      matchPackageNames: [
+        'https://github.com/prometheus-operator/kube-prometheus.git',
+      ],
       versioning: 'semver-coerced',
     },
   ],
