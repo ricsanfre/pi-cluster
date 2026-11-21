@@ -2,6 +2,30 @@
 #
 # Distributed deployment backed by RustFS (S3).
 
+# Probe tuning shared by every tempo component.
+#
+# The ingester is killed by its own liveness probe while it replays the WAL: the
+# pod saturates its 500m CPU limit, /ready does not answer within 5s, and the
+# container restarts into another replay. The probe values below are the chart
+# defaults (tempo-distributed 1.61.3) with the timeouts relaxed; they apply to
+# compactor, distributor, ingester, querier and query-frontend. Size the limits
+# separately once the kill loop is broken.
+tempo:
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 60
+    timeoutSeconds: 15
+    failureThreshold: 5
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 5
+
 # Configure S3 backend
 storage:
   trace:
