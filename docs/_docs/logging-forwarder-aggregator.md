@@ -63,6 +63,17 @@ Tags mirror the fluentd base image they are built from; there is no rolling `lat
 
 {{site.data.alerts.end}}
 
+{{site.data.alerts.note}}
+
+GHCR is the only registry the image build workflow publishes to. Docker Hub is legacy and no
+longer updated, but the last tag published there,
+`docker.io/ricsanfre/fluentd-aggregator:v1.18-debian-1`, remains pullable as a fallback. The
+same tag exists in GHCR (`ghcr.io/ricsanfre/fluentd-aggregator:v1.18-debian-1`) and is the
+cluster rollback image; to roll back, point the deployment at that tag instead of the current
+one.
+
+{{site.data.alerts.end}}
+
 As base image, the [official fluentd docker image](https://github.com/fluent/fluentd-docker-image) can be used. To customize it, follow the instructions in the project repository: ["Customizing the image to intall additional plugins"](https://github.com/fluent/fluentd-docker-image#3-customize-dockerfile-to-install-plugins-optional).
 
 In our case, the list of plugins that need to be added to the default fluentd image are:
