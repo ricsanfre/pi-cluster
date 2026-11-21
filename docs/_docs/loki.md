@@ -2,7 +2,7 @@
 title: Log Aggregation (Loki)
 permalink: /docs/loki/
 description: How to deploy Grafana Loki in our Raspberry Pi Kubernetes cluster.
-last_modified_at: "20-11-2026"
+last_modified_at: "21-11-2026"
 
 ---
 
@@ -552,3 +552,70 @@ grafana:
     type: loki
     url: http://loki-read-headless.loki.svc.cluster.local
 ```
+
+## Observability
+
+### Metrics
+
+Loki exposes its own metrics in Prometheus format on the `http-metrics` port of every component. They
+are the only way to see the ingester internals — stream count, WAL replay state — which cAdvisor and
+pod logs cannot show.
+
+#### Prometheus Integration
+
+A `ServiceMonitor`, Prometheus Operator's CRD, can be created so kube-prometheus-stack automatically
+starts collecting the metrics. In this repository it is environment-specific, so it lives in a
+kustomization component that only the prod overlay loads:
+
+```
+kubernetes/platform/loki/app/components/monitoring/
+├── kustomization.yaml   # kind: Component - ConfigMap merge + HelmRelease patch
+├── helm-patch.yaml      # appends monitoring-values.yaml to spec.valuesFrom
+└── values.yaml
+```
+
+The values it provides:
+
+```yml
+monitoring:
+  serviceMonitor:
+    enabled: true
+  dashboards:
+    enabled: true
+clusterLabelOverride: pi-cluster
+```
+
+- `monitoring.serviceMonitor` creates a single `ServiceMonitor` in the `loki` namespace. The chart
+  marks the services that must not be scraped — `loki-gateway`, the `*-headless` services and
+  `loki-query-scheduler-discovery` — with `prometheus.io/service-monitor: "false"`, so the scrape
+  targets are `write`, `read`, `backend`, `canary` and the two caches.
+- `monitoring.selfMonitoring` stays disabled: it installs a second kube-prometheus stack from inside
+  the chart, which is not wanted here.
+- `clusterLabelOverride` keeps the `cluster` label on Loki's metrics equal to the Prometheus external
+  label (`pi-cluster`) instead of the chart default `<release>-<chart>`. The bundled dashboards build
+  their `cluster` variable from that label.
+
+Without the component nothing scrapes Loki — the namespace has no `ServiceMonitor` and no
+`PodMonitor` — which is why the ingester internals were invisible during the 2026-11 logging
+incidents. `OBS-004` relies on `loki_ingester_memory_streams`, which only exists once the component
+is deployed.
+
+#### Grafana Dashboards
+
+`monitoring.dashboards` creates the `loki-dashboards-1` and `loki-dashboards-2` ConfigMaps, labelled
+`grafana_dashboard: "1"`, carrying the upstream dashboards version-matched to the chart:
+
+-   `Loki / Operational`
+-   `Loki / Writes`, `Loki / Reads`, `Loki / Writes Resources`, `Loki / Reads Resources`
+-   `Loki / Retention`, `Loki / Chunks`, `Loki / Deletion`
+-   `Loki / Logs`
+-   `Recording Rules`
+
+Labelled ConfigMaps are the same delivery route the fluentd, fluent-bit, Strimzi and CloudNativePG
+charts already use in this cluster: the grafana-operator reads them cluster-wide, so no
+`GrafanaDashboard` resource is needed. `monitoring.rules` stays disabled because none of these
+dashboards query recorded metrics.
+
+See [Grafana Operator - Provisioning Dashboards](/docs/grafana-operator/#provisioning-dashboards) for
+the alternative `GrafanaDashboard` onboarding patterns.
+

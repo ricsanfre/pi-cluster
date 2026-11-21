@@ -1,0 +1,25 @@
+# loki helm values (monitoring)
+#
+# Scrape Loki's own metrics. Nothing else in the repo defines a ServiceMonitor
+# for the loki namespace, so without this the ingester internals (stream count,
+# WAL replay) are invisible to Prometheus and two incidents had to be diagnosed
+# from cAdvisor and pod logs. The chart labels the services that must not be
+# scraped (gateway, headless, query-scheduler discovery) with
+# prometheus.io/service-monitor: "false", so the targets are write, read,
+# backend, canary and the two caches.
+monitoring:
+  serviceMonitor:
+    enabled: true
+  # The chart's dashboards are delivered as ConfigMaps labelled
+  # grafana_dashboard: "1", which the grafana-operator picks up cluster-wide -
+  # the same route the fluentd, fluent-bit, Strimzi and CloudNativePG charts
+  # already use in this cluster. They are version-matched to the chart, so no
+  # third-party dashboard is vendored. The chart's recording rules stay
+  # disabled: none of the bundled dashboards depend on them.
+  dashboards:
+    enabled: true
+
+# Keep the cluster label on Loki's metrics consistent with the Prometheus
+# external label; the chart's ServiceMonitor otherwise rewrites it to
+# <release>-<chart>, i.e. loki-loki.
+clusterLabelOverride: pi-cluster
