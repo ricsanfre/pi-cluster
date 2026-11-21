@@ -45,5 +45,6 @@
 /boilerplate/output/
 /boilerplate/fluxcd-app-template-vars.yaml
 
-# Session handover (untracked working notes; never committed)
-/handover-*.md
+# Operational status (rolling per-cluster status; session context, never committed)
+/operational-status/*/cluster-status.md
+/operational-status/*/incidents/

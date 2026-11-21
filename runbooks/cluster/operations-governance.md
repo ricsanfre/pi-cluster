@@ -85,13 +85,15 @@ checks, and reconcile the live-issue handover so it reflects reality.
 Preconditions:
 - `kubectl` with the `picluster-prod` context and `flux` installed.
 - Access to Prometheus, Loki, Tempo and Grafana through the Kubernetes API proxy.
-- The current handover file at the repository root (`handover-*-cluster-status.md`). It is
-  untracked session context and must never be committed.
+- The rolling status file `operational-status/<cluster>/cluster-status.md` and the template
+  `operational-status/TEMPLATE.md`. The status file and `incidents/` are untracked session context
+  and must never be committed.
 
 Procedure:
 
-1. Load the current handover (`ls -t handover-*-cluster-status.md | head -1`) and list every open
-   item with the command or value that proves it.
+1. Load `operational-status/<cluster>/cluster-status.md` (on first run, copy
+   `operational-status/TEMPLATE.md` to that path). List every open item with the command or value
+   that proves it.
 2. Run the layer sweep described in the `cluster-triage` skill: nodes, `kube-system`, Flux
    sources/Kustomizations, HelmReleases, workloads, storage, gateway/TLS/DNS, observability and
    external services. Record only abnormal results.
@@ -101,9 +103,9 @@ Procedure:
    - Evidence still reproduces -> update the value and timestamp.
    - Evidence is worse -> re-prioritise and add the next step.
 5. Add new findings from the sweep as open items with evidence and a proposed next step.
-6. Update the handover: snapshot, timeline, closed table, open items, watch list and suggested
-   moves. Keep exactly one current file: update it in place during the day; on a new day create
-   the dated successor, carry the open items over, and delete the superseded file once quoted.
+6. Update the rolling status in place: snapshot, timeline, closed table, open items, watch list and
+   suggested moves. There is no dated file per day; historical incident narratives go under
+   `operational-status/<cluster>/incidents/`.
 7. Report only the deltas since the previous handover.
 
 Commands:
@@ -145,8 +147,8 @@ kubectl $CTX get --raw "/api/v1/nodes/<node>/proxy/stats/summary"
 kubectl $CTX -n longhorn-system get volumes.longhorn.io
 kubectl $CTX get pvc -A | grep -v Bound
 
-# Handover
-ls -t handover-*-cluster-status.md | head -1
+# Status file
+cat operational-status/prod/cluster-status.md
 ```
 
 Verify:
@@ -164,4 +166,5 @@ References:
 - `.opencode/skills/cluster-triage/SKILL.md` - sweep order and healthy signals.
 - `.opencode/skills/cluster-handover/SKILL.md` - agent orchestration of this runbook.
 - `runbooks/components/observability.md` - `OBS-001`, `OBS-004`.
-- `handover-*-cluster-status.md` - current state and work queue.
+- `operational-status/README.md` - layout and rules for the rolling status files.
+- `operational-status/<cluster>/cluster-status.md` - current state and work queue.
