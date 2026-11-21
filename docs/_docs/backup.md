@@ -412,26 +412,30 @@ credentials:
 
 ### Testing Velero
 
-Deploy a testing application (nginx), which uses a Longhorn's Volume for storing its logs (`/var/logs/nginx`)
+Deploy a small writer that keeps a heartbeat file on a Longhorn volume, back it up with
+Velero, delete the namespace, and restore it. Velero is configured with CSI snapshots
+(`features: EnableCSI`), so the PVC is captured by the Longhorn CSI driver; the old
+file-system-backup annotation and `fsfreeze` hook are not used.
 
--   Step 1. Create manifest file: `nginx-example.yml`
-  
-    ```yml
+-   Step 1. Create the manifest file `velero-example.yaml` (kept in the repository as
+    `test/velero/example.yaml`)
+
+    ```yaml
     ---
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: nginx-example
+      name: velero-example
       labels:
-        app: nginx
+        app: velero-example
     ---
-    kind: PersistentVolumeClaim
     apiVersion: v1
+    kind: PersistentVolumeClaim
     metadata:
-      name: nginx-logs
-      namespace: nginx-example
+      name: velero-data
+      namespace: velero-example
       labels:
-        app: nginx
+        app: velero-example
     spec:
       storageClassName: longhorn
       accessModes:
@@ -443,128 +447,107 @@ Deploy a testing application (nginx), which uses a Longhorn's Volume for storing
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: nginx-deployment
-      namespace: nginx-example
+      name: velero-example
+      namespace: velero-example
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app: nginx
+          app: velero-example
       template:
         metadata:
           labels:
-              app: nginx
-          annotations:
-              pre.hook.backup.velero.io/container: fsfreeze
-              pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
-              post.hook.backup.velero.io/container: fsfreeze
-              post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
+            app: velero-example
         spec:
-          volumes:
-            - name: nginx-logs
-              persistentVolumeClaim:
-                claimName: nginx-logs
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
           containers:
-            - image: nginx:1.17.6
-              name: nginx
-              ports:
-                - containerPort: 80
-              volumeMounts:
-                - mountPath: "/var/log/nginx"
-                  name: nginx-logs
-                  readOnly: false
-            - image: ubuntu:bionic
-              name: fsfreeze
-              securityContext:
-                privileged: true
-              volumeMounts:
-                - mountPath: "/var/log/nginx"
-                  name: nginx-logs
-                  readOnly: false
+            - name: writer
+              image: busybox:1.36.1
               command:
-                - "/bin/bash"
-                - "-c"
-                - "sleep infinity"
-    ---
-    apiVersion: v1
-    kind: Service
-    metadata:
-      labels:
-          app: nginx
-      name: my-nginx
-      namespace: nginx-example
-    spec:
-      ports:
-        - port: 80
-          targetPort: 80
-      selector:
-        app: nginx
-      type: LoadBalancer
+                - /bin/sh
+                - -c
+                - while true; do date -u +%FT%TZ >> /data/heartbeat.log; sleep 5; done
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 50m
+                  memory: 32Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: velero-data
     ```
 
-    {{site.data.alerts.note}}
-    Deployment template is annotated so, volume is included in the backup (`backup.velero.io/backup-volumes`) and before doing the backup the filesystem is freeze (`pre.hook.backup.velero.io` and `post.hook.backup.velero.io`)
-    {{site.data.alerts.end}}
+-   Step 2. Apply the manifest
 
--   Step 2. Apply manifest file `nginx-example.yml`
-   
     ```shell
-    kubectl apply -f nginx-example.yml
-    ```
--   Step 3. Connect to nginx pod and create manually a file within `/var/log/nginx`
-
-      ```shell
-      kubectl exec <nginx-pod> -n nginx-example -it -- /bin/sh
-      # touch /var/log/nginx/testing
-      ```
-
--   Step 4. Create a backup for any object included in nginx-example namespace:
-  
-    ```shell
-    velero backup create nginx-backup --include-namespaces nginx-example --wait  
+    kubectl apply -f velero-example.yaml
     ```
 
--   Step 5. Simulate a disaster:
-  
+-   Step 3. Confirm the writer is running and writing to the volume
+
     ```shell
-    kubectl delete namespace nginx-example
+    kubectl -n velero-example exec deploy/velero-example -- cat /data/heartbeat.log
     ```
 
--   Step 6. To check that the nginx deployment and service are gone, run:
+-   Step 4. Create a backup of the namespace
 
     ```shell
-    kubectl get deployments --namespace=nginx-example
-    kubectl get services --namespace=nginx-example
-    kubectl get namespace/nginx-example
+    velero backup create velero-example-backup --include-namespaces velero-example --wait
+    velero backup describe velero-example-backup --details
+    ```
+
+    The backup should report the `velero-data` PVC as snapshotted by the CSI driver.
+
+-   Step 5. Simulate a disaster
+
+    ```shell
+    kubectl delete namespace velero-example
+    ```
+
+-   Step 6. Confirm the namespace and its resources are gone
+
+    ```shell
+    kubectl get namespace velero-example
+    kubectl -n velero-example get deploy,pvc
     ```
 
 -   Step 7. Run the restore
 
     ```shell
-    velero restore create --from-backup nginx-backup
+    velero restore create --from-backup velero-example-backup
     ```
-  
--   Step 8. Check the status of the restore:
+
+-   Step 8. Check the restore status
 
     ```shell
     velero restore get
     ```
 
-    After the restore finishes, the output looks like the following:
+    After the restore finishes, the output looks like:
+
     ```
-    NAME                          BACKUP         STATUS      STARTED                         COMPLETED                       ERRORS   WARNINGS   CREATED                         SELECTOR
-    nginx-backup-20211220180613   nginx-backup   Completed   2021-12-20 18:06:13 +0100 CET   2021-12-20 18:06:50 +0100 CET   0        0          2021-12-20 18:06:13 +0100 CET   <none>
+    NAME                               BACKUP                 STATUS      ...
+    velero-example-backup-<timestamp>  velero-example-backup  Completed   ...
     ```
 
--   Step 9. Check nginx deployment and services are back
-  
+-   Step 9. Verify the Deployment, the PVC and the data are back
+
     ```shell
-    kubectl get deployments --namespace=nginx-example
-    kubectl get services --namespace=nginx-example
-    kubectl get namespace/nginx-example
+    kubectl -n velero-example get deploy,pvc
+    kubectl -n velero-example exec deploy/velero-example -- cat /data/heartbeat.log
     ```
 
--   Step 10. Connect to the restored pod and check that `testing` file is in `/var/log/nginx`
+    The heartbeat file must contain the entries written before the backup. If it does, the
+    CSI snapshot and restore path is working end to end.
 
 ### Schedule a periodic full backup
 

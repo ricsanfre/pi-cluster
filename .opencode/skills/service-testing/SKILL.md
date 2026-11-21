@@ -81,7 +81,8 @@ Run the service's own protocol, not just an HTTP 200:
 - **Object storage**: `mc` or `aws s3` put/get/delete against RustFS.
 - **Backup**: `velero backup create` a namespace, inspect status (`test/velero/nginx.yaml` is the
   sample workload).
-- **Tracing**: deploy the sample app (`test/tracing/emojivoto-ingress.yaml`) and confirm traces.
+- **Tracing**: send a request through the e-commerce app (OTel-instrumented) or another
+  instrumented workload, then confirm the trace in Grafana Tempo.
 - **Auth**: complete a real login through Keycloak; assert the token has the expected claims.
 
 Reusable test assets belong under `test/<service>/` with a `Makefile` and a short `README.md`, following
