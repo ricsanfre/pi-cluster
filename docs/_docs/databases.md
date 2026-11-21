@@ -1732,66 +1732,12 @@ The operator does not yet include native backup/restore or integration with S3-c
 
 ### Troubleshooting
 
-#### Cluster stuck in Reconciling state
+{{site.data.alerts.note}}
 
-The most common failure mode is the cluster entering a perpetual `Reconciling` state, typically caused by stale IP addresses in the cluster topology file after pod restarts.
-
-**Symptoms**:
-
-```shell
-$ kubectl get valkeycluster -n databases
-NAME     STATE          REASON         SHARDS   READY SHARDS   AGE
-valkey   Reconciling    Reconciling    1        0              2d
-```
-
-- `Ready` condition is `False` with message `"Waiting for replicas to sync with primary"`
-- Operator logs repeat `"replica not yet in sync, requeue.."`
-- Replica pod logs show repeated connection failures to a stale primary IP
-
-**Root cause**: When pods restart and receive new IP addresses from the CNI, the `nodes.conf` file persisted on the PVC retains old IP addresses from the previous run. The operator detects the mismatch but may not issue corrective `CLUSTER MEET` / `CLUSTER FORGET` commands automatically, especially on clusters created with older operator versions (v0.1.0).
-
-**Recovery procedure**:
-
-1. Verify the stale IP condition:
-
-   ```shell
-   # Check pod IPs
-   kubectl get pods -n databases -l valkey.io/cluster=valkey -o wide
-
-   # Check replication status on each pod
-   kubectl exec -n databases valkey-valkey-0-0-0 -c server -- valkey-cli INFO replication
-   kubectl exec -n databases valkey-valkey-0-1-0 -c server -- valkey-cli INFO replication
-
-   # Inspect nodes.conf for stale IPs
-   kubectl exec -n databases valkey-valkey-0-0-0 -c server -- cat /data/nodes.conf
-   kubectl exec -n databases valkey-valkey-0-1-0 -c server -- cat /data/nodes.conf
-   ```
-
-2. Fix the cluster topology at runtime:
-
-   ```shell
-   # Get current pod IPs
-   PRIMARY_IP=$(kubectl get pod -n databases valkey-valkey-0-0-0 -o jsonpath='{.status.podIP}')
-   REPLICA_IP=$(kubectl get pod -n databases valkey-valkey-0-1-0 -o jsonpath='{.status.podIP}')
-
-   # Set correct announce IPs
-   kubectl exec -n databases valkey-valkey-0-0-0 -c server -- valkey-cli CONFIG SET cluster-announce-ip "$PRIMARY_IP"
-   kubectl exec -n databases valkey-valkey-0-1-0 -c server -- valkey-cli CONFIG SET cluster-announce-ip "$REPLICA_IP"
-
-   # Re-establish cluster topology
-   kubectl exec -n databases valkey-valkey-0-0-0 -c server -- valkey-cli CLUSTER MEET "$REPLICA_IP" 6379
-   ```
-
-3. Verify recovery:
-
-   ```shell
-   kubectl get valkeycluster -n databases valkey
-   # Should show STATE=Ready, READY SHARDS=1
-   ```
-
-{{site.data.alerts.important}}
-
-Operator v0.2.0 and later inject `--cluster-announce-ip $(POD_IP)` via the Kubernetes downward API, which prevents self-IP staleness on restarts. However, **peer IPs** in `nodes.conf` on pre-existing PVCs may still be stale after pod IP changes. For a permanent fix, recreate the ValkeyCluster (or its PVCs) after upgrading the operator, so that `nodes.conf` starts fresh with correct addresses.
+If the cluster is stuck in `Reconciling` after pod restarts because `nodes.conf` holds
+stale IPs, follow
+[runbook `VALKEY-001`](https://github.com/ricsanfre/pi-cluster/blob/master/runbooks/components/data-services.md#runbook-valkey-001).
+The recovery procedure and the automated recovery script live there.
 
 {{site.data.alerts.end}}
 
@@ -1812,13 +1758,3 @@ CLUSTER NODES
 INFO replication
 INFO stats
 ```
-
-{{site.data.alerts.tip}}
-
-For an automated detection and recovery of stale IP conditions, use the recovery script included in the repository at `scripts/recover-valkey-stale-ip.sh`. The script is idempotent — safe to run repeatedly on healthy clusters.
-
-```shell
-bash scripts/recover-valkey-stale-ip.sh --namespace databases --cluster valkey
-```
-
-{{site.data.alerts.end}}

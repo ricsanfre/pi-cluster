@@ -40,7 +40,7 @@ If no runbook covers the situation, start from a triage runbook (`GITOPS-002`, `
 | Elastic and Logging | [`components/elastic-logging.md`](components/elastic-logging.md) | `ELASTIC-001` (backlog: `ELASTIC-002` … `ELASTIC-005`) |
 | Monitoring and Tracing | [`components/observability.md`](components/observability.md) | `OBS-001`, `OBS-004` (backlog: `OBS-002`, `OBS-003`, `OBS-005`) |
 | Service Mesh and Ingress | [`components/networking-ingress.md`](components/networking-ingress.md) | `NET-004` … `NET-008` (backlog: `NET-001` … `NET-003`) |
-| Kafka and Data Services | — | backlog only: `KAFKA-001`, `KAFKA-002`, `MONGO-001`, `PG-001` |
+| Kafka and Data Services | [`components/data-services.md`](components/data-services.md) | `VALKEY-001` (backlog: `KAFKA-001`, `KAFKA-002`, `MONGO-001`, `PG-001`) |
 
 ## Runbook Template
 
@@ -197,6 +197,7 @@ References:
 
 #### Kafka and Data Services
 
+- [`VALKEY-001` Valkey Cluster Stuck in Reconciling (Stale Node IPs)](components/data-services.md#runbook-valkey-001)
 - `KAFKA-001` Kafka Broker Outage and Partition Recovery
 - `KAFKA-002` Kafka Auth and ACL Drift Recovery
 - `MONGO-001` MongoDB Operator Failover and Restore
