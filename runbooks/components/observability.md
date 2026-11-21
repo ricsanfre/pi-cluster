@@ -107,6 +107,14 @@ curl -sG "$PROM/api/v1/query" --data-urlencode 'query=fluentd_output_status_retr
 The fix is on the output side, not the input side: set `overflow_action` on the Loki store, or give
 Loki its own `<match>` with a bounded buffer, so one jammed sink cannot starve the other.
 
+As of 2026-11-21 both stores use a **file buffer** on a 1 GiB `emptyDir`
+(`/var/log/fluent/buffer/{es,loki}`, `total_limit_size 400MB` each) with
+`overflow_action drop_oldest_chunk`. Overflow now drops the oldest chunks of the jammed store only
+and never raises `BufferOverflowError` into the shared `copy`, so a Loki outage no longer stalls
+Elasticsearch (and vice versa). The trade-off is deliberate: under a long sink outage the oldest
+records of *that* sink are dropped instead of the whole batch being lost. The buffer survives a
+container restart but not a POD reschedule (the aggregator is a `Deployment` with an HPA).
+
 **Confirming that one host is actually shipping**
 
 `fluentd_input_status_num_records_total` is emitted by a `prometheus` filter **after** `in_forward`

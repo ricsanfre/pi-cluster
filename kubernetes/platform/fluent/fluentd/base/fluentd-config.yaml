@@ -201,12 +201,18 @@ data:
             customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_name}"}
             remove_keys index_name
             <buffer tag, index_name>
+                @type file
+                path /var/log/fluent/buffer/es
                 flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
                 flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
                 chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
-                queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+                total_limit_size 400MB
                 retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
                 retry_forever true
+                # Do not raise BufferOverflowError into the shared `@type copy`
+                # (which would fail the Loki store too). Drop the oldest queued
+                # chunks for THIS store only; bounded by total_limit_size.
+                overflow_action drop_oldest_chunk
             </buffer>
         </match>
     </label>
@@ -246,12 +252,17 @@ data:
                 filename
             </label>
             <buffer>
+                @type file
+                path /var/log/fluent/buffer/loki
                 flush_thread_count 8
                 flush_interval 5s
                 chunk_limit_size 2M
-                queue_limit_length 32
+                total_limit_size 400MB
                 retry_max_interval 30
                 retry_forever true
+                # Isolated from the Elasticsearch store: overflow drops the
+                # oldest Loki chunks instead of throwing and failing the copy.
+                overflow_action drop_oldest_chunk
             </buffer>
         </match>
     </label>
