@@ -348,7 +348,7 @@ Installation process is the following:
     replicaCount: 1
     # Enabling HPA
     autoscaling:
-      enabled: false
+      enabled: true
       minReplicas: 1
       maxReplicas: 100
       targetCPUUtilizationPercentage: 80
@@ -471,6 +471,17 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
+
+# Resource requests are required by the HPA: without a CPU request the
+# autoscaler reports FailedGetResourceMetric and never scales. 100m keeps the
+# 80% target at 80m, above the ~38m steady state, so it scales only on bursts.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
 
 # Do not create serviceAccount and RBAC. Fluentd does not need to get access to kubernetes API.
 serviceAccount:
@@ -608,6 +619,9 @@ volumes:
   - name: fluentd-tls
     secret:
       secretName: fluentd-tls
+  - name: fluentd-buffer
+    emptyDir:
+      sizeLimit: 1Gi
 
 volumeMounts:
   - name: etcfluentd-template
@@ -615,6 +629,8 @@ volumeMounts:
   - mountPath: /etc/fluent/certs
     name: fluentd-tls
     readOnly: true
+  - mountPath: /var/log/fluent/buffer
+    name: fluentd-buffer
 ```
 
 -  `mountVarLogDirectory` and `mountDockerContainerDirectory` set to false so host directories containing logs are not mounted. Fluentd does not need to get access to logs
@@ -624,6 +640,7 @@ volumeMounts:
 -   `volumes` and `volumesMounts` specifies additional volumes to be mounted into fluentd POD. 
     -   Secret `fluentd-tls`, generated in step 1 of the installation procedure, containing fluentd certificate and key. TLS Secret containing fluentd's certificate and private key files, is mounted as `/etc/fluent/certs`.
     -   ConfigMap `fluentd-template`, containing ES index templates used by `fluentd-elasticsearch-plugin`, mounted as `/etc/fluent/template`. This configMap is generated in step 3 of the installation procedure.
+    -   `emptyDir` `fluentd-buffer` (`sizeLimit: 1Gi`), mounted as `/var/log/fluent/buffer`, backing the file buffers of both outputs. It bounds the queue on disk per POD and survives a container restart; it does not survive a POD reschedule, which is accepted so the Deployment/HPA model is preserved.
 
 ConfigMaps created by the helm chart are mounted in the fluentd container:
 
@@ -936,12 +953,15 @@ The following fluentd configuration files are used:
             customize_template {"<<shard>>": "1","<<replica>>": "0", "<<TAG>>":"${index_name}"}
             remove_keys index_name
             <buffer tag, index_name>
+                @type file
+                path /var/log/fluent/buffer/es
                 flush_thread_count "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_THREAD_COUNT'] || '8'}"
                 flush_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_FLUSH_INTERVAL'] || '5s'}"
                 chunk_limit_size "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE'] || '2M'}"
-                queue_limit_length "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_QUEUE_LIMIT_LENGTH'] || '32'}"
+                total_limit_size 400MB
                 retry_max_interval "#{ENV['FLUENT_ELASTICSEARCH_BUFFER_RETRY_MAX_INTERVAL'] || '30'}"
                 retry_forever true
+                overflow_action drop_oldest_chunk
             </buffer>
         </match>
     </label>
@@ -975,12 +995,15 @@ The following fluentd configuration files are used:
                 filename
             </label>
             <buffer>
+                @type file
+                path /var/log/fluent/buffer/loki
                 flush_thread_count 8
                 flush_interval 5s
                 chunk_limit_size 2M
-                queue_limit_length 32
+                total_limit_size 400MB
                 retry_max_interval 30
                 retry_forever true
+                overflow_action drop_oldest_chunk
             </buffer>
         </match>
     </label>

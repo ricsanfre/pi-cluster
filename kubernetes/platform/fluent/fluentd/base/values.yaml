@@ -17,6 +17,21 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
+# Resource requests are required by the HPA (without a CPU request the
+# autoscaler fails with FailedGetResourceMetric). Current usage is ~38m CPU
+# and ~190Mi. The 100m request keeps the effective target at 80m, so the
+# aggregator stays at 1 replica in steady state and only scales on real
+# bursts. The 1Gi memory limit is deliberately above the handover's 512Mi so
+# a memory-buffer spike cannot OOM-kill the aggregator and lose queued
+# records; tighten it once the disk buffer is the only queue.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
 # Do not create serviceAccount and RBAC. Fluentd does not need to get access to kubernetes API.
 serviceAccount:
   create: false
@@ -101,6 +116,13 @@ volumes:
     configMap:
       name: fluentd-template
       defaultMode: 0777
+  # File-buffer storage. Per-POD and bounded so that a jammed output cannot
+  # grow memory without limit. It survives a container restart (the OOM/restart
+  # loss mode seen on 2026-11-20) but not a POD reschedule; that is acceptable
+  # for the secondary log sink and keeps the Deployment+HPA model intact.
+  - name: fluentd-buffer
+    emptyDir:
+      sizeLimit: 1Gi
 
 volumeMounts:
   - name: etcfluentd-template
@@ -108,6 +130,8 @@ volumeMounts:
   - mountPath: /etc/fluent/certs
     name: fluentd-tls
     readOnly: true
+  - mountPath: /var/log/fluent/buffer
+    name: fluentd-buffer
 
 # Probes - fluentd takes a few seconds to start, need initial delay
 livenessProbe:
