@@ -37,6 +37,7 @@ reversible, and treats Git and Flux as the source of truth.
 | Evaluating technology alternatives | `tech-spike` |
 | Adding a new service | `new-service` |
 | Proving a service works | `service-testing` |
+| Refreshing the live cluster handover | `cluster-handover` |
 | Website pages, runbooks, release notes | `docs-authoring` |
 
 ## Prerequisites
@@ -71,6 +72,7 @@ The agent routes to the matching skill automatically. You can also name a skill 
 | [`tech-spike`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/tech-spike) | Choosing between technologies | Scored comparison, optional PoC, ADR or spike note |
 | [`new-service`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/new-service) | Adding a platform service or workload | Pinned chart, overlays, secrets, SSO, observability, wiring |
 | [`service-testing`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/service-testing) | Proving a service works | Dev deploy, smoke/integration checks, promotion checklist |
+| [`cluster-handover`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/cluster-handover) | Refreshing the cluster handover | Health/e2e sweep and issue reconciliation |
 | [`docs-authoring`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/docs-authoring) | Writing docs, runbooks or release notes | Page/runbook with navigation and build verification |
 
 Skills are loaded on demand, so only the relevant procedure enters the context. The skill files are

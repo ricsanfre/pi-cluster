@@ -44,3 +44,6 @@
 # manifests to output/. Both are local working files, never committed.
 /boilerplate/output/
 /boilerplate/fluxcd-app-template-vars.yaml
+
+# Session handover (untracked working notes; never committed)
+/handover-*.md
