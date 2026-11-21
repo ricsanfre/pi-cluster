@@ -137,6 +137,7 @@ panic: metric-resolution should be larger than kubelet-request-timeout
 ```yaml
 deschedulerPolicyAPIVersion: descheduler/v1alpha2
 deschedulerPolicy:
+  maxNoOfPodsToEvictPerNode: 3
   profiles:
     - name: default
       pluginConfig:
@@ -148,40 +149,59 @@ deschedulerPolicy:
             podProtections:
               extraEnabled:
               - PodsWithPVC     # Don't evict pods with PersistentVolumeClaims
+            namespaceLabelSelector:   # Never evict from cluster-critical namespaces
+              matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: NotIn
+                values: [kube-system, cert-manager, flux-system]
         - name: LowNodeUtilization
           args:
             thresholds:          # Node is "underutilized" below these values
-              cpu: 20
-              memory: 20
-              pods: 20
+              cpu: 60
+              memory: 40
+              pods: 40
             targetThresholds:     # Node is "overutilized" above these values
-              cpu: 50
-              memory: 50
-              pods: 50
+              cpu: 90
+              memory: 70
+              pods: 60
         - name: RemoveDuplicates
       plugins:
         balance:
           enabled:
           - RemoveDuplicates
           - LowNodeUtilization
-```
 
 ### Strategies
 
 #### LowNodeUtilization
 
-Identifies overutilized and underutilized nodes based on **actual** CPU, memory, and pod counts (from metrics-server), then evicts pods from overutilized nodes so they can be rescheduled onto underutilized ones.
+Identifies overutilized and underutilized nodes, then evicts pods from overutilized nodes so they can
+be rescheduled onto underutilized ones.
+
+Utilization is computed from pod **resource requests**, not from live usage: the policy sets no
+`metricsProviders`, so the descheduler defaults to the scheduler's own view of the node. This is the
+right signal for placement pressure, but it means a node can be "overutilized" while idling — on
+2026-11-21 `node-hp-1` sat at 81% of CPU requests but 38% of actual CPU.
 
 | Parameter | Value | Meaning |
 |-----------|-------|---------|
-| `thresholds.cpu` | 20% | Node below 20% CPU → underutilized (eviction target) |
-| `thresholds.memory` | 20% | Node below 20% memory → underutilized |
-| `thresholds.pods` | 20% | Node below 20% pod capacity → underutilized |
-| `targetThresholds.cpu` | 50% | Node above 50% CPU → overutilized (eviction source) |
-| `targetThresholds.memory` | 50% | Node above 50% memory → overutilized |
-| `targetThresholds.pods` | 50% | Node above 50% pod capacity → overutilized |
+| `thresholds.cpu` | 60% | Node below 60% CPU requests → underutilized (eviction target) |
+| `thresholds.memory` | 40% | Node below 40% memory requests → underutilized |
+| `thresholds.pods` | 40% | Node below 40% pod capacity → underutilized |
+| `targetThresholds.cpu` | 90% | Node above 90% CPU requests → overutilized (eviction source) |
+| `targetThresholds.memory` | 70% | Node above 70% memory requests → overutilized |
+| `targetThresholds.pods` | 60% | Node above 60% pod capacity → overutilized |
 
-Nodes between 20% and 50% on all dimensions are "appropriately utilized" and left alone.
+Nodes between the two sets are "appropriately utilized" and left alone. A node is overutilized when
+**any** dimension exceeds its target and underutilized only when **every** dimension is below its
+threshold.
+
+`targetThresholds.cpu` was raised from 80% to 90% on 2026-11-21. At 80%, both x86 workers were
+permanently over target (81% and 85-87% of CPU requests) while running at 38-43% actual CPU, so every
+5-minute cycle evicted 3 pods from each of them — 195 evictions in four hours, including the
+cert-manager webhook, the CNPG operator and `tempo-ingester` — and the scheduler placed them back on
+the same nodes. The loop never converged because `nodeFit: false` does not require the pod to fit
+anywhere else.
 
 #### RemoveDuplicates
 
@@ -199,6 +219,7 @@ The descheduler will **not** evict:
 | Pods with local storage (`PodsWithLocalStorage`) | Prevent data loss |
 | Mirror pods | Kubelet-managed |
 | Static pods | Kubelet-managed |
+| Pods in `kube-system`, `cert-manager`, `flux-system` | Webhook, GitOps and CNI helpers must stay up (`namespaceLabelSelector`; v1alpha2 has no `excludedNamespaces`) |
 
 ### nodeFit and control-plane taints
 
