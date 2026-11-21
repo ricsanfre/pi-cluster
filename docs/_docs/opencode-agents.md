@@ -37,6 +37,7 @@ reversible, and treats Git and Flux as the source of truth.
 | Evaluating technology alternatives | `tech-spike` |
 | Adding a new service | `new-service` |
 | Proving a service works | `service-testing` |
+| Refreshing the live cluster handover | `cluster-healthcheck` |
 | Website pages, runbooks, release notes | `docs-authoring` |
 
 ## Prerequisites
@@ -52,6 +53,7 @@ Select `sre` from the agent picker in the TUI, or invoke it directly:
 
 ```bash
 opencode run --agent sre "Do a read-only health sweep and report only anomalies"
+opencode run --agent sre "Run a cluster healthcheck for prod and update operational-status/prod/cluster-status.md"
 opencode run --agent sre "Triage why the keycloak Kustomization is not ready"
 opencode run --agent sre "Spike: Longhorn vs OpenEBS for the Pi nodes — recommend one"
 opencode run --agent sre "Add <service> as a platform service and propose the file layout"
@@ -59,7 +61,8 @@ opencode run --agent sre "Update the Vault docs page for the new auth backend"
 ```
 
 The agent routes to the matching skill automatically. You can also name a skill explicitly with
-`@skill-id`, for example `@tech-spike`.
+`@skill-id`, for example `@tech-spike`. Use `@cluster-healthcheck` (or just *"run a cluster
+healthcheck"*) to refresh the operational status; use `@cluster-triage` when something is broken.
 
 ## Capability map
 
@@ -71,6 +74,7 @@ The agent routes to the matching skill automatically. You can also name a skill 
 | [`tech-spike`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/tech-spike) | Choosing between technologies | Scored comparison, optional PoC, ADR or spike note |
 | [`new-service`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/new-service) | Adding a platform service or workload | Pinned chart, overlays, secrets, SSO, observability, wiring |
 | [`service-testing`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/service-testing) | Proving a service works | Dev deploy, smoke/integration checks, promotion checklist |
+| [`cluster-healthcheck`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/cluster-healthcheck) | Running a periodic healthcheck | Layer/e2e sweep, reconciled open issues, updated status file |
 | [`docs-authoring`](https://github.com/ricsanfre/pi-cluster/tree/master/.opencode/skills/docs-authoring) | Writing docs, runbooks or release notes | Page/runbook with navigation and build verification |
 
 Skills are loaded on demand, so only the relevant procedure enters the context. The skill files are

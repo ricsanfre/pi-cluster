@@ -63,6 +63,7 @@ Symptom-to-runbook index for triage. Canonical catalog: [`runbooks/README.md`](.
 | --- | --- |
 | `OPS-001` | An incident needs command structure and coordination |
 | `OPS-002` | Writing a postmortem and tracking follow-ups |
+| `OPS-003` | Refreshing the cluster health snapshot and the live-issue handover |
 
 ## Components
 

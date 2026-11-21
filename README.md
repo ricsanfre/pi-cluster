@@ -311,6 +311,8 @@ Check out the documentation [Quick Start guide](http://picluster.ricsanfre.com/d
 
 The repository also ships project-scoped OpenCode agents and skills for operating, extending and documenting the cluster. See [OpenCode AI Agents](https://picluster.ricsanfre.com/docs/opencode-agents/).
 
+To refresh the cluster's operational status, ask the SRE agent `@cluster-healthcheck`; the convention and the current status live in [`operational-status/`](operational-status/README.md).
+
 ## About the Project
 
 This project was started in June 2021 by Ricardo Sanchez

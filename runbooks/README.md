@@ -28,7 +28,7 @@ If no runbook covers the situation, start from a triage runbook (`GITOPS-002`, `
 | Security and Access | [`cluster/security-access.md`](cluster/security-access.md) | `SEC-001` … `SEC-003` (backlog: `SEC-004`, `SEC-005`) |
 | Upgrades and Change Management | [`cluster/change-management.md`](cluster/change-management.md) | `CHANGE-001`, `CHANGE-002` (backlog: `CHANGE-003`, `CHANGE-004`) |
 | Backup and Compliance | [`cluster/backup-compliance.md`](cluster/backup-compliance.md) | `BACKUP-001` … `BACKUP-003` (backlog: `AUDIT-001`) |
-| Operations and Governance | [`cluster/operations-governance.md`](cluster/operations-governance.md) | `OPS-001`, `OPS-002` (backlog: `OPS-003`, `OPS-004`) |
+| Operations and Governance | [`cluster/operations-governance.md`](cluster/operations-governance.md) | `OPS-001` … `OPS-003` (backlog: `OPS-004`) |
 
 ### Components
 
@@ -142,7 +142,7 @@ References:
 
 - [`OPS-001` Incident Command Workflow](cluster/operations-governance.md#runbook-ops-001)
 - [`OPS-002` Postmortem Template and Action Tracking](cluster/operations-governance.md#runbook-ops-002)
-- `OPS-003` Monthly Platform Health Review Checklist
+- [`OPS-003` Platform Healthcheck and Status Refresh](cluster/operations-governance.md#runbook-ops-003)
 - `OPS-004` Runbook Review and Stale Runbook Cleanup Process
 
 ### Component Backlog Catalog

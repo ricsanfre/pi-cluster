@@ -44,3 +44,7 @@
 # manifests to output/. Both are local working files, never committed.
 /boilerplate/output/
 /boilerplate/fluxcd-app-template-vars.yaml
+
+# Operational status (rolling per-cluster status; session context, never committed)
+/operational-status/*/cluster-status.md
+/operational-status/*/incidents/
