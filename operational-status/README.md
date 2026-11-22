@@ -36,11 +36,16 @@ operational-status/
 
 - **One status file per cluster**, not one per day. Update it in place.
 - `cluster-status.md` and `incidents/` are **untracked session context** and are covered by
-  `.gitignore`; never commit them.
-- `README.md` and `TEMPLATE.md` are tracked: they define the convention and the procedure.
+  `.gitignore` (`.gitignore:48-50`); never commit them, and never `git add -f` them. This repository
+  is **public**: the rolling status, the incident narratives and the open-issue notes are private
+  operational data and must not be published. `README.md` and `TEMPLATE.md` are tracked because they
+  contain the convention and the procedure, not the findings.
 - On the first run for a cluster, copy `TEMPLATE.md` to `<cluster>/cluster-status.md` and fill it
   from live evidence. Use the cluster name matching the kube context: `prod` for
   `picluster-prod`, `dev` for `k3d-picluster`.
 - Refresh with `OPS-003` or the `cluster-healthcheck` skill: layer sweep, end-to-end checks, then
   reconcile every open item against fresh evidence.
+- `TEMPLATE.md` opens with a **section guide**: what each section holds and how the next session should
+  treat it. The short version: §1 is re-measured, §3 is history (only a regression reopens it), §5 is
+  re-checked every sweep but not re-diagnosed.
 - Historical incident narratives go under `<cluster>/incidents/`, not in the rolling status.
