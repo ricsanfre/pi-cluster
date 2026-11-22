@@ -4,9 +4,9 @@
     {
       "description": ["Actions Runner Controller Group"],
       "groupName": "Actions Runner Controller",
-      "matchPackagePatterns": [
-        "gha-runner-scale-set-controller",
-        "gha-runner-scale-set"
+      "matchPackageNames": [
+        "/gha-runner-scale-set-controller/",
+        "/gha-runner-scale-set/"
       ],
       "matchDatasources": ["helm", "docker"],
       "group": {
@@ -17,7 +17,7 @@
     {
       "description": ["Flux Group"],
       "groupName": "Flux",
-      "matchPackagePatterns": ["fluxcd"],
+      "matchPackageNames": ["/fluxcd/"],
       "matchDatasources": ["docker", "helm", "github-tags"],
       "versioning": "semver",
       "group": {
@@ -28,7 +28,7 @@
     {
       "description": ["Schema Registry Group"],
       "groupName": "Schema-Registry",
-      "matchPackagePatterns": ["schema-registry"],
+      "matchPackageNames": ["/schema-registry/"],
       "matchDatasources": ["helm"],
       "group": {
         "commitMessageTopic": "{{{groupName}}} group"
@@ -38,12 +38,28 @@
     {
       "description": ["System Upgrade Controller Group"],
       "groupName": "System Upgrade Controller",
-      "matchPackagePatterns": ["system-upgrade-controller"],
+      "matchPackageNames": ["/system-upgrade-controller/"],
       "matchDatasources": ["docker", "github-releases"],
       "group": {
         "commitMessageTopic": "{{{groupName}}} group"
       },
       "separateMinorPatch": true
+    },
+    {
+      "description": ["Prometheus Operator Group"],
+      "groupName": "Prometheus Operator",
+      "matchPackageNames": [
+        "/kube-prometheus-stack/",
+        "/prometheus-operator-crd/"
+      ],
+      // kube-prometheus-stack is deployed with crds: Skip, so the CRDs come only from the
+      // prometheus-operator-crds chart, whose appVersion is the exact prometheus-operator
+      // version. The Flux chart tag, the CRD bundle tag and the ansible bootstrap
+      // chart_version must therefore always move in the same PR.
+      "separateMajorMinor": false,
+      "group": {
+        "commitMessageTopic": "{{{groupName}}} group"
+      }
     }
   ]
 }

@@ -73,5 +73,17 @@
       ],
       versioning: 'semver-coerced',
     },
+    {
+      description: 'ES 9, cp-schema-registry 8 and MongoDB 9 change on-disk or wire formats: they need a migration plan and an e2e window, not a rolling upgrade',
+      matchPackageNames: [
+        'elastic/elasticsearch',
+        'docker.io/confluentinc/cp-schema-registry',
+        '/^(docker\\.io\\/library\\/)?mongo$/',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+    },
   ],
 }
