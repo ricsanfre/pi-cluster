@@ -83,14 +83,16 @@ ingester:
         secretKeyRef:
           name: tempo-s3-secret
           key: S3_SECRET_ACCESS_KEY
-  # ingester-1 uses up to 631Mi, others under 100Mi
+  # Block flushes are the memory spike: 2026-11-22 10:05 peak 726Mi, 2026-11-21 13:12 peak 764Mi,
+  # both against a 768Mi limit (and the 11-21 OOMKill). Headroom is 42Mi, so the limit is the first
+  # thing to raise. Memory only: node-hp-3 sits at 84% of CPU requests, so the 50m request stays.
   resources:
     requests:
       cpu: 50m
       memory: 256Mi
     limits:
       cpu: 500m
-      memory: 768Mi
+      memory: 1Gi
 
 # Configure compactor
 compactor:
