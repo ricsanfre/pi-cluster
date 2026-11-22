@@ -37,14 +37,48 @@ silent until a restore is attempted.
 
 | Item | Value |
 | --- | --- |
-| Operator chart | `cloudnative-pg` **0.29.1** (app **1.30.1**) |
+| Operator chart | `cloudnative-pg` **0.29.2** (app **1.30.2**) |
 | Operator namespace | `databases` (not the upstream default `cnpg-system`) |
 | Chart repository | `https://cloudnative-pg.github.io/charts` |
+| Plugin chart pin | `plugin-barman-cloud` **0.9.0** (app **v0.16.0**), merged but **not deployed** — see *Version pinning* |
 | Clusters | 2, both in `databases` |
 | WAL archiving | `ContinuousArchiving=True` on both |
 | Base backups | daily since 2026-11-01 |
 | cert-manager | deployed |
 | S3 backend | RustFS at `https://object-store.homelab.ricsanfre.com:9091` |
+
+### Version pinning
+
+`plugin-barman-cloud` is pinned at **0.9.0** (app **v0.16.0**, 2026-11-09) in
+`kubernetes/platform/databases/plugin-barman-cloud/app/base/helm.yaml`. That bump is already merged, and
+it is harmless today: the app has no Flux Kustomization, so nothing is deployed.
+
+It does mean the pin is **ahead of the evidence in this ADR**, which was measured on **v0.15.1**
+(2026-09-30). Those measurements are what set the production sidecar limits, so the migration must
+re-validate them on v0.16.0 before the switch:
+
+| | Measured in the PoC | Pinned now |
+| --- | --- | --- |
+| Chart | `0.8.1` | `0.9.0` |
+| Plugin | `v0.15.1` | `v0.16.0` |
+
+To re-measure or re-check before wiring the plugin:
+
+- **Sidecar sizing** — idle ~15 MiB, 294–356 MiB while restoring WAL on a restarted standby, and
+  `256Mi` `OOMKilled` in the PoC. These are the numbers behind the recommended requests `50m`/`64Mi`
+  and limits `500m`/`512Mi`, so they must be confirmed on v0.16.0.
+- **RustFS compatibility** — the operand moves to `barman-cloud` module `v0.7.0`; the PoC validated
+  `barman-cloud 3.20.1` against RustFS `1.0.4`.
+- **CNPG-I protocol version** — whether v0.16.0 implements what operator `1.30.2` speaks. The plugin is
+  coupled to the operator by protocol, not by chart version, so a mismatch only shows up on deployment.
+
+What v0.16.0 adds that is worth having here: `s3AddressingStyle` (path-style addressing, directly
+relevant to RustFS), zstd base-backup compression, SSE-C, `sidecarImage` as a plugin parameter, and
+`WATCH_NAMESPACE` to scope the cache.
+
+Both v0.16.0 images are multi-arch (`linux/amd64`, `linux/arm64`, verified against the registry
+manifests on 2026-11-22), so the ARM64 criterion that disqualified other options still holds for the
+pinned version.
 
 ### Timeline pressure
 
@@ -186,8 +220,9 @@ away a hard constraint.
 Repository changes, in dependency order. Nothing is applied until the PoC below passes.
 
 1. **Platform component** `kubernetes/platform/databases/plugin-barman-cloud/app/`
-   - HelmRelease pinned to chart `0.8.1` (app `v0.15.1`) from the existing `cloudnative-pg`
-     `HelmRepository`, in namespace `databases`.
+   - HelmRelease pinned to chart `0.9.0` (app `v0.16.0`) from the existing `cloudnative-pg`
+     `HelmRepository`, in namespace `databases`. The pin is already in place; **validate it** by
+     re-running the PoC (see *Version pinning*) before adding the Kustomization that deploys it.
    - New Flux Kustomization `plugin-barman-cloud-app` in `kubernetes/clusters/prod/infra/` with
      `dependsOn: cloudnative-pg-app`, registered in the infra `kustomization.yaml`.
 2. **ObjectStore resources** in `kubernetes/platform/keycloak/database/base/` and
@@ -255,6 +290,7 @@ Open questions the PoC must answer:
 | Question | Why it matters |
 | --- | --- |
 | Does barman-cloud **3.20.1** (bundled in the sidecar) work against RustFS? | Native barman already does, but the sidecar ships a newer version than the operand image |
+| Does plugin **v0.16.0** speak the CNPG-I version implemented by operator **1.30.2**? | The plugin is coupled to the operator by protocol, not by chart version; a mismatch only shows up on deployment |
 | Sidecar CPU/memory per instance | 4 instances total on 8-16 GB nodes |
 | Does WAL archiving resume without a gap across the switch? | A gap means an unrecoverable window |
 | Behaviour of the rolling restart on a 2-instance cluster | Temporary single-instance exposure |
