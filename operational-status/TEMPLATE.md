@@ -6,13 +6,40 @@
 
 ---
 
+## What each section is for
+
+Read this once before filling the file. Every item lives in exactly **one** section, and moving it
+between sections is how a handover records progress.
+
+| Section | Holds | How the next session treats it |
+| --- | --- | --- |
+| **1. Snapshot** | Measurements taken **this run**, one row per layer | Refresh wholesale. Never carry a number forward — re-read every value, even if nothing changed. |
+| **2. Timeline** | What happened between handovers | **Append only**, never rewrite. Anything longer than a table row moves to `incidents/`. Include the boot time and any restart cause, not just the symptom. |
+| **3. Closed** | Items that were broken and now are not | **Do not re-test the diagnosis.** A recurrence is a *new* open item that links back here. Every row names the PR/commit/command and the live proof. |
+| **4. Open** | Known-unhealthy, each with a reproducible proof | **Re-run the proof every sweep** and update the value: still true → keep it, gone → §3, worse → re-prioritise. Keep existing IDs stable (cross-reads depend on them); add new items at the end. |
+| **4.x Housekeeping** | Known, decision pending, nothing broken | Actionable whenever someone has a window. |
+| **4.x Watch** | Known, not actionable until it moves | Carries a trigger ("if it fires again", "on the next boot"), no owner until then. |
+| **5. Verified healthy this sweep** | Checks that passed **this run** | **Re-check every sweep** — this is the end-to-end checklist, *not* an exemption list. If it still passes, don't re-open it as a finding or re-derive the conclusion. If it fails, it moves to §4. |
+| **6. Commands worth keeping** | Commands that earned their place | Keep them copy-paste correct; delete ones that stopped being true. Prefer the query that distinguishes causes over the one that only shows the symptom. |
+| **7. Gotchas** | Environment facts that cause misreads | Add one every time a wrong conclusion was reached. Never delete — a gotcha that "no longer applies" still explains an old entry. |
+| **8. Reference** | Where to read next | Path or issue → why it matters. Include the runbook IDs that §4 hands off to. |
+| **9. Suggested first moves** | The queue for the next session | Ordered, with the reason. Only as long as one session can plausibly start. |
+
+Two rules that follow from the table: **§5 is not "resolved"** — an item leaves §5 only by failing a
+later sweep, and **§3 is not "re-checked"** — it is history, reopened only by a regression.
+
+---
+
 ## 1. Snapshot — <YYYY-MM-DD HH:MMZ>
+
+*State the measurement window (e.g. "20–40 min after the boot") and which rows are older than it.*
 
 | Item | Value |
 | --- | --- |
-| Nodes | <n/n Ready, version, uptime> |
-| Flux | <n/n Kustomizations True, revision> |
-| Pods | <all Running/ready, or the exceptions> |
+| Boot / uptime | <when the hosts booted, how it was verified — `node_boot_time_seconds`, not node age> |
+| Nodes | <n/n Ready, version, pressure conditions, load vs requests> |
+| Flux | <n/n Kustomizations, HelmReleases, Terraform CRs; revision> |
+| Pods | <all Running/ready, or the exceptions, and any stale objects> |
 | Firing alerts | <count and names> |
 | Workloads | <key services and their state> |
 | Storage | <PVCs Bound, volumes healthy, capacity> |
@@ -42,7 +69,7 @@
 
 ### 4.1 <P1/P2 issue>
 
-<Symptoms, evidence, next step.>
+<Symptoms, evidence, next step. Include the command that proves it and the value from this run.>
 
 ### 4.x Housekeeping (P3)
 
@@ -54,11 +81,13 @@
 
 | Item | Why |
 | --- | --- |
-| <item> | <why> |
+| <item> | <why + the trigger that would make it actionable> |
 
 ---
 
-## 5. Verified healthy — do not re-litigate
+## 5. Verified healthy this sweep — re-check, don't re-diagnose
+
+<Each bullet is a check run in this sweep: what was measured, and the value that proves it.>
 
 - <check> — <evidence>
 

@@ -33,6 +33,8 @@
 .idea/
 # Planning documents (working notes, not part of the repository)
 /plans/
+# Personal scratch notes. This repository is public: local notes are never published.
+/TO-DO.md
 
 # k3s-mixins build staging. `make k3s-mixins` writes here and then moves the
 # files into base/rules/ and components/monitoring/, so this is intermediate
