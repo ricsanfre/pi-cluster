@@ -15,14 +15,27 @@ instance:
       /test/
   kustomize:
     patches:
-      - # Increase the number of workers
+      - # Right-size the worker pool, the dependency requeue and the leader-election window.
+        # 20 concurrent Kustomizations meant 20 simultaneous server-side applies after every new
+        # revision, which is what saturates the 4-core Pi control plane on a CRD apply. A slow API
+        # also used to exceed the default lease (15s/renew 10s) and kill the controller with
+        # "leader election lost", restarting every in-flight reconcile.
         patch: |
           - op: add
             path: /spec/template/spec/containers/0/args/-
-            value: --concurrent=10
+            value: --concurrent=3
           - op: add
             path: /spec/template/spec/containers/0/args/-
-            value: --requeue-dependency=5s
+            value: --requeue-dependency=30s
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --leader-election-lease-duration=60s
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --leader-election-renew-deadline=40s
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --leader-election-retry-period=5s
         target:
           kind: Deployment
           name: (kustomize-controller|helm-controller|source-controller)
@@ -43,11 +56,8 @@ instance:
         target:
           kind: Deployment
           name: (kustomize-controller|helm-controller|source-controller)
-      - # Enable in-memory kustomize builds
+      - # Enable in-memory kustomize builds (the concurrency override moved to the shared patch)
         patch: |
-          - op: add
-            path: /spec/template/spec/containers/0/args/-
-            value: --concurrent=20
           - op: replace
             path: /spec/template/spec/volumes/0
             value:
