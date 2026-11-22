@@ -15,18 +15,15 @@ instance:
       /test/
   kustomize:
     patches:
-      - # Right-size the worker pool, the dependency requeue and the leader-election window.
-        # 20 concurrent Kustomizations meant 20 simultaneous server-side applies after every new
-        # revision, which is what saturates the 4-core Pi control plane on a CRD apply. A slow API
-        # also used to exceed the default lease (15s/renew 10s) and kill the controller with
-        # "leader election lost", restarting every in-flight reconcile.
+      - # Shared controller flags: the dependency requeue and a leader-election window that survives
+        # the latency spike of a CRD apply. A slow API used to exceed the default lease
+        # (15s/renew 10s) and kill the controller with "leader election lost", restarting every
+        # in-flight reconcile. Keep --requeue-dependency short: it multiplies through the dependency
+        # chain, so 30s made a full cascade ~3x slower.
         patch: |
           - op: add
             path: /spec/template/spec/containers/0/args/-
-            value: --concurrent=3
-          - op: add
-            path: /spec/template/spec/containers/0/args/-
-            value: --requeue-dependency=30s
+            value: --requeue-dependency=5s
           - op: add
             path: /spec/template/spec/containers/0/args/-
             value: --leader-election-lease-duration=60s
@@ -39,6 +36,34 @@ instance:
         target:
           kind: Deployment
           name: (kustomize-controller|helm-controller|source-controller)
+      # Concurrency per controller, because only kustomize-controller drives the apply burst:
+      # measured busiest apiserver series 20 req/s at concurrency 20 vs 8 req/s at 3, and
+      # slow_apply 316/min vs 146/min. helm-controller applies release manifests; source-controller
+      # only fetches artifacts and needs no throttle.
+      - # kustomize-controller: the server-side applies (the writes)
+        patch: |
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --concurrent=4
+        target:
+          kind: Deployment
+          name: kustomize-controller
+      - # helm-controller: Helm upgrades
+        patch: |
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --concurrent=6
+        target:
+          kind: Deployment
+          name: helm-controller
+      - # source-controller: artifact fetches, no API write pressure
+        patch: |
+          - op: add
+            path: /spec/template/spec/containers/0/args/-
+            value: --concurrent=10
+        target:
+          kind: Deployment
+          name: source-controller
       - # Increase the memory limits
         patch: |
           apiVersion: apps/v1
