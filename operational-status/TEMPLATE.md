@@ -24,6 +24,7 @@ between sections is how a handover records progress.
 | **7. Gotchas** | Environment facts that cause misreads | Add one every time a wrong conclusion was reached. Never delete — a gotcha that "no longer applies" still explains an old entry. |
 | **8. Reference** | Where to read next | Path or issue → why it matters. Include the runbook IDs that §4 hands off to. |
 | **9. Suggested first moves** | The queue for the next session | Ordered, with the reason. Only as long as one session can plausibly start. |
+| **10. Backlog plan** | A multi-session queue of dependency PRs: batches in merge order, the gate per batch, what is parked or blocked, and the invariants the order protects | Maintain the **Status** column as PRs land. It outlives §9 on purpose: §9 is what one session can start, §10 is the whole queue and the rules that order it. |
 
 Two rules that follow from the table: **§5 is not "resolved"** — an item leaves §5 only by failing a
 later sweep, and **§3 is not "re-checked"** — it is history, reopened only by a regression.
@@ -118,3 +119,43 @@ later sweep, and **§3 is not "re-checked"** — it is history, reopened only by
 
 1. Run `OPS-003` / the `cluster-healthcheck` skill to refresh this file.
 2. <next action>
+
+---
+
+## 10. Backlog plan — <YYYY-MM-DD> (<n> open PRs)
+
+<The multi-session dependency queue: batches in merge order, the gate that must pass after each step,
+the PRs deliberately parked or blocked, and the invariants the ordering protects. Keep the Status column
+current — it is how a later session knows what is left without re-reading every PR.>
+
+**Ordering rules** (state them once; they are why the batches look the way they do):
+
+1. <rule — e.g. one CRD-bearing operator per reconcile>
+2. <rule — e.g. leaves before core: DNS, CNI, gateway and the reconciler itself last>
+
+**Gate for every merged step:** `flux reconcile` → all Kustomizations `True` → all pods ready → 0 firing
+alerts → the component check in the batch table → next step. Stop and report on the first red gate;
+rollback is a revert of that merge commit.
+
+### A — <batch name> (<n> PRs)
+
+| PR | Change | Gate | Status |
+| --- | --- | --- | --- |
+| <#id> | <what it changes> | <component-specific check> | open |
+
+### B — parked (own window)
+
+| PR | Why parked | Status |
+| --- | --- | --- |
+| <#id> | <the risk that keeps it out of a batch> | open, do not batch |
+
+### C — blocked
+
+| PR | Change | Blocker |
+| --- | --- | --- |
+| <#id> | <change> | <why it cannot move yet> |
+
+### Invariants this plan protects
+
+- <invariant — the thing that must stay true, and how it is enforced>
+

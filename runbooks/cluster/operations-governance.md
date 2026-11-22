@@ -103,10 +103,14 @@ Procedure:
    - Evidence still reproduces -> update the value and timestamp.
    - Evidence is worse -> re-prioritise and add the next step.
 5. Add new findings from the sweep as open items with evidence and a proposed next step.
-6. Update the rolling status in place: snapshot, timeline, closed table, open items, watch list and
-   suggested moves. There is no dated file per day; historical incident narratives go under
-   `operational-status/<cluster>/incidents/`.
-7. Report only the deltas since the previous handover.
+6. Review the dependency PRs pending merge (`gh pr list --state open`) and reconcile the backlog plan:
+   a PR merged since the last handover moves its batch row, a new PR joins a batch, a closed one is
+   dropped. Flag anything that breaks the ordering — two CRD-bearing operators in one reconcile, a
+   chart without its Ansible bootstrap pin, or a format-breaking major. Do not merge anything here.
+7. Update the rolling status in place: snapshot, timeline, closed table, open items, watch list,
+   suggested moves and the backlog plan. There is no dated file per day; historical incident narratives
+   go under `operational-status/<cluster>/incidents/`.
+8. Report only the deltas since the previous handover.
 
 Commands:
 
@@ -149,6 +153,10 @@ kubectl $CTX get pvc -A | grep -v Bound
 
 # Status file
 cat operational-status/prod/cluster-status.md
+
+# Dependency PRs pending merge (backlog plan): number, title and blast radius
+gh pr list --state open --limit 100 --json number,title,files \
+  --jq '.[] | "\(.number)\t\(.title)\t\([.files[].path] | join(","))"'
 ```
 
 Verify:
@@ -156,6 +164,8 @@ Verify:
 - Every closed item names the PR/commit or command that proves it.
 - No "firing" claim without a current `ALERTS` query.
 - The snapshot values are from this run, not copied.
+- Every open dependency PR appears in a batch in the backlog plan, no batch claims a merge that is not in
+  the git history, and no parked or blocked PR has been folded into a batch.
 
 Rollback:
 1. The handover is untracked; restore the previous copy from editor history or a backup.
