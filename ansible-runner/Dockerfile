@@ -9,7 +9,7 @@ COPY --from=ghcr.io/opentofu/opentofu:1.13.9 /usr/local/bin/tofu /usr/local/bin/
 # of truth. Bump both files together: `make check-runner-versions` (run by CI)
 # fails when they disagree.
 
-FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.10 AS uv
 
 
 FROM python:3.14-slim
