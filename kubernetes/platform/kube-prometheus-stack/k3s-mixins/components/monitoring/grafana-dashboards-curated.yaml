@@ -38,7 +38,7 @@ spec:
       dashboards: grafana
   grafanaCom:
     id: 15757
-    revision: 43
+    revision: 46
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
