@@ -85,5 +85,30 @@
       ],
       enabled: false,
     },
+    {
+      description: [
+        'Velero CLI, Ansible bootstrap pin and AWS plugin must not run ahead of the Velero Helm chart.',
+        'The chart is what actually moves the Velero server and Renovate sees it under the same name',
+        '(`velero`), so it is scoped out by file: helm.yaml is deliberately NOT in matchFileNames.',
+        'Newest published chart is velero-12.2.5 / appVersion 1.18.2 (verified 2026-11-28) and',
+        'velero-plugin-for-aws v1.15.x requires Velero v1.19.x, so a 1.19.0 PR cannot be merged yet.',
+        'Do not use allowedVersions here: it would also hide 1.19.0 forever once the chart ships it.',
+        'Dashboard approval keeps the update visible as a checkbox with no unmergeable PR; tick it',
+        'when a chart ships appVersion 1.19.x, and verify a restore first (1.19 drops the Restic path).',
+      ],
+      matchFileNames: [
+        '.mise.toml',
+        'ansible/vars/picluster.yml',
+        'kubernetes/platform/velero/app/base/values.yaml',
+      ],
+      matchPackageNames: [
+        '/velero/',
+      ],
+      matchUpdateTypes: [
+        'minor',
+        'major',
+      ],
+      dependencyDashboardApproval: true,
+    },
   ],
 }
