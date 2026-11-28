@@ -3,7 +3,7 @@
 # Single source of truth: kubectl, helm and opentofu are also baked into the
 # ansible-runner image. Keep the two in step — `make check-runner-versions`
 # (run by CI) fails when they disagree.
-kubectl = "1.37.2"
+kubectl = "1.37.3"
 flux2 = "2.10.1"
 velero = "1.18.4"
 istioctl = "1.32.0"
