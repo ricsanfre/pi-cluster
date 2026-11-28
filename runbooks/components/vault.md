@@ -242,3 +242,89 @@ Rollback:
 References:
 - `terraform/vault/resources/seal_config.yaml`
 - Vault official docs: https://developer.hashicorp.com/vault/docs/seal
+
+## VAULT-006 Vault Server Upgrade and Unseal
+
+<a id="runbook-vault-006"></a>
+Runbook ID: `VAULT-006`
+Owner: Security and Platform
+Severity: `Maintenance`
+
+Objective: Upgrade the Vault **server binary** on `node1` (`vault_version`) and bring it back to an
+unsealed state without manual key entry.
+
+The `ricsanfre.vault` role supports this directly: it compares `vault -version` with `vault_version`,
+reinstalls the binary when they differ, and notifies `Restart vault`. Two details decide whether the
+upgrade succeeds:
+
+- `initialize_vault` is skipped unless `/v1/sys/health` returns **501**, so an upgrade restart (503,
+  sealed but initialised) never re-initialises the cluster.
+- The in-playbook unseal in `unseal_vault.yml` is gated on `vault_keys is defined`, which is only set
+  during initial creation — so on an upgrade it **silently skips**. The unseal is actually performed by
+  **`vault-unseal.service`** (`vault_unseal_service: true`), which is enabled, marked `PartOf=vault.service`,
+  and unseals from `/etc/vault/unseal.json`.
+
+Preconditions:
+- `~/.secrets/vault.env` present with a token that can read the S3 and other bootstrap secrets.
+- `/etc/vault/unseal.json` exists on `node1` and `systemctl is-enabled vault-unseal` is `enabled`. **If the
+  unseal service is disabled, the upgrade leaves Vault sealed with no automatic recovery** — enable it
+  first or plan a manual unseal with the keys.
+- Maintenance window: every ExternalSecret, the Vault agent injector and the two Terraform CRs read Vault.
+
+Procedure:
+
+1. Record the current state.
+
+```bash
+./ansible-runner/ansible-runner.sh ansible vault -i inventory.yml -b -m shell \
+  -a "vault -version; systemctl is-enabled vault-unseal"
+curl -sk -o /dev/null -w '%{http_code}\n' https://vault.homelab.ricsanfre.com:8200/v1/sys/health   # 200
+kubectl --context picluster-prod get externalsecrets -A -o json \
+  | jq -r '[.items[]|select([.status.conditions[]?|select(.type=="Ready")|.status]|join(""))=="True"]|"\(length)/\(.items|length) synced"'
+```
+
+2. Take a Vault snapshot (see `VAULT-003`) and keep the unseal keys accessible outside the host.
+
+3. Bump `vault_version` in `ansible/vars/picluster.yml` and deploy.
+
+```bash
+make deploy-vault
+```
+
+The role detects the version mismatch, downloads the zip from `releases.hashicorp.com` with
+SHA256SUMS verification, copies the binary, restarts the unit, then (same play) the Terraform stage
+re-applies Vault configuration.
+
+4. Watch the unseal happen. The service waits for the API, then unseals from `/etc/vault/unseal.json`:
+
+```bash
+./ansible-runner/ansible-runner.sh ansible vault -i inventory.yml -b -m shell \
+  -a "journalctl -u vault-unseal -n 40 --no-pager"
+```
+
+Verify:
+
+- `/v1/sys/health` returns **200** (initialised, unsealed, active) and `vault status` shows the new version.
+- The `vault-unseal` journal shows `Vault unsealed`. It is a `oneshot` unit (`RemainAfterExit=false`), so
+  `systemctl is-active vault-unseal` reading `inactive` afterwards is expected — check `is-enabled`, which
+  must stay `enabled`, not `is-active`.
+- All ExternalSecrets are `SecretSynced` again (54/54 at the time of writing).
+- `kubectl --context picluster-prod -n flux-system get terraforms` — `config-elastic` and
+  `config-keycloak` return to `Ready` and plan without drift.
+- Grafana SSO and the five OIDC consoles still answer `302` (the gateway resolves the issuer from Vault).
+
+Rollback:
+
+1. Reinstall the previous binary: `./ansible-runner/ansible-runner.sh ansible-playbook deploy_vault.yml -e vault_version=<previous>`
+   — the role detects the mismatch and reinstalls, then restarts.
+2. If Vault does not unseal, unseal manually with the keys and investigate `vault-unseal.service`:
+
+```bash
+vault operator unseal <key>
+```
+3. If data is damaged, restore the snapshot taken in step 2 (see `VAULT-003`).
+
+References:
+- `ansible/deploy_vault.yml`, `ansible/vars/picluster.yml` (`vault_version`, `vault_unseal*`)
+- `ansible/requirements.yml` (`ricsanfre.vault`)
+- `runbooks/components/vault.md#runbook-vault-003` (backup and restore)
