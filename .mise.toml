@@ -8,7 +8,7 @@ flux2 = "2.10.1"
 velero = "1.18.4"
 istioctl = "1.32.0"
 helm = "4.3.2"
-opentofu = "1.13.9"
+opentofu = "1.13.10"
 
 # Herramienta via GitHub Releases
 "github:longhorn/cli" = "1.13.0"
