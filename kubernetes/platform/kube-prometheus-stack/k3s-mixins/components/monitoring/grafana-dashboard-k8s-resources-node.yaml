@@ -773,6 +773,131 @@ spec:
                     }
                 ],
                 "type": "table"
+            },
+            {
+                "datasource": {
+                    "type": "datasource",
+                    "uid": "-- Mixed --"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 10,
+                            "showPoints": "never",
+                            "spanNulls": true
+                        },
+                        "unit": "ops"
+                    },
+                    "overrides": [
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "compact stall"
+                            },
+                            "properties": [
+                                {
+                                    "id": "color",
+                                    "value": {
+                                        "fixedColor": "red",
+                                        "mode": "fixed"
+                                    }
+                                },
+                                {
+                                    "id": "custom.lineStyle",
+                                    "value": {
+                                        "dash": [
+                                            10,
+                                            10
+                                        ],
+                                        "fill": "dash"
+                                    }
+                                },
+                                {
+                                    "id": "custom.fillOpacity",
+                                    "value": 0
+                                }
+                            ]
+                        },
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "kcompactd wake"
+                            },
+                            "properties": [
+                                {
+                                    "id": "color",
+                                    "value": {
+                                        "fixedColor": "blue",
+                                        "mode": "fixed"
+                                    }
+                                },
+                                {
+                                    "id": "custom.fillOpacity",
+                                    "value": 0
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "gridPos": {
+                    "h": 6,
+                    "w": 24,
+                    "x": 0,
+                    "y": 30
+                },
+                "id": 6,
+                "interval": "1m",
+                "options": {
+                    "legend": {
+                        "asTable": true,
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "displayMode": "table",
+                        "placement": "right",
+                        "showLegend": true
+                    },
+                    "tooltip": {
+                        "mode": "single"
+                    }
+                },
+                "pluginVersion": "v13.0.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(rate(node_vmstat_compact_stall{cluster=\"$cluster\", job=\"node-exporter\", node=~\"$node\"}[$__rate_interval]))",
+                        "legendFormat": "compact stall"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(rate(node_vmstat_compact_success{cluster=\"$cluster\", job=\"node-exporter\", node=~\"$node\"}[$__rate_interval]))",
+                        "legendFormat": "compact success"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(rate(node_vmstat_compact_fail{cluster=\"$cluster\", job=\"node-exporter\", node=~\"$node\"}[$__rate_interval]))",
+                        "legendFormat": "compact fail"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum(rate(node_vmstat_compact_daemon_wake{cluster=\"$cluster\", job=\"node-exporter\", node=~\"$node\"}[$__rate_interval]))",
+                        "legendFormat": "kcompactd wake"
+                    }
+                ],
+                "title": "Memory Compaction Re-pack Rate",
+                "type": "timeseries"
             }
         ],
         "refresh": "10s",
