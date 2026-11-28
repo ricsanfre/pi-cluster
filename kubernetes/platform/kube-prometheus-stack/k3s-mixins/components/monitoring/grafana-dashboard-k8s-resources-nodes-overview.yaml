@@ -338,6 +338,81 @@ spec:
                 ],
                 "title": "Memory Utilization per Node",
                 "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "datasource",
+                    "uid": "-- Mixed --"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "fillOpacity": 10,
+                            "showPoints": "never",
+                            "spanNulls": true
+                        },
+                        "unit": "ops"
+                    }
+                },
+                "gridPos": {
+                    "h": 8,
+                    "w": 24,
+                    "x": 0,
+                    "y": 40
+                },
+                "id": 6,
+                "interval": "1m",
+                "options": {
+                    "legend": {
+                        "asTable": true,
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "displayMode": "table",
+                        "placement": "right",
+                        "showLegend": true
+                    },
+                    "tooltip": {
+                        "mode": "single"
+                    }
+                },
+                "pluginVersion": "v13.0.0",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum by (node) (rate(node_vmstat_compact_stall{cluster=\"$cluster\", job=\"node-exporter\"}[$__rate_interval]))",
+                        "legendFormat": "stall: {{node}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum by (node) (rate(node_vmstat_compact_fail{cluster=\"$cluster\", job=\"node-exporter\"}[$__rate_interval]))",
+                        "legendFormat": "fail: {{node}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum by (node) (rate(node_vmstat_compact_success{cluster=\"$cluster\", job=\"node-exporter\"}[$__rate_interval]))",
+                        "legendFormat": "success: {{node}}"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "${datasource}"
+                        },
+                        "expr": "sum by (node) (rate(node_vmstat_compact_daemon_wake{cluster=\"$cluster\", job=\"node-exporter\"}[$__rate_interval]))",
+                        "legendFormat": "kcompactd wake: {{node}}"
+                    }
+                ],
+                "title": "Memory Compaction Re-pack Rate per Node",
+                "type": "timeseries"
             }
         ],
         "refresh": "10s",
