@@ -1,4 +1,4 @@
-FROM alpine/kubectl:1.37.2 AS kubectl
+FROM alpine/kubectl:1.37.3 AS kubectl
 
 FROM alpine/helm:4.3.2 AS helm
 
